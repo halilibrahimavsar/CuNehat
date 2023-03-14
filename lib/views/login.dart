@@ -1,9 +1,10 @@
 import 'package:cunehat/firebase_options.dart';
-import 'package:cunehat/main_u%C4%B1s/%20constants/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
+
+import '../ constants/routes.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({
