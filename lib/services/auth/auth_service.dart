@@ -1,21 +1,26 @@
 import 'package:cunehat/services/auth/auth_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
+import 'package:cunehat/services/auth/providers/firebase_auth_provider.dart';
 
 class AuthService implements AuthProvider {
   final AuthProvider provider;
 
-  AuthService(this.provider);
+  const AuthService(this.provider);
 
+  // Using the factory constructor here is for take the options from initialized FirebaseAuthProvider.
+  // So instead of creating copy of the class, we take the already created one. This is how factory constructor works
+  factory AuthService.firebase() => AuthService(FirebaseAuthProvider());
+  // By the way, this class works as Polymorphism. So this mean,
+  // when you want to change or create new provider same as google, facebook, etc...
+  // then simply you can add it to the factory constructure and good to go
   @override
   Future<AuthUser> createUser(
           {required String email, required String password}) =>
       provider.createUser(email: email, password: password);
 
   @override
-  // TODO: implement currentUser
   AuthUser? get currentUser => provider.currentUser;
 
-// look at that later
   @override
   Future<void> initialize() => provider.initialize();
 
@@ -29,7 +34,6 @@ class AuthService implements AuthProvider {
   @override
   Future<void> sendEmailVerification() => provider.sendEmailVerification();
 
-// look at that later
   @override
   Future<void> sendPasswordReset({required String toEmail}) =>
       provider.sendPasswordReset(toEmail: toEmail);

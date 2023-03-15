@@ -4,13 +4,12 @@
 // TODO : make some beautiful ui animation
 // TODO : modern ui for app
 
-import 'package:cunehat/main_u%C4%B1s/main_ui.dart';
+import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/main_uis/main_ui.dart';
 import 'package:cunehat/views/email_verify.dart';
 import 'package:cunehat/views/login.dart';
 import 'package:cunehat/views/register.dart';
 import 'package:flutter/material.dart';
-
-import ' constants/routes.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +18,7 @@ void main() {
       title: "CuNehat",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.cyan),
-      home: CuNehat(),
+      home: const CuNehat(),
       routes: {
         loginRoute: (context) => LoginPage(),
         registerRoute: (context) => RegisterPage(),
@@ -31,7 +30,9 @@ void main() {
 }
 
 class CuNehat extends StatelessWidget {
-  bool isLogin = false;
+  final bool isLogin = false;
+
+  const CuNehat({super.key});
 
   @override
   Widget build(BuildContext context) {

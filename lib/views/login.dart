@@ -1,18 +1,14 @@
-import 'package:cunehat/firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/services/auth/auth_exceptions.dart';
+import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
-
-import '../ constants/routes.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({
     super.key,
-    this.emailFromRegister,
   });
 
-  String? emailFromRegister;
   final TextEditingController email = TextEditingController();
   final TextEditingController passwd = TextEditingController();
 
@@ -20,15 +16,12 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("email from register $emailFromRegister");
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
       ),
       body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
+        future: AuthService.firebase().initialize(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
@@ -88,16 +81,13 @@ class LoginPage extends StatelessWidget {
                           if (loginFormValidtr.currentState!.validate()) {
                             dev.log("login validated");
                             try {
-                              await FirebaseAuth.instance
-                                  .signInWithEmailAndPassword(
-                                email: email.text,
-                                password: passwd.text,
-                              );
-
-                              final user = FirebaseAuth.instance.currentUser;
+                              await AuthService.firebase().logIn(
+                                  email: email.text, password: passwd.text);
+                              dev.log("loged innnn");
+                              final user = AuthService.firebase().currentUser;
 
                               if (context.mounted) {
-                                if (user?.emailVerified ?? false) {
+                                if (user?.isEmailVerified ?? false) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("Logged in"),
@@ -120,23 +110,25 @@ class LoginPage extends StatelessWidget {
                                   );
                                 }
                               }
-                            } on FirebaseAuthException catch (e) {
-                              debugPrint(e.code);
-                              if (e.code == "unknown") {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(e.code),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              } else {
-                                // all exception catching will be shown using snackbar yellow color. But abowe is red.
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(
-                                  content: Text(e.code),
-                                  backgroundColor: Colors.yellow.shade700,
-                                ));
-                              }
+                            } on WrongPasswordAuthException {
+                              dev.log("noooo");
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Wrong Password"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            } on UserNotFoundAuthException {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("User not found"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            } on GenericAuthException catch (e) {
+                              dev.log(e.toString());
+                            } on Exception {
+                              dev.log("exception worked");
                             }
                           } else {
                             dev.log("log not validated");

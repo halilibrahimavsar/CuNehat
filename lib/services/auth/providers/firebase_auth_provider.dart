@@ -1,3 +1,5 @@
+// This file is for email and pasword sign in provider from firebase
+
 import 'package:cunehat/firebase_options.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_provider.dart';

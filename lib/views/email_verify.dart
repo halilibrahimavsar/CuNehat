@@ -1,6 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as dev show log;
 
 class EmailVerify extends StatefulWidget {
   const EmailVerify({super.key});
@@ -24,10 +23,7 @@ class _EmailVerifyState extends State<EmailVerify> {
             TextButton.icon(
               onPressed: () async {
                 // TODO : if user verified its email. then automatically log in to the home page
-                final createdUser = FirebaseAuth.instance.currentUser;
-                await createdUser?.sendEmailVerification();
-                dev.log("is email verified ? ;");
-                dev.log("${createdUser?.emailVerified}");
+                AuthService.firebase().sendEmailVerification();
               },
               icon: const Icon(Icons.verified),
               label: const Text("Send Email"),

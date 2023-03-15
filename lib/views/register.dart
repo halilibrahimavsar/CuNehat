@@ -1,12 +1,10 @@
-import 'package:cunehat/firebase_options.dart';
+import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/services/auth/auth_exceptions.dart';
+import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/views/email_verify.dart';
 import 'package:cunehat/views/login.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
-
-import '../ constants/routes.dart';
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
@@ -31,9 +29,7 @@ class RegisterPage extends StatelessWidget {
         ),
       ),
       body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
+        future: AuthService.firebase().initialize(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
@@ -119,15 +115,17 @@ class RegisterPage extends StatelessWidget {
                           onPressed: () async {
                             if (registrFormValidtr.currentState!.validate()) {
                               try {
-                                final createdUser = await FirebaseAuth.instance
-                                    .createUserWithEmailAndPassword(
+                                final createdUser =
+                                    await AuthService.firebase().createUser(
                                   email: email.text,
                                   password: passwd.text,
                                 );
-                                if (createdUser.user?.emailVerified ?? false) {
+                                if (createdUser.isEmailVerified) {
                                   dev.log("Email verified");
                                 } else {
                                   dev.log("Email not verified");
+                                  AuthService.firebase()
+                                      .sendEmailVerification();
                                   if (context.mounted) {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -137,39 +135,39 @@ class RegisterPage extends StatelessWidget {
                                     );
                                   }
                                 }
-                              } on FirebaseAuthException catch (error) {
-                                if (error.code == "unknown") {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(SnackBar(
-                                    content: Text(error.code),
-                                    backgroundColor: Colors.red,
-                                  ));
-                                } else if (error.code ==
-                                    "email-already-in-use") {
-                                  dev.log("already in use");
-                                  final createdUser =
-                                      FirebaseAuth.instance.currentUser;
-                                  await createdUser?.sendEmailVerification();
-                                  if (context.mounted) {
-                                    Navigator.pushNamedAndRemoveUntil(
-                                        context, loginRoute, (route) => true,
-                                        arguments: LoginPage(
-                                          emailFromRegister:
-                                              email.text.toString(),
-                                        ));
-                                  }
-                                } else {
-                                  // all exception catching will be shown using snackbar yellow color. But abowe is red.
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(error.code),
-                                      backgroundColor: Colors.yellow.shade700,
-                                    ),
+                              } on EmailAlreadyInUseAuthException {
+                                AuthService.firebase().sendEmailVerification();
+                                if (context.mounted) {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    loginRoute,
+                                    (route) => true,
                                   );
                                 }
+                              } on WeakPasswordAuthException {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Weak pasword"),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              } on InvalidEmailAuthException {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text("Invalid Email"),
+                                    backgroundColor: Colors.yellow.shade700,
+                                  ),
+                                );
+                              } on GenericAuthException {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text("Some other things"),
+                                    backgroundColor: Colors.yellow.shade700,
+                                  ),
+                                );
                               }
                             } else {
-                              dev.log("not signed in");
+                              dev.log("Form Validation Error");
                             }
                           },
                           icon: const Icon(

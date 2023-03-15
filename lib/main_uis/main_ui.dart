@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
 
-enum MainActions { logout, exit }
+import '../enums/main_actions.dart';
 
 class MainUI extends StatelessWidget {
   const MainUI({super.key});
@@ -19,7 +19,7 @@ class MainUI extends StatelessWidget {
                 case MainActions.logout:
                   bool isLogOut = await showLogOutDialog(context);
                   if (isLogOut) {
-                    FirebaseAuth.instance.signOut();
+                    AuthService.firebase().logOut();
                     if (context.mounted) {
                       Navigator.of(context)
                           .pushNamedAndRemoveUntil("/login/", (_) => false);
