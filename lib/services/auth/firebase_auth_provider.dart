@@ -28,13 +28,10 @@ class FirebaseAuthProvider implements AuthProvider {
         password: password,
       );
 
-      // if user created
       final user = currentUser;
       if (user != null) {
-        // return user
         return user;
       } else {
-        // otherwise throw error
         throw UserNotLoggedInAuthException();
       }
     } on FirebaseAuthException catch (e) {
