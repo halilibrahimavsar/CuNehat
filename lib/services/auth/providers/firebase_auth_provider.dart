@@ -1,4 +1,4 @@
-// This file is for email and pasword sign in provider from firebase
+// This class aims to provide backand functionality between UI and firebase.
 
 import 'package:cunehat/firebase_options.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
@@ -7,14 +7,15 @@ import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:firebase_auth/firebase_auth.dart'
-    show FirebaseAuth, FirebaseAuthException;
+    show FirebaseAuth, FirebaseAuthException, Persistence;
 
 class FirebaseAuthProvider implements AuthProvider {
   @override
   Future<void> initialize() async {
+    /// Initialize default option from exported flutter configuration file
+    /// this method shuld be called in main.dart file
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+        options: DefaultFirebaseOptions.currentPlatform);
   }
 
   // Create user function
@@ -126,5 +127,11 @@ class FirebaseAuthProvider implements AuthProvider {
     } catch (_) {
       throw GenericAuthException();
     }
+  }
+
+  @override
+  Future<void> keepSignIn() async {
+    FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    throw UnimplementedError();
   }
 }

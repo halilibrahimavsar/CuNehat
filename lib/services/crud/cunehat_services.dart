@@ -63,6 +63,15 @@ class CunehatServices {
       throw UnableToGetDirectoryException;
     }
   }
+
+  Future<void> close() async {
+    // if (_db != null) {
+    //   throw DatabaseAlreadyOpenException();
+    // }
+    // try {
+    //   await_db.close();
+    // }
+  }
 }
 
 class DatabaseUser {
@@ -135,10 +144,6 @@ class DatabaseCunehat {
 
   @override
   operator ==(covariant DatabaseCunehat other) {
-    // Lets explain abowe code ; We are overriding the "==" operator,
-    // with help of `covariant` keyword. With `covariant`, we are simply
-    // saying we want to take `DatabaseUser` object and compare our `id`
-    // with `other.id`.
     return id == other.id;
   }
 
