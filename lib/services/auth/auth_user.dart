@@ -12,8 +12,6 @@ class AuthUser {
     required this.isEmailVerified,
   });
 
-  // Factory constructor is the class method, which is not creating multiple instance of the class.
-  // So same as @classmethod in python. But slightly different.
   factory AuthUser.fromFirebase(User user) => AuthUser(
         id: user.uid,
         email: user.email!,
