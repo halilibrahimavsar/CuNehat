@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
 class AddDataPage extends StatefulWidget {
   const AddDataPage({super.key});
@@ -12,21 +15,7 @@ class _AddDataPageState extends State<AddDataPage> {
   final _explainationController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _priceController = TextEditingController();
-  String _selectedDate =
-      "${DateTime.now().year}/${DateTime.now().month}/${DateTime.now().day}";
-
-  void _showDatePicker() {
-    showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(1997),
-            lastDate: DateTime(2100))
-        .then((value) {
-      setState(() {
-        _selectedDate = "${value!.year}/${value.month}/${value.day}";
-      });
-    });
-  }
+  String btnDateTime = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +33,31 @@ class _AddDataPageState extends State<AddDataPage> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 const SizedBox(height: 50),
-                ElevatedButton(
-                  onPressed: () => _showDatePicker(),
-                  child: Text(_selectedDate),
+                MaterialButton(
+                  elevation: 20,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  onPressed: () {
+                    DatePicker.showDatePicker(
+                      context,
+                      onConfirm: (time) {
+                        setState(() {
+                          btnDateTime =
+                              DateFormat('dd/MM/yyyy', 'tr').format(time);
+                        });
+                      },
+                      minTime: DateTime(1997, 5, 19),
+                      maxTime: DateTime(2050, 0, 0),
+                      currentTime: DateTime.now(),
+                      locale: LocaleType.tr,
+                    );
+                  },
+                  child: Text(
+                    btnDateTime,
+                    style: const TextStyle(fontSize: 25),
+                  ),
                 ),
                 const SizedBox(height: 50),
                 TextFormField(
@@ -98,8 +109,8 @@ class _AddDataPageState extends State<AddDataPage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
-        label: Text("KAYDET"),
-        extendedPadding: EdgeInsets.symmetric(horizontal: 100),
+        label: const Text("KAYDET"),
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
         onPressed: () {
           if (_formKey.currentState!.validate()) {
             showDialog(

@@ -9,8 +9,12 @@ import 'package:cunehat/views/login_page.dart';
 import 'package:cunehat/views/register_page.dart';
 import 'package:flutter/material.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  initializeDateFormatting('tr_TR', null);
 
   runApp(
     MaterialApp(
@@ -33,6 +37,6 @@ class CuNehat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MainUI();
+    return const MainUI();
   }
 }
