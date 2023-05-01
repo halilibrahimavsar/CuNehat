@@ -1,18 +1,21 @@
-// TODO : automatically log in when app opening
-// TODO : pass data through register to login if the user exists
-// TODO : enforce users for select their pasword with at least  one digit and one uppercase...
-// TODO : make some beautiful ui animation
-// TODO : modern ui for app
+// TODO : check network connection on startup
 
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/main_uis/main_ui.dart';
 import 'package:cunehat/views/email_verify.dart';
-import 'package:cunehat/views/login.dart';
-import 'package:cunehat/views/register.dart';
+import 'package:cunehat/views/login_page.dart';
+import 'package:cunehat/views/register_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+import 'package:intl/date_symbol_data_local.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  initializeDateFormatting('tr_TR', null);
+
   runApp(
     MaterialApp(
       title: "CuNehat",
@@ -20,7 +23,7 @@ void main() {
       theme: ThemeData(primarySwatch: Colors.cyan),
       home: const CuNehat(),
       routes: {
-        loginRoute: (context) => LoginPage(),
+        loginPageRoute: (context) => LoginPage(),
         registerRoute: (context) => RegisterPage(),
         emailVerifyRoute: (context) => const EmailVerify(),
         mainUiRoute: (context) => const MainUI(),
@@ -30,8 +33,6 @@ void main() {
 }
 
 class CuNehat extends StatelessWidget {
-  final bool isLogin = false;
-
   const CuNehat({super.key});
 
   @override

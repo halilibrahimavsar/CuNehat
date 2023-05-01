@@ -42,6 +42,12 @@ dependencies:
   path: ^1.8.2
   path_provider: ^2.0.13
   sqflite: ^2.2.6
+  sign_button: ^2.0.3
+  flutter_countdown_timer: ^4.1.0
+  intl: ^0.17.0
+  flutter_datetime_picker: ^1.5.1
+  google_sign_in: ^6.1.0
+
 
 dev_dependencies:
   flutter_test:
@@ -66,8 +72,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+     - assets/images/logo.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
