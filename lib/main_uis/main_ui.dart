@@ -8,6 +8,8 @@ import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
 
+import 'package:flutter/services.dart';
+
 int setCurrentPage = 0;
 
 List<Widget> navigationDestinations = [
@@ -52,7 +54,7 @@ class _MainUIState extends State<MainUI> {
                   }
                   break;
                 case MainActions.exit:
-                  // TODO: Handle this case.
+                  SystemNavigator.pop();
                   break;
               }
               dev.log(value.toString());

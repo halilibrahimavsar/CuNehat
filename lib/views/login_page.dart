@@ -4,12 +4,12 @@ import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/main_uis/main_ui.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
-import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
 
 class LoginPage extends StatelessWidget {
+  final user = AuthService.firebase().currentUser;
   LoginPage({super.key});
 
   final TextEditingController email = TextEditingController();
@@ -29,18 +29,13 @@ class LoginPage extends StatelessWidget {
     // Access individual values from the passed data
     return Scaffold(
       backgroundColor: Colors.deepPurple.shade100,
-      appBar: AppBar(
-        title: const Text("Login"),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.black,
-      ),
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else {
-            if (snapshot.hasData) {
+            if (snapshot.data?.providerData[0].providerId == "google.com") {
               // User is logged in, redirect to private page
               return const MainUI();
             } else {
@@ -56,6 +51,10 @@ class LoginPage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        const SafeArea(
+                            child: Padding(
+                          padding: EdgeInsets.all(0),
+                        )),
                         TextFormField(
                           controller: email,
                           decoration: const InputDecoration(
@@ -187,7 +186,6 @@ class LoginPage extends StatelessWidget {
     if (loginFormValidator.currentState!.validate()) {
       try {
         await AuthService.firebase().logIn(email: email, password: passwd);
-        final user = AuthService.firebase().currentUser;
 
         if (context.mounted) {
           if (user?.isEmailVerified ?? false) {

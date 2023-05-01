@@ -142,7 +142,7 @@ class RegisterPage extends StatelessWidget {
                         },
                       ),
                       const SizedBox(
-                        height: 25,
+                        height: 100,
                       ),
                       ElevatedButton(
                         onPressed: () async {
