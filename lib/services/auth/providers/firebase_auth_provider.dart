@@ -4,10 +4,8 @@ import 'package:cunehat/firebase_options.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-
-import 'package:firebase_auth/firebase_auth.dart'
-    show FirebaseAuth, FirebaseAuthException, Persistence;
 
 class FirebaseAuthProvider implements AuthProvider {
   @override
@@ -132,6 +130,10 @@ class FirebaseAuthProvider implements AuthProvider {
   @override
   Future<void> keepSignIn() async {
     FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  }
+
+  @override
+  Future<UserCredential> googleSignIn() {
     throw UnimplementedError();
   }
 }

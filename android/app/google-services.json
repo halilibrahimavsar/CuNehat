@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "330272412409-71kghnd97t5u211qd1tho0a5aa3f7alg.apps.googleusercontent.com",
+          "client_id": "330272412409-qo4kohkq2k9hs2sf14penjkodk59tlkl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cunehat.cunehat",
+            "certificate_hash": "f5838ab973993ff1b25ef1195c78434caeec9166"
+          }
+        },
+        {
+          "client_id": "330272412409-ou46294l0bc5tac9g8eqmiuqcitv8pbn.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

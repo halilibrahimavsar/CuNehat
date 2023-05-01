@@ -1,6 +1,8 @@
 import 'package:cunehat/services/auth/auth_user.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class AuthProvider {
+  Future<UserCredential> googleSignIn();
   Future<void> initialize();
   AuthUser? get currentUser;
 

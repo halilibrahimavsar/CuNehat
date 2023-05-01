@@ -1,8 +1,11 @@
 import 'dart:developer';
 
 import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/main_uis/main_ui.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
 
@@ -25,16 +28,23 @@ class LoginPage extends StatelessWidget {
 
     // Access individual values from the passed data
     return Scaffold(
+      backgroundColor: Colors.deepPurple.shade100,
       appBar: AppBar(
         title: const Text("Login"),
         foregroundColor: Colors.white,
         backgroundColor: Colors.black,
       ),
-      body: FutureBuilder(
-        future: AuthService.firebase().initialize(),
+      body: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else {
+            if (snapshot.hasData) {
+              // User is logged in, redirect to private page
+              return const MainUI();
+            } else {
+              // User is not logged in, show login page
               return SingleChildScrollView(
                 child: Container(
                   padding:
@@ -49,6 +59,8 @@ class LoginPage extends StatelessWidget {
                         TextFormField(
                           controller: email,
                           decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
                             prefixIcon: Icon(Icons.email),
                             border: OutlineInputBorder(),
                             hintText: "Please enter your email",
@@ -69,6 +81,8 @@ class LoginPage extends StatelessWidget {
                         TextFormField(
                           controller: passwd,
                           decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
                             prefixIcon: Icon(Icons.lock),
                             border: OutlineInputBorder(),
                             hintText: "Please enter your password",
@@ -115,21 +129,42 @@ class LoginPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(
-                          height: 25,
+                          height: 100,
                         ),
-                        TextButton(
+                        const Text("Don't have an account?"),
+                        ElevatedButton(
                           onPressed: () {
                             Navigator.of(context).pushNamed(registerRoute);
                           },
+                          style: ButtonStyle(
+                            foregroundColor:
+                                MaterialStateProperty.all<Color>(Colors.white),
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                Colors
+                                    .blueAccent), // Set button background color
+                            padding: MaterialStateProperty.all<EdgeInsets>(
+                                const EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 30)),
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30.0))),
+                          ),
                           child: const Text(
-                              "Don't have an account? Register here!"),
+                            "REGISTER",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20),
+                          ),
                         ),
+                        const Text("Or"),
                         SignInButton(
                           elevation: 25,
                           btnText: "Login with google",
                           buttonType: ButtonType.googleDark,
-                          onPressed: () {
-                            // TODO : login with google
+                          onPressed: () async {
+                            // TODO : login with google(use streem to check if there is data{explained by chatgpt})
+                            UserCredential userCredential =
+                                await AuthService.google().googleSignIn();
                           },
                         )
                       ],
@@ -137,14 +172,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
               );
-            case ConnectionState.waiting:
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            default:
-              return const Center(
-                child: Text("Failed to connect to server"),
-              );
+            }
           }
         },
       ),
@@ -166,6 +194,8 @@ class LoginPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Logged in"),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
               ),
             );
             Navigator.pushNamedAndRemoveUntil(

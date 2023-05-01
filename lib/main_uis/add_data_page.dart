@@ -34,6 +34,7 @@ class _AddDataPageState extends State<AddDataPage> {
               children: [
                 const SizedBox(height: 50),
                 MaterialButton(
+                  color: Colors.cyan,
                   elevation: 20,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
