@@ -47,7 +47,6 @@ class _MainUIState extends State<MainUI> {
                 case MainActions.logout:
                   bool isLogOut = await showLogOutDialog(context);
                   if (isLogOut) {
-                    dev.log("log out works");
                     if (context.mounted) {
                       AuthService.google().logOut();
                       Navigator.popAndPushNamed(context, loginPageRoute);
