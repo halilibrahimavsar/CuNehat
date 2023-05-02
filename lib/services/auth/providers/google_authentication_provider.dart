@@ -6,16 +6,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthenticationProvider implements AuthProvider {
-  late final GoogleSignIn googleSign;
-  late final GoogleSignInAccount? googleUser;
-  late final GoogleSignInAuthentication? googleAuth;
+  static final GoogleSignIn googleSign = GoogleSignIn();
 
   @override
   googleSignIn() async {
     await initialize();
-    googleSign = GoogleSignIn();
-    googleUser = await googleSign.signIn();
-    googleAuth = await googleUser?.authentication;
+    final GoogleSignInAccount? googleUser = await googleSign.signIn();
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
     final gUserCredential = GoogleAuthProvider.credential(
       accessToken: googleAuth?.accessToken,
       idToken: googleAuth?.idToken,
@@ -52,7 +50,7 @@ class GoogleAuthenticationProvider implements AuthProvider {
   @override
   Future<void> logOut() async {
     googleSign.signOut();
-    await googleUser?.clearAuthCache();
+    print("the user is isSignedIn ::::: ${await googleSign.isSignedIn()}");
   }
 
   @override
@@ -63,5 +61,10 @@ class GoogleAuthenticationProvider implements AuthProvider {
   @override
   Future<void> sendPasswordReset({required String toEmail}) {
     throw UnimplementedError();
+  }
+
+  Future<bool> googleSignInUser() async {
+    bool a = await googleSign.isSignedIn();
+    return a;
   }
 }

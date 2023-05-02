@@ -57,8 +57,10 @@ class _EmailVerifyState extends State<EmailVerify> {
     );
   }
 
-  CountdownTimer countdownEmailVerify(
-      {int second = 30, required Widget Function() function}) {
+  CountdownTimer countdownEmailVerify({
+    int second = 30,
+    required Widget Function() function,
+  }) {
     return CountdownTimer(
       textStyle: const TextStyle(
         fontSize: 22,

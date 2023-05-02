@@ -47,9 +47,9 @@ class _MainUIState extends State<MainUI> {
                 case MainActions.logout:
                   bool isLogOut = await showLogOutDialog(context);
                   if (isLogOut) {
-                    AuthService.firebase().logOut();
                     if (context.mounted) {
-                      Navigator.pushNamed(context, loginPageRoute);
+                      AuthService.google().logOut();
+                      Navigator.popAndPushNamed(context, loginPageRoute);
                     }
                   }
                   break;
@@ -112,13 +112,13 @@ Future<bool> showLogOutDialog(BuildContext context) {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(false);
+              Navigator.pop(context, false);
             },
             child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(true);
+              Navigator.pop(context, true);
             },
             child: const Text("Log out"),
           ),
