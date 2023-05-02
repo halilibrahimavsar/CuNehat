@@ -9,12 +9,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final user = AuthService.firebase().currentUser;
-  LoginPage({super.key});
 
   final TextEditingController email = TextEditingController();
+
   final TextEditingController passwd = TextEditingController();
+
   final rememberToLog = false;
 
   final GlobalKey<FormState> loginFormValidator = GlobalKey<FormState>();
@@ -39,9 +47,11 @@ class LoginPage extends StatelessWidget {
           builder: (context, snapshot) {
             switch (snapshot.data) {
               case true:
+                log(" the Actual data ::: ${snapshot.data}");
                 return const MainUI();
 
               default:
+                log(" the Actual data ::: ${snapshot.data}");
                 return Scaffold(
                   backgroundColor: Colors.deepPurple.shade100,
                   body: SingleChildScrollView(

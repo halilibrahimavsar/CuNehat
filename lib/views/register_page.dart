@@ -203,7 +203,7 @@ class RegisterPage extends StatelessWidget {
         if (createdUser.isEmailVerified) {
           log("Email verified");
           if (context.mounted) {
-            LoginPage().loginToApp(context, email, passwd);
+            Navigator.pushNamed(context, loginPageRoute);
           }
         } else {
           log("Email not verified");
