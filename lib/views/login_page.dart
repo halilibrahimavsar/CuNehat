@@ -4,6 +4,7 @@ import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/main_uis/main_ui.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
@@ -27,154 +28,162 @@ class LoginPage extends StatelessWidget {
     }
 
     // Access individual values from the passed data
-    return Scaffold(
-      backgroundColor: Colors.deepPurple.shade100,
-      body: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            if (snapshot.data?.providerData[0].providerId == "google.com") {
-              // User is logged in, redirect to private page
-              return const MainUI();
-            } else {
-              // User is not logged in, show login page
-              return SingleChildScrollView(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 25, vertical: 100),
-                  alignment: Alignment.bottomCenter,
-                  child: Form(
-                    key: loginFormValidator,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SafeArea(
-                            child: Padding(
-                          padding: EdgeInsets.all(0),
-                        )),
-                        TextFormField(
-                          controller: email,
-                          decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            filled: true,
-                            prefixIcon: Icon(Icons.email),
-                            border: OutlineInputBorder(),
-                            hintText: "Please enter your email",
-                            labelText: "Email",
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value != null && value.isEmpty) {
-                              return "This field can't be empty";
-                            } else {
-                              return null;
-                            }
-                          },
-                        ),
-                        const SizedBox(
-                          height: 25,
-                        ),
-                        TextFormField(
-                          controller: passwd,
-                          decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            filled: true,
-                            prefixIcon: Icon(Icons.lock),
-                            border: OutlineInputBorder(),
-                            hintText: "Please enter your password",
-                            labelText: "Password",
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value != null && value.isEmpty) {
-                              return "This field can't be empty";
-                            } else {
-                              return null;
-                            }
-                          },
-                        ),
-                        const SizedBox(
-                          height: 25,
-                        ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await loginToApp(context, email.text, passwd.text);
-                          },
-                          style: ButtonStyle(
-                            foregroundColor:
-                                MaterialStateProperty.all<Color>(Colors.white),
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                Colors.black), // Set button background color
-                            padding: MaterialStateProperty.all<EdgeInsets>(
-                                const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 30)),
-                            shape: MaterialStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30.0))),
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return FutureBuilder(
+          future: GoogleAuthenticationProvider().googleSignInUser(),
+          builder: (context, snapshot) {
+            switch (snapshot.data) {
+              case true:
+                return const MainUI();
+
+              default:
+                return Scaffold(
+                  backgroundColor: Colors.deepPurple.shade100,
+                  body: SingleChildScrollView(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 25, vertical: 100),
+                      alignment: Alignment.bottomCenter,
+                      child: Form(
+                        key: loginFormValidator,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SafeArea(
+                                child: Padding(
+                              padding: EdgeInsets.all(0),
+                            )),
+                            TextFormField(
+                              controller: email,
+                              decoration: const InputDecoration(
+                                fillColor: Colors.white,
+                                filled: true,
+                                prefixIcon: Icon(Icons.email),
+                                border: OutlineInputBorder(),
+                                hintText: "Please enter your email",
+                                labelText: "Email",
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (value) {
+                                if (value != null && value.isEmpty) {
+                                  return "This field can't be empty";
+                                } else {
+                                  return null;
+                                }
+                              },
                             ),
-                            child: Text(
-                              "LOGIN",
-                              style: TextStyle(fontSize: 24),
+                            const SizedBox(
+                              height: 25,
                             ),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 100,
-                        ),
-                        const Text("Don't have an account?"),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pushNamed(registerRoute);
-                          },
-                          style: ButtonStyle(
-                            foregroundColor:
-                                MaterialStateProperty.all<Color>(Colors.white),
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                Colors
-                                    .blueAccent), // Set button background color
-                            padding: MaterialStateProperty.all<EdgeInsets>(
-                                const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 30)),
-                            shape: MaterialStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30.0))),
-                          ),
-                          child: const Text(
-                            "REGISTER",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20),
-                          ),
-                        ),
-                        const Text("Or"),
-                        SignInButton(
-                          elevation: 25,
-                          btnText: "Login with google",
-                          buttonType: ButtonType.googleDark,
-                          onPressed: () async {
-                            // TODO : login with google(use streem to check if there is data{explained by chatgpt})
-                            UserCredential userCredential =
+                            TextFormField(
+                              controller: passwd,
+                              decoration: const InputDecoration(
+                                fillColor: Colors.white,
+                                filled: true,
+                                prefixIcon: Icon(Icons.lock),
+                                border: OutlineInputBorder(),
+                                hintText: "Please enter your password",
+                                labelText: "Password",
+                              ),
+                              obscureText: true,
+                              validator: (value) {
+                                if (value != null && value.isEmpty) {
+                                  return "This field can't be empty";
+                                } else {
+                                  return null;
+                                }
+                              },
+                            ),
+                            const SizedBox(
+                              height: 25,
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                await loginToApp(
+                                    context, email.text, passwd.text);
+                              },
+                              style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        Colors.white),
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(Colors
+                                        .black), // Set button background color
+                                padding: MaterialStateProperty.all<EdgeInsets>(
+                                    const EdgeInsets.symmetric(
+                                        vertical: 5, horizontal: 30)),
+                                shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(30.0))),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  "LOGIN",
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 100,
+                            ),
+                            const Text("Don't have an account?"),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pushNamed(registerRoute);
+                              },
+                              style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        Colors.white),
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(Colors
+                                        .blueAccent), // Set button background color
+                                padding: MaterialStateProperty.all<EdgeInsets>(
+                                    const EdgeInsets.symmetric(
+                                        vertical: 5, horizontal: 30)),
+                                shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(30.0))),
+                              ),
+                              child: const Text(
+                                "REGISTER",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 20),
+                              ),
+                            ),
+                            const Text("Or"),
+                            SignInButton(
+                              elevation: 25,
+                              btnText: "Login with google",
+                              buttonType: ButtonType.googleDark,
+                              onPressed: () async {
                                 await AuthService.google().googleSignIn();
-                          },
-                        )
-                      ],
+                              },
+                            )
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              );
+                );
             }
-          }
-        },
-      ),
+          },
+        );
+      },
     );
   }
 
