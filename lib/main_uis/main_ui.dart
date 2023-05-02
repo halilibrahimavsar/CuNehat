@@ -47,7 +47,7 @@ class _MainUIState extends State<MainUI> {
                 case MainActions.logout:
                   bool isLogOut = await showLogOutDialog(context);
                   if (isLogOut) {
-                    AuthService.firebase().logOut();
+                    AuthService.google().logOut();
                     if (context.mounted) {
                       Navigator.pushNamed(context, loginPageRoute);
                     }
