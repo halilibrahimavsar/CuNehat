@@ -47,7 +47,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 switch (snapshot.data) {
                   case true:
                     log(" the Actual data ::: ${snapshot.data}");
-                    return const MainScreen();
+                    return FutureBuilder(
+                      future:
+                          Future.delayed(const Duration(milliseconds: 1200)),
+                      builder: (context, snapshot) {
+                        switch (snapshot.connectionState) {
+                          case ConnectionState.waiting:
+                            return const Center(
+                                child: CircularProgressIndicator(
+                              backgroundColor: Colors.green,
+                              color: Colors.purple,
+                            ));
+                          case ConnectionState.done:
+                            return const MainScreen();
+                          default:
+                            return const Center(
+                                child: Text(
+                                    "Something goes wrong. Close aplication and re-open it"));
+                        }
+                      },
+                    );
                   default:
                     log(" the Actual data ::: ${snapshot.data}");
                     return Scaffold(

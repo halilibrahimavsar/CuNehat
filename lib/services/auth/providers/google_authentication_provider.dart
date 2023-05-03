@@ -64,7 +64,6 @@ class GoogleAuthenticationProvider implements AuthProvider {
   }
 
   Future<bool> googleSignInUser() async {
-    bool a = await googleSign.isSignedIn();
-    return a;
+    return await googleSign.isSignedIn();
   }
 }
