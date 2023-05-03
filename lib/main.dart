@@ -21,22 +21,13 @@ void main() async {
       title: "CuNehat",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.cyan),
-      home: const CuNehat(),
+      home: const LoginPage(),
       routes: {
-        loginPageRoute: (context) => LoginPage(),
+        loginPageRoute: (context) => const LoginPage(),
         registerRoute: (context) => RegisterPage(),
         emailVerifyRoute: (context) => const EmailVerify(),
         mainUiRoute: (context) => const MainUI(),
       },
     ),
   );
-}
-
-class CuNehat extends StatelessWidget {
-  const CuNehat({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return LoginPage();
-  }
 }
