@@ -1,12 +1,11 @@
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
-import 'package:cunehat/views/login_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' show log;
 
-class RegisterPage extends StatelessWidget {
-  RegisterPage({super.key});
+class RegisterScreen extends StatelessWidget {
+  RegisterScreen({super.key});
 
   final TextEditingController email = TextEditingController();
   final TextEditingController passwd = TextEditingController();
