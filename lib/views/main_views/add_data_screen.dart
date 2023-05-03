@@ -4,14 +4,14 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
-class AddDataPage extends StatefulWidget {
-  const AddDataPage({super.key});
+class AddDataScreen extends StatefulWidget {
+  const AddDataScreen({super.key});
 
   @override
-  State<AddDataPage> createState() => _AddDataPageState();
+  State<AddDataScreen> createState() => _AddDataScreenState();
 }
 
-class _AddDataPageState extends State<AddDataPage> {
+class _AddDataScreenState extends State<AddDataScreen> {
   final _explainationController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _priceController = TextEditingController();

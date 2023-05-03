@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:cunehat/constants/routes.dart';
-import 'package:cunehat/main_uis/main_ui.dart';
+import 'package:cunehat/views/main_views/main_screen.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
@@ -9,14 +9,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginScreenState extends State<LoginScreen> {
   final user = AuthService.firebase().currentUser;
 
   final TextEditingController email = TextEditingController();
@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
                 switch (snapshot.data) {
                   case true:
                     log(" the Actual data ::: ${snapshot.data}");
-                    return const MainUI();
+                    return const MainScreen();
                   default:
                     log(" the Actual data ::: ${snapshot.data}");
                     return Scaffold(

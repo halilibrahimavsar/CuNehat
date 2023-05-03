@@ -1,9 +1,8 @@
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/enums/main_actions.dart';
-import 'package:cunehat/main_uis/add_data_page.dart';
-import 'package:cunehat/main_uis/details_page.dart';
-import 'package:cunehat/main_uis/home_page.dart';
-import 'package:cunehat/main_uis/user_page.dart';
+import 'package:cunehat/views/main_views/add_data_screen.dart';
+import 'package:cunehat/views/main_views/details_screen.dart';
+import 'package:cunehat/views/main_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
@@ -16,24 +15,21 @@ List<Widget> navigationDestinations = [
   const NavigationDestination(
       icon: Icon(Icons.bar_chart_sharp), label: "Ayrıntılar"),
   const NavigationDestination(icon: Icon(Icons.house), label: "Ana Sayfa"),
-  const NavigationDestination(
-      icon: Icon(Icons.person_add), label: "Kullanıcılar"),
 ];
 
 List<Widget> navigationHeads = [
   const Text("AYRINTILAR"),
   const Text("ANA SAYFA"),
-  const Text("KULLANICILAR"),
 ];
 
-class MainUI extends StatefulWidget {
-  const MainUI({super.key});
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
 
   @override
-  State<MainUI> createState() => _MainUIState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainUIState extends State<MainUI> {
+class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,12 +81,12 @@ class _MainUIState extends State<MainUI> {
         },
         selectedIndex: setCurrentPage,
       ),
-      body: const [DetailsPage(), HomePage(), UserPage()][setCurrentPage],
+      body: const [DetailsScreen(), HomeScreen()][setCurrentPage],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const AddDataPage(),
+              builder: (context) => const AddDataScreen(),
             ),
           );
         },

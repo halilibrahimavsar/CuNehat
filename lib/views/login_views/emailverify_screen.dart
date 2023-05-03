@@ -7,14 +7,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_countdown_timer/index.dart';
 
-class EmailVerify extends StatefulWidget {
-  const EmailVerify({Key? key}) : super(key: key);
+class EmailVerifyScreen extends StatefulWidget {
+  const EmailVerifyScreen({Key? key}) : super(key: key);
 
   @override
-  State<EmailVerify> createState() => _EmailVerifyState();
+  State<EmailVerifyScreen> createState() => _EmailVerifyScreenState();
 }
 
-class _EmailVerifyState extends State<EmailVerify> {
+class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
   int reSendCount = 1;
   int second = 5;
 
