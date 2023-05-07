@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     );
                   default:
-                    log(" the Actual data ::: ${snapshot.data}");
+                    log(" the Actual data in not login::: ${snapshot.data}");
                     return Scaffold(
                       backgroundColor: Colors.deepPurple.shade100,
                       body: SingleChildScrollView(
@@ -203,9 +203,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   btnText: "Login with google",
                                   buttonType: ButtonType.googleDark,
                                   onPressed: () async {
-                                    await AuthService.google().googleSignIn();
-
                                     setState(() {});
+                                    await AuthService.google().googleSignIn();
                                   },
                                 )
                               ],
