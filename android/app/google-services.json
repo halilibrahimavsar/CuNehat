@@ -7,12 +7,49 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:330272412409:android:c6da8e7304a9a94fc8c828",
+        "mobilesdk_app_id": "1:330272412409:android:872edcf7b29c1c3fc8c828",
         "android_client_info": {
           "package_name": "com.cunehat.cunehat"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "330272412409-ou46294l0bc5tac9g8eqmiuqcitv8pbn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVfQogMHdZEGkwXJ32yf3x-fEsg7Ss394"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "330272412409-71kghnd97t5u211qd1tho0a5aa3f7alg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330272412409:android:c6da8e7304a9a94fc8c828",
+        "android_client_info": {
+          "package_name": "com.example.cunehat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "330272412409-2mhij3mh9p12rmtdujbpjg6vuilfl59r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cunehat",
+            "certificate_hash": "a4513247aae240a227e4693e33b405b457aa5c93"
+          }
+        },
         {
           "client_id": "330272412409-ou46294l0bc5tac9g8eqmiuqcitv8pbn.apps.googleusercontent.com",
           "client_type": 3

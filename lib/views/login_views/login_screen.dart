@@ -1,3 +1,5 @@
+// TODO : We should add new fingerprint to firebase.
+
 import 'dart:developer';
 
 import 'package:cunehat/constants/routes.dart';
@@ -203,8 +205,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   btnText: "Login with google",
                                   buttonType: ButtonType.googleDark,
                                   onPressed: () async {
-                                    setState(() {});
                                     await AuthService.google().googleSignIn();
+                                    setState(() {});
                                   },
                                 )
                               ],
