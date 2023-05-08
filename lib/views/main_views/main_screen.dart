@@ -4,23 +4,20 @@ import 'package:cunehat/views/main_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:cunehat/views/main_views/visualize_data_screen.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
 
 import 'package:flutter/services.dart';
 
-int setCurrentPage = 0;
+int setCurrentPage = 1;
 
 List<Widget> navigationDestinations = [
-  const NavigationDestination(
-      icon: Icon(Icons.bar_chart_sharp), label: "Ayrıntılar"),
-  const NavigationDestination(icon: Icon(Icons.house), label: "Ana Sayfa"),
-];
-
-List<Widget> navigationHeads = [
-  const Text("AYRINTILAR"),
-  const Text("ANA SAYFA"),
+  const Icon(Icons.bar_chart_sharp),
+  const Icon(Icons.house),
+  const Icon(Icons.data_thresholding_outlined),
 ];
 
 class MainScreen extends StatefulWidget {
@@ -91,18 +88,22 @@ class _MainScreenState extends State<MainScreen> {
           )
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        destinations: navigationDestinations,
-        onDestinationSelected: (int index) {
-          setState(
-            () {
-              setCurrentPage = index;
-            },
-          );
+      bottomNavigationBar: CurvedNavigationBar(
+        items: navigationDestinations,
+        onTap: (value) {
+          setState(() {
+            setCurrentPage = value;
+          });
         },
-        selectedIndex: setCurrentPage,
+        index: setCurrentPage,
+        backgroundColor: Colors.white,
+        color: Colors.cyan,
       ),
-      body: const [DetailsScreen(), HomeScreen()][setCurrentPage],
+      body: const [
+        DetailsScreen(),
+        HomeScreen(),
+        VisualizeDataScreen(),
+      ][setCurrentPage],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
@@ -145,4 +146,3 @@ Future<bool> showLogOutDialog(BuildContext context) {
   ).then((value) => value ?? false);
 }
 // here (then) is used, because if user do not give any answer to our dialog, then the returning value will be null (which will cause error)
-
