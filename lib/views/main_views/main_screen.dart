@@ -4,6 +4,7 @@ import 'package:cunehat/views/main_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
 
@@ -32,12 +33,32 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final String userPhoto =
+        user?.providerData[0].photoURL ?? "/assets/images/logo.jpg";
     return Scaffold(
       appBar: AppBar(
-        title: navigationHeads[setCurrentPage],
-        centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(25),
+            bottomRight: Radius.circular(25),
+          ),
+        ),
+        title: Text(user?.displayName ?? "Anonymous"),
         actions: [
           PopupMenuButton(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(25)),
+              child: Image.network(
+                userPhoto,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.account_circle_rounded,
+                    size: 50,
+                  );
+                },
+              ),
+            ),
             onSelected: (value) async {
               switch (value) {
                 case MainActions.logout:

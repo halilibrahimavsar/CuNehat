@@ -1,4 +1,5 @@
 // TODO : check network connection on startup
+// TODO : if user signed in via google, then cant be log in using email-password.
 
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/views/main_views/main_screen.dart';
