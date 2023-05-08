@@ -29,7 +29,13 @@ class GoogleAuthenticationProvider implements AuthProvider {
   }
 
   @override
-  AuthUser? get currentUser => throw UnimplementedError();
+  AuthUser? get currentUser => throw UnimplementedError;
+
+  gUser() {
+    print("___cur user_______");
+    print(FirebaseAuth.instance.currentUser);
+    return FirebaseAuth.instance.currentUser;
+  }
 
   @override
   Future<void> initialize() async {
