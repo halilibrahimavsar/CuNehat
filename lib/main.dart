@@ -1,4 +1,3 @@
-// TODO : check network connection on startup
 // TODO : if user signed in via google, then cant be log in using email-password.
 
 import 'dart:async';
@@ -102,7 +101,7 @@ class _CheckConnectionState extends State<CheckConnection> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       result = await _connectivity.checkConnectivity();
-    } on PlatformException catch (e) {
+    } on PlatformException {
       return;
     }
 

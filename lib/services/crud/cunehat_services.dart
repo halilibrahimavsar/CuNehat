@@ -10,11 +10,11 @@ const dbName = "cunehat.db";
 const userTable = "users";
 const dataTable = "data";
 
-// For the field of the DatabaseUser
+// For the field of the user table
 const idColmn = "id";
 const emailColmn = "email";
 
-// For the field of the DatabaseCunehat
+// For the field of the data table
 const userIdColmn = "user_id";
 const priceColmn = "price";
 const noteColmn = "note";
@@ -23,7 +23,7 @@ const dateColmn = "date";
 const timeColmn = "time";
 const isSyncedWithCloudColmn = "is_synced_with_cloud";
 
-// create tables
+// create tables in sql syntax
 const createDataTable = '''CREATE TABLE IF NOT EXISTS "data" (
                           "id"	INTEGER NOT NULL UNIQUE,
                           "price"	REAL,
@@ -69,7 +69,7 @@ class CunehatServices {
     //   throw DatabaseAlreadyOpenException();
     // }
     // try {
-    //   await_db.close();
+    //   await _db.close();
     // }
   }
 }

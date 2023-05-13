@@ -130,7 +130,6 @@ class _AddDataScreenState extends State<AddDataScreen> {
                   MaterialButton(
                       onPressed: () {
                         Navigator.of(context).pop();
-                        //TODO: Add database and ask for "do you want to save the date blablablaa",
                       },
                       color: Colors.green,
                       child: const Text("KAYDET"))

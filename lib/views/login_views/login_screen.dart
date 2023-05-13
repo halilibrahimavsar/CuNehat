@@ -1,5 +1,3 @@
-// TODO : We should add new fingerprint to firebase.
-
 import 'dart:developer';
 
 import 'package:cunehat/constants/routes.dart';
