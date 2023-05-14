@@ -32,8 +32,6 @@ class GoogleAuthenticationProvider implements AuthProvider {
   AuthUser? get currentUser => throw UnimplementedError;
 
   gUser() {
-    print("___cur user_______");
-    print(FirebaseAuth.instance.currentUser);
     return FirebaseAuth.instance.currentUser;
   }
 
@@ -56,7 +54,6 @@ class GoogleAuthenticationProvider implements AuthProvider {
   @override
   Future<void> logOut() async {
     googleSign.signOut();
-    print("the user is isSignedIn ::::: ${await googleSign.isSignedIn()}");
   }
 
   @override

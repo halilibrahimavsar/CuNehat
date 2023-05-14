@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-
-import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 
 class AddDataScreen extends StatefulWidget {
   const AddDataScreen({super.key});
@@ -41,7 +40,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   onPressed: () {
-                    DatePicker.showDatePicker(
+                    DatePickerBdaya.showDatePicker(
                       context,
                       onConfirm: (time) {
                         setState(() {
