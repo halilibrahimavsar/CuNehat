@@ -28,7 +28,7 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin{
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin{
 
 
   @override
