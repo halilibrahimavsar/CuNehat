@@ -1,17 +1,18 @@
+import 'package:cunehat/services/crud/cunehat_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 
-class AddDataScreen extends StatefulWidget {
-  const AddDataScreen({super.key});
+class AddExpenseScreen extends StatefulWidget {
+  const AddExpenseScreen({super.key});
 
   @override
-  State<AddDataScreen> createState() => _AddDataScreenState();
+  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
-class _AddDataScreenState extends State<AddDataScreen> {
-  final _explainationController = TextEditingController();
+class _AddExpenseScreenState extends State<AddExpenseScreen> {
+  final _noteController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _priceController = TextEditingController();
   String btnDateTime = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
@@ -84,11 +85,11 @@ class _AddDataScreenState extends State<AddDataScreen> {
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
-                  controller: _explainationController,
+                  controller: _noteController,
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(),
                     suffix: IconButton(
-                        onPressed: () => _explainationController.clear(),
+                        onPressed: () => _noteController.clear(),
                         icon: const Icon(Icons.clear)),
                     labelText: "AÇIKLAMA",
                     hintText: "Ne için harcama yaptın?",
@@ -118,7 +119,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
               builder: (context) => AlertDialog(
                 title: const Text("Kaydet"),
                 content: Text(
-                    "Fiyat : ${_priceController.text}\nAçıklama : ${_explainationController.text} \n\nKAYIT EDİLSİN Mİ? "),
+                    "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? "),
                 actions: [
                   MaterialButton(
                       onPressed: () {

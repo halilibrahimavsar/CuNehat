@@ -1,12 +1,13 @@
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/enums/main_actions.dart';
-import 'package:cunehat/views/main_views/add_data_screen.dart';
+import 'package:cunehat/views/main_views/add_expense_screen.dart';
 import 'package:cunehat/views/main_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/views/main_views/visualize_data_screen.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:floating_action_bubble/floating_action_bubble.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
 
@@ -27,9 +28,17 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin{
+
+
   @override
   Widget build(BuildContext context) {
+    late AnimationController _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 260),
+    );
+    final curvedAnimation = CurvedAnimation(curve: Curves.easeInOut, parent: _animationController);
+    late Animation<double> _animation =Tween<double>(begin: 0, end: 1).animate(curvedAnimation);
     final user = FirebaseAuth.instance.currentUser;
     final String userPhoto =
         user?.providerData[0].photoURL ?? "/assets/images/logo.jpg";
@@ -104,16 +113,54 @@ class _MainScreenState extends State<MainScreen> {
         HomeScreen(),
         VisualizeDataScreen(),
       ][setCurrentPage],
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const AddDataScreen(),
-            ),
-          );
+      floatingActionButton: FloatingActionBubble(
+        iconData: Icons.data_saver_on,
+        backGroundColor: Colors.cyan,
+        iconColor: Colors.black,
+        onPress: () {
+          _animationController.isCompleted
+              ? _animationController.reverse()
+              : _animationController.forward();
+
         },
-        tooltip: "Add data",
-        child: const Icon(Icons.add),
+        animation: _animation,
+        items: <Bubble>[
+
+
+          // Floating action menu item
+          Bubble(
+            title:"Expense",
+            iconColor :Colors.white,
+            bubbleColor : Colors.red,
+            icon:Icons.dataset,
+            titleStyle:TextStyle(fontSize: 16 , color: Colors.white),
+            onPress: () {
+              _animationController.reverse();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddExpenseScreen(),
+                ),
+              );
+            },
+          ),
+          //Floating action menu item
+          Bubble(
+            title:"Income",
+            iconColor :Colors.white,
+            bubbleColor : Colors.green,
+            icon:Icons.dataset,
+            titleStyle:TextStyle(fontSize: 16 , color: Colors.white),
+            onPress: () {
+              Navigator.of(context).push(
+                // TODO :  change this to add income screen
+                MaterialPageRoute(
+                  builder: (context) => const AddExpenseScreen(),
+                ),
+              );
+              _animationController.reverse();
+            },
+          ),
+        ],
       ),
     );
   }
