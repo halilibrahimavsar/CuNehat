@@ -1,17 +1,17 @@
-import 'package:cunehat/services/crud/cunehat_services.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 
-class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+class AddIncomeScreen extends StatefulWidget {
+  const AddIncomeScreen({super.key});
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  State<AddIncomeScreen> createState() => _AddIncomeScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddIncomeScreenState extends State<AddIncomeScreen> {
   final _noteController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _priceController = TextEditingController();
@@ -20,10 +20,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.red,
-        title: const Text("Gider"),
+        backgroundColor: Colors.green,
+        title: const Text("Gelir"),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -36,10 +35,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               children: [
                 const SizedBox(height: 50),
                 MaterialButton(
-                  color: Colors.red,
+                  color: Colors.green,
                   elevation: 20,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   onPressed: () {
@@ -112,8 +111,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.green,
         label: const Text("KAYDET"),
-        backgroundColor: Colors.red,
         extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
         onPressed: () {
           if (_formKey.currentState!.validate()) {

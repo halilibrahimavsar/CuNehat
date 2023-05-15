@@ -1,6 +1,7 @@
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/enums/main_actions.dart';
 import 'package:cunehat/views/main_views/add_expense_screen.dart';
+import 'package:cunehat/views/main_views/add_income_screen.dart';
 import 'package:cunehat/views/main_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
@@ -154,7 +155,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin{
               Navigator.of(context).push(
                 // TODO :  change this to add income screen
                 MaterialPageRoute(
-                  builder: (context) => const AddExpenseScreen(),
+                  builder: (context) => const AddIncomeScreen(),
                 ),
               );
               _animationController.reverse();
