@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cunehat/services/crud/database_exceptions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -62,6 +64,57 @@ const createIncomeTable = '''CREATE TABLE IF NOT EXISTS "$incomeTable" (
 
 class CunehatServices {
   Database? _db;
+
+  DatabaseUser? _user;
+
+  List<DbExpense> _expenseList = [];
+  List<DbIncome> _incomeList = [];
+
+  late final StreamController<List<DbExpense>> _expenseStream;
+  late final StreamController<List<DbIncome>> _incomeStream;
+
+  // singleton pattern
+  static final CunehatServices _shared = CunehatServices._sharedInstance();
+  CunehatServices._sharedInstance() {
+    // initialize _expenseStream
+    _expenseStream = StreamController<List<DbExpense>>.broadcast(
+      onListen: () {
+        _expenseStream.sink.add(_expenseList);
+      },
+    );
+
+    // initialize _incomeStream
+    _incomeStream = StreamController<List<DbIncome>>.broadcast(
+      onListen: () {
+        _incomeStream.sink.add(_incomeList);
+      },
+    );
+  }
+  factory CunehatServices() => _shared;
+
+  // Stream<List<DbExpense>> get expenseLastMnth =>
+  //     _expenseStream.stream.where((expense) {
+  //       final currentUser = _user;
+  //       if (currentUser != null) {
+  //         return expense.userId == currentUser.id;
+  //       } else {
+  //         throw UserShouldBeSetBeforeReadingAllNotes();
+  //       }
+  //     });
+
+  // private and open/close fields
+  Future<void> _cacheExpense() async {
+    final expenses = await expenseGetLastMonth();
+    _expenseList = expenses.toList();
+    _expenseStream.add(_expenseList);
+  }
+
+  Future<void> _cacheIncome() async {
+    final incomes = await incomeGetLastMonth();
+    _incomeList = incomes.toList();
+    _incomeStream.add(_incomeList);
+  }
+
   Database _getDatabaseOrThrow() {
     final db = _db;
     if (db == null) {
@@ -100,12 +153,35 @@ class CunehatServices {
       await db.execute(createUserTable);
       await db.execute(createExpenseTable);
       await db.execute(createIncomeTable);
+      await _cacheExpense();
+      await _cacheIncome();
     } on MissingPlatformDirectoryException {
       throw UnableToGetDirectoryException;
     }
   }
 
   // user services
+  Future<DatabaseUser> userGetOrCreate({
+    required String email,
+    bool setAsCurrentUser = true,
+  }) async {
+    try {
+      final user = await userGet(email: email);
+      if (setAsCurrentUser) {
+        _user = user;
+      }
+      return user;
+    } on CouldNotFindUser {
+      final createdUser = await userCreate(email: email);
+      if (setAsCurrentUser) {
+        _user = createdUser;
+      }
+      return createdUser;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<DatabaseUser> userCreate({required String email}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
@@ -200,8 +276,8 @@ class CunehatServices {
       userId: owner.id,
     );
 
-    // _notes.add(expense);
-    // _notesStreamController.add(expense);
+    _expenseList.add(expense);
+    _expenseStream.add(_expenseList);
 
     return expense;
   }
@@ -217,8 +293,8 @@ class CunehatServices {
     if (deletedCount == 0) {
       throw CouldNotDeleteData();
     } else {
-      // _notes.removeWhere((note) => note.id == id);
-      // _notesStreamController.add(_notes);
+      _expenseList.removeWhere((element) => element.id == id);
+      _expenseStream.add(_expenseList);
     }
   }
 
@@ -236,9 +312,10 @@ class CunehatServices {
       throw CouldNotFindData();
     } else {
       final expense = DbExpense.fromRow(expenses.first);
-      // _notes.removeWhere((note) => note.id == id);
-      // _notes.add(note);
-      // _notesStreamController.add(_notes);
+
+      _expenseList.removeWhere((element) => element.id == id);
+      _expenseList.add(expense);
+      _expenseStream.add(_expenseList);
       return expense;
     }
   }
@@ -276,11 +353,23 @@ class CunehatServices {
       throw CouldNotUpdateData();
     } else {
       final updatedExpense = await expenseGet(id: expense.id);
-      // _notes.removeWhere((note) => note.id == updatedNote.id);
-      // _notes.add(updatedNote);
-      // _notesStreamController.add(_notes);
+
+      _expenseList.removeWhere((element) => element.id == updatedExpense.id);
+      _expenseList.add(updatedExpense);
+      _expenseStream.add(_expenseList);
       return updatedExpense;
     }
+  }
+
+  Future<Iterable<DbExpense>> expenseGetLastMonth() async {
+    await _ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+    final expenses = await db.query(
+      expenseTable,
+      limit: 31,
+    );
+
+    return expenses.map((expenseRow) => DbExpense.fromRow(expenseRow));
   }
 
   // income service
@@ -324,6 +413,8 @@ class CunehatServices {
 
     // _notes.add(expense);
     // _notesStreamController.add(expense);
+    _incomeList.add(income);
+    _incomeStream.add(_incomeList);
 
     return income;
   }
@@ -339,8 +430,8 @@ class CunehatServices {
     if (deletedCount == 0) {
       throw CouldNotDeleteData();
     } else {
-      // _notes.removeWhere((note) => note.id == id);
-      // _notesStreamController.add(_notes);
+      _incomeList.removeWhere((element) => element.id == id);
+      _incomeStream.add(_incomeList);
     }
   }
 
@@ -358,9 +449,9 @@ class CunehatServices {
       throw CouldNotFindData();
     } else {
       final income = DbIncome.fromRow(incomes.first);
-      // _notes.removeWhere((note) => note.id == id);
-      // _notes.add(note);
-      // _notesStreamController.add(_notes);
+      _incomeList.removeWhere((element) => element.id == id);
+      _incomeList.add(income);
+      _incomeStream.add(_incomeList);
       return income;
     }
   }
@@ -398,11 +489,22 @@ class CunehatServices {
       throw CouldNotUpdateData();
     } else {
       final updatedIncome = await incomeGet(id: income.id);
-      // _notes.removeWhere((note) => note.id == updatedNote.id);
-      // _notes.add(updatedNote);
-      // _notesStreamController.add(_notes);
+      _incomeList.removeWhere((note) => note.id == updatedIncome.id);
+      _incomeList.add(updatedIncome);
+      _incomeStream.add(_incomeList);
       return updatedIncome;
     }
+  }
+
+  Future<Iterable<DbIncome>> incomeGetLastMonth() async {
+    await _ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+    final incomes = await db.query(
+      incomeTable,
+      limit: 31,
+    );
+
+    return incomes.map((incomeRow) => DbIncome.fromRow(incomeRow));
   }
 }
 

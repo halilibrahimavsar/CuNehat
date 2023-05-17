@@ -12,6 +12,8 @@ class CouldNotFindUser implements Exception {}
 
 class CouldNotDeleteUser implements Exception {}
 
+class UserShouldBeSetBeforeReadingAllNotes implements Exception {}
+
 // expense and income exception ()
 class CouldNotDeleteData implements Exception {}
 
