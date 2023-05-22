@@ -4,6 +4,11 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/views/main_views/add_data_views/add_expense_screen.dart';
+import 'package:cunehat/views/main_views/add_data_views/add_income_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
 import 'package:cunehat/views/main_views/main_screen.dart';
 import 'package:cunehat/views/login_views/emailverify_screen.dart';
 import 'package:cunehat/views/login_views/login_screen.dart';
@@ -15,9 +20,11 @@ import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
+  // initialize firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
+  // initialize turkey language for date and time
   initializeDateFormatting('tr_TR', null);
 
   runApp(
@@ -27,10 +34,17 @@ void main() async {
       theme: ThemeData(primarySwatch: Colors.cyan),
       home: const CheckConnection(),
       routes: {
+        // login routes
         loginPageRoute: (context) => const LoginScreen(),
-        registerRoute: (context) => RegisterScreen(),
+        registerPageRoute: (context) => RegisterScreen(),
         emailVerifyRoute: (context) => const EmailVerifyScreen(),
-        mainUiRoute: (context) => const MainScreen(),
+        // private routes
+        mainPrivateRoute: (context) => const MainScreen(),
+        detailsUi: (context) => const DetailsScreen(),
+        homeUi: (context) => const HomeScreen(),
+        visualizeUi: (context) => const VisualizeDataScreen(),
+        addExpenseUi: (context) => const AddExpenseScreen(),
+        addIncomeUi: (context) => const AddIncomeScreen(),
       },
     ),
   );

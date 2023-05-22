@@ -1,11 +1,10 @@
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/enums/main_actions.dart';
-import 'package:cunehat/views/main_views/add_expense_screen.dart';
-import 'package:cunehat/views/main_views/add_income_screen.dart';
-import 'package:cunehat/views/main_views/details_screen.dart';
-import 'package:cunehat/views/main_views/home_screen.dart';
+import 'package:cunehat/services/crud/cunehat_services.dart';
+import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
-import 'package:cunehat/views/main_views/visualize_data_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:floating_action_bubble/floating_action_bubble.dart';
@@ -29,17 +28,29 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin{
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+  @override
+  void initState() {
+    CunehatServices().open();
+    super.initState();
+  }
 
+  @override
+  void dispose() {
+    CunehatServices().close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    late AnimationController _animationController = AnimationController(
+    late AnimationController animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 260),
     );
-    final curvedAnimation = CurvedAnimation(curve: Curves.easeInOut, parent: _animationController);
-    late Animation<double> _animation =Tween<double>(begin: 0, end: 1).animate(curvedAnimation);
+    final curvedAnimation =
+        CurvedAnimation(curve: Curves.easeInOut, parent: animationController);
+    late Animation<double> animation =
+        Tween<double>(begin: 0, end: 1).animate(curvedAnimation);
     final user = FirebaseAuth.instance.currentUser;
     final String userPhoto =
         user?.providerData[0].photoURL ?? "/assets/images/logo.jpg";
@@ -109,56 +120,59 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin{
         backgroundColor: Colors.white,
         color: Colors.cyan,
       ),
-      body: const [
-        DetailsScreen(),
-        HomeScreen(),
-        VisualizeDataScreen(),
-      ][setCurrentPage],
+      body: FutureBuilder(
+        future: CunehatServices()
+            .userGetOrCreate(email: user?.email ?? "Anonymous"),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              // TODO : use PUSHNAMED
+              return const [
+                DetailsScreen(),
+                HomeScreen(),
+                VisualizeDataScreen(),
+              ][setCurrentPage];
+
+            default:
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+          }
+        },
+      ),
       floatingActionButton: FloatingActionBubble(
         iconData: Icons.data_saver_on,
         backGroundColor: Colors.cyan,
         iconColor: Colors.black,
         onPress: () {
-          _animationController.isCompleted
-              ? _animationController.reverse()
-              : _animationController.forward();
-
+          animationController.isCompleted
+              ? animationController.reverse()
+              : animationController.forward();
         },
-        animation: _animation,
+        animation: animation,
         items: <Bubble>[
-
-
           // Floating action menu item
           Bubble(
-            title:"Expense",
-            iconColor :Colors.white,
-            bubbleColor : Colors.red,
-            icon:Icons.dataset,
-            titleStyle:TextStyle(fontSize: 16 , color: Colors.white),
+            title: "Expense",
+            iconColor: Colors.white,
+            bubbleColor: Colors.red,
+            icon: Icons.dataset,
+            titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
             onPress: () {
-              _animationController.reverse();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AddExpenseScreen(),
-                ),
-              );
+              animationController.reverse();
+              Navigator.pushNamed(context, addExpenseUi);
             },
           ),
           //Floating action menu item
           Bubble(
-            title:"Income",
-            iconColor :Colors.white,
-            bubbleColor : Colors.green,
-            icon:Icons.dataset,
-            titleStyle:TextStyle(fontSize: 16 , color: Colors.white),
+            title: "Income",
+            iconColor: Colors.white,
+            bubbleColor: Colors.green,
+            icon: Icons.dataset,
+            titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
             onPress: () {
-              Navigator.of(context).push(
-                // TODO :  change this to add income screen
-                MaterialPageRoute(
-                  builder: (context) => const AddIncomeScreen(),
-                ),
-              );
-              _animationController.reverse();
+              Navigator.pushNamed(context, addIncomeUi);
+              animationController.reverse();
             },
           ),
         ],

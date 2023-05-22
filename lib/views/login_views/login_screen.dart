@@ -17,7 +17,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final user = AuthService.firebase().currentUser;
+  bool isLoginWithFirebase = false;
 
   final TextEditingController email = TextEditingController();
 
@@ -46,35 +46,37 @@ class _LoginScreenState extends State<LoginScreen> {
               builder: (context, snapshot) {
                 switch (snapshot.data) {
                   case true:
-                    log(" the Actual data ::: ${snapshot.data}");
                     return FutureBuilder(
-                      future:
-                          Future.delayed(const Duration(milliseconds: 1200)),
+                      future: Future.delayed(const Duration(milliseconds: 200)),
                       builder: (context, snapshot) {
                         switch (snapshot.connectionState) {
                           case ConnectionState.waiting:
                             return const Center(
-                                child: CircularProgressIndicator(
-                              backgroundColor: Colors.green,
-                              color: Colors.purple,
-                            ));
+                              child: CircularProgressIndicator(
+                                backgroundColor: Colors.green,
+                                color: Colors.purple,
+                              ),
+                            );
                           case ConnectionState.done:
+                            // TODO : USE PUSHNAMED
                             return const MainScreen();
                           default:
                             return const Center(
-                                child: Text(
-                                    "Something goes wrong. Close aplication and re-open it"));
+                              child: Text(
+                                  "Something goes wrong. Close aplication and re-open it"),
+                            );
                         }
                       },
                     );
                   default:
-                    log(" the Actual data in not login::: ${snapshot.data}");
                     return Scaffold(
                       backgroundColor: Colors.deepPurple.shade100,
                       body: SingleChildScrollView(
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 25, vertical: 100),
+                            horizontal: 25,
+                            vertical: 100,
+                          ),
                           alignment: Alignment.bottomCenter,
                           child: Form(
                             key: loginFormValidator,
@@ -134,7 +136,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ElevatedButton(
                                   onPressed: () async {
                                     await loginToApp(
-                                        context, email.text, passwd.text);
+                                      context,
+                                      email.text,
+                                      passwd.text,
+                                    );
                                   },
                                   style: ButtonStyle(
                                     foregroundColor:
@@ -171,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.of(context)
-                                        .pushNamed(registerRoute);
+                                        .pushNamed(registerPageRoute);
                                   },
                                   style: ButtonStyle(
                                     foregroundColor:
@@ -203,6 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   btnText: "Login with google",
                                   buttonType: ButtonType.googleDark,
                                   onPressed: () async {
+                                    isLoginWithFirebase = false;
                                     await AuthService.google().googleSignIn();
                                     setState(() {});
                                   },
@@ -226,7 +232,9 @@ class _LoginScreenState extends State<LoginScreen> {
     String email,
     String passwd,
   ) async {
-    if (loginFormValidator.currentState!.validate()) {
+    isLoginWithFirebase = true;
+    final user = AuthService.firebase().currentUser;
+    if (loginFormValidator.currentState!.validate() && isLoginWithFirebase) {
       try {
         await AuthService.firebase().logIn(email: email, password: passwd);
 
@@ -241,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
             );
             Navigator.pushNamedAndRemoveUntil(
               context,
-              mainUiRoute,
+              mainPrivateRoute,
               (route) => false,
             );
           } else {

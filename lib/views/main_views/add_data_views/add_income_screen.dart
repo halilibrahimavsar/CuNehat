@@ -1,4 +1,5 @@
-
+import 'package:cunehat/services/crud/cunehat_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -19,6 +20,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
@@ -38,7 +40,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                   color: Colors.green,
                   elevation: 20,
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   onPressed: () {
@@ -130,8 +132,20 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                       color: Colors.red,
                       child: const Text("VAZGEÇ")),
                   MaterialButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
+                      onPressed: () async {
+                        CunehatServices().incomeCreate(
+                          owner: await CunehatServices()
+                              .userGet(email: user?.email ?? "Anonymous"),
+                          price: double.parse(_priceController.text),
+                          note: _noteController.text,
+                          tag: "tagg",
+                          date: btnDateTime,
+                          time: "no time now",
+                          isSynecWithCloud: true,
+                        );
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
                       },
                       color: Colors.green,
                       child: const Text("KAYDET"))

@@ -73,6 +73,9 @@ class CunehatServices {
   late final StreamController<List<DbExpense>> _expenseStream;
   late final StreamController<List<DbIncome>> _incomeStream;
 
+  Stream<List<DbExpense>> get allExpense => _expenseStream.stream;
+  Stream<List<DbIncome>> get allIncome => _incomeStream.stream;
+
   // singleton pattern
   static final CunehatServices _shared = CunehatServices._sharedInstance();
   CunehatServices._sharedInstance() {
@@ -91,16 +94,6 @@ class CunehatServices {
     );
   }
   factory CunehatServices() => _shared;
-
-  // Stream<List<DbExpense>> get expenseLastMnth =>
-  //     _expenseStream.stream.where((expense) {
-  //       final currentUser = _user;
-  //       if (currentUser != null) {
-  //         return expense.userId == currentUser.id;
-  //       } else {
-  //         throw UserShouldBeSetBeforeReadingAllNotes();
-  //       }
-  //     });
 
   // private and open/close fields
   Future<void> _cacheExpense() async {
