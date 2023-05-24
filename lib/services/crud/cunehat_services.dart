@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:developer';
 
+import 'package:cunehat/extensions/filter.dart';
 import 'package:cunehat/services/crud/database_exceptions.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' show join;
@@ -73,8 +76,24 @@ class CunehatServices {
   late final StreamController<List<DbExpense>> _expenseStream;
   late final StreamController<List<DbIncome>> _incomeStream;
 
-  Stream<List<DbExpense>> get allExpense => _expenseStream.stream;
-  Stream<List<DbIncome>> get allIncome => _incomeStream.stream;
+  Stream<List<DbExpense>> get allExpense =>
+      _expenseStream.stream.filter((expense) {
+        final currentUser = _user;
+        if (currentUser != null) {
+          return expense.userId == currentUser.id;
+        } else {
+          throw UserShouldBeSetBeforeReadingAllNotes();
+        }
+      });
+
+  Stream<List<DbIncome>> get allIncome => _incomeStream.stream.filter((income) {
+        final currentUser = _user;
+        if (currentUser != null) {
+          return income.userId == currentUser.id;
+        } else {
+          throw UserShouldBeSetBeforeReadingAllNotes();
+        }
+      });
 
   // singleton pattern
   static final CunehatServices _shared = CunehatServices._sharedInstance();
@@ -208,7 +227,7 @@ class CunehatServices {
       where: 'email = ?',
       whereArgs: [email.toLowerCase()],
     );
-
+    log(results.toString());
     if (results.isEmpty) {
       throw CouldNotFindUser();
     } else {
@@ -359,7 +378,8 @@ class CunehatServices {
     final db = _getDatabaseOrThrow();
     final expenses = await db.query(
       expenseTable,
-      limit: 31,
+      where: "user_id = ?",
+      whereArgs: [_user?.id],
     );
 
     return expenses.map((expenseRow) => DbExpense.fromRow(expenseRow));
