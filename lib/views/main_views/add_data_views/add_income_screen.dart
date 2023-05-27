@@ -1,9 +1,11 @@
 import 'package:cunehat/services/crud/cunehat_services.dart';
+import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
+import 'package:textfield_tags/textfield_tags.dart';
 
 class AddIncomeScreen extends StatefulWidget {
   const AddIncomeScreen({super.key});
@@ -13,10 +15,29 @@ class AddIncomeScreen extends StatefulWidget {
 }
 
 class _AddIncomeScreenState extends State<AddIncomeScreen> {
-  final _noteController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _priceController = TextEditingController();
-  String btnDateTime = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
+  late final TextEditingController _noteController;
+  late final TextEditingController _priceController;
+  late final TextfieldTagsController _tagController;
+  late String btnDate;
+  late String btnTime;
+
+  @override
+  void initState() {
+    _noteController = TextEditingController();
+    _priceController = TextEditingController();
+    _tagController = TextfieldTagsController();
+    btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
+    btnTime = DateFormat.Hm('tr').format(DateTime.now());
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,40 +56,69 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(height: 50),
-                MaterialButton(
-                  color: Colors.green,
-                  elevation: 20,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  onPressed: () {
-                    DatePickerBdaya.showDatePicker(
-                      context,
-                      onConfirm: (time) {
-                        setState(() {
-                          btnDateTime =
-                              DateFormat('dd/MM/yyyy', 'tr').format(time);
-                        });
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    MaterialButton(
+                      color: Colors.green,
+                      elevation: 20,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      onPressed: () {
+                        DatePickerBdaya.showDatePicker(
+                          context,
+                          onConfirm: (time) {
+                            setState(() {
+                              btnDate =
+                                  DateFormat('dd/MM/yyyy', 'tr').format(time);
+                            });
+                          },
+                          minTime: DateTime(1997, 5, 19),
+                          maxTime: DateTime(2050, 0, 0),
+                          currentTime: DateTime.now(),
+                          locale: LocaleType.tr,
+                        );
                       },
-                      minTime: DateTime(1997, 5, 19),
-                      maxTime: DateTime(2050, 0, 0),
-                      currentTime: DateTime.now(),
-                      locale: LocaleType.tr,
-                    );
-                  },
-                  child: Text(
-                    btnDateTime,
-                    style: const TextStyle(fontSize: 25),
-                  ),
+                      child: Text(
+                        btnDate,
+                        style: const TextStyle(fontSize: 25),
+                      ),
+                    ),
+                    MaterialButton(
+                      color: Colors.green,
+                      elevation: 20,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      onPressed: () {
+                        DatePickerBdaya.showTime12hPicker(
+                          context,
+                          onConfirm: (time) {
+                            setState(() {
+                              btnTime = DateFormat.Hm('tr').format(time);
+                            });
+                          },
+                          currentTime: DateTime.now(),
+                          locale: LocaleType.tr,
+                        );
+                      },
+                      child: Text(
+                        btnTime,
+                        style: const TextStyle(fontSize: 25),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 50),
                 TextFormField(
                   controller: _priceController,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                    icon: const Icon(Icons.monetization_on_outlined, size: 50),
+                    icon: const Icon(Icons.monetization_on_outlined, size: 40),
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                         onPressed: () => _priceController.clear(),
@@ -84,7 +134,10 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                       return null;
                     }
                   },
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^(\d+)?\.?\d{0,2}')),
+                  ],
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
@@ -97,7 +150,6 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                     labelText: "AÇIKLAMA",
                     hintText: "Ne için harcama yaptın?",
                   ),
-                  keyboardType: TextInputType.multiline,
                   validator: (value) {
                     if (value != null && value.toString().isEmpty) {
                       return "Bu alan boş olamaz";
@@ -106,6 +158,27 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                     }
                   },
                 ),
+                const SizedBox(height: 50),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(child: TagEditing(tagController: _tagController)),
+                    MaterialButton(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      color: Colors.green.shade100,
+                      onPressed: () {
+                        _tagController.clearTags();
+                      },
+                      child: const Text('CLEAR TAG'),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 100,
+                )
               ],
             ),
           ),
@@ -133,14 +206,17 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                       child: const Text("VAZGEÇ")),
                   MaterialButton(
                       onPressed: () async {
+                        final tag = _tagController.getTags!.isNotEmpty
+                            ? _tagController.getTags!.first
+                            : "tag";
                         CunehatServices().incomeCreate(
                           owner: await CunehatServices()
                               .userGet(email: user?.email ?? "Anonymous"),
                           price: double.parse(_priceController.text),
                           note: _noteController.text,
-                          tag: "tagg",
-                          date: btnDateTime,
-                          time: "no time now",
+                          tag: tag,
+                          date: btnDate,
+                          time: btnTime,
                           isSynecWithCloud: true,
                         );
                         if (context.mounted) {
