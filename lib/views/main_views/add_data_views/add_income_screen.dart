@@ -1,6 +1,5 @@
-import 'package:cunehat/services/crud/cunehat_services.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -41,7 +40,6 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
@@ -209,16 +207,13 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                         final tag = _tagController.getTags!.isNotEmpty
                             ? _tagController.getTags!.first
                             : "tag";
-                        CunehatServices().incomeCreate(
-                          owner: await CunehatServices()
-                              .userGet(email: user?.email ?? "Anonymous"),
-                          price: double.parse(_priceController.text),
-                          note: _noteController.text,
-                          tag: tag,
-                          date: btnDate,
-                          time: btnTime,
-                          isSynecWithCloud: true,
-                        );
+                        FirestoreService().addIncome(income: {
+                          "price": double.parse(_priceController.text),
+                          "note": _noteController.text,
+                          "tag": tag,
+                          "date": btnDate,
+                          "time": btnTime,
+                        });
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }

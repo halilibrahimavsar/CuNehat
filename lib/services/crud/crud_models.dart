@@ -43,12 +43,12 @@ class DbExpense {
 
   DbExpense({
     required this.id,
+    required this.userId,
     required this.price,
     required this.note,
     required this.tag,
     required this.date,
     required this.time,
-    required this.userId,
     required this.isSyncedWithCloud,
   });
 

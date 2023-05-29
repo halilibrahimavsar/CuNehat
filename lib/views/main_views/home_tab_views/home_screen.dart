@@ -1,5 +1,5 @@
 import 'package:cunehat/services/crud/crud_models.dart';
-import 'package:cunehat/services/crud/cunehat_services.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,8 +12,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<DbExpense>>(
-      stream: CunehatServices().allExpense,
+    return FutureBuilder(
+      future: FirestoreService().getAllExpenses(),
       builder: (context, expenseSnapshot) {
         if (expenseSnapshot.hasData) {
           final expenses = expenseSnapshot.data;
@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Build UI item for expense
               return ListTile(
                 onLongPress: () {
-                  CunehatServices().expenseDelete(id: expense.id);
+                  // CunehatServices().expenseDelete(id: expense.id);
                 },
                 onTap: () {
                   showDialog(
@@ -42,10 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   );
                 },
-                title: Text(expense!.note),
-                trailing: Text(expense.price.toString()),
-                leading: Text("${expense.date}\n${expense.time}"),
-                subtitle: Text("${expense.tag}  |   ${expense.userId}"),
+                title: Text(expense!.data().toString()),
+                // trailing: Text(expense.price.toString()),
+                // leading: Text("${expense.date}\n${expense.time}"),
+                // subtitle: Text("${expense.tag}  |   ${expense.userId}"),
                 titleAlignment: ListTileTitleAlignment.center,
                 // Other expense details...
               );

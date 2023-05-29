@@ -1,6 +1,5 @@
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/enums/main_actions.dart';
-import 'package:cunehat/services/crud/cunehat_services.dart';
 import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
@@ -29,18 +28,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
-  @override
-  void initState() {
-    CunehatServices().open();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    CunehatServices().close();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     late AnimationController animationController = AnimationController(
@@ -120,26 +107,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         backgroundColor: Colors.white,
         color: Colors.cyan,
       ),
-      body: FutureBuilder(
-        future: CunehatServices()
-            .userGetOrCreate(email: user?.email ?? "Anonymous"),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              // TODO : use PUSHNAMED
-              return const [
-                DetailsScreen(),
-                HomeScreen(),
-                VisualizeDataScreen(),
-              ][setCurrentPage];
-
-            default:
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-          }
-        },
-      ),
+      body: const [
+        DetailsScreen(),
+        HomeScreen(),
+        VisualizeDataScreen(),
+      ][setCurrentPage],
       floatingActionButton: FloatingActionBubble(
         iconData: Icons.data_saver_on,
         backGroundColor: Colors.cyan,

@@ -1,5 +1,4 @@
-import 'package:cunehat/services/crud/crud_models.dart';
-import 'package:cunehat/services/crud/cunehat_services.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:flutter/material.dart';
 
 class DetailsScreen extends StatelessWidget {
@@ -7,8 +6,8 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<DbIncome>>(
-      stream: CunehatServices().allIncome,
+    return FutureBuilder(
+      future: FirestoreService().getAllIncomes(),
       builder: (context, incomeSnapshot) {
         if (incomeSnapshot.hasData) {
           final incomes = incomeSnapshot.data;
@@ -20,7 +19,7 @@ class DetailsScreen extends StatelessWidget {
               // Build UI item for income
               return ListTile(
                 onLongPress: () {
-                  CunehatServices().incomeDelete(id: income.id);
+                  // TODO : CunehatServices().incomeDelete(id: income.id);
                 },
                 onTap: () {
                   showDialog(
@@ -36,10 +35,10 @@ class DetailsScreen extends StatelessWidget {
                     },
                   );
                 },
-                title: Text(income!.note),
-                trailing: Text(income.price.toString()),
-                leading: Text("${income.date}\n${income.time}"),
-                subtitle: Text("${income.tag}  |   ${income.userId}"),
+                title: Text(income!.data().toString()),
+                // trailing: Text(income.price.toString()),
+                // leading: Text("${income.date}\n${income.time}"),
+                // subtitle: Text("${income.tag}  |   ${income.userId}"),
                 titleAlignment: ListTileTitleAlignment.center,
                 // Other income details...
               );

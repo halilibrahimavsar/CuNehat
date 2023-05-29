@@ -58,7 +58,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           case ConnectionState.done:
-                            // TODO : USE PUSHNAMED
                             return const MainScreen();
                           default:
                             return const Center(
