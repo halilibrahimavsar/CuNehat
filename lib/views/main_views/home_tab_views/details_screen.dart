@@ -1,3 +1,4 @@
+import 'package:cunehat/services/crud/crud_models.dart';
 import 'package:cunehat/services/crud/cunehat_services.dart';
 import 'package:flutter/material.dart';
 

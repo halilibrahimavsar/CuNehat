@@ -1,99 +1,71 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:cunehat/extensions/filter.dart';
+import 'package:cunehat/services/crud/crud_models.dart';
 import 'package:cunehat/services/crud/database_exceptions.dart';
+import 'package:cunehat/services/crud/crud_constants.dart';
 
-import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
-
-// Database name
-const dbName = "cunehat.db";
-
-// Table names
-const userTable = "users";
-const expenseTable = "expense";
-const incomeTable = "income";
-
-// For the field of the user table
-const idColmn = "id";
-const emailColmn = "email";
-
-// Below variables is the same for both Expense and Income databases.
-// The table title will be same but content(data inside of the tables)
-// will be different.
-const userIdColmn = "user_id";
-const priceColmn = "price";
-const noteColmn = "note";
-const tagColmn = "tag";
-const dateColmn = "date";
-const timeColmn = "time";
-const isSyncedWithCloudColmn = "is_synced_with_cloud";
-
-const createUserTable = '''CREATE TABLE IF NOT EXISTS "users" (
-                          "id"	INTEGER NOT NULL UNIQUE,
-                          "email"	TEXT NOT NULL UNIQUE,
-                          PRIMARY KEY("id" AUTOINCREMENT)
-                        );''';
-
-// create tables in sql syntax
-const createExpenseTable = '''CREATE TABLE IF NOT EXISTS "$expenseTable" (
-                          "id"	INTEGER NOT NULL UNIQUE,
-                          "$priceColmn"	REAL,
-                          "$noteColmn"	TEXT,
-                          "$tagColmn"	TEXT,
-                          "$dateColmn"	TEXT,
-                          "$timeColmn"	TEXT,
-                          "$userIdColmn"	INTEGER NOT NULL,
-                          "$isSyncedWithCloudColmn"	INTEGER NOT NULL DEFAULT 0,
-                          PRIMARY KEY("id" AUTOINCREMENT),
-                          FOREIGN KEY("$userIdColmn") REFERENCES "$userTable"("id")
-                        );''';
-
-const createIncomeTable = '''CREATE TABLE IF NOT EXISTS "$incomeTable" (
-                          "id"	INTEGER NOT NULL UNIQUE,
-                          "$priceColmn"	REAL,
-                          "$noteColmn"	TEXT,
-                          "$tagColmn"	TEXT,
-                          "$dateColmn"	TEXT,
-                          "$timeColmn"	TEXT,
-                          "$userIdColmn"	INTEGER NOT NULL,
-                          "$isSyncedWithCloudColmn"	INTEGER NOT NULL DEFAULT 0,
-                          PRIMARY KEY("id" AUTOINCREMENT),
-                          FOREIGN KEY("$userIdColmn") REFERENCES "$userTable"("id")
-                        );''';
 
 class CunehatServices {
   Database? _db;
 
   DatabaseUser? _user;
 
-  List<DbExpense> _expenseList = [];
-  List<DbIncome> _incomeList = [];
+  final List<DbExpense> _expenseList = [];
+  final List<DbIncome> _incomeList = [];
 
   late final StreamController<List<DbExpense>> _expenseStream;
   late final StreamController<List<DbIncome>> _incomeStream;
 
-  Stream<List<DbExpense>> get allExpense =>
-      _expenseStream.stream.filter((expense) {
-        final currentUser = _user;
-        if (currentUser != null) {
-          return expense.userId == currentUser.id;
-        } else {
-          throw UserShouldBeSetBeforeReadingAllNotes();
-        }
-      });
+  late final StreamController<List<DbIncome>> _incomeStreamMonth;
+  late final StreamController<List<DbExpense>> _expenseStreamMonth;
 
-  Stream<List<DbIncome>> get allIncome => _incomeStream.stream.filter((income) {
-        final currentUser = _user;
-        if (currentUser != null) {
-          return income.userId == currentUser.id;
-        } else {
-          throw UserShouldBeSetBeforeReadingAllNotes();
-        }
-      });
+  Stream<List<DbExpense>> get allExpense {
+    return _expenseStream.stream.filter((expense) {
+      final currentUser = _user;
+      if (currentUser != null) {
+        return expense.userId == currentUser.id;
+      } else {
+        throw UserShouldBeSetBeforeReadingAllNotes();
+      }
+    });
+  }
+
+  Stream<List<DbIncome>> get allIncome {
+    return _incomeStream.stream.filter((income) {
+      final currentUser = _user;
+      if (currentUser != null) {
+        return income.userId == currentUser.id;
+      } else {
+        throw UserShouldBeSetBeforeReadingAllNotes();
+      }
+    });
+  }
+
+  Stream<List<DbExpense>> getIncomeByMonth() {
+    return _expenseStreamMonth.stream.filter((expense) {
+      final currentUser = _user;
+      if (currentUser != null) {
+        return expense.userId == currentUser.id;
+      } else {
+        throw UserShouldBeSetBeforeReadingAllNotes();
+      }
+    });
+  }
+
+  Stream<List<DbIncome>> getExpenseByMonth() {
+    return _incomeStreamMonth.stream.filter((expense) {
+      final currentUser = _user;
+      if (currentUser != null) {
+        return expense.userId == currentUser.id;
+      } else {
+        throw UserShouldBeSetBeforeReadingAllNotes();
+      }
+    });
+  }
 
   // singleton pattern
   static final CunehatServices _shared = CunehatServices._sharedInstance();
@@ -115,17 +87,6 @@ class CunehatServices {
   factory CunehatServices() => _shared;
 
   // private and open/close fields
-  Future<void> _cacheExpense() async {
-    final expenses = await expenseGetLastMonth();
-    _expenseList = expenses.toList();
-    _expenseStream.add(_expenseList);
-  }
-
-  Future<void> _cacheIncome() async {
-    final incomes = await incomeGetLastMonth();
-    _incomeList = incomes.toList();
-    _incomeStream.add(_incomeList);
-  }
 
   Database _getDatabaseOrThrow() {
     final db = _db;
@@ -165,8 +126,6 @@ class CunehatServices {
       await db.execute(createUserTable);
       await db.execute(createExpenseTable);
       await db.execute(createIncomeTable);
-      await _cacheExpense();
-      await _cacheIncome();
     } on MissingPlatformDirectoryException {
       throw UnableToGetDirectoryException;
     }
@@ -227,7 +186,6 @@ class CunehatServices {
       where: 'email = ?',
       whereArgs: [email.toLowerCase()],
     );
-    log(results.toString());
     if (results.isEmpty) {
       throw CouldNotFindUser();
     } else {
@@ -307,6 +265,8 @@ class CunehatServices {
     } else {
       _expenseList.removeWhere((element) => element.id == id);
       _expenseStream.add(_expenseList);
+      _expenseList.removeWhere((element) => element.id == id);
+      _expenseStream.add(_expenseList);
     }
   }
 
@@ -373,16 +333,44 @@ class CunehatServices {
     }
   }
 
-  Future<Iterable<DbExpense>> expenseGetLastMonth() async {
+  Future<List<DbExpense>> expenseGetDate({required String monthAndYear}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final expenses = await db.query(
       expenseTable,
-      where: "user_id = ?",
-      whereArgs: [_user?.id],
+      where: "date LIKE ?",
+      whereArgs: ['%$monthAndYear%'],
     );
 
-    return expenses.map((expenseRow) => DbExpense.fromRow(expenseRow));
+    final monthlyData =
+        expenses.map((expenseRow) => DbExpense.fromRow(expenseRow)).toList();
+
+    return monthlyData;
+  }
+
+  Future<List<String>> expenseGetMonthAndYear() async {
+    await _ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+
+    final dates =
+        await db.query(expenseTable, columns: ['date'], orderBy: "date");
+
+    final List<String> listOfDates =
+        dates.map((e) => e.values.first.toString()).toList();
+
+    final List<String> monthsAndYears = [];
+
+    for (final String i in listOfDates) {
+      final String year = i.split("/")[2].split("-")[0];
+      final String month = i.split("/")[1];
+      final String yearAndMonthDate = '$month/$year';
+
+      if (!(monthsAndYears.contains(yearAndMonthDate))) {
+        monthsAndYears.add(yearAndMonthDate);
+      }
+    }
+
+    return monthsAndYears;
   }
 
   // income service
@@ -424,8 +412,6 @@ class CunehatServices {
       userId: owner.id,
     );
 
-    // _notes.add(expense);
-    // _notesStreamController.add(expense);
     _incomeList.add(income);
     _incomeStream.add(_incomeList);
 
@@ -509,140 +495,39 @@ class CunehatServices {
     }
   }
 
-  Future<Iterable<DbIncome>> incomeGetLastMonth() async {
+  Future<List<DbIncome>> incomeGetDate({required String monthAndYear}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final incomes = await db.query(
       incomeTable,
-      limit: 31,
+      where: "date LIKE ?",
+      whereArgs: ['%$monthAndYear%'],
     );
 
-    return incomes.map((incomeRow) => DbIncome.fromRow(incomeRow));
-  }
-}
-
-@immutable
-class DatabaseUser {
-  final int id;
-  final String email;
-
-  const DatabaseUser({required this.id, required this.email});
-
-  DatabaseUser.fromRow(Map<String, Object?> map)
-      : id = map[idColmn] as int,
-        email = map[emailColmn] as String;
-
-  @override
-  String toString() {
-    return "id : $id     email : $email";
+    return incomes.map((incomeRow) => DbIncome.fromRow(incomeRow)).toList();
   }
 
-  @override
-  operator ==(covariant DatabaseUser other) {
-    // Lets explain abowe code ; We are overriding the "==" operator,
-    // with help of `covariant` keyword. With `covariant`, we are simply
-    // saying we want to take `DatabaseUser` object and compare our `id`
-    // with `other.id`.
-    return id == other.id;
+  Future<List<String>> incomeGetMonthAndYear() async {
+    await _ensureDbIsOpen();
+    final db = _getDatabaseOrThrow();
+
+    final dates =
+        await db.query(incomeTable, columns: ['date'], orderBy: "date");
+
+    final List<String> listOfDates =
+        dates.map((e) => e.values.first.toString()).toList();
+
+    final List<String> monthsAndYears = [];
+
+    for (final String i in listOfDates) {
+      final String year = i.split("/")[2].split("-")[0];
+      final String month = i.split("/")[1];
+      final String yearAndMonthDate = '$month/$year';
+      if (!(monthsAndYears.contains(yearAndMonthDate))) {
+        monthsAndYears.add(yearAndMonthDate);
+      }
+    }
+
+    return monthsAndYears;
   }
-
-  // Below code is also part of the overriding `==` operator.
-  @override
-  int get hashCode => id.hashCode;
-}
-
-class DbExpense {
-  final int id;
-  final double price;
-  final String note;
-  final String tag;
-  final String date;
-  final String time;
-  final int userId;
-  final bool isSyncedWithCloud;
-
-  DbExpense({
-    required this.id,
-    required this.price,
-    required this.note,
-    required this.tag,
-    required this.date,
-    required this.time,
-    required this.userId,
-    required this.isSyncedWithCloud,
-  });
-
-  DbExpense.fromRow(Map<String, Object?> map)
-      : id = map[idColmn] as int,
-        price = map[priceColmn] as double,
-        note = map[noteColmn] as String,
-        tag = map[tagColmn] as String,
-        date = map[dateColmn] as String,
-        time = map[timeColmn] as String,
-        userId = map[userIdColmn] as int,
-        isSyncedWithCloud =
-            (map[isSyncedWithCloudColmn] as int) == 1 ? true : false;
-
-  @override
-  String toString() {
-    return 'id : $id \nprice : $price \nnote : $note \ntag : $tag \ndate : $date \ntime : $time \nuserId : $userId \nisSyncedWithCloud : $isSyncedWithCloud \n';
-  }
-
-  @override
-  operator ==(covariant DbExpense other) {
-    return id == other.id;
-  }
-
-  // Below code is also part of the overriding `==` operator.
-  @override
-  int get hashCode => id.hashCode;
-}
-
-class DbIncome {
-  final int id;
-  final double price;
-  final String note;
-  final String tag;
-  final String date;
-  final String time;
-  final int userId;
-  final bool isSyncedWithCloud;
-
-  DbIncome({
-    required this.id,
-    required this.price,
-    required this.note,
-    required this.tag,
-    required this.date,
-    required this.time,
-    required this.userId,
-    required this.isSyncedWithCloud,
-  });
-
-  DbIncome.fromRow(Map<String, Object?> map)
-      : id = map[idColmn] as int,
-        price = map[priceColmn] as double,
-        note = map[noteColmn] as String,
-        tag = map[tagColmn] as String,
-        date = map[dateColmn] as String,
-        time = map[timeColmn] as String,
-        userId = map[userIdColmn] as int,
-        isSyncedWithCloud =
-            (map[isSyncedWithCloudColmn] as int) == 1 ? true : false;
-  // as we dont have boolean in sqlite, we use as bool in program but
-  // saving as 1 or 0 (which is int) inside of the database
-
-  @override
-  String toString() {
-    return 'id : $id \nprice : $price \nnote : $note \ntag : $tag \ndate : $date \ntime : $time \nuserId : $userId \nisSyncedWithCloud : $isSyncedWithCloud \n';
-  }
-
-  @override
-  operator ==(covariant DbExpense other) {
-    return id == other.id;
-  }
-
-  // Below code is also part of the overriding `==` operator.
-  @override
-  int get hashCode => id.hashCode;
 }
