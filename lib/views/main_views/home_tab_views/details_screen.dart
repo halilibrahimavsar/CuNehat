@@ -1,4 +1,5 @@
 import 'package:cunehat/services/firestore/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DetailsScreen extends StatelessWidget {
@@ -6,8 +7,9 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: FirestoreService().getAllIncomes(),
+    return StreamBuilder(
+      stream: FirestoreService()
+          .getAllIncomes(ownerUserId: FirebaseAuth.instance.currentUser?.uid),
       builder: (context, incomeSnapshot) {
         if (incomeSnapshot.hasData) {
           final incomes = incomeSnapshot.data;
@@ -15,7 +17,7 @@ class DetailsScreen extends StatelessWidget {
           return ListView.builder(
             itemCount: incomes?.length,
             itemBuilder: (context, index) {
-              final income = incomes?[index];
+              final income = incomes?.elementAt(index);
               // Build UI item for income
               return ListTile(
                 onLongPress: () {
@@ -35,10 +37,10 @@ class DetailsScreen extends StatelessWidget {
                     },
                   );
                 },
-                title: Text(income!.data().toString()),
-                // trailing: Text(income.price.toString()),
-                // leading: Text("${income.date}\n${income.time}"),
-                // subtitle: Text("${income.tag}  |   ${income.userId}"),
+                title: Text(income!.date),
+                trailing: Text(income.amount.toString()),
+                leading: Text("${income.date}\n${income.time}"),
+                subtitle: Text("${income.tag}  |   ${income.userId}"),
                 titleAlignment: ListTileTitleAlignment.center,
                 // Other income details...
               );

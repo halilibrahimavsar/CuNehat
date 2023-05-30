@@ -32,7 +32,7 @@ void main() async {
       title: "CuNehat",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.cyan),
-      home: const CheckConnection(),
+      home: const LoginScreen(),
       routes: {
         // login routes
         loginPageRoute: (context) => const LoginScreen(),

@@ -1,5 +1,8 @@
+import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -208,11 +211,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             ? _tagController.getTags!.first
                             : "tag";
                         FirestoreService().addExpense(expense: {
-                          "price": double.parse(_priceController.text),
-                          "note": _noteController.text,
-                          "tag": tag,
-                          "date": btnDate,
-                          "time": btnTime,
+                          fieldUserId: FirebaseAuth.instance.currentUser?.uid,
+                          fieldAmount: double.parse(_priceController.text),
+                          fieldTitle: _noteController.text,
+                          fieldTag: tag,
+                          fieldDate: btnDate,
+                          fieldTime: btnTime,
                         });
                         if (context.mounted) {
                           Navigator.of(context).pop();

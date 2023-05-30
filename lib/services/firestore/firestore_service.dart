@@ -1,63 +1,51 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/services/firestore/cloud_const.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String expenseTable = 'expenses';
-  final String incomeTable = 'incomes';
-  final String userIdColmn = 'userId';
+  final _expense = FirebaseFirestore.instance.collection(expenseTable);
+  final _income = FirebaseFirestore.instance.collection(incomeTable);
 
   Future<void> addExpense({required Map<String, dynamic> expense}) async {
-    final expenseCollection = _firestore.collection(expenseTable);
-    await expenseCollection.add(expense);
+    await _expense.add(expense);
   }
 
   Future<void> addIncome({required Map<String, dynamic> income}) async {
-    final incomeCollection = _firestore.collection(incomeTable);
-    await incomeCollection.add(income);
+    await _income.add(income);
   }
 
-  Future<List<DocumentSnapshot>> getAllExpenses() async {
-    final expensesCollection = _firestore.collection(expenseTable);
+  Stream<Iterable<Expense>> getAllExpenses({required ownerUserId}) {
+    final querySnapshot = _expense
+        .where(fieldUserId, isEqualTo: ownerUserId)
+        .snapshots()
+        .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
 
-    final querySnapshot = await expensesCollection.get();
-
-    return querySnapshot.docs;
+    return querySnapshot;
   }
 
-  Future<List<DocumentSnapshot>> getAllIncomes() async {
-    final incomesCollection = _firestore.collection(incomeTable);
+  Stream<Iterable<Income>> getAllIncomes({required ownerUserId}) {
+    final querySnapshot = _income
+        .where(fieldUserId, isEqualTo: ownerUserId)
+        .snapshots()
+        .map((event) => event.docs.map((doc) => Income.fromSnapshot(doc)));
 
-    final querySnapshot = await incomesCollection.get();
-
-    return querySnapshot.docs;
+    return querySnapshot;
   }
 
   Future<List<DocumentSnapshot>> getExpensesByMonthAndYear(
-      {required int month, required int year}) async {
-    final expensesCollection = _firestore.collection(expenseTable);
-
-    final querySnapshot = await expensesCollection
-        .where('month', isEqualTo: month)
-        .where('year', isEqualTo: year)
-        .get();
+      {required int date}) async {
+    final querySnapshot =
+        await _expense.where('date', isGreaterThanOrEqualTo: date).get();
 
     return querySnapshot.docs;
   }
 
   Future<List<DocumentSnapshot>> getIncomesByMonthAndYear(
-      {required int month, required int year}) async {
-    final incomesCollection = _firestore.collection(incomeTable);
-
-    final querySnapshot = await incomesCollection
-        .where('month', isEqualTo: month)
-        .where('year', isEqualTo: year)
-        .get();
+      {required int date}) async {
+    final querySnapshot =
+        await _income.where('date', isGreaterThanOrEqualTo: date).get();
 
     return querySnapshot.docs;
   }
-
-  // Update other methods and code that interact with the local Sqflite database to work with Firebase Firestore.
-  // Update Firebase configuration settings in your Flutter project.
 }
 
 class Expense {
@@ -79,16 +67,14 @@ class Expense {
     required this.time,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'userId': userId,
-      'title': title,
-      'amount': amount,
-      'date': date,
-      'time': time,
-    };
-  }
+  Expense.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
+      : id = snapshot.id,
+        userId = snapshot.data()[fieldUserId],
+        title = snapshot.data()[fieldTitle],
+        tag = snapshot.data()[fieldTag],
+        amount = snapshot.data()[fieldAmount],
+        date = snapshot.data()[fieldDate],
+        time = snapshot.data()[fieldTime];
 }
 
 class Income {
@@ -110,14 +96,12 @@ class Income {
     required this.time,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'userId': userId,
-      'title': title,
-      'amount': amount,
-      'date': date,
-      'time': time,
-    };
-  }
+  Income.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
+      : id = snapshot.id,
+        userId = snapshot.data()[fieldUserId],
+        title = snapshot.data()[fieldTitle],
+        tag = snapshot.data()[fieldTag],
+        amount = snapshot.data()[fieldAmount],
+        date = snapshot.data()[fieldDate],
+        time = snapshot.data()[fieldTime];
 }

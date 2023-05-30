@@ -51,7 +51,7 @@ dependencies:
   connectivity_plus: ^4.0.0
   floating_action_bubble: ^1.1.4
   textfield_tags: ^2.0.2
-
+  flutter_slidable: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -64,10 +64,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
 
-  flutter_native_splash: ^2.2.19
+#  flutter_native_splash: ^2.2.19
 
-flutter_native_splash:
-  background_image: assets/images/splashScrn.png
+#flutter_native_splash:
+#  background_image: assets/images/splashScrn.png
 #  color: "#823329"
 
 
