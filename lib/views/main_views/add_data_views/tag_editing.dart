@@ -38,18 +38,18 @@ class TagEditing extends StatelessWidget {
                 isDense: true,
                 border: const OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Color.fromARGB(255, 74, 137, 92),
+                    color: Color.fromARGB(255, 11, 0, 165),
                     width: 3.0,
                   ),
                 ),
                 focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Color.fromARGB(255, 74, 137, 92),
+                    color: Color.fromARGB(255, 11, 0, 165),
                     width: 3.0,
                   ),
                 ),
                 helperStyle: const TextStyle(
-                  color: Color.fromARGB(255, 74, 137, 92),
+                  color: Color.fromARGB(255, 245, 0, 0),
                 ),
                 hintText: _tagController.hasTags ? '' : "Enter tag...",
                 errorText: error,
@@ -60,11 +60,11 @@ class TagEditing extends StatelessWidget {
                         child: Row(
                             children: tags.map((String tag) {
                           return Container(
-                            decoration: const BoxDecoration(
-                              borderRadius: BorderRadius.all(
+                            decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.all(
                                 Radius.circular(20.0),
                               ),
-                              color: Color.fromARGB(255, 74, 137, 92),
+                              color: Colors.blueAccent.shade200,
                             ),
                             margin: const EdgeInsets.symmetric(horizontal: 5.0),
                             padding: const EdgeInsets.symmetric(

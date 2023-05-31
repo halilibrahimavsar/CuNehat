@@ -1,3 +1,5 @@
+import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -34,15 +36,26 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           // A SlidableAction can have an icon and/or a label.
                           SlidableAction(
-                            onPressed: (context) {},
-                            backgroundColor: Color(0xFFFE4A49),
+                            onPressed: (context) {
+                              FirestoreService().deleteExpense(id: expense!.id);
+                            },
+                            backgroundColor: const Color(0xFFFE4A49),
                             foregroundColor: Colors.white,
                             icon: Icons.delete,
                             label: 'Delete',
                           ),
                           SlidableAction(
-                            onPressed: (context) {},
-                            backgroundColor: Color(0xFF21B7CA),
+                            onPressed: (context) {
+                              Navigator.pushNamed(context, updateDataUi,
+                                  arguments: {
+                                    fieldAmount: expense?.amount,
+                                    fieldTitle: expense?.title,
+                                    fieldTag: expense?.tag,
+                                    fieldDate: expense?.date,
+                                    fieldTime: expense?.time,
+                                  });
+                            },
+                            backgroundColor: const Color(0xFF21B7CA),
                             foregroundColor: Colors.white,
                             icon: Icons.update,
                             label: 'Update',
@@ -52,13 +65,13 @@ class HomeScreen extends StatelessWidget {
 
                       // The end action pane is the one at the right or the bottom side.
                       endActionPane: ActionPane(
-                        motion: ScrollMotion(),
+                        motion: const ScrollMotion(),
                         children: [
                           SlidableAction(
                             // An action can be bigger than the others.
                             flex: 2,
                             onPressed: (context) {},
-                            backgroundColor: Color(0xFF7BC043),
+                            backgroundColor: const Color(0xFF7BC043),
                             foregroundColor: Colors.white,
                             icon: Icons.share,
                             label: 'Share',
@@ -66,8 +79,6 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
 
-                      // The child of the Slidable is what the user sees when the
-                      // component is not dragged.
                       child: ListTile(
                         title: Text(expense!.title),
                         trailing: Text(expense.amount.toString()),
@@ -82,40 +93,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           );
-
-          // return ListView.builder(
-          //   itemCount: expenses?.length,
-          //   itemBuilder: (context, index) {
-          //     final expense = expenses?.elementAt(index);
-          //     // Build UI item for expense
-          //     return ListTile(
-          //       onLongPress: () {
-          //         // CunehatServices().expenseDelete(id: expense.id);
-          //       },
-          //       onTap: () {
-          //         showDialog(
-          //           context: context,
-          //           useSafeArea: true,
-          //           builder: (context) {
-          //             return const Dialog(
-          //               child: Column(
-          //                 children: [
-          //                   Text("TITLE"),
-          //                 ],
-          //               ),
-          //             );
-          //           },
-          //         );
-          //       },
-          //       title: Text(expense!.date),
-          //       trailing: Text(expense.amount.toString()),
-          //       leading: Text("${expense.date}\n${expense.time}"),
-          //       subtitle: Text("${expense.tag}  |   ${expense.userId}"),
-          //       titleAlignment: ListTileTitleAlignment.center,
-          //       // Other expense details...
-          //     );
-          //   },
-          // );
         } else if (expenseSnapshot.hasError) {
           // Handle error case
           return const Center(child: Text('There is no data'));
@@ -125,7 +102,5 @@ class HomeScreen extends StatelessWidget {
         }
       },
     );
-
-    // add some button which can be able to add PERSON, DELETE PERSON, SWİTCH PERSON,
   }
 }

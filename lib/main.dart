@@ -4,8 +4,8 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/constants/routes.dart';
-import 'package:cunehat/views/main_views/add_data_views/add_expense_screen.dart';
-import 'package:cunehat/views/main_views/add_data_views/add_income_screen.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
+import 'package:cunehat/views/main_views/add_data_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
@@ -43,8 +43,18 @@ void main() async {
         detailsUi: (context) => const DetailsScreen(),
         homeUi: (context) => const HomeScreen(),
         visualizeUi: (context) => const VisualizeDataScreen(),
-        addExpenseUi: (context) => const AddExpenseScreen(),
-        addIncomeUi: (context) => const AddIncomeScreen(),
+        addExpenseUi: (context) => AddDataScreen(
+            colorOfClass: Colors.red,
+            titleOfClass: "Gider",
+            provider: FirestoreService().addExpense),
+        addIncomeUi: (context) => AddDataScreen(
+            colorOfClass: Colors.green,
+            titleOfClass: "Gelir",
+            provider: FirestoreService().addIncome),
+        updateDataUi: (context) => AddDataScreen(
+            colorOfClass: Colors.purple,
+            titleOfClass: "GÜNCELLE",
+            provider: FirestoreService().update)
       },
     ),
   );

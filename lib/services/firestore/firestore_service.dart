@@ -5,12 +5,12 @@ class FirestoreService {
   final _expense = FirebaseFirestore.instance.collection(expenseTable);
   final _income = FirebaseFirestore.instance.collection(incomeTable);
 
-  Future<void> addExpense({required Map<String, dynamic> expense}) async {
-    await _expense.add(expense);
+  Future<void> addExpense({required Map<String, dynamic> data}) async {
+    await _expense.add(data);
   }
 
-  Future<void> addIncome({required Map<String, dynamic> income}) async {
-    await _income.add(income);
+  Future<void> addIncome({required Map<String, dynamic> data}) async {
+    await _income.add(data);
   }
 
   Stream<Iterable<Expense>> getAllExpenses({required ownerUserId}) {
@@ -46,6 +46,23 @@ class FirestoreService {
 
     return querySnapshot.docs;
   }
+
+  Future<void> deleteIncome({required String id}) async {
+    await _income.doc(id).delete();
+  }
+
+  Future<void> deleteExpense({required String id}) async {
+    await _expense.doc(id).delete();
+  }
+
+  Future<void> update(
+      {required CollectionReference<Map<String, dynamic>> collection,
+      required Map<String, dynamic> incomeData,
+      required String id}) async {
+    await collection.doc(id).update(incomeData);
+  }
+
+  // TODO delete user from database by ownerUserId
 }
 
 class Expense {

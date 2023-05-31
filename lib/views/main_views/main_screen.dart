@@ -125,7 +125,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         items: <Bubble>[
           // Floating action menu item
           Bubble(
-            title: "Expense",
+            title: "Gider",
             iconColor: Colors.white,
             bubbleColor: Colors.red,
             icon: Icons.dataset,
@@ -137,7 +137,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
           //Floating action menu item
           Bubble(
-            title: "Income",
+            title: "Gelir",
             iconColor: Colors.white,
             bubbleColor: Colors.green,
             icon: Icons.dataset,

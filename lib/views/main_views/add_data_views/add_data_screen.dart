@@ -1,5 +1,4 @@
 import 'package:cunehat/services/firestore/cloud_const.dart';
-import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,28 +7,38 @@ import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
-class AddIncomeScreen extends StatefulWidget {
-  const AddIncomeScreen({super.key});
+class AddDataScreen extends StatefulWidget {
+  final Function provider;
+  final Color colorOfClass;
+  final String titleOfClass;
+
+  const AddDataScreen({
+    super.key,
+    required this.colorOfClass,
+    required this.titleOfClass,
+    required this.provider,
+  });
 
   @override
-  State<AddIncomeScreen> createState() => _AddIncomeScreenState();
+  State<AddDataScreen> createState() => _AddDataScreenState();
 }
 
-class _AddIncomeScreenState extends State<AddIncomeScreen> {
+class _AddDataScreenState extends State<AddDataScreen> {
+  bool isUpdateing = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
   late final TextfieldTagsController _tagController;
-  late String btnDate;
-  late String btnTime;
+  late String _btnDate;
+  late String _btnTime;
 
   @override
   void initState() {
     _noteController = TextEditingController();
     _priceController = TextEditingController();
     _tagController = TextfieldTagsController();
-    btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
-    btnTime = DateFormat.Hm('tr').format(DateTime.now());
+    _btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
+    _btnTime = DateFormat.Hm('tr').format(DateTime.now());
     super.initState();
   }
 
@@ -42,10 +51,25 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // If user want to update data, then current data will be passed by
+    // below line of code. So we can show selected row to the user
+    try {
+      isUpdateing = true;
+      final updateData =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+      _noteController.text = updateData[fieldTitle];
+      _priceController.text = updateData[fieldAmount].toString();
+      _tagController.clearTags();
+      _tagController.addTag = updateData[fieldTag];
+    } catch (e) {
+      print("-----------");
+      print(e);
+    }
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: const Text("Gelir"),
+        backgroundColor: widget.colorOfClass,
+        title: Text(widget.titleOfClass),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -61,7 +85,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     MaterialButton(
-                      color: Colors.green,
+                      color: widget.colorOfClass,
                       elevation: 20,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 12),
@@ -72,7 +96,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              btnDate =
+                              _btnDate =
                                   DateFormat('dd/MM/yyyy', 'tr').format(time);
                             });
                           },
@@ -83,12 +107,12 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                         );
                       },
                       child: Text(
-                        btnDate,
+                        _btnDate,
                         style: const TextStyle(fontSize: 25),
                       ),
                     ),
                     MaterialButton(
-                      color: Colors.green,
+                      color: widget.colorOfClass,
                       elevation: 20,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 12),
@@ -99,7 +123,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              btnTime = DateFormat.Hm('tr').format(time);
+                              _btnTime = DateFormat.Hm('tr').format(time);
                             });
                           },
                           currentTime: DateTime.now(),
@@ -107,7 +131,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                         );
                       },
                       child: Text(
-                        btnTime,
+                        _btnTime,
                         style: const TextStyle(fontSize: 25),
                       ),
                     ),
@@ -168,7 +192,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                           horizontal: 20, vertical: 8),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
-                      color: Colors.green.shade100,
+                      color: Colors.blueAccent.shade200,
                       onPressed: () {
                         _tagController.clearTags();
                       },
@@ -186,7 +210,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.green,
+        backgroundColor: widget.colorOfClass,
         label: const Text("KAYDET"),
         extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
         onPressed: () {
@@ -202,26 +226,26 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      color: Colors.red,
+                      color: widget.colorOfClass,
                       child: const Text("VAZGEÇ")),
                   MaterialButton(
                       onPressed: () async {
                         final tag = _tagController.getTags!.isNotEmpty
                             ? _tagController.getTags!.first
                             : "tag";
-                        FirestoreService().addIncome(income: {
+                        widget.provider(data: {
                           fieldUserId: FirebaseAuth.instance.currentUser?.uid,
                           fieldAmount: double.parse(_priceController.text),
                           fieldTitle: _noteController.text,
                           fieldTag: tag,
-                          fieldDate: btnDate,
-                          fieldTime: btnTime,
+                          fieldDate: _btnDate,
+                          fieldTime: _btnTime,
                         });
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }
                       },
-                      color: Colors.green,
+                      color: widget.colorOfClass,
                       child: const Text("KAYDET"))
                 ],
               ),
