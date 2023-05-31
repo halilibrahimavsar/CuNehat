@@ -1,6 +1,7 @@
-import 'package:cunehat/constants/routes.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
+import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -34,7 +35,33 @@ class HomeScreen extends StatelessWidget {
 
                         // All actions are defined in the children parameter.
                         children: [
-                          // A SlidableAction can have an icon and/or a label.
+                          SlidableAction(
+                            onPressed: (context) {
+                              Navigator.push(context, MaterialPageRoute(
+                                builder: (context) {
+                                  return UpdateDataScreen(
+                                    collection: FirebaseFirestore.instance
+                                        .collection(expenseTable),
+                                    id: expense?.id ?? "",
+                                    note: expense?.title ?? "",
+                                    price: expense?.amount ?? 0,
+                                    tag: expense?.tag ?? "",
+                                    date: expense?.date ?? "",
+                                    time: expense?.time ?? "",
+                                  );
+                                },
+                              ));
+                            },
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            icon: Icons.update,
+                            label: 'Update',
+                          ),
+                        ],
+                      ),
+                      endActionPane: ActionPane(
+                        motion: const ScrollMotion(),
+                        children: [
                           SlidableAction(
                             onPressed: (context) {
                               FirestoreService().deleteExpense(id: expense!.id);
@@ -43,38 +70,6 @@ class HomeScreen extends StatelessWidget {
                             foregroundColor: Colors.white,
                             icon: Icons.delete,
                             label: 'Delete',
-                          ),
-                          SlidableAction(
-                            onPressed: (context) {
-                              Navigator.pushNamed(context, updateDataUi,
-                                  arguments: {
-                                    fieldAmount: expense?.amount,
-                                    fieldTitle: expense?.title,
-                                    fieldTag: expense?.tag,
-                                    fieldDate: expense?.date,
-                                    fieldTime: expense?.time,
-                                  });
-                            },
-                            backgroundColor: const Color(0xFF21B7CA),
-                            foregroundColor: Colors.white,
-                            icon: Icons.update,
-                            label: 'Update',
-                          ),
-                        ],
-                      ),
-
-                      // The end action pane is the one at the right or the bottom side.
-                      endActionPane: ActionPane(
-                        motion: const ScrollMotion(),
-                        children: [
-                          SlidableAction(
-                            // An action can be bigger than the others.
-                            flex: 2,
-                            onPressed: (context) {},
-                            backgroundColor: const Color(0xFF7BC043),
-                            foregroundColor: Colors.white,
-                            icon: Icons.share,
-                            label: 'Share',
                           ),
                         ],
                       ),

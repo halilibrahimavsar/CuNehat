@@ -12,5 +12,3 @@ const String visualizeUi = "/main_views/home_tab_views/visualize_data_screen/";
 
 const String addExpenseUi = "/main_views/add_data_views/expense_ui/";
 const String addIncomeUi = "/main_views/add_data_views/income_ui/";
-
-const String updateDataUi = "/main_views/add_data_views/update_ui/";

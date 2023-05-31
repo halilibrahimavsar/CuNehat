@@ -55,11 +55,14 @@ class FirestoreService {
     await _expense.doc(id).delete();
   }
 
-  Future<void> update(
-      {required CollectionReference<Map<String, dynamic>> collection,
-      required Map<String, dynamic> incomeData,
-      required String id}) async {
-    await collection.doc(id).update(incomeData);
+  Future<void> updateExpense(
+      {required Map<String, dynamic> data, required String id}) async {
+    await _expense.doc(id).update(data);
+  }
+
+  Future<void> updateIncome(
+      {required Map<String, dynamic> data, required String id}) async {
+    await _income.doc(id).update(data);
   }
 
   // TODO delete user from database by ownerUserId

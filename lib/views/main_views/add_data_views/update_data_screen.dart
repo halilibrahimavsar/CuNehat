@@ -1,30 +1,38 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
+import 'package:intl/intl.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
-class AddDataScreen extends StatefulWidget {
-  final Function provider;
-  final Color colorOfClass;
-  final String titleOfClass;
+class UpdateDataScreen extends StatefulWidget {
+  final CollectionReference<Map<String, dynamic>> collection;
+  final String id;
+  final String note;
+  final double price;
+  final String tag;
+  final String date;
+  final String time;
 
-  const AddDataScreen({
+  const UpdateDataScreen({
     super.key,
-    required this.colorOfClass,
-    required this.titleOfClass,
-    required this.provider,
+    required this.collection,
+    required this.id,
+    required this.note,
+    required this.price,
+    required this.tag,
+    required this.date,
+    required this.time,
   });
 
   @override
-  State<AddDataScreen> createState() => _AddDataScreenState();
+  State<UpdateDataScreen> createState() => _UpdateDataScreenState();
 }
 
-class _AddDataScreenState extends State<AddDataScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+class _UpdateDataScreenState extends State<UpdateDataScreen> {
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
   late final TextfieldTagsController _tagController;
@@ -50,16 +58,22 @@ class _AddDataScreenState extends State<AddDataScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _noteController.text = widget.note;
+    _priceController.text = widget.price.toString();
+    // _tagController.clearTags();
+    // _tagController.addTag = widget.tag;
+    _btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
+    _btnTime = DateFormat.Hm('tr').format(DateTime.now());
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: widget.colorOfClass,
-        title: Text(widget.titleOfClass),
+        backgroundColor: Colors.purple,
+        title: const Text("Güncelle"),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Form(
-            key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -69,7 +83,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     MaterialButton(
-                      color: widget.colorOfClass,
+                      color: Colors.purple,
                       elevation: 20,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 12),
@@ -96,7 +110,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                       ),
                     ),
                     MaterialButton(
-                      color: widget.colorOfClass,
+                      color: Colors.purple,
                       elevation: 20,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 12),
@@ -194,47 +208,46 @@ class _AddDataScreenState extends State<AddDataScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: widget.colorOfClass,
+        backgroundColor: Colors.purple,
         label: const Text("KAYDET"),
         extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
         onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text("Kaydet"),
-                content: Text(
-                    "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? "),
-                actions: [
-                  MaterialButton(
-                      onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Kaydet"),
+              content: Text(
+                  "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? "),
+              actions: [
+                MaterialButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    color: Colors.purple,
+                    child: const Text("VAZGEÇ")),
+                MaterialButton(
+                    onPressed: () async {
+                      final tag = _tagController.getTags!.isNotEmpty
+                          ? _tagController.getTags!.first
+                          : "tag";
+
+                      await FirestoreService()
+                          .updateExpense(id: widget.id, data: {
+                        fieldAmount: double.parse(_priceController.text),
+                        fieldTitle: _noteController.text,
+                        fieldTag: tag,
+                        fieldDate: _btnDate,
+                        fieldTime: _btnTime,
+                      });
+                      if (context.mounted) {
                         Navigator.of(context).pop();
-                      },
-                      color: widget.colorOfClass,
-                      child: const Text("VAZGEÇ")),
-                  MaterialButton(
-                      onPressed: () async {
-                        final tag = _tagController.getTags!.isNotEmpty
-                            ? _tagController.getTags!.first
-                            : "tag";
-                        widget.provider(data: {
-                          fieldUserId: FirebaseAuth.instance.currentUser?.uid,
-                          fieldAmount: double.parse(_priceController.text),
-                          fieldTitle: _noteController.text,
-                          fieldTag: tag,
-                          fieldDate: _btnDate,
-                          fieldTime: _btnTime,
-                        });
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      color: widget.colorOfClass,
-                      child: const Text("KAYDET"))
-                ],
-              ),
-            );
-          }
+                      }
+                    },
+                    color: Colors.purple,
+                    child: const Text("GÜNCELLE"))
+              ],
+            ),
+          );
         },
       ),
     );
