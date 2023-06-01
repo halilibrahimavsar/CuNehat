@@ -231,6 +231,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           ? _tagController.getTags!.first
                           : "tag";
 
+                      // TODO : CHANGE THİS CODE (ADD İNCOME TOO)
                       await FirestoreService()
                           .updateExpense(id: widget.id, data: {
                         fieldAmount: double.parse(_priceController.text),

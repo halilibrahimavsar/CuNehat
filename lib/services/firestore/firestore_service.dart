@@ -68,13 +68,30 @@ class FirestoreService {
   // TODO delete user from database by ownerUserId
 }
 
-class Expense {
+abstract class ModelProvider {
+  String id = "";
+  String userId = "";
+  String title = "";
+  String tag = "";
+  double amount = 0;
+  String date = "";
+  String time = "";
+}
+
+class Expense implements ModelProvider {
+  @override
   final String id;
+  @override
   final String userId;
+  @override
   final String title;
+  @override
   final String tag;
+  @override
   final double amount;
+  @override
   final String date;
+  @override
   final String time;
 
   Expense({
@@ -95,15 +112,57 @@ class Expense {
         amount = snapshot.data()[fieldAmount],
         date = snapshot.data()[fieldDate],
         time = snapshot.data()[fieldTime];
+
+  @override
+  set amount(double _amount) {
+    // TODO: implement amount
+  }
+
+  @override
+  set date(String _date) {
+    // TODO: implement date
+  }
+
+  @override
+  set id(String _id) {
+    // TODO: implement id
+  }
+
+  @override
+  set tag(String _tag) {
+    // TODO: implement tag
+  }
+
+  @override
+  set time(String _time) {
+    // TODO: implement time
+  }
+
+  @override
+  set title(String _title) {
+    // TODO: implement title
+  }
+
+  @override
+  set userId(String _userId) {
+    // TODO: implement userId
+  }
 }
 
-class Income {
+class Income implements ModelProvider {
+  @override
   final String id;
+  @override
   final String userId;
+  @override
   final String title;
+  @override
   final String tag;
+  @override
   final double amount;
+  @override
   final String date;
+  @override
   final String time;
 
   Income({
@@ -124,4 +183,39 @@ class Income {
         amount = snapshot.data()[fieldAmount],
         date = snapshot.data()[fieldDate],
         time = snapshot.data()[fieldTime];
+
+  @override
+  set amount(double _amount) {
+    // TODO: implement amount
+  }
+
+  @override
+  set date(String _date) {
+    // TODO: implement date
+  }
+
+  @override
+  set id(String _id) {
+    // TODO: implement id
+  }
+
+  @override
+  set tag(String _tag) {
+    // TODO: implement tag
+  }
+
+  @override
+  set time(String _time) {
+    // TODO: implement time
+  }
+
+  @override
+  set title(String _title) {
+    // TODO: implement title
+  }
+
+  @override
+  set userId(String _userId) {
+    // TODO: implement userId
+  }
 }

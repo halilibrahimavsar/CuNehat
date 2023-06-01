@@ -27,11 +27,14 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: FirestoreService()
-          .getAllExpenses(ownerUserId: FirebaseAuth.instance.currentUser?.uid),
+      stream: selectedOption == 1
+          ? FirestoreService().getAllExpenses(
+              ownerUserId: FirebaseAuth.instance.currentUser?.uid)
+          : FirestoreService().getAllIncomes(
+              ownerUserId: FirebaseAuth.instance.currentUser?.uid),
       builder: (context, expenseSnapshot) {
         if (expenseSnapshot.hasData) {
-          final expenses = expenseSnapshot.data;
+          final datas = expenseSnapshot.data;
 
           return Column(
             children: [
@@ -51,9 +54,9 @@ class HomeScreenState extends State<HomeScreen> {
               ),
               Expanded(
                 child: ListView.builder(
-                  itemCount: expenses?.length,
+                  itemCount: datas?.length,
                   itemBuilder: (context, index) {
-                    final expense = expenses?.elementAt(index);
+                    final data = datas?.elementAt(index);
                     return Slidable(
                       startActionPane: ActionPane(
                         motion: const ScrollMotion(),
@@ -64,13 +67,15 @@ class HomeScreenState extends State<HomeScreen> {
                                 builder: (context) {
                                   return UpdateDataScreen(
                                     collection: FirebaseFirestore.instance
-                                        .collection(expenseTable),
-                                    id: expense?.id ?? "",
-                                    note: expense?.title ?? "",
-                                    price: expense?.amount ?? 0,
-                                    tag: expense?.tag ?? "",
-                                    date: expense?.date ?? "",
-                                    time: expense?.time ?? "",
+                                        .collection(selectedOption == 1
+                                            ? expenseTable
+                                            : incomeTable),
+                                    id: data?.id ?? "",
+                                    note: data?.title ?? "",
+                                    price: data?.amount ?? 0,
+                                    tag: data?.tag ?? "",
+                                    date: data?.date ?? "",
+                                    time: data?.time ?? "",
                                   );
                                 },
                               ));
@@ -114,8 +119,11 @@ class HomeScreenState extends State<HomeScreen> {
 
                               if (isDelete) {
                                 print("deleted");
-                                FirestoreService()
-                                    .deleteExpense(id: expense!.id);
+                                selectedOption == 1
+                                    ? FirestoreService()
+                                        .deleteExpense(id: data!.id)
+                                    : FirestoreService()
+                                        .deleteIncome(id: data!.id);
 
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -144,11 +152,11 @@ class HomeScreenState extends State<HomeScreen> {
                         borderRadius: 10,
                         depth: 10,
                         child: ListTile(
-                          title: Text(expense!.title),
-                          trailing: Text(expense.amount.toString()),
-                          leading: Text("${expense.date}\n${expense.time}",
+                          title: Text(data!.title),
+                          trailing: Text(data.amount.toString()),
+                          leading: Text("${data.date}\n${data.time}",
                               textAlign: TextAlign.center),
-                          subtitle: Text(expense.tag),
+                          subtitle: Text(data.tag),
                           titleAlignment: ListTileTitleAlignment.center,
                         ),
                       ),
