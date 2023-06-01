@@ -1,3 +1,4 @@
+import 'package:clay_containers/clay_containers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
@@ -5,9 +6,23 @@ import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart'
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  HomeScreenState createState() => HomeScreenState();
+}
+
+class HomeScreenState extends State<HomeScreen> {
+  int selectedOption = 1;
+
+  void setSelectedOption(int option) {
+    setState(() {
+      selectedOption = option;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +35,28 @@ class HomeScreen extends StatelessWidget {
 
           return Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    child: NeomorphicRadioGroup(
+                      options: const ['Gelir', 'Gider'],
+                      selectedOption: selectedOption,
+                      onChanged: (value) {
+                        setSelectedOption(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
               Expanded(
                 child: ListView.builder(
                   itemCount: expenses?.length,
                   itemBuilder: (context, index) {
                     final expense = expenses?.elementAt(index);
                     return Slidable(
-                      // The start action pane is the one at the left or the top side.
                       startActionPane: ActionPane(
-                        // A motion is a widget used to control how the pane animates.
                         motion: const ScrollMotion(),
-
-                        // A pane can dismiss the Slidable.
-
-                        // All actions are defined in the children parameter.
                         children: [
                           SlidableAction(
                             onPressed: (context) {
@@ -63,8 +86,51 @@ class HomeScreen extends StatelessWidget {
                         motion: const ScrollMotion(),
                         children: [
                           SlidableAction(
-                            onPressed: (context) {
-                              FirestoreService().deleteExpense(id: expense!.id);
+                            onPressed: (context) async {
+                              bool isDelete = await showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text("Sil!"),
+                                    content: const Text(
+                                        "Bu veriyi tekrar getiremezsiniz. Silinsin mi?"),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context, false);
+                                        },
+                                        child: const Text("Hayır"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context, true);
+                                        },
+                                        child: const Text("Evet"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ).then((value) => value ?? false);
+
+                              if (isDelete) {
+                                print("deleted");
+                                FirestoreService()
+                                    .deleteExpense(id: expense!.id);
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      behavior: SnackBarBehavior.floating,
+                                      content: AwesomeSnackbarContent(
+                                          title: "Sil",
+                                          message:
+                                              "Veriler geri getirilemez! \nSilinsin mi",
+                                          contentType: ContentType.warning),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
                             },
                             backgroundColor: const Color(0xFFFE4A49),
                             foregroundColor: Colors.white,
@@ -73,14 +139,18 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-
-                      child: ListTile(
-                        title: Text(expense!.title),
-                        trailing: Text(expense.amount.toString()),
-                        leading: Text("${expense.date}\n${expense.time}",
-                            textAlign: TextAlign.center),
-                        subtitle: Text(expense.tag),
-                        titleAlignment: ListTileTitleAlignment.center,
+                      child: ClayContainer(
+                        curveType: CurveType.concave,
+                        borderRadius: 10,
+                        depth: 10,
+                        child: ListTile(
+                          title: Text(expense!.title),
+                          trailing: Text(expense.amount.toString()),
+                          leading: Text("${expense.date}\n${expense.time}",
+                              textAlign: TextAlign.center),
+                          subtitle: Text(expense.tag),
+                          titleAlignment: ListTileTitleAlignment.center,
+                        ),
                       ),
                     );
                   },
@@ -96,6 +166,65 @@ class HomeScreen extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
       },
+    );
+  }
+}
+
+class NeomorphicRadioGroup extends StatefulWidget {
+  final List<String> options;
+  final int selectedOption;
+  final ValueChanged<int> onChanged;
+
+  const NeomorphicRadioGroup({
+    Key? key,
+    required this.options,
+    required this.selectedOption,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  NeomorphicRadioGroupState createState() => NeomorphicRadioGroupState();
+}
+
+class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: widget.options.map((option) {
+        final index = widget.options.indexOf(option);
+        final isSelected = index + 1 == widget.selectedOption;
+
+        return Expanded(
+          child: GestureDetector(
+            onTap: () {
+              widget.onChanged(index + 1);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.blue : Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 2,
+                    blurRadius: 6,
+                    offset: const Offset(0, 6), // changes position of shadow
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
