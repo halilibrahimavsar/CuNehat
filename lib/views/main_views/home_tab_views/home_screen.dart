@@ -1,6 +1,4 @@
 import 'package:clay_containers/clay_containers.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,9 +30,9 @@ class HomeScreenState extends State<HomeScreen> {
               ownerUserId: FirebaseAuth.instance.currentUser?.uid)
           : FirestoreService().getAllIncomes(
               ownerUserId: FirebaseAuth.instance.currentUser?.uid),
-      builder: (context, expenseSnapshot) {
-        if (expenseSnapshot.hasData) {
-          final datas = expenseSnapshot.data;
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final allData = snapshot.data;
 
           return Column(
             children: [
@@ -54,9 +52,9 @@ class HomeScreenState extends State<HomeScreen> {
               ),
               Expanded(
                 child: ListView.builder(
-                  itemCount: datas?.length,
+                  itemCount: allData?.length,
                   itemBuilder: (context, index) {
-                    final data = datas?.elementAt(index);
+                    final data = allData?.elementAt(index);
                     return Slidable(
                       startActionPane: ActionPane(
                         motion: const ScrollMotion(),
@@ -66,10 +64,7 @@ class HomeScreenState extends State<HomeScreen> {
                               Navigator.push(context, MaterialPageRoute(
                                 builder: (context) {
                                   return UpdateDataScreen(
-                                    collection: FirebaseFirestore.instance
-                                        .collection(selectedOption == 1
-                                            ? expenseTable
-                                            : incomeTable),
+                                    selectedOption: selectedOption,
                                     id: data?.id ?? "",
                                     note: data?.title ?? "",
                                     price: data?.amount ?? 0,
@@ -118,7 +113,6 @@ class HomeScreenState extends State<HomeScreen> {
                               ).then((value) => value ?? false);
 
                               if (isDelete) {
-                                print("deleted");
                                 selectedOption == 1
                                     ? FirestoreService()
                                         .deleteExpense(id: data!.id)
@@ -166,7 +160,7 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ],
           );
-        } else if (expenseSnapshot.hasError) {
+        } else if (snapshot.hasError) {
           // Handle error case
           return const Center(child: Text('There is no data'));
         } else {

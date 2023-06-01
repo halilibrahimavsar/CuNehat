@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
@@ -9,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
 class UpdateDataScreen extends StatefulWidget {
-  final CollectionReference<Map<String, dynamic>> collection;
+  final int selectedOption;
   final String id;
   final String note;
   final double price;
@@ -19,7 +18,7 @@ class UpdateDataScreen extends StatefulWidget {
 
   const UpdateDataScreen({
     super.key,
-    required this.collection,
+    required this.selectedOption,
     required this.id,
     required this.note,
     required this.price,
@@ -231,15 +230,29 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           ? _tagController.getTags!.first
                           : "tag";
 
-                      // TODO : CHANGE THİS CODE (ADD İNCOME TOO)
-                      await FirestoreService()
-                          .updateExpense(id: widget.id, data: {
-                        fieldAmount: double.parse(_priceController.text),
-                        fieldTitle: _noteController.text,
-                        fieldTag: tag,
-                        fieldDate: _btnDate,
-                        fieldTime: _btnTime,
-                      });
+                      if (widget.selectedOption == 1) {
+                        await FirestoreService().updateExpense(
+                          id: widget.id,
+                          data: {
+                            fieldAmount: double.parse(_priceController.text),
+                            fieldTitle: _noteController.text,
+                            fieldTag: tag,
+                            fieldDate: _btnDate,
+                            fieldTime: _btnTime,
+                          },
+                        );
+                      } else {
+                        await FirestoreService().updateIncome(
+                          id: widget.id,
+                          data: {
+                            fieldAmount: double.parse(_priceController.text),
+                            fieldTitle: _noteController.text,
+                            fieldTag: tag,
+                            fieldDate: _btnDate,
+                            fieldTime: _btnTime,
+                          },
+                        );
+                      }
                       if (context.mounted) {
                         Navigator.of(context).pop();
                       }
