@@ -61,8 +61,6 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
     _priceController.text = widget.price.toString();
     // _tagController.clearTags();
     // _tagController.addTag = widget.tag;
-    _btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
-    _btnTime = DateFormat.Hm('tr').format(DateTime.now());
 
     return Scaffold(
       appBar: AppBar(
@@ -208,7 +206,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Colors.purple,
-        label: const Text("KAYDET"),
+        label: const Text("GÜNCELLE"),
         extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
         onPressed: () {
           showDialog(
@@ -230,7 +228,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           ? _tagController.getTags!.first
                           : "tag";
 
-                      if (widget.selectedOption == 1) {
+                      if (widget.selectedOption == 2) {
                         await FirestoreService().updateExpense(
                           id: widget.id,
                           data: {

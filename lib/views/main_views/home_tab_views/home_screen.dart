@@ -25,7 +25,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: selectedOption == 1
+      stream: selectedOption == 2
           ? FirestoreService().getAllExpenses(
               ownerUserId: FirebaseAuth.instance.currentUser?.uid)
           : FirestoreService().getAllIncomes(
@@ -36,6 +36,7 @@ class HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
+              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -50,6 +51,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
               Expanded(
                 child: ListView.builder(
                   itemCount: allData?.length,
@@ -195,7 +197,9 @@ class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
       children: widget.options.map((option) {
         final index = widget.options.indexOf(option);
         final isSelected = index + 1 == widget.selectedOption;
-
+        print("vvvvvvvvvvvvvvvvvvv");
+        print(index);
+        print(isSelected);
         return Expanded(
           child: GestureDetector(
             onTap: () {
@@ -204,7 +208,9 @@ class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue : Colors.white,
+                color: isSelected
+                    ? (index == 1 ? Colors.green : Colors.red)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
