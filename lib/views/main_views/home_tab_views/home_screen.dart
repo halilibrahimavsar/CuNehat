@@ -25,7 +25,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: selectedOption == 2
+      stream: (selectedOption == 2)
           ? FirestoreService().getAllExpenses(
               ownerUserId: FirebaseAuth.instance.currentUser?.uid)
           : FirestoreService().getAllIncomes(
@@ -145,14 +145,36 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                       child: ClayContainer(
                         curveType: CurveType.concave,
-                        borderRadius: 10,
-                        depth: 10,
+                        borderRadius: 26,
+                        depth: 16,
                         child: ListTile(
-                          title: Text(data!.title),
-                          trailing: Text(data.amount.toString()),
-                          leading: Text("${data.date}\n${data.time}",
-                              textAlign: TextAlign.center),
-                          subtitle: Text(data.tag),
+                          title: Text(
+                            data!.title,
+                            style: TextStyle(
+                                color: (selectedOption == 2)
+                                    ? Colors.red
+                                    : Colors.green),
+                          ),
+                          trailing: Text(
+                            data.amount.toString(),
+                            style: TextStyle(
+                                fontSize: 18,
+                                color: (selectedOption == 2)
+                                    ? Colors.red
+                                    : Colors.green),
+                          ),
+                          leading: Text(
+                            "${data.date}\n${data.time}",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: (selectedOption == 2)
+                                    ? Colors.red
+                                    : Colors.green),
+                          ),
+                          subtitle: Text(
+                            data.tag,
+                            style: const TextStyle(color: Colors.blue),
+                          ),
                           titleAlignment: ListTileTitleAlignment.center,
                         ),
                       ),
@@ -197,9 +219,7 @@ class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
       children: widget.options.map((option) {
         final index = widget.options.indexOf(option);
         final isSelected = index + 1 == widget.selectedOption;
-        print("vvvvvvvvvvvvvvvvvvv");
-        print(index);
-        print(isSelected);
+
         return Expanded(
           child: GestureDetector(
             onTap: () {
@@ -209,7 +229,7 @@ class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (index == 1 ? Colors.green : Colors.red)
+                    ? (index == 1 ? Colors.red : Colors.green)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
