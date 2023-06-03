@@ -115,7 +115,7 @@ class HomeScreenState extends State<HomeScreen> {
                               ).then((value) => value ?? false);
 
                               if (isDelete) {
-                                selectedOption == 1
+                                (selectedOption == 2)
                                     ? FirestoreService()
                                         .deleteExpense(id: data!.id)
                                     : FirestoreService()
