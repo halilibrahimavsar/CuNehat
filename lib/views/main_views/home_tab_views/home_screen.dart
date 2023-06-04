@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,6 +16,12 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   int selectedOption = 1;
+  List<String> allDatesBetweenStartEnd = [];
+  DateTime firstDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
+  DateTime lastDate = DateTime.now();
 
   void setSelectedOption(int option) {
     setState(() {
@@ -22,13 +29,28 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void addAllDatesRanges() {
+    allDatesBetweenStartEnd.clear();
+    for (DateTime date = firstDate;
+        date.isBefore(lastDate) || date.isAtSameMomentAs(lastDate);
+        date = date.add(Duration(days: 1))) {
+      allDatesBetweenStartEnd.add(
+        DateFormat('dd/MM/yyyy', 'tr').format(date),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    addAllDatesRanges();
+    print(allDatesBetweenStartEnd);
     return StreamBuilder(
       stream: (selectedOption == 2)
-          ? FirestoreService().getAllExpenses(
+          ? FirestoreService().getExpensesByMonthAndYear(
+              date: allDatesBetweenStartEnd,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid)
-          : FirestoreService().getAllIncomes(
+          : FirestoreService().getIncomeByMonthAndYear(
+              date: allDatesBetweenStartEnd,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -36,6 +58,40 @@ class HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      DateTimeRange result = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime(1997),
+                            lastDate: DateTime(2050),
+                            currentDate: DateTime.now(),
+                            initialDateRange: DateTimeRange(
+                              start: DateTime.now()
+                                  .subtract(const Duration(days: 30)),
+                              end: DateTime.now(),
+                            ),
+                          ) ??
+                          DateTimeRange(
+                              start: DateTime(
+                                DateTime.now().year,
+                                DateTime.now().month,
+                              ),
+                              end: DateTime.now());
+                      setState(() {
+                        firstDate = result.start;
+
+                        lastDate = result.end;
+                      });
+                    },
+                    child: const Text("Tarih sec"),
+                  ),
+                  Text(firstDate.toString().split(" ")[0]),
+                  Text(lastDate.toString().split(" ")[0]),
+                ],
+              ),
               const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,

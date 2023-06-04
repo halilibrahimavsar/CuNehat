@@ -31,20 +31,26 @@ class FirestoreService {
     return querySnapshot;
   }
 
-  Future<List<DocumentSnapshot>> getExpensesByMonthAndYear(
-      {required int date}) async {
-    final querySnapshot =
-        await _expense.where('date', isGreaterThanOrEqualTo: date).get();
+  Stream<Iterable<Expense>> getExpensesByMonthAndYear(
+      {required List date, required ownerUserId}) {
+    final querySnapshot = _expense
+        .where(fieldUserId, isEqualTo: ownerUserId)
+        .where(fieldDate, arrayContains: date)
+        .snapshots()
+        .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
 
-    return querySnapshot.docs;
+    return querySnapshot;
   }
 
-  Future<List<DocumentSnapshot>> getIncomesByMonthAndYear(
-      {required int date}) async {
-    final querySnapshot =
-        await _income.where('date', isGreaterThanOrEqualTo: date).get();
+  Stream<Iterable<Expense>> getIncomeByMonthAndYear(
+      {required List<String> date, required ownerUserId}) {
+    final querySnapshot = _income
+        .where(fieldUserId, isEqualTo: ownerUserId)
+        .where(fieldDate, whereIn: date)
+        .snapshots()
+        .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
 
-    return querySnapshot.docs;
+    return querySnapshot;
   }
 
   Future<void> deleteIncome({required String id}) async {
