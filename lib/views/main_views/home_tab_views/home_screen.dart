@@ -1,11 +1,11 @@
 import 'package:clay_containers/clay_containers.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -16,12 +16,14 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   int selectedOption = 1;
-  List<String> allDatesBetweenStartEnd = [];
-  DateTime firstDate = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
+  Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
+    DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+    ).millisecondsSinceEpoch,
   );
-  DateTime lastDate = DateTime.now();
+  Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
+      DateTime.now().millisecondsSinceEpoch);
 
   void setSelectedOption(int option) {
     setState(() {
@@ -29,68 +31,61 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void addAllDatesRanges() {
-    allDatesBetweenStartEnd.clear();
-    for (DateTime date = firstDate;
-        date.isBefore(lastDate) || date.isAtSameMomentAs(lastDate);
-        date = date.add(Duration(days: 1))) {
-      allDatesBetweenStartEnd.add(
-        DateFormat('dd/MM/yyyy', 'tr').format(date),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    addAllDatesRanges();
-    print(allDatesBetweenStartEnd);
     return StreamBuilder(
       stream: (selectedOption == 2)
           ? FirestoreService().getExpensesByMonthAndYear(
-              date: allDatesBetweenStartEnd,
+              firstDate: firstDate,
+              lastDate: lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid)
           : FirestoreService().getIncomeByMonthAndYear(
-              date: allDatesBetweenStartEnd,
+              firstDate: firstDate,
+              lastDate: lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final allData = snapshot.data;
-
           return Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      DateTimeRange result = await showDateRangePicker(
-                            context: context,
-                            firstDate: DateTime(1997),
-                            lastDate: DateTime(2050),
-                            currentDate: DateTime.now(),
-                            initialDateRange: DateTimeRange(
-                              start: DateTime.now()
-                                  .subtract(const Duration(days: 30)),
-                              end: DateTime.now(),
-                            ),
-                          ) ??
-                          DateTimeRange(
-                              start: DateTime(
-                                DateTime.now().year,
-                                DateTime.now().month,
-                              ),
-                              end: DateTime.now());
-                      setState(() {
-                        firstDate = result.start;
-
-                        lastDate = result.end;
-                      });
-                    },
-                    child: const Text("Tarih sec"),
+              GestureDetector(
+                onTap: () async {
+                  DateTimeRange result = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(1997),
+                        lastDate: DateTime(2050),
+                        currentDate: DateTime.now(),
+                        initialDateRange: DateTimeRange(
+                          start:
+                              DateTime.now().subtract(const Duration(days: 30)),
+                          end: DateTime.now(),
+                        ),
+                      ) ??
+                      DateTimeRange(
+                          start: DateTime(
+                            DateTime.now().year,
+                            DateTime.now().month,
+                          ),
+                          end: DateTime.now());
+                  setState(() {
+                    firstDate = Timestamp.fromMillisecondsSinceEpoch(
+                        result.start.millisecondsSinceEpoch);
+                    lastDate = Timestamp.fromMillisecondsSinceEpoch(
+                        result.end.millisecondsSinceEpoch);
+                  });
+                },
+                child: ClayContainer(
+                  width: 200,
+                  height: 30,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(firstDate.toDate().toString().split(" ")[0]),
+                      const Text(">"),
+                      Text(lastDate.toDate().toString().split(" ")[0]),
+                    ],
                   ),
-                  Text(firstDate.toString().split(" ")[0]),
-                  Text(lastDate.toString().split(" ")[0]),
-                ],
+                ),
               ),
               const SizedBox(height: 5),
               Row(
@@ -127,7 +122,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     note: data?.title ?? "",
                                     price: data?.amount ?? 0,
                                     tag: data?.tag ?? "",
-                                    date: data?.date ?? "",
+                                    date: data?.date,
                                     time: data?.time ?? "",
                                   );
                                 },
@@ -220,7 +215,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     : Colors.green),
                           ),
                           leading: Text(
-                            "${data.date}\n${data.time}",
+                            "${data.date.toDate().toString().split(" ")[0]}\n${data.time}",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: (selectedOption == 2)
@@ -241,6 +236,7 @@ class HomeScreenState extends State<HomeScreen> {
             ],
           );
         } else if (snapshot.hasError) {
+          print(snapshot.error);
           // Handle error case
           return const Center(child: Text('There is no data'));
         } else {

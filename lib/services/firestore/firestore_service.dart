@@ -31,22 +31,31 @@ class FirestoreService {
     return querySnapshot;
   }
 
-  Stream<Iterable<Expense>> getExpensesByMonthAndYear(
-      {required List date, required ownerUserId}) {
+  Stream<Iterable<Expense>> getExpensesByMonthAndYear({
+    required Timestamp firstDate,
+    required Timestamp lastDate,
+    required ownerUserId,
+  }) {
     final querySnapshot = _expense
         .where(fieldUserId, isEqualTo: ownerUserId)
-        .where(fieldDate, arrayContains: date)
+        .where(fieldDate, isGreaterThanOrEqualTo: firstDate)
+        .where(fieldDate, isLessThanOrEqualTo: lastDate)
         .snapshots()
         .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
 
     return querySnapshot;
   }
 
-  Stream<Iterable<Expense>> getIncomeByMonthAndYear(
-      {required List<String> date, required ownerUserId}) {
+  Stream<Iterable<Expense>> getIncomeByMonthAndYear({
+    required Timestamp firstDate,
+    required Timestamp lastDate,
+    required ownerUserId,
+  }) {
     final querySnapshot = _income
         .where(fieldUserId, isEqualTo: ownerUserId)
-        .where(fieldDate, whereIn: date)
+        .orderBy(fieldDate)
+        .startAt([firstDate])
+        .endAt([lastDate])
         .snapshots()
         .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
 
@@ -80,7 +89,7 @@ abstract class ModelProvider {
   String title = "";
   String tag = "";
   double amount = 0;
-  String date = "";
+  Timestamp date = Timestamp.now();
   String time = "";
 }
 
@@ -96,7 +105,7 @@ class Expense implements ModelProvider {
   @override
   final double amount;
   @override
-  final String date;
+  final Timestamp date;
   @override
   final String time;
 
@@ -125,7 +134,7 @@ class Expense implements ModelProvider {
   }
 
   @override
-  set date(String _date) {
+  set date(Timestamp _date) {
     // TODO: implement date
   }
 
@@ -167,7 +176,7 @@ class Income implements ModelProvider {
   @override
   final double amount;
   @override
-  final String date;
+  final Timestamp date;
   @override
   final String time;
 
@@ -196,7 +205,7 @@ class Income implements ModelProvider {
   }
 
   @override
-  set date(String _date) {
+  set date(Timestamp _date) {
     // TODO: implement date
   }
 

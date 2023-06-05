@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
@@ -13,7 +14,7 @@ class UpdateDataScreen extends StatefulWidget {
   final String note;
   final double price;
   final String tag;
-  final String date;
+  final Timestamp? date;
   final String time;
 
   const UpdateDataScreen({
@@ -35,15 +36,18 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
   late final TextfieldTagsController _tagController;
+  late Timestamp date;
   late String _btnDate;
   late String _btnTime;
 
   @override
   void initState() {
+    date = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime.now().millisecondsSinceEpoch);
     _noteController = TextEditingController();
     _priceController = TextEditingController();
     _tagController = TextfieldTagsController();
-    _btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
+    _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(DateTime.now());
     _btnTime = DateFormat.Hm('tr').format(DateTime.now());
     super.initState();
   }
@@ -92,7 +96,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           onConfirm: (time) {
                             setState(() {
                               _btnDate =
-                                  DateFormat('dd/MM/yyyy', 'tr').format(time);
+                                  DateFormat('dd-MM-yyyy', 'tr').format(time);
                             });
                           },
                           minTime: DateTime(1997, 5, 19),
@@ -118,7 +122,11 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              _btnTime = DateFormat.Hm('tr').format(time);
+                              date = Timestamp.fromMillisecondsSinceEpoch(
+                                  time.millisecondsSinceEpoch);
+                              _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      date.millisecondsSinceEpoch));
                             });
                           },
                           currentTime: DateTime.now(),
@@ -235,8 +243,12 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                             fieldAmount: double.parse(_priceController.text),
                             fieldTitle: _noteController.text,
                             fieldTag: tag,
-                            fieldDate: _btnDate,
-                            fieldTime: _btnTime,
+                            fieldDate: Timestamp.fromMillisecondsSinceEpoch(
+                                DateTime.parse(_btnDate)
+                                    .millisecondsSinceEpoch),
+                            fieldTime: Timestamp.fromMillisecondsSinceEpoch(
+                                DateTime.parse(_btnTime)
+                                    .millisecondsSinceEpoch),
                           },
                         );
                       } else {
@@ -246,7 +258,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                             fieldAmount: double.parse(_priceController.text),
                             fieldTitle: _noteController.text,
                             fieldTag: tag,
-                            fieldDate: _btnDate,
+                            fieldDate: date,
                             fieldTime: _btnTime,
                           },
                         );

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,15 +29,17 @@ class _AddDataScreenState extends State<AddDataScreen> {
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
   late final TextfieldTagsController _tagController;
+  late Timestamp date;
   late String _btnDate;
   late String _btnTime;
 
   @override
   void initState() {
+    date = Timestamp.fromDate(DateTime.now());
     _noteController = TextEditingController();
     _priceController = TextEditingController();
     _tagController = TextfieldTagsController();
-    _btnDate = DateFormat('dd/MM/yyyy', 'tr').format(DateTime.now());
+    _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(DateTime.now());
     _btnTime = DateFormat.Hm('tr').format(DateTime.now());
     super.initState();
   }
@@ -80,8 +83,11 @@ class _AddDataScreenState extends State<AddDataScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              _btnDate =
-                                  DateFormat('dd/MM/yyyy', 'tr').format(time);
+                              date = Timestamp.fromMillisecondsSinceEpoch(
+                                  time.millisecondsSinceEpoch);
+                              _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      date.millisecondsSinceEpoch));
                             });
                           },
                           minTime: DateTime(1997, 5, 19),
@@ -222,7 +228,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                           fieldAmount: double.parse(_priceController.text),
                           fieldTitle: _noteController.text,
                           fieldTag: tag,
-                          fieldDate: _btnDate,
+                          fieldDate: date,
                           fieldTime: _btnTime,
                         });
                         if (context.mounted) {
