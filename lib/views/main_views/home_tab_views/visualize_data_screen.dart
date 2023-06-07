@@ -31,7 +31,6 @@ class VisualizeDataScreen extends StatelessWidget {
                   if (incomeMap.containsKey(formattedDate)) {
                     incomeMap.update(
                         formattedDate, (value) => income.amount + value);
-                    print(incomeMap);
                   } else {
                     incomeMap[formattedDate] = income.amount;
                   }
@@ -42,8 +41,8 @@ class VisualizeDataScreen extends StatelessWidget {
                   final date = expense.date.toDate();
                   final formattedDate = '${date.month}-${date.year}';
                   if (expenseMap.containsKey(formattedDate)) {
-                    // expenseMap[formattedDate]! += expense.amount;
-                    incomeMap.update(formattedDate, (value) => expense.amount);
+                    expenseMap.update(
+                        formattedDate, (value) => expense.amount + value);
                   } else {
                     expenseMap[formattedDate] = expense.amount;
                   }
@@ -51,10 +50,7 @@ class VisualizeDataScreen extends StatelessWidget {
 
                 return Column(
                   children: [
-                    const SizedBox(height: 10),
-                    // LineChartSample(
-                    // incomeMap: incomeMap, expenseMap: expenseMap),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
                     BarChartSample(
                         incomeMap: incomeMap, expenseMap: expenseMap),
                     const SizedBox(height: 100),
@@ -73,6 +69,7 @@ class VisualizeDataScreen extends StatelessWidget {
   }
 }
 
+// for now, we not using this widget in the application
 class LineChartSample extends StatelessWidget {
   final Map<String, double> incomeMap;
   final Map<String, double> expenseMap;
@@ -206,6 +203,8 @@ class BarChartSample extends StatelessWidget {
 
     return Expanded(
       child: BarChart(
+        swapAnimationCurve: Curves.bounceIn,
+        swapAnimationDuration: const Duration(seconds: 3),
         BarChartData(
           titlesData: FlTitlesData(
             topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),

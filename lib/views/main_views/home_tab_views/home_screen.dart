@@ -22,7 +22,7 @@ class HomeScreenState extends State<HomeScreen> {
     ).millisecondsSinceEpoch,
   );
   Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
-      DateTime.now().millisecondsSinceEpoch);
+      DateTime.now().add(Duration(hours: 3)).millisecondsSinceEpoch);
 
   void setSelectedOption(int option) {
     setState(() {
@@ -76,8 +76,9 @@ class HomeScreenState extends State<HomeScreen> {
                     setState(() {
                       firstDate = Timestamp.fromMillisecondsSinceEpoch(
                           result.start.millisecondsSinceEpoch);
-                      lastDate = Timestamp.fromMillisecondsSinceEpoch(
-                          result.end.millisecondsSinceEpoch);
+                      lastDate = Timestamp.fromMillisecondsSinceEpoch(result.end
+                          .add(const Duration(hours: 3))
+                          .millisecondsSinceEpoch);
                     });
                   },
                   child: Row(
