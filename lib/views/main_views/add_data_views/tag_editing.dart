@@ -15,12 +15,12 @@ class TagEditing extends StatelessWidget {
       textfieldTagsController: _tagController,
       textSeparators: const [' ', ','],
       letterCase: LetterCase.normal,
-      initialTags: const [''],
+      initialTags: const ['tag'],
       validator: (String tag) {
         if (tag.startsWith("#")) {
           return 'Hayır, lütfen hayır. Küstüm  :(';
         } else if (_tagController.getTags!.contains(tag)) {
-          return 'E aynısını yazdınya zaten';
+          return 'E aynısını yazdınya zaten, Anam cıldıracam haaa';
           // ignore: prefer_is_empty
         } else if (_tagController.getTags!.length >= 1) {
           return 'Bitane sadece, bir-ta-neeee';

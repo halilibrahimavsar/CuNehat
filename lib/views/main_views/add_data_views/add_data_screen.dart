@@ -162,21 +162,17 @@ class _AddDataScreenState extends State<AddDataScreen> {
                         onPressed: () => _noteController.clear(),
                         icon: const Icon(Icons.clear)),
                     labelText: "AÇIKLAMA",
-                    hintText: "Ne için harcama yaptın?",
+                    hintText: "Kayıt için not gir",
                   ),
-                  validator: (value) {
-                    if (value != null && value.toString().isEmpty) {
-                      return "Bu alan boş olamaz";
-                    } else {
-                      return null;
-                    }
-                  },
                 ),
                 const SizedBox(height: 50),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Expanded(child: TagEditing(tagController: _tagController)),
+                    Expanded(
+                        child: TagEditing(
+                      tagController: _tagController,
+                    )),
                     MaterialButton(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 8),

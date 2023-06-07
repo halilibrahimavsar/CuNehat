@@ -129,37 +129,37 @@ class Expense implements ModelProvider {
         time = snapshot.data()[fieldTime];
 
   @override
-  set amount(double _amount) {
+  set amount(double amount) {
     // TODO: implement amount
   }
 
   @override
-  set date(Timestamp _date) {
+  set date(Timestamp date) {
     // TODO: implement date
   }
 
   @override
-  set id(String _id) {
+  set id(String id) {
     // TODO: implement id
   }
 
   @override
-  set tag(String _tag) {
+  set tag(String tag) {
     // TODO: implement tag
   }
 
   @override
-  set time(String _time) {
+  set time(String time) {
     // TODO: implement time
   }
 
   @override
-  set title(String _title) {
+  set title(String title) {
     // TODO: implement title
   }
 
   @override
-  set userId(String _userId) {
+  set userId(String userId) {
     // TODO: implement userId
   }
 }
@@ -200,37 +200,37 @@ class Income implements ModelProvider {
         time = snapshot.data()[fieldTime];
 
   @override
-  set amount(double _amount) {
+  set amount(double amount) {
     // TODO: implement amount
   }
 
   @override
-  set date(Timestamp _date) {
+  set date(Timestamp date) {
     // TODO: implement date
   }
 
   @override
-  set id(String _id) {
+  set id(String id) {
     // TODO: implement id
   }
 
   @override
-  set tag(String _tag) {
+  set tag(String tag) {
     // TODO: implement tag
   }
 
   @override
-  set time(String _time) {
+  set time(String time) {
     // TODO: implement time
   }
 
   @override
-  set title(String _title) {
+  set title(String title) {
     // TODO: implement title
   }
 
   @override
-  set userId(String _userId) {
+  set userId(String userId) {
     // TODO: implement userId
   }
 }

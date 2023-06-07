@@ -1,4 +1,3 @@
-import 'package:clay_containers/clay_containers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
@@ -38,51 +37,66 @@ class HomeScreenState extends State<HomeScreen> {
           ? FirestoreService().getExpensesByMonthAndYear(
               firstDate: firstDate,
               lastDate: lastDate,
-              ownerUserId: FirebaseAuth.instance.currentUser?.uid)
+              ownerUserId: FirebaseAuth.instance.currentUser?.uid,
+            )
           : FirestoreService().getIncomeByMonthAndYear(
               firstDate: firstDate,
               lastDate: lastDate,
-              ownerUserId: FirebaseAuth.instance.currentUser?.uid),
+              ownerUserId: FirebaseAuth.instance.currentUser?.uid,
+            ),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final allData = snapshot.data;
           return Column(
             children: [
-              GestureDetector(
-                onTap: () async {
-                  DateTimeRange result = await showDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(1997),
-                        lastDate: DateTime(2050),
-                        currentDate: DateTime.now(),
-                        initialDateRange: DateTimeRange(
-                          start:
-                              DateTime.now().subtract(const Duration(days: 30)),
-                          end: DateTime.now(),
-                        ),
-                      ) ??
-                      DateTimeRange(
-                          start: DateTime(
-                            DateTime.now().year,
-                            DateTime.now().month,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 26),
+                child: ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStatePropertyAll(
+                          (selectedOption == 2) ? Colors.red : Colors.green)),
+                  onPressed: () async {
+                    DateTimeRange result = await showDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(1997),
+                          lastDate: DateTime(2050),
+                          currentDate: DateTime.now(),
+                          initialDateRange: DateTimeRange(
+                            start: DateTime.now()
+                                .subtract(const Duration(days: 30)),
+                            end: DateTime.now(),
                           ),
-                          end: DateTime.now());
-                  setState(() {
-                    firstDate = Timestamp.fromMillisecondsSinceEpoch(
-                        result.start.millisecondsSinceEpoch);
-                    lastDate = Timestamp.fromMillisecondsSinceEpoch(
-                        result.end.millisecondsSinceEpoch);
-                  });
-                },
-                child: ClayContainer(
-                  width: 200,
-                  height: 30,
+                        ) ??
+                        DateTimeRange(
+                            start: DateTime(
+                              DateTime.now().year,
+                              DateTime.now().month,
+                            ),
+                            end: DateTime.now());
+                    setState(() {
+                      firstDate = Timestamp.fromMillisecondsSinceEpoch(
+                          result.start.millisecondsSinceEpoch);
+                      lastDate = Timestamp.fromMillisecondsSinceEpoch(
+                          result.end.millisecondsSinceEpoch);
+                    });
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Text(firstDate.toDate().toString().split(" ")[0]),
-                      const Text(">"),
-                      Text(lastDate.toDate().toString().split(" ")[0]),
+                      Text(
+                        firstDate.toDate().toString().split(" ")[0],
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                      const Text(
+                        ">",
+                        style: TextStyle(fontSize: 20, color: Colors.black),
+                      ),
+                      Text(
+                        lastDate.toDate().toString().split(" ")[0],
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white),
+                      ),
                     ],
                   ),
                 ),
@@ -144,6 +158,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 context: context,
                                 builder: (context) {
                                   return AlertDialog(
+                                    backgroundColor: Colors.amber,
                                     title: const Text("Sil!"),
                                     content: const Text(
                                         "Bu veriyi tekrar getiremezsiniz. Silinsin mi?"),
@@ -152,13 +167,25 @@ class HomeScreenState extends State<HomeScreen> {
                                         onPressed: () {
                                           Navigator.pop(context, false);
                                         },
-                                        child: const Text("Hayır"),
+                                        child: const Text(
+                                          "Hayır",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20,
+                                          ),
+                                        ),
                                       ),
                                       TextButton(
                                         onPressed: () {
                                           Navigator.pop(context, true);
                                         },
-                                        child: const Text("Evet"),
+                                        child: const Text(
+                                          "Evet",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   );
@@ -187,17 +214,15 @@ class HomeScreenState extends State<HomeScreen> {
                                 }
                               }
                             },
-                            backgroundColor: const Color(0xFFFE4A49),
+                            backgroundColor:
+                                const Color.fromARGB(255, 255, 224, 23),
                             foregroundColor: Colors.white,
                             icon: Icons.delete,
                             label: 'Delete',
                           ),
                         ],
                       ),
-                      child: ClayContainer(
-                        curveType: CurveType.concave,
-                        borderRadius: 26,
-                        depth: 16,
+                      child: Card(
                         child: ListTile(
                           title: Text(
                             data!.title,
@@ -297,6 +322,7 @@ class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
                 child: Text(
                   option,
                   style: TextStyle(
+                    fontSize: 18,
                     color: isSelected ? Colors.white : Colors.black,
                   ),
                 ),
