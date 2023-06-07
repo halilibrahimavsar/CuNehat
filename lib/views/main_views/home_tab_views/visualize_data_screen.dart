@@ -25,10 +25,13 @@ class VisualizeDataScreen extends StatelessWidget {
                 // Calculate total income for each date
                 for (var income in incomes!) {
                   final date = income.date.toDate();
-                  final formattedDate =
-                      '${date.day}-${date.month}-${date.year}';
+                  // in here the key is data for obtain daily data or mothly data or maybe yearly data
+
+                  final formattedDate = '${date.month}-${date.year}';
                   if (incomeMap.containsKey(formattedDate)) {
-                    incomeMap.update(formattedDate, (value) => income.amount);
+                    incomeMap.update(
+                        formattedDate, (value) => income.amount + value);
+                    print(incomeMap);
                   } else {
                     incomeMap[formattedDate] = income.amount;
                   }
@@ -37,8 +40,7 @@ class VisualizeDataScreen extends StatelessWidget {
                 // Calculate total expense for each date
                 for (var expense in expenses!) {
                   final date = expense.date.toDate();
-                  final formattedDate =
-                      '${date.day}-${date.month}-${date.year}';
+                  final formattedDate = '${date.month}-${date.year}';
                   if (expenseMap.containsKey(formattedDate)) {
                     // expenseMap[formattedDate]! += expense.amount;
                     incomeMap.update(formattedDate, (value) => expense.amount);
@@ -206,19 +208,23 @@ class BarChartSample extends StatelessWidget {
       child: BarChart(
         BarChartData(
           titlesData: FlTitlesData(
-            show: true,
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                reservedSize: 65,
                 getTitlesWidget: (value, meta) {
                   if (value.toInt() >= 0 && value.toInt() < dates.length) {
-                    return Text(dates[value.toInt()]);
+                    return RotatedBox(
+                      quarterTurns: 3,
+                      child: Text(dates[value.toInt()]),
+                    );
                   }
                   return const Text("e");
                 },
               ),
             ),
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
           ),
           borderData: FlBorderData(
             show: true,
