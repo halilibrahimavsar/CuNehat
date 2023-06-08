@@ -31,6 +31,7 @@ Future<bool> showCustmDialog(
           ),
           TextButton(
             onPressed: () {
+              functionWhenConfirm();
               Navigator.pop(context, true);
             },
             child: Text(
