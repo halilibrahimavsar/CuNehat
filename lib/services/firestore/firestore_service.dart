@@ -79,8 +79,6 @@ class FirestoreService {
       {required Map<String, dynamic> data, required String id}) async {
     await _income.doc(id).update(data);
   }
-
-  // TODO delete user from database by ownerUserId
 }
 
 abstract class ModelProvider {

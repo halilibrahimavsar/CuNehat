@@ -288,9 +288,10 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
   }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.fixed,
+        backgroundColor: Colors.transparent,
         content: AwesomeSnackbarContent(
             title: title, message: msg, contentType: type),
-        backgroundColor: Colors.red,
       ),
     );
   }

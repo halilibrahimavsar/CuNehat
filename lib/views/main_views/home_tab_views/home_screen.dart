@@ -23,7 +23,7 @@ class HomeScreenState extends State<HomeScreen> {
     ).millisecondsSinceEpoch,
   );
   Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
-      DateTime.now().add(Duration(hours: 3)).millisecondsSinceEpoch);
+      DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
 
   void setSelectedOption(int option) {
     setState(() {
@@ -234,7 +234,6 @@ class HomeScreenState extends State<HomeScreen> {
             ],
           );
         } else if (snapshot.hasError) {
-          print(snapshot.error);
           // Handle error case
           return const Center(child: Text('There is no data'));
         } else {
@@ -252,9 +251,10 @@ class HomeScreenState extends State<HomeScreen> {
   }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.fixed,
+        backgroundColor: Colors.transparent,
         content: AwesomeSnackbarContent(
             title: title, message: msg, contentType: type),
-        backgroundColor: Colors.red,
       ),
     );
   }
