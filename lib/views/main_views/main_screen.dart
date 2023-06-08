@@ -4,6 +4,7 @@ import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
+import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:floating_action_bubble/floating_action_bubble.dart';
@@ -67,7 +68,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             onSelected: (value) async {
               switch (value) {
                 case MainActions.logout:
-                  bool isLogOut = await showLogOutDialog(context);
+                  bool isLogOut = await showCustmDialog(
+                    context,
+                    title: "Log out",
+                    msg: "Do you want to log out?",
+                    cancelButton: "Cancel",
+                    confirmButton: "Log out",
+                    color: Colors.blue,
+                    functionWhenConfirm: () {},
+                  );
                   if (isLogOut) {
                     if (context.mounted) {
                       AuthService.google().logOut();
@@ -154,29 +163,4 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 }
 
 // either we take log out or not, so this is why we give Boolean to our function
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog<bool>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text("Log out"),
-        content: const Text("Do you want to Log out"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, false);
-            },
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-            child: const Text("Log out"),
-          ),
-        ],
-      );
-    },
-  ).then((value) => value ?? false);
-}
 // here (then) is used, because if user do not give any answer to our dialog, then the returning value will be null (which will cause error)

@@ -1,39 +1,48 @@
 import 'package:flutter/material.dart';
 
-class CustomizableDialog extends StatelessWidget {
-  final String title;
-  final String message;
-  final Color backgroundColor;
-
-  const CustomizableDialog({
-    super.key,
-    required this.title,
-    required this.message,
-    required this.backgroundColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(title),
-      backgroundColor: backgroundColor,
-      content: Text(message),
-      actions: <Widget>[
-        MaterialButton(
-          color: Colors.redAccent,
-          child: const Text("HAYIR"),
-          onPressed: () {
-            Navigator.of(context).pop(false);
-          },
-        ),
-        MaterialButton(
-          color: Colors.greenAccent,
-          child: const Text("EVET"),
-          onPressed: () {
-            Navigator.of(context).pop(true);
-          },
-        ),
-      ],
-    );
-  }
+Future<bool> showCustmDialog(
+  BuildContext context, {
+  required String title,
+  required String msg,
+  required String cancelButton,
+  required String confirmButton,
+  required Color color,
+  required Function() functionWhenConfirm,
+}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: color,
+        title: Text(title),
+        content: Text(msg),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: Text(
+              cancelButton,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: Text(
+              confirmButton,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  ).then((value) => value ?? false);
 }

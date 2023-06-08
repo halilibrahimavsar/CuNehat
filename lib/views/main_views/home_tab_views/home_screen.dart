@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
+import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -155,64 +156,35 @@ class HomeScreenState extends State<HomeScreen> {
                         children: [
                           SlidableAction(
                             onPressed: (context) async {
-                              bool isDelete = await showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    backgroundColor: Colors.amber,
-                                    title: const Text("Sil!"),
-                                    content: const Text(
-                                        "Bu veriyi tekrar getiremezsiniz. Silinsin mi?"),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context, false);
-                                        },
-                                        child: const Text(
-                                          "Hayır",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 20,
-                                          ),
-                                        ),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context, true);
-                                        },
-                                        child: const Text(
-                                          "Evet",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 20,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
+                              bool isDelete = await showCustmDialog(
+                                context,
+                                title: "Sil",
+                                msg:
+                                    "Bu veriyi tekrar getiremezsiniz. Silinsin mi?",
+                                cancelButton: "VAZGEÇ",
+                                confirmButton: "SİL",
+                                color: Colors.amber,
+                                functionWhenConfirm: () async {
+                                  (selectedOption == 2)
+                                      ? await FirestoreService()
+                                          .deleteExpense(id: data!.id)
+                                      : await FirestoreService()
+                                          .deleteIncome(id: data!.id);
                                 },
-                              ).then((value) => value ?? false);
+                              );
 
                               if (isDelete) {
-                                (selectedOption == 2)
-                                    ? FirestoreService()
-                                        .deleteExpense(id: data!.id)
-                                    : FirestoreService()
-                                        .deleteIncome(id: data!.id);
-
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      behavior: SnackBarBehavior.floating,
-                                      content: AwesomeSnackbarContent(
-                                          title: "Sil",
-                                          message:
-                                              "Veriler geri getirilemez! \nSilinsin mi",
-                                          contentType: ContentType.warning),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
+                                showSnackbar(
+                                  title: "Success",
+                                  msg: "Data Removed",
+                                  type: ContentType.success,
+                                );
+                              } else {
+                                showSnackbar(
+                                  title: "Warning",
+                                  msg: "Data not Removed, user not want to :(",
+                                  type: ContentType.warning,
+                                );
                               }
                             },
                             backgroundColor:
@@ -270,6 +242,20 @@ class HomeScreenState extends State<HomeScreen> {
           return const Center(child: CircularProgressIndicator());
         }
       },
+    );
+  }
+
+  showSnackbar({
+    required String title,
+    required String msg,
+    required ContentType type,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: AwesomeSnackbarContent(
+            title: title, message: msg, contentType: type),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 }

@@ -1,6 +1,8 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
+import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -199,45 +201,60 @@ class _AddDataScreenState extends State<AddDataScreen> {
         backgroundColor: widget.colorOfClass,
         label: const Text("KAYDET"),
         extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState!.validate()) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text("Kaydet"),
-                content: Text(
-                    "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? "),
-                actions: [
-                  MaterialButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      color: widget.colorOfClass,
-                      child: const Text("VAZGEÇ")),
-                  MaterialButton(
-                      onPressed: () async {
-                        final tag = _tagController.getTags!.isNotEmpty
-                            ? _tagController.getTags!.first
-                            : "tag";
-                        widget.provider(data: {
-                          fieldUserId: FirebaseAuth.instance.currentUser?.uid,
-                          fieldAmount: double.parse(_priceController.text),
-                          fieldTitle: _noteController.text,
-                          fieldTag: tag,
-                          fieldDate: date,
-                          fieldTime: _btnTime,
-                        });
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      color: widget.colorOfClass,
-                      child: const Text("KAYDET"))
-                ],
-              ),
+            bool isSave = await showCustmDialog(
+              context,
+              title: "Kaydet",
+              msg:
+                  "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? ",
+              cancelButton: "VAZGEÇ",
+              confirmButton: "KAYDET",
+              color: Colors.blue,
+              functionWhenConfirm: () {
+                final tag = _tagController.getTags!.isNotEmpty
+                    ? _tagController.getTags!.first
+                    : "tag";
+                widget.provider(data: {
+                  fieldUserId: FirebaseAuth.instance.currentUser?.uid,
+                  fieldAmount: double.parse(_priceController.text),
+                  fieldTitle: _noteController.text,
+                  fieldTag: tag,
+                  fieldDate: date,
+                  fieldTime: _btnTime,
+                });
+              },
             );
+
+            if (isSave) {
+              showSnackbar(
+                title: "Success",
+                msg: "Data Saving to database",
+                type: ContentType.success,
+              );
+            } else {
+              showSnackbar(
+                title: "Warning",
+                msg: "Data not saved, user not want to :(",
+                type: ContentType.warning,
+              );
+            }
           }
         },
+      ),
+    );
+  }
+
+  showSnackbar({
+    required String title,
+    required String msg,
+    required ContentType type,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: AwesomeSnackbarContent(
+            title: title, message: msg, contentType: type),
+        backgroundColor: Colors.red,
       ),
     );
   }

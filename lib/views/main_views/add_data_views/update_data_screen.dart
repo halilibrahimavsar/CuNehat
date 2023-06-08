@@ -1,7 +1,9 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
+import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
@@ -216,63 +218,79 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
         backgroundColor: Colors.purple,
         label: const Text("GÜNCELLE"),
         extendedPadding: const EdgeInsets.symmetric(horizontal: 100),
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text("Kaydet"),
-              content: Text(
-                  "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? "),
-              actions: [
-                MaterialButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    color: Colors.purple,
-                    child: const Text("VAZGEÇ")),
-                MaterialButton(
-                    onPressed: () async {
-                      final tag = _tagController.getTags!.isNotEmpty
-                          ? _tagController.getTags!.first
-                          : "tag";
+        onPressed: () async {
+          bool isUpdate = await showCustmDialog(
+            context,
+            title: "Güncelle",
+            msg:
+                "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? ",
+            cancelButton: "VAZGEÇ",
+            confirmButton: "GÜNCELLE",
+            color: Colors.purple,
+            functionWhenConfirm: () async {
+              final tag = _tagController.getTags!.isNotEmpty
+                  ? _tagController.getTags!.first
+                  : "tag";
 
-                      if (widget.selectedOption == 2) {
-                        await FirestoreService().updateExpense(
-                          id: widget.id,
-                          data: {
-                            fieldAmount: double.parse(_priceController.text),
-                            fieldTitle: _noteController.text,
-                            fieldTag: tag,
-                            fieldDate: Timestamp.fromMillisecondsSinceEpoch(
-                                DateTime.parse(_btnDate)
-                                    .millisecondsSinceEpoch),
-                            fieldTime: Timestamp.fromMillisecondsSinceEpoch(
-                                DateTime.parse(_btnTime)
-                                    .millisecondsSinceEpoch),
-                          },
-                        );
-                      } else {
-                        await FirestoreService().updateIncome(
-                          id: widget.id,
-                          data: {
-                            fieldAmount: double.parse(_priceController.text),
-                            fieldTitle: _noteController.text,
-                            fieldTag: tag,
-                            fieldDate: date,
-                            fieldTime: _btnTime,
-                          },
-                        );
-                      }
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    color: Colors.purple,
-                    child: const Text("GÜNCELLE"))
-              ],
-            ),
+              if (widget.selectedOption == 2) {
+                await FirestoreService().updateExpense(
+                  id: widget.id,
+                  data: {
+                    fieldAmount: double.parse(_priceController.text),
+                    fieldTitle: _noteController.text,
+                    fieldTag: tag,
+                    fieldDate: Timestamp.fromMillisecondsSinceEpoch(
+                        DateTime.parse(_btnDate).millisecondsSinceEpoch),
+                    fieldTime: Timestamp.fromMillisecondsSinceEpoch(
+                        DateTime.parse(_btnTime).millisecondsSinceEpoch),
+                  },
+                );
+              } else {
+                await FirestoreService().updateIncome(
+                  id: widget.id,
+                  data: {
+                    fieldAmount: double.parse(_priceController.text),
+                    fieldTitle: _noteController.text,
+                    fieldTag: tag,
+                    fieldDate: date,
+                    fieldTime: _btnTime,
+                  },
+                );
+              }
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
           );
+
+          if (isUpdate) {
+            showSnackbar(
+              title: "Success",
+              msg: "Data Updated in database",
+              type: ContentType.success,
+            );
+          } else {
+            showSnackbar(
+              title: "Warning",
+              msg: "Data not updated, user not want to :(",
+              type: ContentType.warning,
+            );
+          }
         },
+      ),
+    );
+  }
+
+  showSnackbar({
+    required String title,
+    required String msg,
+    required ContentType type,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: AwesomeSnackbarContent(
+            title: title, message: msg, contentType: type),
+        backgroundColor: Colors.red,
       ),
     );
   }
