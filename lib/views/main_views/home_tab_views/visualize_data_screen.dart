@@ -193,7 +193,13 @@ class BarChartSample extends StatelessWidget {
     final List<double> expenseData = [];
 
     // Sort dates in ascending order
-    final sortedDates = incomeMap.keys.toList()..sort();
+    final sortedDates = incomeMap.keys.toList()
+      ..sort((a, b) {
+        a = a.split("-")[0];
+        b = b.split("-")[0];
+
+        return int.tryParse(a)!.compareTo(int.tryParse(b)!);
+      });
 
     for (var date in sortedDates) {
       dates.add(date);
