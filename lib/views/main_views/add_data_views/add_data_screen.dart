@@ -33,19 +33,19 @@ class _AddDataScreenState extends State<AddDataScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
-  late final TextfieldTagsController _tagController;
+  late final _tagController = TextfieldTagsController();
   late Timestamp date;
   late String _btnDate;
   late String _btnTime;
   String _tag = "";
-  List<String> options = [];
+  List<String> tagList = [];
 
   @override
   void initState() {
     date = Timestamp.fromDate(DateTime.now());
     _noteController = TextEditingController();
     _priceController = TextEditingController();
-    _tagController = TextfieldTagsController();
+
     _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(DateTime.now());
     _btnTime = DateFormat.Hm('tr').format(DateTime.now());
     super.initState();
@@ -162,37 +162,94 @@ class _AddDataScreenState extends State<AddDataScreen> {
                         RegExp(r'^(\d+)?\.?\d{0,2}')),
                   ],
                 ),
-                ChipsChoice<String>.single(
-                  value: _tag,
-                  leading: const Text("TAGS :"),
-                  choiceCheckmark: true,
-                  clipBehavior: Clip.antiAlias,
-                  choiceLoader: loadTag,
-                  onChanged: (val) => setState(() => _tag = val),
-                  choiceItems: C2Choice.listFrom<String, String>(
-                    source: options,
-                    value: (i, v) => v,
-                    label: (i, v) => v,
-                  ),
-                ),
-                const SizedBox(height: 30),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                        child: TagEditing(
-                      tagController: _tagController,
-                    )),
-                    MaterialButton(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      color: Colors.blueAccent.shade200,
-                      onPressed: () {
-                        _tagController.clearTags();
+                    SizedBox(
+                      width: 300, // TODO make this responsive
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ChipsChoice<String>.single(
+                          value: _tag,
+                          leading: const Text(
+                            "TAGS :",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          choiceCheckmark: true,
+                          clipBehavior: Clip.antiAlias,
+                          choiceLoader: loadTag,
+                          onChanged: (val) => setState(() => _tag = val),
+                          choiceItems: C2Choice.listFrom<String, String>(
+                            source: tagList,
+                            value: (i, v) => v,
+                            label: (i, v) => v,
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        showModalBottomSheet(
+                          context: context,
+                          enableDrag: true,
+                          useSafeArea: true,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(25))),
+                          builder: (context) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const SizedBox(height: 30),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Expanded(
+                                        child: TagEditing(
+                                      tagController: _tagController,
+                                    )),
+                                    MaterialButton(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                      color: Colors.blueAccent.shade200,
+                                      onPressed: () {
+                                        List<String> editedTags =
+                                            _tagController.getTags!.toList();
+                                        for (final String i in editedTags) {
+                                          if (!tagList.contains(i)) {
+                                            tagList.add(i);
+                                          }
+                                        }
+                                        setState(() {});
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('EKLE'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 30),
+                                Text(
+                                  'Buradan eklenen taglar geçici süreliğine gösterilecektir',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.amber.shade900,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
-                      child: const Text('TAG EKLE'),
+                      icon: const Icon(Icons.add_circle_outline),
                     ),
                   ],
                 ),
@@ -226,8 +283,11 @@ class _AddDataScreenState extends State<AddDataScreen> {
             bool isSave = await showCustmDialog(
               context,
               title: "Kaydet",
-              msg:
-                  "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? ",
+              msg: '''
+Fiyat    : ${_priceController.text}
+Tag      : $_tag
+Açıklama : ${_noteController.text}
+Tarih    : $_btnDate - $_btnTime''',
               cancelButton: "VAZGEÇ",
               confirmButton: "KAYDET",
               color: Colors.blue,

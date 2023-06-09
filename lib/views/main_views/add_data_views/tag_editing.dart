@@ -51,7 +51,7 @@ class TagEditing extends StatelessWidget {
                 helperStyle: const TextStyle(
                   color: Color.fromARGB(255, 245, 0, 0),
                 ),
-                hintText: _tagController.hasTags ? '' : "Enter tag...",
+                // hintText: _tagController.hasTags ? '' : "Enter tag...",
                 errorText: error,
                 prefixIcon: tags.isNotEmpty
                     ? SingleChildScrollView(
