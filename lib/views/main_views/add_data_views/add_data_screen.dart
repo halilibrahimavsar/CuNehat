@@ -2,7 +2,6 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
-import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,15 +12,17 @@ import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart
 import 'package:textfield_tags/textfield_tags.dart';
 
 class AddDataScreen extends StatefulWidget {
-  final Function provider;
   final Color colorOfClass;
   final String titleOfClass;
+  final Function provider;
+  final Function tagProvider;
 
   const AddDataScreen({
     super.key,
     required this.colorOfClass,
     required this.titleOfClass,
     required this.provider,
+    required this.tagProvider,
   });
 
   @override
@@ -262,8 +263,8 @@ class _AddDataScreenState extends State<AddDataScreen> {
   }
 
   Future<List<C2Choice<String>>> loadTag() async {
-    final res = await FirestoreService()
-        .getIncomeTags(ownerUserId: FirebaseAuth.instance.currentUser?.uid);
+    final res = await widget.tagProvider(
+        ownerUserId: FirebaseAuth.instance.currentUser?.uid);
     // TODO : the provider should be selected, so
 
     return res;

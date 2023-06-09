@@ -55,13 +55,17 @@ void main() async {
         homeUi: (context) => const HomeScreen(),
         visualizeUi: (context) => const VisualizeDataScreen(),
         addExpenseUi: (context) => AddDataScreen(
-            colorOfClass: Colors.red,
-            titleOfClass: "Gider",
-            provider: FirestoreService().addExpense),
+              colorOfClass: Colors.red,
+              titleOfClass: "Gider",
+              provider: FirestoreService().addExpense,
+              tagProvider: FirestoreService().getExpenseTags,
+            ),
         addIncomeUi: (context) => AddDataScreen(
-            colorOfClass: Colors.green,
-            titleOfClass: "Gelir",
-            provider: FirestoreService().addIncome),
+              colorOfClass: Colors.green,
+              titleOfClass: "Gelir",
+              provider: FirestoreService().addIncome,
+              tagProvider: FirestoreService().getIncomeTags,
+            ),
       },
     ),
   );
