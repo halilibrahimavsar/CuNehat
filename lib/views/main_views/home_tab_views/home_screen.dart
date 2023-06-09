@@ -59,6 +59,7 @@ class HomeScreenState extends State<HomeScreen> {
                   onPressed: () async {
                     DateTimeRange result = await showDateRangePicker(
                           context: context,
+                          locale: const Locale("tr"),
                           firstDate: DateTime(1997),
                           lastDate: DateTime(2050),
                           currentDate: DateTime.now(),
