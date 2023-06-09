@@ -1,3 +1,4 @@
+import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 
@@ -78,6 +79,36 @@ class FirestoreService {
   Future<void> updateIncome(
       {required Map<String, dynamic> data, required String id}) async {
     await _income.doc(id).update(data);
+  }
+
+  Future<List<C2Choice<String>>> getIncomeTags({required ownerUserId}) async {
+    final querySnashot =
+        await _income.where(fieldUserId, isEqualTo: ownerUserId).get();
+
+    final List<String> oneCopy = [];
+    for (final doc in querySnashot.docs) {
+      final singleTag = Income.fromSnapshot(doc).tag;
+      if (!oneCopy.contains(singleTag)) {
+        oneCopy.add(singleTag);
+      }
+    }
+
+    return oneCopy.map((e) => C2Choice(value: e, label: e)).toList();
+  }
+
+  Future<List<C2Choice<String>>> getExpenseTags({required ownerUserId}) async {
+    final querySnashot =
+        await _expense.where(fieldUserId, isEqualTo: ownerUserId).get();
+
+    final List<String> oneCopy = [];
+    for (final doc in querySnashot.docs) {
+      final singleTag = Expense.fromSnapshot(doc).tag;
+      if (!oneCopy.contains(singleTag)) {
+        oneCopy.add(singleTag);
+      }
+    }
+
+    return oneCopy.map((e) => C2Choice(value: e, label: e)).toList();
   }
 }
 

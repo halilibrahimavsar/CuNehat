@@ -15,15 +15,15 @@ class TagEditing extends StatelessWidget {
       textfieldTagsController: _tagController,
       textSeparators: const [' ', ','],
       letterCase: LetterCase.normal,
-      initialTags: const ['tag'],
+      initialTags: const ['no-tag'],
       validator: (String tag) {
         if (tag.startsWith("#")) {
           return 'Hayır, lütfen hayır. Küstüm  :(';
         } else if (_tagController.getTags!.contains(tag)) {
-          return 'E aynısını yazdınya zaten, Anam cıldıracam haaa';
+          return 'Aynısını yazdın, Anam cıldıracam haaa';
           // ignore: prefer_is_empty
-        } else if (_tagController.getTags!.length >= 1) {
-          return 'Bitane sadece, bir-ta-neeee';
+        } else if (_tagController.getTags!.length >= 3) {
+          return 'Napıyon gebeş gablumbaga, 3 tane yeter';
         }
         return null;
       },

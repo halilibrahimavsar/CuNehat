@@ -1,6 +1,8 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,6 +36,8 @@ class _AddDataScreenState extends State<AddDataScreen> {
   late Timestamp date;
   late String _btnDate;
   late String _btnTime;
+  String _tag = "";
+  List<String> options = [];
 
   @override
   void initState() {
@@ -50,6 +54,8 @@ class _AddDataScreenState extends State<AddDataScreen> {
   void dispose() {
     _noteController.dispose();
     _priceController.dispose();
+    _tagController.dispose();
+
     super.dispose();
   }
 
@@ -155,19 +161,20 @@ class _AddDataScreenState extends State<AddDataScreen> {
                         RegExp(r'^(\d+)?\.?\d{0,2}')),
                   ],
                 ),
-                const SizedBox(height: 30),
-                TextFormField(
-                  controller: _noteController,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    suffix: IconButton(
-                        onPressed: () => _noteController.clear(),
-                        icon: const Icon(Icons.clear)),
-                    labelText: "AÇIKLAMA",
-                    hintText: "Kayıt için not gir",
+                ChipsChoice<String>.single(
+                  value: _tag,
+                  leading: const Text("TAGS :"),
+                  choiceCheckmark: true,
+                  clipBehavior: Clip.antiAlias,
+                  choiceLoader: loadTag,
+                  onChanged: (val) => setState(() => _tag = val),
+                  choiceItems: C2Choice.listFrom<String, String>(
+                    source: options,
+                    value: (i, v) => v,
+                    label: (i, v) => v,
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -184,9 +191,21 @@ class _AddDataScreenState extends State<AddDataScreen> {
                       onPressed: () {
                         _tagController.clearTags();
                       },
-                      child: const Text('CLEAR TAG'),
+                      child: const Text('TAG EKLE'),
                     ),
                   ],
+                ),
+                const SizedBox(height: 50),
+                TextFormField(
+                  controller: _noteController,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    suffix: IconButton(
+                        onPressed: () => _noteController.clear(),
+                        icon: const Icon(Icons.clear)),
+                    labelText: "AÇIKLAMA",
+                    hintText: "Kayıt için not gir",
+                  ),
                 ),
                 const SizedBox(
                   height: 100,
@@ -212,14 +231,11 @@ class _AddDataScreenState extends State<AddDataScreen> {
               confirmButton: "KAYDET",
               color: Colors.blue,
               functionWhenConfirm: () {
-                final tag = _tagController.getTags!.isNotEmpty
-                    ? _tagController.getTags!.first
-                    : "tag";
                 widget.provider(data: {
                   fieldUserId: FirebaseAuth.instance.currentUser?.uid,
                   fieldAmount: double.parse(_priceController.text),
                   fieldTitle: _noteController.text,
-                  fieldTag: tag,
+                  fieldTag: _tag,
                   fieldDate: date,
                   fieldTime: _btnTime,
                 });
@@ -243,6 +259,14 @@ class _AddDataScreenState extends State<AddDataScreen> {
         },
       ),
     );
+  }
+
+  Future<List<C2Choice<String>>> loadTag() async {
+    final res = await FirestoreService()
+        .getIncomeTags(ownerUserId: FirebaseAuth.instance.currentUser?.uid);
+    // TODO : the provider should be selected, so
+
+    return res;
   }
 
   showSnackbar({
