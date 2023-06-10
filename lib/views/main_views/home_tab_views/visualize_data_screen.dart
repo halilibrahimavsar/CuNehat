@@ -51,10 +51,10 @@ class VisualizeDataScreen extends StatelessWidget {
 
                 return Column(
                   children: [
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 60),
                     BarChartSample(
                         incomeMap: incomeMap, expenseMap: expenseMap),
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 90),
                   ],
                 );
               } else {
