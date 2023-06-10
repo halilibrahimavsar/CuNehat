@@ -33,7 +33,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
-  late final _tagController = TextfieldTagsController();
+  late final TextfieldTagsController _tagController;
   late Timestamp date;
   late String _btnDate;
   late String _btnTime;
@@ -45,7 +45,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
     date = Timestamp.fromDate(DateTime.now());
     _noteController = TextEditingController();
     _priceController = TextEditingController();
-
+    _tagController = TextfieldTagsController();
     _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(DateTime.now());
     _btnTime = DateFormat.Hm('tr').format(DateTime.now());
     super.initState();
@@ -55,7 +55,6 @@ class _AddDataScreenState extends State<AddDataScreen> {
   void dispose() {
     _noteController.dispose();
     _priceController.dispose();
-    _tagController.dispose();
 
     super.dispose();
   }
@@ -166,7 +165,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SizedBox(
-                      width: 300, // TODO make this responsive
+                      width: 280, // TODO make this responsive
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: ChipsChoice<String>.single(

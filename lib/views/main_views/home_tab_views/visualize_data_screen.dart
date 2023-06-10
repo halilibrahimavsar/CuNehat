@@ -25,6 +25,7 @@ class VisualizeDataScreen extends StatelessWidget {
                 // Calculate total income for each date
                 for (var income in incomes!) {
                   final date = income.date.toDate();
+
                   // in here the key is data for obtain daily data or mothly data or maybe yearly data
 
                   final formattedDate = '${date.month}-${date.year}';
@@ -191,15 +192,27 @@ class BarChartSample extends StatelessWidget {
     final List<String> dates = [];
     final List<double> incomeData = [];
     final List<double> expenseData = [];
+    final List<String> sortedDates = [];
+
+    for (final i in expenseMap.keys.toList()) {
+      if (!sortedDates.contains(i)) {
+        sortedDates.add(i);
+      }
+    }
+
+    for (final i in incomeMap.keys.toList()) {
+      if (!sortedDates.contains(i)) {
+        sortedDates.add(i);
+      }
+    }
 
     // Sort dates in ascending order
-    final sortedDates = incomeMap.keys.toList()
-      ..sort((a, b) {
-        a = a.split("-")[0];
-        b = b.split("-")[0];
+    sortedDates.sort((a, b) {
+      a = a.split("-")[0];
+      b = b.split("-")[0];
 
-        return int.tryParse(a)!.compareTo(int.tryParse(b)!);
-      });
+      return int.tryParse(a)!.compareTo(int.tryParse(b)!);
+    });
 
     for (var date in sortedDates) {
       dates.add(date);
