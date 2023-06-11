@@ -139,6 +139,8 @@ class HomeScreenState extends State<HomeScreen> {
                                     note: data?.title ?? "",
                                     price: data?.amount ?? 0,
                                     tag: data?.tag ?? "",
+                                    tagList: data?.tag.split(",.,.,.,.,.,") ??
+                                        ["no-tag"],
                                     date: data?.date,
                                     time: data?.time ?? "",
                                   );

@@ -303,9 +303,6 @@ Tarih    : $_btnDate - $_btnTime''',
             );
 
             if (isSave) {
-              _formKey.currentState!.reset();
-              _priceController.clear();
-              _noteController.clear();
               showSnackbar(
                 title: "Success",
                 msg: "Data Saving to database",
@@ -319,6 +316,9 @@ Tarih    : $_btnDate - $_btnTime''',
               );
             }
           }
+          _priceController.clear();
+          _noteController.clear();
+          _formKey.currentState?.reset();
         },
       ),
     );

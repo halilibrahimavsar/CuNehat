@@ -1,4 +1,7 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
@@ -15,17 +18,19 @@ class UpdateDataScreen extends StatefulWidget {
   final String id;
   final String note;
   final double price;
-  final String tag;
+  String tag;
+  final List<String> tagList;
   final Timestamp? date;
   final String time;
 
-  const UpdateDataScreen({
+  UpdateDataScreen({
     super.key,
     required this.selectedOption,
     required this.id,
     required this.note,
     required this.price,
     required this.tag,
+    required this.tagList,
     required this.date,
     required this.time,
   });
@@ -49,8 +54,8 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
     _noteController = TextEditingController();
     _priceController = TextEditingController();
     _tagController = TextfieldTagsController();
-    _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(DateTime.now());
-    _btnTime = DateFormat.Hm('tr').format(DateTime.now());
+    _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(widget.date!.toDate());
+    _btnTime = widget.time;
     super.initState();
   }
 
@@ -65,8 +70,9 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
   Widget build(BuildContext context) {
     _noteController.text = widget.note;
     _priceController.text = widget.price.toString();
-    // _tagController.clearTags();
-    // _tagController.addTag = widget.tag;
+
+    String tag = widget.tag;
+    List<String> tagList = widget.tagList;
 
     return Scaffold(
       appBar: AppBar(
@@ -97,8 +103,11 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              _btnDate =
-                                  DateFormat('dd-MM-yyyy', 'tr').format(time);
+                              date = Timestamp.fromMillisecondsSinceEpoch(
+                                  time.millisecondsSinceEpoch);
+                              _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      date.millisecondsSinceEpoch));
                             });
                           },
                           minTime: DateTime(1997, 5, 19),
@@ -124,11 +133,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              date = Timestamp.fromMillisecondsSinceEpoch(
-                                  time.millisecondsSinceEpoch);
-                              _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
-                                  DateTime.fromMillisecondsSinceEpoch(
-                                      date.millisecondsSinceEpoch));
+                              _btnTime = DateFormat.Hm('tr').format(time);
                             });
                           },
                           currentTime: DateTime.now(),
@@ -169,6 +174,100 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 280, // TODO make this responsive
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ChipsChoice<String>.single(
+                          value: tag,
+                          leading: const Text(
+                            "TAGS :",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          choiceCheckmark: true,
+                          clipBehavior: Clip.antiAlias,
+                          // choiceLoader: loadTag,
+                          onChanged: (val) => setState(() {
+                            widget.tag = val;
+                          }),
+                          choiceItems: C2Choice.listFrom<String, String>(
+                            source: tagList,
+                            value: (i, v) => v,
+                            label: (i, v) => v,
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        showModalBottomSheet(
+                          context: context,
+                          enableDrag: true,
+                          useSafeArea: true,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(25))),
+                          builder: (context) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const SizedBox(height: 30),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Expanded(
+                                        child: TagEditing(
+                                      tagController: _tagController,
+                                    )),
+                                    MaterialButton(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 8),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                      color: Colors.blueAccent.shade200,
+                                      onPressed: () {
+                                        List<String> editedTags =
+                                            _tagController.getTags!.toList();
+                                        for (final String i in editedTags) {
+                                          if (!tagList.contains(i)) {
+                                            tagList.add(i);
+                                          }
+                                        }
+                                        setState(() {});
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('EKLE'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 30),
+                                Text(
+                                  'Buradan eklenen taglar geçici süreliğine gösterilecektir',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.amber.shade900,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.add_circle_outline),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 50),
                 TextFormField(
                   controller: _noteController,
                   decoration: InputDecoration(
@@ -179,31 +278,6 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                     labelText: "AÇIKLAMA",
                     hintText: "Ne için harcama yaptın?",
                   ),
-                  validator: (value) {
-                    if (value != null && value.toString().isEmpty) {
-                      return "Bu alan boş olamaz";
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
-                const SizedBox(height: 50),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(child: TagEditing(tagController: _tagController)),
-                    MaterialButton(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      color: Colors.blueAccent.shade200,
-                      onPressed: () {
-                        _tagController.clearTags();
-                      },
-                      child: const Text('CLEAR TAG'),
-                    ),
-                  ],
                 ),
                 const SizedBox(
                   height: 100,
@@ -222,16 +296,15 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
           bool isUpdate = await showCustmDialog(
             context,
             title: "Güncelle",
-            msg:
-                "Fiyat : ${_priceController.text}\nAçıklama : ${_noteController.text} \n\nKAYIT EDİLSİN Mİ? ",
+            msg: '''
+Fiyat    : ${_priceController.text}
+Tag      : $tag
+Açıklama : ${_noteController.text}
+Tarih    : $_btnDate - $_btnTime''',
             cancelButton: "VAZGEÇ",
             confirmButton: "GÜNCELLE",
             color: Colors.purple,
             functionWhenConfirm: () async {
-              final tag = _tagController.getTags!.isNotEmpty
-                  ? _tagController.getTags!.first
-                  : "tag";
-
               if (widget.selectedOption == 2) {
                 await FirestoreService().updateExpense(
                   id: widget.id,
@@ -240,9 +313,10 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                     fieldTitle: _noteController.text,
                     fieldTag: tag,
                     fieldDate: Timestamp.fromMillisecondsSinceEpoch(
-                        DateTime.parse(_btnDate).millisecondsSinceEpoch),
-                    fieldTime: Timestamp.fromMillisecondsSinceEpoch(
-                        DateTime.parse(_btnTime).millisecondsSinceEpoch),
+                        DateFormat('dd-MM-yyyy')
+                            .parse(_btnDate)
+                            .millisecondsSinceEpoch),
+                    fieldTime: _btnTime,
                   },
                 );
               } else {
@@ -252,7 +326,10 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                     fieldAmount: double.parse(_priceController.text),
                     fieldTitle: _noteController.text,
                     fieldTag: tag,
-                    fieldDate: date,
+                    fieldDate: Timestamp.fromMillisecondsSinceEpoch(
+                        DateFormat('dd-MM-yyyy')
+                            .parse(_btnDate)
+                            .millisecondsSinceEpoch),
                     fieldTime: _btnTime,
                   },
                 );
@@ -291,7 +368,10 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
         behavior: SnackBarBehavior.fixed,
         backgroundColor: Colors.transparent,
         content: AwesomeSnackbarContent(
-            title: title, message: msg, contentType: type),
+          title: title,
+          message: msg,
+          contentType: type,
+        ),
       ),
     );
   }
