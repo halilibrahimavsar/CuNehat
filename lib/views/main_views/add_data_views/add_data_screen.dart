@@ -308,6 +308,9 @@ Tarih    : $_btnDate - $_btnTime''',
                 msg: "Data Saving to database",
                 type: ContentType.success,
               );
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             } else {
               showSnackbar(
                 title: "Warning",
@@ -316,9 +319,6 @@ Tarih    : $_btnDate - $_btnTime''',
               );
             }
           }
-          _priceController.clear();
-          _noteController.clear();
-          _formKey.currentState?.reset();
         },
       ),
     );
