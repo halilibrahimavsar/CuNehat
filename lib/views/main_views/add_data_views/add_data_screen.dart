@@ -61,6 +61,10 @@ class _AddDataScreenState extends State<AddDataScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+
+    final double desiredTagWidth =
+        screenSize.width * 0.8; // 80% of screen width
     return Scaffold(
       appBar: AppBar(
         backgroundColor: widget.colorOfClass,
@@ -165,7 +169,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SizedBox(
-                      width: 280, // TODO make this responsive
+                      width: desiredTagWidth,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: ChipsChoice<String>.single(
@@ -190,6 +194,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                       ),
                     ),
                     IconButton(
+                      // iconSize: desiredButtonWidth,
                       onPressed: () async {
                         showModalBottomSheet(
                           context: context,
