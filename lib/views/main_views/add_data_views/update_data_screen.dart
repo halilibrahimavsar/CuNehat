@@ -53,6 +53,8 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
         DateTime.now().millisecondsSinceEpoch);
     _noteController = TextEditingController();
     _priceController = TextEditingController();
+    _noteController.text = widget.note;
+    _priceController.text = widget.price.toString();
     _tagController = TextfieldTagsController();
     _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(widget.date!.toDate());
     _btnTime = widget.time;
@@ -72,9 +74,6 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
 
     final double desiredTagWidth =
         screenSize.width * 0.8; // 80% of screen width
-
-    _noteController.text = widget.note;
-    _priceController.text = widget.price.toString();
 
     String tag = widget.tag;
     List<String> tagList = widget.tagList;

@@ -61,14 +61,14 @@ class VisualizeDataScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final res = [
                       Container(
-                        color: Colors.black,
-                        child: Dashboard(),
-                      ),
-                      Container(
                         padding: const EdgeInsets.all(25),
                         color: Colors.blueGrey.shade200,
                         child: LineChartSample(
                             incomeMap: incomeMap, expenseMap: expenseMap),
+                      ),
+                      Container(
+                        color: Colors.black,
+                        child: const Dashboard(),
                       ),
                       Container(
                         padding: const EdgeInsets.only(top: 50, bottom: 50),
@@ -188,7 +188,7 @@ class LineChartSample extends StatelessWidget {
             color: Colors.green,
             barWidth: 2,
             isCurved: true,
-            shadow: const Shadow(blurRadius: 0.5),
+            shadow: const Shadow(blurRadius: 0.9),
             isStrokeCapRound: true,
             dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
@@ -208,11 +208,10 @@ class LineChartSample extends StatelessWidget {
             ),
             color: Colors.red,
             barWidth: 2,
-            shadow: const Shadow(blurRadius: 0.5),
             isCurved: true,
+            shadow: const Shadow(blurRadius: 0.9),
             isStrokeCapRound: true,
             dotData: FlDotData(show: true),
-            curveSmoothness: 0.8,
             belowBarData: BarAreaData(
               show: true,
               color: Colors.green.shade100,
