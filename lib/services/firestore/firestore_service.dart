@@ -47,7 +47,7 @@ class FirestoreService {
     return querySnapshot;
   }
 
-  Stream<Iterable<Expense>> getIncomeByMonthAndYear({
+  Stream<Iterable<Income>> getIncomeByMonthAndYear({
     required Timestamp firstDate,
     required Timestamp lastDate,
     required ownerUserId,
@@ -58,7 +58,7 @@ class FirestoreService {
         .startAt([firstDate])
         .endAt([lastDate])
         .snapshots()
-        .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
+        .map((event) => event.docs.map((doc) => Income.fromSnapshot(doc)));
 
     return querySnapshot;
   }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
+import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -52,56 +53,14 @@ class HomeScreenState extends State<HomeScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 26),
-                child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(
-                          (selectedOption == 2) ? Colors.red : Colors.green)),
-                  onPressed: () async {
-                    DateTimeRange result = await showDateRangePicker(
-                          context: context,
-                          locale: const Locale("tr"),
-                          firstDate: DateTime(1997),
-                          lastDate: DateTime(2050),
-                          currentDate: DateTime.now(),
-                          initialDateRange: DateTimeRange(
-                            start: DateTime.now()
-                                .subtract(const Duration(days: 30)),
-                            end: DateTime.now(),
-                          ),
-                        ) ??
-                        DateTimeRange(
-                            start: DateTime(
-                              DateTime.now().year,
-                              DateTime.now().month,
-                            ),
-                            end: DateTime.now());
+                child: DateRangPck(
+                  color: (selectedOption == 2) ? Colors.red : Colors.green,
+                  onCall: (first, last) {
                     setState(() {
-                      firstDate = Timestamp.fromMillisecondsSinceEpoch(
-                          result.start.millisecondsSinceEpoch);
-                      lastDate = Timestamp.fromMillisecondsSinceEpoch(result.end
-                          .add(const Duration(hours: 3))
-                          .millisecondsSinceEpoch);
+                      firstDate = first;
+                      lastDate = last;
                     });
                   },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        firstDate.toDate().toString().split(" ")[0],
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                      const Text(
-                        ">",
-                        style: TextStyle(fontSize: 20, color: Colors.black),
-                      ),
-                      Text(
-                        lastDate.toDate().toString().split(" ")[0],
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(height: 5),
