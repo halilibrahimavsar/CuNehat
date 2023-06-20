@@ -1,5 +1,6 @@
 import 'package:card_swiper/card_swiper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/exceptions/view_exceptions.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,22 +15,33 @@ class VisualizeDataScreen extends StatefulWidget {
 }
 
 class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final Size screenSize = MediaQuery.of(context).size;
+  late List<String> dropDownList;
+  late String dropDownItem;
 
-    final double desiredBodyHeight =
-        screenSize.height * 0.68; // 80% of screen width
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
+  late final uid;
+  late Timestamp firstDate;
+  late Timestamp lastDate;
+
+  @override
+  void initState() {
+    dropDownList = ["daily", "monthly", "yearly"];
+    dropDownItem = dropDownList.first;
+
+    uid = FirebaseAuth.instance.currentUser?.uid;
+    firstDate = Timestamp.fromMillisecondsSinceEpoch(
       DateTime(
         DateTime.now().year,
         DateTime.now().month,
       ).millisecondsSinceEpoch,
     );
-    Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
+    lastDate = Timestamp.fromMillisecondsSinceEpoch(
         DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
 
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return StreamBuilder<Iterable<Income>>(
       stream: FirestoreService().getIncomeByMonthAndYear(
         ownerUserId: uid,
@@ -46,50 +58,55 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
             ),
             builder: (context, expenseSnapshot) {
               if (expenseSnapshot.hasData) {
-                final incomes = incomeSnapshot.data;
-                final expenses = expenseSnapshot.data;
-                final Map<String, double> incomeMap = {};
-                final Map<String, double> expenseMap = {};
+                // Calculate total income and expense for each date
+                final Map<String, double> incomeMap = filterDataByDate(
+                  allData: incomeSnapshot.data,
+                  filter: dropDownItem,
+                );
 
-                // Calculate total income for each date
-                for (var income in incomes!) {
-                  final date = income.date.toDate();
+                final Map<String, double> expenseMap = filterDataByDate(
+                  allData: expenseSnapshot.data,
+                  filter: dropDownItem,
+                );
 
-                  // in here the key is data for obtain daily data or mothly data or maybe yearly data
-
-                  final formattedDate = '${date.month}-${date.year}';
-                  if (incomeMap.containsKey(formattedDate)) {
-                    incomeMap.update(
-                        formattedDate, (value) => income.amount + value);
-                  } else {
-                    incomeMap[formattedDate] = income.amount;
-                  }
-                }
-
-                // Calculate total expense for each date
-                for (var expense in expenses!) {
-                  final date = expense.date.toDate();
-                  final formattedDate = '${date.month}-${date.year}';
-                  if (expenseMap.containsKey(formattedDate)) {
-                    expenseMap.update(
-                        formattedDate, (value) => expense.amount + value);
-                  } else {
-                    expenseMap[formattedDate] = expense.amount;
-                  }
-                }
+                final Size screenSize = MediaQuery.of(context).size;
+                final desiredBodyHeight =
+                    screenSize.height * 0.68; // 68% of screen width
 
                 return Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: DateRangPck(
-                        color: Colors.green,
-                        onCall: (first, last) {
-                          setState(() {
-                            firstDate = first;
-                            lastDate = last;
-                          });
-                        },
+                      child: Row(
+                        children: [
+                          DateRangPck(
+                            color: Colors.green,
+                            onCall: (first, last) {
+                              setState(() {
+                                firstDate = first;
+                                lastDate = last;
+                                print(firstDate.toDate());
+                                print(lastDate.toDate());
+                              });
+                            },
+                          ),
+                          DropdownButton(
+                            value: dropDownItem,
+                            onChanged: (value) {
+                              setState(() {
+                                dropDownItem = value!;
+                              });
+                            },
+                            items: dropDownList
+                                .map(
+                                  (val) => DropdownMenuItem(
+                                    value: val,
+                                    child: Text(val),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(
@@ -139,6 +156,36 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
         }
       },
     );
+  }
+
+  /// Use this function for filter [Expense] or [Income] data by their dates.
+  /// [filter] arg can accept only "yearly", "monthly" and "daily"
+  Map<String, double> filterDataByDate(
+      {required Iterable<ModelProvider>? allData, String filter = "monthly"}) {
+    Map<String, double> filteredData = {};
+    for (var data in allData!) {
+      final DateTime date = data.date.toDate();
+      String formattedDate = '${date.year}';
+
+      // in here the key is data for obtain daily data or mothly data or maybe yearly data
+      if (filter == "yearly") {
+        formattedDate = '${date.year}';
+      } else if (filter == "monthly") {
+        formattedDate = '${date.month}-${date.year}';
+      } else if (filter == "daily") {
+        formattedDate = '${date.day}-${date.month}-${date.year}';
+      } else {
+        throw UnableToFindRightValueForArgument();
+      }
+
+      if (filteredData.containsKey(formattedDate)) {
+        filteredData.update(formattedDate, (value) => data.amount + value);
+      } else {
+        filteredData[formattedDate] = data.amount;
+      }
+    }
+
+    return filteredData;
   }
 }
 
@@ -309,8 +356,6 @@ class BarChartSample extends StatelessWidget {
     for (final i in expenseMap.keys.toList()) {
       if (!sortedDates.contains(i)) {
         sortedDates.add(i);
-        print(i);
-        print(expenseMap);
       }
     }
 
@@ -431,19 +476,7 @@ class Dashboard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             SpecificDateShower(
-              header: "SENELİK",
-              expenseTotal: 0.5,
-              incomeTotal: 25.5,
-              remaining: 56,
-            ),
-            SpecificDateShower(
-              header: "AYLIK",
-              expenseTotal: 0.5,
-              incomeTotal: 25.5,
-              remaining: 56,
-            ),
-            SpecificDateShower(
-              header: "GÜNLÜK",
+              header: "DETAYLAR",
               expenseTotal: 0.5,
               incomeTotal: 25.5,
               remaining: 56,
@@ -474,15 +507,6 @@ class SpecificDateShower extends StatefulWidget {
 }
 
 class _SpecificDateShowerState extends State<SpecificDateShower> {
-  late List<String> dropDownList;
-  late String dropDownItem;
-  @override
-  void initState() {
-    dropDownList = ["den", "e", "me"];
-    dropDownItem = dropDownList.first;
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -496,32 +520,6 @@ class _SpecificDateShowerState extends State<SpecificDateShower> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Container(
-              width: 80,
-              height: 25,
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: DropdownButton(
-                value: dropDownItem,
-                isExpanded: true,
-                dropdownColor: Colors.blue,
-                onChanged: (value) {
-                  setState(() {
-                    dropDownItem = value!;
-                  });
-                },
-                items: dropDownList
-                    .map(
-                      (val) => DropdownMenuItem(
-                        child: Text(val),
-                        value: val,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
             Text(
               widget.header,
               style: const TextStyle(

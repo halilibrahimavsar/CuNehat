@@ -1,0 +1,1 @@
+class UnableToFindRightValueForArgument implements Exception {}
