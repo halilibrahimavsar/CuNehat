@@ -2,10 +2,13 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/exceptions/view_exceptions.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
+import 'package:cunehat/views/main_views/private_utilities/charts/custom_bar_chart.dart';
+import 'package:cunehat/views/main_views/private_utilities/charts/custom_line_chart.dart';
+import 'package:cunehat/views/main_views/private_utilities/dashboard/dashboard.dart';
 import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class VisualizeDataScreen extends StatefulWidget {
   const VisualizeDataScreen({Key? key}) : super(key: key);
@@ -18,7 +21,7 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
   late List<String> dropDownList;
   late String dropDownItem;
 
-  late final uid;
+  late final _uid;
   late Timestamp firstDate;
   late Timestamp lastDate;
 
@@ -27,7 +30,7 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
     dropDownList = ["daily", "monthly", "yearly"];
     dropDownItem = dropDownList.first;
 
-    uid = FirebaseAuth.instance.currentUser?.uid;
+    _uid = FirebaseAuth.instance.currentUser?.uid;
     firstDate = Timestamp.fromMillisecondsSinceEpoch(
       DateTime(
         DateTime.now().year,
@@ -44,7 +47,7 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
   Widget build(BuildContext context) {
     return StreamBuilder<Iterable<Income>>(
       stream: FirestoreService().getIncomeByMonthAndYear(
-        ownerUserId: uid,
+        ownerUserId: _uid,
         firstDate: firstDate,
         lastDate: lastDate,
       ),
@@ -52,7 +55,7 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
         if (incomeSnapshot.hasData) {
           return StreamBuilder<Iterable<Expense>>(
             stream: FirestoreService().getExpensesByMonthAndYear(
-              ownerUserId: uid,
+              ownerUserId: _uid,
               firstDate: firstDate,
               lastDate: lastDate,
             ),
@@ -85,8 +88,6 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                               setState(() {
                                 firstDate = first;
                                 lastDate = last;
-                                print(firstDate.toDate());
-                                print(lastDate.toDate());
                               });
                             },
                           ),
@@ -169,11 +170,11 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
 
       // in here the key is data for obtain daily data or mothly data or maybe yearly data
       if (filter == "yearly") {
-        formattedDate = '${date.year}';
+        formattedDate = DateFormat('yyyy', 'tr').format(date);
       } else if (filter == "monthly") {
-        formattedDate = '${date.month}-${date.year}';
+        formattedDate = DateFormat('MM-yyyy', 'tr').format(date);
       } else if (filter == "daily") {
-        formattedDate = '${date.day}-${date.month}-${date.year}';
+        formattedDate = DateFormat('dd-MM-yyyy', 'tr').format(date);
       } else {
         throw UnableToFindRightValueForArgument();
       }
@@ -186,380 +187,5 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
     }
 
     return filteredData;
-  }
-}
-
-// for now, we not using this widget in the application
-class LineChartSample extends StatelessWidget {
-  final Map<String, double> incomeMap;
-  final Map<String, double> expenseMap;
-
-  const LineChartSample({
-    super.key,
-    required this.incomeMap,
-    required this.expenseMap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final List<String> dates = [];
-    final List<double> incomeData = [];
-    final List<double> expenseData = [];
-    final List<String> sortedDates = [];
-
-    for (final i in expenseMap.keys.toList()) {
-      if (!sortedDates.contains(i)) {
-        sortedDates.add(i);
-      }
-    }
-
-    for (final i in incomeMap.keys.toList()) {
-      if (!sortedDates.contains(i)) {
-        sortedDates.add(i);
-      }
-    }
-
-    // Sort dates in ascending order
-    sortedDates.sort((a, b) {
-      a = a.split("-")[0];
-      b = b.split("-")[0];
-
-      return int.tryParse(a)!.compareTo(int.tryParse(b)!);
-    });
-
-    for (var date in sortedDates) {
-      dates.add(date);
-      incomeData.add(incomeMap[date] ?? 0);
-      expenseData.add(expenseMap[date] ?? 0);
-    }
-
-    return LineChart(
-      LineChartData(
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 65,
-              getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < dates.length) {
-                  return RotatedBox(
-                    quarterTurns: 3,
-                    child: Text(dates[value.toInt()]),
-                  );
-                }
-                return const Text("e");
-              },
-            ),
-          ),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: const Border(
-            bottom: BorderSide(
-              color: Colors.grey,
-              width: 1,
-            ),
-            left: BorderSide(
-              color: Colors.transparent,
-            ),
-            right: BorderSide(
-              color: Colors.transparent,
-            ),
-            top: BorderSide(
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-        minX: 0,
-        maxX: dates.length.toDouble() - 1,
-        minY: 0,
-        maxY: _calculateMaxValue(incomeData, expenseData),
-        lineBarsData: [
-          LineChartBarData(
-            spots: List.generate(
-              dates.length,
-              (index) => FlSpot(index.toDouble(), incomeData[index]),
-            ),
-            color: Colors.green,
-            barWidth: 2,
-            isCurved: true,
-            shadow: const Shadow(blurRadius: 0.9),
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: Colors.green.shade100,
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.green, Colors.transparent],
-              ),
-            ),
-          ),
-          LineChartBarData(
-            spots: List.generate(
-              dates.length,
-              (index) => FlSpot(index.toDouble(), expenseData[index]),
-            ),
-            color: Colors.red,
-            barWidth: 2,
-            isCurved: true,
-            shadow: const Shadow(blurRadius: 0.9),
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: Colors.green.shade100,
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.red, Colors.transparent],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  double _calculateMaxValue(List<double> incomeData, List<double> expenseData) {
-    if (incomeMap.isEmpty || expenseData.isEmpty) {
-      return 0;
-    }
-    final maxIncome = incomeData
-        .reduce((value, element) => value > element ? value : element);
-    final maxExpense = expenseData
-        .reduce((value, element) => value > element ? value : element);
-    return maxIncome > maxExpense ? maxIncome : maxExpense;
-  }
-}
-
-///////////////////////////////////////////////////////////
-
-class BarChartSample extends StatelessWidget {
-  final Map<String, double> incomeMap;
-  final Map<String, double> expenseMap;
-
-  const BarChartSample({
-    super.key,
-    required this.incomeMap,
-    required this.expenseMap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final List<double> incomeData = [];
-    final List<double> expenseData = [];
-    final List<String> sortedDates = [];
-
-    for (final i in expenseMap.keys.toList()) {
-      if (!sortedDates.contains(i)) {
-        sortedDates.add(i);
-      }
-    }
-
-    for (final i in incomeMap.keys.toList()) {
-      if (!sortedDates.contains(i)) {
-        sortedDates.add(i);
-      }
-    }
-
-    // Sort dates in ascending order
-    sortedDates.sort((a, b) {
-      a = a.split("-")[0];
-      b = b.split("-")[0];
-
-      return int.tryParse(a)!.compareTo(int.tryParse(b)!);
-    });
-
-    for (var date in sortedDates) {
-      incomeData.add(incomeMap[date] ?? 0);
-      expenseData.add(expenseMap[date] ?? 0);
-    }
-    return BarChart(
-      swapAnimationCurve: Curves.bounceIn,
-      swapAnimationDuration: const Duration(seconds: 3),
-      BarChartData(
-        titlesData: FlTitlesData(
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 65,
-              getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < sortedDates.length) {
-                  return RotatedBox(
-                    quarterTurns: 3,
-                    child: Text(sortedDates[value.toInt()]),
-                  );
-                }
-                return const Text("e");
-              },
-            ),
-          ),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: const Border(
-            bottom: BorderSide(
-              color: Colors.grey,
-              width: 1,
-            ),
-            left: BorderSide(
-              color: Colors.transparent,
-            ),
-            right: BorderSide(
-              color: Colors.transparent,
-            ),
-            top: BorderSide(
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-        barGroups: List.generate(
-          sortedDates.length,
-          (index) => BarChartGroupData(
-            x: index,
-            barRods: [
-              BarChartRodData(
-                toY: incomeData[index],
-                color: Colors.green,
-              ),
-              BarChartRodData(
-                toY: expenseData[index],
-                color: Colors.red,
-              ),
-            ],
-          ),
-        ),
-        maxY: _calculateMaxValue(incomeData, expenseData),
-      ),
-    );
-  }
-
-  double _calculateMaxValue(List<double> incomeData, List<double> expenseData) {
-    try {
-      final maxIncome = incomeData
-          .reduce((value, element) => value > element ? value : element);
-      final maxExpense = expenseData
-          .reduce((value, element) => value > element ? value : element);
-      return maxIncome > maxExpense ? maxIncome : maxExpense;
-    } catch (e) {
-      return 0;
-    }
-  }
-}
-
-/// Show total income and expense yearly, monthly, daily
-/// Will be an radiochoice for selecting date period (daily, monthly, yearly)
-///
-class Dashboard extends StatelessWidget {
-  final Map<String, double> incomeMap;
-  final Map<String, double> expenseMap;
-  const Dashboard(
-      {super.key, required this.incomeMap, required this.expenseMap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: const Card(
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        color: Colors.blueGrey,
-        elevation: 100,
-        shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(100))),
-        shadowColor: Colors.grey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            SpecificDateShower(
-              header: "DETAYLAR",
-              expenseTotal: 0.5,
-              incomeTotal: 25.5,
-              remaining: 56,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SpecificDateShower extends StatefulWidget {
-  final String header;
-  final double expenseTotal;
-  final double incomeTotal;
-  final double remaining;
-
-  const SpecificDateShower({
-    super.key,
-    required this.header,
-    required this.expenseTotal,
-    required this.incomeTotal,
-    required this.remaining,
-  });
-
-  @override
-  State<SpecificDateShower> createState() => _SpecificDateShowerState();
-}
-
-class _SpecificDateShowerState extends State<SpecificDateShower> {
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        color: Colors.blueGrey.shade900,
-        elevation: 25,
-        shape: const ContinuousRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(100))),
-        shadowColor: Colors.grey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Text(
-              widget.header,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Text(
-                  "GİDER : - ${widget.expenseTotal}",
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                Text(
-                  "GELİR : + ${widget.incomeTotal}",
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              "KALAN = ${widget.remaining}",
-              style: const TextStyle(
-                color: Colors.tealAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
