@@ -1,6 +1,5 @@
 import 'package:card_swiper/card_swiper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/exceptions/view_exceptions.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/private_utilities/charts/custom_bar_chart.dart';
 import 'package:cunehat/views/main_views/private_utilities/charts/custom_line_chart.dart';
@@ -23,7 +22,7 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
   late List<String> dropDownList;
   late String dropDownItem;
 
-  late final _uid;
+  late final String? _uid;
   late Timestamp firstDate;
   late Timestamp lastDate;
 

@@ -1,3 +1,4 @@
+import 'package:cunehat/views/main_views/private_utilities/charts/sort_dates.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -15,17 +16,20 @@ class BarChartSample extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<double> incomeData = [];
     final List<double> expenseData = [];
-    final List<String> sortedDates = [];
+    final List<String> dates = sortAndMergeDates(
+      expenseMp: expenseMap,
+      incomeMp: incomeMap,
+    );
 
     for (final i in expenseMap.keys.toList()) {
-      if (!sortedDates.contains(i)) {
-        sortedDates.add(i);
+      if (!dates.contains(i)) {
+        dates.add(i);
       }
     }
 
     for (final i in incomeMap.keys.toList()) {
-      if (!sortedDates.contains(i)) {
-        sortedDates.add(i);
+      if (!dates.contains(i)) {
+        dates.add(i);
       }
     }
 
@@ -33,7 +37,7 @@ class BarChartSample extends StatelessWidget {
     // sorting first value(day), instead we should get
     // second and third value respectively if there is second and third)
 
-    for (var date in sortedDates) {
+    for (var date in dates) {
       incomeData.add(incomeMap[date] ?? 0);
       expenseData.add(expenseMap[date] ?? 0);
     }
@@ -49,10 +53,10 @@ class BarChartSample extends StatelessWidget {
               showTitles: true,
               reservedSize: 90,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < sortedDates.length) {
+                if (value.toInt() >= 0 && value.toInt() < dates.length) {
                   return RotatedBox(
                     quarterTurns: 3,
-                    child: Text(sortedDates[value.toInt()]),
+                    child: Text(dates[value.toInt()]),
                   );
                 }
                 return const Text("e");
@@ -79,7 +83,7 @@ class BarChartSample extends StatelessWidget {
           ),
         ),
         barGroups: List.generate(
-          sortedDates.length,
+          dates.length,
           (index) => BarChartGroupData(
             x: index,
             barRods: [
@@ -98,11 +102,6 @@ class BarChartSample extends StatelessWidget {
       ),
     );
   }
-
-  /// Take list of dates in string
-  // List<String> sortDates(List<String> dates) {
-
-  // }
 
   double _calculateMaxValue(List<double> incomeData, List<double> expenseData) {
     try {

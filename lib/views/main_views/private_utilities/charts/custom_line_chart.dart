@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/views/main_views/private_utilities/charts/sort_dates.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class LineChartSample extends StatelessWidget {
   final Map<String, double> incomeMap;
@@ -21,26 +20,6 @@ class LineChartSample extends StatelessWidget {
       expenseMp: expenseMap,
       incomeMp: incomeMap,
     );
-
-    // for (final i in expenseMap.keys.toList()) {
-    //   if (!dates.contains(i)) {
-    //     dates.add(i);
-    //   }
-    // }
-
-    // for (final i in incomeMap.keys.toList()) {
-    //   if (!dates.contains(i)) {
-    //     dates.add(i);
-    //   }
-    // }
-
-    // // Sort dates in ascending order
-    // dates.sort((a, b) {
-    //   a = a.split("-")[0];
-    //   b = b.split("-")[0];
-
-    //   return int.tryParse(a)!.compareTo(int.tryParse(b)!);
-    // });
 
     for (var date in dates) {
       incomeData.add(incomeMap[date] ?? 0);
@@ -135,43 +114,6 @@ class LineChartSample extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  List<String> sortAndMergeDates({
-    required Map<String, double> incomeMp,
-    required Map<String, double> expenseMp,
-  }) {
-    /// in here we will accept dates in string format.
-    /// then we cast into [Timestamp] object, thus it can be sorted easily
-    List<Timestamp> dates = [];
-    List<String> sortedDates = [];
-
-    for (final date in expenseMp.keys.toList()) {
-      if (!dates.contains(date)) {
-        dates.add(
-          Timestamp.fromMillisecondsSinceEpoch(DateFormat('dd-MM-yyyy', 'tr')
-              .parse(date)
-              .millisecondsSinceEpoch),
-        );
-      }
-    }
-
-    for (final i in incomeMp.keys.toList()) {
-      if (!dates.contains(i)) {
-        dates.add(
-          Timestamp.fromMillisecondsSinceEpoch(
-              DateFormat('dd-MM-yyyy', 'tr').parse(i).millisecondsSinceEpoch),
-        );
-      }
-    }
-
-    dates.sort();
-
-    for (Timestamp i in dates) {
-      sortedDates.add(DateFormat('dd-MM-yyyy', 'tr').format(i.toDate()));
-    }
-
-    return sortedDates;
   }
 
   double _calculateMaxValue(List<double> incomeData, List<double> expenseData) {
