@@ -1,4 +1,4 @@
-import 'package:cunehat/views/main_views/private_utilities/charts/sort_dates.dart';
+import 'package:cunehat/views/main_views/private_utilities/charts/sort_and_merge_dates.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -17,8 +17,8 @@ class LineChartSample extends StatelessWidget {
     final List<double> incomeData = [];
     final List<double> expenseData = [];
     final List<String> dates = sortAndMergeDates(
-      expenseMp: expenseMap,
-      incomeMp: incomeMap,
+      expenseDateAndVals: expenseMap,
+      incomeDateAndVals: incomeMap,
     );
 
     for (var date in dates) {
