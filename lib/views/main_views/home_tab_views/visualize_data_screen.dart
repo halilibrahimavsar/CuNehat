@@ -81,33 +81,90 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: Row(
+                      child: Column(
                         children: [
-                          DateRangPck(
-                            color: Colors.green,
-                            onCall: (first, last) {
-                              setState(() {
-                                firstDate = first;
-                                lastDate = last;
-                              });
-                            },
-                          ),
-                          DropdownButton(
-                            value: dropDownItem,
-                            onChanged: (value) {
-                              setState(() {
-                                dropDownItem = value!;
-                              });
-                            },
-                            items: dropDownList
-                                .map(
-                                  (val) => DropdownMenuItem(
-                                    value: val,
-                                    child: Text(val),
-                                  ),
-                                )
-                                .toList(),
-                          ),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      firstDate =
+                                          Timestamp.fromMillisecondsSinceEpoch(
+                                        DateTime(
+                                          DateTime.now().year,
+                                        ).millisecondsSinceEpoch,
+                                      );
+                                      lastDate =
+                                          Timestamp.fromMillisecondsSinceEpoch(
+                                              DateTime.now()
+                                                  .add(const Duration(hours: 3))
+                                                  .millisecondsSinceEpoch);
+                                    });
+                                  },
+                                  child: const Text("ThisYear"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      firstDate =
+                                          Timestamp.fromMillisecondsSinceEpoch(
+                                        DateTime(
+                                          DateTime.now().year,
+                                          DateTime.now().month,
+                                        ).millisecondsSinceEpoch,
+                                      );
+                                      lastDate =
+                                          Timestamp.fromMillisecondsSinceEpoch(
+                                              DateTime.now()
+                                                  .add(const Duration(hours: 3))
+                                                  .millisecondsSinceEpoch);
+                                    });
+                                  },
+                                  child: const Text("ThisMonth"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceAround,
+                                          children: [
+                                            DateRangPck(
+                                              color: Colors.green,
+                                              onCall: (first, last) {
+                                                setState(() {
+                                                  firstDate = first;
+                                                  lastDate = last;
+                                                });
+                                              },
+                                            ),
+                                            DropdownButton(
+                                              value: dropDownItem,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  dropDownItem = value!;
+                                                });
+                                              },
+                                              items: dropDownList
+                                                  .map(
+                                                    (val) => DropdownMenuItem(
+                                                      value: val,
+                                                      child: Text(val),
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: Text("Filter"),
+                                ),
+                              ]),
                         ],
                       ),
                     ),
