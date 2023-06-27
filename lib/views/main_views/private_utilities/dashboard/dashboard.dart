@@ -10,8 +10,6 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(sumMap(incomeMap));
-    print(sumMap(expenseMap));
     return Container(
       color: Colors.white,
       child: Card(

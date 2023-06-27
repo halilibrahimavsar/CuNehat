@@ -27,6 +27,8 @@ class LineChartSample extends StatelessWidget {
     }
 
     return LineChart(
+      swapAnimationCurve: Curves.easeInOutBack,
+      swapAnimationDuration: const Duration(seconds: 1),
       LineChartData(
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(

@@ -181,6 +181,12 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                         itemBuilder: (context, index) {
                           final res = [
                             Container(
+                              padding: const EdgeInsets.all(25),
+                              color: Colors.blueGrey.shade200,
+                              child: LineChartSample(
+                                  incomeMap: incomeMap, expenseMap: expenseMap),
+                            ),
+                            Container(
                               color: Colors.black,
                               child: Dashboard(
                                   incomeMap: incomeMap, expenseMap: expenseMap),
@@ -190,12 +196,6 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                                   const EdgeInsets.only(top: 50, bottom: 50),
                               color: Colors.blueGrey.shade200,
                               child: BarChartSample(
-                                  incomeMap: incomeMap, expenseMap: expenseMap),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(25),
-                              color: Colors.blueGrey.shade200,
-                              child: LineChartSample(
                                   incomeMap: incomeMap, expenseMap: expenseMap),
                             ),
                           ][index];

@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
           case ConnectionState.waiting:
             return const Center(child: CircularProgressIndicator());
           default:
-            return FutureBuilder(
+            return FutureBuilder<bool>(
               future: GoogleAuthenticationProvider().googleSignInUser(),
               builder: (context, snapshot) {
                 switch (snapshot.data) {

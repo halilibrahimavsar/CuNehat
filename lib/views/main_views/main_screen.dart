@@ -121,43 +121,47 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         HomeScreen(),
         VisualizeDataScreen(),
       ][setCurrentPage],
-      floatingActionButton: FloatingActionBubble(
-        iconData: Icons.data_saver_on,
-        backGroundColor: Colors.cyan,
-        iconColor: Colors.black,
-        onPress: () {
-          animationController.isCompleted
-              ? animationController.reverse()
-              : animationController.forward();
-        },
-        animation: animation,
-        items: <Bubble>[
-          // Floating action menu item
-          Bubble(
-            title: "Gider",
-            iconColor: Colors.white,
-            bubbleColor: Colors.red,
-            icon: Icons.dataset,
-            titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
-            onPress: () {
-              animationController.reverse();
-              Navigator.pushNamed(context, addExpenseUi);
-            },
-          ),
-          //Floating action menu item
-          Bubble(
-            title: "Gelir",
-            iconColor: Colors.white,
-            bubbleColor: Colors.green,
-            icon: Icons.dataset,
-            titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
-            onPress: () {
-              Navigator.pushNamed(context, addIncomeUi);
-              animationController.reverse();
-            },
-          ),
-        ],
-      ),
+      floatingActionButton: [
+        const SizedBox.shrink(),
+        FloatingActionBubble(
+          iconData: Icons.data_saver_on,
+          backGroundColor: Colors.cyan,
+          iconColor: Colors.black,
+          onPress: () {
+            animationController.isCompleted
+                ? animationController.reverse()
+                : animationController.forward();
+          },
+          animation: animation,
+          items: <Bubble>[
+            // Floating action menu item
+            Bubble(
+              title: "Gider",
+              iconColor: Colors.white,
+              bubbleColor: Colors.red,
+              icon: Icons.dataset,
+              titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
+              onPress: () {
+                animationController.reverse();
+                Navigator.pushNamed(context, addExpenseUi);
+              },
+            ),
+            //Floating action menu item
+            Bubble(
+              title: "Gelir",
+              iconColor: Colors.white,
+              bubbleColor: Colors.green,
+              icon: Icons.dataset,
+              titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
+              onPress: () {
+                Navigator.pushNamed(context, addIncomeUi);
+                animationController.reverse();
+              },
+            ),
+          ],
+        ),
+        const SizedBox.shrink(),
+      ][setCurrentPage],
     );
   }
 }
