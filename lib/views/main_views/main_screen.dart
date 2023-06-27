@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/enums/main_actions.dart';
 import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
@@ -5,6 +6,7 @@ import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
+import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:floating_action_bubble/floating_action_bubble.dart';
@@ -29,6 +31,15 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+  Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
+    DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+    ).millisecondsSinceEpoch,
+  );
+  Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
+      DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+
   @override
   Widget build(BuildContext context) {
     late AnimationController animationController = AnimationController(
@@ -50,17 +61,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             bottomRight: Radius.circular(25),
           ),
         ),
-        title: Text(user?.displayName ?? "Anonymous"),
-        actions: [
-          PopupMenuButton(
+        titleSpacing: 0,
+        title: SizedBox(
+          height: 55,
+          width: 55,
+          child: PopupMenuButton(
             child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(25)),
+              borderRadius: const BorderRadius.all(Radius.circular(100)),
               child: Image.network(
                 userPhoto,
                 errorBuilder: (context, error, stackTrace) {
                   return const Icon(
                     Icons.account_circle_rounded,
-                    size: 50,
+                    size: 10,
                   );
                 },
               ),
@@ -102,7 +115,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ),
               ];
             },
-          )
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 26),
+            child: DateRangPck(
+              color: Colors.green,
+              onCall: (first, last) {
+                setState(() {
+                  firstDate = first;
+                  lastDate = last;
+                });
+              },
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
@@ -116,10 +143,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         backgroundColor: Colors.white,
         color: Colors.cyan,
       ),
-      body: const [
-        DetailsScreen(),
-        HomeScreen(),
-        VisualizeDataScreen(),
+      body: [
+        const DetailsScreen(),
+        HomeScreen(firstDate: firstDate, lastDate: lastDate),
+        const VisualizeDataScreen(),
       ][setCurrentPage],
       floatingActionButton: [
         const SizedBox.shrink(),

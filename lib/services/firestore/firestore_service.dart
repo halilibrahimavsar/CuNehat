@@ -2,6 +2,8 @@ import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 
+// TODO : seperate every user by its uid and add all data into the owned user. You can remove filter func after all. It will be useless
+
 class FirestoreService {
   final _expense = FirebaseFirestore.instance.collection(expenseTable);
   final _income = FirebaseFirestore.instance.collection(incomeTable);

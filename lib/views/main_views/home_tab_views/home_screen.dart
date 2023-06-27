@@ -2,14 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
-import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
+// TODO : add daily data into one listItem
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final Timestamp firstDate;
+  final Timestamp lastDate;
+  const HomeScreen({Key? key, required this.firstDate, required this.lastDate})
+      : super(key: key);
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -17,33 +20,19 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   int selectedOption = 1;
-  Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
-    DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-    ).millisecondsSinceEpoch,
-  );
-  Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
-      DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
-
-  void setSelectedOption(int option) {
-    setState(() {
-      selectedOption = option;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: (selectedOption == 2)
           ? FirestoreService().getExpensesByMonthAndYear(
-              firstDate: firstDate,
-              lastDate: lastDate,
+              firstDate: widget.firstDate,
+              lastDate: widget.lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid,
             )
           : FirestoreService().getIncomeByMonthAndYear(
-              firstDate: firstDate,
-              lastDate: lastDate,
+              firstDate: widget.firstDate,
+              lastDate: widget.lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid,
             ),
       builder: (context, snapshot) {
@@ -51,19 +40,6 @@ class HomeScreenState extends State<HomeScreen> {
           final allData = snapshot.data;
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 26),
-                child: DateRangPck(
-                  color: (selectedOption == 2) ? Colors.red : Colors.green,
-                  onCall: (first, last) {
-                    setState(() {
-                      firstDate = first;
-                      lastDate = last;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -204,6 +180,12 @@ class HomeScreenState extends State<HomeScreen> {
         }
       },
     );
+  }
+
+  void setSelectedOption(int option) {
+    setState(() {
+      selectedOption = option;
+    });
   }
 
   showSnackbar({

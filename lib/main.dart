@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
@@ -21,6 +22,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
+  Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
+    DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+    ).millisecondsSinceEpoch,
+  );
+  Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
+      DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+
   // initialize firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -52,7 +62,8 @@ void main() async {
         // private routes
         mainPrivateRoute: (context) => const MainScreen(),
         detailsUi: (context) => const DetailsScreen(),
-        homeUi: (context) => const HomeScreen(),
+        homeUi: (context) =>
+            HomeScreen(firstDate: firstDate, lastDate: lastDate),
         visualizeUi: (context) => const VisualizeDataScreen(),
         addExpenseUi: (context) => AddDataScreen(
               colorOfClass: Colors.red,
