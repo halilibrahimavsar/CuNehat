@@ -162,7 +162,7 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                                       },
                                     );
                                   },
-                                  child: Text("Filter"),
+                                  child: const Text("Filter"),
                                 ),
                               ]),
                         ],

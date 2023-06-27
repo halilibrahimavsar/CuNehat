@@ -10,13 +10,15 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(sumMap(incomeMap));
+    print(sumMap(expenseMap));
     return Container(
       color: Colors.white,
-      child: const Card(
+      child: Card(
         clipBehavior: Clip.antiAliasWithSaveLayer,
         color: Colors.blueGrey,
         elevation: 100,
-        shape: ContinuousRectangleBorder(
+        shape: const ContinuousRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(100))),
         shadowColor: Colors.grey,
         child: Column(
@@ -24,14 +26,22 @@ class Dashboard extends StatelessWidget {
           children: [
             DashboardShowWidget(
               header: "DETAYLAR",
-              expenseTotal: 0.5,
-              incomeTotal: 25.5,
-              remaining: 56,
+              expenseTotal: sumMap(expenseMap),
+              incomeTotal: sumMap(incomeMap),
+              remaining: sumMap(incomeMap) - sumMap(expenseMap),
             ),
           ],
         ),
       ),
     );
+  }
+
+  double sumMap(Map<String, double> dictionary) {
+    double total = 0.0;
+    for (double i in dictionary.values) {
+      total += i;
+    }
+    return double.parse(total.toStringAsFixed(2));
   }
 }
 
