@@ -9,8 +9,13 @@ List<String> sortAndMergeDates({
   /// then we cast into [Timestamp] object, thus it can be sorted easily
   List<Timestamp> dates = [];
   List<String> sortedDates = [];
+  int getFiltrOption = 0;
 
-  int getFiltrOption = expenseDateAndVals.keys.toList().first.split("-").length;
+  try {
+    getFiltrOption = expenseDateAndVals.keys.toList().first.split("-").length;
+  } on StateError {
+    getFiltrOption = 0;
+  }
   String dateFiltrFrmt = "";
   if (getFiltrOption == 1) {
     dateFiltrFrmt = 'yyyy';

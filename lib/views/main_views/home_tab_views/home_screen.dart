@@ -3,7 +3,7 @@ import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
@@ -43,15 +43,67 @@ class HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Expanded(
-                    child: NeomorphicRadioGroup(
-                      options: const ['Gelir', 'Gider'],
-                      selectedOption: selectedOption,
-                      onChanged: (value) {
-                        setSelectedOption(value);
-                      },
+                  NeumorphicButton(
+                    margin: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 55, vertical: 15),
+                    onPressed: () {
+                      setState(() {
+                        selectedOption = 1;
+                      });
+                    },
+                    style: NeumorphicStyle(
+                      color: Colors.grey.shade200,
+                      boxShape: NeumorphicBoxShape.roundRect(
+                          BorderRadius.circular(20)),
+                      shape: NeumorphicShape.concave,
+                      oppositeShadowLightSource: selectedOption == 1,
+                    ),
+                    child: Text(
+                      "Gelir",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color:
+                            selectedOption == 1 ? Colors.green : Colors.black,
+                      ),
                     ),
                   ),
+                  NeumorphicButton(
+                    margin: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 55, vertical: 15),
+                    onPressed: () {
+                      setState(() {
+                        selectedOption = 2;
+                      });
+                    },
+                    style: NeumorphicStyle(
+                      color: Colors.grey.shade200,
+                      boxShape: NeumorphicBoxShape.roundRect(
+                          BorderRadius.circular(20)),
+                      shape: NeumorphicShape.concave,
+                      oppositeShadowLightSource: selectedOption == 2,
+                    ),
+                    child: Text(
+                      "Gider",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: selectedOption == 2 ? Colors.red : Colors.black,
+                      ),
+                    ),
+                  ),
+
+                  // Expanded(
+                  //   child: NeomorphicRadioGroup(
+                  //     options: const ['Gelir', 'Gider'],
+                  //     selectedOption: selectedOption,
+                  //     onChanged: (value) {
+                  //       setSelectedOption(value);
+                  //     },
+                  //   ),
+                  // ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -134,35 +186,70 @@ class HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       child: Card(
-                        child: ListTile(
-                          title: Text(
-                            data!.title,
-                            style: TextStyle(
-                                color: (selectedOption == 2)
-                                    ? Colors.red
-                                    : Colors.green),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Neumorphic(
+                          style: NeumorphicStyle(
+                            color: (selectedOption == 2)
+                                ? Colors.red.shade50
+                                : Colors.green.shade50,
                           ),
-                          trailing: Text(
-                            data.amount.toString(),
-                            style: TextStyle(
+                          child: ListTile(
+                            title: NeumorphicText(
+                              data!.title,
+                              style: NeumorphicStyle(
+                                oppositeShadowLightSource: true,
+                                color: (selectedOption == 2)
+                                    ? Colors.red.shade900
+                                    : Colors.green.shade900,
+                              ),
+                              textStyle: NeumorphicTextStyle(
                                 fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            trailing: NeumorphicText(
+                              data.amount.toString(),
+                              style: NeumorphicStyle(
+                                oppositeShadowLightSource: true,
                                 color: (selectedOption == 2)
-                                    ? Colors.red
-                                    : Colors.green),
-                          ),
-                          leading: Text(
-                            "${data.date.toDate().toString().split(" ")[0]}\n${data.time}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
+                                    ? Colors.red.shade900
+                                    : Colors.green.shade900,
+                              ),
+                              textStyle: NeumorphicTextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            leading: NeumorphicText(
+                              "${data.date.toDate().toString().split(" ")[0]}\n${data.time}",
+                              style: NeumorphicStyle(
+                                oppositeShadowLightSource: true,
                                 color: (selectedOption == 2)
-                                    ? Colors.red
-                                    : Colors.green),
+                                    ? Colors.red.shade900
+                                    : Colors.green.shade900,
+                              ),
+                              textStyle: NeumorphicTextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: NeumorphicText(
+                              data.tag,
+                              style: NeumorphicStyle(
+                                oppositeShadowLightSource: true,
+                                color: (selectedOption == 2)
+                                    ? Colors.red.shade900
+                                    : Colors.green.shade900,
+                              ),
+                              textStyle: NeumorphicTextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            titleAlignment: ListTileTitleAlignment.center,
                           ),
-                          subtitle: Text(
-                            data.tag,
-                            style: const TextStyle(color: Colors.blue),
-                          ),
-                          titleAlignment: ListTileTitleAlignment.center,
                         ),
                       ),
                     );
@@ -182,11 +269,11 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void setSelectedOption(int option) {
-    setState(() {
-      selectedOption = option;
-    });
-  }
+  // void setSelectedOption(int option) {
+  //   setState(() {
+  //     selectedOption = option;
+  //   });
+  // }
 
   showSnackbar({
     required String title,
@@ -204,64 +291,68 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class NeomorphicRadioGroup extends StatefulWidget {
-  final List<String> options;
-  final int selectedOption;
-  final ValueChanged<int> onChanged;
+// class NeomorphicRadioGroup extends StatefulWidget {
+//   final List<String> options;
+//   final int selectedOption;
+//   final ValueChanged<int> onChanged;
 
-  const NeomorphicRadioGroup({
-    Key? key,
-    required this.options,
-    required this.selectedOption,
-    required this.onChanged,
-  }) : super(key: key);
+//   const NeomorphicRadioGroup({
+//     Key? key,
+//     required this.options,
+//     required this.selectedOption,
+//     required this.onChanged,
+//   }) : super(key: key);
 
-  @override
-  NeomorphicRadioGroupState createState() => NeomorphicRadioGroupState();
-}
+//   @override
+//   NeomorphicRadioGroupState createState() => NeomorphicRadioGroupState();
+// }
 
-class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: widget.options.map((option) {
-        final index = widget.options.indexOf(option);
-        final isSelected = index + 1 == widget.selectedOption;
+// class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Row(
+//       children: widget.options.map((option) {
+//         final index = widget.options.indexOf(option);
+//         final isSelected = index + 1 == widget.selectedOption;
 
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {
-              widget.onChanged(index + 1);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? (index == 1 ? Colors.red : Colors.green)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 6,
-                    offset: const Offset(0, 6), // changes position of shadow
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  option,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: isSelected ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
+//         return Expanded(
+//           child: GestureDetector(
+//             onTap: () {
+//               widget.onChanged(index + 1);
+//             },
+//             child: Container(
+//               padding: const EdgeInsets.all(10),
+//               decoration: BoxDecoration(
+//                 color: isSelected
+//                     ? (index == 1 ? Colors.red : Colors.green)
+//                     : Colors.white,
+//                 borderRadius: BorderRadius.circular(25),
+//                 boxShadow: [
+//                   BoxShadow(
+//                     color: Colors.grey.withOpacity(0.5),
+//                     spreadRadius: 2,
+//                     blurRadius: 6,
+//                     offset: const Offset(0, 6), // changes position of shadow
+//                   ),
+//                 ],
+//               ),
+//               child: Neumorphic(
+//                 child: Center(
+//                   child: Text(
+//                     option,
+//                     style: TextStyle(
+//                       fontSize: 18,
+//                       color: isSelected
+//                           ? (option == 'Gelir' ? Colors.green : Colors.red)
+//                           : Colors.black,
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ),
+//         );
+//       }).toList(),
+//     );
+//   }
+// }

@@ -10,8 +10,8 @@ import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:floating_action_bubble/floating_action_bubble.dart';
-import 'package:flutter/material.dart';
 import 'dart:developer' as dev show log;
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 import 'package:flutter/services.dart';
 
@@ -31,14 +31,26 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
-  Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
-    DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-    ).millisecondsSinceEpoch,
-  );
-  Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
-      DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+  late List<String> dropDownList;
+  late String dropDownItem;
+
+  late final String? uid;
+  late Timestamp firstDate;
+  late Timestamp lastDate;
+
+  @override
+  void initState() {
+    firstDate = Timestamp.fromMillisecondsSinceEpoch(
+      DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+      ).millisecondsSinceEpoch,
+    );
+    lastDate = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,75 +74,221 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
         ),
         titleSpacing: 0,
-        title: SizedBox(
-          height: 55,
-          width: 55,
-          child: PopupMenuButton(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(100)),
-              child: Image.network(
-                userPhoto,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.account_circle_rounded,
-                    size: 10,
-                  );
+        title: Row(
+          children: [
+            SizedBox(
+              height: 55,
+              width: 55,
+              child: PopupMenuButton(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(100)),
+                      child: Image.network(
+                        userPhoto,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.account_circle_rounded,
+                            size: 10,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                onSelected: (value) async {
+                  switch (value) {
+                    case MainActions.logout:
+                      bool isLogOut = await showCustmDialog(
+                        context,
+                        title: "Log out",
+                        msg: "Do you want to log out?",
+                        cancelButton: "Cancel",
+                        confirmButton: "Log out",
+                        color: Colors.blue,
+                        functionWhenConfirm: () {},
+                      );
+                      if (isLogOut) {
+                        if (context.mounted) {
+                          AuthService.google().logOut();
+                          Navigator.popAndPushNamed(context, loginPageRoute);
+                        }
+                      }
+                      break;
+                    case MainActions.exit:
+                      SystemNavigator.pop();
+                      break;
+                  }
+                  dev.log(value.toString());
+                },
+                itemBuilder: (context) {
+                  return const [
+                    PopupMenuItem<MainActions>(
+                      value: MainActions.logout,
+                      child: Text("LOGOUT"),
+                    ),
+                    PopupMenuItem<MainActions>(
+                      value: MainActions.exit,
+                      child: Text("EXIT"),
+                    ),
+                  ];
                 },
               ),
             ),
-            onSelected: (value) async {
-              switch (value) {
-                case MainActions.logout:
-                  bool isLogOut = await showCustmDialog(
-                    context,
-                    title: "Log out",
-                    msg: "Do you want to log out?",
-                    cancelButton: "Cancel",
-                    confirmButton: "Log out",
-                    color: Colors.blue,
-                    functionWhenConfirm: () {},
-                  );
-                  if (isLogOut) {
-                    if (context.mounted) {
-                      AuthService.google().logOut();
-                      Navigator.popAndPushNamed(context, loginPageRoute);
-                    }
-                  }
-                  break;
-                case MainActions.exit:
-                  SystemNavigator.pop();
-                  break;
-              }
-              dev.log(value.toString());
-            },
-            itemBuilder: (context) {
-              return const [
-                PopupMenuItem<MainActions>(
-                  value: MainActions.logout,
-                  child: Text("LOGOUT"),
-                ),
-                PopupMenuItem<MainActions>(
-                  value: MainActions.exit,
-                  child: Text("EXIT"),
-                ),
-              ];
-            },
-          ),
+            Text(
+              user?.displayName ?? "Anonymous",
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 26),
-            child: DateRangPck(
-              color: Colors.green,
-              onCall: (first, last) {
-                setState(() {
-                  firstDate = first;
-                  lastDate = last;
-                });
+          [
+            NeumorphicButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) {
+                    return PopupMenuButton(
+                      child: Column(
+                        children: [
+                          NeumorphicButton(
+                            child: NeumorphicText("Hello"),
+                          ),
+                        ],
+                      ),
+                      itemBuilder: (context) {
+                        return [
+                          PopupMenuItem(
+                            child: DateRangPck(
+                              color: Colors.brown,
+                              onCall: (first, last) {
+                                setState(() {
+                                  firstDate = first;
+                                  lastDate = last;
+                                });
+                              },
+                            ),
+                          )
+                        ];
+                      },
+                    );
+                  },
+                );
               },
+              style: const NeumorphicStyle(
+                boxShape: NeumorphicBoxShape.circle(),
+                color: Colors.cyan,
+              ),
+              child: const Center(
+                child: Text(
+                  "FİLTRELE",
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+          [
+            NeumorphicButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  enableDrag: true,
+                  useSafeArea: true,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(25))),
+                  builder: (context) {
+                    return Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(25),
+                            ),
+                            color: Colors.grey.shade500,
+                          ),
+                          margin: const EdgeInsets.all(10),
+                          height: 6,
+                          width: 60,
+                        ),
+                        DateRangPck(
+                          color: Colors.brown,
+                          onCall: (first, last) {
+                            setState(() {
+                              firstDate = first;
+                              lastDate = last;
+                            });
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              style: const NeumorphicStyle(
+                boxShape: NeumorphicBoxShape.circle(),
+                color: Colors.cyan,
+              ),
+              child: const Center(
+                child: Text(
+                  "FİLTRELE",
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
+          ],
+          [
+            NeumorphicButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  enableDrag: true,
+                  useSafeArea: true,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(25))),
+                  builder: (context) {
+                    return PopupMenuButton(
+                      child: Column(
+                        children: [
+                          NeumorphicButton(
+                            child: NeumorphicText("Hello"),
+                          ),
+                        ],
+                      ),
+                      itemBuilder: (context) {
+                        return [
+                          PopupMenuItem(
+                            child: DateRangPck(
+                              color: Colors.black,
+                              onCall: (first, last) {
+                                setState(() {
+                                  firstDate = first;
+                                  lastDate = last;
+                                });
+                              },
+                            ),
+                          )
+                        ];
+                      },
+                    );
+                  },
+                );
+              },
+              style: const NeumorphicStyle(
+                boxShape: NeumorphicBoxShape.circle(),
+                color: Colors.cyan,
+              ),
+              child: const Center(
+                child: Text(
+                  "FİLTRELE",
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
+          ],
+        ][setCurrentPage],
       ),
       bottomNavigationBar: CurvedNavigationBar(
         items: navigationDestinations,
@@ -140,9 +298,10 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           });
         },
         index: setCurrentPage,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey.shade300,
         color: Colors.cyan,
       ),
+      backgroundColor: Colors.grey.shade300,
       body: [
         const DetailsScreen(),
         HomeScreen(firstDate: firstDate, lastDate: lastDate),
@@ -192,6 +351,3 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 }
-
-// either we take log out or not, so this is why we give Boolean to our function
-// here (then) is used, because if user do not give any answer to our dialog, then the returning value will be null (which will cause error)
