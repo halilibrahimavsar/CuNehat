@@ -14,6 +14,7 @@ import 'package:cunehat/views/main_views/main_screen.dart';
 import 'package:cunehat/views/login_views/emailverify_screen.dart';
 import 'package:cunehat/views/login_views/login_screen.dart';
 import 'package:cunehat/views/login_views/register_screen.dart';
+import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -64,7 +65,11 @@ void main() async {
         detailsUi: (context) => const DetailsScreen(),
         homeUi: (context) =>
             HomeScreen(firstDate: firstDate, lastDate: lastDate),
-        visualizeUi: (context) => const VisualizeDataScreen(),
+        visualizeUi: (context) => VisualizeDataScreen(
+              firstDate: firstDate,
+              lastDate: lastDate,
+              filterChronical: FilterDataByDate.monthly,
+            ),
         addExpenseUi: (context) => AddDataScreen(
               colorOfClass: Colors.red,
               titleOfClass: "Gider",

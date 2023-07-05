@@ -5,6 +5,7 @@ import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
+import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -16,6 +17,8 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:flutter/services.dart';
 
 int setCurrentPage = 1;
+int slctdOptForDateIntrvl = 2;
+FilterDataByDate slctdOptForChroniclIntrvl = FilterDataByDate.daily;
 
 List<Widget> navigationDestinations = [
   const Icon(Icons.bar_chart_sharp),
@@ -31,9 +34,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
-  late List<String> dropDownList;
-  late String dropDownItem;
-
   late final String? uid;
   late Timestamp firstDate;
   late Timestamp lastDate;
@@ -143,152 +143,208 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ],
         ),
         actions: [
-          [
-            NeumorphicButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) {
-                    return PopupMenuButton(
-                      child: Column(
-                        children: [
-                          NeumorphicButton(
-                            child: NeumorphicText("Hello"),
+          NeumorphicButton(
+            onPressed: () async {
+              List? listOfFilter = await showModalBottomSheet(
+                context: context,
+                useSafeArea: true,
+                enableDrag: true,
+                showDragHandle: true,
+                shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(25))),
+                builder: (context) {
+                  return StatefulBuilder(builder: (context, setState) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Neumorphic(
+                          child: Column(
+                            children: [
+                              DateRangPck(
+                                color: Colors.transparent,
+                                onCall: (first, last) {
+                                  setState(
+                                    () {
+                                      firstDate = first;
+
+                                      lastDate = last;
+                                    },
+                                  );
+                                },
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  NeumorphicButton(
+                                    style: NeumorphicStyle(
+                                      color: Colors.grey.shade200,
+                                      boxShape: NeumorphicBoxShape.roundRect(
+                                          BorderRadius.circular(20)),
+                                      shape: NeumorphicShape.concave,
+                                      oppositeShadowLightSource:
+                                          slctdOptForDateIntrvl == 1,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        slctdOptForDateIntrvl = 1;
+                                        firstDate = Timestamp
+                                            .fromMillisecondsSinceEpoch(
+                                          DateTime(
+                                            DateTime.now().year,
+                                          ).millisecondsSinceEpoch,
+                                        );
+                                        lastDate = Timestamp
+                                            .fromMillisecondsSinceEpoch(DateTime
+                                                    .now()
+                                                .add(const Duration(hours: 3))
+                                                .millisecondsSinceEpoch);
+                                      });
+                                    },
+                                    child: const Text("Bu yıl"),
+                                  ),
+                                  Builder(builder: (context) {
+                                    return NeumorphicButton(
+                                      style: NeumorphicStyle(
+                                        color: Colors.grey.shade200,
+                                        boxShape: NeumorphicBoxShape.roundRect(
+                                            BorderRadius.circular(20)),
+                                        shape: NeumorphicShape.concave,
+                                        oppositeShadowLightSource:
+                                            slctdOptForDateIntrvl == 2,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          slctdOptForDateIntrvl = 2;
+
+                                          firstDate = Timestamp
+                                              .fromMillisecondsSinceEpoch(
+                                            DateTime(
+                                              DateTime.now().year,
+                                              DateTime.now().month,
+                                            ).millisecondsSinceEpoch,
+                                          );
+                                          lastDate = Timestamp
+                                              .fromMillisecondsSinceEpoch(
+                                                  DateTime.now()
+                                                      .add(const Duration(
+                                                          hours: 3))
+                                                      .millisecondsSinceEpoch);
+                                        });
+                                      },
+                                      child: const Text("Bu ay"),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      itemBuilder: (context) {
-                        return [
-                          PopupMenuItem(
-                            child: DateRangPck(
-                              color: Colors.brown,
-                              onCall: (first, last) {
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource:
+                                    slctdOptForChroniclIntrvl ==
+                                        FilterDataByDate.daily,
+                              ),
+                              onPressed: () {
                                 setState(() {
-                                  firstDate = first;
-                                  lastDate = last;
+                                  slctdOptForChroniclIntrvl =
+                                      FilterDataByDate.daily;
                                 });
                               },
+                              child: const Text("Günlük"),
                             ),
-                          )
-                        ];
-                      },
-                    );
-                  },
-                );
-              },
-              style: const NeumorphicStyle(
-                boxShape: NeumorphicBoxShape.circle(),
-                color: Colors.cyan,
-              ),
-              child: const Center(
-                child: Text(
-                  "FİLTRELE",
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-          ],
-          [
-            NeumorphicButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  enableDrag: true,
-                  useSafeArea: true,
-                  shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(25))),
-                  builder: (context) {
-                    return Column(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(25),
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource:
+                                    slctdOptForChroniclIntrvl ==
+                                        FilterDataByDate.monthly,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  slctdOptForChroniclIntrvl =
+                                      FilterDataByDate.monthly;
+                                });
+                              },
+                              child: const Text("Aylık"),
                             ),
-                            color: Colors.grey.shade500,
-                          ),
-                          margin: const EdgeInsets.all(10),
-                          height: 6,
-                          width: 60,
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource:
+                                    slctdOptForChroniclIntrvl ==
+                                        FilterDataByDate.yearly,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  slctdOptForChroniclIntrvl =
+                                      FilterDataByDate.yearly;
+                                });
+                              },
+                              child: const Text("Yıllık"),
+                            ),
+                          ],
                         ),
-                        DateRangPck(
-                          color: Colors.brown,
-                          onCall: (first, last) {
-                            setState(() {
-                              firstDate = first;
-                              lastDate = last;
-                            });
-                          },
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: NeumorphicButton(
+                                child: Text("TEMİZLE"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: NeumorphicButton(
+                                child: Text("KAYDET"),
+                                onPressed: () {
+                                  Navigator.of(context).pop([
+                                    slctdOptForChroniclIntrvl,
+                                    slctdOptForDateIntrvl
+                                  ]);
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     );
-                  },
-                );
-              },
-              style: const NeumorphicStyle(
-                boxShape: NeumorphicBoxShape.circle(),
-                color: Colors.cyan,
-              ),
-              child: const Center(
-                child: Text(
-                  "FİLTRELE",
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
+                  });
+                },
+              );
+
+              setState(() {
+                slctdOptForChroniclIntrvl =
+                    listOfFilter?[0] ?? FilterDataByDate.daily;
+                slctdOptForDateIntrvl = listOfFilter?[1] ?? 2;
+              });
+            },
+            style: const NeumorphicStyle(
+              boxShape: NeumorphicBoxShape.circle(),
+              color: Colors.cyan,
             ),
-          ],
-          [
-            NeumorphicButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  enableDrag: true,
-                  useSafeArea: true,
-                  shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(25))),
-                  builder: (context) {
-                    return PopupMenuButton(
-                      child: Column(
-                        children: [
-                          NeumorphicButton(
-                            child: NeumorphicText("Hello"),
-                          ),
-                        ],
-                      ),
-                      itemBuilder: (context) {
-                        return [
-                          PopupMenuItem(
-                            child: DateRangPck(
-                              color: Colors.black,
-                              onCall: (first, last) {
-                                setState(() {
-                                  firstDate = first;
-                                  lastDate = last;
-                                });
-                              },
-                            ),
-                          )
-                        ];
-                      },
-                    );
-                  },
-                );
-              },
-              style: const NeumorphicStyle(
-                boxShape: NeumorphicBoxShape.circle(),
-                color: Colors.cyan,
-              ),
-              child: const Center(
-                child: Text(
-                  "FİLTRELE",
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-          ],
-        ][setCurrentPage],
+            child: const Center(child: Icon(Icons.menu)),
+          ),
+        ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
         items: navigationDestinations,
@@ -305,7 +361,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       body: [
         const DetailsScreen(),
         HomeScreen(firstDate: firstDate, lastDate: lastDate),
-        const VisualizeDataScreen(),
+        VisualizeDataScreen(
+          firstDate: firstDate,
+          lastDate: lastDate,
+          filterChronical: slctdOptForChroniclIntrvl,
+        ),
       ][setCurrentPage],
       floatingActionButton: [
         const SizedBox.shrink(),
