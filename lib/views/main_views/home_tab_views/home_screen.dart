@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
+import 'package:cunehat/views/main_views/add_data_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,9 +45,11 @@ class HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   NeumorphicButton(
-                    margin: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.fromLTRB(2, 10, 2, 6),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 55, vertical: 15),
+                      horizontal: 55,
+                      vertical: 8,
+                    ),
                     onPressed: () {
                       setState(() {
                         selectedOption = 1;
@@ -70,9 +73,11 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   NeumorphicButton(
-                    margin: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.fromLTRB(2, 10, 2, 6),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 55, vertical: 15),
+                      horizontal: 55,
+                      vertical: 8,
+                    ),
                     onPressed: () {
                       setState(() {
                         selectedOption = 2;
@@ -94,16 +99,6 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-
-                  // Expanded(
-                  //   child: NeomorphicRadioGroup(
-                  //     options: const ['Gelir', 'Gider'],
-                  //     selectedOption: selectedOption,
-                  //     onChanged: (value) {
-                  //       setSelectedOption(value);
-                  //     },
-                  //   ),
-                  // ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -256,6 +251,60 @@ class HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
+              [
+                NeumorphicButton(
+                  margin: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 100,
+                  ),
+                  child: Icon(Icons.add, color: Colors.green.shade300),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      enableDrag: true,
+                      useSafeArea: true,
+                      isScrollControlled: true,
+                      isDismissible: true,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25)),
+                      context: context,
+                      builder: (context) {
+                        return AddDataScreen(
+                          colorOfClass: Colors.green,
+                          titleOfClass: "Gelir",
+                          provider: FirestoreService().addIncome,
+                          tagProvider: FirestoreService().getIncomeTags,
+                        );
+                      },
+                    );
+                  },
+                ),
+                NeumorphicButton(
+                  margin: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 100,
+                  ),
+                  child: Icon(Icons.add, color: Colors.red.shade300),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      enableDrag: true,
+                      useSafeArea: true,
+                      isScrollControlled: true,
+                      isDismissible: true,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25)),
+                      context: context,
+                      builder: (context) {
+                        return AddDataScreen(
+                          colorOfClass: Colors.red,
+                          titleOfClass: "Gider",
+                          provider: FirestoreService().addExpense,
+                          tagProvider: FirestoreService().getExpenseTags,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ][selectedOption - 1]
             ],
           );
         } else if (snapshot.hasError) {
@@ -268,12 +317,6 @@ class HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  // void setSelectedOption(int option) {
-  //   setState(() {
-  //     selectedOption = option;
-  //   });
-  // }
 
   showSnackbar({
     required String title,
@@ -290,69 +333,3 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-// class NeomorphicRadioGroup extends StatefulWidget {
-//   final List<String> options;
-//   final int selectedOption;
-//   final ValueChanged<int> onChanged;
-
-//   const NeomorphicRadioGroup({
-//     Key? key,
-//     required this.options,
-//     required this.selectedOption,
-//     required this.onChanged,
-//   }) : super(key: key);
-
-//   @override
-//   NeomorphicRadioGroupState createState() => NeomorphicRadioGroupState();
-// }
-
-// class NeomorphicRadioGroupState extends State<NeomorphicRadioGroup> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Row(
-//       children: widget.options.map((option) {
-//         final index = widget.options.indexOf(option);
-//         final isSelected = index + 1 == widget.selectedOption;
-
-//         return Expanded(
-//           child: GestureDetector(
-//             onTap: () {
-//               widget.onChanged(index + 1);
-//             },
-//             child: Container(
-//               padding: const EdgeInsets.all(10),
-//               decoration: BoxDecoration(
-//                 color: isSelected
-//                     ? (index == 1 ? Colors.red : Colors.green)
-//                     : Colors.white,
-//                 borderRadius: BorderRadius.circular(25),
-//                 boxShadow: [
-//                   BoxShadow(
-//                     color: Colors.grey.withOpacity(0.5),
-//                     spreadRadius: 2,
-//                     blurRadius: 6,
-//                     offset: const Offset(0, 6), // changes position of shadow
-//                   ),
-//                 ],
-//               ),
-//               child: Neumorphic(
-//                 child: Center(
-//                   child: Text(
-//                     option,
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       color: isSelected
-//                           ? (option == 'Gelir' ? Colors.green : Colors.red)
-//                           : Colors.black,
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ),
-//         );
-//       }).toList(),
-//     );
-//   }
-// }

@@ -10,7 +10,6 @@ import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:floating_action_bubble/floating_action_bubble.dart';
 import 'dart:developer' as dev show log;
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
@@ -33,7 +32,7 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen> {
   late final String? uid;
   late Timestamp firstDate;
   late Timestamp lastDate;
@@ -53,15 +52,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    late AnimationController animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 260),
-    );
-    final curvedAnimation =
-        CurvedAnimation(curve: Curves.easeInOut, parent: animationController);
-    late Animation<double> animation =
-        Tween<double>(begin: 0, end: 1).animate(curvedAnimation);
     final user = FirebaseAuth.instance.currentUser;
     final String userPhoto =
         user?.providerData[0].photoURL ?? "/assets/images/logo.jpg";
@@ -306,7 +302,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: NeumorphicButton(
-                                child: Text("TEMİZLE"),
+                                child: const Text("TEMİZLE"),
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },
@@ -315,7 +311,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                             Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: NeumorphicButton(
-                                child: Text("KAYDET"),
+                                child: const Text("KAYDET"),
                                 onPressed: () {
                                   Navigator.of(context).pop([
                                     slctdOptForChroniclIntrvl,
@@ -366,47 +362,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           lastDate: lastDate,
           filterChronical: slctdOptForChroniclIntrvl,
         ),
-      ][setCurrentPage],
-      floatingActionButton: [
-        const SizedBox.shrink(),
-        FloatingActionBubble(
-          iconData: Icons.data_saver_on,
-          backGroundColor: Colors.cyan,
-          iconColor: Colors.black,
-          onPress: () {
-            animationController.isCompleted
-                ? animationController.reverse()
-                : animationController.forward();
-          },
-          animation: animation,
-          items: <Bubble>[
-            // Floating action menu item
-            Bubble(
-              title: "Gider",
-              iconColor: Colors.white,
-              bubbleColor: Colors.red,
-              icon: Icons.dataset,
-              titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
-              onPress: () {
-                animationController.reverse();
-                Navigator.pushNamed(context, addExpenseUi);
-              },
-            ),
-            //Floating action menu item
-            Bubble(
-              title: "Gelir",
-              iconColor: Colors.white,
-              bubbleColor: Colors.green,
-              icon: Icons.dataset,
-              titleStyle: const TextStyle(fontSize: 16, color: Colors.white),
-              onPress: () {
-                Navigator.pushNamed(context, addIncomeUi);
-                animationController.reverse();
-              },
-            ),
-          ],
-        ),
-        const SizedBox.shrink(),
       ][setCurrentPage],
     );
   }
