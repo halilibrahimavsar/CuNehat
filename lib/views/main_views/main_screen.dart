@@ -52,11 +52,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final String userPhoto =
@@ -139,207 +134,7 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         actions: [
-          NeumorphicButton(
-            onPressed: () async {
-              List? listOfFilter = await showModalBottomSheet(
-                context: context,
-                useSafeArea: true,
-                enableDrag: true,
-                showDragHandle: true,
-                shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(25))),
-                builder: (context) {
-                  return StatefulBuilder(builder: (context, setState) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Neumorphic(
-                          child: Column(
-                            children: [
-                              DateRangPck(
-                                color: Colors.transparent,
-                                onCall: (first, last) {
-                                  setState(
-                                    () {
-                                      firstDate = first;
-
-                                      lastDate = last;
-                                    },
-                                  );
-                                },
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  NeumorphicButton(
-                                    style: NeumorphicStyle(
-                                      color: Colors.grey.shade200,
-                                      boxShape: NeumorphicBoxShape.roundRect(
-                                          BorderRadius.circular(20)),
-                                      shape: NeumorphicShape.concave,
-                                      oppositeShadowLightSource:
-                                          slctdOptForDateIntrvl == 1,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        slctdOptForDateIntrvl = 1;
-                                        firstDate = Timestamp
-                                            .fromMillisecondsSinceEpoch(
-                                          DateTime(
-                                            DateTime.now().year,
-                                          ).millisecondsSinceEpoch,
-                                        );
-                                        lastDate = Timestamp
-                                            .fromMillisecondsSinceEpoch(DateTime
-                                                    .now()
-                                                .add(const Duration(hours: 3))
-                                                .millisecondsSinceEpoch);
-                                      });
-                                    },
-                                    child: const Text("Bu yıl"),
-                                  ),
-                                  Builder(builder: (context) {
-                                    return NeumorphicButton(
-                                      style: NeumorphicStyle(
-                                        color: Colors.grey.shade200,
-                                        boxShape: NeumorphicBoxShape.roundRect(
-                                            BorderRadius.circular(20)),
-                                        shape: NeumorphicShape.concave,
-                                        oppositeShadowLightSource:
-                                            slctdOptForDateIntrvl == 2,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          slctdOptForDateIntrvl = 2;
-
-                                          firstDate = Timestamp
-                                              .fromMillisecondsSinceEpoch(
-                                            DateTime(
-                                              DateTime.now().year,
-                                              DateTime.now().month,
-                                            ).millisecondsSinceEpoch,
-                                          );
-                                          lastDate = Timestamp
-                                              .fromMillisecondsSinceEpoch(
-                                                  DateTime.now()
-                                                      .add(const Duration(
-                                                          hours: 3))
-                                                      .millisecondsSinceEpoch);
-                                        });
-                                      },
-                                      child: const Text("Bu ay"),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            NeumorphicButton(
-                              style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
-                                boxShape: NeumorphicBoxShape.roundRect(
-                                    BorderRadius.circular(20)),
-                                shape: NeumorphicShape.concave,
-                                oppositeShadowLightSource:
-                                    slctdOptForChroniclIntrvl ==
-                                        FilterDataByDate.daily,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  slctdOptForChroniclIntrvl =
-                                      FilterDataByDate.daily;
-                                });
-                              },
-                              child: const Text("Günlük"),
-                            ),
-                            NeumorphicButton(
-                              style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
-                                boxShape: NeumorphicBoxShape.roundRect(
-                                    BorderRadius.circular(20)),
-                                shape: NeumorphicShape.concave,
-                                oppositeShadowLightSource:
-                                    slctdOptForChroniclIntrvl ==
-                                        FilterDataByDate.monthly,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  slctdOptForChroniclIntrvl =
-                                      FilterDataByDate.monthly;
-                                });
-                              },
-                              child: const Text("Aylık"),
-                            ),
-                            NeumorphicButton(
-                              style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
-                                boxShape: NeumorphicBoxShape.roundRect(
-                                    BorderRadius.circular(20)),
-                                shape: NeumorphicShape.concave,
-                                oppositeShadowLightSource:
-                                    slctdOptForChroniclIntrvl ==
-                                        FilterDataByDate.yearly,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  slctdOptForChroniclIntrvl =
-                                      FilterDataByDate.yearly;
-                                });
-                              },
-                              child: const Text("Yıllık"),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: NeumorphicButton(
-                                child: const Text("TEMİZLE"),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: NeumorphicButton(
-                                child: const Text("KAYDET"),
-                                onPressed: () {
-                                  Navigator.of(context).pop([
-                                    slctdOptForChroniclIntrvl,
-                                    slctdOptForDateIntrvl
-                                  ]);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  });
-                },
-              );
-
-              setState(() {
-                slctdOptForChroniclIntrvl =
-                    listOfFilter?[0] ?? FilterDataByDate.daily;
-                slctdOptForDateIntrvl = listOfFilter?[1] ?? 2;
-              });
-            },
-            style: const NeumorphicStyle(
-              boxShape: NeumorphicBoxShape.circle(),
-              color: Colors.cyan,
-            ),
-            child: const Center(child: Icon(Icons.menu)),
-          ),
+          filterVisualizeScreen(context),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
@@ -363,6 +158,259 @@ class _MainScreenState extends State<MainScreen> {
           filterChronical: slctdOptForChroniclIntrvl,
         ),
       ][setCurrentPage],
+    );
+  }
+
+  NeumorphicButton filterVisualizeScreen(BuildContext context) {
+    const Color selectedColor = Colors.cyan;
+    const Color notSelectedColor = Colors.black;
+    return NeumorphicButton(
+      onPressed: () async {
+        List? listOfFilter = await showModalBottomSheet(
+          context: context,
+          useSafeArea: true,
+          enableDrag: true,
+          showDragHandle: true,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+          builder: (context) {
+            return StatefulBuilder(builder: (context, setState) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Neumorphic(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource:
+                                    slctdOptForDateIntrvl == 1,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  slctdOptForDateIntrvl = 1;
+                                  firstDate =
+                                      Timestamp.fromMillisecondsSinceEpoch(
+                                    DateTime(
+                                      DateTime.now().year,
+                                    ).millisecondsSinceEpoch,
+                                  );
+                                  lastDate =
+                                      Timestamp.fromMillisecondsSinceEpoch(
+                                          DateTime.now()
+                                              .add(const Duration(hours: 3))
+                                              .millisecondsSinceEpoch);
+                                });
+                              },
+                              child: Text(
+                                "Bu yıl",
+                                style: TextStyle(
+                                  color: slctdOptForDateIntrvl == 1
+                                      ? selectedColor
+                                      : notSelectedColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Builder(builder: (context) {
+                              return NeumorphicButton(
+                                style: NeumorphicStyle(
+                                  color: Colors.grey.shade200,
+                                  boxShape: NeumorphicBoxShape.roundRect(
+                                      BorderRadius.circular(20)),
+                                  shape: NeumorphicShape.concave,
+                                  oppositeShadowLightSource:
+                                      slctdOptForDateIntrvl == 2,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    slctdOptForDateIntrvl = 2;
+
+                                    firstDate =
+                                        Timestamp.fromMillisecondsSinceEpoch(
+                                      DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month,
+                                      ).millisecondsSinceEpoch,
+                                    );
+                                    lastDate =
+                                        Timestamp.fromMillisecondsSinceEpoch(
+                                            DateTime.now()
+                                                .add(const Duration(hours: 3))
+                                                .millisecondsSinceEpoch);
+                                  });
+                                },
+                                child: Text(
+                                  "Bu ay",
+                                  style: TextStyle(
+                                    color: slctdOptForDateIntrvl == 2
+                                        ? selectedColor
+                                        : notSelectedColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                        DateRangPck(
+                          backgroundColor: Colors.grey.shade100,
+                          fonstColor: Colors.blue,
+                          onCall: (first, last) {
+                            setState(
+                              () {
+                                firstDate = first;
+
+                                lastDate = last;
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Neumorphic(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        NeumorphicButton(
+                          style: NeumorphicStyle(
+                            color: Colors.grey.shade200,
+                            boxShape: NeumorphicBoxShape.roundRect(
+                                BorderRadius.circular(20)),
+                            shape: NeumorphicShape.concave,
+                            oppositeShadowLightSource:
+                                slctdOptForChroniclIntrvl ==
+                                    FilterDataByDate.daily,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              slctdOptForChroniclIntrvl =
+                                  FilterDataByDate.daily;
+                            });
+                          },
+                          child: Text(
+                            "Günlük",
+                            style: TextStyle(
+                              color: slctdOptForChroniclIntrvl ==
+                                      FilterDataByDate.daily
+                                  ? selectedColor
+                                  : notSelectedColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        NeumorphicButton(
+                          style: NeumorphicStyle(
+                            color: Colors.grey.shade200,
+                            boxShape: NeumorphicBoxShape.roundRect(
+                                BorderRadius.circular(20)),
+                            shape: NeumorphicShape.concave,
+                            oppositeShadowLightSource:
+                                slctdOptForChroniclIntrvl ==
+                                    FilterDataByDate.monthly,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              slctdOptForChroniclIntrvl =
+                                  FilterDataByDate.monthly;
+                            });
+                          },
+                          child: Text(
+                            "Aylık",
+                            style: TextStyle(
+                              color: slctdOptForChroniclIntrvl ==
+                                      FilterDataByDate.monthly
+                                  ? selectedColor
+                                  : notSelectedColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        NeumorphicButton(
+                          style: NeumorphicStyle(
+                            color: Colors.grey.shade200,
+                            boxShape: NeumorphicBoxShape.roundRect(
+                                BorderRadius.circular(20)),
+                            shape: NeumorphicShape.concave,
+                            oppositeShadowLightSource:
+                                slctdOptForChroniclIntrvl ==
+                                    FilterDataByDate.yearly,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              slctdOptForChroniclIntrvl =
+                                  FilterDataByDate.yearly;
+                            });
+                          },
+                          child: Text(
+                            "Yıllık",
+                            style: TextStyle(
+                              color: slctdOptForChroniclIntrvl ==
+                                      FilterDataByDate.yearly
+                                  ? selectedColor
+                                  : notSelectedColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: NeumorphicButton(
+                          style: const NeumorphicStyle(color: Colors.cyan),
+                          child: const Text("TEMİZLE"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: NeumorphicButton(
+                          style: const NeumorphicStyle(color: Colors.cyan),
+                          child: const Text("KAYDET"),
+                          onPressed: () {
+                            Navigator.of(context).pop([
+                              slctdOptForChroniclIntrvl,
+                              slctdOptForDateIntrvl
+                            ]);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            });
+          },
+        );
+
+        setState(() {
+          slctdOptForChroniclIntrvl =
+              listOfFilter?[0] ?? FilterDataByDate.daily;
+          slctdOptForDateIntrvl = listOfFilter?[1] ?? 2;
+        });
+      },
+      style: const NeumorphicStyle(
+        boxShape: NeumorphicBoxShape.circle(),
+        color: Colors.cyan,
+      ),
+      child: const Center(child: Icon(Icons.menu)),
     );
   }
 }

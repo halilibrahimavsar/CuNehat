@@ -1,11 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class DateRangPck extends StatefulWidget {
-  final Color color;
+  final Color backgroundColor;
+  final Color fonstColor;
   final Function(Timestamp first, Timestamp last) onCall;
-  const DateRangPck({super.key, required this.color, required this.onCall});
+  const DateRangPck({
+    super.key,
+    required this.backgroundColor,
+    required this.onCall,
+    required this.fonstColor,
+  });
 
   @override
   State<DateRangPck> createState() => _DateRangPckState();
@@ -25,6 +30,7 @@ class _DateRangPckState extends State<DateRangPck> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: NeumorphicButton(
+        style: NeumorphicStyle(color: widget.backgroundColor),
         onPressed: () async {
           DateTimeRange result = await showDateRangePicker(
                 context: context,
@@ -55,15 +61,15 @@ class _DateRangPckState extends State<DateRangPck> {
           children: [
             Text(
               firstDate.toDate().toString().split(" ")[0],
-              style: const TextStyle(fontSize: 18, color: Colors.black),
+              style: TextStyle(fontSize: 18, color: widget.fonstColor),
             ),
-            const Text(
+            Text(
               ">",
-              style: TextStyle(fontSize: 20, color: Colors.black),
+              style: TextStyle(fontSize: 20, color: widget.fonstColor),
             ),
             Text(
               lastDate.toDate().toString().split(" ")[0],
-              style: const TextStyle(fontSize: 18, color: Colors.black),
+              style: TextStyle(fontSize: 18, color: widget.fonstColor),
             ),
           ],
         ),

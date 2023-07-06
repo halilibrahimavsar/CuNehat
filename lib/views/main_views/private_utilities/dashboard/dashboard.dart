@@ -1,34 +1,50 @@
-// for now, we not using this widget in the application
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
-/// Show total income and expense yearly, monthly, daily
 class Dashboard extends StatelessWidget {
   final Map<String, double> incomeMap;
   final Map<String, double> expenseMap;
-  const Dashboard(
-      {super.key, required this.incomeMap, required this.expenseMap});
+  final Timestamp startDate;
+  final Timestamp endDate;
+
+  const Dashboard({
+    super.key,
+    required this.incomeMap,
+    required this.expenseMap,
+    required this.startDate,
+    required this.endDate,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Colors.grey.shade300,
       child: Card(
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        color: Colors.blueGrey,
-        elevation: 100,
-        shape: const ContinuousRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(100))),
-        shadowColor: Colors.grey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            DashboardShowWidget(
-              header: "DETAYLAR",
-              expenseTotal: sumMap(expenseMap),
-              incomeTotal: sumMap(incomeMap),
-              remaining: sumMap(incomeMap) - sumMap(expenseMap),
-            ),
-          ],
+        elevation: 10,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        color: Colors.cyan.shade800,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(startDate, endDate),
+              const SizedBox(height: 20),
+              _buildStatRow('Gelir', sumMap(incomeMap), Colors.green.shade300),
+              const SizedBox(height: 10),
+              _buildStatRow('Gider', sumMap(expenseMap), Colors.red.shade300),
+              const SizedBox(height: 10),
+              const Divider(color: Colors.white),
+              const SizedBox(height: 10),
+              _buildStatRow(
+                'Kalan',
+                sumMap(incomeMap) - sumMap(expenseMap),
+                Colors.tealAccent,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -41,79 +57,69 @@ class Dashboard extends StatelessWidget {
     }
     return double.parse(total.toStringAsFixed(2));
   }
-}
 
-class DashboardShowWidget extends StatefulWidget {
-  final String header;
-  final double expenseTotal;
-  final double incomeTotal;
-  final double remaining;
-
-  const DashboardShowWidget({
-    super.key,
-    required this.header,
-    required this.expenseTotal,
-    required this.incomeTotal,
-    required this.remaining,
-  });
-
-  @override
-  State<DashboardShowWidget> createState() => _DashboardShowWidgetState();
-}
-
-class _DashboardShowWidgetState extends State<DashboardShowWidget> {
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        color: Colors.blueGrey.shade900,
-        elevation: 25,
-        shape: const ContinuousRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(100))),
-        shadowColor: Colors.grey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Text(
-              widget.header,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Text(
-                  "GİDER : - ${widget.expenseTotal}",
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                Text(
-                  "GELİR : + ${widget.incomeTotal}",
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              "KALAN = ${widget.remaining}",
-              style: const TextStyle(
-                color: Colors.tealAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
+  Widget _buildStatRow(String label, double amount, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        Text(
+          amount.toStringAsFixed(2),
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(
+    final Timestamp startDate,
+    final Timestamp endDate,
+  ) {
+    // find the range of dates (Start point and End point)
+    var start =
+        '${startDate.toDate().day}-${startDate.toDate().month}-${startDate.toDate().year}';
+    var end =
+        '${endDate.toDate().day}-${endDate.toDate().month}-${endDate.toDate().year}';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(border: Border.all(color: Colors.white)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Text(
+            start,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          NeumorphicIcon(
+            Icons.arrow_forward_ios,
+            size: 26,
+          ),
+          Text(
+            end,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

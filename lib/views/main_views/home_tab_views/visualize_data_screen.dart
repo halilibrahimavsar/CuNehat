@@ -64,14 +64,13 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                   filter: widget.filterChronical,
                 );
 
-                final Size screenSize = MediaQuery.of(context).size;
-                final desiredBodyHeight =
-                    screenSize.height * 0.68; // 68% of screen width
+                // final Size screenSize = MediaQuery.of(context).size;
+                // final desiredBodyHeight =
+                //     screenSize.height * 0.68; // 68% of screen width
 
                 return Column(
                   children: [
-                    SizedBox(
-                      height: desiredBodyHeight,
+                    Expanded(
                       child: Swiper(
                         itemCount: 3,
                         scrollDirection: Axis.vertical,
@@ -83,14 +82,17 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                         itemBuilder: (context, index) {
                           final res = [
                             Container(
+                              color: Colors.black,
+                              child: Dashboard(
+                                  incomeMap: incomeMap,
+                                  expenseMap: expenseMap,
+                                  startDate: widget.firstDate,
+                                  endDate: widget.lastDate),
+                            ),
+                            Container(
                               padding: const EdgeInsets.all(25),
                               color: Colors.blueGrey.shade200,
                               child: LineChartSample(
-                                  incomeMap: incomeMap, expenseMap: expenseMap),
-                            ),
-                            Container(
-                              color: Colors.black,
-                              child: Dashboard(
                                   incomeMap: incomeMap, expenseMap: expenseMap),
                             ),
                             Container(
