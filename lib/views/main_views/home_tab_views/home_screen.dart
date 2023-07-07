@@ -113,7 +113,14 @@ class HomeScreenState extends State<HomeScreen> {
                         children: [
                           SlidableAction(
                             onPressed: (context) {
-                              Navigator.push(context, MaterialPageRoute(
+                              showModalBottomSheet(
+                                enableDrag: true,
+                                useSafeArea: true,
+                                isScrollControlled: true,
+                                isDismissible: true,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25)),
+                                context: context,
                                 builder: (context) {
                                   return UpdateDataScreen(
                                     selectedOption: selectedOption,
@@ -127,7 +134,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     time: data?.time ?? "",
                                   );
                                 },
-                              ));
+                              );
                             },
                             backgroundColor: Colors.purple,
                             foregroundColor: Colors.white,

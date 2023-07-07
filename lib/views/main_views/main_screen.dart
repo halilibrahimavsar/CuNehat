@@ -18,6 +18,8 @@ import 'package:flutter/services.dart';
 int setCurrentPage = 1;
 int slctdOptForDateIntrvl = 2;
 FilterDataByDate slctdOptForChroniclIntrvl = FilterDataByDate.daily;
+late Timestamp firstDate;
+late Timestamp lastDate;
 
 List<Widget> navigationDestinations = [
   const Icon(Icons.bar_chart_sharp),
@@ -34,8 +36,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late final String? uid;
-  late Timestamp firstDate;
-  late Timestamp lastDate;
 
   @override
   void initState() {
@@ -263,7 +263,7 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                         DateRangPck(
                           backgroundColor: Colors.grey.shade100,
-                          fonstColor: Colors.blue,
+                          fontColor: Colors.blue,
                           onCall: (first, last) {
                             setState(
                               () {
@@ -399,7 +399,6 @@ class _MainScreenState extends State<MainScreen> {
             });
           },
         );
-
         setState(() {
           slctdOptForChroniclIntrvl =
               listOfFilter?[0] ?? FilterDataByDate.daily;

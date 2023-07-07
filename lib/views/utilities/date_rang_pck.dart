@@ -3,13 +3,13 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class DateRangPck extends StatefulWidget {
   final Color backgroundColor;
-  final Color fonstColor;
+  final Color fontColor;
   final Function(Timestamp first, Timestamp last) onCall;
   const DateRangPck({
     super.key,
     required this.backgroundColor,
     required this.onCall,
-    required this.fonstColor,
+    required this.fontColor,
   });
 
   @override
@@ -61,15 +61,15 @@ class _DateRangPckState extends State<DateRangPck> {
           children: [
             Text(
               firstDate.toDate().toString().split(" ")[0],
-              style: TextStyle(fontSize: 18, color: widget.fonstColor),
+              style: TextStyle(fontSize: 18, color: widget.fontColor),
             ),
             Text(
               ">",
-              style: TextStyle(fontSize: 20, color: widget.fonstColor),
+              style: TextStyle(fontSize: 20, color: widget.fontColor),
             ),
             Text(
               lastDate.toDate().toString().split(" ")[0],
-              style: TextStyle(fontSize: 18, color: widget.fonstColor),
+              style: TextStyle(fontSize: 18, color: widget.fontColor),
             ),
           ],
         ),

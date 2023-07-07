@@ -64,10 +64,6 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                   filter: widget.filterChronical,
                 );
 
-                // final Size screenSize = MediaQuery.of(context).size;
-                // final desiredBodyHeight =
-                //     screenSize.height * 0.68; // 68% of screen width
-
                 return Column(
                   children: [
                     Expanded(
