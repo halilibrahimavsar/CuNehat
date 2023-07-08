@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/views/main_views/private_utilities/charts/custom_pie_chart.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class Dashboard extends StatelessWidget {
@@ -28,21 +29,30 @@ class Dashboard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildHeader(startDate, endDate),
-              const SizedBox(height: 20),
-              _buildStatRow('Gelir', sumMap(incomeMap), Colors.green.shade300),
-              const SizedBox(height: 10),
-              _buildStatRow('Gider', sumMap(expenseMap), Colors.red.shade300),
-              const SizedBox(height: 10),
-              const Divider(color: Colors.white),
-              const SizedBox(height: 10),
-              _buildStatRow(
-                'Kalan',
-                sumMap(incomeMap) - sumMap(expenseMap),
-                Colors.tealAccent,
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildHeader(startDate, endDate),
+                  const SizedBox(height: 20),
+                  _buildStatRow(
+                      'Gelir', sumMap(incomeMap), Colors.green.shade300),
+                  const SizedBox(height: 10),
+                  _buildStatRow(
+                      'Gider', sumMap(expenseMap), Colors.red.shade300),
+                  const SizedBox(height: 10),
+                  const Divider(color: Colors.white),
+                  const SizedBox(height: 10),
+                  _buildStatRow(
+                    'Kalan',
+                    sumMap(incomeMap) - sumMap(expenseMap),
+                    Colors.tealAccent,
+                  ),
+                ],
               ),
+              SizedBox.shrink(child: PieChartSample()),
             ],
           ),
         ),

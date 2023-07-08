@@ -33,10 +33,6 @@ class BarChartSample extends StatelessWidget {
       }
     }
 
-    // Sort dates in ascending order (but for now its just
-    // sorting first value(day), instead we should get
-    // second and third value respectively if there is second and third)
-
     for (var date in dates) {
       incomeData.add(incomeMap[date] ?? 0);
       expenseData.add(expenseMap[date] ?? 0);
