@@ -2,6 +2,9 @@ import 'package:cunehat/views/main_views/private_utilities/charts/sort_and_merge
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+// TODO : add radio button which can show both of them or just one of them [both, expense, income]
+// Then add same functionality for the bar chart
+
 class LineChartSample extends StatelessWidget {
   final Map<String, double> incomeMap;
   final Map<String, double> expenseMap;
@@ -70,6 +73,8 @@ class LineChartSample extends StatelessWidget {
         maxX: dates.length.toDouble() - 1,
         minY: 0,
         maxY: _calculateMaxValue(incomeData, expenseData),
+        baselineX: 0,
+        baselineY: 0,
         lineBarsData: [
           LineChartBarData(
             spots: List.generate(
@@ -78,7 +83,7 @@ class LineChartSample extends StatelessWidget {
             ),
             color: Colors.green,
             barWidth: 2,
-            isCurved: true,
+            // isCurved: true,
             shadow: const Shadow(blurRadius: 0.9),
             isStrokeCapRound: true,
             dotData: FlDotData(show: true),
@@ -99,7 +104,9 @@ class LineChartSample extends StatelessWidget {
             ),
             color: Colors.red,
             barWidth: 2,
-            isCurved: true,
+            // preventCurveOverShooting: true,
+            // preventCurveOvershootingThreshold: 0,
+            // isCurved: true,
             shadow: const Shadow(blurRadius: 0.9),
             isStrokeCapRound: true,
             dotData: FlDotData(show: true),
