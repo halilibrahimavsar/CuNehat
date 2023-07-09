@@ -1,61 +1,93 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/private_utilities/charts/custom_pie_chart.dart';
+import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
+import 'package:cunehat/views/main_views/private_utilities/filtering/filter_db_data.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class Dashboard extends StatelessWidget {
-  final Map<String, double> incomeMap;
-  final Map<String, double> expenseMap;
+  final AsyncSnapshot<Iterable<Income>> incomeSnapshot;
+  final AsyncSnapshot<Iterable<Expense>> expenseSnapshot;
   final Timestamp startDate;
   final Timestamp endDate;
+  final FilterDataByDate filterChronical;
 
   const Dashboard({
     super.key,
-    required this.incomeMap,
-    required this.expenseMap,
     required this.startDate,
     required this.endDate,
+    required this.incomeSnapshot,
+    required this.expenseSnapshot,
+    required this.filterChronical,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, double> incomeMap = filterByDateFrVisData(
+      allData: incomeSnapshot.data,
+      filter: filterChronical,
+    );
+
+    final Map<String, double> expenseMap = filterByDateFrVisData(
+      allData: expenseSnapshot.data,
+      filter: filterChronical,
+    );
+
+    final expenseTagsValues = filterTagValues(allData: incomeSnapshot.data);
+    final incomeTagsValues = filterTagValues(allData: incomeSnapshot.data);
+
     return Container(
-      color: Colors.grey.shade300,
-      child: Card(
-        elevation: 10,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        color: Colors.cyan.shade800,
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
+      color: Colors.cyan.shade700,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildHeader(startDate, endDate),
+              const SizedBox(height: 20),
+              _buildStatRow('Gelir', sumMap(incomeMap), Colors.green.shade300),
+              const SizedBox(height: 10),
+              _buildStatRow('Gider', sumMap(expenseMap), Colors.red.shade300),
+              const SizedBox(height: 10),
+              const Divider(color: Colors.white),
+              const SizedBox(height: 10),
+              _buildStatRow(
+                'Kalan',
+                sumMap(incomeMap) - sumMap(expenseMap),
+                Colors.tealAccent,
+              ),
+            ],
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildHeader(startDate, endDate),
-                  const SizedBox(height: 20),
-                  _buildStatRow(
-                      'Gelir', sumMap(incomeMap), Colors.green.shade300),
-                  const SizedBox(height: 10),
-                  _buildStatRow(
-                      'Gider', sumMap(expenseMap), Colors.red.shade300),
-                  const SizedBox(height: 10),
-                  const Divider(color: Colors.white),
-                  const SizedBox(height: 10),
-                  _buildStatRow(
-                    'Kalan',
-                    sumMap(incomeMap) - sumMap(expenseMap),
-                    Colors.tealAccent,
-                  ),
+                  const Text("GİDER TAG VERİLERİ"),
+                  const SizedBox(height: 80),
+                  SizedBox.shrink(
+                      child: PieChartSample(
+                    data: expenseTagsValues,
+                  )),
                 ],
               ),
-              SizedBox.shrink(child: PieChartSample()),
+              Column(
+                children: [
+                  const Text("GELİR TAG VERİLERİ"),
+                  const SizedBox(height: 80),
+                  SizedBox.shrink(
+                      child: PieChartSample(
+                    data: incomeTagsValues,
+                  )),
+                ],
+              ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

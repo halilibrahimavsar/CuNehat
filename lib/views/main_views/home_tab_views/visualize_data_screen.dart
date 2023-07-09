@@ -64,6 +64,8 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                   filter: widget.filterChronical,
                 );
 
+                print(expenseSnapshot.data?.first.tag);
+
                 return Column(
                   children: [
                     Expanded(
@@ -80,10 +82,12 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                             Container(
                               color: Colors.black,
                               child: Dashboard(
-                                  incomeMap: incomeMap,
-                                  expenseMap: expenseMap,
-                                  startDate: widget.firstDate,
-                                  endDate: widget.lastDate),
+                                expenseSnapshot: expenseSnapshot,
+                                incomeSnapshot: incomeSnapshot,
+                                startDate: widget.firstDate,
+                                endDate: widget.lastDate,
+                                filterChronical: widget.filterChronical,
+                              ),
                             ),
                             Container(
                               padding: const EdgeInsets.all(25),
