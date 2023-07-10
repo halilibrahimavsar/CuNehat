@@ -16,24 +16,28 @@ class BarChartSample extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<double> incomeData = [];
     final List<double> expenseData = [];
+    final List<String> selectedDates = [];
     final List<String> dates = sortAndMergeDates(
       expenseDateAndVals: expenseMap,
       incomeDateAndVals: incomeMap,
     );
 
-    for (final i in expenseMap.keys.toList()) {
-      if (!dates.contains(i)) {
-        dates.add(i);
+    int interval = (dates.length ~/ 15);
+    if (dates.length > 31) {
+      for (int i = 0; i < dates.length; i += interval) {
+        if (i > dates.length) {
+          selectedDates.add(dates[dates.length]);
+        } else {
+          selectedDates.add(dates[i]);
+        }
+      }
+    } else {
+      for (int i = 0; i < dates.length; i++) {
+        selectedDates.add(dates[i]);
       }
     }
 
-    for (final i in incomeMap.keys.toList()) {
-      if (!dates.contains(i)) {
-        dates.add(i);
-      }
-    }
-
-    for (var date in dates) {
+    for (var date in selectedDates) {
       incomeData.add(incomeMap[date] ?? 0);
       expenseData.add(expenseMap[date] ?? 0);
     }
@@ -49,10 +53,11 @@ class BarChartSample extends StatelessWidget {
               showTitles: true,
               reservedSize: 90,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < dates.length) {
+                if (value.toInt() >= 0 &&
+                    value.toInt() < selectedDates.length) {
                   return RotatedBox(
                     quarterTurns: 3,
-                    child: Text(dates[value.toInt()]),
+                    child: Text(selectedDates[value.toInt()]),
                   );
                 }
                 return const Text("e");
@@ -79,7 +84,7 @@ class BarChartSample extends StatelessWidget {
           ),
         ),
         barGroups: List.generate(
-          dates.length,
+          selectedDates.length,
           (index) => BarChartGroupData(
             x: index,
             barRods: [

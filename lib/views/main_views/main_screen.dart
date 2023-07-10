@@ -10,7 +10,6 @@ import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:developer' as dev show log;
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 import 'package:flutter/services.dart';
@@ -111,7 +110,6 @@ class _MainScreenState extends State<MainScreen> {
                       SystemNavigator.pop();
                       break;
                   }
-                  dev.log(value.toString());
                 },
                 itemBuilder: (context) {
                   return const [
