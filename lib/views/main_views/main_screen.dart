@@ -21,9 +21,9 @@ late Timestamp firstDate;
 late Timestamp lastDate;
 
 List<Widget> navigationDestinations = [
-  const Icon(Icons.bar_chart_sharp),
-  const Icon(Icons.house),
   const Icon(Icons.data_thresholding_outlined),
+  const Icon(Icons.house),
+  const Icon(Icons.bar_chart_sharp),
 ];
 
 class MainScreen extends StatefulWidget {

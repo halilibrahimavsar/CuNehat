@@ -64,8 +64,6 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                   filter: widget.filterChronical,
                 );
 
-                print(expenseSnapshot.data?.first.tag);
-
                 return Column(
                   children: [
                     Expanded(

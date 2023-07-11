@@ -33,8 +33,10 @@ class Dashboard extends StatelessWidget {
       filter: filterChronical,
     );
 
-    final expenseTagsValues = filterTagValues(allData: incomeSnapshot.data);
-    final incomeTagsValues = filterTagValues(allData: incomeSnapshot.data);
+    final expenseTagsValues =
+        filterTagValues(allData: expenseSnapshot.data as Iterable<Expense>);
+    final incomeTagsValues =
+        filterTagValues(allData: incomeSnapshot.data as Iterable<Income>);
 
     return Container(
       color: Colors.cyan.shade700,

@@ -36,9 +36,9 @@ Map<String, double> filterByDateFrVisData({
   return filteredData;
 }
 
-Map<String, double> filterTagValues({required Iterable<Income>? allData}) {
+Map<String, double> filterTagValues({required Iterable allData}) {
   Map<String, double> filteredData = {};
-  for (var data in allData!) {
+  for (var data in allData) {
     if (filteredData.containsKey(data.tag)) {
       filteredData.update(data.tag, (value) => data.amount + value);
     } else {

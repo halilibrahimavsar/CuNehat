@@ -54,6 +54,7 @@ dependencies:
   fl_chart: ^0.62.0
   card_swiper: ^2.0.4
   scrollable_positioned_list: ^0.3.8
+  sqflite: ^2.2.8+4
   flutter_neumorphic:
     git:
       url: https://github.com/den0206/Flutter-Neumorphic.git
