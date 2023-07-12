@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:intl/intl.dart';
 
 // TODO : add daily data into one listItem
 class HomeScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class HomeScreenState extends State<HomeScreen> {
             ),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          final allData = snapshot.data;
+          final allData = snapshot.data?.toList().reversed;
           return Column(
             children: [
               Row(
@@ -225,7 +226,7 @@ class HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             leading: NeumorphicText(
-                              "${data.date.toDate().toString().split(" ")[0]}\n${data.time}",
+                              "${DateFormat.yMd().format(data.date.toDate())}\n${DateFormat.E('tr').format(data.date.toDate())}  ${data.time}",
                               style: NeumorphicStyle(
                                 oppositeShadowLightSource: true,
                                 color: (selectedOption == 2)

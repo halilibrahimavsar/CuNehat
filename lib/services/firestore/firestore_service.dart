@@ -56,9 +56,8 @@ class FirestoreService {
   }) {
     final querySnapshot = _income
         .where(fieldUserId, isEqualTo: ownerUserId)
-        .orderBy(fieldDate)
-        .startAt([firstDate])
-        .endAt([lastDate])
+        .where(fieldDate, isGreaterThanOrEqualTo: firstDate)
+        .where(fieldDate, isLessThanOrEqualTo: lastDate)
         .snapshots()
         .map((event) => event.docs.map((doc) => Income.fromSnapshot(doc)));
 
