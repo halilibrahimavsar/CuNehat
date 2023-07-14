@@ -327,8 +327,6 @@ Tarih    : $_btnDate - $_btnTime''',
   Future<List<C2Choice<String>>> loadTag() async {
     final res = await widget.tagProvider(
         ownerUserId: FirebaseAuth.instance.currentUser?.uid);
-    // TODO : the provider should be selected, so
-
     return res;
   }
 

@@ -45,7 +45,6 @@ Map<String, double> filterTagValues({required Iterable allData}) {
       filteredData[data.tag] = data.amount;
     }
   }
-  print(filteredData);
 
   return filteredData;
 }

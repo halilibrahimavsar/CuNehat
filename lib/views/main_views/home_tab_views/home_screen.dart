@@ -9,7 +9,6 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:intl/intl.dart';
 
-// TODO: add daily data into one listItem
 class HomeScreen extends StatefulWidget {
   final Timestamp firstDate;
   final Timestamp lastDate;
