@@ -9,10 +9,11 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:intl/intl.dart';
 
-// TODO : add daily data into one listItem
+// TODO: add daily data into one listItem
 class HomeScreen extends StatefulWidget {
   final Timestamp firstDate;
   final Timestamp lastDate;
+
   const HomeScreen({Key? key, required this.firstDate, required this.lastDate})
       : super(key: key);
 
@@ -40,6 +41,16 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final allData = snapshot.data?.toList().reversed;
+          Map<String, List<ModelProvider>> trnsformAllData = {};
+
+          allData!.toList().forEach((e) {
+            String keyy = DateFormat.yMMMd('tr').format(e.date.toDate());
+            if (trnsformAllData.containsKey(keyy)) {
+              trnsformAllData[keyy]?.add(e);
+            } else {
+              trnsformAllData[keyy] = [e];
+            }
+          });
           return Column(
             children: [
               Row(
@@ -105,155 +116,103 @@ class HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 6),
               Expanded(
                 child: ListView.builder(
-                  itemCount: allData?.length,
+                  itemCount: trnsformAllData.length,
                   itemBuilder: (context, index) {
-                    final data = allData?.elementAt(index);
-                    return Slidable(
-                      startActionPane: ActionPane(
-                        motion: const ScrollMotion(),
-                        children: [
-                          SlidableAction(
-                            onPressed: (context) {
-                              showModalBottomSheet(
-                                enableDrag: true,
-                                useSafeArea: true,
-                                isScrollControlled: true,
-                                isDismissible: true,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25)),
-                                context: context,
-                                builder: (context) {
-                                  return UpdateDataScreen(
-                                    selectedOption: selectedOption,
-                                    id: data?.id ?? "",
-                                    note: data?.title ?? "",
-                                    price: data?.amount ?? 0,
-                                    tag: data?.tag ?? "",
-                                    tagList: data?.tag.split(",.,.,.,.,.,") ??
-                                        ["no-tag"],
-                                    date: data?.date,
-                                    time: data?.time ?? "",
-                                  );
-                                },
-                              );
-                            },
-                            backgroundColor: Colors.purple,
-                            foregroundColor: Colors.white,
-                            icon: Icons.update,
-                            label: 'Update',
-                          ),
-                        ],
-                      ),
-                      endActionPane: ActionPane(
-                        motion: const ScrollMotion(),
-                        children: [
-                          SlidableAction(
-                            onPressed: (context) async {
-                              bool isDelete = await showCustmDialog(
-                                context,
-                                title: "Sil",
-                                msg:
-                                    "Bu veriyi tekrar getiremezsiniz. Silinsin mi?",
-                                cancelButton: "VAZGEÇ",
-                                confirmButton: "SİL",
-                                color: Colors.amber,
-                                functionWhenConfirm: () async {
-                                  (selectedOption == 2)
-                                      ? await FirestoreService()
-                                          .deleteExpense(id: data!.id)
-                                      : await FirestoreService()
-                                          .deleteIncome(id: data!.id);
-                                },
-                              );
+                    final header = trnsformAllData.keys.elementAt(index);
+                    return ExpansionTile(
+                      title: Text(header),
+                      children: List.generate(
+                        trnsformAllData[header]!.length,
+                        (indx) {
+                          final data = trnsformAllData[header]?[indx];
 
-                              if (isDelete) {
-                                showSnackbar(
-                                  title: "Success",
-                                  msg: "Data Removed",
-                                  type: ContentType.success,
-                                );
-                              } else {
-                                showSnackbar(
-                                  title: "Warning",
-                                  msg: "Data not Removed, user not want to :(",
-                                  type: ContentType.warning,
-                                );
-                              }
-                            },
-                            backgroundColor:
-                                const Color.fromARGB(255, 255, 224, 23),
-                            foregroundColor: Colors.white,
-                            icon: Icons.delete,
-                            label: 'Delete',
-                          ),
-                        ],
-                      ),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Neumorphic(
-                          style: NeumorphicStyle(
-                            color: (selectedOption == 2)
-                                ? Colors.red.shade50
-                                : Colors.green.shade50,
-                          ),
-                          child: ListTile(
-                            title: NeumorphicText(
-                              data!.title,
-                              style: NeumorphicStyle(
-                                oppositeShadowLightSource: true,
-                                color: (selectedOption == 2)
-                                    ? Colors.red.shade900
-                                    : Colors.green.shade900,
-                              ),
-                              textStyle: NeumorphicTextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          return Slidable(
+                            startActionPane: ActionPane(
+                              motion: const ScrollMotion(),
+                              children: [
+                                SlidableAction(
+                                  onPressed: (context) {
+                                    showModalBottomSheet(
+                                      enableDrag: true,
+                                      useSafeArea: true,
+                                      isScrollControlled: true,
+                                      isDismissible: true,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(25)),
+                                      context: context,
+                                      builder: (context) {
+                                        return UpdateDataScreen(
+                                          selectedOption: selectedOption,
+                                          id: data!.id,
+                                          note: data.title,
+                                          price: data.amount,
+                                          tag: data.tag,
+                                          tagList:
+                                              data.tag.split(",.,.,.,.,.,"),
+                                          date: data.date,
+                                          time: data.time,
+                                        );
+                                      },
+                                    );
+                                  },
+                                  backgroundColor: Colors.purple,
+                                  foregroundColor: Colors.white,
+                                  icon: Icons.update,
+                                  label: 'Update',
+                                ),
+                              ],
                             ),
-                            trailing: NeumorphicText(
-                              data.amount.toString(),
-                              style: NeumorphicStyle(
-                                oppositeShadowLightSource: true,
-                                color: (selectedOption == 2)
-                                    ? Colors.red.shade900
-                                    : Colors.green.shade900,
-                              ),
-                              textStyle: NeumorphicTextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            endActionPane: ActionPane(
+                              motion: const ScrollMotion(),
+                              children: [
+                                SlidableAction(
+                                  onPressed: (context) async {
+                                    bool isDelete = await showCustmDialog(
+                                      context,
+                                      title: "Sil",
+                                      msg:
+                                          "Bu veriyi tekrar getiremezsiniz. Silinsin mi?",
+                                      cancelButton: "VAZGEÇ",
+                                      confirmButton: "SİL",
+                                      color: Colors.amber,
+                                      functionWhenConfirm: () async {
+                                        (selectedOption == 2)
+                                            ? await FirestoreService()
+                                                .deleteExpense(id: data!.id)
+                                            : await FirestoreService()
+                                                .deleteIncome(id: data!.id);
+                                      },
+                                    );
+
+                                    if (isDelete) {
+                                      showSnackbar(
+                                        title: "Success",
+                                        msg: "Data Removed",
+                                        type: ContentType.success,
+                                      );
+                                    } else {
+                                      showSnackbar(
+                                        title: "Warning",
+                                        msg:
+                                            "Data not Removed, user not want to :(",
+                                        type: ContentType.warning,
+                                      );
+                                    }
+                                  },
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 255, 224, 23),
+                                  foregroundColor: Colors.white,
+                                  icon: Icons.delete,
+                                  label: 'Delete',
+                                ),
+                              ],
                             ),
-                            leading: NeumorphicText(
-                              "${DateFormat.yMd().format(data.date.toDate())}\n${DateFormat.E('tr').format(data.date.toDate())}  ${data.time}",
-                              style: NeumorphicStyle(
-                                oppositeShadowLightSource: true,
-                                color: (selectedOption == 2)
-                                    ? Colors.red.shade900
-                                    : Colors.green.shade900,
-                              ),
-                              textStyle: NeumorphicTextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: NeumorphicText(
-                              data.tag,
-                              style: NeumorphicStyle(
-                                oppositeShadowLightSource: true,
-                                color: (selectedOption == 2)
-                                    ? Colors.red.shade900
-                                    : Colors.green.shade900,
-                              ),
-                              textStyle: NeumorphicTextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            titleAlignment: ListTileTitleAlignment.center,
-                          ),
-                        ),
+                            child: ShowListWidget(
+                                selectedOption: selectedOption,
+                                data: trnsformAllData[header]?[indx]),
+                          );
+                        },
                       ),
                     );
                   },
@@ -336,7 +295,91 @@ class HomeScreenState extends State<HomeScreen> {
         behavior: SnackBarBehavior.fixed,
         backgroundColor: Colors.transparent,
         content: AwesomeSnackbarContent(
-            title: title, message: msg, contentType: type),
+          title: title,
+          message: msg,
+          contentType: type,
+        ),
+      ),
+    );
+  }
+}
+
+class ShowListWidget extends StatelessWidget {
+  const ShowListWidget({
+    Key? key,
+    required this.selectedOption,
+    required this.data,
+  }) : super(key: key);
+
+  final int selectedOption;
+  final ModelProvider? data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Neumorphic(
+        style: NeumorphicStyle(
+          color:
+              (selectedOption == 2) ? Colors.red.shade50 : Colors.green.shade50,
+        ),
+        child: ListTile(
+          title: NeumorphicText(
+            data!.title,
+            style: NeumorphicStyle(
+              oppositeShadowLightSource: true,
+              color: (selectedOption == 2)
+                  ? Colors.red.shade900
+                  : Colors.green.shade900,
+            ),
+            textStyle: NeumorphicTextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          trailing: NeumorphicText(
+            data!.amount.toString(),
+            style: NeumorphicStyle(
+              oppositeShadowLightSource: true,
+              color: (selectedOption == 2)
+                  ? Colors.red.shade900
+                  : Colors.green.shade900,
+            ),
+            textStyle: NeumorphicTextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          leading: NeumorphicText(
+            data!.time,
+            style: NeumorphicStyle(
+              oppositeShadowLightSource: true,
+              color: (selectedOption == 2)
+                  ? Colors.red.shade900
+                  : Colors.green.shade900,
+            ),
+            textStyle: NeumorphicTextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          subtitle: NeumorphicText(
+            data!.tag,
+            style: NeumorphicStyle(
+              oppositeShadowLightSource: true,
+              color: (selectedOption == 2)
+                  ? Colors.red.shade900
+                  : Colors.green.shade900,
+            ),
+            textStyle: NeumorphicTextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          titleAlignment: ListTileTitleAlignment.center,
+        ),
       ),
     );
   }
