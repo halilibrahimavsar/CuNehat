@@ -40,10 +40,17 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final allData = snapshot.data?.toList().reversed;
-          Map<String, List<ModelProvider>> trnsformAllData = {};
+          Map<DateTime, List<ModelProvider>> trnsformAllData = {};
 
           allData!.toList().forEach((e) {
-            String keyy = DateFormat.yMMMd('tr').format(e.date.toDate());
+            DateTime keyy = DateTime(
+              e.date.toDate().year,
+              e.date.toDate().month,
+              e.date.toDate().day,
+              0, // hour
+              0, // minute
+              0, // second
+            );
             if (trnsformAllData.containsKey(keyy)) {
               trnsformAllData[keyy]?.add(e);
             } else {
@@ -119,7 +126,9 @@ class HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final header = trnsformAllData.keys.elementAt(index);
                     return ExpansionTile(
-                      title: Text(header),
+                      title: Text(DateFormat.yMMMd('tr').format(header)),
+                      subtitle: Text(DateFormat.E('tr').format(header)),
+                      leading: Text(trnsformAllData[header]!.length.toString()),
                       children: List.generate(
                         trnsformAllData[header]!.length,
                         (indx) {
