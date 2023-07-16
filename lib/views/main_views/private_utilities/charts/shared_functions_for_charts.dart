@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+// Widgets
 List<String> sortAndMergeDates({
   required Map<String, double> incomeDateAndVals,
   required Map<String, double> expenseDateAndVals,
@@ -48,4 +50,54 @@ List<String> sortAndMergeDates({
   }
 
   return sortedDates;
+}
+
+class ShowInfoForCharts extends StatelessWidget {
+  const ShowInfoForCharts({
+    super.key,
+    required this.totalIncome,
+    required this.totalExpense,
+  });
+
+  final double totalIncome;
+  final double totalExpense;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Text(
+          "Gelir Toplamı : $totalIncome",
+          style: const TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+        ),
+        Text(
+          "Gider Toplamı : $totalExpense",
+          style: const TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+        ),
+      ],
+    );
+  }
+}
+
+// Functions
+double calculateAvarage(List<double> data) {
+  double total = data.reduce((value, element) => value + element);
+  int count = data.length;
+
+  return (total / count).roundToDouble();
+}
+
+double calculateMaxValue(List<double> incomeData, List<double> expenseData) {
+  try {
+    final maxIncome = incomeData
+        .reduce((value, element) => value > element ? value : element);
+    final maxExpense = expenseData
+        .reduce((value, element) => value > element ? value : element);
+    return maxIncome > maxExpense ? maxIncome : maxExpense;
+  } catch (e) {
+    return 0;
+  }
 }

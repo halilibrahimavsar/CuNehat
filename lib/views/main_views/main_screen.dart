@@ -148,7 +148,11 @@ class _MainScreenState extends State<MainScreen> {
       ),
       backgroundColor: Colors.grey.shade300,
       body: [
-        const DetailsScreen(),
+        DetailsScreen(
+          firstDate: firstDate,
+          lastDate: lastDate,
+          filterChronical: slctdOptForChroniclIntrvl,
+        ),
         HomeScreen(firstDate: firstDate, lastDate: lastDate),
         VisualizeDataScreen(
           firstDate: firstDate,

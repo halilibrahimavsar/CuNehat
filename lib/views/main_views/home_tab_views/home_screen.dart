@@ -43,7 +43,8 @@ class HomeScreenState extends State<HomeScreen> {
           Map<DateTime, List<ModelProvider>> trnsformAllData = {};
 
           allData!.toList().forEach((e) {
-            DateTime keyy = DateTime(
+            // key for daily show data
+            DateTime keyDaily = DateTime(
               e.date.toDate().year,
               e.date.toDate().month,
               e.date.toDate().day,
@@ -51,10 +52,20 @@ class HomeScreenState extends State<HomeScreen> {
               0, // minute
               0, // second
             );
-            if (trnsformAllData.containsKey(keyy)) {
-              trnsformAllData[keyy]?.add(e);
+
+            //
+            // DateTime keyMonthly = DateTime(
+            //   e.date.toDate().year,
+            //   e.date.toDate().month,
+            //   0, // day
+            //   0, // hour
+            //   0, // minute
+            //   0, // second
+            // );
+            if (trnsformAllData.containsKey(keyDaily)) {
+              trnsformAllData[keyDaily]?.add(e);
             } else {
-              trnsformAllData[keyy] = [e];
+              trnsformAllData[keyDaily] = [e];
             }
           });
           return Column(

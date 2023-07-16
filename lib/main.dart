@@ -62,7 +62,11 @@ void main() async {
         emailVerifyRoute: (context) => const EmailVerifyScreen(),
         // private routes
         mainPrivateRoute: (context) => const MainScreen(),
-        detailsUi: (context) => const DetailsScreen(),
+        detailsUi: (context) => DetailsScreen(
+              firstDate: firstDate,
+              lastDate: lastDate,
+              filterChronical: FilterDataByDate.monthly,
+            ),
         homeUi: (context) =>
             HomeScreen(firstDate: firstDate, lastDate: lastDate),
         visualizeUi: (context) => VisualizeDataScreen(
