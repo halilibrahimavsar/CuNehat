@@ -1,12 +1,11 @@
 import 'package:cunehat/services/firestore/firestore_service.dart';
-import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
+import 'package:cunehat/views/main_views/filtering/filter_constants.dart';
+import 'package:cunehat/views/main_views/filtering/filter_exceptions.dart';
 import 'package:intl/intl.dart';
 
-class UnableToFindRightValueForArgument implements Exception {}
-
-/// Use this function for filter [Expense] or [Income] data by their dates.
+/// Use this function for summon monthly, yearly or daily [Expense] or [Income] data.
 /// [filter] arg can accept only "yearly", "monthly" and "daily"
-Map<String, double> filterByDateFrVisData({
+Map<String, double> sumDailyMonthlyYearly({
   required Iterable<ModelProvider>? allData,
   FilterDataByDate filter = FilterDataByDate.monthly,
 }) {
@@ -15,7 +14,7 @@ Map<String, double> filterByDateFrVisData({
     final DateTime date = data.date.toDate();
     String formattedDate = '${date.year}';
 
-    // in here the key is data for obtain daily data or mothly data or maybe yearly data
+    // Summon all data by giving date.
     if (filter == FilterDataByDate.yearly) {
       formattedDate = DateFormat('yyyy', 'tr').format(date);
     } else if (filter == FilterDataByDate.monthly) {
@@ -36,7 +35,7 @@ Map<String, double> filterByDateFrVisData({
   return filteredData;
 }
 
-Map<String, double> filterTagValues({required Iterable allData}) {
+Map<String, double> sumTagValues({required Iterable allData}) {
   Map<String, double> filteredData = {};
   for (var data in allData) {
     if (filteredData.containsKey(data.tag)) {

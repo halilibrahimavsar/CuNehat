@@ -10,31 +10,43 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Timestamp firstDate;
-  final Timestamp lastDate;
-
-  const HomeScreen({Key? key, required this.firstDate, required this.lastDate})
-      : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   HomeScreenState createState() => HomeScreenState();
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  late Timestamp firstDate;
+  late Timestamp lastDate;
   int selectedOption = 1;
+
+  @override
+  void initState() {
+    firstDate = Timestamp.fromMillisecondsSinceEpoch(
+      DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+      ).millisecondsSinceEpoch,
+    );
+    lastDate = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: (selectedOption == 2)
           ? FirestoreService().getExpensesByMonthAndYear(
-              firstDate: widget.firstDate,
-              lastDate: widget.lastDate,
+              firstDate: firstDate,
+              lastDate: lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid,
             )
           : FirestoreService().getIncomeByMonthAndYear(
-              firstDate: widget.firstDate,
-              lastDate: widget.lastDate,
+              firstDate: firstDate,
+              lastDate: lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid,
             ),
       builder: (context, snapshot) {

@@ -1,20 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
-import 'package:cunehat/views/main_views/private_utilities/dashboard/dashboard.dart';
-import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
+import 'package:cunehat/views/main_views/home_tab_views/details_screen/dashboard/dashboard.dart';
+import 'package:cunehat/views/main_views/filtering/filter_constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DetailsScreen extends StatefulWidget {
-  final Timestamp firstDate;
-  final Timestamp lastDate;
-  final FilterDataByDate filterChronical;
-  const DetailsScreen({
-    Key? key,
-    required this.firstDate,
-    required this.lastDate,
-    required this.filterChronical,
-  }) : super(key: key);
+  const DetailsScreen({Key? key}) : super(key: key);
 
   @override
   State<DetailsScreen> createState() => _DetailsScreenState();
@@ -22,10 +14,22 @@ class DetailsScreen extends StatefulWidget {
 
 class _DetailsScreenState extends State<DetailsScreen> {
   late final String? _uid;
+  late Timestamp firstDate;
+  late Timestamp lastDate;
+  FilterDataByDate filterChronical = FilterDataByDate.daily;
 
   @override
   void initState() {
     _uid = FirebaseAuth.instance.currentUser?.uid;
+    firstDate = Timestamp.fromMillisecondsSinceEpoch(
+      DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+      ).millisecondsSinceEpoch,
+    );
+    lastDate = Timestamp.fromMillisecondsSinceEpoch(
+        DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+
     super.initState();
   }
 
@@ -34,25 +38,25 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return StreamBuilder<Iterable<Income>>(
       stream: FirestoreService().getIncomeByMonthAndYear(
         ownerUserId: _uid,
-        firstDate: widget.firstDate,
-        lastDate: widget.lastDate,
+        firstDate: firstDate,
+        lastDate: lastDate,
       ),
       builder: (context, incomeSnapshot) {
         if (incomeSnapshot.hasData) {
           return StreamBuilder<Iterable<Expense>>(
             stream: FirestoreService().getExpensesByMonthAndYear(
               ownerUserId: _uid,
-              firstDate: widget.firstDate,
-              lastDate: widget.lastDate,
+              firstDate: firstDate,
+              lastDate: lastDate,
             ),
             builder: (context, expenseSnapshot) {
               if (expenseSnapshot.hasData) {
                 return Dashboard(
                   expenseSnapshot: expenseSnapshot,
                   incomeSnapshot: incomeSnapshot,
-                  startDate: widget.firstDate,
-                  endDate: widget.lastDate,
-                  filterChronical: widget.filterChronical,
+                  startDate: firstDate,
+                  endDate: lastDate,
+                  filterChronical: filterChronical,
                 );
               }
 

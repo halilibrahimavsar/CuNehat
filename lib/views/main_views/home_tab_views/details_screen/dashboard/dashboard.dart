@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
-import 'package:cunehat/views/main_views/private_utilities/charts/custom_pie_chart.dart';
-import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
-import 'package:cunehat/views/main_views/private_utilities/filtering/filter_db_data.dart';
+import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/charts/custom_pie_chart.dart';
+import 'package:cunehat/views/main_views/filtering/filter_constants.dart';
+import 'package:cunehat/views/main_views/filtering/filter_functions.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class Dashboard extends StatelessWidget {
@@ -23,20 +23,20 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, double> incomeMap = filterByDateFrVisData(
+    final Map<String, double> incomeMap = sumDailyMonthlyYearly(
       allData: incomeSnapshot.data,
       filter: filterChronical,
     );
 
-    final Map<String, double> expenseMap = filterByDateFrVisData(
+    final Map<String, double> expenseMap = sumDailyMonthlyYearly(
       allData: expenseSnapshot.data,
       filter: filterChronical,
     );
 
     final expenseTagsValues =
-        filterTagValues(allData: expenseSnapshot.data as Iterable<Expense>);
+        sumTagValues(allData: expenseSnapshot.data as Iterable<Expense>);
     final incomeTagsValues =
-        filterTagValues(allData: incomeSnapshot.data as Iterable<Income>);
+        sumTagValues(allData: incomeSnapshot.data as Iterable<Income>);
 
     return Container(
       color: Colors.cyan.shade700,

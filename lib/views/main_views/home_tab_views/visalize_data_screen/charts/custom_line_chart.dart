@@ -1,12 +1,12 @@
-import 'package:cunehat/views/main_views/private_utilities/charts/shared_functions_for_charts.dart';
+import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/charts/shared_functions_for_charts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class BarChartSample extends StatelessWidget {
+class LineChartSample extends StatelessWidget {
   final Map<String, double> incomeMap;
   final Map<String, double> expenseMap;
 
-  const BarChartSample({
+  const LineChartSample({
     super.key,
     required this.incomeMap,
     required this.expenseMap,
@@ -20,26 +20,10 @@ class BarChartSample extends StatelessWidget {
       expenseDateAndVals: expenseMap,
       incomeDateAndVals: incomeMap,
     );
-    final List<String> selectedDates = [];
     double totalExpense = 0;
     double totalIncome = 0;
 
-    int interval = (dates.length ~/ 15);
-    if (dates.length > 31) {
-      for (int i = 0; i < dates.length; i += interval) {
-        if (i > dates.length) {
-          selectedDates.add(dates[dates.length]);
-        } else {
-          selectedDates.add(dates[i]);
-        }
-      }
-    } else {
-      for (int i = 0; i < dates.length; i++) {
-        selectedDates.add(dates[i]);
-      }
-    }
-
-    for (var date in selectedDates) {
+    for (var date in dates) {
       incomeData.add(incomeMap[date] ?? 0);
       expenseData.add(expenseMap[date] ?? 0);
     }
@@ -50,40 +34,39 @@ class BarChartSample extends StatelessWidget {
     for (double i in incomeData) {
       totalIncome += i;
     }
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         ShowInfoForCharts(totalIncome: totalIncome, totalExpense: totalExpense),
         const SizedBox(height: 30),
         Expanded(
-          child: BarChart(
-            swapAnimationCurve: Curves.bounceIn,
-            swapAnimationDuration: const Duration(seconds: 3),
-            BarChartData(
+          child: LineChart(
+            swapAnimationCurve: Curves.easeInOutBack,
+            swapAnimationDuration: const Duration(seconds: 1),
+            LineChartData(
               titlesData: FlTitlesData(
-                topTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 90,
                     getTitlesWidget: (value, meta) {
-                      if (value.toInt() >= 0 &&
-                          value.toInt() < selectedDates.length) {
+                      if (value.toInt() >= 0 && value.toInt() < dates.length) {
                         return RotatedBox(
                           quarterTurns: 3,
-                          child: Text(selectedDates[value.toInt()]),
+                          child: Text(dates[value.toInt()]),
                         );
                       }
                       return RotatedBox(
                         quarterTurns: 3,
-                        child: Text(selectedDates[value.toInt()]),
+                        child: Text(dates[value.toInt()]),
                       );
                     },
                   ),
                 ),
+                rightTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               borderData: FlBorderData(
                 show: true,
@@ -103,24 +86,11 @@ class BarChartSample extends StatelessWidget {
                   ),
                 ),
               ),
-              barGroups: List.generate(
-                selectedDates.length,
-                (index) => BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: incomeData[index],
-                      color: Colors.green,
-                    ),
-                    BarChartRodData(
-                      toY: expenseData[index],
-                      color: Colors.red,
-                    ),
-                  ],
-                ),
-              ),
+              minX: 0,
+              maxX: dates.length.toDouble() - 1,
+              minY: 0,
               maxY: calculateMaxValue(incomeData, expenseData),
-              barTouchData: BarTouchData(),
+              lineTouchData: LineTouchData(),
               extraLinesData: ExtraLinesData(
                 horizontalLines: [
                   HorizontalLine(
@@ -149,6 +119,49 @@ class BarChartSample extends StatelessWidget {
                   )
                 ],
               ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: List.generate(
+                    dates.length,
+                    (index) => FlSpot(index.toDouble(), incomeData[index]),
+                  ),
+                  color: Colors.green,
+                  barWidth: 2,
+                  // isCurved: true,
+                  shadow: const Shadow(blurRadius: 0.9),
+                  isStrokeCapRound: true,
+                  dotData: FlDotData(show: true),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: Colors.green.shade100,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.green, Colors.transparent],
+                    ),
+                  ),
+                ),
+                LineChartBarData(
+                  spots: List.generate(
+                    dates.length,
+                    (index) => FlSpot(index.toDouble(), expenseData[index]),
+                  ),
+                  color: Colors.red,
+                  barWidth: 2,
+                  shadow: const Shadow(blurRadius: 0.9),
+                  isStrokeCapRound: true,
+                  dotData: FlDotData(show: true),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: Colors.green.shade100,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.red, Colors.transparent],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
