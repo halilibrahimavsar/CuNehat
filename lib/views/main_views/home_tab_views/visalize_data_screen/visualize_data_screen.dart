@@ -78,26 +78,24 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                         children: [
                           Expanded(
                             child: NeumorphicButton(
-                              margin: const EdgeInsets.all(10),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    DateFormat.yMd('tr')
-                                        .format(dateRange['firstDate']!),
-                                  ),
-                                  const Icon(Icons.arrow_right_outlined),
-                                  Text(
-                                    DateFormat.yMd('tr')
-                                        .format(dateRange['lastDate']!),
-                                  )
-                                ],
+                              margin: const EdgeInsets.all(5),
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.convex,
+                              ),
+                              child: NeumorphicText(
+                                "${DateFormat.yMd('tr').format(dateRange['firstDate']!)}   -   ${DateFormat.yMd('tr').format(dateRange['lastDate']!)}",
+                                style: const NeumorphicStyle(
+                                  color: Colors.black,
+                                ),
+                                textStyle: NeumorphicTextStyle(
+                                    fontWeight: FontWeight.w900, fontSize: 18),
                               ),
                               onPressed: () async {
-                                var res = await getDateRange(context);
+                                Map<String, DateTime> res =
+                                    await getDateRange(context);
                                 setState(() {
                                   dateRange['firstDate'] = res['firstDate']!;
                                   dateRange['lastDate'] = res['lastDate']!;
@@ -300,120 +298,198 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
 
     bool save = await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      enableDrag: true,
       builder: (bottomContext) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Neumorphic(
-                  child: NeumorphicButton(
-                    onPressed: () async {
-                      await showDateRangePicker(
-                        context: context,
-                        firstDate: dateRange['firstDate']!,
-                        lastDate: dateRange['lastDate']!,
-                      );
-                    },
-                    child: const Text("data"),
-                  ),
-                ),
-                Neumorphic(
-                  padding: const EdgeInsets.all(25),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      NeumorphicButton(
-                        style: NeumorphicStyle(
-                          oppositeShadowLightSource: isSelected == 0,
-                        ),
-                        child: Text(
-                          "Bu Yıl",
-                          style: TextStyle(
-                            color: isSelected == 0
-                                ? selectedColor
-                                : notSelectedColor,
+          builder: (context, setStateOfBottomSheet) {
+            return Container(
+              decoration:
+                  BoxDecoration(borderRadius: BorderRadius.circular(25)),
+              height: 300,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Neumorphic(
+                    padding: const EdgeInsets.all(30),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        NeumorphicButton(
+                          style: NeumorphicStyle(
+                            color: Colors.grey.shade200,
+                            boxShape: NeumorphicBoxShape.roundRect(
+                                BorderRadius.circular(20)),
+                            shape: NeumorphicShape.convex,
+                          ),
+                          onPressed: () async {
+                            var a = await showDateRangePicker(
+                              context: context,
+                              firstDate: DateTime(1997, 5, 19),
+                              lastDate: DateTime(2099, 5, 19),
+                            );
+                            setStateOfBottomSheet(() {
+                              result['firstDate'] = a?.start ??
+                                  DateTime.now().subtract(
+                                    Duration(
+                                      days: DateTime.now().day,
+                                    ),
+                                  );
+                              result['lastDate'] = a?.end ?? DateTime.now();
+                              isSelected = 0;
+                            });
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                '${DateFormat.yMd('tr').format(result['firstDate']!)}   -   ${DateFormat.yMd('tr').format(result['lastDate']!)}',
+                                style: TextStyle(
+                                  color: (isSelected == 0)
+                                      ? Colors.cyan
+                                      : Colors.black,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        onPressed: () {
-                          result['firstDate'] = DateTime(DateTime.now().year);
-                          result['lastDate'] =
-                              DateTime.now().add(const Duration(hours: 3));
-                          setState(() {
-                            isSelected = 0;
-                          });
-                        },
-                      ),
-                      NeumorphicButton(
-                        style: NeumorphicStyle(
-                          oppositeShadowLightSource: isSelected == 1,
+                        const SizedBox(
+                          height: 20,
                         ),
-                        child: Text(
-                          "Son üc ay",
-                          style: TextStyle(
-                            color: isSelected == 1
-                                ? selectedColor
-                                : notSelectedColor,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource: isSelected == 1,
+                              ),
+                              child: Text(
+                                "Bu Yıl",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected == 1
+                                      ? selectedColor
+                                      : notSelectedColor,
+                                ),
+                              ),
+                              onPressed: () {
+                                result['firstDate'] =
+                                    DateTime(DateTime.now().year);
+                                result['lastDate'] = DateTime.now()
+                                    .add(const Duration(hours: 3));
+                                setStateOfBottomSheet(() {
+                                  isSelected = 1;
+                                });
+                              },
+                            ),
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource: isSelected == 2,
+                              ),
+                              child: Text(
+                                "Son üc ay",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected == 2
+                                      ? selectedColor
+                                      : notSelectedColor,
+                                ),
+                              ),
+                              onPressed: () {
+                                result['firstDate'] = DateTime.now()
+                                    .subtract(const Duration(days: 90));
+                                result['lastDate'] = DateTime.now()
+                                    .add(const Duration(hours: 3));
+                                setStateOfBottomSheet(() {
+                                  isSelected = 2;
+                                });
+                              },
+                            ),
+                            NeumorphicButton(
+                              style: NeumorphicStyle(
+                                color: Colors.grey.shade200,
+                                boxShape: NeumorphicBoxShape.roundRect(
+                                    BorderRadius.circular(20)),
+                                shape: NeumorphicShape.concave,
+                                oppositeShadowLightSource: isSelected == 3,
+                              ),
+                              child: Text(
+                                "Bu ay",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected == 3
+                                      ? selectedColor
+                                      : notSelectedColor,
+                                ),
+                              ),
+                              onPressed: () {
+                                result['firstDate'] = DateTime(
+                                  DateTime.now().year,
+                                  DateTime.now().month,
+                                );
+                                result['lastDate'] = DateTime.now()
+                                    .add(const Duration(hours: 3));
+                                setStateOfBottomSheet(() {
+                                  isSelected = 3;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                      colors: [Colors.red, Colors.green],
+                    )),
+                    padding: const EdgeInsets.all(25),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        NeumorphicButton(
+                          style: const NeumorphicStyle(
+                            color: Colors.red,
+                          ),
+                          onPressed: () {
+                            Navigator.pop(bottomContext, false);
+                          },
+                          child: const Text(
+                            "VAZGEÇ",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        onPressed: () {
-                          result['firstDate'] =
-                              DateTime.now().subtract(const Duration(days: 90));
-                          result['lastDate'] =
-                              DateTime.now().add(const Duration(hours: 3));
-                          setState(() {
-                            isSelected = 1;
-                          });
-                        },
-                      ),
-                      NeumorphicButton(
-                        style: NeumorphicStyle(
-                          oppositeShadowLightSource: isSelected == 2,
-                        ),
-                        child: Text(
-                          "Bu ay",
-                          style: TextStyle(
-                            color: isSelected == 2
-                                ? selectedColor
-                                : notSelectedColor,
+                        NeumorphicButton(
+                          style: const NeumorphicStyle(color: Colors.green),
+                          onPressed: () {
+                            Navigator.pop(bottomContext, true);
+                          },
+                          child: const Text(
+                            "KAYDET",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        onPressed: () {
-                          result['firstDate'] = DateTime(
-                            DateTime.now().year,
-                            DateTime.now().month,
-                          );
-                          result['lastDate'] =
-                              DateTime.now().add(const Duration(hours: 3));
-                          setState(() {
-                            isSelected = 2;
-                          });
-                        },
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Neumorphic(
-                  padding: EdgeInsets.all(25),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      NeumorphicButton(
-                        child: const Text("VAZGEÇ"),
-                        onPressed: () {
-                          Navigator.pop(bottomContext, false);
-                        },
-                      ),
-                      NeumorphicButton(
-                        child: const Text("KAYDET"),
-                        onPressed: () {
-                          Navigator.pop(bottomContext, true);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         );

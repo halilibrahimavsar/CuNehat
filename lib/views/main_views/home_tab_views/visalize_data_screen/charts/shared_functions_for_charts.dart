@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/constants/currency_format.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -68,14 +69,20 @@ class ShowInfoForCharts extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Text(
-          "Gelir Toplamı : $totalIncome",
+          "Gelir : ${formatCurrency.format(totalIncome)}",
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
         ),
         Text(
-          "Gider Toplamı : $totalExpense",
+          "Gider : ${formatCurrency.format(totalExpense)}",
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
         ),
       ],
     );

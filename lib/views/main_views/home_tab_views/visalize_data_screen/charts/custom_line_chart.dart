@@ -1,3 +1,4 @@
+import 'package:cunehat/constants/currency_format.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/charts/shared_functions_for_charts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -100,7 +101,7 @@ class LineChartSample extends StatelessWidget {
                     label: HorizontalLineLabel(
                       show: true,
                       labelResolver: (p0) =>
-                          "ORTALAMA GİDER - [${calculateAvarage(expenseData)}]",
+                          "ORTALAMA GİDER - ${formatCurrency.format(calculateAvarage(expenseData))}",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 12),
                     ),
@@ -112,7 +113,7 @@ class LineChartSample extends StatelessWidget {
                     label: HorizontalLineLabel(
                       show: true,
                       labelResolver: (p0) =>
-                          "ORTALAMA GELİR - [${calculateAvarage(incomeData)}]",
+                          "ORTALAMA GELİR - ${formatCurrency.format(calculateAvarage(incomeData))}",
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 12),
                     ),
