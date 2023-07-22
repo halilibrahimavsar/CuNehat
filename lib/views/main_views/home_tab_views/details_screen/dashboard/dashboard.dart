@@ -39,7 +39,10 @@ class Dashboard extends StatelessWidget {
         sumTagValues(allData: incomeSnapshot.data as Iterable<Income>);
 
     return Container(
-      color: Colors.cyan.shade700,
+      decoration: BoxDecoration(
+        color: Colors.cyan.shade700,
+        borderRadius: BorderRadius.circular(25),
+      ),
       padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

@@ -73,196 +73,189 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
 
                 return Column(
                   children: [
-                    Expanded(
+                    Neumorphic(
+                      padding: const EdgeInsets.all(10),
                       child: Column(
                         children: [
-                          Expanded(
-                            child: NeumorphicButton(
-                              margin: const EdgeInsets.all(5),
-                              style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
-                                boxShape: NeumorphicBoxShape.roundRect(
-                                    BorderRadius.circular(20)),
-                                shape: NeumorphicShape.convex,
+                          NeumorphicButton(
+                            margin: const EdgeInsets.all(5),
+                            style: NeumorphicStyle(
+                              color: Colors.grey.shade200,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              shape: NeumorphicShape.convex,
+                            ),
+                            child: NeumorphicText(
+                              "${DateFormat.yMd('tr').format(dateRange['firstDate']!)}   -   ${DateFormat.yMd('tr').format(dateRange['lastDate']!)}",
+                              style: const NeumorphicStyle(
+                                color: Colors.black,
                               ),
-                              child: NeumorphicText(
-                                "${DateFormat.yMd('tr').format(dateRange['firstDate']!)}   -   ${DateFormat.yMd('tr').format(dateRange['lastDate']!)}",
-                                style: const NeumorphicStyle(
-                                  color: Colors.black,
+                              textStyle: NeumorphicTextStyle(
+                                  fontWeight: FontWeight.w900, fontSize: 18),
+                            ),
+                            onPressed: () async {
+                              Map<String, DateTime> res =
+                                  await getDateRange(context);
+                              setState(() {
+                                dateRange['firstDate'] = res['firstDate']!;
+                                dateRange['lastDate'] = res['lastDate']!;
+                              });
+                            },
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              NeumorphicButton(
+                                style: NeumorphicStyle(
+                                  color: Colors.grey.shade200,
+                                  boxShape: NeumorphicBoxShape.roundRect(
+                                      BorderRadius.circular(20)),
+                                  shape: NeumorphicShape.concave,
+                                  oppositeShadowLightSource:
+                                      chartSelection == 0,
                                 ),
-                                textStyle: NeumorphicTextStyle(
-                                    fontWeight: FontWeight.w900, fontSize: 18),
+                                onPressed: () => setState(() {
+                                  chartSelection = 0;
+                                }),
+                                child: Text(
+                                  "LINE GRAFİK",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: chartSelection == 0
+                                        ? Colors.cyan
+                                        : Colors.black,
+                                  ),
+                                ),
                               ),
-                              onPressed: () async {
-                                Map<String, DateTime> res =
-                                    await getDateRange(context);
-                                setState(() {
-                                  dateRange['firstDate'] = res['firstDate']!;
-                                  dateRange['lastDate'] = res['lastDate']!;
-                                });
-                              },
+                              NeumorphicButton(
+                                style: NeumorphicStyle(
+                                  color: Colors.grey.shade200,
+                                  boxShape: NeumorphicBoxShape.roundRect(
+                                      BorderRadius.circular(20)),
+                                  shape: NeumorphicShape.concave,
+                                  oppositeShadowLightSource:
+                                      chartSelection == 1,
+                                ),
+                                onPressed: () => setState(() {
+                                  chartSelection = 1;
+                                }),
+                                child: Text(
+                                  "BAR GRAFİK",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: chartSelection == 1
+                                        ? Colors.cyan
+                                        : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 8,
+                      child: [
+                        Container(
+                          padding: const EdgeInsets.all(25),
+                          color: Colors.transparent,
+                          child: LineChartSample(
+                            incomeMap: incomeMap,
+                            expenseMap: expenseMap,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(25),
+                          color: Colors.transparent,
+                          child: BarChartSample(
+                              incomeMap: incomeMap, expenseMap: expenseMap),
+                        ),
+                      ][chartSelection],
+                    ),
+                    Neumorphic(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          NeumorphicButton(
+                            style: NeumorphicStyle(
+                              color: Colors.grey.shade200,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              shape: NeumorphicShape.concave,
+                              oppositeShadowLightSource:
+                                  slctdOptForChroniclIntrvl ==
+                                      FilterDataByDate.daily,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                slctdOptForChroniclIntrvl =
+                                    FilterDataByDate.daily;
+                              });
+                            },
+                            child: Text(
+                              "Günlük",
+                              style: TextStyle(
+                                color: slctdOptForChroniclIntrvl ==
+                                        FilterDataByDate.daily
+                                    ? selectedColor
+                                    : notSelectedColor,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                          Expanded(
-                            flex: 1,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                NeumorphicButton(
-                                  style: NeumorphicStyle(
-                                    color: Colors.grey.shade200,
-                                    boxShape: NeumorphicBoxShape.roundRect(
-                                        BorderRadius.circular(20)),
-                                    shape: NeumorphicShape.concave,
-                                    oppositeShadowLightSource:
-                                        chartSelection == 0,
-                                  ),
-                                  onPressed: () => setState(() {
-                                    chartSelection = 0;
-                                  }),
-                                  child: Text(
-                                    "LINE GRAFİK",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: chartSelection == 0
-                                          ? Colors.cyan
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                NeumorphicButton(
-                                  style: NeumorphicStyle(
-                                    color: Colors.grey.shade200,
-                                    boxShape: NeumorphicBoxShape.roundRect(
-                                        BorderRadius.circular(20)),
-                                    shape: NeumorphicShape.concave,
-                                    oppositeShadowLightSource:
-                                        chartSelection == 1,
-                                  ),
-                                  onPressed: () => setState(() {
-                                    chartSelection = 1;
-                                  }),
-                                  child: Text(
-                                    "BAR GRAFİK",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: chartSelection == 1
-                                          ? Colors.cyan
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          NeumorphicButton(
+                            style: NeumorphicStyle(
+                              color: Colors.grey.shade200,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              shape: NeumorphicShape.concave,
+                              oppositeShadowLightSource:
+                                  slctdOptForChroniclIntrvl ==
+                                      FilterDataByDate.monthly,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                slctdOptForChroniclIntrvl =
+                                    FilterDataByDate.monthly;
+                              });
+                            },
+                            child: Text(
+                              "Aylık",
+                              style: TextStyle(
+                                color: slctdOptForChroniclIntrvl ==
+                                        FilterDataByDate.monthly
+                                    ? selectedColor
+                                    : notSelectedColor,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                          Expanded(
-                            flex: 8,
-                            child: [
-                              Container(
-                                padding: const EdgeInsets.all(25),
-                                color: Colors.transparent,
-                                child: LineChartSample(
-                                  incomeMap: incomeMap,
-                                  expenseMap: expenseMap,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(25),
-                                color: Colors.transparent,
-                                child: BarChartSample(
-                                    incomeMap: incomeMap,
-                                    expenseMap: expenseMap),
-                              ),
-                            ][chartSelection],
-                          ),
-                          Expanded(
-                            child: Neumorphic(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  NeumorphicButton(
-                                    style: NeumorphicStyle(
-                                      color: Colors.grey.shade200,
-                                      boxShape: NeumorphicBoxShape.roundRect(
-                                          BorderRadius.circular(20)),
-                                      shape: NeumorphicShape.concave,
-                                      oppositeShadowLightSource:
-                                          slctdOptForChroniclIntrvl ==
-                                              FilterDataByDate.daily,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        slctdOptForChroniclIntrvl =
-                                            FilterDataByDate.daily;
-                                      });
-                                    },
-                                    child: Text(
-                                      "Günlük",
-                                      style: TextStyle(
-                                        color: slctdOptForChroniclIntrvl ==
-                                                FilterDataByDate.daily
-                                            ? selectedColor
-                                            : notSelectedColor,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                  NeumorphicButton(
-                                    style: NeumorphicStyle(
-                                      color: Colors.grey.shade200,
-                                      boxShape: NeumorphicBoxShape.roundRect(
-                                          BorderRadius.circular(20)),
-                                      shape: NeumorphicShape.concave,
-                                      oppositeShadowLightSource:
-                                          slctdOptForChroniclIntrvl ==
-                                              FilterDataByDate.monthly,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        slctdOptForChroniclIntrvl =
-                                            FilterDataByDate.monthly;
-                                      });
-                                    },
-                                    child: Text(
-                                      "Aylık",
-                                      style: TextStyle(
-                                        color: slctdOptForChroniclIntrvl ==
-                                                FilterDataByDate.monthly
-                                            ? selectedColor
-                                            : notSelectedColor,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                  NeumorphicButton(
-                                    style: NeumorphicStyle(
-                                      color: Colors.grey.shade200,
-                                      boxShape: NeumorphicBoxShape.roundRect(
-                                          BorderRadius.circular(20)),
-                                      shape: NeumorphicShape.concave,
-                                      oppositeShadowLightSource:
-                                          slctdOptForChroniclIntrvl ==
-                                              FilterDataByDate.yearly,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        slctdOptForChroniclIntrvl =
-                                            FilterDataByDate.yearly;
-                                      });
-                                    },
-                                    child: Text(
-                                      "Yıllık",
-                                      style: TextStyle(
-                                        color: slctdOptForChroniclIntrvl ==
-                                                FilterDataByDate.yearly
-                                            ? selectedColor
-                                            : notSelectedColor,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          NeumorphicButton(
+                            style: NeumorphicStyle(
+                              color: Colors.grey.shade200,
+                              boxShape: NeumorphicBoxShape.roundRect(
+                                  BorderRadius.circular(20)),
+                              shape: NeumorphicShape.concave,
+                              oppositeShadowLightSource:
+                                  slctdOptForChroniclIntrvl ==
+                                      FilterDataByDate.yearly,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                slctdOptForChroniclIntrvl =
+                                    FilterDataByDate.yearly;
+                              });
+                            },
+                            child: Text(
+                              "Yıllık",
+                              style: TextStyle(
+                                color: slctdOptForChroniclIntrvl ==
+                                        FilterDataByDate.yearly
+                                    ? selectedColor
+                                    : notSelectedColor,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -322,6 +315,8 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                             boxShape: NeumorphicBoxShape.roundRect(
                                 BorderRadius.circular(20)),
                             shape: NeumorphicShape.convex,
+                            oppositeShadowLightSource:
+                                isSelected == 0 ? true : false,
                           ),
                           onPressed: () async {
                             var a = await showDateRangePicker(

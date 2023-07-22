@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/constants/currency_format.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
@@ -142,16 +143,34 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
               Expanded(
                 child: ListView.builder(
                   itemCount: trnsformAllData.length,
                   itemBuilder: (context, index) {
                     final header = trnsformAllData.keys.elementAt(index);
                     return ExpansionTile(
-                      title: Text(DateFormat.yMMMd('tr').format(header)),
-                      subtitle: Text(DateFormat.E('tr').format(header)),
-                      leading: Text(trnsformAllData[header]!.length.toString()),
+                      title: Text(
+                        DateFormat.yMMMd('tr').format(header),
+                        style: TextStyle(
+                          color:
+                              selectedOption == 2 ? Colors.red : Colors.green,
+                        ),
+                      ),
+                      subtitle: Text(
+                        DateFormat.E('tr').format(header),
+                        style: TextStyle(
+                          color:
+                              selectedOption == 2 ? Colors.red : Colors.green,
+                        ),
+                      ),
+                      leading: Text(
+                        '   ${trnsformAllData[header]!.length}\nAdet',
+                        style: TextStyle(
+                          color:
+                              selectedOption == 2 ? Colors.red : Colors.green,
+                        ),
+                      ),
+                      maintainState: true,
                       children: List.generate(
                         trnsformAllData[header]!.length,
                         (indx) {
@@ -169,8 +188,8 @@ class HomeScreenState extends State<HomeScreen> {
                                       isScrollControlled: true,
                                       isDismissible: true,
                                       shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(25)),
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
                                       context: context,
                                       builder: (context) {
                                         return UpdateDataScreen(
@@ -240,8 +259,9 @@ class HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             child: ShowListWidget(
-                                selectedOption: selectedOption,
-                                data: trnsformAllData[header]?[indx]),
+                              selectedOption: selectedOption,
+                              data: trnsformAllData[header]?[indx],
+                            ),
                           );
                         },
                       ),
@@ -255,7 +275,7 @@ class HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(
                     horizontal: 100,
                   ),
-                  child: Icon(Icons.add, color: Colors.green.shade300),
+                  style: const NeumorphicStyle(color: Colors.green),
                   onPressed: () {
                     showModalBottomSheet(
                       enableDrag: true,
@@ -275,13 +295,14 @@ class HomeScreenState extends State<HomeScreen> {
                       },
                     );
                   },
+                  child: const Icon(Icons.add),
                 ),
                 NeumorphicButton(
                   margin: const EdgeInsets.all(10),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 100,
                   ),
-                  child: Icon(Icons.add, color: Colors.red.shade300),
+                  style: const NeumorphicStyle(color: Colors.red),
                   onPressed: () {
                     showModalBottomSheet(
                       enableDrag: true,
@@ -301,6 +322,7 @@ class HomeScreenState extends State<HomeScreen> {
                       },
                     );
                   },
+                  child: const Icon(Icons.add),
                 ),
               ][selectedOption - 1]
             ],
@@ -351,66 +373,13 @@ class ShowListWidget extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Neumorphic(
-        style: NeumorphicStyle(
-          color:
-              (selectedOption == 2) ? Colors.red.shade50 : Colors.green.shade50,
-        ),
-        child: ListTile(
-          title: NeumorphicText(
-            data!.title,
-            style: NeumorphicStyle(
-              oppositeShadowLightSource: true,
-              color: (selectedOption == 2)
-                  ? Colors.red.shade900
-                  : Colors.green.shade900,
-            ),
-            textStyle: NeumorphicTextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          trailing: NeumorphicText(
-            data!.amount.toString(),
-            style: NeumorphicStyle(
-              oppositeShadowLightSource: true,
-              color: (selectedOption == 2)
-                  ? Colors.red.shade900
-                  : Colors.green.shade900,
-            ),
-            textStyle: NeumorphicTextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          leading: NeumorphicText(
-            data!.time,
-            style: NeumorphicStyle(
-              oppositeShadowLightSource: true,
-              color: (selectedOption == 2)
-                  ? Colors.red.shade900
-                  : Colors.green.shade900,
-            ),
-            textStyle: NeumorphicTextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          subtitle: NeumorphicText(
-            data!.tag,
-            style: NeumorphicStyle(
-              oppositeShadowLightSource: true,
-              color: (selectedOption == 2)
-                  ? Colors.red.shade900
-                  : Colors.green.shade900,
-            ),
-            textStyle: NeumorphicTextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          titleAlignment: ListTileTitleAlignment.center,
-        ),
+      child: ListTile(
+        tileColor: Colors.grey.shade200,
+        title: Text(data!.title),
+        trailing: Text(formatCurrency.format(data!.amount)),
+        leading: Text(data!.time),
+        subtitle: Text(data!.tag),
+        titleAlignment: ListTileTitleAlignment.center,
       ),
     );
   }
