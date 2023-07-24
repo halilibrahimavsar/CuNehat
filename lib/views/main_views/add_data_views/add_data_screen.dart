@@ -3,6 +3,7 @@ import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
+import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -300,6 +301,7 @@ Tarih    : $_btnDate - $_btnTime''',
 
                     if (isSave) {
                       showSnackbar(
+                        context: context,
                         title: "Success",
                         msg: "Data Saving to database",
                         type: ContentType.success,
@@ -307,12 +309,6 @@ Tarih    : $_btnDate - $_btnTime''',
                       if (context.mounted) {
                         Navigator.of(context).pop();
                       }
-                    } else {
-                      showSnackbar(
-                        title: "Warning",
-                        msg: "Data not saved, user not want to :(",
-                        type: ContentType.warning,
-                      );
                     }
                   }
                 },
@@ -330,18 +326,18 @@ Tarih    : $_btnDate - $_btnTime''',
     return res;
   }
 
-  showSnackbar({
-    required String title,
-    required String msg,
-    required ContentType type,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.fixed,
-        backgroundColor: Colors.transparent,
-        content: AwesomeSnackbarContent(
-            title: title, message: msg, contentType: type),
-      ),
-    );
-  }
+  // showSnackbar({
+  //   required String title,
+  //   required String msg,
+  //   required ContentType type,
+  // }) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       behavior: SnackBarBehavior.fixed,
+  //       backgroundColor: Colors.transparent,
+  //       content: AwesomeSnackbarContent(
+  //           title: title, message: msg, contentType: type),
+  //     ),
+  //   );
+  // }
 }
