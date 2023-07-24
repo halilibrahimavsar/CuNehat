@@ -17,9 +17,10 @@ class CustomListview extends StatelessWidget {
         itemBuilder: (context, index) {
           final header = trnsformAllData.keys.elementAt(index);
           return RootListItem(
-              header: header,
-              selectedOption: selectedOption,
-              trnsformAllData: trnsformAllData);
+            header: header,
+            selectedOption: selectedOption,
+            trnsformAllData: trnsformAllData,
+          );
         },
       ),
     );
