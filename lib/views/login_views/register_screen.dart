@@ -1,6 +1,8 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' show log;
 
@@ -214,11 +216,11 @@ class RegisterScreen extends StatelessWidget {
         }
       } on EmailAlreadyInUseAuthException {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Email is already in use. Try login!"),
-              backgroundColor: Colors.green,
-            ),
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Email is already in use. Try login!",
+            type: ContentType.warning,
           );
           Navigator.pushNamed(
             context,
@@ -227,25 +229,25 @@ class RegisterScreen extends StatelessWidget {
           );
         }
       } on WeakPasswordAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Weak pasword"),
-            backgroundColor: Colors.red,
-          ),
+        showSnackbar(
+          context: context,
+          title: "WARNING",
+          msg: "Weak password",
+          type: ContentType.warning,
         );
       } on InvalidEmailAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Invalid Email"),
-            backgroundColor: Colors.yellow.shade700,
-          ),
+        showSnackbar(
+          context: context,
+          title: "WARNING",
+          msg: "Imvalid email",
+          type: ContentType.warning,
         );
       } on GenericAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Something goes wrong..."),
-            backgroundColor: Colors.yellow.shade700,
-          ),
+        showSnackbar(
+          context: context,
+          title: "WARNING",
+          msg: "Something hoes wrong...",
+          type: ContentType.warning,
         );
       }
     } else {

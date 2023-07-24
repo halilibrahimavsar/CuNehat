@@ -1,10 +1,12 @@
 import 'dart:developer';
 
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/views/main_views/main_screen.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
+import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
@@ -239,43 +241,44 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (context.mounted) {
           if (user?.isEmailVerified ?? false) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Logged in"),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
+            showSnackbar(
+              context: context,
+              title: "Logged in",
+              msg: "Successfully logged in",
+              type: ContentType.success,
             );
+
             Navigator.pushNamedAndRemoveUntil(
               context,
               mainPrivateRoute,
               (route) => false,
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Verify your email."),
-                backgroundColor: Colors.red,
-              ),
+            showSnackbar(
+              context: context,
+              title: "Verify",
+              msg: "Verify your email",
+              type: ContentType.warning,
             );
+
             Navigator.of(context).pushNamed(
               emailVerifyRoute,
             );
           }
         }
       } on WrongPasswordAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Wrong Password"),
-            backgroundColor: Colors.red,
-          ),
+        showSnackbar(
+          context: context,
+          title: "Wrong password",
+          msg: "Password is incorrect",
+          type: ContentType.warning,
         );
       } on UserNotFoundAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("User not found"),
-            backgroundColor: Colors.red,
-          ),
+        showSnackbar(
+          context: context,
+          title: "User",
+          msg: "User not found",
+          type: ContentType.success,
         );
       } on GenericAuthException catch (e) {
         log(e.toString());

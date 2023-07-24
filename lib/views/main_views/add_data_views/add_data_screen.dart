@@ -300,13 +300,13 @@ Tarih    : $_btnDate - $_btnTime''',
                     );
 
                     if (isSave) {
-                      showSnackbar(
-                        context: context,
-                        title: "Success",
-                        msg: "Data Saving to database",
-                        type: ContentType.success,
-                      );
                       if (context.mounted) {
+                        showSnackbar(
+                          context: context,
+                          title: "Success",
+                          msg: "Data Saving to database",
+                          type: ContentType.success,
+                        );
                         Navigator.of(context).pop();
                       }
                     }
