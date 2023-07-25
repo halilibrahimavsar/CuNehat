@@ -9,10 +9,14 @@ showSnackbar({
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
+      duration: const Duration(seconds: 1),
       behavior: SnackBarBehavior.fixed,
       backgroundColor: Colors.transparent,
-      content:
-          AwesomeSnackbarContent(title: title, message: msg, contentType: type),
+      content: AwesomeSnackbarContent(
+        title: title,
+        message: msg,
+        contentType: type,
+      ),
     ),
   );
 }
