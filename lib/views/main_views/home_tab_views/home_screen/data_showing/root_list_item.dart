@@ -30,6 +30,9 @@ class RootListItemState extends State<RootListItem> {
     double totalAmount = _calculateTotal();
     return ExpansionTile(
         maintainState: true,
+        backgroundColor: widget.selectedOption == 1
+            ? Colors.green.shade200
+            : Colors.red.shade200,
         onExpansionChanged: (expanded) {
           setState(() {
             _isExpanded = expanded;

@@ -94,62 +94,28 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        StreamBuilder(
-          stream: (selectedOption == 2)
-              ? FirestoreService().getExpensesByMonthAndYear(
-                  firstDate: firstDate,
-                  lastDate: lastDate,
-                  ownerUserId: FirebaseAuth.instance.currentUser?.uid,
-                )
-              : FirestoreService().getIncomeByMonthAndYear(
-                  firstDate: firstDate,
-                  lastDate: lastDate,
-                  ownerUserId: FirebaseAuth.instance.currentUser?.uid,
-                ),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final allData = snapshot.data?.toList().reversed;
-              Map<DateTime, List<ModelProvider>> trnsformAllData = {};
-
-              allData!.toList().forEach((e) {
-                // key for daily show data
-                DateTime keyDaily = DateTime(
-                  e.date.toDate().year,
-                  e.date.toDate().month,
-                  e.date.toDate().day,
-                  0, // hour
-                  0, // minute
-                  0, // second
-                );
-
-                //
-                // DateTime keyMonthly = DateTime(
-                //   e.date.toDate().year,
-                //   e.date.toDate().month,
-                //   0, // day
-                //   0, // hour
-                //   0, // minute
-                //   0, // second
-                // );
-                if (trnsformAllData.containsKey(keyDaily)) {
-                  trnsformAllData[keyDaily]?.add(e);
-                } else {
-                  trnsformAllData[keyDaily] = [e];
-                }
-              });
-              return CustomListview(
-                trnsformAllData: trnsformAllData,
-                selectedOption: selectedOption,
-              );
-            } else if (snapshot.hasError) {
-              // Handle error case
-              return const Center(child: Text('There is no data'));
-            } else {
-              // Show loading indicator
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
-        ),
+        [
+          StreamOfExpOrInc(
+            firstDate: firstDate,
+            lastDate: lastDate,
+            selectedOption: selectedOption,
+            stream: FirestoreService().getIncomeByMonthAndYear(
+              firstDate: firstDate,
+              lastDate: lastDate,
+              ownerUserId: FirebaseAuth.instance.currentUser?.uid,
+            ),
+          ),
+          StreamOfExpOrInc(
+            firstDate: firstDate,
+            lastDate: lastDate,
+            selectedOption: selectedOption,
+            stream: FirestoreService().getExpensesByMonthAndYear(
+              firstDate: firstDate,
+              lastDate: lastDate,
+              ownerUserId: FirebaseAuth.instance.currentUser?.uid,
+            ),
+          ),
+        ][selectedOption - 1],
         [
           NeumorphicButton(
             margin: const EdgeInsets.all(10),
@@ -207,6 +173,82 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ][selectedOption - 1]
       ],
+    );
+  }
+}
+
+class StreamOfExpOrInc extends StatelessWidget {
+  const StreamOfExpOrInc({
+    super.key,
+    required this.firstDate,
+    required this.lastDate,
+    required this.selectedOption,
+    required this.stream,
+  });
+  final Timestamp firstDate;
+  final Timestamp lastDate;
+  final int selectedOption;
+  final Stream<Iterable<ModelProvider>> stream;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Iterable<ModelProvider>>(
+      stream: stream,
+      builder: (context, snapshotOfExpense) {
+        switch (snapshotOfExpense.connectionState) {
+          case ConnectionState.waiting:
+            return const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          case ConnectionState.active:
+            if (snapshotOfExpense.hasData) {
+              {
+                final allData = snapshotOfExpense.data?.toList().reversed;
+                Map<DateTime, List<ModelProvider>> trnsformAllData = {};
+
+                allData!.toList().forEach((e) {
+                  // key for daily show data
+                  DateTime keyDaily = DateTime(
+                    e.date.toDate().year,
+                    e.date.toDate().month,
+                    e.date.toDate().day,
+                    0, // hour
+                    0, // minute
+                    0, // second
+                  );
+
+                  //
+                  // DateTime keyMonthly = DateTime(
+                  //   e.date.toDate().year,
+                  //   e.date.toDate().month,
+                  //   0, // day
+                  //   0, // hour
+                  //   0, // minute
+                  //   0, // second
+                  // );
+                  if (trnsformAllData.containsKey(keyDaily)) {
+                    trnsformAllData[keyDaily]?.add(e);
+                  } else {
+                    trnsformAllData[keyDaily] = [e];
+                  }
+                });
+                return CustomListview(
+                  trnsformAllData: trnsformAllData,
+                  selectedOption: selectedOption,
+                );
+              }
+            } else {
+              print("there is no data");
+              return const Text("There is no data");
+            }
+          default:
+            return const Center(
+              child: Text("Something goes wrong..."),
+            );
+        }
+      },
     );
   }
 }
