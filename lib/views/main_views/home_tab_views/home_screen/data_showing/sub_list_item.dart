@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 class SubListItem extends StatelessWidget {
   const SubListItem({
     Key? key,
-    required this.selectedOption,
     required this.data,
   }) : super(key: key);
 
-  final int selectedOption;
   final ModelProvider? data;
 
   @override
@@ -17,27 +15,19 @@ class SubListItem extends StatelessWidget {
     return ListTile(
       title: Text(
         data!.title,
-        style: TextStyle(
-          color: selectedOption == 2 ? Colors.red : Colors.green,
-        ),
+        style: const TextStyle(color: Colors.cyan),
       ),
       trailing: Text(
         formatCurrency.format(data!.amount),
-        style: TextStyle(
-          color: selectedOption == 2 ? Colors.red : Colors.green,
-        ),
+        style: const TextStyle(color: Colors.cyan),
       ),
       leading: Text(
         data!.time,
-        style: TextStyle(
-          color: selectedOption == 2 ? Colors.red : Colors.green,
-        ),
+        style: const TextStyle(color: Colors.cyan),
       ),
       subtitle: Text(
         data!.tag,
-        style: TextStyle(
-          color: selectedOption == 2 ? Colors.red : Colors.green,
-        ),
+        style: const TextStyle(color: Colors.cyan),
       ),
       titleAlignment: ListTileTitleAlignment.center,
     );

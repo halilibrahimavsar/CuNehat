@@ -93,6 +93,7 @@ flutter:
   assets:
      - assets/images/logo.jpg
      - assets/images/splashScreen.png
+     - assets/images/background.png
      
   #   - images/a_dot_ham.jpeg
 

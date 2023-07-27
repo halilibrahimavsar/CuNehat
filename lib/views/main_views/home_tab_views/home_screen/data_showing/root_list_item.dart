@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:cunehat/views/utilities/glass_effect.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/update_data_screen.dart';
@@ -23,142 +26,141 @@ class RootListItem extends StatefulWidget {
 }
 
 class RootListItemState extends State<RootListItem> {
-  bool _isExpanded = false;
-
   @override
   Widget build(BuildContext context) {
     double totalAmount = _calculateTotal();
-    return ExpansionTile(
-        maintainState: true,
-        backgroundColor: widget.selectedOption == 1
-            ? Colors.green.shade200
-            : Colors.red.shade200,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _isExpanded = expanded;
-          });
-        },
-        title: Text(
-          DateFormat.yMMMd('tr').format(widget.header),
-          style: TextStyle(
-            color: widget.selectedOption == 2 ? Colors.red : Colors.green,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 2,
+        vertical: 1,
+      ),
+      child: GlassEffect(
+        child: ExpansionTile(
+          shape: Border.all(
+            color: Colors.black,
           ),
-        ),
-        subtitle: Text(
-          DateFormat.E('tr').format(widget.header),
-          style: TextStyle(
-            color: widget.selectedOption == 2 ? Colors.red : Colors.green,
-          ),
-        ),
-        leading: Text(
-          '   ${widget.trnsformAllData[widget.header]!.length}\nAdet',
-          style: TextStyle(
-            color: widget.selectedOption == 2 ? Colors.red : Colors.green,
-          ),
-        ),
-        trailing: AnimatedIcon(
-          icon: AnimatedIcons.menu_close,
-          color: widget.selectedOption == 2 ? Colors.red : Colors.green,
-          progress: _isExpanded
-              ? const AlwaysStoppedAnimation<double>(1)
-              : const AlwaysStoppedAnimation<double>(0),
-        ),
-        children: [
-          ...List.generate(
-            widget.trnsformAllData[widget.header]!.length,
-            (indx) {
-              final data = widget.trnsformAllData[widget.header]?[indx];
-
-              return Slidable(
-                startActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  children: [
-                    SlidableAction(
-                      onPressed: (context) {
-                        showModalBottomSheet(
-                          enableDrag: true,
-                          useSafeArea: true,
-                          isScrollControlled: true,
-                          isDismissible: true,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          context: context,
-                          builder: (context) {
-                            return UpdateDataScreen(
-                              selectedOption: widget.selectedOption,
-                              id: data!.id,
-                              note: data.title,
-                              price: data.amount,
-                              tag: data.tag,
-                              tagList: data.tag.split(",.,.,.,.,.,"),
-                              date: data.date,
-                              time: data.time,
-                            );
-                          },
-                        );
-                      },
-                      backgroundColor: Colors.purple,
-                      foregroundColor: Colors.white,
-                      icon: Icons.update,
-                      label: 'Update',
-                    ),
-                  ],
-                ),
-                endActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  children: [
-                    SlidableAction(
-                      onPressed: (context) async {
-                        await showCustmDialog(
-                          context,
-                          title: "Sil",
-                          msg: "Bu veriyi tekrar getiremezsiniz. Silinsin mi?",
-                          cancelButton: "VAZGEÇ",
-                          confirmButton: "SİL",
-                          color: Colors.amber,
-                          functionWhenConfirm: () async {
-                            (widget.selectedOption == 2)
-                                ? await FirestoreService()
-                                    .deleteExpense(id: data!.id)
-                                : await FirestoreService()
-                                    .deleteIncome(id: data!.id);
-                          },
-                        );
-                      },
-                      autoClose: true,
-                      backgroundColor: const Color.fromARGB(255, 255, 224, 23),
-                      foregroundColor: Colors.white,
-                      icon: Icons.delete,
-                      label: 'Delete',
-                    ),
-                  ],
-                ),
-                child: SubListItem(
-                  selectedOption: widget.selectedOption,
-                  data: widget.trnsformAllData[widget.header]?[indx],
-                ),
-              );
-            },
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                gradient: LinearGradient(colors: [
-                  Colors.transparent,
-                  widget.selectedOption == 2 ? Colors.red : Colors.green
-                ])),
-            alignment: Alignment.centerRight,
-            child: Text(
-              'Toplam : ${totalAmount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+          collapsedShape: Border.merge(
+            const Border(bottom: BorderSide(color: Colors.black26)),
+            const Border(
+              bottom: BorderSide(color: Colors.black26),
             ),
           ),
-        ]);
+          maintainState: true,
+          // backgroundColor: widget.selectedOption == 1
+          //     ? Colors.green.shade200
+          //     : Colors.red.shade200,
+          // collapsedIconColor:
+          //     widget.selectedOption == 1 ? Colors.green : Colors.red,
+          collapsedTextColor:
+              widget.selectedOption == 1 ? Colors.green : Colors.red,
+          // textColor: Colors.black,
+          title: Text(DateFormat.yMMMd('tr').format(widget.header)),
+          subtitle: Text(DateFormat.E('tr').format(widget.header)),
+          leading:
+              Text('   ${widget.trnsformAllData[widget.header]!.length}\nAdet'),
+          children: [
+            ...List.generate(
+              widget.trnsformAllData[widget.header]!.length,
+              (indx) {
+                final data = widget.trnsformAllData[widget.header]?[indx];
+
+                return Slidable(
+                  startActionPane: ActionPane(
+                    motion: const ScrollMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: (context) {
+                          showModalBottomSheet(
+                            enableDrag: true,
+                            useSafeArea: true,
+                            isScrollControlled: true,
+                            isDismissible: true,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            context: context,
+                            builder: (context) {
+                              return UpdateDataScreen(
+                                selectedOption: widget.selectedOption,
+                                id: data!.id,
+                                note: data.title,
+                                price: data.amount,
+                                tag: data.tag,
+                                tagList: data.tag.split(",.,.,.,.,.,"),
+                                date: data.date,
+                                time: data.time,
+                              );
+                            },
+                          );
+                        },
+                        backgroundColor: Colors.purple,
+                        foregroundColor: Colors.white,
+                        icon: Icons.update,
+                        label: 'Update',
+                      ),
+                    ],
+                  ),
+                  endActionPane: ActionPane(
+                    motion: const ScrollMotion(),
+                    children: [
+                      SlidableAction(
+                        onPressed: (context) async {
+                          await showCustmDialog(
+                            context,
+                            title: "Sil",
+                            msg:
+                                "Bu veriyi tekrar getiremezsiniz. Silinsin mi?",
+                            cancelButton: "VAZGEÇ",
+                            confirmButton: "SİL",
+                            color: Colors.amber,
+                            functionWhenConfirm: () async {
+                              (widget.selectedOption == 2)
+                                  ? await FirestoreService()
+                                      .deleteExpense(id: data!.id)
+                                  : await FirestoreService()
+                                      .deleteIncome(id: data!.id);
+                            },
+                          );
+                        },
+                        autoClose: true,
+                        backgroundColor:
+                            const Color.fromARGB(255, 255, 224, 23),
+                        foregroundColor: Colors.white,
+                        icon: Icons.delete,
+                        label: 'Delete',
+                      ),
+                    ],
+                  ),
+                  child: GlassEffect(
+                    child: SubListItem(
+                      data: widget.trnsformAllData[widget.header]?[indx],
+                    ),
+                  ),
+                );
+              },
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              // decoration: BoxDecoration(
+              //     borderRadius: BorderRadius.circular(25),
+              //     gradient: LinearGradient(colors: [
+              //       Colors.transparent,
+              //       widget.selectedOption == 2 ? Colors.red : Colors.green
+              //     ])),
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Toplam : ${totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.cyan,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   double _calculateTotal() {
