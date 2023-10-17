@@ -4,29 +4,32 @@ import 'package:cunehat/views/main_views/add_data_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/home_screen/data_showing/stream_of_expense_income.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final Timestamp firstDate;
+  final Timestamp lastDate;
+
+  const HomeScreen({Key? key, required this.firstDate, required this.lastDate})
+      : super(key: key);
 
   @override
   HomeScreenState createState() => HomeScreenState();
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  late Timestamp firstDate;
-  late Timestamp lastDate;
   int selectedOption = 1;
 
   @override
   void initState() {
-    firstDate = Timestamp.fromMillisecondsSinceEpoch(
-      DateTime(
-        DateTime.now().year,
-        DateTime.now().month,
-      ).millisecondsSinceEpoch,
-    );
-    lastDate = Timestamp.fromMillisecondsSinceEpoch(
-        DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
+    // firstDate = Timestamp.fromMillisecondsSinceEpoch(
+    //   DateTime(
+    //     DateTime.now().year,
+    //     DateTime.now().month,
+    //   ).millisecondsSinceEpoch,
+    // );
+    // lastDate = Timestamp.fromMillisecondsSinceEpoch(
+    //     DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
 
     super.initState();
   }
@@ -35,141 +38,124 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            NeumorphicButton(
-              margin: const EdgeInsets.fromLTRB(2, 10, 2, 6),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 55,
-                vertical: 8,
-              ),
-              onPressed: () {
-                setState(() {
-                  selectedOption = 1;
-                });
-              },
-              style: NeumorphicStyle(
-                color: Colors.grey.shade200,
-                boxShape:
-                    NeumorphicBoxShape.roundRect(BorderRadius.circular(20)),
-                shape: NeumorphicShape.concave,
-                oppositeShadowLightSource: selectedOption == 1,
-              ),
-              child: Text(
-                "Gelir",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: selectedOption == 1 ? Colors.green : Colors.black,
-                ),
-              ),
-            ),
-            NeumorphicButton(
-              margin: const EdgeInsets.fromLTRB(2, 10, 2, 6),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 55,
-                vertical: 8,
-              ),
-              onPressed: () {
-                setState(() {
-                  selectedOption = 2;
-                });
-              },
-              style: NeumorphicStyle(
-                color: Colors.grey.shade200,
-                boxShape:
-                    NeumorphicBoxShape.roundRect(BorderRadius.circular(20)),
-                shape: NeumorphicShape.concave,
-                oppositeShadowLightSource: selectedOption == 2,
-              ),
-              child: Text(
-                "Gider",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: selectedOption == 2 ? Colors.red : Colors.black,
-                ),
-              ),
-            ),
-          ],
+        ToggleSwitch(
+          customWidths: const [150, 150],
+          animate: true,
+          animationDuration: 500,
+          initialLabelIndex: selectedOption - 1,
+          totalSwitches: 2,
+          labels: const ['GELİR', 'GİDER'],
+          activeBgColor: [selectedOption == 1 ? Colors.green : Colors.red],
+          inactiveBgColor: Colors.transparent,
+          inactiveFgColor: Colors.white60,
+          onToggle: (index) {
+            setState(() {
+              selectedOption = (index! + 1);
+            });
+          },
         ),
         [
           StreamOfExpOrInc(
-            firstDate: firstDate,
-            lastDate: lastDate,
+            firstDate: widget.firstDate,
+            lastDate: widget.lastDate,
             selectedOption: selectedOption,
             stream: FirestoreService().getIncomeByMonthAndYear(
-              firstDate: firstDate,
-              lastDate: lastDate,
+              firstDate: widget.firstDate,
+              lastDate: widget.lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid,
             ),
           ),
           StreamOfExpOrInc(
-            firstDate: firstDate,
-            lastDate: lastDate,
+            firstDate: widget.firstDate,
+            lastDate: widget.lastDate,
             selectedOption: selectedOption,
             stream: FirestoreService().getExpensesByMonthAndYear(
-              firstDate: firstDate,
-              lastDate: lastDate,
+              firstDate: widget.firstDate,
+              lastDate: widget.lastDate,
               ownerUserId: FirebaseAuth.instance.currentUser?.uid,
             ),
           ),
         ][selectedOption - 1],
         [
-          NeumorphicButton(
-            margin: const EdgeInsets.all(2),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 100,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 100)),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: const BorderSide(
+                        color: Colors.green,
+                        style: BorderStyle.solid,
+                        strokeAlign: 10),
+                  ),
+                ),
+                foregroundColor: MaterialStateProperty.all(Colors.green),
+                backgroundColor: MaterialStateProperty.all(Colors.transparent),
+              ),
+              child: const Icon(Icons.add),
+              onPressed: () {
+                showModalBottomSheet(
+                  enableDrag: true,
+                  useSafeArea: true,
+                  isScrollControlled: true,
+                  isDismissible: true,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25)),
+                  context: context,
+                  builder: (context) {
+                    return AddDataScreen(
+                      colorOfClass: Colors.green,
+                      titleOfClass: "Gelir",
+                      provider: FirestoreService().addIncome,
+                      tagProvider: FirestoreService().getIncomeTags,
+                    );
+                  },
+                );
+              },
             ),
-            style: const NeumorphicStyle(color: Colors.green),
-            onPressed: () {
-              showModalBottomSheet(
-                enableDrag: true,
-                useSafeArea: true,
-                isScrollControlled: true,
-                isDismissible: true,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25)),
-                context: context,
-                builder: (context) {
-                  return AddDataScreen(
-                    colorOfClass: Colors.green,
-                    titleOfClass: "Gelir",
-                    provider: FirestoreService().addIncome,
-                    tagProvider: FirestoreService().getIncomeTags,
-                  );
-                },
-              );
-            },
-            child: const Icon(Icons.add),
           ),
-          NeumorphicButton(
-            margin: const EdgeInsets.all(2),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 100,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 100)),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: const BorderSide(
+                        color: Colors.red,
+                        style: BorderStyle.solid,
+                        strokeAlign: 10),
+                  ),
+                ),
+                foregroundColor: MaterialStateProperty.all(Colors.red),
+                backgroundColor: MaterialStateProperty.all(Colors.transparent),
+              ),
+              child: const Icon(Icons.add),
+              onPressed: () {
+                showModalBottomSheet(
+                  enableDrag: true,
+                  useSafeArea: true,
+                  isScrollControlled: true,
+                  isDismissible: true,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25)),
+                  context: context,
+                  builder: (context) {
+                    return AddDataScreen(
+                      colorOfClass: Colors.red,
+                      titleOfClass: "Gider",
+                      provider: FirestoreService().addExpense,
+                      tagProvider: FirestoreService().getExpenseTags,
+                    );
+                  },
+                );
+              },
             ),
-            style: const NeumorphicStyle(color: Colors.red),
-            onPressed: () {
-              showModalBottomSheet(
-                enableDrag: true,
-                useSafeArea: true,
-                isScrollControlled: true,
-                isDismissible: true,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25)),
-                context: context,
-                builder: (context) {
-                  return AddDataScreen(
-                    colorOfClass: Colors.red,
-                    titleOfClass: "Gider",
-                    provider: FirestoreService().addExpense,
-                    tagProvider: FirestoreService().getExpenseTags,
-                  );
-                },
-              );
-            },
-            child: const Icon(Icons.add),
           ),
         ][selectedOption - 1]
       ],

@@ -267,19 +267,23 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
       } on WrongPasswordAuthException {
-        showSnackbar(
-          context: context,
-          title: "Wrong password",
-          msg: "Password is incorrect",
-          type: ContentType.warning,
-        );
+        if (mounted) {
+          showSnackbar(
+            context: context,
+            title: "Wrong password",
+            msg: "Password is incorrect",
+            type: ContentType.warning,
+          );
+        }
       } on UserNotFoundAuthException {
-        showSnackbar(
-          context: context,
-          title: "User",
-          msg: "User not found",
-          type: ContentType.success,
-        );
+        if (mounted) {
+          showSnackbar(
+            context: context,
+            title: "User",
+            msg: "User not found",
+            type: ContentType.success,
+          );
+        }
       } on GenericAuthException catch (e) {
         log(e.toString());
       } on Exception {

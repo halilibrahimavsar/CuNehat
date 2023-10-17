@@ -1,17 +1,18 @@
-import 'package:cunehat/constants/routes.dart';
-import 'package:cunehat/enums/main_actions.dart';
+import 'dart:developer';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/views/main_views/app_bars.dart';
 import 'package:cunehat/views/main_views/home_tab_views/details_screen/details_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/home_screen/home_screen.dart';
-import 'package:cunehat/services/auth/auth_service.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/visualize_data_screen.dart';
-import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
-import 'package:flutter/services.dart';
-
 int setCurrentPage = 1;
+
+Timestamp firstDateForFilterHome = Timestamp.now();
+Timestamp lastDateForFilterHome = Timestamp.now();
 
 List<Widget> navigationDestinations = [
   const Icon(Icons.data_thresholding_outlined),
@@ -20,7 +21,9 @@ List<Widget> navigationDestinations = [
 ];
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({
+    super.key,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -34,100 +37,76 @@ class _MainScreenState extends State<MainScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final String userPhoto =
         user?.providerData[0].photoURL ?? "/assets/images/logo.jpg";
-    return Scaffold(
-      appBar: AppBar(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(25),
-            bottomRight: Radius.circular(25),
-          ),
-        ),
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            SizedBox(
-              height: 55,
-              width: 55,
-              child: PopupMenuButton(
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(100)),
-                      child: Image.network(
-                        userPhoto,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.account_circle_rounded,
-                            size: 10,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                onSelected: (value) async {
-                  switch (value) {
-                    case MainActions.logout:
-                      bool isLogOut = await showCustmDialog(
-                        context,
-                        title: "Log out",
-                        msg: "Do you want to log out?",
-                        cancelButton: "Cancel",
-                        confirmButton: "Log out",
-                        color: Colors.blue,
-                        functionWhenConfirm: () {},
-                      );
-                      if (isLogOut) {
-                        if (context.mounted) {
-                          AuthService.google().logOut();
-                          Navigator.popAndPushNamed(context, loginPageRoute);
-                        }
-                      }
-                      break;
-                    case MainActions.exit:
-                      SystemNavigator.pop();
-                      break;
-                  }
-                },
-                itemBuilder: (context) {
-                  return const [
-                    PopupMenuItem<MainActions>(
-                      value: MainActions.logout,
-                      child: Text("LOGOUT"),
-                    ),
-                    PopupMenuItem<MainActions>(
-                      value: MainActions.exit,
-                      child: Text("EXIT"),
-                    ),
-                  ];
-                },
-              ),
-            ),
-            Text(
-              user?.displayName ?? "Anonymous",
-              style: const TextStyle(fontSize: 16),
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: SweepGradient(
+          endAngle: 9,
+          startAngle: 2,
+          center: Alignment.bottomLeft,
+          tileMode: TileMode.clamp,
+          colors: [
+            Colors.black12,
+            Colors.black12,
+            Colors.black12,
+            Colors.blue.shade900,
+            Colors.black12,
+            Colors.purple.shade900,
+            Colors.black12,
+            Colors.blue,
+            Colors.black12,
+            Colors.purple.shade900,
+            Colors.black12,
+            Colors.purple.shade900,
           ],
         ),
       ),
-      bottomNavigationBar: CurvedNavigationBar(
-        items: navigationDestinations,
-        onTap: (value) {
-          setState(() {
-            setCurrentPage = value;
-          });
-        },
-        index: setCurrentPage,
-        backgroundColor: Colors.grey.shade300,
-        color: Colors.cyan,
+      child: Scaffold(
+        appBar: <PreferredSizeWidget>[
+          DetailsAppbar(
+            userPhoto: userPhoto,
+            user: user,
+            appBar: AppBar(),
+          ),
+          HomeAppbar(
+            userPhoto: userPhoto,
+            user: user,
+            appBar: AppBar(),
+            sendDataToParrent: (Map<String, DateTime> data) {
+              setState(() {
+                firstDateForFilterHome = Timestamp.fromDate(data['firstDate']!);
+                lastDateForFilterHome = Timestamp.fromDate(data['lastDate']!);
+                log(firstDateForFilterHome.toDate().toString());
+                log(lastDateForFilterHome.toDate().toString());
+              });
+            },
+          ),
+          VisualizeAppbar(
+            userPhoto: userPhoto,
+            user: user,
+            appBar: AppBar(),
+          ),
+        ][setCurrentPage],
+        bottomNavigationBar: CurvedNavigationBar(
+          items: navigationDestinations,
+          onTap: (value) {
+            setState(() {
+              setCurrentPage = value;
+            });
+          },
+          index: setCurrentPage,
+          backgroundColor: Colors.transparent,
+          color: Colors.cyan.withOpacity(0.6),
+        ),
+        backgroundColor: Colors.transparent,
+        body: [
+          const DetailsScreen(),
+          HomeScreen(
+            firstDate: firstDateForFilterHome,
+            lastDate: lastDateForFilterHome,
+          ),
+          const VisualizeDataScreen(),
+        ][setCurrentPage],
       ),
-      backgroundColor: Colors.grey.shade300,
-      body: [
-        const DetailsScreen(),
-        const HomeScreen(),
-        const VisualizeDataScreen(),
-      ][setCurrentPage],
     );
   }
 }

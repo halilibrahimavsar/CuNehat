@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:intl/intl.dart';
 
@@ -38,7 +37,8 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                         style: NeumorphicStyle(
                           color: Colors.grey.shade200,
                           boxShape: NeumorphicBoxShape.roundRect(
-                              BorderRadius.circular(20)),
+                            BorderRadius.circular(20),
+                          ),
                           shape: NeumorphicShape.convex,
                           oppositeShadowLightSource:
                               isSelected == 0 ? true : false,

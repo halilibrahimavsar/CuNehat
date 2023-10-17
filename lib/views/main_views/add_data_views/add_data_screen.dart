@@ -90,8 +90,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
                         context,
                         onConfirm: (time) {
                           setState(() {
-                            date = Timestamp.fromMillisecondsSinceEpoch(
-                                time.millisecondsSinceEpoch);
+                            date = Timestamp.fromDate(time);
                             _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
                                 DateTime.fromMillisecondsSinceEpoch(
                                     date.millisecondsSinceEpoch));
@@ -198,8 +197,10 @@ class _AddDataScreenState extends State<AddDataScreen> {
                       enableDrag: true,
                       useSafeArea: true,
                       shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(25))),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(25),
+                        ),
+                      ),
                       builder: (context) {
                         return Column(
                           mainAxisSize: MainAxisSize.max,
@@ -288,14 +289,16 @@ Tarih    : $_btnDate - $_btnTime''',
                       confirmButton: "KAYDET",
                       color: Colors.blue,
                       functionWhenConfirm: () {
-                        widget.provider(data: {
-                          fieldUserId: FirebaseAuth.instance.currentUser?.uid,
-                          fieldAmount: double.parse(_priceController.text),
-                          fieldTitle: _noteController.text,
-                          fieldTag: _tag,
-                          fieldDate: date,
-                          fieldTime: _btnTime,
-                        });
+                        widget.provider(
+                          data: {
+                            fieldUserId: FirebaseAuth.instance.currentUser?.uid,
+                            fieldAmount: double.parse(_priceController.text),
+                            fieldTitle: _noteController.text,
+                            fieldTag: _tag,
+                            fieldDate: date,
+                            fieldTime: _btnTime,
+                          },
+                        );
                       },
                     );
 

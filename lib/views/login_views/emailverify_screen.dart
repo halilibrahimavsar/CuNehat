@@ -96,37 +96,39 @@ class _EmailVerifyScreenState extends State<EmailVerifyScreen> {
       });
     } on FirebaseAuthException catch (e) {
       if (e.code == 'too-many-requests') {
-        showCupertinoDialog(
-          context: context,
-          builder: (contextDialog) {
-            return Dialog.fullscreen(
-              backgroundColor: Colors.red,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    e.message.toString(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+        if (mounted) {
+          showCupertinoDialog(
+            context: context,
+            builder: (contextDialog) {
+              return Dialog.fullscreen(
+                backgroundColor: Colors.red,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      e.message.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 40,
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(contextDialog).pop(contextDialog);
-                    },
-                    icon: const Icon(Icons.settings_backup_restore_rounded),
-                    label: const Text("Go Back"),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+                    const SizedBox(
+                      height: 40,
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(contextDialog).pop(contextDialog);
+                      },
+                      icon: const Icon(Icons.settings_backup_restore_rounded),
+                      label: const Text("Go Back"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }
       }
     }
   }

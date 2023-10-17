@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/constants/current_month_range.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/add_data_screen.dart';
 import 'package:cunehat/views/main_views/home_tab_views/details_screen/details_screen.dart';
@@ -52,7 +53,10 @@ void main() async {
         // private routes
         mainPrivateRoute: (context) => const MainScreen(),
         detailsUi: (context) => const DetailsScreen(),
-        homeUi: (context) => const HomeScreen(),
+        homeUi: (context) => HomeScreen(
+              firstDate: currentMonthRange['firstDate']!,
+              lastDate: currentMonthRange['lastDate']!,
+            ),
         visualizeUi: (context) => const VisualizeDataScreen(),
         addExpenseUi: (context) => AddDataScreen(
               colorOfClass: Colors.red,

@@ -46,20 +46,16 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
     return StreamBuilder<Iterable<Income>>(
       stream: FirestoreService().getIncomeByMonthAndYear(
         ownerUserId: _uid,
-        firstDate: Timestamp.fromMillisecondsSinceEpoch(
-            dateRange['firstDate']!.millisecondsSinceEpoch),
-        lastDate: Timestamp.fromMillisecondsSinceEpoch(
-            dateRange['lastDate']!.millisecondsSinceEpoch),
+        firstDate: Timestamp.fromDate(dateRange['firstDate']!),
+        lastDate: Timestamp.fromDate(dateRange['lastDate']!),
       ),
       builder: (context, incomeSnapshot) {
         if (incomeSnapshot.hasData) {
           return StreamBuilder<Iterable<Expense>>(
             stream: FirestoreService().getExpensesByMonthAndYear(
               ownerUserId: _uid,
-              firstDate: Timestamp.fromMillisecondsSinceEpoch(
-                  dateRange['firstDate']!.millisecondsSinceEpoch),
-              lastDate: Timestamp.fromMillisecondsSinceEpoch(
-                  dateRange['lastDate']!.millisecondsSinceEpoch),
+              firstDate: Timestamp.fromDate(dateRange['firstDate']!),
+              lastDate: Timestamp.fromDate(dateRange['lastDate']!),
             ),
             builder: (context, expenseSnapshot) {
               if (expenseSnapshot.hasData) {
@@ -200,10 +196,9 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                               incomeMap: incomeMap, expenseMap: expenseMap),
                         ),
                         Dashboard(
-                            startDate: Timestamp.fromMicrosecondsSinceEpoch(
-                                dateRange['firstDate']!.microsecondsSinceEpoch),
-                            endDate: Timestamp.fromMicrosecondsSinceEpoch(
-                                dateRange['lastDate']!.microsecondsSinceEpoch),
+                            startDate:
+                                Timestamp.fromDate(dateRange['firstDate']!),
+                            endDate: Timestamp.fromDate(dateRange['lastDate']!),
                             incomeSnapshot: incomeSnapshot,
                             expenseSnapshot: expenseSnapshot,
                             filterChronical: slctdOptForChroniclIntrvl)

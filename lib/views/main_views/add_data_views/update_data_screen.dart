@@ -50,8 +50,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
 
   @override
   void initState() {
-    date = Timestamp.fromMillisecondsSinceEpoch(
-        DateTime.now().millisecondsSinceEpoch);
+    date = Timestamp.fromDate(DateTime.now());
     _noteController = TextEditingController();
     _priceController = TextEditingController();
     _noteController.text = widget.note;
@@ -108,8 +107,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              date = Timestamp.fromMillisecondsSinceEpoch(
-                                  time.millisecondsSinceEpoch);
+                              date = Timestamp.fromDate(time);
                               _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
                                   DateTime.fromMillisecondsSinceEpoch(
                                       date.millisecondsSinceEpoch));
@@ -317,10 +315,8 @@ Tarih    : $_btnDate - $_btnTime''',
                     fieldAmount: double.parse(_priceController.text),
                     fieldTitle: _noteController.text,
                     fieldTag: tag,
-                    fieldDate: Timestamp.fromMillisecondsSinceEpoch(
-                        DateFormat('dd-MM-yyyy')
-                            .parse(_btnDate)
-                            .millisecondsSinceEpoch),
+                    fieldDate: Timestamp.fromDate(
+                        DateFormat('dd-MM-yyyy').parse(_btnDate)),
                     fieldTime: _btnTime,
                   },
                 );
@@ -331,10 +327,8 @@ Tarih    : $_btnDate - $_btnTime''',
                     fieldAmount: double.parse(_priceController.text),
                     fieldTitle: _noteController.text,
                     fieldTag: tag,
-                    fieldDate: Timestamp.fromMillisecondsSinceEpoch(
-                        DateFormat('dd-MM-yyyy')
-                            .parse(_btnDate)
-                            .millisecondsSinceEpoch),
+                    fieldDate: Timestamp.fromDate(
+                        DateFormat('dd-MM-yyyy').parse(_btnDate)),
                     fieldTime: _btnTime,
                   },
                 );

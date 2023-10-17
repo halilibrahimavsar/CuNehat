@@ -29,16 +29,16 @@ List<String> sortAndMergeDates({
   }
 
   for (final date in expenseDateAndVals.keys.toList()) {
-    final Timestamp dateTmstp = Timestamp.fromMillisecondsSinceEpoch(
-        DateFormat(dateFiltrFrmt, 'tr').parse(date).millisecondsSinceEpoch);
+    final Timestamp dateTmstp =
+        Timestamp.fromDate(DateFormat(dateFiltrFrmt, 'tr').parse(date));
     if (!dates.contains(dateTmstp)) {
       dates.add(dateTmstp);
     }
   }
 
   for (final date in incomeDateAndVals.keys.toList()) {
-    final Timestamp dateTmstp = Timestamp.fromMillisecondsSinceEpoch(
-        DateFormat(dateFiltrFrmt, 'tr').parse(date).millisecondsSinceEpoch);
+    final Timestamp dateTmstp =
+        Timestamp.fromDate(DateFormat(dateFiltrFrmt, 'tr').parse(date));
     if (!dates.contains(dateTmstp)) {
       dates.add(dateTmstp);
     }
@@ -91,7 +91,12 @@ class ShowInfoForCharts extends StatelessWidget {
 
 // Functions
 double calculateAvarage(List<double> data) {
-  double total = data.reduce((value, element) => value + element);
+  double total = 0;
+  try {
+    total = data.reduce((value, element) => value + element);
+  } on StateError {
+    total = 0;
+  }
   int count = data.length;
 
   return (total / count).roundToDouble();

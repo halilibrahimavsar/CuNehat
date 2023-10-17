@@ -229,26 +229,32 @@ class RegisterScreen extends StatelessWidget {
           );
         }
       } on WeakPasswordAuthException {
-        showSnackbar(
-          context: context,
-          title: "WARNING",
-          msg: "Weak password",
-          type: ContentType.warning,
-        );
+        if (context.mounted) {
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Weak password",
+            type: ContentType.warning,
+          );
+        }
       } on InvalidEmailAuthException {
-        showSnackbar(
-          context: context,
-          title: "WARNING",
-          msg: "Imvalid email",
-          type: ContentType.warning,
-        );
+        if (context.mounted) {
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Imvalid email",
+            type: ContentType.warning,
+          );
+        }
       } on GenericAuthException {
-        showSnackbar(
-          context: context,
-          title: "WARNING",
-          msg: "Something hoes wrong...",
-          type: ContentType.warning,
-        );
+        if (context.mounted) {
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Something hoes wrong...",
+            type: ContentType.warning,
+          );
+        }
       }
     } else {
       log("Form Validation Error");

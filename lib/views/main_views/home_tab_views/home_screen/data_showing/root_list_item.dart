@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:cunehat/views/utilities/glass_effect.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
