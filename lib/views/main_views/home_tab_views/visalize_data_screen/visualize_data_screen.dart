@@ -3,7 +3,6 @@ import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/charts/custom_bar_chart.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/charts/custom_line_chart.dart';
 import 'package:cunehat/views/main_views/filtering/filter_constants.dart';
-import 'package:cunehat/views/main_views/filtering/filter_functions.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/dashboard/dashboard.dart';
 import 'package:cunehat/views/utilities/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,8 +23,9 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
   late final String? _uid;
   // 0 is line and 1 is bar chart
   int chartSelection = 1;
+
   final Color selectedColor = Colors.cyan;
-  final Color notSelectedColor = Colors.black;
+  final Color notSelectedColor = Colors.white;
   bool isFilterWidgetsVisible = false;
 
   @override
@@ -60,37 +60,44 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
             builder: (context, expenseSnapshot) {
               if (expenseSnapshot.hasData) {
                 // Calculate total income and expense for each date
-                final Map<String, double> incomeMap = sumDailyMonthlyYearly(
-                  allData: incomeSnapshot.data,
-                  filter: slctdOptForChroniclIntrvl,
-                );
+                // final Map<String, double> incomeMap = sumDailyMonthlyYearly(
+                //   allData: incomeSnapshot.data,
+                //   filter: slctdOptForChroniclIntrvl,
+                // );
 
-                final Map<String, double> expenseMap = sumDailyMonthlyYearly(
-                  allData: expenseSnapshot.data,
-                  filter: slctdOptForChroniclIntrvl,
-                );
+                // final Map<String, double> expenseMap = sumDailyMonthlyYearly(
+                //   allData: expenseSnapshot.data,
+                //   filter: slctdOptForChroniclIntrvl,
+                // );
 
                 return Column(
                   children: [
                     Visibility(
                       visible: isFilterWidgetsVisible,
-                      child: Neumorphic(
+                      child: Container(
                         padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color: const Color.fromARGB(255, 42, 41, 41),
+                        ),
                         child: Column(
                           children: [
                             NeumorphicButton(
                               margin: const EdgeInsets.all(5),
                               style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
+                                color: const Color.fromARGB(255, 42, 41, 41),
                                 boxShape: NeumorphicBoxShape.roundRect(
                                     BorderRadius.circular(20)),
                                 shape: NeumorphicShape.convex,
+                                shadowLightColor: Colors.grey.shade500,
+                                shadowDarkColor: Colors.black,
+                                depth: 2,
+                                intensity: 200,
                               ),
                               child: NeumorphicText(
                                 "${DateFormat.yMd('tr').format(dateRange['firstDate']!)}   -   ${DateFormat.yMd('tr').format(dateRange['lastDate']!)}",
-                                style: const NeumorphicStyle(
-                                  color: Colors.black,
-                                ),
+                                style:
+                                    const NeumorphicStyle(color: Colors.white),
                                 textStyle: NeumorphicTextStyle(
                                     fontWeight: FontWeight.w900, fontSize: 18),
                               ),
@@ -103,17 +110,23 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                                 });
                               },
                             ),
+                            const SizedBox(height: 10),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 NeumorphicButton(
                                   style: NeumorphicStyle(
-                                    color: Colors.grey.shade200,
+                                    color:
+                                        const Color.fromARGB(255, 42, 41, 41),
                                     boxShape: NeumorphicBoxShape.roundRect(
                                         BorderRadius.circular(20)),
                                     shape: NeumorphicShape.concave,
                                     oppositeShadowLightSource:
                                         chartSelection == 0,
+                                    shadowLightColor: Colors.grey.shade500,
+                                    shadowDarkColor: Colors.black,
+                                    depth: 2,
+                                    intensity: 200,
                                   ),
                                   onPressed: () => setState(() {
                                     chartSelection = 0;
@@ -123,19 +136,25 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: chartSelection == 0
-                                          ? Colors.cyan
-                                          : Colors.black,
+                                          ? selectedColor
+                                          : notSelectedColor,
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: 2),
                                 NeumorphicButton(
                                   style: NeumorphicStyle(
-                                    color: Colors.grey.shade200,
+                                    color:
+                                        const Color.fromARGB(255, 42, 41, 41),
                                     boxShape: NeumorphicBoxShape.roundRect(
                                         BorderRadius.circular(20)),
                                     shape: NeumorphicShape.concave,
                                     oppositeShadowLightSource:
                                         chartSelection == 1,
+                                    shadowLightColor: Colors.grey.shade500,
+                                    shadowDarkColor: Colors.black,
+                                    depth: 2,
+                                    intensity: 200,
                                   ),
                                   onPressed: () => setState(() {
                                     chartSelection = 1;
@@ -145,19 +164,25 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: chartSelection == 1
-                                          ? Colors.cyan
-                                          : Colors.black,
+                                          ? selectedColor
+                                          : notSelectedColor,
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: 2),
                                 NeumorphicButton(
                                   style: NeumorphicStyle(
-                                    color: Colors.grey.shade200,
+                                    color:
+                                        const Color.fromARGB(255, 42, 41, 41),
                                     boxShape: NeumorphicBoxShape.roundRect(
                                         BorderRadius.circular(20)),
                                     shape: NeumorphicShape.concave,
                                     oppositeShadowLightSource:
                                         chartSelection == 2,
+                                    shadowLightColor: Colors.grey.shade500,
+                                    shadowDarkColor: Colors.black,
+                                    depth: 2,
+                                    intensity: 200,
                                   ),
                                   onPressed: () => setState(() {
                                     chartSelection = 2;
@@ -167,8 +192,8 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: chartSelection == 2
-                                          ? Colors.cyan
-                                          : Colors.black,
+                                          ? selectedColor
+                                          : notSelectedColor,
                                     ),
                                   ),
                                 ),
@@ -179,35 +204,48 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                       ),
                     ),
                     Expanded(
-                      flex: 8,
                       child: [
                         Container(
                           padding: const EdgeInsets.all(25),
                           color: Colors.transparent,
                           child: LineChartSample(
-                            incomeMap: incomeMap,
-                            expenseMap: expenseMap,
+                            startDate:
+                                Timestamp.fromDate(dateRange['firstDate']!),
+                            endDate: Timestamp.fromDate(dateRange['lastDate']!),
+                            incomeSnapshot: incomeSnapshot,
+                            expenseSnapshot: expenseSnapshot,
+                            filterChronical: slctdOptForChroniclIntrvl,
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.all(25),
                           color: Colors.transparent,
                           child: BarChartSample(
-                              incomeMap: incomeMap, expenseMap: expenseMap),
-                        ),
-                        Dashboard(
                             startDate:
                                 Timestamp.fromDate(dateRange['firstDate']!),
                             endDate: Timestamp.fromDate(dateRange['lastDate']!),
                             incomeSnapshot: incomeSnapshot,
                             expenseSnapshot: expenseSnapshot,
-                            filterChronical: slctdOptForChroniclIntrvl)
+                            filterChronical: slctdOptForChroniclIntrvl,
+                          ),
+                        ),
+                        Dashboard(
+                          startDate:
+                              Timestamp.fromDate(dateRange['firstDate']!),
+                          endDate: Timestamp.fromDate(dateRange['lastDate']!),
+                          incomeSnapshot: incomeSnapshot,
+                          expenseSnapshot: expenseSnapshot,
+                          filterChronical: slctdOptForChroniclIntrvl,
+                        )
                       ][chartSelection],
                     ),
-                    NeumorphicButton(
-                      style: const NeumorphicStyle(
-                        color: Colors.cyan,
-                        boxShape: NeumorphicBoxShape.stadium(),
+                    ElevatedButton(
+                      style: ButtonStyle(
+                        shape: MaterialStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
                       ),
                       child: Text(
                         isFilterWidgetsVisible ? 'Hide Filter' : 'Show Filter',
@@ -220,20 +258,28 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                     ),
                     Visibility(
                       visible: isFilterWidgetsVisible,
-                      child: Neumorphic(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color: const Color.fromARGB(255, 42, 41, 41),
+                        ),
                         padding: const EdgeInsets.all(10),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             NeumorphicButton(
                               style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
+                                color: const Color.fromARGB(255, 42, 41, 41),
                                 boxShape: NeumorphicBoxShape.roundRect(
                                     BorderRadius.circular(20)),
                                 shape: NeumorphicShape.concave,
                                 oppositeShadowLightSource:
                                     slctdOptForChroniclIntrvl ==
                                         FilterDataByDate.daily,
+                                shadowLightColor: Colors.grey.shade500,
+                                shadowDarkColor: Colors.black,
+                                depth: 2,
+                                intensity: 200,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -254,13 +300,17 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                             ),
                             NeumorphicButton(
                               style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
+                                color: const Color.fromARGB(255, 42, 41, 41),
                                 boxShape: NeumorphicBoxShape.roundRect(
                                     BorderRadius.circular(20)),
                                 shape: NeumorphicShape.concave,
                                 oppositeShadowLightSource:
                                     slctdOptForChroniclIntrvl ==
                                         FilterDataByDate.monthly,
+                                shadowLightColor: Colors.grey.shade500,
+                                shadowDarkColor: Colors.black,
+                                depth: 2,
+                                intensity: 200,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -281,13 +331,17 @@ class _VisualizeDataScreenState extends State<VisualizeDataScreen> {
                             ),
                             NeumorphicButton(
                               style: NeumorphicStyle(
-                                color: Colors.grey.shade200,
+                                color: const Color.fromARGB(255, 42, 41, 41),
                                 boxShape: NeumorphicBoxShape.roundRect(
                                     BorderRadius.circular(20)),
                                 shape: NeumorphicShape.concave,
                                 oppositeShadowLightSource:
                                     slctdOptForChroniclIntrvl ==
                                         FilterDataByDate.yearly,
+                                shadowLightColor: Colors.grey.shade500,
+                                shadowDarkColor: Colors.black,
+                                depth: 2,
+                                intensity: 200,
                               ),
                               onPressed: () {
                                 setState(() {

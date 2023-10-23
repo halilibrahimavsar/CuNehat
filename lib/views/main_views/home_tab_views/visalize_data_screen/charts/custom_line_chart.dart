@@ -1,20 +1,43 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/constants/currency_format.dart';
+import 'package:cunehat/services/firestore/firestore_service.dart';
+import 'package:cunehat/views/main_views/filtering/filter_constants.dart';
+import 'package:cunehat/views/main_views/filtering/filter_functions.dart';
 import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/charts/shared_functions_for_charts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class LineChartSample extends StatelessWidget {
-  final Map<String, double> incomeMap;
-  final Map<String, double> expenseMap;
+  final AsyncSnapshot<Iterable<Income>> incomeSnapshot;
+  final AsyncSnapshot<Iterable<Expense>> expenseSnapshot;
+  final Timestamp startDate;
+  final Timestamp endDate;
+  final FilterDataByDate filterChronical;
+  // final Map<String, double> incomeMap;
+  // final Map<String, double> expenseMap;
 
   const LineChartSample({
     super.key,
-    required this.incomeMap,
-    required this.expenseMap,
+    required this.incomeSnapshot,
+    required this.expenseSnapshot,
+    required this.startDate,
+    required this.endDate,
+    required this.filterChronical,
+    // required this.incomeMap,
+    // required this.expenseMap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, double> incomeMap = sumDailyMonthlyYearly(
+      allData: incomeSnapshot.data,
+      filter: filterChronical,
+    );
+
+    final Map<String, double> expenseMap = sumDailyMonthlyYearly(
+      allData: expenseSnapshot.data,
+      filter: filterChronical,
+    );
     final List<double> incomeData = [];
     final List<double> expenseData = [];
     final List<String> dates = sortAndMergeDates(

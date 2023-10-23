@@ -82,14 +82,18 @@ class HomeScreenState extends State<HomeScreen> {
             child: ElevatedButton(
               style: ButtonStyle(
                 padding: MaterialStateProperty.all(
-                    const EdgeInsets.symmetric(horizontal: 100)),
+                  const EdgeInsets.symmetric(
+                    horizontal: 60,
+                  ),
+                ),
                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                     side: const BorderSide(
-                        color: Colors.green,
-                        style: BorderStyle.solid,
-                        strokeAlign: 10),
+                      color: Colors.green,
+                      style: BorderStyle.solid,
+                      strokeAlign: 10,
+                    ),
                   ),
                 ),
                 foregroundColor: MaterialStateProperty.all(Colors.green),
@@ -122,7 +126,10 @@ class HomeScreenState extends State<HomeScreen> {
             child: ElevatedButton(
               style: ButtonStyle(
                 padding: MaterialStateProperty.all(
-                    const EdgeInsets.symmetric(horizontal: 100)),
+                  const EdgeInsets.symmetric(
+                    horizontal: 60,
+                  ),
+                ),
                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),

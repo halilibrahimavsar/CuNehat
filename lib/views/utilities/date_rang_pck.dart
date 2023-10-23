@@ -12,36 +12,47 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
   int isSelected = 0;
 
   Color selectedColor = Colors.cyan;
-  Color notSelectedColor = Colors.black;
+  Color notSelectedColor = Colors.white;
 
   bool save = await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     enableDrag: true,
+    backgroundColor: const Color.fromARGB(255, 25, 24, 24).withOpacity(0.7),
     builder: (bottomContext) {
       return StatefulBuilder(
         builder: (context, setStateOfBottomSheet) {
           return Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(25)),
-            height: 300,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+            ),
+            height: 250,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Neumorphic(
-                  padding: const EdgeInsets.all(30),
+                Container(
+                  padding: const EdgeInsets.all(25),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 42, 41, 41),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       NeumorphicButton(
                         style: NeumorphicStyle(
-                          color: Colors.grey.shade200,
+                          color: const Color.fromARGB(255, 42, 41, 41),
                           boxShape: NeumorphicBoxShape.roundRect(
                             BorderRadius.circular(20),
                           ),
                           shape: NeumorphicShape.convex,
                           oppositeShadowLightSource:
                               isSelected == 0 ? true : false,
+                          shadowLightColor: Colors.grey.shade500,
+                          shadowDarkColor: Colors.black,
+                          depth: 2,
+                          intensity: 200,
                         ),
                         onPressed: () async {
                           var a = await showDateRangePicker(
@@ -67,8 +78,8 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                               '${DateFormat.yMd('tr').format(result['firstDate']!)}   -   ${DateFormat.yMd('tr').format(result['lastDate']!)}',
                               style: TextStyle(
                                 color: (isSelected == 0)
-                                    ? Colors.cyan
-                                    : Colors.black,
+                                    ? selectedColor
+                                    : notSelectedColor,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 22,
                               ),
@@ -84,11 +95,15 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                         children: [
                           NeumorphicButton(
                             style: NeumorphicStyle(
-                              color: Colors.grey.shade200,
+                              color: const Color.fromARGB(255, 42, 41, 41),
                               boxShape: NeumorphicBoxShape.roundRect(
                                   BorderRadius.circular(20)),
                               shape: NeumorphicShape.concave,
                               oppositeShadowLightSource: isSelected == 1,
+                              shadowLightColor: Colors.grey.shade500,
+                              shadowDarkColor: Colors.black,
+                              depth: 2,
+                              intensity: 200,
                             ),
                             child: Text(
                               "Bu Yıl",
@@ -111,11 +126,15 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                           ),
                           NeumorphicButton(
                             style: NeumorphicStyle(
-                              color: Colors.grey.shade200,
+                              color: const Color.fromARGB(255, 42, 41, 41),
                               boxShape: NeumorphicBoxShape.roundRect(
                                   BorderRadius.circular(20)),
                               shape: NeumorphicShape.concave,
                               oppositeShadowLightSource: isSelected == 2,
+                              shadowLightColor: Colors.grey.shade500,
+                              shadowDarkColor: Colors.black,
+                              depth: 2,
+                              intensity: 200,
                             ),
                             child: Text(
                               "Son üc ay",
@@ -138,11 +157,15 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                           ),
                           NeumorphicButton(
                             style: NeumorphicStyle(
-                              color: Colors.grey.shade200,
+                              color: const Color.fromARGB(255, 42, 41, 41),
                               boxShape: NeumorphicBoxShape.roundRect(
                                   BorderRadius.circular(20)),
                               shape: NeumorphicShape.concave,
                               oppositeShadowLightSource: isSelected == 3,
+                              shadowLightColor: Colors.grey.shade500,
+                              shadowDarkColor: Colors.black,
+                              depth: 2,
+                              intensity: 200,
                             ),
                             child: Text(
                               "Bu ay",

@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class DetailsAppbar extends StatelessWidget implements PreferredSizeWidget {
+  @override
+  Size get preferredSize => const Size(double.maxFinite, 50);
   const DetailsAppbar({
     super.key,
     required this.userPhoto,
@@ -91,17 +93,16 @@ class DetailsAppbar extends StatelessWidget implements PreferredSizeWidget {
               },
             ),
           ),
+          const SizedBox(width: 10),
           Text(
             user?.displayName ?? "Anonymous",
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
+      backgroundColor: Colors.indigo.withOpacity(0.6),
     );
   }
-
-  @override
-  Size get preferredSize => Size.fromHeight(appBar.preferredSize.height);
 }
 
 class HomeAppbar extends StatefulWidget implements PreferredSizeWidget {
@@ -197,25 +198,31 @@ class _HomeAppbarState extends State<HomeAppbar> {
               },
             ),
           ),
+          const SizedBox(width: 10),
           Text(
             widget.user?.displayName ?? "Anonymous",
-            style: const TextStyle(fontSize: 16, color: Colors.white),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
-      backgroundColor: Colors.cyan.withOpacity(0.6),
+      backgroundColor: Colors.indigo.withOpacity(0.6),
       actions: [
         GestureDetector(
-            onTap: () async {
-              var a = await getDateRange(context);
+          onTap: () async {
+            var a = await getDateRange(context);
 
-              setState(() {
-                widget.sendDataToParrent(a);
-              });
-            },
-            child: const Icon(
+            setState(() {
+              widget.sendDataToParrent(a);
+            });
+          },
+          child: const Padding(
+            padding: EdgeInsets.all(10),
+            child: Icon(
               Icons.filter_list,
-            )),
+              size: 30,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -224,6 +231,9 @@ class _HomeAppbarState extends State<HomeAppbar> {
 }
 
 class VisualizeAppbar extends StatelessWidget implements PreferredSizeWidget {
+  @override
+  Size get preferredSize => const Size(double.maxFinite, 50);
+
   const VisualizeAppbar({
     super.key,
     required this.userPhoto,
@@ -306,15 +316,14 @@ class VisualizeAppbar extends StatelessWidget implements PreferredSizeWidget {
               },
             ),
           ),
+          const SizedBox(width: 10),
           Text(
             user?.displayName ?? "Anonymous",
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
+      backgroundColor: Colors.indigo.withOpacity(0.6),
     );
   }
-
-  @override
-  Size get preferredSize => Size.fromHeight(appBar.preferredSize.height);
 }
