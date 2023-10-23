@@ -20,8 +20,8 @@ class StreamOfExpOrInc extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<Iterable<ModelProvider>>(
       stream: stream,
-      builder: (context, snapshotOfExpense) {
-        switch (snapshotOfExpense.connectionState) {
+      builder: (context, providerSnapshot) {
+        switch (providerSnapshot.connectionState) {
           case ConnectionState.waiting:
             return const Expanded(
               child: Center(
@@ -29,9 +29,9 @@ class StreamOfExpOrInc extends StatelessWidget {
               ),
             );
           case ConnectionState.active:
-            if (snapshotOfExpense.hasData) {
+            if (providerSnapshot.hasData) {
               {
-                final allData = snapshotOfExpense.data?.toList().reversed;
+                final allData = providerSnapshot.data?.toList().reversed;
                 Map<DateTime, List<ModelProvider>> trnsformAllData = {};
 
                 allData!.toList().forEach((e) {

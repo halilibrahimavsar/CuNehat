@@ -11,8 +11,15 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 int setCurrentPage = 1;
 
-Timestamp firstDateForFilterHome = Timestamp.now();
-Timestamp lastDateForFilterHome = Timestamp.now();
+Timestamp firstDateForFilterHome = Timestamp.fromMillisecondsSinceEpoch(
+  DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  ).millisecondsSinceEpoch,
+);
+Timestamp lastDateForFilterHome = Timestamp.fromMillisecondsSinceEpoch(
+  DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch,
+);
 
 List<Widget> navigationDestinations = [
   const Icon(Icons.data_thresholding_outlined),

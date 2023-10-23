@@ -209,10 +209,10 @@ class _HomeAppbarState extends State<HomeAppbar> {
       actions: [
         GestureDetector(
           onTap: () async {
-            var a = await getDateRange(context);
+            var dateRangeFromUser = await getDateRange(context);
 
             setState(() {
-              widget.sendDataToParrent(a);
+              widget.sendDataToParrent(dateRangeFromUser);
             });
           },
           child: const Padding(

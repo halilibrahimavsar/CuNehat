@@ -21,20 +21,6 @@ class HomeScreenState extends State<HomeScreen> {
   int selectedOption = 1;
 
   @override
-  void initState() {
-    // firstDate = Timestamp.fromMillisecondsSinceEpoch(
-    //   DateTime(
-    //     DateTime.now().year,
-    //     DateTime.now().month,
-    //   ).millisecondsSinceEpoch,
-    // );
-    // lastDate = Timestamp.fromMillisecondsSinceEpoch(
-    //     DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
-
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
