@@ -1,6 +1,8 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cunehat/constants/routes.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
 import 'package:cunehat/services/auth/auth_service.dart';
+import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' show log;
 
@@ -16,7 +18,7 @@ class RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade100,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text(
           "Register",
@@ -36,153 +38,175 @@ class RegisterScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white, // Set app bar background color
       ),
-      body: FutureBuilder(
-        future: AuthService.firebase().initialize(),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 25, vertical: 100),
-                child: Form(
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  key: registrFormValidtr,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: email,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                        ),
-                        decoration: const InputDecoration(
-                          fillColor: Colors.white,
-                          filled: true,
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(),
-                          hintText: "Please enter your email",
-                          labelText: "Email",
-                        ),
-                        enableSuggestions: false,
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        validator: (value) {
-                          if (value != null && value.isEmpty) {
-                            return "This field can't be empty!";
-                          } else if (!value.toString().contains("@") ||
-                              !value.toString().contains(".")) {
-                            return "Please enter a valid email";
-                          } else {
-                            return null;
-                          }
-                        },
-                      ),
-                      const SizedBox(
-                        height: 25,
-                      ),
-                      TextFormField(
-                        controller: passwd,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                        ),
-                        decoration: const InputDecoration(
-                          fillColor: Colors.white,
-                          filled: true,
-                          prefixIcon: Icon(Icons.lock),
-                          border: OutlineInputBorder(),
-                          hintText: "Please enter your password",
-                          labelText: "Password",
-                        ),
-                        enableSuggestions: false,
-                        autocorrect: false,
-                        obscureText: true,
-                        validator: (value) {
-                          if (value != null && value.toString().isEmpty) {
-                            return "This field can't be empty";
-                          } else if (value.toString().length < 8) {
-                            return "Password must be at least 8 characters";
-                          } else if (value.toString().contains(" ")) {
-                            return "Password should not contain spaces";
-                          } else {
-                            return null;
-                          }
-                        },
-                      ),
-                      const SizedBox(
-                        height: 25,
-                      ),
-                      TextFormField(
-                        controller: confirmPasswd,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                        ),
-                        decoration: const InputDecoration(
-                          fillColor: Colors.white,
-                          filled: true,
-                          prefixIcon: Icon(Icons.lock),
-                          border: OutlineInputBorder(),
-                          hintText: "Please confirm your password",
-                          labelText: "Comfirm Password",
-                        ),
-                        enableSuggestions: false,
-                        autocorrect: false,
-                        obscureText: true,
-                        validator: (value) {
-                          if (value != null && value.toString().isEmpty) {
-                            return "This field can't be empty";
-                          } else if (value.toString() !=
-                              passwd.text.toString()) {
-                            return "Passwords do not match";
-                          } else {
-                            return null;
-                          }
-                        },
-                      ),
-                      const SizedBox(
-                        height: 100,
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await registerNewUser(
-                            context,
-                            email.text,
-                            passwd.text,
-                          );
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(
-                              Colors.black), // Set button background color
-                          padding: MaterialStateProperty.all<EdgeInsets>(
-                              const EdgeInsets.symmetric(
-                                  vertical: 15, horizontal: 30)),
-                          shape:
-                              MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(30.0))),
-                        ),
-                        child: const Text(
-                          "REGISTER",
-                          style: TextStyle(
-                            color: Colors.white,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: SweepGradient(
+            endAngle: 9,
+            startAngle: 2,
+            center: Alignment.bottomLeft,
+            tileMode: TileMode.clamp,
+            colors: [
+              Colors.black12,
+              Colors.black12,
+              Colors.black12,
+              Colors.blue.shade900,
+              Colors.black12,
+              Colors.purple.shade900,
+              Colors.black12,
+              Colors.blue,
+              Colors.black12,
+              Colors.black12,
+              Colors.black,
+            ],
+          ),
+        ),
+        child: FutureBuilder(
+          future: AuthService.firebase().initialize(),
+          builder: (context, snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.done:
+                return SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 25, vertical: 100),
+                  child: Form(
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    key: registrFormValidtr,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: email,
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          ),
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            prefixIcon: Icon(Icons.email),
+                            border: OutlineInputBorder(),
+                            hintText: "Please enter your email",
+                            labelText: "Email",
+                          ),
+                          enableSuggestions: false,
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          validator: (value) {
+                            if (value != null && value.isEmpty) {
+                              return "This field can't be empty!";
+                            } else if (!value.toString().contains("@") ||
+                                !value.toString().contains(".")) {
+                              return "Please enter a valid email";
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+                        const SizedBox(
+                          height: 25,
+                        ),
+                        TextFormField(
+                          controller: passwd,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                          ),
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            prefixIcon: Icon(Icons.lock),
+                            border: OutlineInputBorder(),
+                            hintText: "Please enter your password",
+                            labelText: "Password",
+                          ),
+                          enableSuggestions: false,
+                          autocorrect: false,
+                          obscureText: true,
+                          validator: (value) {
+                            if (value != null && value.toString().isEmpty) {
+                              return "This field can't be empty";
+                            } else if (value.toString().length < 8) {
+                              return "Password must be at least 8 characters";
+                            } else if (value.toString().contains(" ")) {
+                              return "Password should not contain spaces";
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+                        const SizedBox(
+                          height: 25,
+                        ),
+                        TextFormField(
+                          controller: confirmPasswd,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                          ),
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            prefixIcon: Icon(Icons.lock),
+                            border: OutlineInputBorder(),
+                            hintText: "Please confirm your password",
+                            labelText: "Comfirm Password",
+                          ),
+                          enableSuggestions: false,
+                          autocorrect: false,
+                          obscureText: true,
+                          validator: (value) {
+                            if (value != null && value.toString().isEmpty) {
+                              return "This field can't be empty";
+                            } else if (value.toString() !=
+                                passwd.text.toString()) {
+                              return "Passwords do not match";
+                            } else {
+                              return null;
+                            }
+                          },
+                        ),
+                        const SizedBox(
+                          height: 100,
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await registerNewUser(
+                              context,
+                              email.text,
+                              passwd.text,
+                            );
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                Colors.black), // Set button background color
+                            padding: MaterialStateProperty.all<EdgeInsets>(
+                                const EdgeInsets.symmetric(
+                                    vertical: 15, horizontal: 30)),
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30.0))),
+                          ),
+                          child: const Text(
+                            "REGISTER",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            case ConnectionState.waiting:
-            default:
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-          }
-        },
+                );
+              case ConnectionState.waiting:
+              default:
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+            }
+          },
+        ),
       ),
     );
   }
@@ -214,11 +238,11 @@ class RegisterScreen extends StatelessWidget {
         }
       } on EmailAlreadyInUseAuthException {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Email is already in use. Try login!"),
-              backgroundColor: Colors.green,
-            ),
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Email is already in use. Try login!",
+            type: ContentType.warning,
           );
           Navigator.pushNamed(
             context,
@@ -227,26 +251,32 @@ class RegisterScreen extends StatelessWidget {
           );
         }
       } on WeakPasswordAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Weak pasword"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (context.mounted) {
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Weak password",
+            type: ContentType.warning,
+          );
+        }
       } on InvalidEmailAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Invalid Email"),
-            backgroundColor: Colors.yellow.shade700,
-          ),
-        );
+        if (context.mounted) {
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Imvalid email",
+            type: ContentType.warning,
+          );
+        }
       } on GenericAuthException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Something goes wrong..."),
-            backgroundColor: Colors.yellow.shade700,
-          ),
-        );
+        if (context.mounted) {
+          showSnackbar(
+            context: context,
+            title: "WARNING",
+            msg: "Something hoes wrong...",
+            type: ContentType.warning,
+          );
+        }
       }
     } else {
       log("Form Validation Error");

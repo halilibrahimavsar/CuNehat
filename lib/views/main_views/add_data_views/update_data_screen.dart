@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
+import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,8 +50,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
 
   @override
   void initState() {
-    date = Timestamp.fromMillisecondsSinceEpoch(
-        DateTime.now().millisecondsSinceEpoch);
+    date = Timestamp.fromDate(DateTime.now());
     _noteController = TextEditingController();
     _priceController = TextEditingController();
     _noteController.text = widget.note;
@@ -107,8 +107,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
                           context,
                           onConfirm: (time) {
                             setState(() {
-                              date = Timestamp.fromMillisecondsSinceEpoch(
-                                  time.millisecondsSinceEpoch);
+                              date = Timestamp.fromDate(time);
                               _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(
                                   DateTime.fromMillisecondsSinceEpoch(
                                       date.millisecondsSinceEpoch));
@@ -316,10 +315,8 @@ Tarih    : $_btnDate - $_btnTime''',
                     fieldAmount: double.parse(_priceController.text),
                     fieldTitle: _noteController.text,
                     fieldTag: tag,
-                    fieldDate: Timestamp.fromMillisecondsSinceEpoch(
-                        DateFormat('dd-MM-yyyy')
-                            .parse(_btnDate)
-                            .millisecondsSinceEpoch),
+                    fieldDate: Timestamp.fromDate(
+                        DateFormat('dd-MM-yyyy').parse(_btnDate)),
                     fieldTime: _btnTime,
                   },
                 );
@@ -330,10 +327,8 @@ Tarih    : $_btnDate - $_btnTime''',
                     fieldAmount: double.parse(_priceController.text),
                     fieldTitle: _noteController.text,
                     fieldTag: tag,
-                    fieldDate: Timestamp.fromMillisecondsSinceEpoch(
-                        DateFormat('dd-MM-yyyy')
-                            .parse(_btnDate)
-                            .millisecondsSinceEpoch),
+                    fieldDate: Timestamp.fromDate(
+                        DateFormat('dd-MM-yyyy').parse(_btnDate)),
                     fieldTime: _btnTime,
                   },
                 );
@@ -344,38 +339,24 @@ Tarih    : $_btnDate - $_btnTime''',
             },
           );
 
-          if (isUpdate) {
-            showSnackbar(
-              title: "Success",
-              msg: "Data Updated in database",
-              type: ContentType.success,
-            );
-          } else {
-            showSnackbar(
-              title: "Warning",
-              msg: "Data not updated, user not want to :(",
-              type: ContentType.warning,
-            );
+          if (context.mounted) {
+            if (isUpdate) {
+              showSnackbar(
+                context: context,
+                title: "Success",
+                msg: "Data Updated in database",
+                type: ContentType.success,
+              );
+            } else {
+              showSnackbar(
+                context: context,
+                title: "Warning",
+                msg: "Data not updated, user not want to :(",
+                type: ContentType.warning,
+              );
+            }
           }
         },
-      ),
-    );
-  }
-
-  showSnackbar({
-    required String title,
-    required String msg,
-    required ContentType type,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.fixed,
-        backgroundColor: Colors.transparent,
-        content: AwesomeSnackbarContent(
-          title: title,
-          message: msg,
-          contentType: type,
-        ),
       ),
     );
   }

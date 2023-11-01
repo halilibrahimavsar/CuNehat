@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/constants/currency_format.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -28,16 +29,16 @@ List<String> sortAndMergeDates({
   }
 
   for (final date in expenseDateAndVals.keys.toList()) {
-    final Timestamp dateTmstp = Timestamp.fromMillisecondsSinceEpoch(
-        DateFormat(dateFiltrFrmt, 'tr').parse(date).millisecondsSinceEpoch);
+    final Timestamp dateTmstp =
+        Timestamp.fromDate(DateFormat(dateFiltrFrmt, 'tr').parse(date));
     if (!dates.contains(dateTmstp)) {
       dates.add(dateTmstp);
     }
   }
 
   for (final date in incomeDateAndVals.keys.toList()) {
-    final Timestamp dateTmstp = Timestamp.fromMillisecondsSinceEpoch(
-        DateFormat(dateFiltrFrmt, 'tr').parse(date).millisecondsSinceEpoch);
+    final Timestamp dateTmstp =
+        Timestamp.fromDate(DateFormat(dateFiltrFrmt, 'tr').parse(date));
     if (!dates.contains(dateTmstp)) {
       dates.add(dateTmstp);
     }
@@ -68,14 +69,20 @@ class ShowInfoForCharts extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Text(
-          "Gelir Toplamı : $totalIncome",
+          "Gelir : ${formatCurrency.format(totalIncome)}",
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
         ),
         Text(
-          "Gider Toplamı : $totalExpense",
+          "Gider : ${formatCurrency.format(totalExpense)}",
           style: const TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
         ),
       ],
     );
@@ -84,7 +91,12 @@ class ShowInfoForCharts extends StatelessWidget {
 
 // Functions
 double calculateAvarage(List<double> data) {
-  double total = data.reduce((value, element) => value + element);
+  double total = 0;
+  try {
+    total = data.reduce((value, element) => value + element);
+  } on StateError {
+    total = 0;
+  }
   int count = data.length;
 
   return (total / count).roundToDouble();

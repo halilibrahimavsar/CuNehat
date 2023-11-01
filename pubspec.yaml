@@ -55,6 +55,8 @@ dependencies:
   card_swiper: ^2.0.4
   scrollable_positioned_list: ^0.3.8
   sqflite: ^2.2.8+4
+  toggle_switch: ^2.1.0
+  keyboard_dismisser: ^3.0.0
   flutter_neumorphic:
     git:
       url: https://github.com/den0206/Flutter-Neumorphic.git
@@ -93,6 +95,7 @@ flutter:
   assets:
      - assets/images/logo.jpg
      - assets/images/splashScreen.png
+     - assets/images/background.png
      
   #   - images/a_dot_ham.jpeg
 

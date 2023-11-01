@@ -2,19 +2,18 @@
 
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/constants/routes.dart';
+import 'package:cunehat/constants/current_month_range.dart';
 import 'package:cunehat/services/firestore/firestore_service.dart';
 import 'package:cunehat/views/main_views/add_data_views/add_data_screen.dart';
-import 'package:cunehat/views/main_views/home_tab_views/details_screen.dart';
-import 'package:cunehat/views/main_views/home_tab_views/home_screen.dart';
-import 'package:cunehat/views/main_views/home_tab_views/visualize_data_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/details_screen/details_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/home_screen/home_screen.dart';
+import 'package:cunehat/views/main_views/home_tab_views/visalize_data_screen/visualize_data_screen.dart';
 import 'package:cunehat/views/main_views/main_screen.dart';
 import 'package:cunehat/views/login_views/emailverify_screen.dart';
 import 'package:cunehat/views/login_views/login_screen.dart';
 import 'package:cunehat/views/login_views/register_screen.dart';
-import 'package:cunehat/views/main_views/private_utilities/filtering/filter_constants.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,15 +22,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
-  Timestamp firstDate = Timestamp.fromMillisecondsSinceEpoch(
-    DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-    ).millisecondsSinceEpoch,
-  );
-  Timestamp lastDate = Timestamp.fromMillisecondsSinceEpoch(
-      DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch);
-
   // initialize firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -62,18 +52,12 @@ void main() async {
         emailVerifyRoute: (context) => const EmailVerifyScreen(),
         // private routes
         mainPrivateRoute: (context) => const MainScreen(),
-        detailsUi: (context) => DetailsScreen(
-              firstDate: firstDate,
-              lastDate: lastDate,
-              filterChronical: FilterDataByDate.monthly,
+        detailsUi: (context) => const DetailsScreen(),
+        homeUi: (context) => HomeScreen(
+              firstDate: currentMonthRange['firstDate']!,
+              lastDate: currentMonthRange['lastDate']!,
             ),
-        homeUi: (context) =>
-            HomeScreen(firstDate: firstDate, lastDate: lastDate),
-        visualizeUi: (context) => VisualizeDataScreen(
-              firstDate: firstDate,
-              lastDate: lastDate,
-              filterChronical: FilterDataByDate.monthly,
-            ),
+        visualizeUi: (context) => const VisualizeDataScreen(),
         addExpenseUi: (context) => AddDataScreen(
               colorOfClass: Colors.red,
               titleOfClass: "Gider",
