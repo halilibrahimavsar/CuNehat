@@ -20,7 +20,7 @@ Timestamp firstDateForFilterHome = Timestamp.fromMillisecondsSinceEpoch(
 Timestamp lastDateForFilterHome = Timestamp.fromMillisecondsSinceEpoch(
   DateTime.now().add(const Duration(hours: 3)).millisecondsSinceEpoch,
 );
-// Todo:
+
 List<Widget> navigationDestinations = [
   const Icon(Icons.data_thresholding_outlined),
   const Icon(Icons.house),
