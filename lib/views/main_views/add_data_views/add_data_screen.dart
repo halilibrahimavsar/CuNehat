@@ -2,7 +2,6 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/services/firestore/cloud_const.dart';
-import 'package:cunehat/views/main_views/add_data_views/tag_editing.dart';
 import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:cunehat/views/utilities/customizable_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,7 +10,6 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
-import 'package:textfield_tags/textfield_tags.dart';
 
 class AddDataScreen extends StatefulWidget {
   final Color colorOfClass;
@@ -35,7 +33,6 @@ class _AddDataScreenState extends State<AddDataScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _noteController;
   late final TextEditingController _priceController;
-  late final TextfieldTagsController _tagController;
   late Timestamp date;
   late String _btnDate;
   late String _btnTime;
@@ -48,7 +45,6 @@ class _AddDataScreenState extends State<AddDataScreen> {
     date = Timestamp.fromDate(DateTime.now());
     _noteController = TextEditingController();
     _priceController = TextEditingController();
-    _tagController = TextfieldTagsController();
     _btnDate = DateFormat('dd-MM-yyyy', 'tr').format(DateTime.now());
     _btnTime = DateFormat.Hm('tr').format(DateTime.now());
     descriptionMsg = '''
@@ -185,6 +181,17 @@ class _AddDataScreenState extends State<AddDataScreen> {
                     ),
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
+                      errorStyle: const TextStyle(color: Colors.amber),
+                      errorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.amber,
+                        ),
+                      ),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.amber,
+                        ),
+                      ),
                       labelStyle: const TextStyle(
                         color: Color.fromRGBO(246, 245, 245, 1),
                       ),
@@ -341,6 +348,10 @@ class _AddDataScreenState extends State<AddDataScreen> {
 
     final double desiredTagWidth =
         screenSize.width * 0.6; // 60% of screen width
+
+    final TextEditingController tagEditingController = TextEditingController();
+    final tagValidator = GlobalKey<FormState>();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -359,6 +370,10 @@ class _AddDataScreenState extends State<AddDataScreen> {
             choiceCheckmark: true,
             clipBehavior: Clip.antiAlias,
             choiceLoader: loadTag,
+            choiceStyle: const C2ChipStyle(
+              foregroundColor: Colors.white,
+              checkmarkColor: Colors.cyan,
+            ),
             onChanged: (val) => setState(() => _tag = val),
             choiceItems: C2Choice.listFrom<String, String>(
               source: tagList,
@@ -374,6 +389,7 @@ class _AddDataScreenState extends State<AddDataScreen> {
               context: context,
               isScrollControlled: true,
               isDismissible: true,
+              backgroundColor: const Color.fromARGB(128, 18, 18, 19),
               showDragHandle: true,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(
@@ -382,55 +398,73 @@ class _AddDataScreenState extends State<AddDataScreen> {
               ),
               builder: (context) {
                 return Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 42, 41, 41),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
                   padding: EdgeInsets.only(
                     bottom: MediaQuery.of(context).viewInsets.bottom,
                     left: 16,
                     right: 16,
                     top: 16,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      const SizedBox(height: 30),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Expanded(
-                              child: TagEditing(
-                            tagController: _tagController,
-                          )),
-                          MaterialButton(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            color: Colors.blueAccent.shade200,
-                            onPressed: () {
-                              List<String> editedTags =
-                                  _tagController.getTags!.toList();
-                              for (final String i in editedTags) {
-                                if (!tagList.contains(i)) {
-                                  tagList.add(i);
-                                }
-                              }
-                              setState(() {});
-                              Navigator.pop(context);
-                            },
-                            child: const Text('EKLE'),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Form(
+                          key: tagValidator,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              TextFormField(
+                                controller: tagEditingController,
+                                validator: (value) {
+                                  if (value != null &&
+                                      value.toString().isEmpty) {
+                                    return "bu alan boş olamaz!";
+                                  } else if (value!.contains(' ')) {
+                                    return 'Etikette boşluk bırakılamaz';
+                                  } else {
+                                    return null;
+                                  }
+                                },
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color.fromRGBO(246, 245, 245, 1),
+                                ),
+                                decoration: const InputDecoration(
+                                  labelStyle: TextStyle(
+                                    color: Color.fromRGBO(246, 245, 245, 1),
+                                  ),
+                                  hintStyle: TextStyle(
+                                    color: Color.fromRGBO(207, 207, 207, 0.735),
+                                  ),
+                                  label: Text('Tag'),
+                                  hintText: 'Etiket için birşeyler yazın',
+                                ),
+                              ),
+                              MaterialButton(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                                color: Colors.blueAccent.shade200,
+                                onPressed: () {
+                                  if (tagValidator.currentState!.validate()) {
+                                    tagList.add(tagEditingController.text);
+                                    setState(() {});
+                                    Navigator.pop(context);
+                                  }
+                                },
+                                child: const Text('EKLE'),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      Text(
-                        'Buradan eklenen taglar geçici süreliğine gösterilecektir',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.amber.shade900,
-                          fontSize: 20,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
                 );
               },
