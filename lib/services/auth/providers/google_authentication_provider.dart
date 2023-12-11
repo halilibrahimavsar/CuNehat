@@ -1,11 +1,11 @@
 import 'package:cunehat/firebase_options.dart';
-import 'package:cunehat/services/auth/auth_provider.dart';
+import 'package:cunehat/services/auth/auth_base_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class GoogleAuthenticationProvider implements AuthProvider {
+class GoogleAuthenticationProvider implements AuthProvidr {
   static final GoogleSignIn googleSign = GoogleSignIn();
 
   @override

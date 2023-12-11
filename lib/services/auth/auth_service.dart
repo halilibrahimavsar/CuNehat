@@ -1,11 +1,11 @@
-import 'package:cunehat/services/auth/auth_provider.dart';
+import 'package:cunehat/services/auth/auth_base_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:cunehat/services/auth/providers/firebase_auth_provider.dart';
 import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class AuthService implements AuthProvider {
-  final AuthProvider provider;
+class AuthService implements AuthProvidr {
+  final AuthProvidr provider;
 
   const AuthService(this.provider);
 

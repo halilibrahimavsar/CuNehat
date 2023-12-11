@@ -2,12 +2,12 @@
 
 import 'package:cunehat/firebase_options.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
-import 'package:cunehat/services/auth/auth_provider.dart';
+import 'package:cunehat/services/auth/auth_base_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-class FirebaseAuthProvider implements AuthProvider {
+class FirebaseAuthProvider implements AuthProvidr {
   @override
   Future<void> initialize() async {
     /// Initialize default option from exported flutter configuration file
