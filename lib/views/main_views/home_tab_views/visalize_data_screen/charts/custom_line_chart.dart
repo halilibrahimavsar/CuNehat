@@ -65,8 +65,6 @@ class LineChartSample extends StatelessWidget {
         const SizedBox(height: 30),
         Expanded(
           child: LineChart(
-            swapAnimationCurve: Curves.easeInOutBack,
-            swapAnimationDuration: const Duration(seconds: 1),
             LineChartData(
               titlesData: FlTitlesData(
                 bottomTitles: AxisTitles(
@@ -88,9 +86,9 @@ class LineChartSample extends StatelessWidget {
                   ),
                 ),
                 rightTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 topTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               borderData: FlBorderData(
                 show: true,
@@ -114,7 +112,7 @@ class LineChartSample extends StatelessWidget {
               maxX: dates.length.toDouble() - 1,
               minY: 0,
               maxY: calculateMaxValue(incomeData, expenseData),
-              lineTouchData: LineTouchData(),
+              lineTouchData: const LineTouchData(),
               extraLinesData: ExtraLinesData(
                 horizontalLines: [
                   HorizontalLine(
@@ -154,7 +152,7 @@ class LineChartSample extends StatelessWidget {
                   // isCurved: true,
                   shadow: const Shadow(blurRadius: 0.9),
                   isStrokeCapRound: true,
-                  dotData: FlDotData(show: true),
+                  dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
                     show: true,
                     color: Colors.green.shade100,
@@ -174,7 +172,7 @@ class LineChartSample extends StatelessWidget {
                   barWidth: 2,
                   shadow: const Shadow(blurRadius: 0.9),
                   isStrokeCapRound: true,
-                  dotData: FlDotData(show: true),
+                  dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
                     show: true,
                     color: Colors.green.shade100,
