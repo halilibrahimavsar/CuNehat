@@ -2,16 +2,18 @@ import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class AuthProvidr {
-  Future<UserCredential> googleSignIn();
-  Future<void> initialize();
+  // shared function
+  Stream<User?> isUserKeepSigned();
+  // email provider
   AuthUser? get currentUser;
+  Future<void> initialize();
 
-  Future<AuthUser> logIn({
+  Future<AuthUser> createUser({
     required String email,
     required String password,
   });
 
-  Future<AuthUser> createUser({
+  Future<AuthUser> logIn({
     required String email,
     required String password,
   });
@@ -19,5 +21,6 @@ abstract class AuthProvidr {
   Future<void> logOut();
   Future<void> sendEmailVerification();
   Future<void> sendPasswordReset({required String toEmail});
-  void keepSignIn();
+  // google provider
+  Future<UserCredential> googleSignIn();
 }

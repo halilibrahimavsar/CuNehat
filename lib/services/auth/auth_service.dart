@@ -1,4 +1,4 @@
-import 'package:cunehat/services/auth/auth_base_provider.dart';
+import 'package:cunehat/services/auth/auth_base_provider/auth_base_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:cunehat/services/auth/providers/firebase_auth_provider.dart';
 import 'package:cunehat/services/auth/providers/google_authentication_provider.dart';
@@ -12,8 +12,9 @@ class AuthService implements AuthProvidr {
   // Using the factory constructor here is for take the options from initialized FirebaseAuthProvider.
   // So instead of creating copy of the class, we takes already created one.
   // This is how factory constructor works
-  factory AuthService.firebase() =>
-      AuthService(FirebaseAuthProvider()); // this one is for email-pasword auth
+  factory AuthService.firebase() => AuthService(
+        FirebaseEmailAuthProvider(),
+      ); // this one is for email-pasword auth
   // By the way, this class works as Polymorphism. So this mean,
   // when you want to change or create new provider same as google, facebook, etc...
   // then simply you can add it to the factory constructure and you are good to go
@@ -46,8 +47,8 @@ class AuthService implements AuthProvidr {
       provider.sendPasswordReset(toEmail: toEmail);
 
   @override
-  void keepSignIn() {
-    provider.keepSignIn();
+  Stream<User?> isUserKeepSigned() {
+    return provider.isUserKeepSigned();
   }
 
   @override

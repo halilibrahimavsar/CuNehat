@@ -44,7 +44,7 @@ void main() async {
       routes: {
         // login routes
         loginPageRoute: (context) => const LoginScreen(),
-        registerPageRoute: (context) => RegisterScreen(),
+        registerPageRoute: (context) => const RegisterScreen(),
         emailVerifyRoute: (context) => const EmailVerifyScreen(),
         // private routes
         mainPrivateRoute: (context) => const MainScreen(),

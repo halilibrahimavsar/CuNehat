@@ -6,14 +6,35 @@ import 'package:cunehat/views/utilities/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' show log;
 
-class RegisterScreen extends StatelessWidget {
-  RegisterScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
-  final TextEditingController email = TextEditingController();
-  final TextEditingController passwd = TextEditingController();
-  final TextEditingController confirmPasswd = TextEditingController();
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
 
-  final GlobalKey<FormState> registrFormValidtr = GlobalKey<FormState>();
+class _RegisterScreenState extends State<RegisterScreen> {
+  late final TextEditingController email;
+  late final TextEditingController passwd;
+  late final TextEditingController confirmPasswd;
+  late final GlobalKey<FormState> registrFormValidtr;
+
+  @override
+  void initState() {
+    email = TextEditingController();
+    passwd = TextEditingController();
+    confirmPasswd = TextEditingController();
+    registrFormValidtr = GlobalKey<FormState>();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    passwd.dispose();
+    confirmPasswd.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

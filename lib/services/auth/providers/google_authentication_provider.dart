@@ -1,5 +1,7 @@
+import 'dart:developer';
+
 import 'package:cunehat/firebase_options.dart';
-import 'package:cunehat/services/auth/auth_base_provider.dart';
+import 'package:cunehat/services/auth/auth_base_provider/auth_base_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,8 +11,7 @@ class GoogleAuthenticationProvider implements AuthProvidr {
   static final GoogleSignIn googleSign = GoogleSignIn();
 
   @override
-  googleSignIn() async {
-    await initialize();
+  Future<UserCredential> googleSignIn() async {
     final GoogleSignInAccount? googleUser = await googleSign.signIn();
     final GoogleSignInAuthentication? googleAuth =
         await googleUser?.authentication;
@@ -18,21 +19,32 @@ class GoogleAuthenticationProvider implements AuthProvidr {
       accessToken: googleAuth?.accessToken,
       idToken: googleAuth?.idToken,
     );
-
-    return await FirebaseAuth.instance.signInWithCredential(gUserCredential);
+    try {
+      return await FirebaseAuth.instance.signInWithCredential(gUserCredential);
+    } on FirebaseAuthException catch (e) {
+      log(e.toString());
+      await FirebaseAuth.instance.signOut();
+      const Duration(milliseconds: 10);
+      return await FirebaseAuth.instance.signInWithCredential(gUserCredential);
+    }
   }
 
   @override
-  Future<AuthUser> createUser(
-      {required String email, required String password}) {
+  Future<AuthUser> createUser({
+    required String email,
+    required String password,
+  }) {
     throw UnimplementedError();
   }
 
   @override
-  AuthUser? get currentUser => throw UnimplementedError;
-
-  gUser() {
-    return FirebaseAuth.instance.currentUser;
+  AuthUser? get currentUser {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return AuthUser.fromFirebase(user);
+    } else {
+      return null;
+    }
   }
 
   @override
@@ -40,11 +52,14 @@ class GoogleAuthenticationProvider implements AuthProvidr {
     /// Initialize default option from exported flutter configuration file
     /// this method shuld be called in main.dart file
     await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 
   @override
-  void keepSignIn() {}
+  Stream<User?> isUserKeepSigned() {
+    return FirebaseAuth.instance.authStateChanges();
+  }
 
   @override
   Future<AuthUser> logIn({required String email, required String password}) {
@@ -66,7 +81,7 @@ class GoogleAuthenticationProvider implements AuthProvidr {
     throw UnimplementedError();
   }
 
-  Future<bool> googleSignInUser() async {
+  Future<bool> isGoogleUserSignedIn() async {
     return await googleSign.isSignedIn();
   }
 }

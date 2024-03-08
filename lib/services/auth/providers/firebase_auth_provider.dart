@@ -2,18 +2,19 @@
 
 import 'package:cunehat/firebase_options.dart';
 import 'package:cunehat/services/auth/auth_exceptions.dart';
-import 'package:cunehat/services/auth/auth_base_provider.dart';
+import 'package:cunehat/services/auth/auth_base_provider/auth_base_provider.dart';
 import 'package:cunehat/services/auth/auth_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-class FirebaseAuthProvider implements AuthProvidr {
+class FirebaseEmailAuthProvider implements AuthProvidr {
   @override
   Future<void> initialize() async {
     /// Initialize default option from exported flutter configuration file
     /// this method shuld be called in main.dart file
     await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 
   // Create user function
@@ -128,8 +129,8 @@ class FirebaseAuthProvider implements AuthProvidr {
   }
 
   @override
-  Future<void> keepSignIn() async {
-    FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  Stream<User?> isUserKeepSigned() {
+    return FirebaseAuth.instance.authStateChanges();
   }
 
   @override

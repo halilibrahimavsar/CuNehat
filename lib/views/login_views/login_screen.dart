@@ -37,19 +37,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Access individual values from the passed data
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      // TODO : STEP1
+      stream: AuthService.google()
+          .isUserKeepSigned(), // TODO : if its possible, add this to provider. Its simply checking whether user log out or keep sign in.
       builder: (context, snapshot) {
         switch (snapshot.connectionState) {
-          case ConnectionState.waiting:
-            return const Center(child: CircularProgressIndicator());
-          default:
+          case ConnectionState.active:
             return FutureBuilder<bool>(
-              future: GoogleAuthenticationProvider().googleSignInUser(),
+              // TODO :STEP2
+              future: GoogleAuthenticationProvider().isGoogleUserSignedIn(),
               builder: (context, snapshot) {
                 switch (snapshot.data) {
                   case true:
                     return FutureBuilder(
-                      future: Future.delayed(const Duration(milliseconds: 200)),
+                      future: Future.delayed(const Duration(milliseconds: 100)),
                       builder: (context, snapshot) {
                         switch (snapshot.connectionState) {
                           case ConnectionState.waiting:
@@ -64,7 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           default:
                             return const Center(
                               child: Text(
-                                  "Something goes wrong. Close aplication and re-open it"),
+                                "Something goes wrong. Close aplication and re-open it",
+                              ),
                             );
                         }
                       },
@@ -263,6 +265,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                 }
               },
+            );
+          default:
+            return const Center(
+              child: CircularProgressIndicator(),
             );
         }
       },
