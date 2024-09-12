@@ -5,6 +5,11 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 // TODO :  We should provide bloc for our sub views. The filtering date should be shared
 
+/// Home page will be responsible for showing-adding expense and income,
+/// detail page will be responsible for shows expense-income and difference between them. We should also add tag differences
+/// dashboard page will be responsible for showing the online finance, gold etc...
+///    - dashboard will contain a menu for redirecting user to the setting, help, finance, theme...
+
 class HomeAppbar extends StatefulWidget implements PreferredSizeWidget {
   const HomeAppbar({super.key});
 

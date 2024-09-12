@@ -1,5 +1,5 @@
 import 'package:cunehat/constants/currency_format.dart';
-import 'package:cunehat/firestore/firestore_service.dart';
+import 'package:cunehat/firestore/firestore_models/model_provider.dart';
 import 'package:flutter/material.dart';
 
 class SubListItem extends StatelessWidget {

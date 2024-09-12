@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.4 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   flutter_localizations: 
     sdk: flutter    
-
   firebase_core: ^2.7.1
   cloud_firestore: ^4.4.4
   firebase_auth: ^4.2.10
@@ -50,11 +49,14 @@ dependencies:
   fl_chart: ^0.66.2
   sqflite: ^2.2.8+4
   toggle_switch: ^2.1.0
+  animated_toggle_switch: ^0.8.2
   keyboard_dismisser: ^3.0.0
+  
   flutter_neumorphic:
     git:
       url: https://github.com/den0206/Flutter-Neumorphic.git
       ref: feature/remoce_accentcolor
+  flutter_bloc: ^8.1.6
   bloc: ^8.1.2
   equatable: ^2.0.5
 

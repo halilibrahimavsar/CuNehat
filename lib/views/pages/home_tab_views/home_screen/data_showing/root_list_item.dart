@@ -1,3 +1,5 @@
+import 'package:cunehat/constants/selected_option.dart';
+import 'package:cunehat/firestore/firestore_models/model_provider.dart';
 import 'package:cunehat/views/view_utilities/glass_effect.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/firestore/firestore_service.dart';
@@ -16,7 +18,7 @@ class RootListItem extends StatefulWidget {
   });
 
   final DateTime header;
-  final int selectedOption;
+  final SelectedOption selectedOption;
   final Map<DateTime, List<ModelProvider>> trnsformAllData;
 
   @override
@@ -49,8 +51,9 @@ class RootListItemState extends State<RootListItem> {
           //     : Colors.red.shade200,
           // collapsedIconColor:
           //     widget.selectedOption == 1 ? Colors.green : Colors.red,
-          collapsedTextColor:
-              widget.selectedOption == 1 ? Colors.green : Colors.red,
+          collapsedTextColor: widget.selectedOption == SelectedOption.income
+              ? Colors.green
+              : Colors.red,
           // textColor: Colors.black,
           title: Text(DateFormat.yMMMd('tr').format(widget.header)),
           subtitle: Text(DateFormat.E('tr').format(widget.header)),
@@ -112,7 +115,7 @@ class RootListItemState extends State<RootListItem> {
                             confirmButton: "SİL",
                             color: Colors.amber,
                             functionWhenConfirm: () async {
-                              (widget.selectedOption == 2)
+                              (widget.selectedOption == SelectedOption.expense)
                                   ? await FirestoreService()
                                       .deleteExpense(id: data!.id)
                                   : await FirestoreService()

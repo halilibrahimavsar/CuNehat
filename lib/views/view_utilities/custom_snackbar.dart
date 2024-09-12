@@ -6,11 +6,12 @@ showSnackbar({
   required String title,
   required String msg,
   required ContentType type,
+  Duration? keepAlive,
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      duration: const Duration(seconds: 1),
-      behavior: SnackBarBehavior.fixed,
+      duration: keepAlive ?? const Duration(seconds: 5),
+      behavior: SnackBarBehavior.floating,
       backgroundColor: Colors.transparent,
       content: AwesomeSnackbarContent(
         title: title,

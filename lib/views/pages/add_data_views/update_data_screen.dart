@@ -3,6 +3,7 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/constants/selected_option.dart';
 import 'package:cunehat/firestore/cloud_const.dart';
 import 'package:cunehat/firestore/firestore_service.dart';
 import 'package:cunehat/views/view_utilities/custom_snackbar.dart';
@@ -14,7 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 
 class UpdateDataScreen extends StatefulWidget {
-  final int selectedOption;
+  final SelectedOption selectedOption;
   final String id;
   final String note;
   final double price;
@@ -444,7 +445,7 @@ class _UpdateDataScreenState extends State<UpdateDataScreen> {
               confirmButton: "GÜNCELLE",
               color: Colors.purple,
               functionWhenConfirm: () async {
-                if (widget.selectedOption == 2) {
+                if (widget.selectedOption == SelectedOption.expense) {
                   await FirestoreService().updateExpense(
                     id: widget.id,
                     data: {
