@@ -17,29 +17,17 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -54,9 +42,50 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCVfQogMHdZEGkwXJ32yf3x-fEsg7Ss394',
-    appId: '1:330272412409:android:3bcbae954cc0db86c8c828',
+    appId: '1:330272412409:android:51c7e1729b554947c8c828',
     messagingSenderId: '330272412409',
     projectId: 'cunehat',
-    storageBucket: 'cunehat.appspot.com',
+    storageBucket: 'cunehat.firebasestorage.app',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAcsFyYhBtlHITcQD23lktK0Ek9z-4KqJ4',
+    appId: '1:330272412409:web:33d9228153207401c8c828',
+    messagingSenderId: '330272412409',
+    projectId: 'cunehat',
+    authDomain: 'cunehat.firebaseapp.com',
+    storageBucket: 'cunehat.firebasestorage.app',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCB9OshKvHoAHmK65xYW-YZEgNVSwQwANM',
+    appId: '1:330272412409:ios:e8c5edfa227731b6c8c828',
+    messagingSenderId: '330272412409',
+    projectId: 'cunehat',
+    storageBucket: 'cunehat.firebasestorage.app',
+    androidClientId: '330272412409-2mhij3mh9p12rmtdujbpjg6vuilfl59r.apps.googleusercontent.com',
+    iosClientId: '330272412409-n0ktel712qp3019r36vl6h67vfrnghn9.apps.googleusercontent.com',
+    iosBundleId: 'com.example.cunehat',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyCB9OshKvHoAHmK65xYW-YZEgNVSwQwANM',
+    appId: '1:330272412409:ios:e8c5edfa227731b6c8c828',
+    messagingSenderId: '330272412409',
+    projectId: 'cunehat',
+    storageBucket: 'cunehat.firebasestorage.app',
+    androidClientId: '330272412409-2mhij3mh9p12rmtdujbpjg6vuilfl59r.apps.googleusercontent.com',
+    iosClientId: '330272412409-n0ktel712qp3019r36vl6h67vfrnghn9.apps.googleusercontent.com',
+    iosBundleId: 'com.example.cunehat',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAcsFyYhBtlHITcQD23lktK0Ek9z-4KqJ4',
+    appId: '1:330272412409:web:3296b5d0e01d4715c8c828',
+    messagingSenderId: '330272412409',
+    projectId: 'cunehat',
+    authDomain: 'cunehat.firebaseapp.com',
+    storageBucket: 'cunehat.firebasestorage.app',
+  );
+
 }

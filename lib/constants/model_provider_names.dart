@@ -1,0 +1,1 @@
+enum ModelProviderNames { income, expense }

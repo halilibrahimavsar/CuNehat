@@ -1,1 +1,0 @@
-enum MainActions { logout, exit }
