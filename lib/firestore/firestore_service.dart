@@ -5,21 +5,37 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/firestore/cloud_const.dart';
 import 'package:cunehat/firestore/firestore_models/expense_model.dart';
 import 'package:cunehat/firestore/firestore_models/income_model.dart';
+import 'package:cunehat/firestore/local_storage/idata_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class FirestoreService {
+// Artık IDataService arayüzünü uyguluyoruz.
+class FirestoreService implements IDataService {
   final _expense = FirebaseFirestore.instance.collection(expenseTable);
   final _income = FirebaseFirestore.instance.collection(incomeTable);
-  final String ownerId = FirebaseAuth.instance.currentUser!.uid;
 
-  Future<void> addExpense({required Map<String, dynamic> data}) async {
-    await _expense.add(data);
+  // ownerId'yi bir getter ile almak daha güvenli olabilir.
+  String get ownerId {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Kullanıcı giriş yapmamışsa (bu senaryo olmamalı ama bir güvence)
+      throw Exception("Kullanıcı girişi yapılmamış.");
+    }
+    return user.uid;
   }
 
-  Future<void> addIncome({required Map<String, dynamic> data}) async {
-    await _income.add(data);
+  @override
+  Future<void> addExpense({required Expense expense}) async {
+    // Modeli alıp, Firestore'un anlayacağı JSON'a çeviriyoruz.
+    // 'id' Firestore tarafından otomatik oluşturulduğu için modeli değil, toJson() kullanıyoruz.
+    await _expense.add(expense.toJson());
   }
 
+  @override
+  Future<void> addIncome({required Income income}) async {
+    await _income.add(income.toJson());
+  }
+
+  @override
   Future<Iterable<Expense>> getExpenseByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
@@ -28,15 +44,18 @@ class FirestoreService {
         .where(fieldUserId, isEqualTo: ownerId)
         .where(
           fieldDate,
-          isGreaterThanOrEqualTo: firstDate,
-          isLessThanOrEqualTo: lastDate,
+          // Firestore için tarihleri Timestamp'e çeviriyoruz
+          isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
+          isLessThanOrEqualTo: Timestamp.fromDate(lastDate),
         )
         .get()
-        .then((value) =>
-            value.docs.reversed.map((doc) => Expense.fromSnapshot(doc)));
+        .then((value) => value.docs.reversed
+            // Güncellenmiş modelin 'fromJson' metodunu kullanıyoruz
+            .map((doc) => Expense.fromJson(doc.id, doc.data())));
     return expenseSnapshot;
   }
 
+  @override
   Future<Iterable<Income>> getIncomeByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
@@ -45,60 +64,100 @@ class FirestoreService {
         .where(fieldUserId, isEqualTo: ownerId)
         .where(
           fieldDate,
-          isGreaterThanOrEqualTo: firstDate,
-          isLessThanOrEqualTo: lastDate,
+          isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
+          isLessThanOrEqualTo: Timestamp.fromDate(lastDate),
         )
         .get()
-        .then((value) =>
-            value.docs.reversed.map((doc) => Income.fromSnapshot(doc)));
+        .then((value) => value.docs.reversed
+            .map((doc) => Income.fromJson(doc.id, doc.data())));
     return incomeSnapshot;
   }
 
+  @override
   Future<void> deleteIncome({required String id}) async {
     await _income.doc(id).delete();
   }
 
+  @override
   Future<void> deleteExpense({required String id}) async {
     await _expense.doc(id).delete();
   }
 
-  Future<void> updateExpense(
-      {required Map<String, dynamic> data, required String id}) async {
-    await _expense.doc(id).update(data);
+  @override
+  Future<void> updateExpense({required Expense expense}) async {
+    // Güncelleme için modelin 'id'sini ve 'toJson' metodunu kullanıyoruz.
+    await _expense.doc(expense.id).update(expense.toJson());
   }
 
-  Future<void> updateIncome(
-      {required Map<String, dynamic> data, required String id}) async {
-    await _income.doc(id).update(data);
+  @override
+  Future<void> updateIncome({required Income income}) async {
+    await _income.doc(income.id).update(income.toJson());
   }
 
-  Future<List<C2Choice<String>>> getIncomeTags({required ownerUserId}) async {
+  // --- Arayüze Dahil Olmayan, Sadece Firestore'a Özel Metotlar ---
+  // (Tag'ler gibi)
+
+  Future<List<C2Choice<String>>> getIncomeTags() async {
     final querySnashot =
-        await _income.where(fieldUserId, isEqualTo: ownerUserId).get();
+        await _income.where(fieldUserId, isEqualTo: ownerId).get();
 
     final List<String> oneCopy = [];
     for (final doc in querySnashot.docs) {
-      final singleTag = Income.fromSnapshot(doc).tag;
+      final singleTag = Income.fromJson(doc.id, doc.data()).tag;
       if (!oneCopy.contains(singleTag)) {
         oneCopy.add(singleTag);
       }
     }
-
     return oneCopy.map((e) => C2Choice(value: e, label: e)).toList();
   }
 
-  Future<List<C2Choice<String>>> getExpenseTags({required ownerUserId}) async {
+  Future<List<C2Choice<String>>> getExpenseTags() async {
     final querySnashot =
-        await _expense.where(fieldUserId, isEqualTo: ownerUserId).get();
+        await _expense.where(fieldUserId, isEqualTo: ownerId).get();
 
     final List<String> oneCopy = [];
     for (final doc in querySnashot.docs) {
-      final singleTag = Expense.fromSnapshot(doc).tag;
+      final singleTag = Expense.fromJson(doc.id, doc.data()).tag;
       if (!oneCopy.contains(singleTag)) {
         oneCopy.add(singleTag);
       }
     }
-
     return oneCopy.map((e) => C2Choice(value: e, label: e)).toList();
+  }
+
+  @override
+  Future<void> clearAllLocalData() async {
+    // Bu, yerel servise ait bir metottur.
+  }
+
+  /// Yerelden buluta geçiş için toplu yazma metodu.
+  Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
+    final batch = FirebaseFirestore.instance.batch();
+    for (final expense in expenses) {
+      // Yerel veriden yeni bir doküman referansı oluşturup ekliyoruz.
+      final docRef = _expense.doc();
+      batch.set(docRef, expense.toJson());
+    }
+    await batch.commit();
+  }
+
+  /// Yerelden buluta geçiş için toplu yazma metodu.
+  Future<void> batchAddIncomes(Iterable<Income> incomes) async {
+    final batch = FirebaseFirestore.instance.batch();
+    for (final income in incomes) {
+      final docRef = _income.doc();
+      batch.set(docRef, income.toJson());
+    }
+    await batch.commit();
+  }
+
+  @override
+  Future<Iterable<Expense>> getAllExpenses() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Iterable<Income>> getAllIncomes() {
+    throw UnimplementedError();
   }
 }

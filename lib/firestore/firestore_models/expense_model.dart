@@ -1,22 +1,33 @@
 // ignore: depend_on_referenced_packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/firestore/cloud_const.dart';
-import 'package:cunehat/firestore/firestore_models/model_provider.dart';
+import 'package:hive/hive.dart';
+import 'package:uuid/uuid.dart';
 
-class Expense implements ModelProvider {
-  @override
+part 'expense_model.g.dart';
+
+// typeId'nin Income'dan (0) farklı olması gerekir.
+@HiveType(typeId: 1)
+class Expense extends HiveObject {
+  @HiveField(0)
   final String id;
-  @override
+
+  @HiveField(1)
   final String userId;
-  @override
+
+  @HiveField(2)
   final String title;
-  @override
+
+  @HiveField(3)
   final String tag;
-  @override
+
+  @HiveField(4)
   final double amount;
-  @override
-  final Timestamp date;
-  @override
+
+  @HiveField(5)
+  final DateTime date; // Timestamp yerine DateTime
+
+  @HiveField(6)
   final String time;
 
   Expense({
@@ -29,45 +40,48 @@ class Expense implements ModelProvider {
     required this.time,
   });
 
-  Expense.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
-      : id = snapshot.id,
-        userId = snapshot.data()[fieldUserId],
-        title = snapshot.data()[fieldTitle],
-        tag = snapshot.data()[fieldTag],
-        amount = snapshot.data()[fieldAmount],
-        date = snapshot.data()[fieldDate],
-        time = snapshot.data()[fieldTime];
+  // Firestore'dan okumak için
+  factory Expense.fromJson(String id, Map<String, dynamic> json) {
+    return Expense(
+      id: id,
+      userId: json[fieldUserId] ?? '',
+      title: json[fieldTitle] ?? '',
+      tag: json[fieldTag] ?? '',
+      amount: (json[fieldAmount] as num? ?? 0.0).toDouble(),
+      date: (json[fieldDate] as Timestamp? ?? Timestamp.now()).toDate(),
+      time: json[fieldTime] ?? '',
+    );
+  }
 
-  @override
-  set amount(double amount) {}
+  // Firestore'a yazmak için
+  Map<String, dynamic> toJson() {
+    return {
+      fieldUserId: userId,
+      fieldTitle: title,
+      fieldTag: tag,
+      fieldAmount: amount,
+      fieldDate: Timestamp.fromDate(date),
+      fieldTime: time,
+    };
+  }
 
-  @override
-  set date(Timestamp date) {}
-
-  @override
-  set id(String id) {}
-
-  @override
-  set tag(String tag) {}
-
-  @override
-  set time(String time) {}
-
-  @override
-  set title(String title) {}
-
-  @override
-  set userId(String userId) {}
-
-//   @override
-//   String toString() => """
-// ---------EXPENSE------------
-// amount : $amount
-// date : $date
-// id : $id
-// tag : $tag
-// time : $time
-// title : $title
-// user id : $userId
-// ---------------------\n""";
+  // Yerel (Hive) oluşturmak için
+  factory Expense.createLocal({
+    required String userId,
+    required String title,
+    required String tag,
+    required double amount,
+    required DateTime date,
+    required String time,
+  }) {
+    return Expense(
+      id: const Uuid().v4(),
+      userId: userId,
+      title: title,
+      tag: tag,
+      amount: amount,
+      date: date,
+      time: time,
+    );
+  }
 }

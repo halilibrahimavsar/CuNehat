@@ -1,22 +1,39 @@
 // ignore: depend_on_referenced_packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/firestore/cloud_const.dart';
-import 'package:cunehat/firestore/firestore_models/model_provider.dart';
+import 'package:hive/hive.dart';
+import 'package:uuid/uuid.dart';
 
-class Income implements ModelProvider {
-  @override
+// Hive'ın bu nesneyi tanıması için 'part' dosyası
+part 'income_model.g.dart';
+
+// Hive için TypeAdapter'ı tanımlıyoruz. typeId benzersiz olmalı.
+@HiveType(typeId: 0)
+class Income extends HiveObject {
+  // HiveObject'i extend etmesi, Hive'ın onu daha verimli yönetmesini sağlar.
+
+  // Hive alanlarını numaralandırıyoruz.
+  @HiveField(0)
   final String id;
-  @override
+
+  @HiveField(1)
   final String userId;
-  @override
+
+  @HiveField(2)
   final String title;
-  @override
+
+  @HiveField(3)
   final String tag;
-  @override
+
+  @HiveField(4)
   final double amount;
-  @override
-  final Timestamp date;
-  @override
+
+  // Firestore'daki Timestamp yerine saf DateTime kullanıyoruz.
+  // Bu, hem Hive hem de Firestore için daha evrenseldir.
+  @HiveField(5)
+  final DateTime date;
+
+  @HiveField(6)
   final String time;
 
   Income({
@@ -29,45 +46,53 @@ class Income implements ModelProvider {
     required this.time,
   });
 
-  Income.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
-      : id = snapshot.id,
-        userId = snapshot.data()[fieldUserId],
-        title = snapshot.data()[fieldTitle],
-        tag = snapshot.data()[fieldTag],
-        amount = snapshot.data()[fieldAmount],
-        date = snapshot.data()[fieldDate],
-        time = snapshot.data()[fieldTime];
+  // Firestore'dan veri okumak için bir 'factory' constructor.
+  // Artık QueryDocumentSnapshot'a bağımlı değiliz.
+  factory Income.fromJson(String id, Map<String, dynamic> json) {
+    return Income(
+      id: id,
+      userId: json[fieldUserId] ?? '',
+      title: json[fieldTitle] ?? '',
+      tag: json[fieldTag] ?? '',
+      amount: (json[fieldAmount] as num? ?? 0.0).toDouble(),
+      // Firestore'dan gelen Timestamp'i DateTime'a çeviriyoruz.
+      date: (json[fieldDate] as Timestamp? ?? Timestamp.now()).toDate(),
+      time: json[fieldTime] ?? '',
+    );
+  }
 
-  @override
-  set amount(double amount) {}
+  // Firestore'a veri yazmak için 'toJson' metodu.
+  Map<String, dynamic> toJson() {
+    return {
+      fieldUserId: userId,
+      fieldTitle: title,
+      fieldTag: tag,
+      fieldAmount: amount,
+      // DateTime'ı Firestore'un anlayacağı Timestamp'e çeviriyoruz.
+      fieldDate: Timestamp.fromDate(date),
+      fieldTime: time,
+    };
+  }
 
-  @override
-  set date(Timestamp date) {}
-
-  @override
-  set id(String id) {}
-
-  @override
-  set tag(String tag) {}
-
-  @override
-  set time(String time) {}
-
-  @override
-  set title(String title) {}
-
-  @override
-  set userId(String userId) {}
-
-//   @override
-//   String toString() => """
-// ---------INCOME------------
-// amount : $amount
-// date : $date
-// id : $id
-// tag : $tag
-// time : $time
-// title : $title
-// user id : $userId
-// ---------------------\n""";
+  // Yerel depolamada (Hive) yeni bir gelir oluştururken
+  // kullanmak için yardımcı bir factory.
+  factory Income.createLocal({
+    required String userId,
+    required String title,
+    required String tag,
+    required double amount,
+    required DateTime date,
+    required String time,
+  }) {
+    return Income(
+      // Benzersiz bir ID oluşturmak için Uuid paketini kullanıyoruz.
+      id: const Uuid().v4(),
+      userId: userId,
+      title: title,
+      tag: tag,
+      amount: amount,
+      date: date,
+      time: time,
+    );
+  }
 }
