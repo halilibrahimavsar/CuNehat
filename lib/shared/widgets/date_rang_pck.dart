@@ -36,7 +36,8 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
     isScrollControlled: true,
     showDragHandle: true,
     enableDrag: true,
-    backgroundColor: const Color.fromARGB(255, 25, 24, 24).withOpacity(0.7),
+    backgroundColor:
+        const Color.fromARGB(255, 25, 24, 24).withValues(alpha: 0.7),
     builder: (bottomContext) {
       return StatefulBuilder(
         builder: (context, setStateOfBottomSheet) {
@@ -206,7 +207,6 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                           style: const NeumorphicStyle(color: Colors.green),
                           onPressed: () {
                             Navigator.pop(bottomContext, true);
-                            // TODO ADD HERE FOR REFRESH
                           },
                           child: const Text(
                             "KAYDET",

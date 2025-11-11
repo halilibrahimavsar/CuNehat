@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/firestore/cloud_const.dart';
@@ -17,36 +19,6 @@ class FirestoreService {
   Future<void> addIncome({required Map<String, dynamic> data}) async {
     await _income.add(data);
   }
-
-  // Stream<Iterable<Expense>> getExpensesByMonthAndYear({
-  //   required Timestamp firstDate,
-  //   required Timestamp lastDate,
-  //   required ownerUserId,
-  // }) {
-  //   final querySnapshot = _expense
-  //       .where(fieldUserId, isEqualTo: ownerUserId)
-  //       .where(fieldDate, isGreaterThanOrEqualTo: firstDate)
-  //       .where(fieldDate, isLessThanOrEqualTo: lastDate)
-  //       .snapshots()
-  //       .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
-
-  //   return querySnapshot;
-  // }
-
-  // Stream<Iterable<Income>> getIncomeByMonthAndYear({
-  //   required Timestamp firstDate,
-  //   required Timestamp lastDate,
-  //   required ownerUserId,
-  // }) {
-  //   final querySnapshot = _income
-  //       .where(fieldUserId, isEqualTo: ownerUserId)
-  //       .where(fieldDate, isGreaterThanOrEqualTo: firstDate)
-  //       .where(fieldDate, isLessThanOrEqualTo: lastDate)
-  //       .snapshots()
-  //       .map((event) => event.docs.map((doc) => Income.fromSnapshot(doc)));
-
-  //   return querySnapshot;
-  // }
 
   Future<Iterable<Expense>> getExpenseByDateRange({
     required DateTime firstDate,
@@ -129,22 +101,4 @@ class FirestoreService {
 
     return oneCopy.map((e) => C2Choice(value: e, label: e)).toList();
   }
-
-  // Stream<Iterable<Expense>> getAllExpenses({required ownerUserId}) {
-  //   final querySnapshot = _expense
-  //       .where(fieldUserId, isEqualTo: ownerUserId)
-  //       .snapshots()
-  //       .map((event) => event.docs.map((doc) => Expense.fromSnapshot(doc)));
-
-  //   return querySnapshot;
-  // }
-
-  // Stream<Iterable<Income>> getAllIncomes({required ownerUserId}) {
-  //   final querySnapshot = _income
-  //       .where(fieldUserId, isEqualTo: ownerUserId)
-  //       .snapshots()
-  //       .map((event) => event.docs.map((doc) => Income.fromSnapshot(doc)));
-
-  //   return querySnapshot;
-  // }
 }

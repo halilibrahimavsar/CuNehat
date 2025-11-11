@@ -1,3 +1,4 @@
+// ignore: depend_on_referenced_packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/firestore/cloud_const.dart';
 import 'package:cunehat/firestore/firestore_models/model_provider.dart';
