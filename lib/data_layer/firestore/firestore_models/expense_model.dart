@@ -1,18 +1,14 @@
 // ignore: depend_on_referenced_packages
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/firestore/cloud_const.dart';
+import 'package:cunehat/data_layer/firestore/cloud_const.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
-// Hive'ın bu nesneyi tanıması için 'part' dosyası
-part 'income_model.g.dart';
+part 'expense_model.g.dart';
 
-// Hive için TypeAdapter'ı tanımlıyoruz. typeId benzersiz olmalı.
-@HiveType(typeId: 0)
-class Income extends HiveObject {
-  // HiveObject'i extend etmesi, Hive'ın onu daha verimli yönetmesini sağlar.
-
-  // Hive alanlarını numaralandırıyoruz.
+// typeId'nin Income'dan (0) farklı olması gerekir.
+@HiveType(typeId: 1)
+class Expense extends HiveObject {
   @HiveField(0)
   final String id;
 
@@ -28,15 +24,13 @@ class Income extends HiveObject {
   @HiveField(4)
   final double amount;
 
-  // Firestore'daki Timestamp yerine saf DateTime kullanıyoruz.
-  // Bu, hem Hive hem de Firestore için daha evrenseldir.
   @HiveField(5)
-  final DateTime date;
+  final DateTime date; // Timestamp yerine DateTime
 
   @HiveField(6)
   final String time;
 
-  Income({
+  Expense({
     required this.id,
     required this.userId,
     required this.title,
@@ -46,37 +40,33 @@ class Income extends HiveObject {
     required this.time,
   });
 
-  // Firestore'dan veri okumak için bir 'factory' constructor.
-  // Artık QueryDocumentSnapshot'a bağımlı değiliz.
-  factory Income.fromJson(String id, Map<String, dynamic> json) {
-    return Income(
+  // Firestore'dan okumak için
+  factory Expense.fromJson(String id, Map<String, dynamic> json) {
+    return Expense(
       id: id,
       userId: json[fieldUserId] ?? '',
       title: json[fieldTitle] ?? '',
       tag: json[fieldTag] ?? '',
       amount: (json[fieldAmount] as num? ?? 0.0).toDouble(),
-      // Firestore'dan gelen Timestamp'i DateTime'a çeviriyoruz.
       date: (json[fieldDate] as Timestamp? ?? Timestamp.now()).toDate(),
       time: json[fieldTime] ?? '',
     );
   }
 
-  // Firestore'a veri yazmak için 'toJson' metodu.
+  // Firestore'a yazmak için
   Map<String, dynamic> toJson() {
     return {
       fieldUserId: userId,
       fieldTitle: title,
       fieldTag: tag,
       fieldAmount: amount,
-      // DateTime'ı Firestore'un anlayacağı Timestamp'e çeviriyoruz.
       fieldDate: Timestamp.fromDate(date),
       fieldTime: time,
     };
   }
 
-  // Yerel depolamada (Hive) yeni bir gelir oluştururken
-  // kullanmak için yardımcı bir factory.
-  factory Income.createLocal({
+  // Yerel (Hive) oluşturmak için
+  factory Expense.createLocal({
     required String userId,
     required String title,
     required String tag,
@@ -84,8 +74,7 @@ class Income extends HiveObject {
     required DateTime date,
     required String time,
   }) {
-    return Income(
-      // Benzersiz bir ID oluşturmak için Uuid paketini kullanıyoruz.
+    return Expense(
       id: const Uuid().v4(),
       userId: userId,
       title: title,

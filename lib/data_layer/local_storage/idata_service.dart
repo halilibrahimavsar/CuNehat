@@ -1,5 +1,5 @@
-import 'package:cunehat/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/firestore/firestore_models/income_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 // chips_choice bağımlılığını kaldırmak için C2Choice yerine basit bir String listesi döndürebiliriz
 // veya bu metodu sadece FirestoreService'e özel bırakabiliriz.
 // Şimdilik basitleştirmek için tag metotlarını buraya eklemeyelim,

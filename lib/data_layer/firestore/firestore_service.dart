@@ -2,10 +2,10 @@
 
 import 'package:chips_choice/chips_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/firestore/cloud_const.dart';
-import 'package:cunehat/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/firestore/firestore_models/income_model.dart';
-import 'package:cunehat/firestore/local_storage/idata_service.dart';
+import 'package:cunehat/data_layer/firestore/cloud_const.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
+import 'package:cunehat/data_layer/local_storage/idata_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Artık IDataService arayüzünü uyguluyoruz.

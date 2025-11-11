@@ -1,5 +1,5 @@
-import 'package:cunehat/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/firestore/firestore_models/income_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class DataState extends Equatable {

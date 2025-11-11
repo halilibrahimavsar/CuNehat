@@ -1,14 +1,14 @@
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/config/theme/custome_theme.dart';
-import 'package:cunehat/firestore/firestore_bloc/data_bloc.dart';
+import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
 // Bloc, Service ve Repository'leri import et
-import 'package:cunehat/firestore/firestore_service.dart';
+import 'package:cunehat/data_layer/firestore/firestore_service.dart';
 
-import 'package:cunehat/firestore/firestore_models/expense_model.dart'; // Hive Adapter için
-import 'package:cunehat/firestore/firestore_models/income_model.dart'; // Hive Adapter için
-import 'package:cunehat/firestore/local_storage/data_repository.dart';
-import 'package:cunehat/firestore/local_storage/local_data_service.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart'; // Hive Adapter için
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart'; // Hive Adapter için
+import 'package:cunehat/data_layer/data_repository.dart';
+import 'package:cunehat/data_layer/local_storage/local_data_service.dart';
 // -----
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

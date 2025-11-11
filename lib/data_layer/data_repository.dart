@@ -1,9 +1,9 @@
 import 'package:cunehat/constants/chose_storage.dart';
-import 'package:cunehat/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/firestore/firestore_models/income_model.dart';
-import 'package:cunehat/firestore/firestore_service.dart';
-import 'package:cunehat/firestore/local_storage/idata_service.dart';
-import 'package:cunehat/firestore/local_storage/local_data_service.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_service.dart';
+import 'package:cunehat/data_layer/local_storage/idata_service.dart';
+import 'package:cunehat/data_layer/local_storage/local_data_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// BLoC'un konuşacağı ana depo sınıfı.

@@ -1,6 +1,6 @@
-import 'package:cunehat/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/firestore/firestore_models/income_model.dart';
-import 'package:cunehat/firestore/local_storage/idata_service.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
+import 'package:cunehat/data_layer/local_storage/idata_service.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 

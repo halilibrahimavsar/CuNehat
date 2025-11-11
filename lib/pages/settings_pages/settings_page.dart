@@ -1,5 +1,6 @@
 import 'package:cunehat/constants/chose_storage.dart';
-import 'package:cunehat/firestore/local_storage/data_repository.dart';
+import 'package:cunehat/data_layer/data_repository.dart';
+import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_selector_dropdown.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -89,6 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          ThemeDropdown(),
           ListTile(
             title: const Text("Veri Depolama"),
             subtitle: Text(_isLoading
