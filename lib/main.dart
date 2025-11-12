@@ -2,19 +2,17 @@ import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/config/theme/custome_theme.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
-// Bloc, Service ve Repository'leri import et
 import 'package:cunehat/data_layer/firestore/firestore_service.dart';
 
 import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart'; // Hive Adapter için
 import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart'; // Hive Adapter için
 import 'package:cunehat/data_layer/data_repository.dart';
 import 'package:cunehat/data_layer/local_storage/local_data_service.dart';
-// -----
+import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
-// Yeni import'lar
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,7 +68,7 @@ void main() async {
         ),
       ],
       // CuNehatEngine() widget'ını buraya taşı
-      child: const CuNehatEngine(),
+      child: CallFirebaseAuth(privateWidget: CuNehatEngine()),
     ),
   );
 }
