@@ -3,11 +3,11 @@ import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/config/theme/custome_theme.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
 import 'package:cunehat/data_layer/firestore/firestore_service.dart';
-
-import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart'; // Hive Adapter için
-import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart'; // Hive Adapter için
+import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:cunehat/data_layer/data_repository.dart';
 import 'package:cunehat/data_layer/local_storage/local_data_service.dart';
+import 'package:cunehat/data_layer/sync_service.dart';
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -24,29 +24,31 @@ void main() async {
   await initializeDateFormatting();
   await Firebase.initializeApp();
 
-  // --- HIVE ve Servis Başlatma ---
-  // 1. Hive'ı başlat
-  // Mobil uygulamalarda Hive'ın nerede saklanacağını belirtmemiz gerekir.
+  // Hive başlatma
   final appDocumentDir = await getApplicationDocumentsDirectory();
   await Hive.initFlutter(appDocumentDir.path);
 
-  // 2. Hive Adapter'lerini (TypeAdapter) kaydet
-  // Model dosyalarına '.g.dart' eklediğimizde oluşan sınıflar.
+  // Adapter kayıtları
   Hive.registerAdapter(IncomeAdapter());
   Hive.registerAdapter(ExpenseAdapter());
+  // PendingOperation adapter'ını da kaydet (build_runner çalıştırdıktan sonra)
+  // Hive.registerAdapter(PendingOperationAdapter());
 
-  // 3. Yerel servisleri ve SharedPreferences'i hazırla
+  // Servisleri hazırla
   final localDataService = LocalDataService();
-  await localDataService.init(); // Hive kutularını açar
+  await localDataService.init();
 
   final sharedPreferences = await SharedPreferences.getInstance();
-  // Firestore servisi zaten hazır (içinde başlatma metodu yok)
   final firestoreService = FirestoreService();
-  // --- Başlatma Sonu ---
+
+  // Sync servisini başlat
+  final syncService = SyncService(firestoreService: firestoreService);
+  await syncService.init();
+
+  // Otomatik senkronizasyonu başlat
+  syncService.startAutoSync();
 
   runApp(
-    // Bu servisleri tüm uygulamaya sağlamak için RepositoryProvider kullanıyoruz.
-    // (veya MultiRepositoryProvider)
     MultiRepositoryProvider(
       providers: [
         RepositoryProvider<LocalDataService>(
@@ -58,17 +60,19 @@ void main() async {
         RepositoryProvider<SharedPreferences>(
           create: (context) => sharedPreferences,
         ),
-        // Ana Depo (DataRepository), diğer servisleri kullanarak oluşturulur
+        RepositoryProvider<SyncService>(
+          create: (context) => syncService,
+        ),
         RepositoryProvider<DataRepository>(
           create: (context) => DataRepository(
             localDataService: context.read<LocalDataService>(),
             firestoreService: context.read<FirestoreService>(),
             sharedPreferences: context.read<SharedPreferences>(),
+            syncService: context.read<SyncService>(),
           ),
         ),
       ],
-      // CuNehatEngine() widget'ını buraya taşı
-      child: CallFirebaseAuth(privateWidget: CuNehatEngine()),
+      child: CallFirebaseAuth(privateWidget: const CuNehatEngine()),
     ),
   );
 }
@@ -78,13 +82,10 @@ class CuNehatEngine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MultiRepositoryProvider 'main' fonksiyonuna taşındığı için
-    // burada sadece BLoC provider'lar kaldı.
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (context) => DataBloc(
-            // BLoC'a doğrudan DataRepository'yi veriyoruz
             dataRepository: RepositoryProvider.of<DataRepository>(context),
           ),
         ),
