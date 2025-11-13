@@ -13,7 +13,7 @@ class ThemeDropdown extends StatelessWidget {
       builder: (context, state) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: DropdownButtonFormField<String>(
+          child: DropdownButtonFormField<ThemeData>(
             decoration: InputDecoration(
               labelText: 'Uygulama Teması',
               prefixIcon: const Icon(Icons.palette_outlined),
@@ -25,15 +25,27 @@ class ThemeDropdown extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            value: state.name, // BLoC'tan gelen mevcut tema adı
-            items: <String>['Dark', 'NeoMorphism'] // Mevcut tema isimleriniz
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
+            value: ThemeStateLight().name, // BLoC'tan gelen mevcut tema adı
+            items: state.names // Mevcut tema isimleriniz
+                .map(
+                  (k, v) {
+                    return MapEntry(
+                        k,
+                        DropdownMenuItem(
+                          value: v,
+                          child: Text(k),
+                        ));
+                  },
+                )
+                .values
+                .toList(),
+            //     .map<DropdownMenuItem<ThemeData>>((n, k) {
+            //   return DropdownMenuItem<ThemeData>(
+            //     value: k,
+            //     child: Text(n),
+            //   );
+            // }).toList(),
+            onChanged: (ThemeData? newValue) {
               if (newValue != null) {
                 // Yeni tema seçildiğinde BLoC'a event gönder
                 context

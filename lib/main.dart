@@ -17,8 +17,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-ThemeData selectedThemeName = CustomeAppThemes.glassTheme;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
@@ -95,16 +93,10 @@ class CuNehatEngine extends StatelessWidget {
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {
-          if (context.read<ThemeBloc>().state.name == "Dark") {
-            selectedThemeName = CustomeAppThemes.glassTheme;
-          } else {
-            selectedThemeName = CustomeAppThemes.neoTheme;
-          }
-
           return MaterialApp.router(
             routerConfig: appRouter,
             themeMode: ThemeMode.light,
-            theme: selectedThemeName,
+            theme: state.name,
             title: "CuNehat",
             debugShowCheckedModeBanner: false,
           );

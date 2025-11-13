@@ -5,7 +5,7 @@ sealed class ThemeEvent {
 }
 
 class ThemeChangeEvent implements ThemeEvent {
-  final String themeName;
+  final ThemeData themeName;
 
   ThemeChangeEvent({required this.themeName});
 }

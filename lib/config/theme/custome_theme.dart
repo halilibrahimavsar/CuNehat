@@ -9,7 +9,7 @@ class CustomeAppThemes {
   // ---------------------------------------------------------------
   // 🧊 GlassMorphism Theme
   // ---------------------------------------------------------------
-  static final ThemeData glassTheme = ThemeData(
+  static ThemeData glassTheme = ThemeData(
     brightness: Brightness.dark,
     scaffoldBackgroundColor: const Color(0xFF0F111A),
     primaryColor: const Color(0xFF00E5FF),
