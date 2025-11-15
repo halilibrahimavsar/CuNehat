@@ -5,7 +5,6 @@ import 'package:cunehat/data_layer/shared_data_bloc/data_event.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 class ExpenseView extends StatefulWidget {
   final Map<DateTime, List<Expense>> expenseData;
@@ -173,7 +172,7 @@ class _AddExpenseFormState extends State<_AddExpenseForm> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(DateFormat.yMd('tr_TR').format(_selectedDate)),
+              Text(AppFormatters.dateShort.format(_selectedDate)),
               TextButton(
                 child: const Text("Tarih Seç"),
                 onPressed: () async {

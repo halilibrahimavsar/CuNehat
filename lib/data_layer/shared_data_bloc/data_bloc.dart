@@ -5,198 +5,268 @@ import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart
 import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:cunehat/data_layer/data_repository.dart';
 
+/// **DataBloc**: Manages all data operations and sync status
+///
+/// Responsibilities:
+/// - CRUD operations for Income/Expense
+/// - Date range filtering
+/// - Sync status monitoring
+/// - Auto-refresh after operations
 class DataBloc extends Bloc<DataEvent, DataState> {
-  // Artık FirestoreService değil, DataRepository alıyor
   final DataRepository dataRepository;
 
   DataBloc({required this.dataRepository}) : super(NoDataState()) {
-    // --- VERİ ÇEKME ---
-    on<GetCompareEvent>((event, emit) async {
-      emit(LoadingDataState());
-      try {
-        Map<DateTime, List<Income>> allIncomeData = {};
-        Map<DateTime, List<Expense>> allExpenseData = {};
+    // ============ DATA FETCHING ============
 
-        // Hiçbir değişiklik yok! BLoC sadece repository'yi çağırır.
-        await dataRepository
-            .getIncomeByDateRange(
-          firstDate: event.filterStart,
-          lastDate: event.filterEnd,
-        )
-            .then((values) {
-          for (var val in values) {
-            DateTime keyDaily = DateTime(
-              val.date.year,
-              val.date.month,
-              val.date.day,
-            );
-            if (allIncomeData.containsKey(keyDaily)) {
-              allIncomeData[keyDaily]?.add(val);
-            } else {
-              allIncomeData[keyDaily] = [val];
-            }
-          }
-        });
+    /// Fetches both income and expense data for comparison view
+    on<GetCompareEvent>(_onGetCompare);
 
-        // Aynı şekilde Expense için de .toDate() kalkar
-        await dataRepository
-            .getExpenseByDateRange(
-          firstDate: event.filterStart,
-          lastDate: event.filterEnd,
-        )
-            .then((values) {
-          for (var val in values) {
-            DateTime keyDaily = DateTime(
-              val.date.year,
-              val.date.month,
-              val.date.day,
-            );
-            if (allExpenseData.containsKey(keyDaily)) {
-              allExpenseData[keyDaily]?.add(val);
-            } else {
-              allExpenseData[keyDaily] = [val];
-            }
-          }
-        });
-        emit(SuccessfullyGetCompareState(
-          expense: allExpenseData,
-          income: allIncomeData,
-        ));
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
+    /// Fetches only expense data
+    on<GetExpenseByDateRngEvent>(_onGetExpenseByDateRange);
+
+    /// Fetches only income data
+    on<GetIncomeByDateRngEvent>(_onGetIncomeByDateRange);
+
+    // ============ CRUD OPERATIONS ============
+
+    on<AddExpenseEvent>(_onAddExpense);
+    on<AddIncomeEvent>(_onAddIncome);
+    on<DeleteExpenseEvent>(_onDeleteExpense);
+    on<DeleteIncomeEvent>(_onDeleteIncome);
+    on<UpdateExpenseEvent>(_onUpdateExpense);
+    on<UpdateIncomeEvent>(_onUpdateIncome);
+
+    // ============ SYNC OPERATIONS ============
+
+    /// Triggers manual sync and refreshes data
+    on<SyncDataEvent>(_onSyncData);
+
+    /// Refreshes current view after operations
+    on<RefreshDataEvent>(_onRefreshData);
+  }
+
+  // ============ PRIVATE HANDLERS ============
+
+  Future<void> _onGetCompare(
+    GetCompareEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      final incomeData = await _fetchAndGroupIncome(
+        event.filterStart,
+        event.filterEnd,
+      );
+      final expenseData = await _fetchAndGroupExpense(
+        event.filterStart,
+        event.filterEnd,
+      );
+
+      emit(SuccessfullyGetCompareState(
+        expense: expenseData,
+        income: incomeData,
+      ));
+    } catch (e) {
+      emit(ErrorState(err: 'Veri yüklenirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onGetExpenseByDateRange(
+    GetExpenseByDateRngEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      final expenseData = await _fetchAndGroupExpense(
+        event.filterStart,
+        event.filterEnd,
+      );
+
+      if (expenseData.isEmpty) {
+        emit(NoDataState());
+      } else {
+        emit(SuccessfullyGetExpenseState(data: expenseData));
       }
-    });
+    } catch (e) {
+      emit(ErrorState(err: 'Gider verileri yüklenemedi: ${e.toString()}'));
+    }
+  }
 
-    on<GetExpenseByDateRngEvent>((event, emit) async {
-      emit(LoadingDataState());
-      try {
-        Map<DateTime, List<Expense>> allData = {};
+  Future<void> _onGetIncomeByDateRange(
+    GetIncomeByDateRngEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      final incomeData = await _fetchAndGroupIncome(
+        event.filterStart,
+        event.filterEnd,
+      );
 
-        await dataRepository
-            .getExpenseByDateRange(
-          firstDate: event.filterStart,
-          lastDate: event.filterEnd,
-        )
-            .then((values) {
-          for (var val in values) {
-            DateTime keyDaily = DateTime(
-              val.date.year,
-              val.date.month,
-              val.date.day,
-            );
-            if (allData.containsKey(keyDaily)) {
-              allData[keyDaily]?.add(val);
-            } else {
-              allData[keyDaily] = [val];
-            }
-          }
-        });
+      if (incomeData.isEmpty) {
+        emit(NoDataState());
+      } else {
+        emit(SuccessfullyGetIncomeState(data: incomeData));
+      }
+    } catch (e) {
+      emit(ErrorState(err: 'Gelir verileri yüklenemedi: ${e.toString()}'));
+    }
+  }
 
-        if (allData.isEmpty) {
-          emit(NoDataState());
-        } else {
-          emit(SuccessfullyGetExpenseState(data: allData));
+  Future<void> _onAddExpense(
+    AddExpenseEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      await dataRepository.addExpense(expense: event.expense);
+      emit(SuccessfullyCreatedItemState());
+    } catch (e) {
+      emit(ErrorState(err: 'Gider eklenirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onAddIncome(
+    AddIncomeEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      await dataRepository.addIncome(income: event.income);
+      emit(SuccessfullyCreatedItemState());
+    } catch (e) {
+      emit(ErrorState(err: 'Gelir eklenirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onDeleteExpense(
+    DeleteExpenseEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    try {
+      await dataRepository.deleteExpense(id: event.id);
+      emit(SuccessfullyDeletedItemState());
+    } catch (e) {
+      emit(ErrorState(err: 'Gider silinirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onDeleteIncome(
+    DeleteIncomeEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    try {
+      await dataRepository.deleteIncome(id: event.id);
+      emit(SuccessfullyDeletedItemState());
+    } catch (e) {
+      emit(ErrorState(err: 'Gelir silinirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onUpdateExpense(
+    UpdateExpenseEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      await dataRepository.updateExpense(expense: event.expense);
+      emit(SuccessfullyUpdatedItemState());
+    } catch (e) {
+      emit(ErrorState(err: 'Gider güncellenirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onUpdateIncome(
+    UpdateIncomeEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(LoadingDataState());
+    try {
+      await dataRepository.updateIncome(income: event.income);
+      emit(SuccessfullyUpdatedItemState());
+    } catch (e) {
+      emit(ErrorState(err: 'Gelir güncellenirken hata: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onSyncData(
+    SyncDataEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    emit(SyncingDataState());
+    try {
+      final success = await dataRepository.syncNow();
+      if (success) {
+        emit(SyncSuccessState());
+        // Auto-refresh after sync
+        if (event.dateRange != null) {
+          add(GetCompareEvent(
+            filterStart: event.dateRange!['start']!,
+            filterEnd: event.dateRange!['end']!,
+          ));
         }
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
+      } else {
+        emit(SyncFailedState());
       }
-    });
+    } catch (e) {
+      emit(ErrorState(err: 'Senkronizasyon hatası: ${e.toString()}'));
+    }
+  }
 
-    on<GetIncomeByDateRngEvent>((event, emit) async {
-      emit(LoadingDataState());
-      try {
-        Map<DateTime, List<Income>> allData = {};
+  Future<void> _onRefreshData(
+    RefreshDataEvent event,
+    Emitter<DataState> emit,
+  ) async {
+    // Re-fetch data without loading indicator
+    add(GetCompareEvent(
+      filterStart: event.filterStart,
+      filterEnd: event.filterEnd,
+    ));
+  }
 
-        await dataRepository
-            .getIncomeByDateRange(
-          firstDate: event.filterStart,
-          lastDate: event.filterEnd,
-        )
-            .then((values) {
-          for (var val in values) {
-            DateTime keyDaily = DateTime(
-              val.date.year,
-              val.date.month,
-              val.date.day,
-            );
-            if (allData.containsKey(keyDaily)) {
-              allData[keyDaily]?.add(val);
-            } else {
-              allData[keyDaily] = [val];
-            }
-          }
-        });
+  // ============ HELPER METHODS ============
 
-        if (allData.isEmpty) {
-          emit(NoDataState());
-        } else {
-          emit(SuccessfullyGetIncomeState(data: allData));
-        }
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
+  /// Groups income data by day
+  Future<Map<DateTime, List<Income>>> _fetchAndGroupIncome(
+    DateTime firstDate,
+    DateTime lastDate,
+  ) async {
+    final incomes = await dataRepository.getIncomeByDateRange(
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
 
-    // --- VERİ İŞLEME (EKLEME, SİLME, GÜNCELLEME) ---
+    final Map<DateTime, List<Income>> grouped = {};
+    for (final income in incomes) {
+      final dayKey = DateTime(
+        income.date.year,
+        income.date.month,
+        income.date.day,
+      );
+      grouped.putIfAbsent(dayKey, () => []).add(income);
+    }
+    return grouped;
+  }
 
-    on<AddExpenseEvent>((event, emit) async {
-      emit(LoadingDataState()); // Arayüzde bir yüklenme durumu gösterilebilir
-      try {
-        await dataRepository.addExpense(expense: event.expense);
-        emit(SuccessfullyCreatedItemState());
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
+  /// Groups expense data by day
+  Future<Map<DateTime, List<Expense>>> _fetchAndGroupExpense(
+    DateTime firstDate,
+    DateTime lastDate,
+  ) async {
+    final expenses = await dataRepository.getExpenseByDateRange(
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
 
-    on<AddIncomeEvent>((event, emit) async {
-      emit(LoadingDataState());
-      try {
-        await dataRepository.addIncome(income: event.income);
-        emit(SuccessfullyCreatedItemState());
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
-
-    on<DeleteExpenseEvent>((event, emit) async {
-      // Silme işlemi için "loading" state'i göstermeyebiliriz,
-      // arayüzde anlık kaybolması daha iyi bir deneyim olabilir.
-      try {
-        await dataRepository.deleteExpense(id: event.id);
-        emit(SuccessfullyDeletedItemState());
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
-
-    on<DeleteIncomeEvent>((event, emit) async {
-      try {
-        await dataRepository.deleteIncome(id: event.id);
-        emit(SuccessfullyDeletedItemState());
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
-
-    on<UpdateExpenseEvent>((event, emit) async {
-      emit(LoadingDataState());
-      try {
-        await dataRepository.updateExpense(expense: event.expense);
-        emit(SuccessfullyUpdatedItemState());
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
-
-    on<UpdateIncomeEvent>((event, emit) async {
-      emit(LoadingDataState());
-      try {
-        await dataRepository.updateIncome(income: event.income);
-        emit(SuccessfullyUpdatedItemState());
-      } catch (e) {
-        emit(ErrorState(err: e.toString()));
-      }
-    });
+    final Map<DateTime, List<Expense>> grouped = {};
+    for (final expense in expenses) {
+      final dayKey = DateTime(
+        expense.date.year,
+        expense.date.month,
+        expense.date.day,
+      );
+      grouped.putIfAbsent(dayKey, () => []).add(expense);
+    }
+    return grouped;
   }
 }

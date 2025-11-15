@@ -16,32 +16,80 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// **Main Entry Point**
+///
+/// Initialization Order:
+/// 1. Flutter bindings
+/// 2. Firebase
+/// 3. Hive + TypeAdapters
+/// 4. Migration check
+/// 5. Services initialization
+/// 6. App launch
 void main() async {
+  // Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting();
+
+  // Initialize date formatting for Turkish locale
+  await initializeDateFormatting('tr_TR');
+
+  // Initialize Firebase
   await Firebase.initializeApp();
 
+  // Initialize Hive
   await Hive.initFlutter();
 
-  // Adapter kayıtları
-  Hive.registerAdapter(IncomeAdapter());
-  Hive.registerAdapter(ExpenseAdapter());
-  // PendingOperation adapter'ını da kaydet (build_runner çalıştırdıktan sonra)
-  Hive.registerAdapter(PendingOperationAdapter());
+  // ============ REGISTER TYPE ADAPTERS ============
+  // ⚠️ Order matters: Register before opening boxes
 
-  // Servisleri hazırla
+  Hive.registerAdapter(IncomeAdapter()); // typeId: 0
+  Hive.registerAdapter(ExpenseAdapter()); // typeId: 1
+  Hive.registerAdapter(PendingOperationAdapter()); // typeId: 2
+
+  print('✅ Hive TypeAdapters registered');
+
+  // ============ CHECK FOR MIGRATION ============
+  // Uncomment if you need to clear old data due to schema changes
+  /*
+  final prefs = await SharedPreferences.getInstance();
+  final needsMigration = !(prefs.getBool('migration_v1_done') ?? false);
+  
+  if (needsMigration) {
+    print('🔄 Running one-time migration...');
+    
+    try {
+      // Delete old boxes
+      await Hive.deleteBoxFromDisk('expenses_box');
+      await Hive.deleteBoxFromDisk('incomes_box');
+      await Hive.deleteBoxFromDisk('pending_operations_box');
+      
+      // Mark as done
+      await prefs.setBool('migration_v1_done', true);
+      print('✅ Migration completed');
+    } catch (e) {
+      print('⚠️  Migration error (continuing anyway): $e');
+    }
+  }
+  */
+
+  // ============ INITIALIZE SERVICES ============
+
   final localDataService = LocalDataService();
   await localDataService.init();
+  print('✅ Local storage initialized');
 
   final sharedPreferences = await SharedPreferences.getInstance();
   final firestoreService = FirestoreService();
 
-  // Sync servisini başlat
+  // Initialize sync service
   final syncService = SyncService(firestoreService: firestoreService);
   await syncService.init();
+  print('✅ Sync service initialized');
 
-  // Otomatik senkronizasyonu başlat
+  // Start auto-sync when connection is available
   syncService.startAutoSync();
+  print('✅ Auto-sync enabled');
+
+  // ============ LAUNCH APP ============
 
   runApp(
     MultiRepositoryProvider(
@@ -67,11 +115,17 @@ void main() async {
           ),
         ),
       ],
-      child: CallFirebaseAuth(privateWidget: const CuNehatEngine()),
+      child: const CallFirebaseAuth(privateWidget: CuNehatEngine()),
     ),
   );
 }
 
+/// **Main App Widget**
+///
+/// Provides:
+/// - DataBloc for state management
+/// - ThemeBloc for theme switching
+/// - Router configuration
 class CuNehatEngine extends StatelessWidget {
   const CuNehatEngine({super.key});
 
