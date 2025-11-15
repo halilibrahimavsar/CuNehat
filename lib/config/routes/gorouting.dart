@@ -1,3 +1,4 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/shared/animations/page_transations_views.dart';
 import 'package:cunehat/pages/settings_pages/profile_page.dart';
 import 'package:cunehat/pages/settings_pages/settings_page.dart';
@@ -6,10 +7,10 @@ import 'package:cunehat/pages/wallet_page.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/wallet',
+  initialLocation: AppRoutes.wallet,
   routes: [
     GoRoute(
-      path: '/wallet',
+      path: AppRoutes.wallet,
       pageBuilder: (context, state) {
         return ExternalCubeSlideLeftToRight(
           key: state.pageKey,
@@ -18,7 +19,7 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/profile',
+      path: AppRoutes.profile,
       pageBuilder: (context, state) {
         return ExternalCubeSlideLeftToRight(
           key: state.pageKey,
@@ -27,7 +28,7 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/settings',
+      path: AppRoutes.settings,
       pageBuilder: (context, state) {
         return ExternalCubeSlideLeftToRight(
           key: state.pageKey,

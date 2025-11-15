@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:cunehat/data_layer/firestore/firestore_service.dart';
@@ -7,7 +8,7 @@ import 'package:hive/hive.dart';
 /// Çevrimdışı senkronizasyon servisi
 class SyncService {
   final FirestoreService _firestoreService;
-  static const String _pendingBoxName = 'pending_operations_box';
+  static const String _pendingBoxName = HiveBoxes.pendingOperations;
 
   SyncService({required FirestoreService firestoreService})
       : _firestoreService = firestoreService;

@@ -9,11 +9,11 @@ import 'package:cunehat/pages/income_pages/income_page.dart';
 import 'package:cunehat/pages/summary_pages/compare_view.dart';
 import 'package:cunehat/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/shared/animations/slider_button_view.dart';
+import 'package:cunehat/shared/widgets/build_drawer.dart';
 import 'package:cunehat/shared/widgets/shared_appbar.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -59,19 +59,42 @@ class _WalletPageState extends State<WalletPage>
         );
   }
 
+// wallet_page.dart - Senkronizasyon durumunu göster:
   Future<void> _syncPendingOperations() async {
     final repository = context.read<DataRepository>();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            CircularProgressIndicator(strokeWidth: 2),
+            SizedBox(width: 10),
+            Text("Senkronizasyon yapılıyor..."),
+          ],
+        ),
+        duration: Duration(seconds: 5),
+      ),
+    );
+
     final result = await repository.syncNow();
 
-    if (result && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Bekleyen işlemler senkronize edildi"),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      _fetchData(); // Verileri yeniden çek
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (result) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("✅ Senkronizasyon başarılı"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("❌ Senkronizasyon başarısız"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -87,115 +110,7 @@ class _WalletPageState extends State<WalletPage>
       top: false,
       child: Scaffold(
         appBar: const SharedAppbar(),
-        drawer: Drawer(
-          elevation: 1,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      'CuNehat',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Finansal Yönetim',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Builder(
-                builder: (context) {
-                  final repo = context.watch<DataRepository>();
-                  final count = repo.getPendingSyncCount();
-
-                  return ListTile(
-                    leading: const Icon(Icons.sync),
-                    title: const Text("Şimdi Senkronize Et"),
-                    trailing: count > 0
-                        ? Badge(
-                            label: Text('$count'),
-                            child: const Icon(Icons.cloud_upload),
-                          )
-                        : const Icon(Icons.cloud_done),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _syncPendingOperations();
-                    },
-                  );
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.bug_report),
-                title: const Text("Debug: Yerel Verileri Göster"),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final repo = context.read<DataRepository>();
-                  final allIncomes = await repo.getAllIncomes();
-                  final allExpenses = await repo.getAllExpenses();
-                  final mode = repo.getStorageMode();
-
-                  if (mounted) {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text("Debug Bilgisi"),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text("Mod: ${mode.name}"),
-                              const Divider(),
-                              Text("Gelir Sayısı: ${allIncomes.length}"),
-                              ...allIncomes.take(3).map(
-                                  (i) => Text("- ${i.title}: ${i.amount}₺")),
-                              const Divider(),
-                              Text("Gider Sayısı: ${allExpenses.length}"),
-                              ...allExpenses.take(3).map(
-                                  (e) => Text("- ${e.title}: ${e.amount}₺")),
-                            ],
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text("Kapat"),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.settings),
-                title: const Text("Ayarlar"),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push("/settings");
-                },
-              ),
-            ],
-          ),
-        ),
+        drawer: SharedDrawer(),
         body: BlocListener<DataBloc, DataState>(
           listener: (context, state) {
             if (state is ErrorState) {

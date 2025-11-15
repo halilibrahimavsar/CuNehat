@@ -1,3 +1,4 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_event.dart';
@@ -45,7 +46,7 @@ class _ExpenseViewState extends State<ExpenseView> {
                     Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Text(
-                        DateFormat.yMMMEd('tr_TR').format(dateKey),
+                        AppFormatters.dateLong.format(dateKey),
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
@@ -236,7 +237,7 @@ class _AddExpenseFormState extends State<_AddExpenseForm> {
                   tag: tag.isEmpty ? 'Diğer' : tag,
                   amount: amount,
                   date: combinedDateTime,
-                  time: DateFormat.Hm('tr_TR').format(combinedDateTime),
+                  time: AppFormatters.time.format(combinedDateTime),
                 );
 
                 // Parent context'i kullan

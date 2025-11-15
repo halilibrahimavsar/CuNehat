@@ -1,6 +1,6 @@
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
-import 'package:cunehat/config/theme/custome_theme.dart';
+import 'package:cunehat/data_layer/firestore/firestore_models/pending_operation_model.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
 import 'package:cunehat/data_layer/firestore/firestore_service.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -22,15 +21,13 @@ void main() async {
   await initializeDateFormatting();
   await Firebase.initializeApp();
 
-  // Hive başlatma
-  final appDocumentDir = await getApplicationDocumentsDirectory();
-  await Hive.initFlutter(appDocumentDir.path);
+  await Hive.initFlutter();
 
   // Adapter kayıtları
   Hive.registerAdapter(IncomeAdapter());
   Hive.registerAdapter(ExpenseAdapter());
   // PendingOperation adapter'ını da kaydet (build_runner çalıştırdıktan sonra)
-  // Hive.registerAdapter(PendingOperationAdapter());
+  Hive.registerAdapter(PendingOperationAdapter());
 
   // Servisleri hazırla
   final localDataService = LocalDataService();

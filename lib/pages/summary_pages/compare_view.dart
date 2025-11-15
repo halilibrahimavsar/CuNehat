@@ -1,3 +1,4 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:cunehat/data_layer/data_repository.dart';
@@ -210,8 +211,6 @@ class CompareView extends StatelessWidget {
 
   Widget _buildTransactionList(
       List<CombinedTransaction> combinedList, double initialBalance) {
-    final formatCurrency = NumberFormat.currency(symbol: "₺", decimalDigits: 2);
-
     return Column(
       children: [
         // Başlık
@@ -279,7 +278,7 @@ class CompareView extends StatelessWidget {
                 combinedList[index],
                 index,
                 balanceAtThisPoint,
-                formatCurrency,
+                AppFormatters.currency,
               );
             },
           ),
@@ -351,7 +350,7 @@ class CompareView extends StatelessWidget {
                   children: [
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat.yMMMEd('tr_TR').format(item.date),
+                      AppFormatters.dateLong.format(item.date),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

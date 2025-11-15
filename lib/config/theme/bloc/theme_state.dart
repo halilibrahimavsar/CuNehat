@@ -2,12 +2,7 @@ part of 'theme_bloc.dart';
 
 sealed class ThemeState {
   final ThemeData name;
-  final Map<String, ThemeData> names = {
-    "Sistem [Acık]": ThemeData.light(),
-    "Sistem [Kapalı]": ThemeData.dark(),
-    "Glass Morphism": CustomeAppThemes.glassTheme,
-    "Neo Morphism": CustomeAppThemes.neoTheme,
-  };
+  final Map<String, ThemeData> names = ThemeNames.all;
   ThemeState(this.name);
 }
 

@@ -1,3 +1,4 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:cunehat/data_layer/local_storage/idata_service.dart';
@@ -6,8 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 /// Hive kullanarak IDataService arayüzünü uygulayan yerel depolama servisi.
 class LocalDataService implements IDataService {
-  static const String _expenseBoxName = 'expenses_box';
-  static const String _incomeBoxName = 'incomes_box';
+  static const String _expenseBoxName = HiveBoxes.expenses;
+  static const String _incomeBoxName = HiveBoxes.incomes;
 
   // Hive "kutularını" (veritabanı tabloları gibi) açar.
   // Bu, main.dart'ta uygulama başlarken çağrılmalı.

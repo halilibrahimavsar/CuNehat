@@ -1,4 +1,4 @@
-import 'package:cunehat/constants/chose_storage.dart';
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/data_repository.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_selector_dropdown.dart';
 import 'package:flutter/material.dart';

@@ -1,6 +1,6 @@
 // ignore: depend_on_referenced_packages
 import 'package:bloc/bloc.dart';
-import 'package:cunehat/config/theme/custome_theme.dart';
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 
 part 'theme_event.dart';

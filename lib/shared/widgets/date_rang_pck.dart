@@ -1,5 +1,5 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
-import 'package:intl/intl.dart';
 
 DateTime filterStartDate = getMonthRange(DateTime.now())['firstDate']!;
 DateTime filterEndDate = getMonthRange(DateTime.now())['lastDate']!;
@@ -94,7 +94,7 @@ Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               Text(
-                                '${DateFormat.yMd('tr').format(result['firstDate']!)}   -   ${DateFormat.yMd('tr').format(result['lastDate']!)}',
+                                '${AppFormatters.dateShort.format(result['firstDate']!)}   -   ${AppFormatters.dateShort.format(result['lastDate']!)}',
                                 style: TextStyle(
                                   color: (isSelected == 0)
                                       ? selectedColor

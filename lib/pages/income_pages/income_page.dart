@@ -1,10 +1,10 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
 import 'package:cunehat/data_layer/shared_data_bloc/data_event.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 class IncomeView extends StatefulWidget {
   final Map<DateTime, List<Income>> incomeData;
@@ -44,7 +44,7 @@ class _IncomeViewState extends State<IncomeView> {
                     Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Text(
-                        DateFormat.yMMMEd('tr_TR').format(dateKey),
+                        AppFormatters.dateLong.format(dateKey),
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
@@ -170,7 +170,7 @@ class _AddIncomeFormState extends State<_AddIncomeForm> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(DateFormat.yMd('tr_TR').format(_selectedDate)),
+              Text(AppFormatters.dateShort.format(_selectedDate)),
               TextButton(
                 child: const Text("Tarih Seç"),
                 onPressed: () async {
@@ -234,7 +234,7 @@ class _AddIncomeFormState extends State<_AddIncomeForm> {
                   tag: tag.isEmpty ? 'Diğer' : tag,
                   amount: amount,
                   date: combinedDateTime,
-                  time: DateFormat.Hm('tr_TR').format(combinedDateTime),
+                  time: AppFormatters.time.format(combinedDateTime),
                 );
 
                 widget.parentContext
