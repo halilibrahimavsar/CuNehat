@@ -1,12 +1,14 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'package:cunehat/shared/widgets/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class SharedAppbar extends StatefulWidget implements PreferredSizeWidget {
-  const SharedAppbar({super.key});
+  final double currentSliderValue; // Yeni parametre
+
+  const SharedAppbar({
+    super.key,
+    required this.currentSliderValue, // Zorunlu parametre
+  });
 
   @override
   State<SharedAppbar> createState() => _SharedAppbarState();
@@ -16,10 +18,58 @@ class SharedAppbar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _SharedAppbarState extends State<SharedAppbar> {
+  // Artık state'te değer takip etmeye gerek yok, prop'tan alıyoruz
+
+  /// Slider değerine göre AppBar rengini hesapla
+  Color _getAppBarColor(double value) {
+    if (value < 0.5) {
+      return Color.lerp(Colors.red[700]!, Colors.blue[700]!, value * 2)!;
+    } else {
+      return Color.lerp(
+          Colors.blue[700]!, Colors.green[700]!, (value - 0.5) * 2)!;
+    }
+  }
+
+  /// Slider değerine göre AppBar gradient rengini hesapla
+  List<Color> _getAppBarGradient(double value) {
+    if (value < 0.5) {
+      return [
+        Color.lerp(Colors.red[400]!, Colors.blue[400]!, value * 2)!,
+        Color.lerp(Colors.red[700]!, Colors.blue[700]!, value * 2)!,
+      ];
+    } else {
+      return [
+        Color.lerp(Colors.blue[400]!, Colors.green[400]!, (value - 0.5) * 2)!,
+        Color.lerp(Colors.blue[700]!, Colors.green[700]!, (value - 0.5) * 2)!,
+      ];
+    }
+  }
+
+  /// Slider değerine göre ikon ve metin rengini belirle
+  Color _getContentColor(double value) {
+    return Colors.white;
+  }
+
+  /// Mevcut modu metin olarak göster
+  String _getCurrentModeText(double value) {
+    if (value < 0.25) return "Gider Modu";
+    if (value > 0.75) return "Gelir Modu";
+    return "Karşılaştırma Modu";
+  }
+
+  /// Mevcut mod için ikon belirle
+  IconData _getCurrentModeIcon(double value) {
+    if (value < 0.25) return Icons.arrow_downward;
+    if (value > 0.75) return Icons.arrow_upward;
+    return Icons.compare_arrows;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentValue = widget.currentSliderValue; // Prop'tan al
+
     return AppBar(
-      automaticallyImplyLeading: false, // hide drawer menu icon
+      automaticallyImplyLeading: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(25),
@@ -27,24 +77,100 @@ class _SharedAppbarState extends State<SharedAppbar> {
         ),
       ),
       titleSpacing: 0,
+      backgroundColor: _getAppBarColor(currentValue),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _getAppBarGradient(currentValue),
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(25),
+            bottomRight: Radius.circular(25),
+          ),
+        ),
+      ),
       title: Row(
         children: [
           GestureDetector(
             onTap: () => Scaffold.of(context).openDrawer(),
-            child: CircleAvatar(
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: _getContentColor(currentValue).withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
+              child: CircleAvatar(
+                backgroundColor: Colors.transparent,
                 backgroundImage: NetworkImage(
-              FirebaseAuth.instance.currentUser?.providerData[0].photoURL ??
-                  "assets/images/logo.jpg",
-            )),
+                  FirebaseAuth.instance.currentUser?.providerData[0].photoURL ??
+                      "assets/images/logo.jpg",
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 10),
-          Text(
-            FirebaseAuth.instance.currentUser?.displayName ?? "Anonymous",
-            style: const TextStyle(fontSize: 16, color: Colors.white70),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  FirebaseAuth.instance.currentUser?.displayName ?? "Anonymous",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: _getContentColor(currentValue),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(
+                      _getCurrentModeIcon(currentValue),
+                      size: 12,
+                      color: _getContentColor(currentValue).withOpacity(0.8),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _getCurrentModeText(currentValue),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: _getContentColor(currentValue).withOpacity(0.8),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
       actions: [
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: _getContentColor(currentValue).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _getContentColor(currentValue).withOpacity(0.3),
+            ),
+          ),
+          child: Text(
+            '${(currentValue * 100).round()}%',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: _getContentColor(currentValue),
+            ),
+          ),
+        ),
         IconButton(
           onPressed: () async {
             var dates = await getDateRange(context);
@@ -53,10 +179,12 @@ class _SharedAppbarState extends State<SharedAppbar> {
               filterEndDate = dates['lastDate']!;
             });
           },
-          icon: const Icon(
+          icon: Icon(
             Icons.filter_list_outlined,
+            color: _getContentColor(currentValue),
           ),
-        )
+          tooltip: 'Tarih Filtresi',
+        ),
       ],
     );
   }

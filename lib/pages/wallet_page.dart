@@ -32,6 +32,7 @@ class _WalletPageState extends State<WalletPage>
   late final AnimationController _controller;
   late DateTime _filterStartDate;
   late DateTime _filterEndDate;
+  double _currentSliderValue = 0.5; // Slider değerini takip et
 
   @override
   void initState() {
@@ -41,10 +42,16 @@ class _WalletPageState extends State<WalletPage>
       duration: const Duration(milliseconds: 750),
     );
 
+    // Slider değeri değiştiğinde callback
+    _controller.addListener(() {
+      setState(() {
+        _currentSliderValue = _controller.value;
+      });
+    });
+
     _updateDateFilter();
     _fetchData();
 
-    // Auto-sync on app start
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncPendingOperations();
     });
@@ -89,7 +96,9 @@ class _WalletPageState extends State<WalletPage>
     return SafeArea(
       top: false,
       child: Scaffold(
-        appBar: const SharedAppbar(),
+        appBar: SharedAppbar(
+          currentSliderValue: _currentSliderValue,
+        ),
         drawer: const SharedDrawer(),
         body: BlocListener<DataBloc, DataState>(
           listener: (context, state) {
@@ -265,7 +274,13 @@ class _WalletPageState extends State<WalletPage>
               // ============ VIEW SLIDER ============
               Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: SliderButtonExpenseIncome(controller: _controller),
+                child: SliderButtonExpenseIncome(
+                  controller: _controller,
+                  onValueChanged: (double value) {
+                    // Opsiyonel: Ek işlemler yapmak isterseniz
+                    print('Slider değeri değişti: $value');
+                  },
+                ),
               ),
             ],
           ),
