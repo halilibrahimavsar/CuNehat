@@ -152,25 +152,6 @@ class _SharedAppbarState extends State<SharedAppbar> {
         ],
       ),
       actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: _getContentColor(currentValue).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _getContentColor(currentValue).withOpacity(0.3),
-            ),
-          ),
-          child: Text(
-            '${(currentValue * 100).round()}%',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: _getContentColor(currentValue),
-            ),
-          ),
-        ),
         IconButton(
           onPressed: () async {
             var dates = await getDateRange(context);

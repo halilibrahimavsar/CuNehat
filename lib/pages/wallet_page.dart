@@ -32,7 +32,7 @@ class _WalletPageState extends State<WalletPage>
   late final AnimationController _controller;
   late DateTime _filterStartDate;
   late DateTime _filterEndDate;
-  double _currentSliderValue = 0.5; // Slider değerini takip et
+  double _currentSliderValue = 0; // Slider değerini takip et
 
   @override
   void initState() {

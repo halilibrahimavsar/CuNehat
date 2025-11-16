@@ -45,7 +45,7 @@ void main() async {
   Hive.registerAdapter(ExpenseAdapter()); // typeId: 1
   Hive.registerAdapter(PendingOperationAdapter()); // typeId: 2
 
-  print('✅ Hive TypeAdapters registered');
+  debugPrint('✅ Hive TypeAdapters registered');
 
   // ============ CHECK FOR MIGRATION ============
   // Uncomment if you need to clear old data due to schema changes
@@ -54,7 +54,7 @@ void main() async {
   final needsMigration = !(prefs.getBool('migration_v1_done') ?? false);
   
   if (needsMigration) {
-    print('🔄 Running one-time migration...');
+    debugPrint('🔄 Running one-time migration...');
     
     try {
       // Delete old boxes
@@ -64,9 +64,9 @@ void main() async {
       
       // Mark as done
       await prefs.setBool('migration_v1_done', true);
-      print('✅ Migration completed');
+      debugPrint('✅ Migration completed');
     } catch (e) {
-      print('⚠️  Migration error (continuing anyway): $e');
+      debugPrint('⚠️  Migration error (continuing anyway): $e');
     }
   }
   */
@@ -75,7 +75,7 @@ void main() async {
 
   final localDataService = LocalDataService();
   await localDataService.init();
-  print('✅ Local storage initialized');
+  debugPrint('✅ Local storage initialized');
 
   final sharedPreferences = await SharedPreferences.getInstance();
   final firestoreService = FirestoreService();
@@ -83,11 +83,11 @@ void main() async {
   // Initialize sync service
   final syncService = SyncService(firestoreService: firestoreService);
   await syncService.init();
-  print('✅ Sync service initialized');
+  debugPrint('✅ Sync service initialized');
 
   // Start auto-sync when connection is available
   syncService.startAutoSync();
-  print('✅ Auto-sync enabled');
+  debugPrint('✅ Auto-sync enabled');
 
   // ============ LAUNCH APP ============
 
