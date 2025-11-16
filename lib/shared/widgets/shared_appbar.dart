@@ -154,11 +154,8 @@ class _SharedAppbarState extends State<SharedAppbar> {
       actions: [
         IconButton(
           onPressed: () async {
-            var dates = await getDateRange(context);
-            setState(() {
-              filterStartDate = dates['firstDate']!;
-              filterEndDate = dates['lastDate']!;
-            });
+            // TODO: Seçilen tarih aralığını state management (BLoC vb.) ile yönet.
+            await getDateRange(context);
           },
           icon: Icon(
             Icons.filter_list_outlined,

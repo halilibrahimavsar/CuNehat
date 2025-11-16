@@ -31,31 +31,21 @@ class _SliderButtonExpenseIncomeState extends State<SliderButtonExpenseIncome> {
   void _onDragEnd(DragEndDetails details) {
     // ... mevcut kod ...
     final velocity = details.primaryVelocity ?? 0;
-    final currentValue = widget.controller.value;
     double target;
 
+    final currentValue = widget.controller.value;
+
+    // Hızlı kaydırma durumunda en yakın mantıksal noktaya git
     if (velocity.abs() > 300) {
-      if (velocity > 0) {
-        if (currentValue > 0.5) {
-          target = 0.5;
-        } else {
-          target = 0.0;
-        }
-      } else {
-        if (currentValue < 0.5) {
-          target = 0.5;
-        } else {
-          target = 1.0;
-        }
+      target = velocity > 0
+          ? 0.0
+          : 1.0; // Sağa kaydırma 0'a, sola kaydırma 1'e gider
+      if ((currentValue - 0.5).abs() < (target - 0.5).abs()) {
+        target = 0.5; // Eğer orta noktaya daha yakınsa, ortaya git
       }
     } else {
-      if (currentValue > 0.75) {
-        target = 1.0;
-      } else if (currentValue < 0.25) {
-        target = 0.0;
-      } else {
-        target = 0.5;
-      }
+      target = (currentValue * 2).round() /
+          2.0; // En yakın 0.0, 0.5 veya 1.0 değerine yuvarla
     }
 
     widget.controller.animateTo(
@@ -78,9 +68,6 @@ class _SliderButtonExpenseIncomeState extends State<SliderButtonExpenseIncome> {
           animation: widget.controller,
           builder: (context, child) {
             final value = widget.controller.value;
-
-            // Değer her değiştiğinde callback'i çağır
-            _notifyValueChanged(value);
 
             final knobRotation = lerpDouble(0, 0, value)!;
             // ... geri kalan mevcut kod ...

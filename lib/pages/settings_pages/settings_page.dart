@@ -49,36 +49,33 @@ class _SettingsPageState extends State<SettingsPage> {
       _isLoading = true;
     });
 
-    if (context.mounted) {
-      try {
-        await context.read<DataRepository>().migrateLocalToCloud();
+    // context.mounted kontrolü asenkron işlemden SONRA yapılmalı
+    try {
+      await context.read<DataRepository>().migrateLocalToCloud();
 
+      if (mounted) {
         setState(() {
           _currentMode = StorageMode.cloud;
           _isLoading = false;
         });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Başarıyla buluta taşındı!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Başarıyla buluta taşındı!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Geçiş başarısız: ${e.toString()}"),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Geçiş başarısız: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
