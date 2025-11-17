@@ -59,6 +59,7 @@ class LocalDataService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
+    // TODO: this one is not correctly working, same as in getExpenseByDateRange....
     return _incomeBox.values.where((income) {
       return !income.date.isBefore(firstDate) && !income.date.isAfter(lastDate);
     }).toList()
