@@ -13,13 +13,12 @@ import 'package:cunehat/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// **WalletPage**: Main page displaying income/expense data with sync support
+/// **WalletPage**: FINAL FIX
 ///
-/// Features:
-/// - Three-way view switching (Income/Compare/Expense)
-/// - Auto-refresh after CRUD operations
-/// - Sync status monitoring
-/// - Date range filtering
+/// KEY FIX:
+/// - BlocListener ONLY listens to feedback states (CRUD success/error, sync)
+/// - BlocListener IGNORES data states (SuccessfullyGetCompareState)
+/// - BlocBuilder handles ALL states including data updates
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
 
@@ -32,17 +31,18 @@ class _WalletPageState extends State<WalletPage>
   late final AnimationController _controller;
   late DateTime _filterStartDate;
   late DateTime _filterEndDate;
-  double _currentSliderValue = 0; // Slider değerini takip et
+  double _currentSliderValue = 0;
 
   @override
   void initState() {
     super.initState();
+    print('🟢 [WALLET] Page initialized');
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
     );
 
-    // Slider değeri değiştiğinde callback
     _controller.addListener(() {
       setState(() {
         _currentSliderValue = _controller.value;
@@ -50,21 +50,25 @@ class _WalletPageState extends State<WalletPage>
     });
 
     _updateDateFilter();
+    print('🟢 [WALLET] Date filter: $_filterStartDate → $_filterEndDate');
+
+    print('🟢 [WALLET] Calling _fetchData()...');
     _fetchData();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print(
+          '🟢 [WALLET] Post-frame callback, calling _syncPendingOperations()...');
       _syncPendingOperations();
     });
   }
 
-  /// Updates date filter to last 30 days
   void _updateDateFilter() {
     _filterEndDate = DateTime.now();
     _filterStartDate = _filterEndDate.subtract(const Duration(days: 30));
   }
 
-  /// Fetches data for current date range
   void _fetchData() {
+    print('📤 [WALLET] Dispatching GetCompareEvent');
     context.read<DataBloc>().add(
           GetCompareEvent(
             filterStart: _filterStartDate,
@@ -73,8 +77,8 @@ class _WalletPageState extends State<WalletPage>
         );
   }
 
-  /// Syncs pending operations and shows status
   Future<void> _syncPendingOperations() async {
+    print('🔄 [WALLET] Dispatching SyncDataEvent');
     context.read<DataBloc>().add(
           SyncDataEvent(
             dateRange: {
@@ -93,6 +97,8 @@ class _WalletPageState extends State<WalletPage>
 
   @override
   Widget build(BuildContext context) {
+    print('🔄 [WALLET] build() called');
+
     return SafeArea(
       top: false,
       child: Scaffold(
@@ -101,9 +107,32 @@ class _WalletPageState extends State<WalletPage>
         ),
         drawer: const SharedDrawer(),
         body: BlocListener<DataBloc, DataState>(
+          // ⚠️ CRITICAL FIX: Only listen to feedback states, NOT data states
+          listenWhen: (previous, current) {
+            // ONLY listen to these specific states:
+            final shouldListen = current is ErrorState ||
+                current is SuccessfullyCreatedItemState ||
+                current is SuccessfullyDeletedItemState ||
+                current is SuccessfullyUpdatedItemState ||
+                current is SyncingDataState ||
+                current is SyncSuccessState ||
+                current is SyncFailedState;
+
+            if (!shouldListen &&
+                current is! LoadingDataState &&
+                current is! NoDataState) {
+              print(
+                  '👂 [WALLET LISTENER] IGNORING state: ${current.runtimeType}');
+            }
+
+            return shouldListen;
+          },
           listener: (context, state) {
-            // ============ ERROR HANDLING ============
+            print('👂 [WALLET LISTENER] State received: ${state.runtimeType}');
+
+            // ERROR HANDLING
             if (state is ErrorState) {
+              print('   ❌ Error state: ${state.err}');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.err),
@@ -113,31 +142,39 @@ class _WalletPageState extends State<WalletPage>
               );
             }
 
-            // ============ CRUD SUCCESS - AUTO REFRESH ============
-            else if (state is SuccessfullyCreatedItemState ||
-                state is SuccessfullyDeletedItemState ||
-                state is SuccessfullyUpdatedItemState) {
-              // Auto-refresh data after any CRUD operation
-              _fetchData();
-
-              // Show success feedback
+            // CRUD SUCCESS FEEDBACK
+            else if (state is SuccessfullyCreatedItemState) {
+              print('   ✓ Item created - showing snackbar');
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    state is SuccessfullyCreatedItemState
-                        ? '✓ Başarıyla eklendi'
-                        : state is SuccessfullyDeletedItemState
-                            ? '✓ Başarıyla silindi'
-                            : '✓ Başarıyla güncellendi',
-                  ),
+                const SnackBar(
+                  content: Text('✓ Başarıyla eklendi'),
                   backgroundColor: Colors.green,
-                  duration: const Duration(seconds: 2),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            } else if (state is SuccessfullyDeletedItemState) {
+              print('   ✓ Item deleted - showing snackbar');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✓ Başarıyla silindi'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            } else if (state is SuccessfullyUpdatedItemState) {
+              print('   ✓ Item updated - showing snackbar');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✓ Başarıyla güncellendi'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
                 ),
               );
             }
 
-            // ============ SYNC STATUS ============
+            // SYNC STATUS
             else if (state is SyncingDataState) {
+              print('   🔄 Syncing...');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Row(
@@ -158,6 +195,7 @@ class _WalletPageState extends State<WalletPage>
                 ),
               );
             } else if (state is SyncSuccessState) {
+              print('   ✓ Sync success');
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -173,6 +211,7 @@ class _WalletPageState extends State<WalletPage>
                 ),
               );
             } else if (state is SyncFailedState) {
+              print('   ⚠️  Sync failed');
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -193,23 +232,22 @@ class _WalletPageState extends State<WalletPage>
             children: [
               Expanded(
                 child: BlocBuilder<DataBloc, DataState>(
-                  buildWhen: (previous, current) {
-                    // Only rebuild for these specific states
-                    return current is LoadingDataState ||
-                        current is SuccessfullyGetCompareState ||
-                        current is NoDataState ||
-                        current is ErrorState;
-                  },
+                  // ⚠️ FIX: Builder rebuilds on EVERY state change
                   builder: (context, state) {
-                    // ============ LOADING STATE ============
+                    print(
+                        '🏗️  [WALLET BUILDER] Building with state: ${state.runtimeType}');
+
+                    // LOADING STATE
                     if (state is LoadingDataState) {
+                      print('   ⏳ Showing loading indicator');
                       return const Center(
                         child: CircularProgressIndicator(),
                       );
                     }
 
-                    // ============ ERROR STATE ============
+                    // ERROR STATE
                     if (state is ErrorState) {
+                      print('   ❌ Showing error view');
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -249,15 +287,77 @@ class _WalletPageState extends State<WalletPage>
                       );
                     }
 
-                    // ============ DATA STATE ============
+                    // NO DATA STATE
+                    if (state is NoDataState) {
+                      print('   ℹ️  Showing no data view');
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inbox_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Henüz veri yok',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Gelir veya gider ekleyerek başlayın',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // DATA EXTRACTION
                     Map<DateTime, List<Income>> incomeData = {};
                     Map<DateTime, List<Expense>> expenseData = {};
 
                     if (state is SuccessfullyGetCompareState) {
+                      print('   📊 Compare state with data');
                       incomeData = state.income;
                       expenseData = state.expense;
+                      print(
+                          '   Income days: ${incomeData.length}, Expense days: ${expenseData.length}');
+                      print(
+                          '   Total income items: ${incomeData.values.expand((x) => x).length}');
+                      print(
+                          '   Total expense items: ${expenseData.values.expand((x) => x).length}');
+                    } else if (state is SuccessfullyGetIncomeState) {
+                      print('   📊 Income state with data');
+                      incomeData = state.data;
+                      print('   Income days: ${incomeData.length}');
+                    } else if (state is SuccessfullyGetExpenseState) {
+                      print('   📊 Expense state with data');
+                      expenseData = state.data;
+                      print('   Expense days: ${expenseData.length}');
+                    } else if (state is SuccessfullyCreatedItemState ||
+                        state is SuccessfullyDeletedItemState ||
+                        state is SuccessfullyUpdatedItemState) {
+                      // ⚠️ CRITICAL: These states appear BEFORE silent refresh completes
+                      // Show previous data (will be updated when SuccessfullyGetCompareState arrives)
+                      print(
+                          '   ⚠️  CRUD state - keeping previous data, waiting for refresh');
+                      // Return empty for now, silent refresh will update soon
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else {
+                      print(
+                          '   ⚠️  Unhandled state type: ${state.runtimeType}');
                     }
 
+                    // BUILD VIEWS
+                    print('   🏗️  Building cube animation view');
                     return CubeAnimationView(
                       controller: _controller,
                       firstView: ExpenseView(expenseData: expenseData),
@@ -271,27 +371,19 @@ class _WalletPageState extends State<WalletPage>
                 ),
               ),
 
-              // ============ VIEW SLIDER ============
+              // VIEW SLIDER
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonExpenseIncome(
                   controller: _controller,
                   onValueChanged: (double value) {
-                    // Opsiyonel: Ek işlemler yapmak isterseniz
-                    print('Slider değeri değişti: $value');
+                    // Optional
                   },
                 ),
               ),
             ],
           ),
         ),
-
-        // ============ SYNC BUTTON ============
-        // floatingActionButton: FloatingActionButton(
-        //   onPressed: _syncPendingOperations,
-        //   tooltip: 'Senkronize Et',
-        //   child: const Icon(Icons.sync),
-        // ),
       ),
     );
   }

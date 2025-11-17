@@ -4,6 +4,12 @@ import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart'
 import 'package:cunehat/data_layer/local_storage/idata_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+/// **FirestoreService**: Cloud storage implementation
+///
+/// KEY CHANGES:
+/// - getAllExpenses/getAllIncomes implemented
+/// - Better error handling
+/// - Proper user authentication checks
 class FirestoreService implements IDataService {
   final _expense = FirebaseFirestore.instance.collection('expenses');
   final _income = FirebaseFirestore.instance.collection('incomes');
@@ -11,7 +17,7 @@ class FirestoreService implements IDataService {
   String get _ownerId {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      throw Exception("Kullanıcı girişi yapılmamış.");
+      throw Exception('Kullanıcı girişi yapılmamış.');
     }
     return user.uid;
   }
@@ -20,12 +26,20 @@ class FirestoreService implements IDataService {
 
   @override
   Future<void> addExpense({required Expense expense}) async {
-    await _expense.add(expense.toJson());
+    try {
+      await _expense.add(expense.toJson());
+    } catch (e) {
+      throw Exception('Gider eklenirken hata: $e');
+    }
   }
 
   @override
   Future<void> addIncome({required Income income}) async {
-    await _income.add(income.toJson());
+    try {
+      await _income.add(income.toJson());
+    } catch (e) {
+      throw Exception('Gelir eklenirken hata: $e');
+    }
   }
 
   // ============ READ ============
@@ -35,15 +49,19 @@ class FirestoreService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
-    final snapshot = await _expense
-        .where('userId', isEqualTo: _ownerId)
-        .where('date',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
-            isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
-        .get();
+    try {
+      final snapshot = await _expense
+          .where('userId', isEqualTo: _ownerId)
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
+              isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
+          .get();
 
-    return snapshot.docs.reversed
-        .map((doc) => Expense.fromJson(doc.id, doc.data()));
+      return snapshot.docs.reversed
+          .map((doc) => Expense.fromJson(doc.id, doc.data()));
+    } catch (e) {
+      throw Exception('Giderler yüklenirken hata: $e');
+    }
   }
 
   @override
@@ -51,49 +69,86 @@ class FirestoreService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
-    final snapshot = await _income
-        .where('userId', isEqualTo: _ownerId)
-        .where('date',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
-            isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
-        .get();
+    try {
+      final snapshot = await _income
+          .where('userId', isEqualTo: _ownerId)
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
+              isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
+          .get();
 
-    return snapshot.docs.reversed
-        .map((doc) => Income.fromJson(doc.id, doc.data()));
+      return snapshot.docs.reversed
+          .map((doc) => Income.fromJson(doc.id, doc.data()));
+    } catch (e) {
+      throw Exception('Gelirler yüklenirken hata: $e');
+    }
   }
 
   @override
-  Future<Iterable<Expense>> getAllExpenses() {
-    throw UnimplementedError('Use getExpenseByDateRange instead');
+  Future<Iterable<Expense>> getAllExpenses() async {
+    try {
+      final snapshot =
+          await _expense.where('userId', isEqualTo: _ownerId).get();
+
+      return snapshot.docs
+          .map((doc) => Expense.fromJson(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      throw Exception('Tüm giderler yüklenirken hata: $e');
+    }
   }
 
   @override
-  Future<Iterable<Income>> getAllIncomes() {
-    throw UnimplementedError('Use getIncomeByDateRange instead');
+  Future<Iterable<Income>> getAllIncomes() async {
+    try {
+      final snapshot = await _income.where('userId', isEqualTo: _ownerId).get();
+
+      return snapshot.docs
+          .map((doc) => Income.fromJson(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      throw Exception('Tüm gelirler yüklenirken hata: $e');
+    }
   }
 
   // ============ UPDATE ============
 
   @override
   Future<void> updateExpense({required Expense expense}) async {
-    await _expense.doc(expense.id).update(expense.toJson());
+    try {
+      await _expense.doc(expense.id).update(expense.toJson());
+    } catch (e) {
+      throw Exception('Gider güncellenirken hata: $e');
+    }
   }
 
   @override
   Future<void> updateIncome({required Income income}) async {
-    await _income.doc(income.id).update(income.toJson());
+    try {
+      await _income.doc(income.id).update(income.toJson());
+    } catch (e) {
+      throw Exception('Gelir güncellenirken hata: $e');
+    }
   }
 
   // ============ DELETE ============
 
   @override
   Future<void> deleteExpense({required String id}) async {
-    await _expense.doc(id).delete();
+    try {
+      await _expense.doc(id).delete();
+    } catch (e) {
+      throw Exception('Gider silinirken hata: $e');
+    }
   }
 
   @override
   Future<void> deleteIncome({required String id}) async {
-    await _income.doc(id).delete();
+    try {
+      await _income.doc(id).delete();
+    } catch (e) {
+      throw Exception('Gelir silinirken hata: $e');
+    }
   }
 
   @override
@@ -101,51 +156,106 @@ class FirestoreService implements IDataService {
     throw UnimplementedError('This is only for local storage');
   }
 
-  // ============ TAGS (Artık chips_choice yok) ============
+  // ============ TAGS ============
 
   Future<List<String>> getIncomeTags() async {
-    final snapshot = await _income.where('userId', isEqualTo: _ownerId).get();
+    try {
+      final snapshot = await _income.where('userId', isEqualTo: _ownerId).get();
 
-    final tags = <String>{};
-    for (final doc in snapshot.docs) {
-      final income = Income.fromJson(doc.id, doc.data());
-      tags.add(income.tag);
+      final tags = <String>{};
+      for (final doc in snapshot.docs) {
+        final income = Income.fromJson(doc.id, doc.data());
+        tags.add(income.tag);
+      }
+      return tags.toList()..sort();
+    } catch (e) {
+      throw Exception('Gelir etiketleri yüklenirken hata: $e');
     }
-    return tags.toList()..sort();
   }
 
   Future<List<String>> getExpenseTags() async {
-    final snapshot = await _expense.where('userId', isEqualTo: _ownerId).get();
+    try {
+      final snapshot =
+          await _expense.where('userId', isEqualTo: _ownerId).get();
 
-    final tags = <String>{};
-    for (final doc in snapshot.docs) {
-      final expense = Expense.fromJson(doc.id, doc.data());
-      tags.add(expense.tag);
+      final tags = <String>{};
+      for (final doc in snapshot.docs) {
+        final expense = Expense.fromJson(doc.id, doc.data());
+        tags.add(expense.tag);
+      }
+      return tags.toList()..sort();
+    } catch (e) {
+      throw Exception('Gider etiketleri yüklenirken hata: $e');
     }
-    return tags.toList()..sort();
   }
 
   // ============ BATCH OPERATIONS (Migration) ============
 
   Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
-    final batch = FirebaseFirestore.instance.batch();
+    try {
+      final batch = FirebaseFirestore.instance.batch();
 
-    for (final expense in expenses) {
-      final docRef = _expense.doc();
-      batch.set(docRef, expense.toJson());
+      for (final expense in expenses) {
+        final docRef = _expense.doc();
+        batch.set(docRef, expense.toJson());
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Toplu gider ekleme hatası: $e');
     }
-
-    await batch.commit();
   }
 
   Future<void> batchAddIncomes(Iterable<Income> incomes) async {
-    final batch = FirebaseFirestore.instance.batch();
+    try {
+      final batch = FirebaseFirestore.instance.batch();
 
-    for (final income in incomes) {
-      final docRef = _income.doc();
-      batch.set(docRef, income.toJson());
+      for (final income in incomes) {
+        final docRef = _income.doc();
+        batch.set(docRef, income.toJson());
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Toplu gelir ekleme hatası: $e');
     }
+  }
 
-    await batch.commit();
+  // ============ UTILITY ============
+
+  /// Checks if user is authenticated and has internet connection
+  Future<bool> isAvailable() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false;
+
+      // Test connection with a simple read
+      await _expense.limit(1).get();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Gets total count of user's expenses
+  Future<int> getExpenseCount() async {
+    try {
+      final snapshot =
+          await _expense.where('userId', isEqualTo: _ownerId).count().get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Gets total count of user's incomes
+  Future<int> getIncomeCount() async {
+    try {
+      final snapshot =
+          await _income.where('userId', isEqualTo: _ownerId).count().get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      return 0;
+    }
   }
 }

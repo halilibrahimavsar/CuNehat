@@ -1,10 +1,13 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/data_layer/data_repository.dart';
+import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
+import 'package:cunehat/data_layer/shared_data_bloc/data_event.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_selector_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+/// **SettingsPage**: WITH UI REFRESH AFTER MODE CHANGE
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -21,63 +24,276 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _currentMode = context.read<DataRepository>().getStorageMode();
+    print('🔧 [SETTINGS] Initialized with mode: ${_currentMode.name}');
   }
 
-  Future<void> _migrateToCloud() async {
-    final wantsToMigrate = await showDialog<bool>(
+  /// Shows storage mode selection dialog
+  Future<void> _showStorageModeDialog() async {
+    final repository = context.read<DataRepository>();
+    final currentMode = repository.getStorageMode();
+
+    final selectedMode = await showDialog<StorageMode>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Buluta Taşı"),
-        content: const Text(
-            "Tüm yerel verileriniz (gelir ve giderler) buluta taşınacak ve cihazdan silinecektir. Bu işlem geri alınamaz. Emin misiniz?"),
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.storage, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Depolama Modu Seçin'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StorageModeOption(
+              mode: StorageMode.local,
+              currentMode: currentMode,
+              icon: Icons.phone_android,
+              title: 'Yerel Depolama',
+              description: 'Veriler sadece bu cihazda saklanır',
+              features: const [
+                '✓ Hızlı erişim',
+                '✓ İnternet gerektirmez',
+                '✓ Tamamen özel',
+                '✗ Cihaz arası senkronizasyon yok',
+              ],
+              onTap: () => Navigator.pop(dialogContext, StorageMode.local),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+            _StorageModeOption(
+              mode: StorageMode.cloud,
+              currentMode: currentMode,
+              icon: Icons.cloud,
+              title: 'Bulut Depolama',
+              description: 'Veriler Google Firestore\'da saklanır',
+              features: const [
+                '✓ Çoklu cihaz desteği',
+                '✓ Otomatik yedekleme',
+                '✓ Veri güvenliği',
+                '⚠ İnternet gerektirir',
+              ],
+              onTap: () => Navigator.pop(dialogContext, StorageMode.cloud),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("İptal"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Taşı"),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('İptal'),
           ),
         ],
       ),
     );
 
-    if (wantsToMigrate != true) return;
+    if (selectedMode != null && selectedMode != currentMode) {
+      await _handleStorageModeChange(selectedMode);
+    }
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
+  /// Handles storage mode change with migration if needed
+  Future<void> _handleStorageModeChange(StorageMode newMode) async {
+    final repository = context.read<DataRepository>();
 
-    // context.mounted kontrolü asenkron işlemden SONRA yapılmalı
-    try {
-      await context.read<DataRepository>().migrateLocalToCloud();
+    // LOCAL → CLOUD: Migration needed
+    if (newMode == StorageMode.cloud) {
+      final shouldMigrate = await _showMigrationDialog();
+      if (!shouldMigrate) return;
 
-      if (mounted) {
-        setState(() {
-          _currentMode = StorageMode.cloud;
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Başarıyla buluta taşındı!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Geçiş başarısız: ${e.toString()}"),
-            backgroundColor: Colors.red,
-          ),
-        );
+      setState(() => _isLoading = true);
+
+      try {
+        print('🔄 [SETTINGS] Starting migration to cloud...');
+        await repository.migrateLocalToCloud();
+        print('✓ [SETTINGS] Migration successful');
+
+        if (mounted) {
+          setState(() {
+            _currentMode = StorageMode.cloud;
+            _isLoading = false;
+          });
+
+          // ⚠️ CRITICAL FIX: Trigger data refresh in BLoC
+          print('📤 [SETTINGS] Triggering data refresh after mode change');
+          _refreshMainPageData();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.cloud_done, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('✓ Veriler buluta taşındı!'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        print('❌ [SETTINGS] Migration failed: $e');
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✗ Geçiş başarısız: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
     }
+
+    // CLOUD → LOCAL: Direct switch (data stays in cloud)
+    else if (newMode == StorageMode.local) {
+      final confirmed = await _showCloudToLocalWarning();
+      if (!confirmed) return;
+
+      try {
+        print('🔄 [SETTINGS] Switching to local mode...');
+        await repository.setStorageMode(StorageMode.local);
+        print('✓ [SETTINGS] Switched to local mode');
+
+        setState(() => _currentMode = StorageMode.local);
+
+        // ⚠️ CRITICAL FIX: Trigger data refresh
+        print('📤 [SETTINGS] Triggering data refresh after mode change');
+        _refreshMainPageData();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✓ Yerel depolamaya geçildi'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+      } catch (e) {
+        print('❌ [SETTINGS] Mode change failed: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✗ Hata: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  /// ⚠️ NEW METHOD: Refresh main page data
+  void _refreshMainPageData() {
+    final now = DateTime.now();
+    final startDate = now.subtract(const Duration(days: 30));
+
+    print('📤 [SETTINGS] Dispatching RefreshDataEvent');
+    context.read<DataBloc>().add(
+          RefreshDataEvent(
+            filterStart: startDate,
+            filterEnd: now,
+          ),
+        );
+  }
+
+  Future<bool> _showMigrationDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.cloud_upload, size: 48, color: Colors.blue),
+            title: const Text('Buluta Taşıma'),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tüm yerel verileriniz (gelir ve giderler) buluta yüklenecek ve '
+                  'cihazdan silinecektir.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '⚠️ Bu işlem geri alınamaz!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '✓ İnternet bağlantınızın aktif olduğundan emin olun.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('İptal'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context, true),
+                icon: const Icon(Icons.cloud_upload),
+                label: const Text('Taşı'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<bool> _showCloudToLocalWarning() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.warning, size: 48, color: Colors.orange),
+            title: const Text('Yerel Depolamaya Geç'),
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Buluttaki verileriniz silinmeyecek, ancak bu cihazda '
+                  'yeni veriler sadece yerel olarak saklanacak.',
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '⚠️ Dikkat:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Buluttaki eski verilerinize erişemezsiniz\n'
+                  '• Çoklu cihaz senkronizasyonu duracak\n'
+                  '• Yeni veriler sadece bu cihazda olacak',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('İptal'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Evet, Geç'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _showEditBalanceDialog() {
@@ -90,12 +306,12 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text("Anapara Düzenle"),
+        title: const Text('Anapara Düzenle'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Mevcut Bakiye: ${formatCurrency.format(currentBalance)}",
+              'Mevcut Bakiye: ${formatCurrency.format(currentBalance)}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -109,10 +325,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 decimal: true,
               ),
               decoration: const InputDecoration(
-                labelText: "Yeni Anapara",
-                suffixText: "₺",
+                labelText: 'Yeni Anapara',
+                suffixText: '₺',
                 border: OutlineInputBorder(),
-                helperText: "Not: Bu değer tüm işlemlerinizi etkilemez",
+                helperText: 'Not: Bu değer tüm işlemlerinizi etkilemez',
               ),
             ),
           ],
@@ -120,7 +336,7 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("İptal"),
+            child: const Text('İptal'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -133,14 +349,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      "Anapara ${formatCurrency.format(newBalance)} olarak güncellendi",
+                      'Anapara ${formatCurrency.format(newBalance)} olarak güncellendi',
                     ),
                     backgroundColor: Colors.green,
                   ),
                 );
               }
             },
-            child: const Text("Kaydet"),
+            child: const Text('Kaydet'),
           ),
         ],
       ),
@@ -151,125 +367,302 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final repository = context.watch<DataRepository>();
     final currentBalance = repository.getMainBalance();
+    final pendingCount = repository.getPendingSyncCount();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Ayarlar"),
+        title: const Text('Ayarlar'),
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // TEMA AYARI
-          const Text(
-            "TEMA",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
+          _SectionHeader(title: 'TEMA'),
           const ThemeDropdown(),
-
           const SizedBox(height: 24),
-
-          // ANAPARA AYARI
-          const Text(
-            "ANAPARA",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
+          _SectionHeader(title: 'ANAPARA'),
           Card(
+            elevation: 2,
             child: ListTile(
               leading: Icon(
                 Icons.account_balance_wallet,
                 color: currentBalance >= 0 ? Colors.green : Colors.red,
+                size: 28,
               ),
-              title: const Text("Mevcut Bakiye"),
+              title: const Text('Mevcut Bakiye'),
               subtitle: Text(
                 formatCurrency.format(currentBalance),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 18,
                   color: currentBalance >= 0 ? Colors.green : Colors.red,
                 ),
               ),
               trailing: IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: _showEditBalanceDialog,
-                tooltip: "Düzenle",
+                tooltip: 'Düzenle',
               ),
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // VERİ DEPOLAMA AYARI
-          const Text(
-            "VERİ DEPOLAMA",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
+          _SectionHeader(title: 'VERİ DEPOLAMA'),
           Card(
+            elevation: 2,
             child: ListTile(
               leading: Icon(
                 _currentMode == StorageMode.cloud
                     ? Icons.cloud
                     : Icons.phone_android,
                 color: Theme.of(context).colorScheme.primary,
+                size: 28,
               ),
-              title: const Text("Depolama Modu"),
-              subtitle: Text(
-                _isLoading
-                    ? "Geçiş yapılıyor..."
-                    : "Mevcut: ${_currentMode == StorageMode.cloud ? 'Bulut (Firestore)' : 'Yerel (Cihaz)'}",
+              title: Text(
+                _currentMode == StorageMode.cloud
+                    ? 'Bulut Depolama'
+                    : 'Yerel Depolama',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text(
+                    _currentMode == StorageMode.cloud
+                        ? 'Veriler Google Firestore\'da güvende'
+                        : 'Veriler sadece bu cihazda',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  if (pendingCount > 0 && _currentMode == StorageMode.cloud)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.sync,
+                              size: 14,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$pendingCount işlem senkronizasyon bekliyor',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.orange.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
               trailing: _isLoading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 24,
+                      height: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : null,
+                  : const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: _isLoading ? null : _showStorageModeDialog,
             ),
           ),
-
-          if (_currentMode == StorageMode.local && !_isLoading)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: ElevatedButton.icon(
-                onPressed: _migrateToCloud,
-                icon: const Icon(Icons.cloud_upload),
-                label: const Text("Verileri Buluta Taşı"),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                ),
+          const SizedBox(height: 12),
+          Card(
+            color: _currentMode == StorageMode.cloud
+                ? Colors.green.shade50
+                : Colors.blue.shade50,
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: _currentMode == StorageMode.cloud
+                            ? Colors.green.shade700
+                            : Colors.blue.shade700,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Bilgi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _currentMode == StorageMode.cloud
+                              ? Colors.green.shade700
+                              : Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _currentMode == StorageMode.cloud
+                        ? 'Tüm verileriniz bulutta güvenle saklanıyor. '
+                            'Farklı cihazlardan erişebilirsiniz.'
+                        : 'Verileriniz sadece bu cihazda tutuluyor. '
+                            'Daha fazla güvenlik için buluta taşıyabilirsiniz.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
+          const SizedBox(height: 24),
+          _SectionHeader(title: 'UYGULAMA'),
+          Card(
+            elevation: 1,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Versiyon'),
+                  trailing: const Text('1.0.0'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.code),
+                  title: const Text('Geliştirici'),
+                  trailing: const Text('İbo + Claude'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-          if (_currentMode == StorageMode.cloud && !_isLoading)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Card(
-                color: Colors.green.shade50,
-                child: const ListTile(
-                  leading: Icon(Icons.cloud_done, color: Colors.green),
-                  title: Text("Verileriniz güvende!"),
-                  subtitle: Text(
-                    "Tüm verileriniz artık bulut ile senkronize ediliyor.",
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade600,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _StorageModeOption extends StatelessWidget {
+  final StorageMode mode;
+  final StorageMode currentMode;
+  final IconData icon;
+  final String title;
+  final String description;
+  final List<String> features;
+  final VoidCallback onTap;
+
+  const _StorageModeOption({
+    required this.mode,
+    required this.currentMode,
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.features,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = mode == currentMode;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? Colors.blue.shade50 : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? Colors.blue : Colors.grey.shade700,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isSelected ? Colors.blue : null,
+                        ),
+                      ),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle,
+                    color: Colors.blue,
+                    size: 24,
+                  ),
+              ],
             ),
-        ],
+            const SizedBox(height: 12),
+            ...features.map((feature) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    feature,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                )),
+          ],
+        ),
       ),
     );
   }
