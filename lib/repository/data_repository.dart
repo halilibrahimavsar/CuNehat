@@ -550,7 +550,7 @@ class DataRepository {
     print('✓ [MIGRATION] Completed: Local → Cloud');
   }
 
-  /// ⚠️ NEW: Cloud → Local migration (Download & Keep)
+  /// ⚠️ NEW: Cloud → Local migration (Download & Clear Cloud)
   Future<void> migrateCloudToLocal() async {
     print('🔄 [MIGRATION] Cloud → Local');
 
@@ -564,20 +564,10 @@ class DataRepository {
     print(
         '   Found: ${cloudIncomes.length} incomes, ${cloudExpenses.length} expenses');
 
-    print('   Step 2: Checking local data...');
-    final localIncomes = await _localDataService.getAllIncomes();
-    final localExpenses = await _localDataService.getAllExpenses();
-    print(
-        '   Local has: ${localIncomes.length} incomes, ${localExpenses.length} expenses');
+    print('   Step 2: Clearing any existing local data...');
+    await clearAllLocalData();
 
-    // ⚠️ MERGE STRATEGY: Cloud data overwrites local
-    print('   Step 3: Merging data (Cloud priority)...');
-
-    // Clear local first
-    if (localIncomes.isNotEmpty || localExpenses.isNotEmpty) {
-      print('   Clearing old local data...');
-      await clearAllLocalData();
-    }
+    print('   Step 3: Downloading data to local storage...');
 
     // Download cloud to local
     if (cloudIncomes.isNotEmpty) {
@@ -596,10 +586,19 @@ class DataRepository {
       print('   ✓ Expenses downloaded');
     }
 
-    print('   Step 4: Switching mode...');
+    print('   Step 4: Clearing cloud data...');
+    if (cloudIncomes.isNotEmpty) {
+      await _firestoreService.batchDeleteIncomes(cloudIncomes);
+      print('   ✓ Cloud incomes cleared');
+    }
+    if (cloudExpenses.isNotEmpty) {
+      await _firestoreService.batchDeleteExpenses(cloudExpenses);
+      print('   ✓ Cloud expenses cleared');
+    }
+
+    print('   Step 5: Switching mode...');
     await setStorageMode(StorageMode.local);
     print('   ✓ Mode switched to LOCAL');
     print('✓ [MIGRATION] Completed: Cloud → Local');
-    print('   Note: Cloud data remains as backup');
   }
 }

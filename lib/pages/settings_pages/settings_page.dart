@@ -272,22 +272,21 @@ class _SettingsPageState extends State<SettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Buluttaki tüm verileriniz bu cihaza indirilecek ve '
-                  'yeni veriler artık sadece yerel olarak saklanacak.',
+                  'Tüm bulut verileriniz bu cihaza taşınacak ve buluttaki kopyaları silinecektir.',
                   style: TextStyle(fontSize: 14),
                 ),
                 SizedBox(height: 16),
                 Text(
                   '✓ Ne Olacak:',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                      fontSize: 13),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  '• Buluttaki veriler bu cihaza kopyalanacak\n'
-                  '• Bulut verileriniz silinmeyecek (yedek olarak kalır)\n'
+                  '• Buluttaki tüm veriler bu cihaza indirilecek.\n'
+                  '• İndirme sonrası buluttaki verileriniz temizlenecek.\n'
                   '• Yeni işlemler sadece bu cihazda tutulacak',
                   style: TextStyle(fontSize: 12),
                 ),
@@ -295,14 +294,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(
                   '⚠️ Dikkat:',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                  ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                      fontSize: 13),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  '• Çoklu cihaz senkronizasyonu duracak\n'
-                  '• Yeni veriler sadece bu cihazda olacak',
+                  '• Bu işlemden sonra çoklu cihaz senkronizasyonu duracaktır.\n'
+                  '• Verileriniz artık sadece bu cihazda saklanacaktır.',
                   style: TextStyle(fontSize: 12),
                 ),
               ],
@@ -314,7 +313,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context, true),
-                icon: const Icon(Icons.download),
+                icon: const Icon(Icons.move_down),
                 label: const Text('İndir ve Geç'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,

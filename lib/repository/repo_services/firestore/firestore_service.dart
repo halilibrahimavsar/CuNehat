@@ -219,6 +219,36 @@ class FirestoreService implements IDataService {
     }
   }
 
+  Future<void> batchDeleteExpenses(Iterable<Expense> expenses) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (final expense in expenses) {
+        final docRef = _expense.doc(expense.id);
+        batch.delete(docRef);
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Toplu gider silme hatası: $e');
+    }
+  }
+
+  Future<void> batchDeleteIncomes(Iterable<Income> incomes) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (final income in incomes) {
+        final docRef = _income.doc(income.id);
+        batch.delete(docRef);
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Toplu gelir silme hatası: $e');
+    }
+  }
+
   // ============ UTILITY ============
 
   /// Checks if user is authenticated and has internet connection

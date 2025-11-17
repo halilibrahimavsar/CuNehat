@@ -46,12 +46,16 @@ class LocalDataService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
+    // Bitiş tarihini gün sonu (23:59:59) olarak ayarla
+    final inclusiveLastDate =
+        DateTime(lastDate.year, lastDate.month, lastDate.day, 23, 59, 59);
+
     return _expenseBox.values.where((expense) {
       // Tarih aralığı kontrolü
       return !expense.date.isBefore(firstDate) &&
-          !expense.date.isAfter(lastDate);
+          !expense.date.isAfter(inclusiveLastDate);
     }).toList()
-      ..sort((a, b) => b.date.compareTo(a.date)); // Azalan sıralama (reversed)
+      ..sort((a, b) => b.date.compareTo(a.date)); // Azalan sıralama
   }
 
   @override
@@ -59,9 +63,13 @@ class LocalDataService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
-    // TODO: this one is not correctly working, same as in getExpenseByDateRange....
+    // Bitiş tarihini gün sonu (23:59:59) olarak ayarla
+    final inclusiveLastDate =
+        DateTime(lastDate.year, lastDate.month, lastDate.day, 23, 59, 59);
+
     return _incomeBox.values.where((income) {
-      return !income.date.isBefore(firstDate) && !income.date.isAfter(lastDate);
+      return !income.date.isBefore(firstDate) &&
+          !income.date.isAfter(inclusiveLastDate);
     }).toList()
       ..sort((a, b) => b.date.compareTo(a.date)); // Azalan sıralama
   }
