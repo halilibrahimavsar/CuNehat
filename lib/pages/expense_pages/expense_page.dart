@@ -1,7 +1,7 @@
 import 'package:cunehat/constants/app_constants.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/data_layer/shared_data_bloc/data_bloc.dart';
-import 'package:cunehat/data_layer/shared_data_bloc/data_event.dart';
+import 'package:cunehat/repository/models/expense_model.dart';
+import 'package:cunehat/repository/data_bloc/data_bloc.dart';
+import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

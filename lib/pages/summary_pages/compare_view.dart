@@ -1,7 +1,7 @@
 import 'package:cunehat/constants/app_constants.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
-import 'package:cunehat/data_layer/data_repository.dart';
+import 'package:cunehat/repository/models/expense_model.dart';
+import 'package:cunehat/repository/models/income_model.dart';
+import 'package:cunehat/repository/data_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';

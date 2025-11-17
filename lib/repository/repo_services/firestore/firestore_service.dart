@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
-import 'package:cunehat/data_layer/local_storage/idata_service.dart';
+import 'package:cunehat/repository/models/expense_model.dart';
+import 'package:cunehat/repository/models/income_model.dart';
+import 'package:cunehat/repository/repo_services/idata_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// **FirestoreService**: Cloud storage implementation
-///
 /// KEY CHANGES:
 /// - getAllExpenses/getAllIncomes implemented
 /// - Better error handling

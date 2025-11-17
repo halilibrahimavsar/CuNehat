@@ -1,8 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/constants/app_constants.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/expense_model.dart';
-import 'package:cunehat/data_layer/firestore/firestore_models/income_model.dart';
-import 'package:cunehat/data_layer/firestore/firestore_service.dart';
+import 'package:cunehat/repository/models/expense_model.dart';
+import 'package:cunehat/repository/models/income_model.dart';
+import 'package:cunehat/repository/repo_services/firestore/firestore_service.dart';
 import 'package:hive/hive.dart';
 
 /// Çevrimdışı senkronizasyon servisi

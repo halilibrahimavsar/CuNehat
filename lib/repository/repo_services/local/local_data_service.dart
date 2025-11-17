@@ -1,7 +1,7 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/models/income_model.dart';
-import 'package:cunehat/repository/idata_service.dart';
+import 'package:cunehat/repository/repo_services/idata_service.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
