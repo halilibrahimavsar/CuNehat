@@ -5,6 +5,11 @@ import 'package:cunehat/repository/models/income_model.dart';
 import 'package:cunehat/repository/repo_services/firestore/firestore_service.dart';
 import 'package:hive/hive.dart';
 
+// TODO: yerel verileri buluta taşırken duplicate oluyor datalar.
+// Clouddan yerele taşımada sorun olmuyor çünkü yerel depolamadaki
+// veriler taşındıktan sonra siliniyor, aynı şekilde verlileri clouddan
+// yerele taşımada cloud verilerini taşıdıktan sonra silmek gerekli
+
 /// Çevrimdışı senkronizasyon servisi
 class SyncService {
   final FirestoreService _firestoreService;
