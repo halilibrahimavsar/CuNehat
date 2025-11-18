@@ -1,6 +1,6 @@
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
-import 'package:cunehat/repository/models/pending_operation_model.dart';
+import 'package:cunehat/repository/get_storage_mod.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/repo_services/firestore/firestore_service.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
@@ -43,33 +43,9 @@ void main() async {
 
   Hive.registerAdapter(IncomeAdapter()); // typeId: 0
   Hive.registerAdapter(ExpenseAdapter()); // typeId: 1
-  Hive.registerAdapter(PendingOperationAdapter()); // typeId: 2
+  // Hive.registerAdapter(PendingOperationAdapter()); // typeId: 2
 
   debugPrint('✅ Hive TypeAdapters registered');
-
-  // ============ CHECK FOR MIGRATION ============
-  // Uncomment if you need to clear old data due to schema changes
-  /*
-  final prefs = await SharedPreferences.getInstance();
-  final needsMigration = !(prefs.getBool('migration_v1_done') ?? false);
-  
-  if (needsMigration) {
-    debugPrint('🔄 Running one-time migration...');
-    
-    try {
-      // Delete old boxes
-      await Hive.deleteBoxFromDisk('expenses_box');
-      await Hive.deleteBoxFromDisk('incomes_box');
-      await Hive.deleteBoxFromDisk('pending_operations_box');
-      
-      // Mark as done
-      await prefs.setBool('migration_v1_done', true);
-      debugPrint('✅ Migration completed');
-    } catch (e) {
-      debugPrint('⚠️  Migration error (continuing anyway): $e');
-    }
-  }
-  */
 
   // ============ INITIALIZE SERVICES ============
 
@@ -103,11 +79,19 @@ void main() async {
         RepositoryProvider<SharedPreferences>(
           create: (context) => sharedPreferences,
         ),
+        RepositoryProvider<GetStorageMod>(
+          create: (context) => GetStorageMod(
+            prefs: context.read<SharedPreferences>(),
+            firestoreService: context.read<FirestoreService>(),
+            localDataService: context.read<LocalDataService>(),
+          ),
+        ),
         RepositoryProvider<SyncService>(
           create: (context) => syncService,
         ),
         RepositoryProvider<DataRepository>(
           create: (context) => DataRepository(
+            getStorageMod: context.read<GetStorageMod>(),
             localDataService: context.read<LocalDataService>(),
             firestoreService: context.read<FirestoreService>(),
             sharedPreferences: context.read<SharedPreferences>(),

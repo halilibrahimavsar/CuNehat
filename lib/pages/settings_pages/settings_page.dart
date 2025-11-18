@@ -3,6 +3,7 @@ import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_select
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:cunehat/repository/data_repository.dart';
+import 'package:cunehat/repository/get_storage_mod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -23,13 +24,13 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _currentMode = context.read<DataRepository>().getStorageMode();
+    _currentMode = context.read<GetStorageMod>().getStorageMode();
     print('🔧 [SETTINGS] Initialized with mode: ${_currentMode.name}');
   }
 
   /// Shows storage mode selection dialog
   Future<void> _showStorageModeDialog() async {
-    final repository = context.read<DataRepository>();
+    final repository = context.read<GetStorageMod>();
     final currentMode = repository.getStorageMode();
 
     final selectedMode = await showDialog<StorageMode>(
@@ -111,7 +112,8 @@ class _SettingsPageState extends State<SettingsPage> {
         if (mounted) {
           setState(() {
             _currentMode = StorageMode.cloud;
-            _isLoading = false;
+            _isLoading =
+                false; // Bu satır zaten vardı, tekrar eklemeye gerek yok.
           });
 
           print('📤 [SETTINGS] Triggering data refresh after mode change');
