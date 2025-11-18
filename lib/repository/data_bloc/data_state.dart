@@ -26,12 +26,6 @@ final class ErrorState extends DataState {
 /// No data available for current filters
 final class NoDataState extends DataState {}
 
-/// Selected date range has no data
-final class DateIsEmptyState extends DataState {}
-
-/// Attempted to add duplicate data
-final class DateAlreadyExistsState extends DataState {}
-
 // ============ LOADING STATES ============
 
 /// General loading state for data operations

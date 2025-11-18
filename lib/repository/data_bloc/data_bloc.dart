@@ -190,7 +190,10 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   }
 
   Future<void> _silentRefresh(Emitter<DataState> emit) async {
-    if (_lastFilterStart == null || _lastFilterEnd == null) return;
+    if (_lastFilterStart == null || _lastFilterEnd == null) {
+      emit(ErrorState(err: 'Yenileme hatası: Tarihler boş olamaz'));
+      return;
+    }
 
     try {
       final incomeData =
@@ -199,8 +202,12 @@ class DataBloc extends Bloc<DataEvent, DataState> {
           await _fetchAndGroupExpense(_lastFilterStart!, _lastFilterEnd!);
 
       emit(SuccessfullyGetCompareState(
-          expense: expenseData, income: incomeData));
-    } catch (e) {}
+        expense: expenseData,
+        income: incomeData,
+      ));
+    } catch (e) {
+      throw Exception('Yenileme hatası: ${e.toString()}');
+    }
   }
 
   Future<Map<DateTime, List<Income>>> _fetchAndGroupIncome(
