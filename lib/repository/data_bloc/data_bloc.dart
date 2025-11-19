@@ -175,15 +175,35 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   Future<void> _onRefreshData(
       RefreshDataEvent event, Emitter<DataState> emit) async {
     emit(LoadingDataState());
+    final Map<DateTime, List<Income>> incomeData;
+    final Map<DateTime, List<Expense>> expenseData;
+    bool isFetchedIncome = false;
+    bool isFetchedExpense = false;
 
     try {
-      final incomeData =
-          await _fetchAndGroupIncome(event.filterStart, event.filterEnd);
-      final expenseData =
-          await _fetchAndGroupExpense(event.filterStart, event.filterEnd);
+      incomeData =
+          await _fetchAndGroupIncome(event.filterStart, event.filterEnd)
+              .whenComplete(
+        () {
+          isFetchedIncome = true;
+        },
+      );
+      expenseData =
+          await _fetchAndGroupExpense(event.filterStart, event.filterEnd)
+              .whenComplete(
+        () {
+          isFetchedExpense = true;
+        },
+      );
 
-      emit(SuccessfullyGetCompareState(
-          expense: expenseData, income: incomeData));
+      if (isFetchedExpense && isFetchedIncome) {
+        // await Future.delayed(const Duration(milliseconds: 100));
+
+        emit(SuccessfullyGetCompareState(
+            expense: expenseData, income: incomeData));
+      } else {
+        emit(LoadingDataState());
+      }
     } catch (e) {
       emit(ErrorState(err: 'Yenileme hatası: ${e.toString()}'));
     }

@@ -1,3 +1,4 @@
+import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:cunehat/repository/data_bloc/data_state.dart';
@@ -7,6 +8,7 @@ import 'package:cunehat/pages/summary_pages/compare_view.dart';
 import 'package:cunehat/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/shared/animations/slider_button_view.dart';
 import 'package:cunehat/shared/widgets/build_drawer.dart';
+import 'package:cunehat/shared/widgets/date_rang_pck.dart';
 import 'package:cunehat/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,21 +23,16 @@ class WalletPage extends StatefulWidget {
 class _WalletPageState extends State<WalletPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late DateTime _start;
-  late DateTime _end;
+  DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
+  DateTime _endDate = DateTime.now();
   double _currentSliderValue = 0.0;
 
   @override
   void initState() {
     super.initState();
     _initAnimation();
-    _initDateFilter();
     _fetchData();
   }
-
-  // -------------------------------------------------------------
-  // INIT
-  // -------------------------------------------------------------
 
   void _initAnimation() {
     _controller = AnimationController(
@@ -48,15 +45,26 @@ class _WalletPageState extends State<WalletPage>
       });
   }
 
-  void _initDateFilter() {
-    _end = DateTime.now();
-    _start = _end.subtract(const Duration(days: 30));
-  }
-
   void _fetchData() {
     context.read<DataBloc>().add(
-          GetCompareEvent(filterStart: _start, filterEnd: _end),
+          GetCompareEvent(filterStart: _startDate, filterEnd: _endDate),
         );
+  }
+
+  Future<void> _showDateRangePicker() async {
+    final result = await showDateRangePickerDialog(
+      context: context,
+      initialStartDate: _startDate,
+      initialEndDate: _endDate,
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _startDate = result['firstDate']!;
+        _endDate = result['lastDate']!;
+      });
+      _fetchData(); // Yeni tarih aralığıyla verileri yeniden yükle
+    }
   }
 
   @override
@@ -74,19 +82,19 @@ class _WalletPageState extends State<WalletPage>
     return SafeArea(
       top: false,
       child: Scaffold(
-        appBar: SharedAppbar(currentSliderValue: _currentSliderValue),
+        appBar: SharedAppbar(
+          currentSliderValue: _currentSliderValue,
+          onDateRangePressed: _showDateRangePicker, // Yeni callback
+        ),
         drawer: const SharedDrawer(),
-
-        // ---------------------------------------------------------
-        // 🔥 TEK BÜYÜK LISTENER — TÜM OLAYLAR BURADA YÖNETİLİR
-        // ---------------------------------------------------------
         body: BlocListener<DataBloc, DataState>(
           listener: (context, state) => _routeStateEvents(context, state),
           child: Column(
             children: [
-              // -----------------------------------------------------
-              // 🔥 ANA VIEW BUILDER
-              // -----------------------------------------------------
+              // Tarih Aralığı Göstergesi
+              _buildDateRangeIndicator(),
+
+              // Ana İçerik
               Expanded(
                 child: BlocBuilder<DataBloc, DataState>(
                   buildWhen: (prev, curr) =>
@@ -117,7 +125,6 @@ class _WalletPageState extends State<WalletPage>
                         return _buildNoDataView();
                       case ErrorState():
                         return _buildErrorView(state.err);
-
                       default:
                         return const SizedBox.shrink();
                     }
@@ -125,9 +132,7 @@ class _WalletPageState extends State<WalletPage>
                 ),
               ),
 
-              // -----------------------------------------------------
-              // 🔥 SLIDER BUTTON
-              // -----------------------------------------------------
+              // Slider Button
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonExpenseIncome(controller: _controller),
@@ -142,6 +147,55 @@ class _WalletPageState extends State<WalletPage>
   // -------------------------------------------------------------
   // STATE EVENT ROUTER  (Tüm Snackbar / Error / Sync olayları)
   // -------------------------------------------------------------
+
+  Widget _buildDateRangeIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.grey.shade50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Tarih Aralığı:',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          GestureDetector(
+            onTap: _showDateRangePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    '${AppFormatters.dateShort.format(_startDate)} - ${AppFormatters.dateShort.format(_endDate)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: 16,
+                    color: Colors.blue.shade700,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _routeStateEvents(BuildContext context, DataState state) {
     switch (state) {

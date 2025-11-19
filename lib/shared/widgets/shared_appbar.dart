@@ -1,13 +1,14 @@
-import 'package:cunehat/shared/widgets/date_rang_pck.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SharedAppbar extends StatefulWidget implements PreferredSizeWidget {
   final double currentSliderValue; // Yeni parametre
+  final VoidCallback onDateRangePressed; // Yeni callback
 
   const SharedAppbar({
     super.key,
-    required this.currentSliderValue, // Zorunlu parametre
+    required this.currentSliderValue,
+    required this.onDateRangePressed, // Zorunlu parametre
   });
 
   @override
@@ -153,10 +154,7 @@ class _SharedAppbarState extends State<SharedAppbar> {
       ),
       actions: [
         IconButton(
-          onPressed: () async {
-            // TODO: Seçilen tarih aralığını state management (BLoC vb.) ile yönet.
-            await getDateRange(context);
-          },
+          onPressed: widget.onDateRangePressed, // Callback'i burada kullan
           icon: Icon(
             Icons.filter_list_outlined,
             color: _getContentColor(currentValue),

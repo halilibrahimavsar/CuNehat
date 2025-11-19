@@ -1,237 +1,295 @@
+// lib/shared/widgets/date_range_picker.dart
 import 'package:cunehat/constants/app_constants.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
-DateTime filterStartDate = getMonthRange(DateTime.now())['firstDate']!;
-DateTime filterEndDate = getMonthRange(DateTime.now())['lastDate']!;
+class DateRangePicker extends StatefulWidget {
+  final DateTime initialStartDate;
+  final DateTime initialEndDate;
+  final Function(DateTime, DateTime) onDateRangeSelected;
 
-Map<String, DateTime> getMonthRange(DateTime dateTime) {
-  /// Based on received datetime, this function will produce two Datetimes
-  /// first one will return month's first day and
-  /// second one will return month's last day
-  /// For example;
-  /// ```
-  /// a = getMonthRange(Datetime.now()) \\2024-05-25 03:34:30.325313
-  /// a['firstDate'] \\ 2024-05-01 00:00:00.000
-  /// a['lastDate'] \\ 2024-05-31 00:00:00.000
-  /// ```
-  return {
-    "firstDate": DateTime(dateTime.year, dateTime.month, 1),
-    "lastDate": DateTime(dateTime.year, dateTime.month + 1, 1)
-        .subtract(const Duration(days: 1)),
-  };
+  const DateRangePicker({
+    super.key,
+    required this.initialStartDate,
+    required this.initialEndDate,
+    required this.onDateRangeSelected,
+  });
+
+  @override
+  State<DateRangePicker> createState() => _DateRangePickerState();
 }
 
-Future<Map<String, DateTime>> getDateRange(BuildContext context) async {
-  Map<String, DateTime> result = {
-    "firstDate": filterStartDate,
-    "lastDate": filterEndDate,
-  };
-  int isSelected = 0;
+class _DateRangePickerState extends State<DateRangePicker> {
+  late DateTime _startDate;
+  late DateTime _endDate;
+  late int _selectedOption;
 
-  Color selectedColor = Colors.cyan;
-  Color notSelectedColor = Colors.white;
+  @override
+  void initState() {
+    super.initState();
+    _startDate = widget.initialStartDate;
+    _endDate = widget.initialEndDate;
+    _selectedOption = _getInitialSelectedOption();
+  }
 
-  bool save = await showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    enableDrag: true,
-    backgroundColor:
-        const Color.fromARGB(255, 25, 24, 24).withValues(alpha: 0.7),
-    builder: (bottomContext) {
-      return StatefulBuilder(
-        builder: (context, setStateOfBottomSheet) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
+  int _getInitialSelectedOption() {
+    final now = DateTime.now();
+    final currentMonth = getMonthRange(now);
+    final lastMonth = getMonthRange(DateTime(now.year, now.month - 1));
+
+    if (_startDate == currentMonth['firstDate'] &&
+        _endDate == currentMonth['lastDate']) {
+      return 1; // Bu ay
+    } else if (_startDate == lastMonth['firstDate'] &&
+        _endDate == lastMonth['lastDate']) {
+      return 2; // Geçen ay
+    } else {
+      return 0; // Özel seçim
+    }
+  }
+
+  static Map<String, DateTime> getMonthRange(DateTime dateTime) {
+    return {
+      "firstDate": DateTime(dateTime.year, dateTime.month, 1),
+      "lastDate": DateTime(dateTime.year, dateTime.month + 1, 1)
+          .subtract(const Duration(days: 1)),
+    };
+  }
+
+  Future<void> _selectCustomDateRange() async {
+    final pickedRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.blue,
+              onPrimary: Colors.white,
             ),
-            height: 250,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(25),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 42, 41, 41),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        NeumorphicButton(
-                          style: NeumorphicStyle(
-                            color: const Color.fromARGB(255, 42, 41, 41),
-                            boxShape: NeumorphicBoxShape.roundRect(
-                              BorderRadius.circular(20),
-                            ),
-                            shape: NeumorphicShape.convex,
-                            oppositeShadowLightSource:
-                                isSelected == 0 ? true : false,
-                            shadowLightColor: Colors.grey.shade500,
-                            shadowDarkColor: Colors.black,
-                            depth: 2,
-                            intensity: 200,
-                          ),
-                          onPressed: () async {
-                            var a = await showDateRangePicker(
-                              context: context,
-                              firstDate: DateTime(1997, 5, 19),
-                              lastDate: DateTime(2099, 5, 19),
-                            );
-                            setStateOfBottomSheet(() {
-                              result['firstDate'] = a?.start ??
-                                  DateTime.now().subtract(
-                                    Duration(
-                                      days: DateTime.now().day,
-                                    ),
-                                  );
-                              result['lastDate'] = a?.end ?? DateTime.now();
-                              isSelected = 0;
-                            });
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                '${AppFormatters.dateShort.format(result['firstDate']!)}   -   ${AppFormatters.dateShort.format(result['lastDate']!)}',
-                                style: TextStyle(
-                                  color: (isSelected == 0)
-                                      ? selectedColor
-                                      : notSelectedColor,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 19,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            NeumorphicButton(
-                              style: NeumorphicStyle(
-                                color: const Color.fromARGB(255, 42, 41, 41),
-                                boxShape: NeumorphicBoxShape.roundRect(
-                                    BorderRadius.circular(20)),
-                                shape: NeumorphicShape.concave,
-                                oppositeShadowLightSource: isSelected == 2,
-                                shadowLightColor: Colors.grey.shade500,
-                                shadowDarkColor: Colors.black,
-                                depth: 2,
-                                intensity: 200,
-                              ),
-                              child: Text(
-                                "Geçen ay",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: isSelected == 2
-                                      ? selectedColor
-                                      : notSelectedColor,
-                                ),
-                              ),
-                              onPressed: () {
-                                result = getMonthRange(
-                                  DateTime(DateTime.now().year,
-                                      DateTime.now().month - 1),
-                                );
+          ),
+          child: child!,
+        );
+      },
+    );
 
-                                setStateOfBottomSheet(() {
-                                  isSelected = 2;
-                                });
-                              },
-                            ),
-                            NeumorphicButton(
-                              style: NeumorphicStyle(
-                                color: const Color.fromARGB(255, 42, 41, 41),
-                                boxShape: NeumorphicBoxShape.roundRect(
-                                    BorderRadius.circular(20)),
-                                shape: NeumorphicShape.concave,
-                                oppositeShadowLightSource: isSelected == 3,
-                                shadowLightColor: Colors.grey.shade500,
-                                shadowDarkColor: Colors.black,
-                                depth: 2,
-                                intensity: 200,
-                              ),
-                              child: Text(
-                                "Bu ay",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: isSelected == 3
-                                      ? selectedColor
-                                      : notSelectedColor,
-                                ),
-                              ),
-                              onPressed: () {
-                                result = getMonthRange(
-                                  DateTime(DateTime.now().year,
-                                      DateTime.now().month),
-                                );
-                                setStateOfBottomSheet(() {
-                                  isSelected = 3;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                      colors: [Colors.red, Colors.green],
-                    )),
-                    padding: const EdgeInsets.all(25),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        NeumorphicButton(
-                          style: const NeumorphicStyle(
-                            color: Colors.red,
-                          ),
-                          onPressed: () {
-                            Navigator.pop(bottomContext, false);
-                          },
-                          child: const Text(
-                            "VAZGEÇ",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        NeumorphicButton(
-                          style: const NeumorphicStyle(color: Colors.green),
-                          onPressed: () {
-                            Navigator.pop(bottomContext, true);
-                          },
-                          child: const Text(
-                            "KAYDET",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+    if (pickedRange != null && mounted) {
+      setState(() {
+        _startDate = pickedRange.start;
+        _endDate = pickedRange.end;
+        _selectedOption = 0;
+      });
+    }
+  }
+
+  void _applyDateRange() {
+    widget.onDateRangeSelected(_startDate, _endDate);
+    Navigator.of(context).pop();
+  }
+
+  void _cancel() {
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Başlık
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
             ),
-          );
-        },
-      );
-    },
-  ).then((value) => value ?? false);
+            child: Row(
+              children: [
+                Icon(Icons.calendar_today, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(
+                  'Tarih Aralığı Seç',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-  if (save) {
-    return result;
-  } else {
-    return getMonthRange(
-      DateTime(DateTime.now().year, DateTime.now().month),
+          // Seçenekler
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Özel Tarih Aralığı
+                _buildOption(
+                  title: 'Özel Tarih Aralığı',
+                  subtitle:
+                      '${AppFormatters.dateShort.format(_startDate)} - ${AppFormatters.dateShort.format(_endDate)}',
+                  isSelected: _selectedOption == 0,
+                  onTap: _selectCustomDateRange,
+                  icon: Icons.calendar_month,
+                ),
+
+                const SizedBox(height: 12),
+
+                // Hızlı Seçenekler
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildQuickOption(
+                        title: 'Bu Ay',
+                        isSelected: _selectedOption == 1,
+                        onTap: () {
+                          setState(() {
+                            final range = getMonthRange(DateTime.now());
+                            _startDate = range['firstDate']!;
+                            _endDate = range['lastDate']!;
+                            _selectedOption = 1;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildQuickOption(
+                        title: 'Geçen Ay',
+                        isSelected: _selectedOption == 2,
+                        onTap: () {
+                          setState(() {
+                            final range = getMonthRange(DateTime(
+                                DateTime.now().year, DateTime.now().month - 1));
+                            _startDate = range['firstDate']!;
+                            _endDate = range['lastDate']!;
+                            _selectedOption = 2;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Alt Butonlar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _cancel,
+                    child: const Text('İptal'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _applyDateRange,
+                    child: const Text('Uygula'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _buildOption({
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required IconData icon,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? Colors.blue : Colors.grey),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: isSelected ? Icon(Icons.check, color: Colors.blue) : null,
+      tileColor: isSelected ? Colors.blue.withOpacity(0.1) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? Colors.blue : Colors.grey.shade300,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildQuickOption({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.blue.withOpacity(0.1) : null,
+        side: BorderSide(
+          color: isSelected ? Colors.blue : Colors.grey.shade300,
+        ),
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? Colors.blue : Colors.grey.shade700,
+        ),
+      ),
+    );
+  }
+}
+
+// Yardımcı fonksiyon
+Future<Map<String, DateTime>?> showDateRangePickerDialog({
+  required BuildContext context,
+  required DateTime initialStartDate,
+  required DateTime initialEndDate,
+}) async {
+  DateTime? selectedStartDate;
+  DateTime? selectedEndDate;
+
+  final result = await showModalBottomSheet<Map<String, DateTime>>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DateRangePicker(
+      initialStartDate: initialStartDate,
+      initialEndDate: initialEndDate,
+      onDateRangeSelected: (start, end) {
+        selectedStartDate = start;
+        selectedEndDate = end;
+      },
+    ),
+  );
+
+  if ((selectedStartDate != null) && (selectedEndDate != null)) {
+    return {
+      'firstDate': selectedStartDate!,
+      'lastDate': selectedEndDate!,
+    };
+  }
+
+  return result;
 }
