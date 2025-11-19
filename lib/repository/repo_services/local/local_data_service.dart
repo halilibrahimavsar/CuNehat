@@ -46,9 +46,12 @@ class LocalDataService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
-    // Bitiş tarihini gün sonu (23:59:59) olarak ayarla
     final inclusiveLastDate =
-        DateTime(lastDate.year, lastDate.month, lastDate.day, 23, 59, 59);
+        DateTime(lastDate.year, lastDate.month, lastDate.day);
+    print("------------------------------");
+    print(firstDate);
+    print(lastDate);
+    print("------------------------------");
 
     return _expenseBox.values.where((expense) {
       // Tarih aralığı kontrolü
@@ -63,9 +66,12 @@ class LocalDataService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
-    // Bitiş tarihini gün sonu (23:59:59) olarak ayarla
+    print("------------------------------");
+    print(firstDate);
+    print(lastDate);
+    print("------------------------------");
     final inclusiveLastDate =
-        DateTime(lastDate.year, lastDate.month, lastDate.day, 23, 59, 59);
+        DateTime(lastDate.year, lastDate.month, lastDate.day);
 
     return _incomeBox.values.where((income) {
       return !income.date.isBefore(firstDate) &&

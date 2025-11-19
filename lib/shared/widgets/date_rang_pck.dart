@@ -49,11 +49,15 @@ class _DateRangePickerState extends State<DateRangePicker> {
   }
 
   static Map<String, DateTime> getMonthRange(DateTime dateTime) {
-    return {
+    Map<String, DateTime> _date = {
       "firstDate": DateTime(dateTime.year, dateTime.month, 1),
       "lastDate": DateTime(dateTime.year, dateTime.month + 1, 1)
-          .subtract(const Duration(days: 1)),
+          .subtract(const Duration(days: 1))
+          .add(
+              Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999)),
     };
+    print(_date);
+    return _date;
   }
 
   Future<void> _selectCustomDateRange() async {

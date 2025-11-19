@@ -25,7 +25,11 @@ class _WalletPageState extends State<WalletPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
-  DateTime _endDate = DateTime.now();
+  DateTime _endDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  ).add(Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
   double _currentSliderValue = 0.0;
 
   @override

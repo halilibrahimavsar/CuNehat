@@ -48,6 +48,10 @@ class FirestoreService implements IDataService {
     required DateTime lastDate,
   }) async {
     try {
+      print("------------------------------");
+      print(firstDate);
+      print(lastDate);
+      print("------------------------------");
       final snapshot = await _expense
           .where('userId', isEqualTo: _ownerId)
           .where('date',
@@ -67,6 +71,10 @@ class FirestoreService implements IDataService {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
+    print("------------------------------");
+    print(firstDate);
+    print(lastDate);
+    print("------------------------------");
     try {
       final snapshot = await _income
           .where('userId', isEqualTo: _ownerId)
