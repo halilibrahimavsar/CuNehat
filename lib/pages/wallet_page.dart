@@ -135,7 +135,10 @@ class _WalletPageState extends State<WalletPage>
               // Slider Button
               Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: SliderButtonExpenseIncome(controller: _controller),
+                child: SliderButtonEnhanced(
+                  controller: _controller,
+                  onTap: () {},
+                ),
               ),
             ],
           ),

@@ -1,61 +1,118 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class SliderButtonExpenseIncome extends StatefulWidget {
+class SliderButtonEnhanced extends StatefulWidget {
   final AnimationController controller;
-  final ValueChanged<double>? onValueChanged; // Yeni callback eklendi
+  final ValueChanged<double>? onValueChanged;
+  final VoidCallback? onTap;
 
-  const SliderButtonExpenseIncome({
+  const SliderButtonEnhanced({
     super.key,
     required this.controller,
-    this.onValueChanged, // Yeni parametre
+    this.onValueChanged,
+    this.onTap,
   });
 
   @override
-  State<SliderButtonExpenseIncome> createState() =>
-      _SliderButtonExpenseIncomeState();
+  State<SliderButtonEnhanced> createState() => _SliderButtonEnhancedState();
 }
 
-class _SliderButtonExpenseIncomeState extends State<SliderButtonExpenseIncome> {
+class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
   bool _dragging = false;
   double _widgetWidth = 0.0;
+  int _lastZone = 1;
 
-  // Değer değiştiğinde callback'i çağır
-  void _notifyValueChanged(double value) {
-    if (widget.onValueChanged != null) {
-      widget.onValueChanged!(value);
+  @override
+  void initState() {
+    super.initState();
+    _updateZone(widget.controller.value);
+    widget.controller.addListener(() {
+      if (!_dragging) {
+        _updateZone(widget.controller.value);
+      }
+    });
+  }
+
+  void _updateZone(double value) {
+    int currentZone;
+    if (value < 0.33) {
+      currentZone = 0;
+    } else if (value > 0.66) {
+      currentZone = 2;
+    } else {
+      currentZone = 1;
+    }
+
+    if (currentZone != _lastZone) {
+      HapticFeedback.selectionClick();
+      _lastZone = currentZone;
     }
   }
 
+  void _notifyValueChanged(double value) {
+    widget.onValueChanged?.call(value);
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    final dx = details.localPosition.dx;
+    final newValue = (dx / _widgetWidth).clamp(0.0, 1.0);
+    widget.controller.value = newValue;
+    _updateZone(newValue);
+    _notifyValueChanged(newValue);
+  }
+
   void _onDragEnd(DragEndDetails details) {
-    // ... mevcut kod ...
     final velocity = details.primaryVelocity ?? 0;
     double target;
 
-    final currentValue = widget.controller.value;
-
-    // Hızlı kaydırma durumunda en yakın mantıksal noktaya git
     if (velocity.abs() > 300) {
-      target = velocity > 0
-          ? 0.0
-          : 1.0; // Sağa kaydırma 0'a, sola kaydırma 1'e gider
-      if ((currentValue - 0.5).abs() < (target - 0.5).abs()) {
-        target = 0.5; // Eğer orta noktaya daha yakınsa, ortaya git
+      if (velocity > 0) {
+        target = 1.0;
+      } else {
+        target = 0.0;
       }
     } else {
-      target = (currentValue * 2).round() /
-          2.0; // En yakın 0.0, 0.5 veya 1.0 değerine yuvarla
+      double value = widget.controller.value;
+      if (value < 0.33) {
+        target = 0.0;
+      } else if (value > 0.66) {
+        target = 1.0;
+      } else {
+        target = 0.5;
+      }
     }
 
     widget.controller.animateTo(
       target,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutBack,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutQuint,
     );
 
     setState(() => _dragging = false);
-    _notifyValueChanged(target); // Hedef değer değiştiğinde bildir
+    _notifyValueChanged(target);
+    HapticFeedback.lightImpact();
+  }
+
+  Color _getTrackColor(double value) {
+    if (value < 0.5) {
+      return Color.lerp(
+          const Color(0xFFFFEBEE), const Color(0xFFE3F2FD), value * 2)!;
+    } else {
+      return Color.lerp(
+          const Color(0xFFE3F2FD), const Color(0xFFE8F5E9), (value - 0.5) * 2)!;
+    }
+  }
+
+  Color _getActiveColor(double value) {
+    if (value < 0.33) return Colors.redAccent;
+    if (value > 0.66) return Colors.green;
+    return Colors.blueAccent;
+  }
+
+  IconData _getIcon(double value) {
+    if (value < 0.33) return Icons.remove;
+    if (value > 0.66) return Icons.add;
+    return Icons.compare_arrows_rounded;
   }
 
   @override
@@ -69,144 +126,136 @@ class _SliderButtonExpenseIncomeState extends State<SliderButtonExpenseIncome> {
           builder: (context, child) {
             final value = widget.controller.value;
 
-            final knobRotation = lerpDouble(0, 0, value)!;
-            // ... geri kalan mevcut kod ...
-            final trackColor = value < 0.5
-                ? Color.lerp(Colors.red[100], Colors.blue[100], value * 2)
-                : Color.lerp(
-                    Colors.blue[100], Colors.green[100], (value - 0.5) * 2);
-
-            final expenseOpacity = (1.0 - value * 2).clamp(0.0, 1.0);
-            final incomeOpacity = (value * 2 - 1.0).clamp(0.0, 1.0);
-            final compareOpacity =
-                (1.0 - (value - 0.5).abs() * 2).clamp(0.0, 1.0);
-
-            final IconData knobIcon;
-            final Color knobIconColor;
-
-            if (value > 0.75) {
-              knobIcon = Icons.arrow_forward_ios;
-              knobIconColor = Colors.green;
-            } else if (value < 0.25) {
-              knobIcon = Icons.arrow_back_ios_new;
-              knobIconColor = Colors.red;
-            } else {
-              knobIcon = Icons.compare_arrows;
-              knobIconColor = Colors.blue;
-            }
-
             return GestureDetector(
               onHorizontalDragStart: (_) => setState(() => _dragging = true),
-              onHorizontalDragUpdate: (details) {
-                final newValue =
-                    (1.0 - (details.localPosition.dx / _widgetWidth))
-                        .clamp(0.0, 1.0);
-                widget.controller.value = newValue;
-                _notifyValueChanged(newValue); // Sürükleme sırasında bildir
-              },
+              onHorizontalDragUpdate: _onDragUpdate,
               onHorizontalDragEnd: _onDragEnd,
-              child: AnimatedContainer(
-                // ... mevcut container kodu ...
-                duration: const Duration(milliseconds: 300),
-                height: 70,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(40),
-                  color: trackColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    )
-                  ],
-                ),
+              onTapUp: (details) {
+                final tapPosition = details.localPosition.dx / _widgetWidth;
+                double target;
+                if (tapPosition < 0.33) {
+                  target = 0.0;
+                } else if (tapPosition > 0.66) {
+                  target = 1.0;
+                } else {
+                  target = 0.5;
+                }
+                widget.controller.animateTo(target,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutQuint);
+              },
+              child: SizedBox(
+                height:
+                    80, // Yükselen metin için biraz daha yer açtık (padding niyetine)
                 child: Stack(
-                  alignment: Alignment.center,
+                  alignment: Alignment.bottomCenter,
                   children: [
-                    // ... mevcut stack children kodu ...
-                    Align(
-                      alignment: Alignment.center,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 150),
-                          opacity: incomeOpacity,
-                          child: Text(
-                            "Gelir",
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                    // --- TRACK (ARKA PLAN ÇUBUĞU) ---
+                    Container(
+                      height: 64,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        color: _getTrackColor(value),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white,
+                            offset: const Offset(-2, -2),
+                            blurRadius: 4,
                           ),
+                          BoxShadow(
+                              color: Colors.grey.shade300,
+                              offset: const Offset(2, 2),
+                              blurRadius: 4,
+                              blurStyle: BlurStyle.inner),
+                        ],
+                      ),
+                    ),
+
+                    // --- METİNLER (LABEL) ---
+                    // Metinleri track'in içine değil, üzerine Stack ile koyuyoruz.
+                    // Böylece Container dışında hareket edebilirler.
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 64, // Track ile aynı yükseklik
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Gider (Target: 0.0)
+                            _buildDynamicLabel(
+                                text: "Gider",
+                                targetPos: 0.0,
+                                currentPos: value,
+                                activeColor: Colors.red[800]!),
+                            // Karşılaştır (Target: 0.5)
+                            _buildDynamicLabel(
+                                text: "Karşılaştır",
+                                targetPos: 0.5,
+                                currentPos: value,
+                                activeColor: Colors.blue[800]!),
+                            // Gelir (Target: 1.0)
+                            _buildDynamicLabel(
+                                text: "Gelir",
+                                targetPos: 1.0,
+                                currentPos: value,
+                                activeColor: Colors.green[800]!),
+                          ],
                         ),
                       ),
                     ),
 
-                    Align(
-                      alignment: Alignment.center,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 20),
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 150),
-                          opacity: expenseOpacity,
-                          child: Text(
-                            "Gider",
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Align(
-                      alignment: Alignment.lerp(
-                          Alignment.centerRight, Alignment.centerLeft, value)!,
-                      child: Transform.rotate(
-                        angle: knobRotation,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          height: 60,
-                          width: 60,
-                          margin: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _dragging ? Colors.white : Colors.grey[200],
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              )
-                            ],
-                          ),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              AnimatedOpacity(
-                                duration: const Duration(milliseconds: 150),
-                                opacity: (1.0 - compareOpacity).clamp(0.0, 1.0),
+                    // --- HAREKETLİ DÜĞME (KNOB) ---
+                    Positioned(
+                      bottom:
+                          4, // Track içinde ortalamak için (64 - 56) / 2 = 4
+                      left: 4, // Başlangıç padding
+                      right: 4,
+                      child: Align(
+                        alignment: Alignment(value * 2 - 1, 0),
+                        child: GestureDetector(
+                          onTap: widget.onTap,
+                          child: Transform.scale(
+                            scale: _dragging ? 1.05 : 1.0,
+                            child: Container(
+                              height: 56,
+                              width: 56,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                border: Border.all(
+                                    color:
+                                        _getActiveColor(value).withOpacity(0.5),
+                                    width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: _getActiveColor(value)
+                                          .withOpacity(0.4),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                      spreadRadius: 2),
+                                ],
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                transitionBuilder: (child, anim) =>
+                                    RotationTransition(
+                                  turns: Tween<double>(begin: 0.75, end: 1.0)
+                                      .animate(anim),
+                                  child: ScaleTransition(
+                                      scale: anim, child: child),
+                                ),
                                 child: Icon(
-                                  knobIcon,
-                                  color: knobIconColor,
+                                  _getIcon(value),
+                                  key: ValueKey(
+                                      'icon_${value < 0.33 ? 'rem' : value > 0.66 ? 'add' : 'compare'}'),
+                                  color: _getActiveColor(value),
+                                  size: 28,
                                 ),
                               ),
-                              AnimatedOpacity(
-                                duration: const Duration(milliseconds: 150),
-                                opacity: compareOpacity,
-                                child: Text(
-                                  "Karşılaştır",
-                                  style: TextStyle(
-                                      color: Colors.blue[800],
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -218,6 +267,66 @@ class _SliderButtonExpenseIncomeState extends State<SliderButtonExpenseIncome> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildDynamicLabel({
+    required String text,
+    required double targetPos,
+    required double currentPos,
+    required Color activeColor,
+  }) {
+    // Butonun bu etikete ne kadar yakın olduğunu hesapla (0.0 ile 1.0 arası mesafe)
+    double distance = (currentPos - targetPos).abs();
+
+    // Etki alanı: Buton etiketin merkezine 0.25 birim yaklaştığında hareket başlasın
+    const double threshold = 0.25;
+
+    double translateY = 0.0;
+    double scale = 1.0;
+    double opacity = 0.6;
+    FontWeight fontWeight = FontWeight.normal;
+    Color color = Colors.grey[600]!;
+
+    if (distance < threshold) {
+      // 0 (tam üstünde) ile 1 (sınırda) arasında bir faktör
+      double proximityFactor = 1.0 - (distance / threshold);
+
+      // Yukarı doğru hareket (Max -40 piksel)
+      translateY = -40.0 * proximityFactor;
+
+      // Ölçek büyümesi (Max 1.2x)
+      scale = 1.0 + (0.2 * proximityFactor);
+
+      // Opaklık artışı
+      opacity = 0.6 + (0.4 * proximityFactor);
+
+      // Renk geçişi (Gri -> ActiveColor)
+      color = Color.lerp(Colors.grey[600], activeColor, proximityFactor)!;
+
+      // Kalınlık
+      if (proximityFactor > 0.5) {
+        fontWeight = FontWeight.bold;
+      }
+    }
+
+    return Expanded(
+      child: Transform.translate(
+        offset: Offset(0, translateY),
+        child: Transform.scale(
+          scale: scale,
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: color.withOpacity(opacity.clamp(0.0, 1.0)),
+              fontWeight: fontWeight,
+              fontSize: 14,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
