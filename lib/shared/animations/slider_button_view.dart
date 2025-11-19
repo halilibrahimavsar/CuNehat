@@ -1,10 +1,16 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// 1. Durumları temsil eden Enum'ı tanımlıyoruz
+enum SliderState { expense, compare, income }
 
 class SliderButtonEnhanced extends StatefulWidget {
   final AnimationController controller;
   final ValueChanged<double>? onValueChanged;
-  final VoidCallback? onTap;
+
+  // 2. onTap artık boş değil, SliderState tipinde veri taşıyan bir fonksiyon
+  final ValueChanged<SliderState>? onTap;
 
   const SliderButtonEnhanced({
     super.key,
@@ -93,6 +99,13 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
     HapticFeedback.lightImpact();
   }
 
+  // Yardımcı metod: Mevcut double değerini Enum'a çevirir
+  SliderState _getCurrentState(double value) {
+    if (value < 0.33) return SliderState.expense;
+    if (value > 0.66) return SliderState.income;
+    return SliderState.compare;
+  }
+
   Color _getTrackColor(double value) {
     if (value < 0.5) {
       return Color.lerp(
@@ -131,6 +144,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
               onHorizontalDragUpdate: _onDragUpdate,
               onHorizontalDragEnd: _onDragEnd,
               onTapUp: (details) {
+                // Track üzerine tıklandığında animasyonla oraya gitme
                 final tapPosition = details.localPosition.dx / _widgetWidth;
                 double target;
                 if (tapPosition < 0.33) {
@@ -141,12 +155,11 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                   target = 0.5;
                 }
                 widget.controller.animateTo(target,
-                    duration: const Duration(milliseconds: 400),
+                    duration: const Duration(milliseconds: 800),
                     curve: Curves.easeOutQuint);
               },
               child: SizedBox(
-                height:
-                    80, // Yükselen metin için biraz daha yer açtık (padding niyetine)
+                height: 72,
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
@@ -172,31 +185,26 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                     ),
 
                     // --- METİNLER (LABEL) ---
-                    // Metinleri track'in içine değil, üzerine Stack ile koyuyoruz.
-                    // Böylece Container dışında hareket edebilirler.
                     Positioned(
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      height: 64, // Track ile aynı yükseklik
+                      height: 66,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 1.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Gider (Target: 0.0)
                             _buildDynamicLabel(
                                 text: "Gider",
                                 targetPos: 0.0,
                                 currentPos: value,
                                 activeColor: Colors.red[800]!),
-                            // Karşılaştır (Target: 0.5)
                             _buildDynamicLabel(
                                 text: "Karşılaştır",
                                 targetPos: 0.5,
                                 currentPos: value,
                                 activeColor: Colors.blue[800]!),
-                            // Gelir (Target: 1.0)
                             _buildDynamicLabel(
                                 text: "Gelir",
                                 targetPos: 1.0,
@@ -209,14 +217,18 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
 
                     // --- HAREKETLİ DÜĞME (KNOB) ---
                     Positioned(
-                      bottom:
-                          4, // Track içinde ortalamak için (64 - 56) / 2 = 4
-                      left: 4, // Başlangıç padding
-                      right: 4,
+                      bottom: 4,
+                      left: 32,
+                      right: 32,
                       child: Align(
                         alignment: Alignment(value * 2 - 1, 0),
                         child: GestureDetector(
-                          onTap: widget.onTap,
+                          // 3. Butona tıklandığında o anki durumu (Enum) gönderiyoruz
+                          onTap: () {
+                            if (widget.onTap != null) {
+                              widget.onTap!(_getCurrentState(value));
+                            }
+                          },
                           child: Transform.scale(
                             scale: _dragging ? 1.05 : 1.0,
                             child: Container(
@@ -276,10 +288,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
     required double currentPos,
     required Color activeColor,
   }) {
-    // Butonun bu etikete ne kadar yakın olduğunu hesapla (0.0 ile 1.0 arası mesafe)
     double distance = (currentPos - targetPos).abs();
-
-    // Etki alanı: Buton etiketin merkezine 0.25 birim yaklaştığında hareket başlasın
     const double threshold = 0.25;
 
     double translateY = 0.0;
@@ -289,22 +298,11 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
     Color color = Colors.grey[600]!;
 
     if (distance < threshold) {
-      // 0 (tam üstünde) ile 1 (sınırda) arasında bir faktör
       double proximityFactor = 1.0 - (distance / threshold);
-
-      // Yukarı doğru hareket (Max -40 piksel)
       translateY = -40.0 * proximityFactor;
-
-      // Ölçek büyümesi (Max 1.2x)
       scale = 1.0 + (0.2 * proximityFactor);
-
-      // Opaklık artışı
       opacity = 0.6 + (0.4 * proximityFactor);
-
-      // Renk geçişi (Gri -> ActiveColor)
       color = Color.lerp(Colors.grey[600], activeColor, proximityFactor)!;
-
-      // Kalınlık
       if (proximityFactor > 0.5) {
         fontWeight = FontWeight.bold;
       }

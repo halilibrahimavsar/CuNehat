@@ -137,7 +137,18 @@ class _WalletPageState extends State<WalletPage>
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonEnhanced(
                   controller: _controller,
-                  onTap: () {},
+                  onTap: (value) {
+                    switch (value) {
+                      case SliderState.expense:
+                        break;
+                      case SliderState.income:
+                        break;
+                      case SliderState.compare:
+                        context.read<DataBloc>().add(GetCompareEvent(
+                            filterStart: _startDate, filterEnd: _endDate));
+                        break;
+                    }
+                  },
                 ),
               ),
             ],
