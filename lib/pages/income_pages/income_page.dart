@@ -2,7 +2,6 @@ import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/income_model.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -87,166 +86,166 @@ class _IncomeViewState extends State<IncomeView> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddIncomeSheet(context),
-        tooltip: 'Gelir Ekle',
-        child: const Icon(Icons.add),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => _showAddIncomeSheet(context),
+      //   tooltip: 'Gelir Ekle',
+      //   child: const Icon(Icons.add),
+      // ),
     );
   }
 
-  void _showAddIncomeSheet(BuildContext parentContext) {
-    showModalBottomSheet(
-      context: parentContext,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return _AddIncomeForm(parentContext: parentContext);
-      },
-    );
-  }
+  // void _showAddIncomeSheet(BuildContext parentContext) {
+  //   showModalBottomSheet(
+  //     context: parentContext,
+  //     isScrollControlled: true,
+  //     builder: (sheetContext) {
+  //       return _AddIncomeForm(parentContext: parentContext);
+  //     },
+  //   );
+  // }
 }
 
-// AYRI BİR STATEFUL WIDGET OLARAK FORM
-class _AddIncomeForm extends StatefulWidget {
-  final BuildContext parentContext;
+// // AYRI BİR STATEFUL WIDGET OLARAK FORM
+// class _AddIncomeForm extends StatefulWidget {
+//   final BuildContext parentContext;
 
-  const _AddIncomeForm({required this.parentContext});
+//   const _AddIncomeForm({required this.parentContext});
 
-  @override
-  State<_AddIncomeForm> createState() => _AddIncomeFormState();
-}
+//   @override
+//   State<_AddIncomeForm> createState() => _AddIncomeFormState();
+// }
 
-class _AddIncomeFormState extends State<_AddIncomeForm> {
-  late final TextEditingController _titleController;
-  late final TextEditingController _amountController;
-  late final TextEditingController _tagController;
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
+// class _AddIncomeFormState extends State<_AddIncomeForm> {
+//   late final TextEditingController _titleController;
+//   late final TextEditingController _amountController;
+//   late final TextEditingController _tagController;
+//   DateTime _selectedDate = DateTime.now();
+//   TimeOfDay _selectedTime = TimeOfDay.now();
 
-  @override
-  void initState() {
-    super.initState();
-    _titleController = TextEditingController();
-    _amountController = TextEditingController();
-    _tagController = TextEditingController();
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     _titleController = TextEditingController();
+//     _amountController = TextEditingController();
+//     _tagController = TextEditingController();
+//   }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _amountController.dispose();
-    _tagController.dispose();
-    super.dispose();
-  }
+//   @override
+//   void dispose() {
+//     _titleController.dispose();
+//     _amountController.dispose();
+//     _tagController.dispose();
+//     super.dispose();
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("Yeni Gelir Ekle",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          TextField(
-            controller: _titleController,
-            decoration: const InputDecoration(labelText: "Başlık"),
-          ),
-          TextField(
-            controller: _amountController,
-            decoration: const InputDecoration(labelText: "Miktar (₺)"),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-          TextField(
-            controller: _tagController,
-            decoration: const InputDecoration(labelText: "Etiket"),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(AppFormatters.dateShort.format(_selectedDate)),
-              TextButton(
-                child: const Text("Tarih Seç"),
-                onPressed: () async {
-                  final pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                  if (pickedDate != null && mounted) {
-                    setState(() {
-                      _selectedDate = pickedDate;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(_selectedTime.format(context)),
-              TextButton(
-                child: const Text("Saat Seç"),
-                onPressed: () async {
-                  final pickedTime = await showTimePicker(
-                    context: context,
-                    initialTime: _selectedTime,
-                  );
-                  if (pickedTime != null && mounted) {
-                    setState(() {
-                      _selectedTime = pickedTime;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            child: const Text("Kaydet"),
-            onPressed: () {
-              final title = _titleController.text;
-              final amount = double.tryParse(_amountController.text) ?? 0.0;
-              final tag = _tagController.text;
-              final userId =
-                  FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: EdgeInsets.only(
+//         bottom: MediaQuery.of(context).viewInsets.bottom,
+//         left: 16,
+//         right: 16,
+//         top: 16,
+//       ),
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           const Text("Yeni Gelir Ekle",
+//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+//           TextField(
+//             controller: _titleController,
+//             decoration: const InputDecoration(labelText: "Başlık"),
+//           ),
+//           TextField(
+//             controller: _amountController,
+//             decoration: const InputDecoration(labelText: "Miktar (₺)"),
+//             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+//           ),
+//           TextField(
+//             controller: _tagController,
+//             decoration: const InputDecoration(labelText: "Etiket"),
+//           ),
+//           const SizedBox(height: 16),
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(AppFormatters.dateShort.format(_selectedDate)),
+//               TextButton(
+//                 child: const Text("Tarih Seç"),
+//                 onPressed: () async {
+//                   final pickedDate = await showDatePicker(
+//                     context: context,
+//                     initialDate: _selectedDate,
+//                     firstDate: DateTime(2000),
+//                     lastDate: DateTime(2101),
+//                   );
+//                   if (pickedDate != null && mounted) {
+//                     setState(() {
+//                       _selectedDate = pickedDate;
+//                     });
+//                   }
+//                 },
+//               ),
+//             ],
+//           ),
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(_selectedTime.format(context)),
+//               TextButton(
+//                 child: const Text("Saat Seç"),
+//                 onPressed: () async {
+//                   final pickedTime = await showTimePicker(
+//                     context: context,
+//                     initialTime: _selectedTime,
+//                   );
+//                   if (pickedTime != null && mounted) {
+//                     setState(() {
+//                       _selectedTime = pickedTime;
+//                     });
+//                   }
+//                 },
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 20),
+//           ElevatedButton(
+//             child: const Text("Kaydet"),
+//             onPressed: () {
+//               final title = _titleController.text;
+//               final amount = double.tryParse(_amountController.text) ?? 0.0;
+//               final tag = _tagController.text;
+//               final userId =
+//                   FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
 
-              if (title.isNotEmpty && amount > 0) {
-                final combinedDateTime = DateTime(
-                  _selectedDate.year,
-                  _selectedDate.month,
-                  _selectedDate.day,
-                  _selectedTime.hour,
-                  _selectedTime.minute,
-                );
+//               if (title.isNotEmpty && amount > 0) {
+//                 final combinedDateTime = DateTime(
+//                   _selectedDate.year,
+//                   _selectedDate.month,
+//                   _selectedDate.day,
+//                   _selectedTime.hour,
+//                   _selectedTime.minute,
+//                 );
 
-                final newIncome = Income.createLocal(
-                  userId: userId,
-                  title: title,
-                  tag: tag.isEmpty ? 'Diğer' : tag,
-                  amount: amount,
-                  date: combinedDateTime,
-                  time: AppFormatters.time.format(combinedDateTime),
-                );
+//                 final newIncome = Income.createLocal(
+//                   userId: userId,
+//                   title: title,
+//                   tag: tag.isEmpty ? 'Diğer' : tag,
+//                   amount: amount,
+//                   date: combinedDateTime,
+//                   time: AppFormatters.time.format(combinedDateTime),
+//                 );
 
-                widget.parentContext
-                    .read<DataBloc>()
-                    .add(AddIncomeEvent(income: newIncome));
-                Navigator.pop(context);
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
+//                 widget.parentContext
+//                     .read<DataBloc>()
+//                     .add(AddIncomeEvent(income: newIncome));
+//                 Navigator.pop(context);
+//               }
+//             },
+//           ),
+//           const SizedBox(height: 16),
+//         ],
+//       ),
+//     );
+//   }
+// }

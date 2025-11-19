@@ -7,6 +7,7 @@ import 'package:cunehat/pages/income_pages/income_page.dart';
 import 'package:cunehat/pages/summary_pages/compare_view.dart';
 import 'package:cunehat/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/shared/animations/slider_button_view.dart';
+import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
 import 'package:cunehat/shared/widgets/build_drawer.dart';
 import 'package:cunehat/shared/widgets/date_rang_pck.dart';
 import 'package:cunehat/shared/widgets/shared_appbar.dart';
@@ -133,6 +134,7 @@ class _WalletPageState extends State<WalletPage>
               ),
 
               // Slider Button
+              // wallet_page.dart - Sadece Slider Button kısmını güncelleyin
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonEnhanced(
@@ -140,8 +142,40 @@ class _WalletPageState extends State<WalletPage>
                   onTap: (value) {
                     switch (value) {
                       case SliderState.expense:
+                        showModalBottomSheet(
+                          isScrollControlled: true,
+                          enableDrag: true,
+                          context: context,
+                          builder: (context) {
+                            return FinanceEntryWidget(
+                              isExpense: true,
+                              onSave: (item) {
+                                context
+                                    .read<DataBloc>()
+                                    .add(AddExpenseEvent(expense: item));
+                              },
+                              onCancel: () => Navigator.pop(context),
+                            );
+                          },
+                        );
                         break;
                       case SliderState.income:
+                        showModalBottomSheet(
+                          isScrollControlled: true,
+                          enableDrag: true,
+                          context: context,
+                          builder: (context) {
+                            return FinanceEntryWidget(
+                              isExpense: false,
+                              onSave: (item) {
+                                context
+                                    .read<DataBloc>()
+                                    .add(AddIncomeEvent(income: item));
+                              },
+                              onCancel: () => Navigator.pop(context),
+                            );
+                          },
+                        );
                         break;
                       case SliderState.compare:
                         context.read<DataBloc>().add(GetCompareEvent(
