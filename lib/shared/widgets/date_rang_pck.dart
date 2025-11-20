@@ -1,5 +1,6 @@
 // lib/shared/widgets/date_range_picker.dart
 import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
@@ -34,8 +35,9 @@ class _DateRangePickerState extends State<DateRangePicker> {
 
   int _getInitialSelectedOption() {
     final now = DateTime.now();
-    final currentMonth = getMonthRange(now);
-    final lastMonth = getMonthRange(DateTime(now.year, now.month - 1));
+    final currentMonth = DateRangeHelper.getMonthRange(now);
+    final lastMonth =
+        DateRangeHelper.getMonthRange(DateTime(now.year, now.month - 1));
 
     if (_startDate == currentMonth['firstDate'] &&
         _endDate == currentMonth['lastDate']) {
@@ -46,18 +48,6 @@ class _DateRangePickerState extends State<DateRangePicker> {
     } else {
       return 0; // Özel seçim
     }
-  }
-
-  static Map<String, DateTime> getMonthRange(DateTime dateTime) {
-    Map<String, DateTime> _date = {
-      "firstDate": DateTime(dateTime.year, dateTime.month, 1),
-      "lastDate": DateTime(dateTime.year, dateTime.month + 1, 1)
-          .subtract(const Duration(days: 1))
-          .add(
-              Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999)),
-    };
-    print(_date);
-    return _date;
   }
 
   Future<void> _selectCustomDateRange() async {
@@ -158,7 +148,8 @@ class _DateRangePickerState extends State<DateRangePicker> {
                         isSelected: _selectedOption == 1,
                         onTap: () {
                           setState(() {
-                            final range = getMonthRange(DateTime.now());
+                            final range =
+                                DateRangeHelper.getMonthRange(DateTime.now());
                             _startDate = range['firstDate']!;
                             _endDate = range['lastDate']!;
                             _selectedOption = 1;
@@ -173,8 +164,9 @@ class _DateRangePickerState extends State<DateRangePicker> {
                         isSelected: _selectedOption == 2,
                         onTap: () {
                           setState(() {
-                            final range = getMonthRange(DateTime(
-                                DateTime.now().year, DateTime.now().month - 1));
+                            final range = DateRangeHelper.getMonthRange(
+                                DateTime(DateTime.now().year,
+                                    DateTime.now().month - 1));
                             _startDate = range['firstDate']!;
                             _endDate = range['lastDate']!;
                             _selectedOption = 2;

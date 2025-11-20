@@ -11,6 +11,7 @@ import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
 import 'package:cunehat/shared/widgets/build_drawer.dart';
 import 'package:cunehat/shared/widgets/date_rang_pck.dart';
 import 'package:cunehat/shared/widgets/shared_appbar.dart';
+import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,12 +25,11 @@ class WalletPage extends StatefulWidget {
 class _WalletPageState extends State<WalletPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
-  DateTime _endDate = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-    DateTime.now().day,
-  ).add(Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
+
+  DateTime _startDate =
+      DateRangeHelper.getMonthRange(DateTime.now())['firstDate']!;
+  DateTime _endDate =
+      DateRangeHelper.getMonthRange(DateTime.now())['lastDate']!;
   double _currentSliderValue = 0.0;
 
   @override
