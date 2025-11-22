@@ -139,6 +139,9 @@ class _WalletPageState extends State<WalletPage>
 
               // Slider Button
               // wallet_page.dart - Sadece Slider Button kısmını güncelleyin
+              // wallet_page.dart içindeki Slider Button kısmını bu şekilde güncelleyin
+// (Sadece değişen kısım - SliderButtonEnhanced onTap bölümü)
+
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonEnhanced(
@@ -149,8 +152,9 @@ class _WalletPageState extends State<WalletPage>
                         showModalBottomSheet(
                           isScrollControlled: true,
                           enableDrag: true,
+                          backgroundColor: Colors.transparent, // Eklendi
                           context: context,
-                          builder: (context) {
+                          builder: (sheetContext) {
                             return FinanceEntryWidget(
                               isExpense: true,
                               onSave: (item) {
@@ -158,7 +162,7 @@ class _WalletPageState extends State<WalletPage>
                                     .read<DataBloc>()
                                     .add(AddExpenseEvent(expense: item));
                               },
-                              onCancel: () => Navigator.pop(context),
+                              onCancel: () => Navigator.pop(sheetContext),
                             );
                           },
                         );
@@ -167,8 +171,9 @@ class _WalletPageState extends State<WalletPage>
                         showModalBottomSheet(
                           isScrollControlled: true,
                           enableDrag: true,
+                          backgroundColor: Colors.transparent, // Eklendi
                           context: context,
-                          builder: (context) {
+                          builder: (sheetContext) {
                             return FinanceEntryWidget(
                               isExpense: false,
                               onSave: (item) {
@@ -176,7 +181,7 @@ class _WalletPageState extends State<WalletPage>
                                     .read<DataBloc>()
                                     .add(AddIncomeEvent(income: item));
                               },
-                              onCancel: () => Navigator.pop(context),
+                              onCancel: () => Navigator.pop(sheetContext),
                             );
                           },
                         );

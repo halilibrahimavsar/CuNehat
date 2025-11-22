@@ -4,16 +4,37 @@ import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/models/income_model.dart';
 
+// Düzenleme modu için başlangıç verileri
+class FinanceInitialData {
+  final String id;
+  final String title;
+  final double amount;
+  final String tag;
+  final DateTime date;
+  final String time;
+
+  FinanceInitialData({
+    required this.id,
+    required this.title,
+    required this.amount,
+    required this.tag,
+    required this.date,
+    required this.time,
+  });
+}
+
 class FinanceEntryWidget extends StatefulWidget {
   final bool isExpense;
   final Function(dynamic model) onSave;
   final VoidCallback onCancel;
+  final FinanceInitialData? initialData; // Düzenleme modu için
 
   const FinanceEntryWidget({
     super.key,
     required this.isExpense,
     required this.onSave,
     required this.onCancel,
+    this.initialData,
   });
 
   @override
@@ -26,8 +47,8 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
   late final TextEditingController _amountController;
   late final TextEditingController _tagController;
 
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
+  late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
 
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -46,15 +67,42 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     'Diğer'
   ];
 
-  String _selectedTag = 'Diğer';
+  late String _selectedTag;
   bool _isAmountValid = true;
+
+  bool get _isEditMode => widget.initialData != null;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _amountController = TextEditingController();
-    _tagController = TextEditingController();
+
+    // Düzenleme modunda başlangıç verilerini yükle
+    if (_isEditMode) {
+      _titleController = TextEditingController(text: widget.initialData!.title);
+      _amountController =
+          TextEditingController(text: widget.initialData!.amount.toString());
+      _tagController = TextEditingController(text: widget.initialData!.tag);
+      _selectedDate = widget.initialData!.date;
+      _selectedTag = widget.initialData!.tag;
+
+      // Time string'i TimeOfDay'e çevir
+      final timeParts = widget.initialData!.time.split(':');
+      if (timeParts.length >= 2) {
+        _selectedTime = TimeOfDay(
+          hour: int.tryParse(timeParts[0]) ?? DateTime.now().hour,
+          minute: int.tryParse(timeParts[1]) ?? DateTime.now().minute,
+        );
+      } else {
+        _selectedTime = TimeOfDay.now();
+      }
+    } else {
+      _titleController = TextEditingController();
+      _amountController = TextEditingController();
+      _tagController = TextEditingController();
+      _selectedDate = DateTime.now();
+      _selectedTime = TimeOfDay.now();
+      _selectedTag = 'Diğer';
+    }
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
@@ -124,23 +172,51 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     final timeString = AppFormatters.time.format(combinedDate);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "local_user";
 
-    dynamic model = widget.isExpense
-        ? Expense.createLocal(
-            userId: userId,
-            title: title,
-            amount: amount,
-            tag: tag,
-            date: combinedDate,
-            time: timeString,
-          )
-        : Income.createLocal(
-            userId: userId,
-            title: title,
-            amount: amount,
-            tag: tag,
-            date: combinedDate,
-            time: timeString,
-          );
+    dynamic model;
+
+    if (_isEditMode) {
+      // Düzenleme modu - mevcut ID'yi koru
+      if (widget.isExpense) {
+        model = Expense(
+          id: widget.initialData!.id,
+          userId: userId,
+          title: title,
+          amount: amount,
+          tag: tag,
+          date: combinedDate,
+          time: timeString,
+        );
+      } else {
+        model = Income(
+          id: widget.initialData!.id,
+          userId: userId,
+          title: title,
+          amount: amount,
+          tag: tag,
+          date: combinedDate,
+          time: timeString,
+        );
+      }
+    } else {
+      // Yeni kayıt modu
+      model = widget.isExpense
+          ? Expense.createLocal(
+              userId: userId,
+              title: title,
+              amount: amount,
+              tag: tag,
+              date: combinedDate,
+              time: timeString,
+            )
+          : Income.createLocal(
+              userId: userId,
+              title: title,
+              amount: amount,
+              tag: tag,
+              date: combinedDate,
+              time: timeString,
+            );
+    }
 
     widget.onSave(model);
     widget.onCancel();
@@ -202,6 +278,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
   Widget build(BuildContext context) {
     final Color primaryColor = widget.isExpense ? Colors.red : Colors.green;
     final String typeText = widget.isExpense ? "Gider" : "Gelir";
+    final String actionText = _isEditMode ? "Düzenle" : "Ekle";
 
     return SafeArea(
       child: SlideTransition(
@@ -211,6 +288,10 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: Container(
+              // 3. OVERFLOW DÜZELTMESİ - maxHeight eklendi
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: const BorderRadius.only(
@@ -225,7 +306,8 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                   ),
                 ],
               ),
-              child: Padding(
+              // 3. OVERFLOW DÜZELTMESİ - SingleChildScrollView eklendi
+              child: SingleChildScrollView(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
                   left: 24,
@@ -237,7 +319,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // HEADER
-                    _buildHeader(primaryColor, typeText),
+                    _buildHeader(primaryColor, typeText, actionText),
                     const SizedBox(height: 24),
 
                     // TITLE FIELD
@@ -259,7 +341,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                       icon: Icons.attach_money,
                       primaryColor: primaryColor,
                       keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
+                          const TextInputType.numberWithOptions(decimal: true),
                       errorText:
                           _isAmountValid ? null : "Geçerli bir tutar girin",
                     ),
@@ -274,7 +356,8 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                     const SizedBox(height: 32),
 
                     // SAVE BUTTON
-                    _buildSaveButton(primaryColor, typeText),
+                    _buildSaveButton(primaryColor, typeText, actionText),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -285,7 +368,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     );
   }
 
-  Widget _buildHeader(Color primaryColor, String typeText) {
+  Widget _buildHeader(Color primaryColor, String typeText, String actionText) {
     return Row(
       children: [
         Container(
@@ -295,14 +378,18 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             shape: BoxShape.circle,
           ),
           child: Icon(
-            widget.isExpense ? Icons.arrow_upward : Icons.arrow_downward,
+            _isEditMode
+                ? Icons.edit
+                : (widget.isExpense
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward),
             color: primaryColor,
             size: 24,
           ),
         ),
         const SizedBox(width: 12),
         Text(
-          "Yeni $typeText Ekle",
+          "$typeText $actionText",
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -365,7 +452,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
               border: InputBorder.none,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              errorText: errorText,
             ),
             onChanged: (value) {
               if (label.contains("Tutar")) {
@@ -376,6 +462,14 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             },
           ),
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 12),
+            child: Text(
+              errorText,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }
@@ -512,7 +606,8 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     );
   }
 
-  Widget _buildSaveButton(Color primaryColor, String typeText) {
+  Widget _buildSaveButton(
+      Color primaryColor, String typeText, String actionText) {
     return SizedBox(
       width: double.infinity,
       height: 54,
@@ -529,10 +624,14 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check, color: Colors.white, size: 20),
+            Icon(
+              _isEditMode ? Icons.save : Icons.check,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
-              "$typeText Kaydet",
+              _isEditMode ? "$typeText Güncelle" : "$typeText Kaydet",
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
