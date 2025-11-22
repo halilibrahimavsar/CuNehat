@@ -6,6 +6,11 @@ sealed class ThemeEvent {
 
 class ThemeChangeEvent implements ThemeEvent {
   final ThemeData themeName;
-
   ThemeChangeEvent({required this.themeName});
+}
+
+// Yeni event: Kaydedilmiş temayı yüklemek için
+class ThemeLoadEvent implements ThemeEvent {
+  final ThemeData themeName;
+  ThemeLoadEvent({required this.themeName});
 }

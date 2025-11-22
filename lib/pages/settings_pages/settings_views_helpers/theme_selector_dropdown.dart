@@ -25,7 +25,7 @@ class ThemeDropdown extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            value: ThemeStateLight().name, // BLoC'tan gelen mevcut tema adı
+            value: state.name, // BLoC'tan gelen mevcut tema adı
             items: state.names // Mevcut tema isimleriniz
                 .map(
                   (k, v) {
@@ -39,15 +39,8 @@ class ThemeDropdown extends StatelessWidget {
                 )
                 .values
                 .toList(),
-            //     .map<DropdownMenuItem<ThemeData>>((n, k) {
-            //   return DropdownMenuItem<ThemeData>(
-            //     value: k,
-            //     child: Text(n),
-            //   );
-            // }).toList(),
             onChanged: (ThemeData? newValue) {
               if (newValue != null) {
-                // Yeni tema seçildiğinde BLoC'a event gönder
                 context
                     .read<ThemeBloc>()
                     .add(ThemeChangeEvent(themeName: newValue));
