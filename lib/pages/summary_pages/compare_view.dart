@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/models/income_model.dart';
@@ -10,11 +12,17 @@ class CompareView extends StatelessWidget {
   final Map<DateTime, List<Income>> incomeData;
   final Map<DateTime, List<Expense>> expenseData;
 
-  const CompareView({
+  CompareView({
     super.key,
     required this.incomeData,
     required this.expenseData,
   });
+
+  // @override
+  // void dispose() {
+  //   _isBalanceVisible.dispose();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -66,102 +74,144 @@ class CompareView extends StatelessWidget {
       BuildContext context, double balance, int pendingCount) {
     final formatCurrency = NumberFormat.currency(symbol: "₺", decimalDigits: 2);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: balance >= 0
-              ? [Colors.green.shade400, Colors.green.shade600]
-              : [Colors.red.shade400, Colors.red.shade600],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Mevcut Bakiye",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+    // State için ValueNotifier kullanıyoruz
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isBalanceVisible,
+      builder: (context, isVisible, child) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 2),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: balance >= 0
+                  ? [Colors.green.shade400, Colors.green.shade600]
+                  : [Colors.red.shade400, Colors.red.shade600],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              if (pendingCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Mevcut Bakiye",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
+                  Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.sync,
-                        size: 12,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "$pendingCount bekliyor",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                      if (pendingCount > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.sync,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "$pendingCount bekliyor",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                      const SizedBox(width: 6),
+                      // GÖZ BUTONU
+                      IconButton(
+                        onPressed: () {
+                          _isBalanceVisible.value = !_isBalanceVisible.value;
+                        },
+                        icon: Icon(
+                          isVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white70,
+                          size: 26,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        splashRadius: 20,
                       ),
                     ],
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            formatCurrency.format(balance),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(
-                balance >= 0 ? Icons.trending_up : Icons.trending_down,
-                color: Colors.white70,
-                size: 14,
+                ],
               ),
-              const SizedBox(width: 4),
+              const SizedBox(height: 8),
               Text(
-                balance >= 0 ? "Pozitif" : "Negatif",
+                isVisible ? formatCurrency.format(balance) : "••••••",
                 style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
                 ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Icon(
+                    balance >= 0 ? Icons.trending_up : Icons.trending_down,
+                    color: Colors.white70,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    balance >= 0 ? "Pozitif" : "Negatif",
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (!isVisible)
+                    Text(
+                      "Bakiye gizli",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+
+  // Balance görünürlük state'i
+  final ValueNotifier<bool> _isBalanceVisible = ValueNotifier<bool>(true);
 
   List<CombinedTransaction> _createCombinedList() {
     final List<CombinedTransaction> combinedList = [];
@@ -211,79 +261,87 @@ class CompareView extends StatelessWidget {
 
   Widget _buildTransactionList(
       List<CombinedTransaction> combinedList, double initialBalance) {
-    return Column(
-      children: [
-        // Başlık
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.3),
-            border: Border(
-              bottom: BorderSide(color: Colors.grey[300]!.withOpacity(0.5)),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.history, color: Colors.blue[700]),
-              const SizedBox(width: 8),
-              Text(
-                "Son İşlemler",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[800],
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isBalanceVisible,
+      builder: (context, isBalanceVisible, child) {
+        return Column(
+          children: [
+            // Başlık
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey[300]!.withOpacity(0.5)),
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.blue[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  "${combinedList.length} işlem",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.blue[800],
+              child: Row(
+                children: [
+                  Icon(Icons.history, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Son İşlemler",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "${combinedList.length} işlem",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue[800],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
 
-        // İşlem Listesi
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: combinedList.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              // Her işlem için o anki bakiyeyi hesapla
-              double balanceAtThisPoint = initialBalance;
+            // İşlem Listesi
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(12),
+                itemCount: combinedList.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  // Her işlem için o anki bakiyeyi hesapla
+                  double balanceAtThisPoint = initialBalance;
 
-              // Bu işleme kadar olan tüm işlemleri tersine uygula
-              for (int i = 0; i < index; i++) {
-                final transaction = combinedList[i];
-                if (transaction.item is Income) {
-                  balanceAtThisPoint -= (transaction.item as Income).amount;
-                } else if (transaction.item is Expense) {
-                  balanceAtThisPoint += (transaction.item as Expense).amount;
-                }
-              }
+                  // Bu işleme kadar olan tüm işlemleri tersine uygula
+                  for (int i = 0; i < index; i++) {
+                    final transaction = combinedList[i];
+                    if (transaction.item is Income) {
+                      balanceAtThisPoint -= (transaction.item as Income).amount;
+                    } else if (transaction.item is Expense) {
+                      balanceAtThisPoint +=
+                          (transaction.item as Expense).amount;
+                    }
+                  }
 
-              return _buildTransactionItem(
-                combinedList[index],
-                index,
-                balanceAtThisPoint,
-                AppFormatters.currency,
-              );
-            },
-          ),
-        ),
-      ],
+                  return _buildTransactionItem(
+                    combinedList[index],
+                    index,
+                    balanceAtThisPoint,
+                    AppFormatters.currency,
+                    isBalanceVisible: isBalanceVisible,
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -291,8 +349,9 @@ class CompareView extends StatelessWidget {
     CombinedTransaction transaction,
     int index,
     double balanceAfter,
-    NumberFormat formatCurrency,
-  ) {
+    NumberFormat formatCurrency, {
+    required bool isBalanceVisible,
+  }) {
     final item = transaction.item;
     final isIncome = item is Income;
     final amount = isIncome ? (item).amount : (item as Expense).amount;
@@ -363,7 +422,9 @@ class CompareView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      "${isIncome ? '+' : '-'}${amount.toStringAsFixed(2)} ₺",
+                      isBalanceVisible
+                          ? "${isIncome ? '+' : '-'}${amount.toStringAsFixed(2)} ₺"
+                          : "••••",
                       style: TextStyle(
                         color: isIncome ? Colors.green : Colors.red,
                         fontWeight: FontWeight.bold,
@@ -431,13 +492,17 @@ class CompareView extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      formatCurrency.format(balanceAfter),
+                      isBalanceVisible
+                          ? formatCurrency.format(balanceAfter)
+                          : "••••••",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: balanceAfter >= 0
-                            ? Colors.green[700]
-                            : Colors.red[700],
+                        color: isBalanceVisible
+                            ? (balanceAfter >= 0
+                                ? Colors.green[700]
+                                : Colors.red[700])
+                            : Colors.grey[600],
                       ),
                     ),
                   ],
@@ -449,6 +514,8 @@ class CompareView extends StatelessWidget {
       ),
     );
   }
+
+  // Widget dispose edildiğinde ValueNotifier'ı temizle
 }
 
 class CombinedTransaction {
