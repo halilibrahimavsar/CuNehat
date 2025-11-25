@@ -30,7 +30,8 @@ class _WalletPageState extends State<WalletPage>
       DateRangeHelper.getMonthRange(DateTime.now())['firstDate']!;
   DateTime _endDate =
       DateRangeHelper.getMonthRange(DateTime.now())['lastDate']!;
-  double _currentSliderValue = 0.0;
+  double _currentSliderValue =
+      0.5; // (0=expense, 0.5=compare 1=income). We wanna show compareview on startup (also look at the animation value)
 
   @override
   void initState() {
