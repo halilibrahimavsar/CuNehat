@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -158,13 +160,13 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                     curve: Curves.easeOutQuint);
               },
               child: SizedBox(
-                height: 72,
+                height: 74,
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
                     // --- TRACK (ARKA PLAN ÇUBUĞU) ---
                     Container(
-                      height: 64,
+                      height: 56,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(32),
                         color: _getTrackColor(value),
@@ -188,7 +190,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      height: 66,
+                      height: 68,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 1.0),
                         child: Row(
@@ -216,7 +218,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
 
                     // --- HAREKETLİ DÜĞME (KNOB) ---
                     Positioned(
-                      bottom: 4,
+                      bottom: 0,
                       left: 32,
                       right: 32,
                       child: Align(
