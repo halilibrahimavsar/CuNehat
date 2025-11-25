@@ -88,7 +88,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
       AddExpenseEvent event, Emitter<DataState> emit) async {
     try {
       await dataRepository.addExpense(expense: event.expense);
-      emit(SuccessfullyCreatedItemState());
+      emit(SuccessfullyCreatedItemState(name: event.expense.title));
       await _silentRefresh(emit);
     } catch (e) {
       emit(ErrorState(err: 'Gider eklenirken hata: ${e.toString()}'));
@@ -100,7 +100,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
       AddIncomeEvent event, Emitter<DataState> emit) async {
     try {
       await dataRepository.addIncome(income: event.income);
-      emit(SuccessfullyCreatedItemState());
+      emit(SuccessfullyCreatedItemState(name: event.income.title));
       await _silentRefresh(emit);
     } catch (e) {
       emit(ErrorState(err: 'Gelir eklenirken hata: ${e.toString()}'));
@@ -111,8 +111,8 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   Future<void> _onDeleteExpense(
       DeleteExpenseEvent event, Emitter<DataState> emit) async {
     try {
-      await dataRepository.deleteExpense(id: event.id);
-      emit(SuccessfullyDeletedItemState());
+      await dataRepository.deleteExpense(id: event.expense.id);
+      emit(SuccessfullyDeletedItemState(name: event.expense.title));
       await _silentRefresh(emit);
     } catch (e) {
       emit(ErrorState(err: 'Gider silinirken hata: ${e.toString()}'));
@@ -123,8 +123,8 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   Future<void> _onDeleteIncome(
       DeleteIncomeEvent event, Emitter<DataState> emit) async {
     try {
-      await dataRepository.deleteIncome(id: event.id);
-      emit(SuccessfullyDeletedItemState());
+      await dataRepository.deleteIncome(id: event.income.id);
+      emit(SuccessfullyDeletedItemState(name: event.income.title));
       await _silentRefresh(emit);
     } catch (e) {
       emit(ErrorState(err: 'Gelir silinirken hata: ${e.toString()}'));
@@ -136,7 +136,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
       UpdateExpenseEvent event, Emitter<DataState> emit) async {
     try {
       await dataRepository.updateExpense(expense: event.expense);
-      emit(SuccessfullyUpdatedItemState());
+      emit(SuccessfullyUpdatedItemState(name: event.expense.title));
       await _silentRefresh(emit);
     } catch (e) {
       emit(ErrorState(err: 'Gider güncellenirken hata: ${e.toString()}'));
@@ -148,7 +148,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
       UpdateIncomeEvent event, Emitter<DataState> emit) async {
     try {
       await dataRepository.updateIncome(income: event.income);
-      emit(SuccessfullyUpdatedItemState());
+      emit(SuccessfullyUpdatedItemState(name: event.income.title));
       await _silentRefresh(emit);
     } catch (e) {
       emit(ErrorState(err: 'Gelir güncellenirken hata: ${e.toString()}'));

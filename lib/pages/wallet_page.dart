@@ -256,13 +256,13 @@ class _WalletPageState extends State<WalletPage>
     switch (state) {
       // CRUD -----------------------------------------------------------------
       case SuccessfullyCreatedItemState():
-        _snackbar("✓ Başarıyla eklendi", Colors.green);
+        _snackbar("✓ ${state.name} Başarıyla eklendi", Colors.green);
         break;
       case SuccessfullyDeletedItemState():
-        _snackbar("✓ Başarıyla silindi", Colors.green);
+        _snackbar("✓ ${state.name} Başarıyla silindi", Colors.green);
         break;
       case SuccessfullyUpdatedItemState():
-        _snackbar("✓ Başarıyla güncellendi", Colors.green);
+        _snackbar("✓ ${state.name} Başarıyla güncellendi", Colors.green);
         break;
       // SYNC ----------------------------------------------------------------
 
@@ -290,7 +290,7 @@ class _WalletPageState extends State<WalletPage>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: color,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(milliseconds: 1500),
         content: Row(
           children: [
             if (loading)

@@ -102,13 +102,12 @@ class _IncomeViewState extends State<IncomeView> {
                         onDismissed: (direction) {
                           // Sadece silme işlemi dismiss eder
                           if (direction == DismissDirection.endToStart) {
-                            context
-                                .read<DataBloc>()
-                                .add(DeleteIncomeEvent(id: income.id));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text("${income.title} silindi.")),
-                            );
+                            context.read<DataBloc>().add(DeleteIncomeEvent(
+                                income: income, id: income.id));
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(
+                            //       content: Text("${income.title} silindi.")),
+                            // );
                           }
                         },
                         child: ListTile(

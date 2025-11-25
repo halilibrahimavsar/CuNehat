@@ -37,13 +37,34 @@ final class SyncingDataState extends DataState {}
 // ============ SUCCESS STATES (CRUD) ============
 
 /// Item successfully created
-final class SuccessfullyCreatedItemState extends DataState {}
+final class SuccessfullyCreatedItemState extends DataState {
+  final String name;
+
+  const SuccessfullyCreatedItemState({required this.name});
+
+  @override
+  List<Object> get props => [name];
+}
 
 /// Item successfully deleted
-final class SuccessfullyDeletedItemState extends DataState {}
+final class SuccessfullyDeletedItemState extends DataState {
+  final String name;
+
+  const SuccessfullyDeletedItemState({required this.name});
+
+  @override
+  List<Object> get props => [name];
+}
 
 /// Item successfully updated
-final class SuccessfullyUpdatedItemState extends DataState {}
+final class SuccessfullyUpdatedItemState extends DataState {
+  final String name;
+
+  const SuccessfullyUpdatedItemState({required this.name});
+
+  @override
+  List<Object> get props => [name];
+}
 
 // ============ SUCCESS STATES (SYNC) ============
 

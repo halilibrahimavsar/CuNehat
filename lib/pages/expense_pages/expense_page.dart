@@ -103,13 +103,12 @@ class _ExpenseViewState extends State<ExpenseView> {
                         onDismissed: (direction) {
                           // Sadece silme işlemi dismiss eder
                           if (direction == DismissDirection.endToStart) {
-                            context
-                                .read<DataBloc>()
-                                .add(DeleteExpenseEvent(id: expense.id));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text("${expense.title} silindi.")),
-                            );
+                            context.read<DataBloc>().add(DeleteExpenseEvent(
+                                expense: expense, id: expense.id));
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(
+                            //       content: Text("${expense.title} silindi.")),
+                            // );
                           }
                         },
                         child: ListTile(

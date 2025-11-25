@@ -77,19 +77,22 @@ class AddIncomeEvent extends DataEvent {
 /// Deletes an expense by ID
 class DeleteExpenseEvent extends DataEvent {
   final String id;
-  const DeleteExpenseEvent({required this.id});
+  final Expense expense;
+
+  const DeleteExpenseEvent({required this.expense, required this.id});
 
   @override
-  List<Object> get props => [id];
+  List<Object> get props => [expense];
 }
 
 /// Deletes an income by ID
 class DeleteIncomeEvent extends DataEvent {
   final String id;
-  const DeleteIncomeEvent({required this.id});
+  final Income income;
+  const DeleteIncomeEvent({required this.income, required this.id});
 
   @override
-  List<Object> get props => [id];
+  List<Object> get props => [income];
 }
 
 /// Updates an existing expense
