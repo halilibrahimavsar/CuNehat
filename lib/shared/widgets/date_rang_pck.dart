@@ -1,8 +1,9 @@
 // lib/shared/widgets/date_range_picker.dart
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 class DateRangePicker extends StatefulWidget {
   final DateTime initialStartDate;
@@ -34,20 +35,39 @@ class _DateRangePickerState extends State<DateRangePicker> {
   }
 
   int _getInitialSelectedOption() {
-    final now = DateTime.now();
-    final currentMonth = DateRangeHelper.getMonthRange(now);
-    final lastMonth =
-        DateRangeHelper.getMonthRange(DateTime(now.year, now.month - 1));
+    final predefinedRanges = _getPredefinedRanges();
 
-    if (_startDate == currentMonth['firstDate'] &&
-        _endDate == currentMonth['lastDate']) {
-      return 1; // Bu ay
-    } else if (_startDate == lastMonth['firstDate'] &&
-        _endDate == lastMonth['lastDate']) {
-      return 2; // Geçen ay
-    } else {
-      return 0; // Özel seçim
+    for (int i = 0; i < predefinedRanges.length; i++) {
+      final range = predefinedRanges[i];
+      if (_startDate == range['firstDate'] && _endDate == range['lastDate']) {
+        return i + 1; // +1 because 0 is for custom selection
+      }
     }
+    return 0; // Özel seçim
+  }
+
+  List<Map<String, DateTime>> _getPredefinedRanges() {
+    final now = DateTime.now();
+    return [
+      DateRangeHelper.getTodayRange(), // Bugün
+      DateRangeHelper.getYesterdayRange(), // Dün
+      DateRangeHelper.getWeekRange(now), // Bu hafta
+      DateRangeHelper.getLastWeekRange(now), // Geçen hafta
+      DateRangeHelper.getMonthRange(now), // Bu ay
+      DateRangeHelper.getMonthRange(
+          DateTime(now.year, now.month - 1)), // Geçen ay
+    ];
+  }
+
+  List<String> _getPredefinedRangeTitles() {
+    return [
+      'Bugün',
+      'Dün',
+      'Bu Hafta',
+      'Geçen Hafta',
+      'Bu Ay',
+      'Geçen Ay',
+    ];
   }
 
   Future<void> _selectCustomDateRange() async {
@@ -56,17 +76,6 @@ class _DateRangePickerState extends State<DateRangePicker> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (pickedRange != null && mounted) {
@@ -83,130 +92,126 @@ class _DateRangePickerState extends State<DateRangePicker> {
     Navigator.of(context).pop();
   }
 
-  void _cancel() {
-    Navigator.of(context).pop();
+  void _selectPredefinedRange(int index) {
+    final range = _getPredefinedRanges()[index];
+    setState(() {
+      _startDate = range['firstDate']!;
+      _endDate = range['lastDate']!;
+      _selectedOption = index + 1;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Başlık
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+    final predefinedTitles = _getPredefinedRangeTitles();
+
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.onPrimary,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Başlık
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Tarih Aralığı Seç',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, color: Colors.white),
-                const SizedBox(width: 12),
-                Text(
-                  'Tarih Aralığı Seç',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+
+            // Seçenekler
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Özel Tarih Aralığı
+                  _buildOption(
+                    title: 'Özel Tarih Aralığı',
+                    subtitle:
+                        '${AppFormatters.dateShort.format(_startDate)} - ${AppFormatters.dateShort.format(_endDate)}',
+                    isSelected: _selectedOption == 0,
+                    onTap: _selectCustomDateRange,
+                    icon: Icons.calendar_month,
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          // Seçenekler
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Özel Tarih Aralığı
-                _buildOption(
-                  title: 'Özel Tarih Aralığı',
-                  subtitle:
-                      '${AppFormatters.dateShort.format(_startDate)} - ${AppFormatters.dateShort.format(_endDate)}',
-                  isSelected: _selectedOption == 0,
-                  onTap: _selectCustomDateRange,
-                  icon: Icons.calendar_month,
-                ),
+                  const SizedBox(height: 16),
 
-                const SizedBox(height: 12),
-
-                // Hızlı Seçenekler
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildQuickOption(
-                        title: 'Bu Ay',
-                        isSelected: _selectedOption == 1,
-                        onTap: () {
-                          setState(() {
-                            final range =
-                                DateRangeHelper.getMonthRange(DateTime.now());
-                            _startDate = range['firstDate']!;
-                            _endDate = range['lastDate']!;
-                            _selectedOption = 1;
-                          });
-                        },
-                      ),
+                  // Hızlı Seçenekler
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 3,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildQuickOption(
-                        title: 'Geçen Ay',
-                        isSelected: _selectedOption == 2,
-                        onTap: () {
-                          setState(() {
-                            final range = DateRangeHelper.getMonthRange(
-                                DateTime(DateTime.now().year,
-                                    DateTime.now().month - 1));
-                            _startDate = range['firstDate']!;
-                            _endDate = range['lastDate']!;
-                            _selectedOption = 2;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Alt Butonlar
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
+                    itemCount: predefinedTitles.length,
+                    itemBuilder: (context, index) {
+                      return _buildQuickOption(
+                        title: predefinedTitles[index],
+                        isSelected: _selectedOption == index + 1,
+                        onTap: () => _selectPredefinedRange(index),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _cancel,
-                    child: const Text('İptal'),
-                  ),
+
+            // Alt Butonlar
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade300),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _applyDateRange,
-                    child: const Text('Uygula'),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('İptal'),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _applyDateRange,
+                      child: const Text('Uygula'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -266,7 +271,7 @@ Future<Map<String, DateTime>?> showDateRangePickerDialog({
   DateTime? selectedStartDate;
   DateTime? selectedEndDate;
 
-  final result = await showModalBottomSheet<Map<String, DateTime>>(
+  await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -280,12 +285,12 @@ Future<Map<String, DateTime>?> showDateRangePickerDialog({
     ),
   );
 
-  if ((selectedStartDate != null) && (selectedEndDate != null)) {
+  if (selectedStartDate != null && selectedEndDate != null) {
     return {
       'firstDate': selectedStartDate!,
       'lastDate': selectedEndDate!,
     };
   }
 
-  return result;
+  return null;
 }
