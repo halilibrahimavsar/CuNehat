@@ -43,6 +43,8 @@ class _WalletPageState extends State<WalletPage>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
+      value:
+          0.5, // (0=expense, 0.5=compare 1=income). We wanna show compareview on startup
     )..addListener(() {
         setState(() {
           _currentSliderValue = _controller.value;
@@ -137,17 +139,16 @@ class _WalletPageState extends State<WalletPage>
                 ),
               ),
 
-              // Slider Button
-              // wallet_page.dart - Sadece Slider Button kısmını güncelleyin
-              // wallet_page.dart içindeki Slider Button kısmını bu şekilde güncelleyin
-// (Sadece değişen kısım - SliderButtonEnhanced onTap bölümü)
-
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonEnhanced(
                   controller: _controller,
                   onTap: (value) {
                     switch (value) {
+                      case SliderState.compare:
+                        context.read<DataBloc>().add(GetCompareEvent(
+                            filterStart: _startDate, filterEnd: _endDate));
+                        break;
                       case SliderState.expense:
                         showModalBottomSheet(
                           isScrollControlled: true,
@@ -185,10 +186,6 @@ class _WalletPageState extends State<WalletPage>
                             );
                           },
                         );
-                        break;
-                      case SliderState.compare:
-                        context.read<DataBloc>().add(GetCompareEvent(
-                            filterStart: _startDate, filterEnd: _endDate));
                         break;
                     }
                   },
