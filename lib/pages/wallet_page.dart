@@ -91,7 +91,7 @@ class _WalletPageState extends State<WalletPage>
       child: Scaffold(
         appBar: SharedAppbar(
           currentSliderValue: _currentSliderValue,
-          onDateRangePressed: _showDateRangePicker, // Yeni callback
+          // onDateRangePressed: _showDateRangePicker, // Yeni callback (date range picker removing)
         ),
         drawer: const SharedDrawer(),
         body: BlocListener<DataBloc, DataState>(

@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 
 class SharedAppbar extends StatefulWidget implements PreferredSizeWidget {
   final double currentSliderValue; // Yeni parametre
-  final VoidCallback onDateRangePressed; // Yeni callback
+  // final VoidCallback onDateRangePressed; // Yeni callback (date range picker removing)
 
   const SharedAppbar({
     super.key,
     required this.currentSliderValue,
-    required this.onDateRangePressed, // Zorunlu parametre
+    // required this.onDateRangePressed, // Zorunlu parametre (date range picker removing)
   });
 
   @override
@@ -153,14 +153,14 @@ class _SharedAppbarState extends State<SharedAppbar> {
         ],
       ),
       actions: [
-        IconButton(
-          onPressed: widget.onDateRangePressed, // Callback'i burada kullan
-          icon: Icon(
-            Icons.filter_list_outlined,
-            color: _getContentColor(currentValue),
-          ),
-          tooltip: 'Tarih Filtresi',
-        ),
+        // IconButton(
+        //   onPressed: widget.onDateRangePressed, // Callback'i burada kullan
+        //   icon: Icon(
+        //     Icons.filter_list_outlined,
+        //     color: _getContentColor(currentValue),
+        //   ),
+        //   tooltip: 'Tarih Filtresi',
+        // ),
       ],
     );
   }
