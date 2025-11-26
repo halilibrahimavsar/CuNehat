@@ -1,4 +1,5 @@
 import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/pages/settings_pages/settings_views_helpers/settings_item.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_selector_dropdown.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
@@ -6,6 +7,7 @@ import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/get_storage_mod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 /// **SettingsPage**: WITH UI REFRESH AFTER MODE CHANGE
@@ -578,6 +580,15 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          _SectionHeader(title: "Profil"),
+          SettingsItem(
+            title: "Profil Ayarları",
+            icon: Icons.person,
+            onTap: () {
+              context.push("/profile");
+            },
+          )
         ],
       ),
     );
