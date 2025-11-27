@@ -3,6 +3,7 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/models/income_model.dart';
+import 'package:cunehat/repository/models/wallet_model.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,68 +19,113 @@ class CompareView extends StatelessWidget {
     required this.expenseData,
   });
 
-  // @override
-  // void dispose() {
-  //   _isBalanceVisible.dispose();
-  //   super.dispose();
-  // }
-
   @override
   Widget build(BuildContext context) {
     final repository = context.watch<DataRepository>();
-    final currentBalance = repository.getMainBalance();
     final pendingCount = repository.getPendingSyncCount();
 
-    final combinedList = _createCombinedList();
+    // ✅ DÜZELTME: Aktif cüzdanı al
+    return FutureBuilder<Wallet?>(
+      future: repository.getActiveWallet(),
+      builder: (context, snapshot) {
+        // Loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue[50]!.withOpacity(0.8),
-            Colors.purple[50]!.withOpacity(0.6),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Column(
-          children: [
-            // ANAPARA GÖSTER
-            _buildBalanceHeader(context, currentBalance, pendingCount),
-
-            // İŞLEM LİSTESİ
-            Expanded(
-              child: combinedList.isEmpty
-                  ? _buildEmptyState()
-                  : _buildTransactionList(combinedList, currentBalance),
+        // Error state
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Hata: ${snapshot.error}'),
+              ],
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        // No wallet found (should not happen in normal flow)
+        final activeWallet = snapshot.data;
+        if (activeWallet == null) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.wallet, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text('Aktif cüzdan bulunamadı'),
+              ],
+            ),
+          );
+        }
+
+        // ✅ DÜZELTME: Aktif cüzdanın bakiyesini kullan
+        final currentBalance = activeWallet.balance;
+        final combinedList = _createCombinedList();
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.blue[50]!.withOpacity(0.8),
+                Colors.purple[50]!.withOpacity(0.6),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Column(
+              children: [
+                // ✅ DÜZELTME: Cüzdan bilgisiyle birlikte bakiye göster
+                _buildBalanceHeader(
+                  context,
+                  currentBalance,
+                  pendingCount,
+                  activeWallet,
+                ),
+
+                // İŞLEM LİSTESİ
+                Expanded(
+                  child: combinedList.isEmpty
+                      ? _buildEmptyState()
+                      : _buildTransactionList(combinedList, currentBalance),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
+  // ✅ DÜZELTME: Wallet parametresi eklendi
   Widget _buildBalanceHeader(
-      BuildContext context, double balance, int pendingCount) {
+    BuildContext context,
+    double balance,
+    int pendingCount,
+    Wallet wallet, // ➕ YENİ PARAMETRE
+  ) {
     final formatCurrency = NumberFormat.currency(symbol: "₺", decimalDigits: 2);
+    final walletColor = WalletColors.hexToColor(wallet.colorHex);
 
-    // State için ValueNotifier kullanıyoruz
     return ValueListenableBuilder<bool>(
       valueListenable: _isBalanceVisible,
       builder: (context, isVisible, child) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -99,15 +145,45 @@ class CompareView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ➕ YENİ: Aktif Cüzdan Bilgisi
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    "Mevcut Bakiye",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      WalletIcons.getIcon(wallet.iconName),
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          wallet.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (wallet.isDefault)
+                          Text(
+                            'Varsayılan Cüzdan',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 10,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Row(
@@ -115,6 +191,7 @@ class CompareView extends StatelessWidget {
                     children: [
                       if (pendingCount > 0)
                         Container(
+                          margin: const EdgeInsets.only(right: 6),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 4,
@@ -143,7 +220,6 @@ class CompareView extends StatelessWidget {
                             ],
                           ),
                         ),
-                      const SizedBox(width: 6),
                       // GÖZ BUTONU
                       IconButton(
                         onPressed: () {
@@ -165,27 +241,57 @@ class CompareView extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                isVisible ? formatCurrency.format(balance) : "••••••",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
+
+              const SizedBox(height: 12),
+
+              // BAKİYE GÖSTERGE
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Mevcut Bakiye",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isVisible ? formatCurrency.format(balance) : "••••••",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    balance >= 0 ? Icons.trending_up : Icons.trending_down,
+                    color: Colors.white70,
+                    size: 32,
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
+
+              const SizedBox(height: 8),
+
+              // DURUM BİLGİSİ
               Row(
                 children: [
                   Icon(
-                    balance >= 0 ? Icons.trending_up : Icons.trending_down,
+                    balance >= 0 ? Icons.check_circle : Icons.warning,
                     color: Colors.white70,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    balance >= 0 ? "Pozitif" : "Negatif",
+                    balance >= 0 ? "Pozitif Bakiye" : "Negatif Bakiye",
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 11,
@@ -514,8 +620,6 @@ class CompareView extends StatelessWidget {
       ),
     );
   }
-
-  // Widget dispose edildiğinde ValueNotifier'ı temizle
 }
 
 class CombinedTransaction {

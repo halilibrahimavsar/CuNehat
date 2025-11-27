@@ -446,49 +446,94 @@ class DataRepository {
     debugPrint('   ✓ Income updated successfully');
   }
 
-  // ============ READ OPERATIONS ============
+  // ============ READ OPERATIONS - WALLET FILTERED ============
 
+  /// ➕ YENİ: Aktif cüzdanın giderlerini tarih aralığına göre getir
   Future<Iterable<Expense>> getExpenseByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
     debugPrint('📥 [REPO] getExpenseByDateRange called');
-    final data = await _getStorageMod.dataService.getExpenseByDateRange(
+
+    // Aktif cüzdan ID'sini al
+    final activeWalletId = getActiveWalletId();
+    debugPrint('   Active wallet: $activeWalletId');
+
+    // Tüm giderleri al
+    final allExpenses = await _getStorageMod.dataService.getExpenseByDateRange(
       firstDate: firstDate,
       lastDate: lastDate,
     );
-    debugPrint('   ✓ Fetched ${data.length} expenses');
-    return data;
+
+    // Sadece aktif cüzdana ait olanları filtrele
+    final filteredExpenses =
+        allExpenses.where((expense) => expense.walletId == activeWalletId);
+
+    debugPrint(
+        '   ✓ Fetched ${filteredExpenses.length} expenses for wallet $activeWalletId');
+    return filteredExpenses;
   }
 
+  /// ➕ YENİ: Aktif cüzdanın gelirlerini tarih aralığına göre getir
   Future<Iterable<Income>> getIncomeByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
     debugPrint('📥 [REPO] getIncomeByDateRange called');
-    final data = await _getStorageMod.dataService.getIncomeByDateRange(
+
+    // Aktif cüzdan ID'sini al
+    final activeWalletId = getActiveWalletId();
+    debugPrint('   Active wallet: $activeWalletId');
+
+    // Tüm gelirleri al
+    final allIncomes = await _getStorageMod.dataService.getIncomeByDateRange(
       firstDate: firstDate,
       lastDate: lastDate,
     );
-    debugPrint('   ✓ Fetched ${data.length} incomes');
-    return data;
+
+    // Sadece aktif cüzdana ait olanları filtrele
+    final filteredIncomes =
+        allIncomes.where((income) => income.walletId == activeWalletId);
+
+    debugPrint(
+        '   ✓ Fetched ${filteredIncomes.length} incomes for wallet $activeWalletId');
+    return filteredIncomes;
   }
 
-  Future<Iterable<Expense>> getAllExpenses() async {
-    debugPrint('📥 [REPO] getAllExpenses called');
+  /// Tüm cüzdanların giderlerini getir (Ayarlar sayfası için)
+  Future<Iterable<Expense>> getAllExpensesAllWallets() async {
+    debugPrint('📥 [REPO] getAllExpensesAllWallets called');
     return _getStorageMod.dataService.getAllExpenses();
   }
 
-  Future<Iterable<Income>> getAllIncomes() async {
-    debugPrint('📥 [REPO] getAllIncomes called');
+  /// Tüm cüzdanların gelirlerini getir (Ayarlar sayfası için)
+  Future<Iterable<Income>> getAllIncomesAllWallets() async {
+    debugPrint('📥 [REPO] getAllIncomesAllWallets called');
     return _getStorageMod.dataService.getAllIncomes();
   }
 
+  /// ⚠️ DEPRECATED: Tüm giderleri getir
+  @Deprecated(
+      'Use getAllExpensesAllWallets() or getExpenseByDateRange() instead')
+  Future<Iterable<Expense>> getAllExpenses() async {
+    debugPrint('⚠️  [REPO] getAllExpenses called (DEPRECATED)');
+    return getAllExpensesAllWallets();
+  }
+
+  /// ⚠️ DEPRECATED: Tüm gelirleri getir
+  @Deprecated('Use getAllIncomesAllWallets() or getIncomeByDateRange() instead')
+  Future<Iterable<Income>> getAllIncomes() async {
+    debugPrint('⚠️  [REPO] getAllIncomes called (DEPRECATED)');
+    return getAllIncomesAllWallets();
+  }
+
+  /// Belirli bir cüzdanın giderlerini getir
   Future<Iterable<Expense>> getExpensesByWalletId(String walletId) async {
     debugPrint('📥 [REPO] getExpensesByWalletId: $walletId');
     return _getStorageMod.dataService.getExpensesByWalletId(walletId);
   }
 
+  /// Belirli bir cüzdanın gelirlerini getir
   Future<Iterable<Income>> getIncomesByWalletId(String walletId) async {
     debugPrint('📥 [REPO] getIncomesByWalletId: $walletId');
     return _getStorageMod.dataService.getIncomesByWalletId(walletId);

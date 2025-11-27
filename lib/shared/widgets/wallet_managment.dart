@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/repository/data_bloc/data_bloc.dart';
+import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/models/wallet_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -104,6 +106,8 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
     );
   }
 
+  // SADECE _buildWalletCard METODUNU DEĞİŞTİRİYORUZ
+
   Widget _buildWalletCard(
     BuildContext context,
     Wallet wallet,
@@ -124,16 +128,53 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
       ),
       child: InkWell(
         onTap: () async {
+          // ✅ DÜZELTME: Cüzdanı değiştir ve ana sayfayı yenile
           await repository.setActiveWallet(wallet.id);
+
+          // ➕ YENİ: setState ile bu sayfayı yenile
           setState(() {});
+
           if (context.mounted) {
+            // ➕ YENİ: Ana sayfadaki DataBloc'u tetikle
+            final now = DateTime.now();
+            final startDate = now.subtract(const Duration(days: 30));
+
+            context.read<DataBloc>().add(
+                  RefreshDataEvent(
+                    filterStart: startDate,
+                    filterEnd: now,
+                  ),
+                );
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${wallet.name} aktif cüzdan olarak seçildi'),
+                content: Row(
+                  children: [
+                    Icon(
+                      WalletIcons.getIcon(wallet.iconName),
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('${wallet.name} aktif cüzdan olarak seçildi'),
+                    ),
+                  ],
+                ),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
+                action: SnackBarAction(
+                  label: 'Kapat',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  },
+                ),
               ),
             );
+
+            // ➕ YENİ: Bottom sheet'i kapat ve ana sayfaya dön
+            Navigator.pop(context);
           }
         },
         borderRadius: BorderRadius.circular(16),
@@ -203,9 +244,11 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                         const SizedBox(height: 4),
                         Text(
                           '${wallet.balance.toStringAsFixed(2)} ₺',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color:
+                                wallet.balance >= 0 ? Colors.green : Colors.red,
                           ),
                         ),
                         Text(

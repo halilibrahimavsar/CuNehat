@@ -32,6 +32,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     _lastFilterEnd = event.filterEnd;
 
     try {
+      // ✅ DÜZELTME: Artık aktif cüzdana göre filtreleniyor
       final incomeData =
           await _fetchAndGroupIncome(event.filterStart, event.filterEnd);
       final expenseData =
@@ -51,6 +52,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     _lastFilterEnd = event.filterEnd;
 
     try {
+      // ✅ DÜZELTME: Artık aktif cüzdana göre filtreleniyor
       final expenseData =
           await _fetchAndGroupExpense(event.filterStart, event.filterEnd);
 
@@ -71,6 +73,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     _lastFilterEnd = event.filterEnd;
 
     try {
+      // ✅ DÜZELTME: Artık aktif cüzdana göre filtreleniyor
       final incomeData =
           await _fetchAndGroupIncome(event.filterStart, event.filterEnd);
 
@@ -181,6 +184,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     bool isFetchedExpense = false;
 
     try {
+      // ✅ DÜZELTME: Artık aktif cüzdana göre filtreleniyor
       incomeData =
           await _fetchAndGroupIncome(event.filterStart, event.filterEnd)
               .whenComplete(
@@ -197,8 +201,6 @@ class DataBloc extends Bloc<DataEvent, DataState> {
       );
 
       if (isFetchedExpense && isFetchedIncome) {
-        // await Future.delayed(const Duration(milliseconds: 100));
-
         emit(SuccessfullyGetCompareState(
             expense: expenseData, income: incomeData));
       } else {
@@ -216,6 +218,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     }
 
     try {
+      // ✅ DÜZELTME: Artık aktif cüzdana göre filtreleniyor
       final incomeData =
           await _fetchAndGroupIncome(_lastFilterStart!, _lastFilterEnd!);
       final expenseData =
@@ -230,10 +233,13 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     }
   }
 
+  /// ✅ DÜZELTME: Artık repository üzerinden aktif cüzdana göre filtreliyor
   Future<Map<DateTime, List<Income>>> _fetchAndGroupIncome(
       DateTime firstDate, DateTime lastDate) async {
+    // Repository zaten aktif cüzdana göre filtreliyor
     final incomes = await dataRepository.getIncomeByDateRange(
         firstDate: firstDate, lastDate: lastDate);
+
     final Map<DateTime, List<Income>> grouped = {};
 
     for (final income in incomes) {
@@ -245,10 +251,13 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     return grouped;
   }
 
+  /// ✅ DÜZELTME: Artık repository üzerinden aktif cüzdana göre filtreliyor
   Future<Map<DateTime, List<Expense>>> _fetchAndGroupExpense(
       DateTime firstDate, DateTime lastDate) async {
+    // Repository zaten aktif cüzdana göre filtreliyor
     final expenses = await dataRepository.getExpenseByDateRange(
         firstDate: firstDate, lastDate: lastDate);
+
     final Map<DateTime, List<Expense>> grouped = {};
 
     for (final expense in expenses) {

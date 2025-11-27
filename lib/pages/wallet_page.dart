@@ -31,22 +31,42 @@ class _WalletPageState extends State<WalletPage>
       DateRangeHelper.getMonthRange(DateTime.now())['firstDate']!;
   DateTime _endDate =
       DateRangeHelper.getMonthRange(DateTime.now())['lastDate']!;
-  double _currentSliderValue =
-      0.5; // (0=expense, 0.5=compare 1=income). We wanna show compareview on startup (also look at the animation value)
+  double _currentSliderValue = 0.5;
+
+  // ➕ YENİ: Aktif cüzdan ID'sini takip et
+  String? _currentWalletId;
 
   @override
   void initState() {
     super.initState();
     _initAnimation();
+    _currentWalletId = context.read<DataRepository>().getActiveWalletId();
     _fetchData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // ➕ YENİ: Her build'de aktif cüzdan değişikliğini kontrol et
+    final repository = context.watch<DataRepository>();
+    final newWalletId = repository.getActiveWalletId();
+
+    if (_currentWalletId != newWalletId) {
+      debugPrint(
+          '🔄 [WALLET_PAGE] Active wallet changed: $_currentWalletId -> $newWalletId');
+      _currentWalletId = newWalletId;
+
+      // Verileri yeniden yükle
+      _fetchData();
+    }
   }
 
   void _initAnimation() {
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
-      value:
-          0.5, // (0=expense, 0.5=compare 1=income). We wanna show compareview on startup
+      value: 0.5,
     )..addListener(() {
         setState(() {
           _currentSliderValue = _controller.value;
@@ -55,6 +75,7 @@ class _WalletPageState extends State<WalletPage>
   }
 
   void _fetchData() {
+    debugPrint('📥 [WALLET_PAGE] Fetching data for wallet: $_currentWalletId');
     context.read<DataBloc>().add(
           GetCompareEvent(filterStart: _startDate, filterEnd: _endDate),
         );
@@ -72,7 +93,7 @@ class _WalletPageState extends State<WalletPage>
         _startDate = result['firstDate']!;
         _endDate = result['lastDate']!;
       });
-      _fetchData(); // Yeni tarih aralığıyla verileri yeniden yükle
+      _fetchData();
     }
   }
 
@@ -82,10 +103,6 @@ class _WalletPageState extends State<WalletPage>
     super.dispose();
   }
 
-  // -------------------------------------------------------------
-  // BUILD
-  // -------------------------------------------------------------
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -93,17 +110,13 @@ class _WalletPageState extends State<WalletPage>
       child: Scaffold(
         appBar: SharedAppbar(
           currentSliderValue: _currentSliderValue,
-          // onDateRangePressed: _showDateRangePicker, // Yeni callback (date range picker removing)
         ),
         drawer: const SharedDrawer(),
         body: BlocListener<DataBloc, DataState>(
           listener: (context, state) => _routeStateEvents(context, state),
           child: Column(
             children: [
-              // Tarih Aralığı Göstergesi
               _buildDateRangeIndicator(),
-
-              // Ana İçerik
               Expanded(
                 child: BlocBuilder<DataBloc, DataState>(
                   buildWhen: (prev, curr) =>
@@ -140,7 +153,6 @@ class _WalletPageState extends State<WalletPage>
                   },
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonEnhanced(
@@ -152,57 +164,50 @@ class _WalletPageState extends State<WalletPage>
                             filterStart: _startDate, filterEnd: _endDate));
                         break;
                       case SliderState.expense:
-                        // ➕ YENİ: Aktif cüzdan ID'sini al
                         final activeWalletId =
                             context.read<DataRepository>().getActiveWalletId();
                         showModalBottomSheet(
                           isScrollControlled: true,
                           enableDrag: true,
-                          backgroundColor: Colors.transparent, // Eklendi
+                          backgroundColor: Colors.transparent,
                           context: context,
                           builder: (sheetContext) {
                             return FinanceEntryWidget(
-                              walletId:
-                                  activeWalletId, // ➕ YENİ: Aktif cüzdan ID'sini widget'a ver
+                              walletId: activeWalletId,
                               isExpense: true,
                               onSave: (item) {
-                                Navigator.pop(
-                                    sheetContext); // ✅ DÜZELTME: Doğru context ile pop yap
+                                Navigator.pop(sheetContext);
                                 context
                                     .read<DataBloc>()
                                     .add(AddExpenseEvent(expense: item));
                               },
                               onCancel: () {
-                                Navigator.pop(
-                                    sheetContext); // ✅ DÜZELTME: Doğru context ile pop yap
+                                Navigator.pop(sheetContext);
                               },
                             );
                           },
                         );
                         break;
                       case SliderState.income:
-                        // ➕ YENİ: Aktif cüzdan ID'sini al
                         final activeWalletId =
                             context.read<DataRepository>().getActiveWalletId();
                         showModalBottomSheet(
                           isScrollControlled: true,
                           enableDrag: true,
-                          backgroundColor: Colors.transparent, // Eklendi
+                          backgroundColor: Colors.transparent,
                           context: context,
                           builder: (sheetContext) {
                             return FinanceEntryWidget(
-                                walletId:
-                                    activeWalletId, // ➕ YENİ: Aktif cüzdan ID'sini widget'a ver
-                                isExpense: false,
-                                onSave: (item) {
-                                  Navigator.pop(
-                                      sheetContext); // ✅ DÜZELTME: Doğru context ile pop yap
-                                  context
-                                      .read<DataBloc>()
-                                      .add(AddIncomeEvent(income: item));
-                                },
-                                onCancel: () => Navigator.pop(
-                                    sheetContext)); // ✅ DÜZELTME: Doğru context ile pop yap
+                              walletId: activeWalletId,
+                              isExpense: false,
+                              onSave: (item) {
+                                Navigator.pop(sheetContext);
+                                context
+                                    .read<DataBloc>()
+                                    .add(AddIncomeEvent(income: item));
+                              },
+                              onCancel: () => Navigator.pop(sheetContext),
+                            );
                           },
                         );
                         break;
@@ -216,10 +221,6 @@ class _WalletPageState extends State<WalletPage>
       ),
     );
   }
-
-  // -------------------------------------------------------------
-  // STATE EVENT ROUTER  (Tüm Snackbar / Error / Sync olayları)
-  // -------------------------------------------------------------
 
   Widget _buildDateRangeIndicator() {
     return Container(
@@ -272,38 +273,30 @@ class _WalletPageState extends State<WalletPage>
 
   void _routeStateEvents(BuildContext context, DataState state) {
     switch (state) {
-      // CRUD -----------------------------------------------------------------
       case SuccessfullyCreatedItemState():
         _snackbar("✓ ${state.name} Başarıyla eklendi", Colors.green);
-        // ➕ YENİ: Veriyi yeniden yükle
-        _fetchData(); // Bu satırı ekleyin
+        _fetchData();
         break;
       case SuccessfullyDeletedItemState():
         _snackbar("✓ ${state.name} Başarıyla silindi", Colors.green);
-        _fetchData(); // Bu satırı ekleyin
+        _fetchData();
         break;
       case SuccessfullyUpdatedItemState():
         _snackbar("✓ ${state.name} Başarıyla güncellendi", Colors.green);
-        _fetchData(); // Bu satırı ekleyin
+        _fetchData();
         break;
-      // SYNC ----------------------------------------------------------------
-
       case SyncingDataState():
         _snackbar("Senkronizasyon yapılıyor...", Colors.blueGrey,
             loading: true);
       case SyncSuccessState():
         _snackbar("✓ Senkronizasyon tamamlandı", Colors.green);
         break;
-
       case SyncFailedState():
         _snackbar("✗ Senkronizasyon başarısız", Colors.orange);
         break;
-
-      // ERROR ----------------------------------------------------------------
       case ErrorState():
         _snackbar(state.err, Colors.red);
         break;
-
       default:
     }
   }
@@ -331,10 +324,6 @@ class _WalletPageState extends State<WalletPage>
       ),
     );
   }
-
-  // -------------------------------------------------------------
-  // EMPTY & ERROR UI
-  // -------------------------------------------------------------
 
   Widget _buildErrorView(String err) {
     return Center(
