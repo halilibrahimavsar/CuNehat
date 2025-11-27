@@ -1,6 +1,7 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
+import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/data_bloc/data_state.dart';
 import 'package:cunehat/pages/expense_pages/expense_page.dart';
 import 'package:cunehat/pages/income_pages/income_page.dart';
@@ -14,6 +15,7 @@ import 'package:cunehat/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -157,9 +159,16 @@ class _WalletPageState extends State<WalletPage>
                           backgroundColor: Colors.transparent, // Eklendi
                           context: context,
                           builder: (sheetContext) {
+                            // ➕ YENİ: Aktif cüzdan ID'sini al
+                            final activeWalletId = context
+                                .read<DataRepository>()
+                                .getActiveWalletId();
                             return FinanceEntryWidget(
+                              walletId:
+                                  activeWalletId, // ➕ YENİ: Aktif cüzdan ID'sini widget'a ver
                               isExpense: true,
                               onSave: (item) {
+                                Navigator.pop(sheetContext);
                                 context
                                     .read<DataBloc>()
                                     .add(AddExpenseEvent(expense: item));
@@ -176,15 +185,21 @@ class _WalletPageState extends State<WalletPage>
                           backgroundColor: Colors.transparent, // Eklendi
                           context: context,
                           builder: (sheetContext) {
+                            // ➕ YENİ: Aktif cüzdan ID'sini al
+                            final activeWalletId = context
+                                .read<DataRepository>()
+                                .getActiveWalletId();
                             return FinanceEntryWidget(
-                              isExpense: false,
-                              onSave: (item) {
-                                context
-                                    .read<DataBloc>()
-                                    .add(AddIncomeEvent(income: item));
-                              },
-                              onCancel: () => Navigator.pop(sheetContext),
-                            );
+                                walletId:
+                                    activeWalletId, // ➕ YENİ: Aktif cüzdan ID'sini widget'a ver
+                                isExpense: false,
+                                onSave: (item) {
+                                  context
+                                      .read<DataBloc>()
+                                      .add(AddIncomeEvent(income: item));
+                                  context.pop(sheetContext);
+                                },
+                                onCancel: () => context.canPop());
                           },
                         );
                         break;

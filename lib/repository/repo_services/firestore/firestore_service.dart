@@ -6,8 +6,9 @@ import 'package:cunehat/repository/repo_services/idata_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService implements IDataService {
-  final _expense = FirebaseFirestore.instance.collection('expenses');
-  final _income = FirebaseFirestore.instance.collection('incomes');
+  // ➖ KALDIRILDI: Artık cüzdanların altında alt koleksiyonlar kullanacağız.
+  // final _expense = FirebaseFirestore.instance.collection('expenses');
+  // final _income = FirebaseFirestore.instance.collection('incomes');
   final _wallets = FirebaseFirestore.instance.collection('wallets'); // ⚠️ NEW
 
   String get _ownerId {
@@ -18,12 +19,25 @@ class FirestoreService implements IDataService {
     return user.uid;
   }
 
+  // ➕ YENİ: Belirli bir cüzdanın 'expenses' alt koleksiyonuna referans verir.
+  CollectionReference<Map<String, dynamic>> _expenseCollection(
+      String walletId) {
+    return _wallets.doc(walletId).collection('expenses');
+  }
+
+  // ➕ YENİ: Belirli bir cüzdanın 'incomes' alt koleksiyonuna referans verir.
+  CollectionReference<Map<String, dynamic>> _incomeCollection(String walletId) {
+    return _wallets.doc(walletId).collection('incomes');
+  }
+
   // ============ EXPENSE OPERATIONS ============
 
   @override
   Future<void> addExpense({required Expense expense}) async {
     try {
-      await _expense.add(expense.toJson());
+      await _expenseCollection(expense.walletId)
+          .doc(expense.id)
+          .set(expense.toJson());
     } catch (e) {
       throw Exception('Gider eklenirken hata: $e');
     }
@@ -32,7 +46,10 @@ class FirestoreService implements IDataService {
   @override
   Future<void> deleteExpense({required String id}) async {
     try {
-      await _expense.doc(id).delete();
+      // Bu fonksiyon artık doğrudan kullanılamaz, çünkü walletId bilgisi gerekir.
+      // Silme işlemi repository katmanında yönetilmelidir.
+      throw UnimplementedError(
+          'deleteExpense requires walletId. Use repository method.');
     } catch (e) {
       throw Exception('Gider silinirken hata: $e');
     }
@@ -41,7 +58,9 @@ class FirestoreService implements IDataService {
   @override
   Future<void> updateExpense({required Expense expense}) async {
     try {
-      await _expense.doc(expense.id).update(expense.toJson());
+      await _expenseCollection(expense.walletId)
+          .doc(expense.id)
+          .update(expense.toJson());
     } catch (e) {
       throw Exception('Gider güncellenirken hata: $e');
     }
@@ -53,15 +72,22 @@ class FirestoreService implements IDataService {
     required DateTime lastDate,
   }) async {
     try {
-      final snapshot = await _expense
-          .where('userId', isEqualTo: _ownerId)
-          .where('date',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
-              isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
-          .get();
+      // 1. Kullanıcıya ait tüm cüzdanları al.
+      final wallets = await getAllWallets();
+      final allExpenses = <Expense>[];
 
-      return snapshot.docs.reversed
-          .map((doc) => Expense.fromJson(doc.id, doc.data()));
+      // 2. Her cüzdan için belirtilen tarih aralığındaki giderleri çek.
+      for (final wallet in wallets) {
+        final snapshot = await _expenseCollection(wallet.id)
+            .where('date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
+                isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
+            .get();
+        allExpenses.addAll(
+            snapshot.docs.map((doc) => Expense.fromJson(doc.id, doc.data())));
+      }
+      // DÜZELTME: Liste zaten doğru formatta, tekrar map'lemeye gerek yok.
+      return allExpenses;
     } catch (e) {
       throw Exception('Giderler yüklenirken hata: $e');
     }
@@ -70,12 +96,16 @@ class FirestoreService implements IDataService {
   @override
   Future<Iterable<Expense>> getAllExpenses() async {
     try {
-      final snapshot =
-          await _expense.where('userId', isEqualTo: _ownerId).get();
+      final wallets = await getAllWallets();
+      final allExpenses = <Expense>[];
 
-      return snapshot.docs
-          .map((doc) => Expense.fromJson(doc.id, doc.data()))
-          .toList();
+      for (final wallet in wallets) {
+        final snapshot = await _expenseCollection(wallet.id).get();
+        allExpenses.addAll(
+            snapshot.docs.map((doc) => Expense.fromJson(doc.id, doc.data())));
+      }
+
+      return allExpenses.toList();
     } catch (e) {
       throw Exception('Tüm giderler yüklenirken hata: $e');
     }
@@ -84,10 +114,7 @@ class FirestoreService implements IDataService {
   @override
   Future<Iterable<Expense>> getExpensesByWalletId(String walletId) async {
     try {
-      final snapshot = await _expense
-          .where('userId', isEqualTo: _ownerId)
-          .where('walletId', isEqualTo: walletId)
-          .get();
+      final snapshot = await _expenseCollection(walletId).get();
 
       return snapshot.docs
           .map((doc) => Expense.fromJson(doc.id, doc.data()))
@@ -103,7 +130,9 @@ class FirestoreService implements IDataService {
   @override
   Future<void> addIncome({required Income income}) async {
     try {
-      await _income.add(income.toJson());
+      await _incomeCollection(income.walletId)
+          .doc(income.id)
+          .set(income.toJson());
     } catch (e) {
       throw Exception('Gelir eklenirken hata: $e');
     }
@@ -112,7 +141,9 @@ class FirestoreService implements IDataService {
   @override
   Future<void> deleteIncome({required String id}) async {
     try {
-      await _income.doc(id).delete();
+      // Bu fonksiyon artık doğrudan kullanılamaz, çünkü walletId bilgisi gerekir.
+      throw UnimplementedError(
+          'deleteIncome requires walletId. Use repository method.');
     } catch (e) {
       throw Exception('Gelir silinirken hata: $e');
     }
@@ -121,7 +152,9 @@ class FirestoreService implements IDataService {
   @override
   Future<void> updateIncome({required Income income}) async {
     try {
-      await _income.doc(income.id).update(income.toJson());
+      await _incomeCollection(income.walletId)
+          .doc(income.id)
+          .update(income.toJson());
     } catch (e) {
       throw Exception('Gelir güncellenirken hata: $e');
     }
@@ -133,15 +166,22 @@ class FirestoreService implements IDataService {
     required DateTime lastDate,
   }) async {
     try {
-      final snapshot = await _income
-          .where('userId', isEqualTo: _ownerId)
-          .where('date',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
-              isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
-          .get();
+      // 1. Kullanıcıya ait tüm cüzdanları al.
+      final wallets = await getAllWallets();
+      final allIncomes = <Income>[];
 
-      return snapshot.docs.reversed
-          .map((doc) => Income.fromJson(doc.id, doc.data()));
+      // 2. Her cüzdan için belirtilen tarih aralığındaki gelirleri çek.
+      for (final wallet in wallets) {
+        final snapshot = await _incomeCollection(wallet.id)
+            .where('date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
+                isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
+            .get();
+        allIncomes.addAll(
+            snapshot.docs.map((doc) => Income.fromJson(doc.id, doc.data())));
+      }
+      // DÜZELTME: Liste zaten doğru formatta, tekrar map'lemeye gerek yok.
+      return allIncomes;
     } catch (e) {
       throw Exception('Gelirler yüklenirken hata: $e');
     }
@@ -150,11 +190,16 @@ class FirestoreService implements IDataService {
   @override
   Future<Iterable<Income>> getAllIncomes() async {
     try {
-      final snapshot = await _income.where('userId', isEqualTo: _ownerId).get();
+      final wallets = await getAllWallets();
+      final allIncomes = <Income>[];
 
-      return snapshot.docs
-          .map((doc) => Income.fromJson(doc.id, doc.data()))
-          .toList();
+      for (final wallet in wallets) {
+        final snapshot = await _incomeCollection(wallet.id).get();
+        allIncomes.addAll(
+            snapshot.docs.map((doc) => Income.fromJson(doc.id, doc.data())));
+      }
+
+      return allIncomes.toList();
     } catch (e) {
       throw Exception('Tüm gelirler yüklenirken hata: $e');
     }
@@ -163,10 +208,7 @@ class FirestoreService implements IDataService {
   @override
   Future<Iterable<Income>> getIncomesByWalletId(String walletId) async {
     try {
-      final snapshot = await _income
-          .where('userId', isEqualTo: _ownerId)
-          .where('walletId', isEqualTo: walletId)
-          .get();
+      final snapshot = await _incomeCollection(walletId).get();
 
       return snapshot.docs
           .map((doc) => Income.fromJson(doc.id, doc.data()))
@@ -239,9 +281,12 @@ class FirestoreService implements IDataService {
 // ============ BATCH OPERATIONS ============
   Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
     try {
+      if (expenses.isEmpty) return;
+      final walletId = expenses
+          .first.walletId; // Tüm giderlerin aynı cüzdanda olduğunu varsayıyoruz
       final batch = FirebaseFirestore.instance.batch();
       for (final expense in expenses) {
-        final docRef = _expense.doc();
+        final docRef = _expenseCollection(walletId).doc(expense.id);
         batch.set(docRef, expense.toJson());
       }
 
@@ -253,9 +298,12 @@ class FirestoreService implements IDataService {
 
   Future<void> batchAddIncomes(Iterable<Income> incomes) async {
     try {
+      if (incomes.isEmpty) return;
+      final walletId = incomes
+          .first.walletId; // Tüm gelirlerin aynı cüzdanda olduğunu varsayıyoruz
       final batch = FirebaseFirestore.instance.batch();
       for (final income in incomes) {
-        final docRef = _income.doc();
+        final docRef = _incomeCollection(walletId).doc(income.id);
         batch.set(docRef, income.toJson());
       }
 
@@ -267,9 +315,11 @@ class FirestoreService implements IDataService {
 
   Future<void> batchDeleteExpenses(Iterable<Expense> expenses) async {
     try {
+      if (expenses.isEmpty) return;
+      final walletId = expenses.first.walletId;
       final batch = FirebaseFirestore.instance.batch();
       for (final expense in expenses) {
-        final docRef = _expense.doc(expense.id);
+        final docRef = _expenseCollection(walletId).doc(expense.id);
         batch.delete(docRef);
       }
 
@@ -281,9 +331,11 @@ class FirestoreService implements IDataService {
 
   Future<void> batchDeleteIncomes(Iterable<Income> incomes) async {
     try {
+      if (incomes.isEmpty) return;
+      final walletId = incomes.first.walletId;
       final batch = FirebaseFirestore.instance.batch();
       for (final income in incomes) {
-        final docRef = _income.doc(income.id);
+        final docRef = _incomeCollection(walletId).doc(income.id);
         batch.delete(docRef);
       }
 

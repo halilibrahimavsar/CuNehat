@@ -29,6 +29,7 @@ class FinanceEntryWidget extends StatefulWidget {
   final bool isExpense;
   final Function(dynamic model) onSave;
   final VoidCallback onCancel;
+  final String? walletId; // ➕ YENİ: Yeni kayıtlar için cüzdan ID'si
   final FinanceInitialData? initialData; // Düzenleme modu için
 
   const FinanceEntryWidget({
@@ -36,6 +37,7 @@ class FinanceEntryWidget extends StatefulWidget {
     required this.isExpense,
     required this.onSave,
     required this.onCancel,
+    this.walletId, // ➕ YENİ
     this.initialData,
   });
 
@@ -163,6 +165,12 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
       return;
     }
 
+    // Cüzdan ID'sini al: Düzenleme modundaysa initialData'dan, değilse widget'tan.
+    final String? currentWalletId =
+        _isEditMode ? widget.initialData!.walletId : widget.walletId;
+
+    if (currentWalletId == null) return; // Cüzdan ID'si yoksa işlemi durdur.
+
     final combinedDate = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -187,7 +195,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           tag: tag,
           date: combinedDate,
           time: timeString,
-          walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
+          walletId: currentWalletId,
         );
       } else {
         model = Income(
@@ -198,7 +206,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           tag: tag,
           date: combinedDate,
           time: timeString,
-          walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
+          walletId: currentWalletId,
         );
       }
     } else {
@@ -211,7 +219,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
               tag: tag,
               date: combinedDate,
               time: timeString,
-              walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
+              walletId: currentWalletId,
             )
           : Income.createLocal(
               userId: userId,
@@ -220,7 +228,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
               tag: tag,
               date: combinedDate,
               time: timeString,
-              walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
+              walletId: currentWalletId,
             );
     }
 

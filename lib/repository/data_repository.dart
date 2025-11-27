@@ -48,6 +48,9 @@ class DataRepository {
   Future<void> createWallet({required Wallet wallet}) async {
     debugPrint('➕ [REPO] Creating wallet: ${wallet.name}');
     await _getStorageMod.dataService.addWallet(wallet: wallet);
+    // ➕ YENİ: Oluşturulan yeni cüzdanı aktif cüzdan olarak ayarla.
+    // Bu, arayüzde tutarlılık sağlar ve olası hataları önler.
+    await setActiveWallet(wallet.id);
   }
 
   /// Get all wallets
