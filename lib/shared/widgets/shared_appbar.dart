@@ -1,3 +1,4 @@
+import 'package:cunehat/shared/widgets/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -153,14 +154,22 @@ class _SharedAppbarState extends State<SharedAppbar> {
         ],
       ),
       actions: [
-        // IconButton(
-        //   onPressed: widget.onDateRangePressed, // Callback'i burada kullan
-        //   icon: Icon(
-        //     Icons.filter_list_outlined,
-        //     color: _getContentColor(currentValue),
-        //   ),
-        //   tooltip: 'Tarih Filtresi',
-        // ),
+        IconButton(
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (context) {
+                return WalletManagementPage();
+              },
+            );
+          }, // Callback'i burada kullan
+          icon: Icon(
+            Icons.wallet_rounded,
+            size: 24,
+            color: _getContentColor(currentValue),
+          ),
+          tooltip: 'Cüzdan Yönetimi',
+        ),
       ],
     );
   }

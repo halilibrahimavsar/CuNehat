@@ -179,6 +179,7 @@ class _IncomeViewState extends State<IncomeView> {
             tag: income.tag,
             date: income.date,
             time: income.time,
+            walletId: income.walletId,
           ),
           onSave: (item) {
             parentContext.read<DataBloc>().add(UpdateIncomeEvent(income: item));

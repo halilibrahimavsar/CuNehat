@@ -6,13 +6,6 @@ import 'package:uuid/uuid.dart';
 
 part 'expense_model.g.dart';
 
-/// **Expense Model**: Represents an expense transaction
-///
-/// Storage Strategy:
-/// - Hive: Stores pure DateTime (no Timestamp)
-/// - Firestore: Converts DateTime ↔ Timestamp
-///
-/// This separation prevents Hive TypeAdapter conflicts
 @HiveType(typeId: 1)
 class Expense extends HiveObject {
   @HiveField(0)
@@ -30,13 +23,14 @@ class Expense extends HiveObject {
   @HiveField(4)
   final double amount;
 
-  /// ⚠️ IMPORTANT: This is DateTime for Hive compatibility
-  /// Firestore conversion happens in toJson/fromJson
   @HiveField(5)
   final DateTime date;
 
   @HiveField(6)
   final String time;
+
+  @HiveField(7) // ⚠️ NEW FIELD
+  final String walletId;
 
   Expense({
     required this.id,
@@ -46,10 +40,9 @@ class Expense extends HiveObject {
     required this.amount,
     required this.date,
     required this.time,
+    required this.walletId,
   });
 
-  /// Creates Expense from Firestore document
-  /// Converts Timestamp → DateTime
   factory Expense.fromJson(String id, Map<String, dynamic> json) {
     return Expense(
       id: id,
@@ -57,28 +50,25 @@ class Expense extends HiveObject {
       title: json[fieldTitle] ?? '',
       tag: json[fieldTag] ?? '',
       amount: (json[fieldAmount] as num? ?? 0.0).toDouble(),
-      // ✅ Convert Firestore Timestamp to DateTime
       date: (json[fieldDate] as Timestamp?)?.toDate() ?? DateTime.now(),
       time: json[fieldTime] ?? '',
+      walletId:
+          json['walletId'] ?? 'default_wallet', // ⚠️ Backward compatibility
     );
   }
 
-  /// Converts Expense to Firestore-compatible map
-  /// Converts DateTime → Timestamp
   Map<String, dynamic> toJson() {
     return {
       fieldUserId: userId,
       fieldTitle: title,
       fieldTag: tag,
       fieldAmount: amount,
-      // ✅ Convert DateTime to Firestore Timestamp
       fieldDate: Timestamp.fromDate(date),
       fieldTime: time,
+      'walletId': walletId, // ⚠️ NEW FIELD
     };
   }
 
-  /// Creates new Expense for local storage (Hive)
-  /// Uses DateTime directly - no Timestamp involved
   factory Expense.createLocal({
     required String userId,
     required String title,
@@ -86,6 +76,7 @@ class Expense extends HiveObject {
     required double amount,
     required DateTime date,
     required String time,
+    required String walletId, // ⚠️ NEW PARAMETER
   }) {
     return Expense(
       id: const Uuid().v4(),
@@ -93,17 +84,16 @@ class Expense extends HiveObject {
       title: title,
       tag: tag,
       amount: amount,
-      date: date, // ✅ Pure DateTime, no conversion needed
+      date: date,
       time: time,
+      walletId: walletId,
     );
   }
 
-  /// Optional: Helper to display formatted date
   String get formattedDate {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  /// Optional: Copy with method for updates
   Expense copyWith({
     String? id,
     String? userId,
@@ -112,6 +102,7 @@ class Expense extends HiveObject {
     double? amount,
     DateTime? date,
     String? time,
+    String? walletId,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -121,11 +112,12 @@ class Expense extends HiveObject {
       amount: amount ?? this.amount,
       date: date ?? this.date,
       time: time ?? this.time,
+      walletId: walletId ?? this.walletId,
     );
   }
 
   @override
   String toString() {
-    return 'Expense(id: $id, title: $title, amount: $amount, date: $date)';
+    return 'Expense(id: $id, title: $title, amount: $amount, walletId: $walletId)';
   }
 }

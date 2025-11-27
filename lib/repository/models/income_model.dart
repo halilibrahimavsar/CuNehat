@@ -4,15 +4,10 @@ import 'package:cunehat/constants/repository_constants.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
-// Hive'ın bu nesneyi tanıması için 'part' dosyası
 part 'income_model.g.dart';
 
-// Hive için TypeAdapter'ı tanımlıyoruz. typeId benzersiz olmalı.
 @HiveType(typeId: 0)
 class Income extends HiveObject {
-  // HiveObject'i extend etmesi, Hive'ın onu daha verimli yönetmesini sağlar.
-
-  // Hive alanlarını numaralandırıyoruz.
   @HiveField(0)
   final String id;
 
@@ -28,13 +23,14 @@ class Income extends HiveObject {
   @HiveField(4)
   final double amount;
 
-  // Firestore'daki Timestamp yerine saf DateTime kullanıyoruz.
-  // Bu, hem Hive hem de Firestore için daha evrenseldir.
   @HiveField(5)
   final DateTime date;
 
   @HiveField(6)
   final String time;
+
+  @HiveField(7) // ⚠️ NEW FIELD
+  final String walletId;
 
   Income({
     required this.id,
@@ -44,10 +40,9 @@ class Income extends HiveObject {
     required this.amount,
     required this.date,
     required this.time,
+    required this.walletId,
   });
 
-  // Firestore'dan veri okumak için bir 'factory' constructor.
-  // Artık QueryDocumentSnapshot'a bağımlı değiliz.
   factory Income.fromJson(String id, Map<String, dynamic> json) {
     return Income(
       id: id,
@@ -55,27 +50,25 @@ class Income extends HiveObject {
       title: json[fieldTitle] ?? '',
       tag: json[fieldTag] ?? '',
       amount: (json[fieldAmount] as num? ?? 0.0).toDouble(),
-      // Firestore'dan gelen Timestamp'i DateTime'a çeviriyoruz.
       date: (json[fieldDate] as Timestamp? ?? Timestamp.now()).toDate(),
       time: json[fieldTime] ?? '',
+      walletId:
+          json['walletId'] ?? 'default_wallet', // ⚠️ Backward compatibility
     );
   }
 
-  // Firestore'a veri yazmak için 'toJson' metodu.
   Map<String, dynamic> toJson() {
     return {
       fieldUserId: userId,
       fieldTitle: title,
       fieldTag: tag,
       fieldAmount: amount,
-      // DateTime'ı Firestore'un anlayacağı Timestamp'e çeviriyoruz.
       fieldDate: Timestamp.fromDate(date),
       fieldTime: time,
+      'walletId': walletId, // ⚠️ NEW FIELD
     };
   }
 
-  // Yerel depolamada (Hive) yeni bir gelir oluştururken
-  // kullanmak için yardımcı bir factory.
   factory Income.createLocal({
     required String userId,
     required String title,
@@ -83,9 +76,9 @@ class Income extends HiveObject {
     required double amount,
     required DateTime date,
     required String time,
+    required String walletId, // ⚠️ NEW PARAMETER
   }) {
     return Income(
-      // Benzersiz bir ID oluşturmak için Uuid paketini kullanıyoruz.
       id: const Uuid().v4(),
       userId: userId,
       title: title,
@@ -93,6 +86,34 @@ class Income extends HiveObject {
       amount: amount,
       date: date,
       time: time,
+      walletId: walletId,
     );
+  }
+
+  Income copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? tag,
+    double? amount,
+    DateTime? date,
+    String? time,
+    String? walletId,
+  }) {
+    return Income(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      tag: tag ?? this.tag,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      walletId: walletId ?? this.walletId,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Income(id: $id, title: $title, amount: $amount, walletId: $walletId)';
   }
 }

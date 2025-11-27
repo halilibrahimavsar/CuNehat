@@ -12,6 +12,7 @@ class FinanceInitialData {
   final String tag;
   final DateTime date;
   final String time;
+  final String walletId; // ⚠️ NEW FIELD
 
   FinanceInitialData({
     required this.id,
@@ -20,6 +21,7 @@ class FinanceInitialData {
     required this.tag,
     required this.date,
     required this.time,
+    required this.walletId, // ⚠️ NEW FIELD
   });
 }
 
@@ -185,6 +187,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           tag: tag,
           date: combinedDate,
           time: timeString,
+          walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
         );
       } else {
         model = Income(
@@ -195,6 +198,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           tag: tag,
           date: combinedDate,
           time: timeString,
+          walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
         );
       }
     } else {
@@ -207,6 +211,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
               tag: tag,
               date: combinedDate,
               time: timeString,
+              walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
             )
           : Income.createLocal(
               userId: userId,
@@ -215,6 +220,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
               tag: tag,
               date: combinedDate,
               time: timeString,
+              walletId: widget.initialData!.walletId, // ⚠️ NEW FIELD
             );
     }
 

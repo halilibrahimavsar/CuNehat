@@ -179,6 +179,7 @@ class _ExpenseViewState extends State<ExpenseView> {
             tag: expense.tag,
             date: expense.date,
             time: expense.time,
+            walletId: expense.walletId,
           ),
           onSave: (item) {
             parentContext
