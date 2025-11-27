@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/models/wallet_model.dart';
@@ -301,7 +303,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
     String selectedColor = WalletDefaults.defaultColorHex;
     String selectedIcon = WalletDefaults.defaultIconName;
-    bool isDefault = false; // ➕ YENİ: Varsayılan cüzdan mı?
+    bool isDefault = false;
+
+    // 🔥 DÜZELTME: Context'i kaydet
+    final scaffoldContext = context;
 
     showDialog(
       context: context,
@@ -334,21 +339,21 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: WalletColors.presetColors.map((entry) {
+                    children: WalletColors.presetColors.map((color) {
+                      final colorHex = WalletColors.colorToHex(color);
                       return GestureDetector(
                         onTap: () {
                           setDialogState(() {
-                            selectedColor = entry.value.toString();
+                            selectedColor = colorHex;
                           });
                         },
                         child: Container(
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color:
-                                WalletColors.hexToColor(entry.value.toString()),
+                            color: color,
                             shape: BoxShape.circle,
-                            border: selectedColor == entry.value
+                            border: selectedColor == colorHex
                                 ? Border.all(color: Colors.black, width: 2)
                                 : null,
                           ),
@@ -417,7 +422,8 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                       double.tryParse(balanceController.text) ?? 0.0;
 
                   if (name.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    // 🔥 DÜZELTME: scaffoldContext kullan
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                       const SnackBar(content: Text('Lütfen cüzdan adı girin')),
                     );
                     return;
@@ -431,7 +437,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     balance: balance,
                     colorHex: selectedColor,
                     iconName: selectedIcon,
-                    isDefault: isDefault, // ➕ YENİ: isDefault değerini ekleyin
+                    isDefault: isDefault,
                     sortOrder: await _getNextSortOrder(repository),
                   );
 
@@ -440,8 +446,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     Navigator.pop(context);
                     setState(() {});
 
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    // 🔥 DÜZELTME: scaffoldContext kullan
+                    if (scaffoldContext.mounted) {
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                         SnackBar(
                           content: Text('"$name" cüzdanı oluşturuldu'),
                           backgroundColor: Colors.green,
@@ -449,8 +456,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                       );
                     }
                   } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    // 🔥 DÜZELTME: scaffoldContext kullan
+                    if (scaffoldContext.mounted) {
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                         SnackBar(
                           content: Text('Hata: $e'),
                           backgroundColor: Colors.red,
@@ -477,6 +485,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
     String selectedColor = wallet.colorHex;
     String selectedIcon = wallet.iconName;
+
+    // 🔥 DÜZELTME: Context'i kaydet
+    final scaffoldContext = context;
 
     showDialog(
       context: context,
@@ -507,21 +518,21 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: WalletColors.presetColors.map((entry) {
+                    children: WalletColors.presetColors.map((color) {
+                      final colorHex = WalletColors.colorToHex(color);
                       return GestureDetector(
                         onTap: () {
                           setDialogState(() {
-                            selectedColor = entry.value.toString();
+                            selectedColor = colorHex;
                           });
                         },
                         child: Container(
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color:
-                                WalletColors.hexToColor(entry.value.toString()),
+                            color: color,
                             shape: BoxShape.circle,
-                            border: selectedColor == entry.value
+                            border: selectedColor == colorHex
                                 ? Border.all(color: Colors.black, width: 2)
                                 : null,
                           ),
@@ -578,7 +589,8 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                       double.tryParse(balanceController.text) ?? wallet.balance;
 
                   if (name.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    // 🔥 DÜZELTME: scaffoldContext kullan
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                       const SnackBar(content: Text('Lütfen cüzdan adı girin')),
                     );
                     return;
@@ -596,8 +608,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     Navigator.pop(context);
                     setState(() {});
 
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    // 🔥 DÜZELTME: scaffoldContext kullan
+                    if (scaffoldContext.mounted) {
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                         SnackBar(
                           content: Text('"$name" cüzdanı güncellendi'),
                           backgroundColor: Colors.green,
@@ -605,8 +618,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                       );
                     }
                   } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    // 🔥 DÜZELTME: scaffoldContext kullan
+                    if (scaffoldContext.mounted) {
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                         SnackBar(
                           content: Text('Hata: $e'),
                           backgroundColor: Colors.red,
