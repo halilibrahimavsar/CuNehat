@@ -2,6 +2,7 @@ import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/repository/get_storage_mod.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
+import 'package:cunehat/repository/models/wallet_model.dart';
 import 'package:cunehat/repository/repo_services/firestore/firestore_service.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/models/income_model.dart';
@@ -43,6 +44,8 @@ void main() async {
 
   Hive.registerAdapter(IncomeAdapter()); // typeId: 0
   Hive.registerAdapter(ExpenseAdapter()); // typeId: 1
+  Hive.registerAdapter(WalletAdapter()); // ➕ YENİ: typeId: 3
+
   // Hive.registerAdapter(PendingOperationAdapter()); // typeId: 2
 
   debugPrint('✅ Hive TypeAdapters registered');

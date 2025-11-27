@@ -46,10 +46,16 @@ class FirestoreService implements IDataService {
   @override
   Future<void> deleteExpense({required String id}) async {
     try {
-      // Bu fonksiyon artık doğrudan kullanılamaz, çünkü walletId bilgisi gerekir.
-      // Silme işlemi repository katmanında yönetilmelidir.
-      throw UnimplementedError(
-          'deleteExpense requires walletId. Use repository method.');
+      // Tüm cüzdanlarda bu ID'ye sahip expense'i bul ve sil
+      final wallets = await getAllWallets();
+      for (final wallet in wallets) {
+        final doc = await _expenseCollection(wallet.id).doc(id).get();
+        if (doc.exists) {
+          await _expenseCollection(wallet.id).doc(id).delete();
+          return;
+        }
+      }
+      throw Exception('Gider bulunamadı: $id');
     } catch (e) {
       throw Exception('Gider silinirken hata: $e');
     }
@@ -141,9 +147,16 @@ class FirestoreService implements IDataService {
   @override
   Future<void> deleteIncome({required String id}) async {
     try {
-      // Bu fonksiyon artık doğrudan kullanılamaz, çünkü walletId bilgisi gerekir.
-      throw UnimplementedError(
-          'deleteIncome requires walletId. Use repository method.');
+      // Tüm cüzdanlarda bu ID'ye sahip income'u bul ve sil
+      final wallets = await getAllWallets();
+      for (final wallet in wallets) {
+        final doc = await _incomeCollection(wallet.id).doc(id).get();
+        if (doc.exists) {
+          await _incomeCollection(wallet.id).doc(id).delete();
+          return;
+        }
+      }
+      throw Exception('Gelir bulunamadı: $id');
     } catch (e) {
       throw Exception('Gelir silinirken hata: $e');
     }

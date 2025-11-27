@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/get_storage_mod.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
@@ -244,8 +246,18 @@ class DataRepository {
 
     Expense? expense;
     try {
-      expense = (await _getStorageMod.dataService.getAllExpenses())
-          .firstWhere((e) => e.id == id);
+      // ✅ Önce local'den bulmayı dene
+      final localExpenses = await _localDataService.getAllExpenses();
+      expense = localExpenses.firstWhere((e) => e.id == id,
+          orElse: () => throw Exception('Not found'));
+
+      // Bulunamazsa cloud'dan dene
+      if (expense == null && _getStorageMod.isCloudMode) {
+        final cloudExpenses = await _firestoreService.getAllExpenses();
+        expense = cloudExpenses.firstWhere((e) => e.id == id,
+            orElse: () => throw Exception('Not found'));
+      }
+
       debugPrint('   Found expense to delete: ${expense.title}');
     } catch (e) {
       debugPrint('   ⚠️  Expense not found: $e');
@@ -268,13 +280,24 @@ class DataRepository {
     debugPrint('   ✓ Expense deleted successfully');
   }
 
+// Aynı düzeltmeyi deleteIncome için de yapın:
   Future<void> deleteIncome({required String id}) async {
     debugPrint('🔴 [REPO] deleteIncome called');
 
     Income? income;
     try {
-      income = (await _getStorageMod.dataService.getAllIncomes())
-          .firstWhere((i) => i.id == id);
+      // ✅ Önce local'den bulmayı dene
+      final localIncomes = await _localDataService.getAllIncomes();
+      income = localIncomes.firstWhere((i) => i.id == id,
+          orElse: () => throw Exception('Not found'));
+
+      // Bulunamazsa cloud'dan dene
+      if (income == null && _getStorageMod.isCloudMode) {
+        final cloudIncomes = await _firestoreService.getAllIncomes();
+        income = cloudIncomes.firstWhere((i) => i.id == id,
+            orElse: () => throw Exception('Not found'));
+      }
+
       debugPrint('   Found income to delete: ${income.title}');
     } catch (e) {
       debugPrint('   ⚠️  Income not found: $e');
@@ -296,7 +319,6 @@ class DataRepository {
 
     debugPrint('   ✓ Income deleted successfully');
   }
-
   // ============ UPDATE OPERATIONS ============
 
   Future<void> updateExpense({required Expense expense}) async {
@@ -304,8 +326,18 @@ class DataRepository {
 
     Expense? oldExpense;
     try {
-      oldExpense = (await _getStorageMod.dataService.getAllExpenses())
-          .firstWhere((e) => e.id == expense.id);
+      // ✅ Önce local'den bulmayı dene
+      final localExpenses = await _localDataService.getAllExpenses();
+      oldExpense = localExpenses.firstWhere((e) => e.id == expense.id,
+          orElse: () => throw Exception('Not found'));
+
+      // Bulunamazsa cloud'dan dene
+      if (oldExpense == null && _getStorageMod.isCloudMode) {
+        final cloudExpenses = await _firestoreService.getAllExpenses();
+        oldExpense = cloudExpenses.firstWhere((e) => e.id == expense.id,
+            orElse: () => throw Exception('Not found'));
+      }
+
       debugPrint('   Found old expense: ${oldExpense.title}');
     } catch (e) {
       debugPrint('   ⚠️  Old expense not found: $e');
@@ -352,12 +384,22 @@ class DataRepository {
   }
 
   Future<void> updateIncome({required Income income}) async {
-    debugPrint('🟠 [REPO] updateIncome called');
+    debugPrint('🟠 [REPO] updateExpense called');
 
-    Income? oldIncome;
+    Expense? oldIncome;
     try {
-      oldIncome = (await _getStorageMod.dataService.getAllIncomes())
-          .firstWhere((i) => i.id == income.id);
+      // ✅ Önce local'den bulmayı dene
+      final localExpenses = await _localDataService.getAllExpenses();
+      oldIncome = localExpenses.firstWhere((e) => e.id == income.id,
+          orElse: () => throw Exception('Not found'));
+
+      // Bulunamazsa cloud'dan dene
+      if (oldIncome == null && _getStorageMod.isCloudMode) {
+        final cloudExpenses = await _firestoreService.getAllExpenses();
+        oldIncome = cloudExpenses.firstWhere((e) => e.id == income.id,
+            orElse: () => throw Exception('Not found'));
+      }
+
       debugPrint('   Found old income: ${oldIncome.title}');
     } catch (e) {
       debugPrint('   ⚠️  Old income not found: $e');
@@ -366,6 +408,7 @@ class DataRepository {
     await _getStorageMod.dataService.updateIncome(income: income);
 
     if (oldIncome != null) {
+      //////////////////////////////////////////
       // If wallet changed, update both wallets
       if (oldIncome.walletId != income.walletId) {
         // Remove from old wallet

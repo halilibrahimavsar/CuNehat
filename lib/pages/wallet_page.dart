@@ -15,7 +15,6 @@ import 'package:cunehat/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -153,53 +152,57 @@ class _WalletPageState extends State<WalletPage>
                             filterStart: _startDate, filterEnd: _endDate));
                         break;
                       case SliderState.expense:
+                        // ➕ YENİ: Aktif cüzdan ID'sini al
+                        final activeWalletId =
+                            context.read<DataRepository>().getActiveWalletId();
                         showModalBottomSheet(
                           isScrollControlled: true,
                           enableDrag: true,
                           backgroundColor: Colors.transparent, // Eklendi
                           context: context,
                           builder: (sheetContext) {
-                            // ➕ YENİ: Aktif cüzdan ID'sini al
-                            final activeWalletId = context
-                                .read<DataRepository>()
-                                .getActiveWalletId();
                             return FinanceEntryWidget(
                               walletId:
                                   activeWalletId, // ➕ YENİ: Aktif cüzdan ID'sini widget'a ver
                               isExpense: true,
                               onSave: (item) {
-                                Navigator.pop(sheetContext);
+                                Navigator.pop(
+                                    sheetContext); // ✅ DÜZELTME: Doğru context ile pop yap
                                 context
                                     .read<DataBloc>()
                                     .add(AddExpenseEvent(expense: item));
                               },
-                              onCancel: () => Navigator.pop(sheetContext),
+                              onCancel: () {
+                                Navigator.pop(
+                                    sheetContext); // ✅ DÜZELTME: Doğru context ile pop yap
+                              },
                             );
                           },
                         );
                         break;
                       case SliderState.income:
+                        // ➕ YENİ: Aktif cüzdan ID'sini al
+                        final activeWalletId =
+                            context.read<DataRepository>().getActiveWalletId();
                         showModalBottomSheet(
                           isScrollControlled: true,
                           enableDrag: true,
                           backgroundColor: Colors.transparent, // Eklendi
                           context: context,
                           builder: (sheetContext) {
-                            // ➕ YENİ: Aktif cüzdan ID'sini al
-                            final activeWalletId = context
-                                .read<DataRepository>()
-                                .getActiveWalletId();
                             return FinanceEntryWidget(
                                 walletId:
                                     activeWalletId, // ➕ YENİ: Aktif cüzdan ID'sini widget'a ver
                                 isExpense: false,
                                 onSave: (item) {
+                                  Navigator.pop(
+                                      sheetContext); // ✅ DÜZELTME: Doğru context ile pop yap
                                   context
                                       .read<DataBloc>()
                                       .add(AddIncomeEvent(income: item));
-                                  context.pop(sheetContext);
                                 },
-                                onCancel: () => context.canPop());
+                                onCancel: () => Navigator.pop(
+                                    sheetContext)); // ✅ DÜZELTME: Doğru context ile pop yap
                           },
                         );
                         break;
@@ -272,12 +275,16 @@ class _WalletPageState extends State<WalletPage>
       // CRUD -----------------------------------------------------------------
       case SuccessfullyCreatedItemState():
         _snackbar("✓ ${state.name} Başarıyla eklendi", Colors.green);
+        // ➕ YENİ: Veriyi yeniden yükle
+        _fetchData(); // Bu satırı ekleyin
         break;
       case SuccessfullyDeletedItemState():
         _snackbar("✓ ${state.name} Başarıyla silindi", Colors.green);
+        _fetchData(); // Bu satırı ekleyin
         break;
       case SuccessfullyUpdatedItemState():
         _snackbar("✓ ${state.name} Başarıyla güncellendi", Colors.green);
+        _fetchData(); // Bu satırı ekleyin
         break;
       // SYNC ----------------------------------------------------------------
 

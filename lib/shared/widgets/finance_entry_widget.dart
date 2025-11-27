@@ -233,7 +233,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     }
 
     widget.onSave(model);
-    widget.onCancel();
   }
 
   void _showErrorAnimation() {

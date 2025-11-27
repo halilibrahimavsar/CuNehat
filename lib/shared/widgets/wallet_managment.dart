@@ -301,6 +301,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
     String selectedColor = WalletDefaults.defaultColorHex;
     String selectedIcon = WalletDefaults.defaultIconName;
+    bool isDefault = false; // ➕ YENİ: Varsayılan cüzdan mı?
 
     showDialog(
       context: context,
@@ -389,6 +390,18 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                       );
                     }).toList(),
                   ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text('Varsayılan Cüzdan'),
+                    subtitle: const Text(
+                        'Bu cüzdan varsayılan olarak kullanılsın mı?'),
+                    value: isDefault,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        isDefault = value;
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
@@ -418,6 +431,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     balance: balance,
                     colorHex: selectedColor,
                     iconName: selectedIcon,
+                    isDefault: isDefault, // ➕ YENİ: isDefault değerini ekleyin
                     sortOrder: await _getNextSortOrder(repository),
                   );
 
