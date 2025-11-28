@@ -43,6 +43,22 @@ class DataRepository {
   /// Set active wallet
   Future<void> setActiveWallet(String walletId) async {
     debugPrint('🔄 [REPO] Setting active wallet: $walletId');
+    debugPrint(
+        '🔄 [REPO] Setting active wallet and deactivating others: $walletId');
+    final allWallets = await getAllWallets();
+
+    for (final wallet in allWallets) {
+      // If this is the wallet to be activated and it's not already active
+      if (wallet.id == walletId && !wallet.isActive) {
+        await updateWallet(wallet: wallet.copyWith(isActive: true));
+      }
+      // If this is another wallet and it is currently active
+      else if (wallet.id != walletId && wallet.isActive) {
+        await updateWallet(wallet: wallet.copyWith(isActive: false));
+      }
+    }
+
+    // Save the new active wallet ID to preferences for quick access
     await _prefs.setString(StorageKeys.activeWalletId, walletId);
   }
 
@@ -97,7 +113,7 @@ class DataRepository {
 
     // Prevent deleting default wallet
     final wallet = await getWalletById(walletId);
-    if (wallet?.isDefault == true) {
+    if (wallet?.isActive == true) {
       throw Exception('Varsayılan cüzdan silinemez');
     }
 
@@ -656,7 +672,7 @@ class DataRepository {
       balance: getMainBalance(),
       colorHex: WalletDefaults.defaultColorHex,
       iconName: WalletDefaults.defaultIconName,
-      isDefault: true,
+      isActive: true,
       sortOrder: 0,
     );
 

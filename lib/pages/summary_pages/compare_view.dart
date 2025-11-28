@@ -119,7 +119,7 @@ class CompareView extends StatelessWidget {
     Wallet wallet, // ➕ YENİ PARAMETRE
   ) {
     final formatCurrency = NumberFormat.currency(symbol: "₺", decimalDigits: 2);
-    final walletColor = WalletColors.hexToColor(wallet.colorHex);
+    // final walletColor = WalletColors.hexToColor(wallet.colorHex);
 
     return ValueListenableBuilder<bool>(
       valueListenable: _isBalanceVisible,
@@ -175,7 +175,7 @@ class CompareView extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (wallet.isDefault)
+                        if (wallet.isActive)
                           Text(
                             'Varsayılan Cüzdan',
                             style: TextStyle(

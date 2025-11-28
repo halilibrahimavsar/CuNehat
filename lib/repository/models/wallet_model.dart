@@ -33,7 +33,7 @@ class Wallet extends HiveObject {
   final DateTime createdAt;
 
   @HiveField(7)
-  final bool isDefault; // Is this the default wallet?
+  final bool isActive; // Is this the currently active wallet?
 
   @HiveField(8)
   final int sortOrder; // Display order
@@ -46,7 +46,7 @@ class Wallet extends HiveObject {
     required this.colorHex,
     required this.iconName,
     required this.createdAt,
-    this.isDefault = false,
+    this.isActive = false,
     this.sortOrder = 0,
   });
 
@@ -60,7 +60,7 @@ class Wallet extends HiveObject {
       colorHex: json['colorHex'] ?? '0xFF2196F3',
       iconName: json['iconName'] ?? 'wallet',
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      isDefault: json['isDefault'] ?? false,
+      isActive: json['isActive'] ?? false,
       sortOrder: json['sortOrder'] ?? 0,
     );
   }
@@ -74,7 +74,7 @@ class Wallet extends HiveObject {
       'colorHex': colorHex,
       'iconName': iconName,
       'createdAt': Timestamp.fromDate(createdAt),
-      'isDefault': isDefault,
+      'isActive': isActive,
       'sortOrder': sortOrder,
     };
   }
@@ -86,7 +86,7 @@ class Wallet extends HiveObject {
     double balance = 0.0,
     String? colorHex,
     String? iconName,
-    bool isDefault = false,
+    bool isActive = false,
     int sortOrder = 0,
   }) {
     return Wallet(
@@ -97,7 +97,7 @@ class Wallet extends HiveObject {
       colorHex: colorHex ?? '0xFF2196F3',
       iconName: iconName ?? 'wallet',
       createdAt: DateTime.now(),
-      isDefault: isDefault,
+      isActive: isActive,
       sortOrder: sortOrder,
     );
   }
@@ -108,7 +108,7 @@ class Wallet extends HiveObject {
     double? balance,
     String? colorHex,
     String? iconName,
-    bool? isDefault,
+    bool? isActive,
     int? sortOrder,
   }) {
     return Wallet(
@@ -119,7 +119,7 @@ class Wallet extends HiveObject {
       colorHex: colorHex ?? this.colorHex,
       iconName: iconName ?? this.iconName,
       createdAt: createdAt,
-      isDefault: isDefault ?? this.isDefault,
+      isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
     );
   }

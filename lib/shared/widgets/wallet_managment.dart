@@ -215,30 +215,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (wallet.isDefault) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(
-                                    color: Colors.blue.withOpacity(0.3),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Varsayılan',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -316,7 +292,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (!wallet.isDefault)
+                  if (!isActive)
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _showDeleteWalletDialog(
@@ -346,7 +322,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
     String selectedColor = WalletDefaults.defaultColorHex;
     String selectedIcon = WalletDefaults.defaultIconName;
-    bool isDefault = false;
 
     // 🔥 DÜZELTME: Context'i kaydet
     final scaffoldContext = context;
@@ -438,18 +413,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: const Text('Varsayılan Cüzdan'),
-                    subtitle: const Text(
-                        'Bu cüzdan varsayılan olarak kullanılsın mı?'),
-                    value: isDefault,
-                    onChanged: (value) {
-                      setDialogState(() {
-                        isDefault = value;
-                      });
-                    },
-                  ),
                 ],
               ),
             ),
@@ -480,7 +443,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     balance: balance,
                     colorHex: selectedColor,
                     iconName: selectedIcon,
-                    isDefault: isDefault,
+                    isActive: false, // Yeni cüzdanlar başlangıçta aktif değil
                     sortOrder: await _getNextSortOrder(repository),
                   );
 
@@ -688,7 +651,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
       builder: (context) => AlertDialog(
         title: const Text('Cüzdanı Sil'),
         content: Text(
-            '"${wallet.name}" cüzdanını silmek istediğinizden emin misiniz? '
+            '"${wallet.name}" cüzdanını silmek istediğinizden emin misiniz? Bu cüzdana ait tüm gelir/gider kayıtları da silinecektir. '
             'Bu işlem geri alınamaz.'),
         actions: [
           TextButton(
@@ -739,7 +702,8 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
           children: [
             Text('• Aktif cüzdanınızı değiştirmek için bir cüzdana tıklayın.'),
             SizedBox(height: 8),
-            Text('• Varsayılan cüzdan silinemez.'),
+            Text(
+                '• Aktif olan cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yapmalısınız.'),
             SizedBox(height: 8),
             Text('• Cüzdan bakiyeleri otomatik olarak güncellenir.'),
             SizedBox(height: 8),

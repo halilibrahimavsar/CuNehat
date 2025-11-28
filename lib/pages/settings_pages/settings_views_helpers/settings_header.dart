@@ -1,20 +1,21 @@
 // Ayar grupları için başlık
 import 'package:flutter/material.dart';
 
-class SettingsHeader extends StatelessWidget {
+class SectionHeader extends StatelessWidget {
   final String title;
-  const SettingsHeader({super.key, required this.title});
+  const SectionHeader({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
-          fontSize: 15,
+          color: Colors.grey.shade600,
+          letterSpacing: 0.5,
         ),
       ),
     );

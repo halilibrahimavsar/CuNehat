@@ -1,5 +1,7 @@
 import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/pages/settings_pages/settings_views_helpers/settings_header.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/settings_item.dart';
+import 'package:cunehat/pages/settings_pages/settings_views_helpers/storage_mode_option.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_selector_dropdown.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
@@ -27,7 +29,6 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _currentMode = context.read<GetStorageMod>().getStorageMode();
-    print('🔧 [SETTINGS] Initialized with mode: ${_currentMode.name}');
   }
 
   /// Shows storage mode selection dialog
@@ -48,7 +49,7 @@ class _SettingsPageState extends State<SettingsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _StorageModeOption(
+            StorageModeOption(
               mode: StorageMode.local,
               currentMode: currentMode,
               icon: Icons.phone_android,
@@ -65,7 +66,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 16),
-            _StorageModeOption(
+            StorageModeOption(
               mode: StorageMode.cloud,
               currentMode: currentMode,
               icon: Icons.cloud,
@@ -330,77 +331,9 @@ class _SettingsPageState extends State<SettingsPage> {
         false;
   }
 
-  void _showEditBalanceDialog() {
-    final repository = context.read<DataRepository>();
-    final currentBalance = repository.getMainBalance();
-    final controller = TextEditingController(
-      text: currentBalance.toStringAsFixed(2),
-    );
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Anapara Düzenle'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Mevcut Bakiye: ${formatCurrency.format(currentBalance)}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Yeni Anapara',
-                suffixText: '₺',
-                border: OutlineInputBorder(),
-                helperText: 'Not: Bu değer tüm işlemlerinizi etkilemez',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newBalance = double.tryParse(controller.text) ?? 0.0;
-              await repository.setMainBalance(newBalance);
-
-              if (mounted) {
-                setState(() {});
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Anapara ${formatCurrency.format(newBalance)} olarak güncellendi',
-                    ),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final repository = context.watch<DataRepository>();
-    final currentBalance = repository.getMainBalance();
     final pendingCount = repository.getPendingSyncCount();
 
     return Scaffold(
@@ -411,36 +344,11 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          _SectionHeader(title: 'TEMA'),
+          SectionHeader(title: 'TEMA'),
           const ThemeDropdown(),
           const SizedBox(height: 24),
-          _SectionHeader(title: 'ANAPARA'),
-          Card(
-            elevation: 2,
-            child: ListTile(
-              leading: Icon(
-                Icons.account_balance_wallet,
-                color: currentBalance >= 0 ? Colors.green : Colors.red,
-                size: 28,
-              ),
-              title: const Text('Mevcut Bakiye'),
-              subtitle: Text(
-                formatCurrency.format(currentBalance),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: currentBalance >= 0 ? Colors.green : Colors.red,
-                ),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: _showEditBalanceDialog,
-                tooltip: 'Düzenle',
-              ),
-            ),
-          ),
           const SizedBox(height: 24),
-          _SectionHeader(title: 'VERİ DEPOLAMA'),
+          SectionHeader(title: 'VERİ DEPOLAMA'),
           Card(
             elevation: 2,
             child: ListTile(
@@ -561,7 +469,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           const SizedBox(height: 24),
-          _SectionHeader(title: 'UYGULAMA'),
+          SectionHeader(title: 'UYGULAMA'),
           Card(
             elevation: 1,
             child: Column(
@@ -581,7 +489,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           const SizedBox(height: 24),
-          _SectionHeader(title: "Profil"),
+          SectionHeader(title: "Profil"),
           SettingsItem(
             title: "Profil Ayarları",
             icon: Icons.person,
@@ -590,122 +498,6 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           )
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey.shade600,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _StorageModeOption extends StatelessWidget {
-  final StorageMode mode;
-  final StorageMode currentMode;
-  final IconData icon;
-  final String title;
-  final String description;
-  final List<String> features;
-  final VoidCallback onTap;
-
-  const _StorageModeOption({
-    required this.mode,
-    required this.currentMode,
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.features,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = mode == currentMode;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: isSelected ? Colors.blue.shade50 : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected ? Colors.blue : Colors.grey.shade700,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: isSelected ? Colors.blue : null,
-                        ),
-                      ),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isSelected)
-                  const Icon(
-                    Icons.check_circle,
-                    color: Colors.blue,
-                    size: 24,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...features.map((feature) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    feature,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                )),
-          ],
-        ),
       ),
     );
   }

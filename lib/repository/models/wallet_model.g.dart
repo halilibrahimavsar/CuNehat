@@ -24,7 +24,7 @@ class WalletAdapter extends TypeAdapter<Wallet> {
       colorHex: fields[4] as String,
       iconName: fields[5] as String,
       createdAt: fields[6] as DateTime,
-      isDefault: fields[7] as bool,
+      isActive: fields[7] as bool,
       sortOrder: fields[8] as int,
     );
   }
@@ -48,7 +48,7 @@ class WalletAdapter extends TypeAdapter<Wallet> {
       ..writeByte(6)
       ..write(obj.createdAt)
       ..writeByte(7)
-      ..write(obj.isDefault)
+      ..write(obj.isActive)
       ..writeByte(8)
       ..write(obj.sortOrder);
   }
