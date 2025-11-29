@@ -132,6 +132,8 @@ class _IncomeViewState extends State<IncomeView> {
   }
 
   void _showEditIncomeSheet(BuildContext parentContext, Income income) {
+    final dataBloc = parentContext.read<DataBloc>();
+
     showModalBottomSheet(
       context: parentContext,
       isScrollControlled: true,
@@ -150,7 +152,8 @@ class _IncomeViewState extends State<IncomeView> {
             walletId: income.walletId,
           ),
           onSave: (item) {
-            parentContext.read<DataBloc>().add(UpdateIncomeEvent(income: item));
+            dataBloc.add(UpdateIncomeEvent(income: item));
+            Navigator.pop(context);
           },
           onCancel: () => Navigator.pop(context),
         );

@@ -132,6 +132,8 @@ class _ExpenseViewState extends State<ExpenseView> {
   }
 
   void _showEditExpenseSheet(BuildContext parentContext, Expense expense) {
+    final dataBloc = parentContext.read<DataBloc>();
+
     showModalBottomSheet(
       context: parentContext,
       isScrollControlled: true,
@@ -150,9 +152,8 @@ class _ExpenseViewState extends State<ExpenseView> {
             walletId: expense.walletId,
           ),
           onSave: (item) {
-            parentContext
-                .read<DataBloc>()
-                .add(UpdateExpenseEvent(expense: item));
+            dataBloc.add(UpdateExpenseEvent(expense: item));
+            Navigator.pop(context);
           },
           onCancel: () => Navigator.pop(context),
         );
