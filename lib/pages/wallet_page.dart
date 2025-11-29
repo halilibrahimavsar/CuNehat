@@ -45,24 +45,6 @@ class _WalletPageState extends State<WalletPage>
     _fetchData();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // ➕ YENİ: Her build'de aktif cüzdan değişikliğini kontrol et
-    final repository = context.watch<DataRepository>();
-    final newWalletId = repository.getActiveWalletId();
-
-    if (_currentWalletId != newWalletId) {
-      debugPrint(
-          '🔄 [WALLET_PAGE] Active wallet changed: $_currentWalletId -> $newWalletId');
-      _currentWalletId = newWalletId;
-
-      // Verileri yeniden yükle
-      _fetchData();
-    }
-  }
-
   void _initAnimation() {
     _controller = AnimationController(
       vsync: this,
@@ -113,8 +95,21 @@ class _WalletPageState extends State<WalletPage>
           currentSliderValue: _currentSliderValue,
         ),
         drawer: const SharedDrawer(),
-        body: BlocListener<DataBloc, DataState>(
-          listener: (context, state) => _routeStateEvents(context, state),
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<DataBloc, DataState>(
+              listener: (context, state) => _routeStateEvents(context, state),
+            ),
+            // BlocListener<WalletBloc, WalletState>(
+            //   listener: (context, state) {
+            //     if (state is WalletsLoaded &&
+            //         state.activeWalletId != _currentWalletId) {
+            //       _currentWalletId = state.activeWalletId;
+            //       _fetchData();
+            //     }
+            //   },
+            // ),
+          ],
           child: Column(
             children: [
               _buildDateRangeIndicator(),

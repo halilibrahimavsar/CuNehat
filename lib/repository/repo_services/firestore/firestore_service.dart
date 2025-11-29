@@ -287,11 +287,39 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<void> clearAllLocalData() {
-    throw UnimplementedError('This is only for local storage');
+  Future<void> clearAllLocalData() async {
+    try {
+      // Get all wallets for the current user.
+      final wallets = await getAllWallets();
+      final batch = FirebaseFirestore.instance.batch();
+
+      // For each wallet, delete its sub-collections (expenses, incomes)
+      // and then the wallet document itself.
+      for (final wallet in wallets) {
+        // Get and delete all expenses in the wallet
+        final expensesSnapshot = await _expenseCollection(wallet.id).get();
+        for (final doc in expensesSnapshot.docs) {
+          batch.delete(doc.reference);
+        }
+
+        // Get and delete all incomes in the wallet
+        final incomesSnapshot = await _incomeCollection(wallet.id).get();
+        for (final doc in incomesSnapshot.docs) {
+          batch.delete(doc.reference);
+        }
+
+        // Delete the wallet document
+        batch.delete(_wallets.doc(wallet.id));
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Veritabanı temizlenirken hata: $e');
+    }
   }
 
 // ============ BATCH OPERATIONS ============
+  @override
   Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
     try {
       if (expenses.isEmpty) return;
@@ -309,6 +337,7 @@ class FirestoreService implements IDataService {
     }
   }
 
+  @override
   Future<void> batchAddIncomes(Iterable<Income> incomes) async {
     try {
       if (incomes.isEmpty) return;
@@ -358,6 +387,7 @@ class FirestoreService implements IDataService {
     }
   }
 
+  @override
   Future<void> batchAddWallets(Iterable<Wallet> wallets) async {
     try {
       final batch = FirebaseFirestore.instance.batch();

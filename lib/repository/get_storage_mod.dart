@@ -31,6 +31,14 @@ class GetStorageMod {
     }
   }
 
+  IDataService get inactiveService {
+    if (getStorageMode() == StorageMode.cloud) {
+      return _localDataService;
+    } else {
+      return _firestoreService;
+    }
+  }
+
   Future<void> setStorageMode(StorageMode mode) async {
     print('🔧 [REPO] Setting storage mode: ${mode.name}');
     await _prefs.setString(StorageKeys.storageMode, mode.name);

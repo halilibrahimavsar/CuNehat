@@ -45,9 +45,6 @@ class WalletDefaults {
 
 // ============ FORMATTERS ============
 
-@Deprecated('Use AppFormatters.currency instead')
-final formatCurrency = NumberFormat.currency(symbol: "₺", decimalDigits: 2);
-
 class AppFormatters {
   static final NumberFormat currency = NumberFormat.currency(
     symbol: "₺",

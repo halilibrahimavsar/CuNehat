@@ -146,4 +146,46 @@ class LocalDataService implements IDataService {
     await _incomeBox.clear();
     await _walletBox.clear();
   }
+
+  // ============ BATCH OPERATIONS for MIGRATION ============
+
+  @override
+  Future<void> batchAddWallets(Iterable<Wallet> wallets) async {
+    if (wallets.isEmpty) return;
+    // Convert the list of wallets to a Map<String, Wallet> for putAll
+    final walletMap = {for (var wallet in wallets) wallet.id: wallet};
+    await _walletBox.putAll(walletMap);
+  }
+
+  @override
+  Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
+    if (expenses.isEmpty) return;
+    final expenseMap = {for (var expense in expenses) expense.id: expense};
+    await _expenseBox.putAll(expenseMap);
+  }
+
+  @override
+  Future<void> batchAddIncomes(Iterable<Income> incomes) async {
+    if (incomes.isEmpty) return;
+    final incomeMap = {for (var income in incomes) income.id: income};
+    await _incomeBox.putAll(incomeMap);
+  }
+
+  Future<void> batchDeleteWallets(List<Wallet> wallets) async {
+    if (wallets.isEmpty) return;
+    final walletIds = wallets.map((w) => w.id);
+    await _walletBox.deleteAll(walletIds);
+  }
+
+  Future<void> batchDeleteExpenses(List<Expense> expenses) async {
+    if (expenses.isEmpty) return;
+    final expenseIds = expenses.map((e) => e.id);
+    await _expenseBox.deleteAll(expenseIds);
+  }
+
+  Future<void> batchDeleteIncomes(List<Income> incomes) async {
+    if (incomes.isEmpty) return;
+    final incomeIds = incomes.map((i) => i.id);
+    await _incomeBox.deleteAll(incomeIds);
+  }
 }

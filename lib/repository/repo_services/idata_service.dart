@@ -38,4 +38,8 @@ abstract class IDataService {
 
   // ============ MIGRATION ============
   Future<void> clearAllLocalData();
+  // ============ BATCH OPERATIONS for MIGRATION ============
+  Future<void> batchAddWallets(List<Wallet> wallets);
+  Future<void> batchAddExpenses(List<Expense> expenses);
+  Future<void> batchAddIncomes(List<Income> incomes);
 }

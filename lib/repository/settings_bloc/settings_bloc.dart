@@ -52,7 +52,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       if (event.newMode == StorageMode.cloud) {
         emit(const MigrationInProgress('Veriler buluta taşınıyor...'));
 
-        await _repository.migrateLocalToCloud();
+        await _repository.migrateStorage(event.newMode);
 
         emit(MigrationSuccess(StorageMode.cloud));
       }
@@ -60,7 +60,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       else if (event.newMode == StorageMode.local) {
         emit(const MigrationInProgress('Bulut verileri indiriliyor...'));
 
-        await _repository.migrateCloudToLocal();
+        await _repository.migrateStorage(event.newMode);
 
         emit(MigrationSuccess(StorageMode.local));
       }
