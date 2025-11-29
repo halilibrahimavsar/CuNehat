@@ -50,8 +50,6 @@ void main() async {
   syncService.startAutoSync();
   debugPrint('✅ Auto-sync enabled');
 
-  FocusManager.instance.primaryFocus?.unfocus();
-
   runApp(
     MultiRepositoryProvider(
       providers: [

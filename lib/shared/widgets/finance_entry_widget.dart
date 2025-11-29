@@ -295,85 +295,91 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     final String typeText = widget.isExpense ? "Gider" : "Gelir";
     final String actionText = _isEditMode ? "Düzenle" : "Ekle";
 
-    return SafeArea(
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Container(
-              // 3. OVERFLOW DÜZELTMESİ - maxHeight eklendi
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        FocusScope.of(context).unfocus(); // Klavyeyi kapat
+      },
+      child: SafeArea(
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Container(
+                // 3. OVERFLOW DÜZELTMESİ - maxHeight eklendi
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, -5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                   ),
-                ],
-              ),
-              // 3. OVERFLOW DÜZELTMESİ - SingleChildScrollView eklendi
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                  left: 24,
-                  right: 24,
-                  top: 24,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // HEADER
-                    _buildHeader(primaryColor, typeText, actionText),
-                    const SizedBox(height: 24),
-
-                    // TITLE FIELD
-                    _buildTextField(
-                      controller: _titleController,
-                      label: "$typeText Başlığı",
-                      hintText:
-                          "Örnek: ${widget.isExpense ? "Market alışverişi" : "Maaş"}",
-                      icon: Icons.title,
-                      primaryColor: primaryColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
                     ),
-                    const SizedBox(height: 16),
-
-                    // AMOUNT FIELD
-                    _buildTextField(
-                      controller: _amountController,
-                      label: "Tutar (₺)",
-                      hintText: "0.00",
-                      icon: Icons.attach_money,
-                      primaryColor: primaryColor,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      errorText:
-                          _isAmountValid ? null : "Geçerli bir tutar girin",
-                    ),
-                    const SizedBox(height: 16),
-
-                    // TAG SELECTION
-                    _buildTagSection(primaryColor),
-                    const SizedBox(height: 16),
-
-                    // DATE & TIME ROW
-                    _buildDateTimeRow(primaryColor),
-                    const SizedBox(height: 32),
-
-                    // SAVE BUTTON
-                    _buildSaveButton(primaryColor, typeText, actionText),
-                    const SizedBox(height: 16),
                   ],
+                ),
+                // 3. OVERFLOW DÜZELTMESİ - SingleChildScrollView eklendi
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    left: 24,
+                    right: 24,
+                    top: 24,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // HEADER
+                      _buildHeader(primaryColor, typeText, actionText),
+                      const SizedBox(height: 24),
+
+                      // TITLE FIELD
+                      _buildTextField(
+                        controller: _titleController,
+                        label: "$typeText Başlığı",
+                        hintText:
+                            "Örnek: ${widget.isExpense ? "Market alışverişi" : "Maaş"}",
+                        icon: Icons.title,
+                        primaryColor: primaryColor,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // AMOUNT FIELD
+                      _buildTextField(
+                        controller: _amountController,
+                        label: "Tutar (₺)",
+                        hintText: "0.00",
+                        icon: Icons.attach_money,
+                        primaryColor: primaryColor,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        errorText:
+                            _isAmountValid ? null : "Geçerli bir tutar girin",
+                      ),
+                      const SizedBox(height: 16),
+
+                      // TAG SELECTION
+                      _buildTagSection(primaryColor),
+                      const SizedBox(height: 16),
+
+                      // DATE & TIME ROW
+                      _buildDateTimeRow(primaryColor),
+                      const SizedBox(height: 32),
+
+                      // SAVE BUTTON
+                      _buildSaveButton(primaryColor, typeText, actionText),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -511,6 +517,8 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             final isSelected = _selectedTag == tag;
             return GestureDetector(
               onTap: () {
+                FocusScope.of(context).unfocus(); // Klavyeyi kapat
+
                 setState(() {
                   _selectedTag = tag;
                   _tagController.text = tag;
