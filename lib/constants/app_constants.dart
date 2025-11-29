@@ -19,7 +19,6 @@ class AppRoutes {
 
 class StorageKeys {
   static const String storageMode = 'storage_mode';
-  static const String mainBalance = 'main_balance';
   static const String activeWalletId = 'active_wallet_id'; // ⚠️ NEW
   static const String isMultiWalletMigrated =
       'is_multi_wallet_migrated'; // ⚠️ NEW

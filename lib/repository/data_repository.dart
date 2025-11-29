@@ -11,6 +11,7 @@ import 'package:cunehat/repository/repo_services/local/local_data_service.dart';
 import 'package:cunehat/repository/repo_services/sync_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -232,103 +233,187 @@ class DataRepository {
 
   // ============ DELETE OPERATIONS ============
 
-  Future<void> deleteExpense(
-      {required String id,
-      required String walletId,
-      required double amount}) async {
-    await _getStorageMod.dataService.deleteExpense(id: id);
+  Future<void> deleteExpense({required String id}) async {
+    debugPrint('🗑️ [REPO] Deleting expense: $id');
 
-    final wallet = await getWalletById(walletId);
+    // 1. Önce expense'i çek (wallet ID ve amount bilgisi için)
+    final expense = await _getExpenseById(id);
+    if (expense == null) {
+      throw Exception('Gider bulunamadı: $id');
+    }
+
+    // 2. Veritabanından sil
+    await _getStorageMod.dataService.deleteExpense(id: id);
+    debugPrint('   ✓ Expense deleted from storage');
+
+    // 3. Wallet balance'ı güncelle (gider silindi = para geri geldi)
+    final wallet = await getWalletById(expense.walletId);
     if (wallet != null) {
-      await updateWalletBalance(walletId, wallet.balance + amount);
+      await updateWalletBalance(
+          expense.walletId, wallet.balance + expense.amount);
+      debugPrint(
+          '   ✓ Wallet balance updated: ${wallet.balance} + ${expense.amount}');
     }
   }
 
-// Aynı düzeltmeyi deleteIncome için de yapın:
-  Future<void> deleteIncome(
-      {required String id,
-      required String walletId,
-      required double amount}) async {
-    await _getStorageMod.dataService.deleteIncome(id: id);
+  Future<void> deleteIncome({required String id}) async {
+    debugPrint('🗑️ [REPO] Deleting income: $id');
 
-    final wallet = await getWalletById(walletId);
+    // 1. Önce income'u çek
+    final income = await _getIncomeById(id);
+    if (income == null) {
+      throw Exception('Gelir bulunamadı: $id');
+    }
+
+    // 2. Veritabanından sil
+    await _getStorageMod.dataService.deleteIncome(id: id);
+    debugPrint('   ✓ Income deleted from storage');
+
+    // 3. Wallet balance'ı güncelle (gelir silindi = para azaldı)
+    final wallet = await getWalletById(income.walletId);
     if (wallet != null) {
-      await updateWalletBalance(walletId, wallet.balance - amount);
+      await updateWalletBalance(
+          income.walletId, wallet.balance - income.amount);
+      debugPrint(
+          '   ✓ Wallet balance updated: ${wallet.balance} - ${income.amount}');
+    }
+  }
+
+// ➕ YENİ: Helper methods - item'ı ID ile getir
+  Future<Expense?> _getExpenseById(String id) async {
+    final allExpenses = await _getStorageMod.dataService.getAllExpenses();
+    try {
+      return allExpenses.firstWhere((e) => e.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<Income?> _getIncomeById(String id) async {
+    final allIncomes = await _getStorageMod.dataService.getAllIncomes();
+    try {
+      return allIncomes.firstWhere((i) => i.id == id);
+    } catch (e) {
+      return null;
     }
   }
 
   // ============ UPDATE OPERATIONS ============
-
   Future<void> updateExpense({required Expense expense}) async {
-    Expense? oldExpense;
+    debugPrint('🔄 [REPO] Updating expense: ${expense.id}');
 
-    await _getStorageMod.dataService.updateExpense(expense: expense);
-
-    if (oldExpense != null) {
-      // If wallet changed, update both wallets
-      if (oldExpense.walletId != expense.walletId) {
-        // Remove from old wallet
-        final oldWallet = await getWalletById(oldExpense.walletId);
-        if (oldWallet != null) {
-          await updateWalletBalance(
-              oldExpense.walletId, oldWallet.balance + oldExpense.amount);
-        }
-
-        // Add to new wallet
-        final newWallet = await getWalletById(expense.walletId);
-        if (newWallet != null) {
-          await updateWalletBalance(
-              expense.walletId, newWallet.balance - expense.amount);
-        }
-      } else {
-        // Same wallet, just update the difference
-        final difference = expense.amount - oldExpense.amount;
-        if (difference != 0) {
-          final wallet = await getWalletById(expense.walletId);
-          if (wallet != null) {
-            await updateWalletBalance(
-                expense.walletId, wallet.balance - difference);
-          }
-        }
-      }
+    // 1. Eski expense'i çek
+    final oldExpense = await _getExpenseById(expense.id);
+    if (oldExpense == null) {
+      throw Exception('Güncellenecek gider bulunamadı: ${expense.id}');
     }
+
+    // 2. Güncelle
+    await _getStorageMod.dataService.updateExpense(expense: expense);
+    debugPrint('   ✓ Expense updated in storage');
+
+    // 3. Balance'ı güncelle
+    await _updateBalanceAfterExpenseChange(oldExpense, expense);
   }
 
   Future<void> updateIncome({required Income income}) async {
-    Expense? oldIncome;
+    debugPrint('🔄 [REPO] Updating income: ${income.id}');
 
+    // 1. Eski income'u çek
+    final oldIncome = await _getIncomeById(income.id);
+    if (oldIncome == null) {
+      throw Exception('Güncellenecek gelir bulunamadı: ${income.id}');
+    }
+
+    // 2. Güncelle
     await _getStorageMod.dataService.updateIncome(income: income);
+    debugPrint('   ✓ Income updated in storage');
 
-    if (oldIncome != null) {
-      // If wallet changed, update both wallets
-      if (oldIncome.walletId != income.walletId) {
-        // Remove from old wallet
-        final oldWallet = await getWalletById(oldIncome.walletId);
-        if (oldWallet != null) {
-          await updateWalletBalance(
-              oldIncome.walletId, oldWallet.balance - oldIncome.amount);
-        }
+    // 3. Balance'ı güncelle
+    await _updateBalanceAfterIncomeChange(oldIncome, income);
+  }
 
-        // Add to new wallet
-        final newWallet = await getWalletById(income.walletId);
-        if (newWallet != null) {
+// ➕ YENİ: Balance update helpers
+  Future<void> _updateBalanceAfterExpenseChange(
+    Expense oldExpense,
+    Expense newExpense,
+  ) async {
+    // Senaryo 1: Farklı cüzdanlara taşındı
+    if (oldExpense.walletId != newExpense.walletId) {
+      // Eski cüzdana parayı geri ver
+      final oldWallet = await getWalletById(oldExpense.walletId);
+      if (oldWallet != null) {
+        await updateWalletBalance(
+          oldExpense.walletId,
+          oldWallet.balance + oldExpense.amount,
+        );
+      }
+
+      // Yeni cüzdandan parayı çıkar
+      final newWallet = await getWalletById(newExpense.walletId);
+      if (newWallet != null) {
+        await updateWalletBalance(
+          newExpense.walletId,
+          newWallet.balance - newExpense.amount,
+        );
+      }
+    }
+    // Senaryo 2: Aynı cüzdan, sadece tutar değişti
+    else {
+      final difference = newExpense.amount - oldExpense.amount;
+      if (difference != 0) {
+        final wallet = await getWalletById(newExpense.walletId);
+        if (wallet != null) {
           await updateWalletBalance(
-              income.walletId, newWallet.balance + income.amount);
-        }
-      } else {
-        // Same wallet, just update the difference
-        final difference = income.amount - oldIncome.amount;
-        if (difference != 0) {
-          final wallet = await getWalletById(income.walletId);
-          if (wallet != null) {
-            await updateWalletBalance(
-                income.walletId, wallet.balance + difference);
-          }
+            newExpense.walletId,
+            wallet.balance - difference,
+          );
         }
       }
     }
 
-    debugPrint('   ✓ Income updated successfully');
+    debugPrint('   ✓ Balance updated after expense change');
+  }
+
+  Future<void> _updateBalanceAfterIncomeChange(
+    Income oldIncome,
+    Income newIncome,
+  ) async {
+    // Senaryo 1: Farklı cüzdanlara taşındı
+    if (oldIncome.walletId != newIncome.walletId) {
+      // Eski cüzdandan parayı çıkar
+      final oldWallet = await getWalletById(oldIncome.walletId);
+      if (oldWallet != null) {
+        await updateWalletBalance(
+          oldIncome.walletId,
+          oldWallet.balance - oldIncome.amount,
+        );
+      }
+
+      // Yeni cüzdana parayı ekle
+      final newWallet = await getWalletById(newIncome.walletId);
+      if (newWallet != null) {
+        await updateWalletBalance(
+          newIncome.walletId,
+          newWallet.balance + newIncome.amount,
+        );
+      }
+    }
+    // Senaryo 2: Aynı cüzdan, sadece tutar değişti
+    else {
+      final difference = newIncome.amount - oldIncome.amount;
+      if (difference != 0) {
+        final wallet = await getWalletById(newIncome.walletId);
+        if (wallet != null) {
+          await updateWalletBalance(
+            newIncome.walletId,
+            wallet.balance + difference,
+          );
+        }
+      }
+    }
+
+    debugPrint('   ✓ Balance updated after income change');
   }
 
   // ============ READ OPERATIONS - WALLET FILTERED ============

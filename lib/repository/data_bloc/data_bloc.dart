@@ -111,13 +111,12 @@ class DataBloc extends Bloc<DataEvent, DataState> {
     }
   }
 
+  // ✅ SONRA - lib/repository/data_bloc/data_bloc.dart
   Future<void> _onDeleteExpense(
       DeleteExpenseEvent event, Emitter<DataState> emit) async {
     try {
-      await dataRepository.deleteExpense(
-          id: event.expense.id,
-          amount: event.expense.amount,
-          walletId: event.expense.walletId);
+      // Artık sadece ID gerekiyor
+      await dataRepository.deleteExpense(id: event.id);
       emit(SuccessfullyDeletedItemState(name: event.expense.title));
       await _silentRefresh(emit);
     } catch (e) {
@@ -129,10 +128,7 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   Future<void> _onDeleteIncome(
       DeleteIncomeEvent event, Emitter<DataState> emit) async {
     try {
-      await dataRepository.deleteIncome(
-          id: event.income.id,
-          amount: event.income.amount,
-          walletId: event.income.walletId);
+      await dataRepository.deleteIncome(id: event.id);
       emit(SuccessfullyDeletedItemState(name: event.income.title));
       await _silentRefresh(emit);
     } catch (e) {
