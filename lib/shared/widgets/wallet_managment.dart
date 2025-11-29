@@ -1,4 +1,5 @@
-// ignore_for_file: deprecated_member_use
+// lib/shared/widgets/wallet_managment.dart
+// ✅ FIXED: Now uses app-level WalletBloc instead of creating new instance
 
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
@@ -11,23 +12,18 @@ import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Import the WalletBloc
 import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
-import 'package:cunehat/repository/data_repository.dart';
 
-/// **WalletManagementPage**: Completely BLoC-driven, zero direct repository access
+/// **WalletManagementPage**: Uses shared app-level WalletBloc
+///
+/// ✅ FIXED: No longer creates its own BLoC instance
 class WalletManagementPage extends StatelessWidget {
   const WalletManagementPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      // ✅ Create WalletBloc here (if not provided from parent)
-      create: (context) => WalletBloc(
-        repository: context.read<DataRepository>(),
-      )..add(LoadWalletsEvent()),
-      child: const _WalletManagementView(),
-    );
+    // ✅ CRITICAL FIX: Use existing WalletBloc, don't create new one
+    return const _WalletManagementView();
   }
 }
 
@@ -174,7 +170,7 @@ class _WalletManagementView extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // ✅ Use BLoC to set active wallet
+          // ✅ Use shared BLoC to set active wallet
           context.read<WalletBloc>().add(SetActiveWalletEvent(wallet.id));
         },
         borderRadius: BorderRadius.circular(16),
@@ -309,36 +305,30 @@ class _WalletManagementView extends StatelessWidget {
   }
 
   void _showCreateWalletDialog(BuildContext context) {
-    // ✅ Use new BLoC-driven dialog
     showWalletDialog(
       context: context,
-      wallet: null, // Create mode
+      wallet: null,
       onSuccess: (message) {
-        // ✅ Show success in parent context (after dialog closes)
         SnackbarHelper.showSuccess(context, message);
-        // ✅ Reload wallets
+        // ✅ Reload wallets using shared BLoC
         context.read<WalletBloc>().add(LoadWalletsEvent());
       },
       onError: (error) {
-        // ✅ Show error in parent context (after dialog closes)
         SnackbarHelper.showError(context, error);
       },
     );
   }
 
   void _showEditWalletDialog(BuildContext context, Wallet wallet) {
-    // ✅ Use new BLoC-driven dialog
     showWalletDialog(
       context: context,
-      wallet: wallet, // Edit mode
+      wallet: wallet,
       onSuccess: (message) {
-        // ✅ Show success in parent context (after dialog closes)
         SnackbarHelper.showSuccess(context, message);
-        // ✅ Reload wallets
+        // ✅ Reload wallets using shared BLoC
         context.read<WalletBloc>().add(LoadWalletsEvent());
       },
       onError: (error) {
-        // ✅ Show error in parent context (after dialog closes)
         SnackbarHelper.showError(context, error);
       },
     );
@@ -351,7 +341,7 @@ class _WalletManagementView extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      // ✅ Use BLoC to delete wallet
+      // ✅ Use shared BLoC to delete wallet
       context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id));
     }
   }

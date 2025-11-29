@@ -1,8 +1,11 @@
+// lib/pages/wallet_page.dart
+// ✅ FIXED: No longer creates duplicate WalletBloc (uses app-level one)
+
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
-import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/data_bloc/data_state.dart';
+import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
 import 'package:cunehat/pages/expense_pages/expense_page.dart';
 import 'package:cunehat/pages/income_pages/income_page.dart';
 import 'package:cunehat/pages/summary_pages/compare_view.dart';
@@ -17,6 +20,9 @@ import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// **WalletPage**: Main page that uses app-level BLoCs
+///
+/// ✅ FIXED: Now uses existing WalletBloc from app level
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
 
@@ -33,14 +39,10 @@ class _WalletPageState extends State<WalletPage>
   DateTime _endDate =
       DateRangeHelper.getMonthRange(DateTime.now())['lastDate']!;
 
-  // ➕ YENİ: Aktif cüzdan ID'sini takip et
-  String? _currentWalletId;
-
   @override
   void initState() {
     super.initState();
     _initAnimation();
-    _currentWalletId = context.read<DataRepository>().getActiveWalletId();
     _fetchData();
   }
 
@@ -53,7 +55,7 @@ class _WalletPageState extends State<WalletPage>
   }
 
   void _fetchData() {
-    debugPrint('📥 [WALLET_PAGE] Fetching data for wallet: $_currentWalletId');
+    debugPrint('📥 [WALLET_PAGE] Fetching data');
     context.read<DataBloc>().add(
           GetCompareEvent(filterStart: _startDate, filterEnd: _endDate),
         );
@@ -83,33 +85,43 @@ class _WalletPageState extends State<WalletPage>
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Scaffold(
-        appBar: PreferredSize(
+    // ✅ FIXED: Use existing BLoCs, don't create new ones
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<DataBloc, DataState>(
+          listener: (context, state) => _routeStateEvents(context, state),
+        ),
+        // ✅ Listen to wallet changes and refresh data
+        BlocListener<WalletBloc, WalletState>(
+          listener: (context, state) {
+            if (state is WalletOperationSuccess &&
+                state.type == WalletOperationType.setActive) {
+              // Refresh data when active wallet changes
+              _fetchData();
+
+              // Show success message
+              SnackbarHelper.showSuccess(
+                context,
+                'Aktif cüzdan değiştirildi',
+              );
+            }
+          },
+        ),
+      ],
+      child: SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: PreferredSize(
             preferredSize: const Size(double.maxFinite, 50),
             child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return SharedAppbar(currentSliderValue: _controller.value);
-                })),
-        drawer: const SharedDrawer(),
-        body: MultiBlocListener(
-          listeners: [
-            BlocListener<DataBloc, DataState>(
-              listener: (context, state) => _routeStateEvents(context, state),
+              animation: _controller,
+              builder: (context, child) {
+                return SharedAppbar(currentSliderValue: _controller.value);
+              },
             ),
-            // BlocListener<WalletBloc, WalletState>(
-            //   listener: (context, state) {
-            //     if (state is WalletsLoaded &&
-            //         state.activeWalletId != _currentWalletId) {
-            //       _currentWalletId = state.activeWalletId;
-            //       _fetchData();
-            //     }
-            //   },
-            // ),
-          ],
-          child: Column(
+          ),
+          drawer: const SharedDrawer(),
+          body: Column(
             children: [
               _buildDateRangeIndicator(),
               Expanded(
@@ -149,68 +161,91 @@ class _WalletPageState extends State<WalletPage>
                 padding: const EdgeInsets.all(20.0),
                 child: SliderButtonEnhanced(
                   controller: _controller,
-                  onTap: (value) {
-                    switch (value) {
-                      case SliderState.compare:
-                        context.read<DataBloc>().add(GetCompareEvent(
-                            filterStart: _startDate, filterEnd: _endDate));
-                        break;
-                      case SliderState.expense:
-                        final activeWalletId =
-                            context.read<DataRepository>().getActiveWalletId();
-                        showModalBottomSheet(
-                          isScrollControlled: true,
-                          enableDrag: true,
-                          backgroundColor: Colors.transparent,
-                          context: context,
-                          builder: (sheetContext) {
-                            return FinanceEntryWidget(
-                              walletId: activeWalletId,
-                              isExpense: true,
-                              onSave: (item) {
-                                Navigator.pop(sheetContext);
-                                context
-                                    .read<DataBloc>()
-                                    .add(AddExpenseEvent(expense: item));
-                              },
-                              onCancel: () {
-                                Navigator.pop(sheetContext);
-                              },
-                            );
-                          },
-                        );
-                        break;
-                      case SliderState.income:
-                        final activeWalletId =
-                            context.read<DataRepository>().getActiveWalletId();
-                        showModalBottomSheet(
-                          isScrollControlled: true,
-                          enableDrag: true,
-                          backgroundColor: Colors.transparent,
-                          context: context,
-                          builder: (sheetContext) {
-                            return FinanceEntryWidget(
-                              walletId: activeWalletId,
-                              isExpense: false,
-                              onSave: (item) {
-                                Navigator.pop(sheetContext);
-                                context
-                                    .read<DataBloc>()
-                                    .add(AddIncomeEvent(income: item));
-                              },
-                              onCancel: () => Navigator.pop(sheetContext),
-                            );
-                          },
-                        );
-                        break;
-                    }
-                  },
+                  onTap: (value) => _handleSliderAction(context, value),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _handleSliderAction(BuildContext context, SliderState value) {
+    switch (value) {
+      case SliderState.compare:
+        context.read<DataBloc>().add(
+              GetCompareEvent(filterStart: _startDate, filterEnd: _endDate),
+            );
+        break;
+      case SliderState.expense:
+        _showExpenseSheet(context);
+        break;
+      case SliderState.income:
+        _showIncomeSheet(context);
+        break;
+    }
+  }
+
+  void _showExpenseSheet(BuildContext context) {
+    // ✅ Get active wallet from app-level WalletBloc
+    final walletState = context.read<WalletBloc>().state;
+
+    if (walletState is! WalletsLoaded) {
+      SnackbarHelper.showError(context, 'Cüzdan bilgisi yüklenemedi');
+      return;
+    }
+
+    final activeWalletId = walletState.activeWalletId;
+
+    showModalBottomSheet(
+      isScrollControlled: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (sheetContext) {
+        return FinanceEntryWidget(
+          walletId: activeWalletId,
+          isExpense: true,
+          onSave: (item) {
+            Navigator.pop(sheetContext);
+            context.read<DataBloc>().add(AddExpenseEvent(expense: item));
+          },
+          onCancel: () {
+            Navigator.pop(sheetContext);
+          },
+        );
+      },
+    );
+  }
+
+  void _showIncomeSheet(BuildContext context) {
+    // ✅ Get active wallet from app-level WalletBloc
+    final walletState = context.read<WalletBloc>().state;
+
+    if (walletState is! WalletsLoaded) {
+      SnackbarHelper.showError(context, 'Cüzdan bilgisi yüklenemedi');
+      return;
+    }
+
+    final activeWalletId = walletState.activeWalletId;
+
+    showModalBottomSheet(
+      isScrollControlled: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (sheetContext) {
+        return FinanceEntryWidget(
+          walletId: activeWalletId,
+          isExpense: false,
+          onSave: (item) {
+            Navigator.pop(sheetContext);
+            context.read<DataBloc>().add(AddIncomeEvent(income: item));
+          },
+          onCancel: () => Navigator.pop(sheetContext),
+        );
+      },
     );
   }
 
@@ -268,15 +303,21 @@ class _WalletPageState extends State<WalletPage>
       case SuccessfullyCreatedItemState():
         SnackbarHelper.showSuccess(context, "${state.name} başarıyla eklendi");
         _fetchData();
+        // ✅ Reload wallets to update balance
+        context.read<WalletBloc>().add(LoadWalletsEvent());
         break;
       case SuccessfullyDeletedItemState():
         SnackbarHelper.showSuccess(context, "${state.name} başarıyla silindi");
         _fetchData();
+        // ✅ Reload wallets to update balance
+        context.read<WalletBloc>().add(LoadWalletsEvent());
         break;
       case SuccessfullyUpdatedItemState():
         SnackbarHelper.showSuccess(
             context, "${state.name} başarıyla güncellendi");
         _fetchData();
+        // ✅ Reload wallets to update balance
+        context.read<WalletBloc>().add(LoadWalletsEvent());
         break;
       case SyncingDataState():
         SnackbarHelper.showLoading(context, "Senkronizasyon yapılıyor...");
@@ -291,7 +332,6 @@ class _WalletPageState extends State<WalletPage>
         SnackbarHelper.showError(context, state.err);
         break;
       default:
-        // Diğer durumlar için bir işlem yapılmasına gerek yok.
         break;
     }
   }

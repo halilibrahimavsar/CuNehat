@@ -20,39 +20,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// **Main Entry Point**
 ///
-/// Initialization Order:
-/// 1. Flutter bindings
-/// 2. Firebase
-/// 3. Hive + TypeAdapters
-/// 4. Migration check
-/// 5. Services initialization
-/// 6. App launch
+/// ✅ FIXED: WalletBloc now provided at app level for proper state sharing
 void main() async {
-  // Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize date formatting for Turkish locale
   await initializeDateFormatting('tr_TR');
-
-  // Initialize Firebase
   await Firebase.initializeApp();
-
-  // Initialize Hive
   await Hive.initFlutter();
 
-  // ============ REGISTER TYPE ADAPTERS ============
-  // ⚠️ Order matters: Register before opening boxes
-
-  Hive.registerAdapter(IncomeAdapter()); // typeId: 0
-  Hive.registerAdapter(ExpenseAdapter()); // typeId: 1
-  Hive.registerAdapter(WalletAdapter()); // ➕ YENİ: typeId: 3
-
-  // Hive.registerAdapter(PendingOperationAdapter()); // typeId: 2
+  // Register type adapters
+  Hive.registerAdapter(IncomeAdapter());
+  Hive.registerAdapter(ExpenseAdapter());
+  Hive.registerAdapter(WalletAdapter());
 
   debugPrint('✅ Hive TypeAdapters registered');
 
-  // ============ INITIALIZE SERVICES ============
-
+  // Initialize services
   final localDataService = LocalDataService();
   await localDataService.init();
   debugPrint('✅ Local storage initialized');
@@ -60,17 +43,13 @@ void main() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   final firestoreService = FirestoreService();
 
-  // Initialize sync service
   final syncService = SyncService(firestoreService: firestoreService);
   await syncService.init();
   debugPrint('✅ Sync service initialized');
 
-  // Start auto-sync when connection is available
   syncService.startAutoSync();
   debugPrint('✅ Auto-sync enabled');
 
-  // ============ LAUNCH APP ============
-  // For unfocus keyboard when click something other than keyboard
   FocusManager.instance.primaryFocus?.unfocus();
 
   runApp(
@@ -112,10 +91,7 @@ void main() async {
 
 /// **Main App Widget**
 ///
-/// Provides:
-/// - DataBloc for state management
-/// - ThemeBloc for theme switching
-/// - Router configuration
+/// ✅ FIXED: WalletBloc provided at app level, shared across all pages
 class CuNehatEngine extends StatelessWidget {
   const CuNehatEngine({super.key});
 
@@ -123,18 +99,21 @@ class CuNehatEngine extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        // ✅ CRITICAL FIX: WalletBloc at app level (shared state)
+        BlocProvider(
+          create: (context) => WalletBloc(
+            repository: RepositoryProvider.of<DataRepository>(context),
+          )..add(LoadWalletsEvent()),
+        ),
+        // DataBloc also at app level
         BlocProvider(
           create: (context) => DataBloc(
             dataRepository: RepositoryProvider.of<DataRepository>(context),
           ),
         ),
+        // ThemeBloc at app level
         BlocProvider(
           create: (context) => ThemeBloc(),
-        ),
-        BlocProvider(
-          create: (context) => WalletBloc(
-            repository: context.read<DataRepository>(),
-          )..add(LoadWalletsEvent()),
         ),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(

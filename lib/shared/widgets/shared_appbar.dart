@@ -1,17 +1,21 @@
-// ignore_for_file: deprecated_member_use
+// lib/shared/widgets/shared_appbar.dart
+// ✅ FIXED: Uses app-level WalletBloc without wrapping in provider
 
+import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
 import 'package:cunehat/shared/widgets/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// **SharedAppbar**: Reactive app bar with wallet integration
+///
+/// ✅ FIXED: Uses shared WalletBloc from app level
 class SharedAppbar extends StatefulWidget implements PreferredSizeWidget {
-  final double currentSliderValue; // Yeni parametre
-  // final VoidCallback onDateRangePressed; // Yeni callback (date range picker removing)
+  final double currentSliderValue;
 
   const SharedAppbar({
     super.key,
     required this.currentSliderValue,
-    // required this.onDateRangePressed, // Zorunlu parametre (date range picker removing)
   });
 
   @override
@@ -22,9 +26,6 @@ class SharedAppbar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _SharedAppbarState extends State<SharedAppbar> {
-  // Artık state'te değer takip etmeye gerek yok, prop'tan alıyoruz
-
-  /// Slider değerine göre AppBar rengini hesapla
   Color _getAppBarColor(double value) {
     if (value < 0.5) {
       return Color.lerp(Colors.red[700]!, Colors.blue[700]!, value * 2)!;
@@ -34,7 +35,6 @@ class _SharedAppbarState extends State<SharedAppbar> {
     }
   }
 
-  /// Slider değerine göre AppBar gradient rengini hesapla
   List<Color> _getAppBarGradient(double value) {
     if (value < 0.5) {
       return [
@@ -49,19 +49,16 @@ class _SharedAppbarState extends State<SharedAppbar> {
     }
   }
 
-  /// Slider değerine göre ikon ve metin rengini belirle
   Color _getContentColor(double value) {
     return Colors.white;
   }
 
-  /// Mevcut modu metin olarak göster
   String _getCurrentModeText(double value) {
     if (value < 0.25) return "Gider Modu";
     if (value > 0.75) return "Gelir Modu";
     return "Karşılaştırma Modu";
   }
 
-  /// Mevcut mod için ikon belirle
   IconData _getCurrentModeIcon(double value) {
     if (value < 0.25) return Icons.arrow_downward;
     if (value > 0.75) return Icons.arrow_upward;
@@ -70,7 +67,7 @@ class _SharedAppbarState extends State<SharedAppbar> {
 
   @override
   Widget build(BuildContext context) {
-    final currentValue = widget.currentSliderValue; // Prop'tan al
+    final currentValue = widget.currentSliderValue;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -95,84 +92,166 @@ class _SharedAppbarState extends State<SharedAppbar> {
           ),
         ),
       ),
-      title: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Scaffold.of(context).openDrawer(),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: _getContentColor(currentValue).withOpacity(0.5),
-                  width: 2,
-                ),
-              ),
-              child: CircleAvatar(
-                backgroundColor: Colors.transparent,
-                backgroundImage: NetworkImage(
-                  FirebaseAuth.instance.currentUser?.providerData[0].photoURL ??
-                      "assets/images/logo.jpg",
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  FirebaseAuth.instance.currentUser?.displayName ?? "Anonymous",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _getContentColor(currentValue),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      _getCurrentModeIcon(currentValue),
-                      size: 12,
-                      color: _getContentColor(currentValue).withOpacity(0.8),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _getCurrentModeText(currentValue),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: _getContentColor(currentValue).withOpacity(0.8),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      title: _buildTitle(context, currentValue),
       actions: [
-        IconButton(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (context) {
-                return WalletManagementPage();
-              },
+        // ✅ Wallet management button with badge
+        BlocBuilder<WalletBloc, WalletState>(
+          builder: (context, state) {
+            return IconButton(
+              onPressed: () => _showWalletManagement(context),
+              icon: Badge(
+                label: state is WalletsLoaded && state.wallets.length > 1
+                    ? Text('${state.wallets.length}')
+                    : null,
+                isLabelVisible:
+                    state is WalletsLoaded && state.wallets.length > 1,
+                child: Icon(
+                  Icons.wallet_rounded,
+                  size: 24,
+                  color: _getContentColor(currentValue),
+                ),
+              ),
+              tooltip: 'Cüzdan Yönetimi',
             );
-          }, // Callback'i burada kullan
-          icon: Icon(
-            Icons.wallet_rounded,
-            size: 24,
-            color: _getContentColor(currentValue),
-          ),
-          tooltip: 'Cüzdan Yönetimi',
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildTitle(BuildContext context, double currentValue) {
+    return Row(
+      children: [
+        // User Avatar (opens drawer)
+        GestureDetector(
+          onTap: () => Scaffold.of(context).openDrawer(),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: _getContentColor(currentValue).withOpacity(0.5),
+                width: 2,
+              ),
+            ),
+            child: CircleAvatar(
+              backgroundColor: Colors.transparent,
+              backgroundImage: NetworkImage(
+                FirebaseAuth.instance.currentUser?.providerData[0].photoURL ??
+                    "assets/images/logo.jpg",
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+
+        // ✅ Use shared WalletBloc for wallet info
+        Expanded(
+          child: BlocBuilder<WalletBloc, WalletState>(
+            builder: (context, state) {
+              // Default user info
+              Widget userInfo = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    FirebaseAuth.instance.currentUser?.displayName ??
+                        "Anonymous",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _getContentColor(currentValue),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        _getCurrentModeIcon(currentValue),
+                        size: 12,
+                        color: _getContentColor(currentValue).withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _getCurrentModeText(currentValue),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color:
+                              _getContentColor(currentValue).withOpacity(0.8),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+
+              // ✅ Show active wallet info if loaded
+              if (state is WalletsLoaded && state.activeWallet != null) {
+                final activeWallet = state.activeWallet!;
+
+                userInfo = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // User name
+                    Text(
+                      FirebaseAuth.instance.currentUser?.displayName ??
+                          "Anonymous",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _getContentColor(currentValue),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    // Active wallet name
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.account_balance_wallet,
+                          size: 10,
+                          color:
+                              _getContentColor(currentValue).withOpacity(0.8),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            activeWallet.name,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: _getContentColor(currentValue)
+                                  .withOpacity(0.8),
+                              fontWeight: FontWeight.w400,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return userInfo;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showWalletManagement(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) {
+        // ✅ CRITICAL: Don't wrap in provider, it already exists in parent
+        return const WalletManagementPage();
+      },
     );
   }
 }
