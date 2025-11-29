@@ -209,26 +209,57 @@ class DataRepository {
 
   // ============ CREATE OPERATIONS ============
 
+  /// Gider ekler ve cüzdan bakiyesini günceller.
+  /// Eğer giderin ait olduğu cüzdan bulunamazsa, varsayılan bir cüzdan oluşturur
+  /// ve gideri bu yeni cüzdana atar.
   Future<void> addExpense({required Expense expense}) async {
-    await _getStorageMod.dataService.addExpense(expense: expense);
+    var targetWallet = await getWalletById(expense.walletId);
+    var expenseToAdd = expense;
 
-    // Update wallet balance
-    final wallet = await getWalletById(expense.walletId);
-    if (wallet != null) {
-      await updateWalletBalance(
-          expense.walletId, wallet.balance - expense.amount);
+    // Cüzdan bulunamazsa, varsayılan bir cüzdan oluştur.
+    if (targetWallet == null) {
+      debugPrint(
+          '⚠️ [REPO] Wallet not found for expense. Creating a default one.');
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
+      final newWallet = Wallet.createLocal(
+        userId: userId,
+        name: WalletDefaults.defaultWalletName,
+        balance: 0, // Bakiye işlemle güncellenecek
+        colorHex: WalletDefaults.defaultColorHex,
+        iconName: WalletDefaults.defaultIconName,
+        isActive: false, // Yeni cüzdan aktif olmasın
+        sortOrder: (await getAllWallets()).length,
+      );
+      await createWallet(wallet: newWallet);
+      targetWallet = newWallet;
+      // Gideri yeni cüzdan ID'si ile güncelle.
+      expenseToAdd = expense.copyWith(walletId: newWallet.id);
     }
+
+    // Gideri ekle.
+    await _getStorageMod.dataService.addExpense(expense: expenseToAdd);
+
+    // Cüzdan bakiyesini güncelle.
+    await updateWalletBalance(
+        targetWallet.id, targetWallet.balance - expenseToAdd.amount);
   }
 
+  /// Gelir ekler ve cüzdan bakiyesini günceller.
+  /// Eğer gelirin ait olduğu cüzdan bulunamazsa, varsayılan bir cüzdan oluşturur
+  /// ve geliri bu yeni cüzdana atar.
   Future<void> addIncome({required Income income}) async {
-    await _getStorageMod.dataService.addIncome(income: income);
+    var targetWallet = await getWalletById(income.walletId);
+    var incomeToAdd = income;
 
-    // Update wallet balance
-    final wallet = await getWalletById(income.walletId);
-    if (wallet != null) {
-      await updateWalletBalance(
-          income.walletId, wallet.balance + income.amount);
+    if (targetWallet == null) {
+      await setupInitialWalletIfNeeded();
+      targetWallet = (await getAllWallets()).first;
+      incomeToAdd = income.copyWith(walletId: targetWallet.id);
     }
+
+    await _getStorageMod.dataService.addIncome(income: incomeToAdd);
+    await updateWalletBalance(
+        targetWallet.id, targetWallet.balance + incomeToAdd.amount);
   }
 
   // ============ DELETE OPERATIONS ============
