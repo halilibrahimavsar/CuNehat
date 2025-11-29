@@ -32,7 +32,6 @@ class _WalletPageState extends State<WalletPage>
       DateRangeHelper.getMonthRange(DateTime.now())['firstDate']!;
   DateTime _endDate =
       DateRangeHelper.getMonthRange(DateTime.now())['lastDate']!;
-  double _currentSliderValue = 0.5;
 
   // ➕ YENİ: Aktif cüzdan ID'sini takip et
   String? _currentWalletId;
@@ -50,11 +49,7 @@ class _WalletPageState extends State<WalletPage>
       vsync: this,
       duration: const Duration(milliseconds: 750),
       value: 0.5,
-    )..addListener(() {
-        setState(() {
-          _currentSliderValue = _controller.value;
-        });
-      });
+    );
   }
 
   void _fetchData() {
@@ -91,9 +86,13 @@ class _WalletPageState extends State<WalletPage>
     return SafeArea(
       top: false,
       child: Scaffold(
-        appBar: SharedAppbar(
-          currentSliderValue: _currentSliderValue,
-        ),
+        appBar: PreferredSize(
+            preferredSize: const Size(double.maxFinite, 50),
+            child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return SharedAppbar(currentSliderValue: _controller.value);
+                })),
         drawer: const SharedDrawer(),
         body: MultiBlocListener(
           listeners: [
@@ -119,10 +118,7 @@ class _WalletPageState extends State<WalletPage>
                       curr is LoadingDataState ||
                       curr is SuccessfullyGetCompareState ||
                       curr is NoDataState ||
-                      curr is ErrorState ||
-                      curr is SuccessfullyCreatedItemState ||
-                      curr is SuccessfullyDeletedItemState ||
-                      curr is SuccessfullyUpdatedItemState,
+                      curr is ErrorState,
                   builder: (context, state) {
                     switch (state) {
                       case LoadingDataState():
