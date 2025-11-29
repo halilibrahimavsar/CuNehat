@@ -70,6 +70,8 @@ void main() async {
   debugPrint('✅ Auto-sync enabled');
 
   // ============ LAUNCH APP ============
+  // For unfocus keyboard when click something other than keyboard
+  FocusManager.instance.primaryFocus?.unfocus();
 
   runApp(
     MultiRepositoryProvider(
