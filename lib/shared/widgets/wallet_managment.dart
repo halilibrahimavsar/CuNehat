@@ -311,8 +311,15 @@ class _WalletManagementView extends StatelessWidget {
     showWalletDialog(
       context: context,
       wallet: null, // Create mode
-      onSuccess: () {
+      onSuccess: (message) {
+        // ✅ Show success in parent context (after dialog closes)
+        SnackbarHelper.showSuccess(context, message);
+        // ✅ Reload wallets
         context.read<WalletBloc>().add(LoadWalletsEvent());
+      },
+      onError: (error) {
+        // ✅ Show error in parent context (after dialog closes)
+        SnackbarHelper.showError(context, error);
       },
     );
   }
@@ -322,8 +329,15 @@ class _WalletManagementView extends StatelessWidget {
     showWalletDialog(
       context: context,
       wallet: wallet, // Edit mode
-      onSuccess: () {
+      onSuccess: (message) {
+        // ✅ Show success in parent context (after dialog closes)
+        SnackbarHelper.showSuccess(context, message);
+        // ✅ Reload wallets
         context.read<WalletBloc>().add(LoadWalletsEvent());
+      },
+      onError: (error) {
+        // ✅ Show error in parent context (after dialog closes)
+        SnackbarHelper.showError(context, error);
       },
     );
   }

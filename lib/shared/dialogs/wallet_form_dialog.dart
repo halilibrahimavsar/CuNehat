@@ -4,7 +4,6 @@ import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/models/wallet_model.dart';
 import 'package:cunehat/repository/wallet_form_bloc/wallet_form_bloc.dart';
-import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,7 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// await showWalletDialog(
 ///   context: context,
 ///   wallet: existingWallet, // null for create mode
-///   onSuccess: () {
+///   onSuccess: (message) {
+///     // Show success message in parent context
+///     SnackbarHelper.showSuccess(context, message);
 ///     // Refresh wallet list
 ///   },
 /// );
@@ -23,7 +24,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 Future<void> showWalletDialog({
   required BuildContext context,
   Wallet? wallet, // null → create, non-null → edit
-  required VoidCallback onSuccess,
+  required Function(String message) onSuccess, // ✅ CHANGED: Pass message back
+  Function(String error)? onError, // ✅ NEW: Optional error callback
 }) async {
   await showDialog(
     context: context,
@@ -35,6 +37,7 @@ Future<void> showWalletDialog({
       child: _WalletFormDialog(
         isEditMode: wallet != null,
         onSuccess: onSuccess,
+        onError: onError,
       ),
     ),
   );
@@ -43,26 +46,30 @@ Future<void> showWalletDialog({
 /// **_WalletFormDialog**: Internal dialog widget
 class _WalletFormDialog extends StatelessWidget {
   final bool isEditMode;
-  final VoidCallback onSuccess;
+  final Function(String message) onSuccess;
+  final Function(String error)? onError;
 
   const _WalletFormDialog({
     required this.isEditMode,
     required this.onSuccess,
+    this.onError,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WalletFormBloc, WalletFormState>(
       listener: (context, state) {
-        // ✅ Handle success
+        // ✅ Handle success - close dialog and pass message to parent
         if (state is WalletFormSuccess) {
-          Navigator.pop(context); // Close dialog
-          SnackbarHelper.showSuccess(context, state.message);
-          onSuccess(); // Trigger refresh
+          Navigator.pop(context); // Close dialog first
+          onSuccess(state.message); // Then show snackbar in parent context
         }
-        // ✅ Handle error
+        // ✅ Handle error - close dialog and pass error to parent
         else if (state is WalletFormError) {
-          SnackbarHelper.showError(context, state.message);
+          Navigator.pop(context); // Close dialog first
+          if (onError != null) {
+            onError!(state.message); // Pass error to parent
+          }
         }
       },
       builder: (context, state) {
