@@ -1,6 +1,8 @@
 // lib/shared/widgets/wallet_managment.dart
 // ✅ FIXED: Now uses app-level WalletBloc instead of creating new instance
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';

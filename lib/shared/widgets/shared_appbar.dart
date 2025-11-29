@@ -1,6 +1,8 @@
 // lib/shared/widgets/shared_appbar.dart
 // ✅ FIXED: Uses app-level WalletBloc without wrapping in provider
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
 import 'package:cunehat/shared/widgets/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -247,10 +249,18 @@ class _SharedAppbarState extends State<SharedAppbar> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: true,
       backgroundColor: Colors.transparent,
       builder: (bottomSheetContext) {
         // ✅ CRITICAL: Don't wrap in provider, it already exists in parent
-        return const WalletManagementPage();
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7, // Start at 70% of screen
+          minChildSize: 0.5, // Can be dragged down to 50%
+          maxChildSize: 0.95, // Can be dragged up to 95%
+          builder: (context, scrollController) {
+            return WalletManagementPage();
+          },
+        );
       },
     );
   }

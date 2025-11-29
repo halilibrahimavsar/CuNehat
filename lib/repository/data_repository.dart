@@ -525,7 +525,6 @@ class DataRepository {
 
   /// Checks if any wallet exists, if not, creates a default one.
   /// This is crucial for the first run of the app.
-  // TODO : THİS ONE SHOULD BE CALLED İN BLOC AS A İNİTİAL
   Future<void> setupInitialWalletIfNeeded() async {
     debugPrint('🔄 [SETUP] Checking for initial wallet...');
     final wallets = await getAllWallets();
