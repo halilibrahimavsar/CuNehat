@@ -15,12 +15,12 @@ class SnackbarHelper {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     final snackBar = SnackBar(
-      behavior: SnackBarBehavior.floating,
+      // behavior: SnackBarBehavior.,
       backgroundColor: color,
       duration:
-          showProgress ? const Duration(days: 1) : const Duration(seconds: 3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.all(12),
+          showProgress ? const Duration(days: 1) : const Duration(seconds: 2),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(50))),
       content: Row(
         children: [
           if (!showProgress) Icon(icon, color: Colors.white),
