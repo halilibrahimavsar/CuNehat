@@ -3,188 +3,219 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/models/wallet_model.dart';
+import 'package:cunehat/repository/wallet_form_bloc/wallet_form_bloc.dart';
 import 'package:cunehat/utilities/snackbar_helper.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-void showWalletDialog({
+/// **showWalletDialog**: BLoC-driven wallet form dialog
+///
+/// Usage:
+/// ```dart
+/// await showWalletDialog(
+///   context: context,
+///   wallet: existingWallet, // null for create mode
+///   onSuccess: () {
+///     // Refresh wallet list
+///   },
+/// );
+/// ```
+Future<void> showWalletDialog({
   required BuildContext context,
-  required DataRepository repository,
-  Wallet? wallet, // null → create, dolu → edit
-  required VoidCallback onUpdated,
-}) {
-  final TextEditingController nameController =
-      TextEditingController(text: wallet?.name ?? '');
-
-  final TextEditingController balanceController = TextEditingController(
-    text: wallet != null ? wallet.balance.toStringAsFixed(2) : '0.0',
-  );
-
-  String selectedColor = wallet?.colorHex ?? WalletDefaults.defaultColorHex;
-  String selectedIcon = wallet?.iconName ?? WalletDefaults.defaultIconName;
-
-  final scaffoldContext = context;
-
-  final bool isEdit = wallet != null;
-
-  showDialog(
+  Wallet? wallet, // null → create, non-null → edit
+  required VoidCallback onSuccess,
+}) async {
+  await showDialog(
     context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) {
-        return AlertDialog(
-          title: Text(isEdit ? 'Cüzdanı Düzenle' : 'Yeni Cüzdan Ekle'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Cüzdan Adı',
-                    hintText: 'Örn: Ana Cüzdan',
-                  ),
+    builder: (dialogContext) => BlocProvider(
+      create: (_) => WalletFormBloc(
+        repository: context.read<DataRepository>(),
+        initialWallet: wallet,
+      ),
+      child: _WalletFormDialog(
+        isEditMode: wallet != null,
+        onSuccess: onSuccess,
+      ),
+    ),
+  );
+}
+
+/// **_WalletFormDialog**: Internal dialog widget
+class _WalletFormDialog extends StatelessWidget {
+  final bool isEditMode;
+  final VoidCallback onSuccess;
+
+  const _WalletFormDialog({
+    required this.isEditMode,
+    required this.onSuccess,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<WalletFormBloc, WalletFormState>(
+      listener: (context, state) {
+        // ✅ Handle success
+        if (state is WalletFormSuccess) {
+          Navigator.pop(context); // Close dialog
+          SnackbarHelper.showSuccess(context, state.message);
+          onSuccess(); // Trigger refresh
+        }
+        // ✅ Handle error
+        else if (state is WalletFormError) {
+          SnackbarHelper.showError(context, state.message);
+        }
+      },
+      builder: (context, state) {
+        // Show loading overlay during submission
+        final isSubmitting = state is WalletFormSubmitting;
+
+        return Stack(
+          children: [
+            // Main dialog content
+            _buildDialogContent(context, state),
+
+            // Loading overlay
+            if (isSubmitting)
+              Container(
+                color: Colors.black.withOpacity(0.3),
+                child: const Center(
+                  child: CircularProgressIndicator(),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: balanceController,
-                  decoration: InputDecoration(
-                    labelText: isEdit ? 'Bakiye' : 'Başlangıç Bakiyesi',
-                    hintText: '0.0',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                const Text('Renk Seçin:'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: WalletColors.presetColors.map((color) {
-                    final hex = WalletColors.colorToHex(color);
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() => selectedColor = hex);
-                      },
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: selectedColor == hex
-                              ? Border.all(color: Colors.black, width: 2)
-                              : null,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                const Text('İkon Seçin:'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: WalletIcons.icons.entries.map((entry) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() => selectedIcon = entry.key);
-                      },
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: selectedIcon == entry.key
-                              ? Colors.blue.withOpacity(0.1)
-                              : Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: selectedIcon == entry.key
-                              ? Border.all(color: Colors.blue, width: 2)
-                              : null,
-                        ),
-                        child: Icon(
-                          entry.value,
-                          color: selectedIcon == entry.key
-                              ? Colors.blue
-                              : Colors.grey,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                final balance = double.tryParse(balanceController.text) ??
-                    (wallet?.balance ?? 0.0);
-
-                if (name.isEmpty) {
-                  SnackbarHelper.showInfo(context, 'Lütfen cüzdan adı girin');
-
-                  return;
-                }
-
-                try {
-                  if (isEdit) {
-                    // --------------------------------------------------------
-                    // EDIT
-                    // --------------------------------------------------------
-                    final updatedWallet = wallet.copyWith(
-                      name: name,
-                      balance: balance,
-                      colorHex: selectedColor,
-                      iconName: selectedIcon,
-                    );
-
-                    await repository.updateWallet(wallet: updatedWallet);
-                    if (scaffoldContext.mounted) {
-                      SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi');
-                    }
-                  } else {
-                    // --------------------------------------------------------
-                    // CREATE
-                    // --------------------------------------------------------
-                    final userId =
-                        FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
-
-                    final newWallet = Wallet.createLocal(
-                      userId: userId,
-                      name: name,
-                      balance: balance,
-                      colorHex: selectedColor,
-                      iconName: selectedIcon,
-                      isActive: false,
-                      sortOrder: await repository.getAllWallets().then(
-                        (value) {
-                          return value.length;
-                        },
-                      ),
-                    );
-
-                    await repository.createWallet(wallet: newWallet);
-                    if (scaffoldContext.mounted) {
-                      SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu');
-                    }
-                  }
-
-                  onUpdated(); // UI yenile
-                } catch (e) {
-                  if (scaffoldContext.mounted) {
-                    SnackbarHelper.showError(context, 'Hata: $e');
-                  }
-                }
-              },
-              child: Text(isEdit ? 'Kaydet' : 'Oluştur'),
-            ),
+              ),
           ],
         );
       },
-    ),
-  );
+    );
+  }
+
+  Widget _buildDialogContent(BuildContext context, WalletFormState state) {
+    if (state is! WalletFormEditing) {
+      return const SizedBox.shrink();
+    }
+
+    return AlertDialog(
+      title: Text(isEditMode ? 'Cüzdanı Düzenle' : 'Yeni Cüzdan Ekle'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ============ NAME FIELD ============
+            TextField(
+              controller: TextEditingController(text: state.name)
+                ..selection = TextSelection.collapsed(
+                  offset: state.name.length,
+                ),
+              decoration: InputDecoration(
+                labelText: 'Cüzdan Adı',
+                hintText: 'Örn: Ana Cüzdan',
+                errorText: state.nameError,
+              ),
+              onChanged: (value) {
+                context.read<WalletFormBloc>().add(UpdateNameEvent(value));
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // ============ BALANCE FIELD ============
+            TextField(
+              controller: TextEditingController(text: state.balance)
+                ..selection = TextSelection.collapsed(
+                  offset: state.balance.length,
+                ),
+              decoration: InputDecoration(
+                labelText: isEditMode ? 'Bakiye' : 'Başlangıç Bakiyesi',
+                hintText: '0.0',
+                errorText: state.balanceError,
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                context.read<WalletFormBloc>().add(UpdateBalanceEvent(value));
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // ============ COLOR PICKER ============
+            const Text('Renk Seçin:'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: WalletColors.presetColors.map((color) {
+                final hex = WalletColors.colorToHex(color);
+                final isSelected = state.colorHex == hex;
+
+                return GestureDetector(
+                  onTap: () {
+                    context.read<WalletFormBloc>().add(UpdateColorEvent(hex));
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: Colors.black, width: 2)
+                          : null,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // ============ ICON PICKER ============
+            const Text('İkon Seçin:'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: WalletIcons.icons.entries.map((entry) {
+                final isSelected = state.iconName == entry.key;
+
+                return GestureDetector(
+                  onTap: () {
+                    context
+                        .read<WalletFormBloc>()
+                        .add(UpdateIconEvent(entry.key));
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.blue.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? Border.all(color: Colors.blue, width: 2)
+                          : null,
+                    ),
+                    child: Icon(
+                      entry.value,
+                      color: isSelected ? Colors.blue : Colors.grey,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        // ============ CANCEL BUTTON ============
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('İptal'),
+        ),
+
+        // ============ SUBMIT BUTTON ============
+        ElevatedButton(
+          onPressed: () {
+            // ✅ Submit via BLoC
+            context.read<WalletFormBloc>().add(SubmitFormEvent());
+          },
+          child: Text(isEditMode ? 'Kaydet' : 'Oluştur'),
+        ),
+      ],
+    );
+  }
 }

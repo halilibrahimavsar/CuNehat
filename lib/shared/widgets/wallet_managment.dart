@@ -1,16 +1,17 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
-import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/models/wallet_model.dart';
 import 'package:cunehat/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/shared/dialogs/wallet_form_dialog.dart';
+import 'package:cunehat/shared/dialogs/wallet_info_dialog.dart';
 import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Import the new WalletBloc
+// Import the WalletBloc
 import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
+import 'package:cunehat/repository/data_repository.dart';
 
 /// **WalletManagementPage**: Completely BLoC-driven, zero direct repository access
 class WalletManagementPage extends StatelessWidget {
@@ -39,7 +40,7 @@ class _WalletManagementView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
-            onPressed: () => _showInfoDialog(context),
+            onPressed: () => WalletInfoDialog.show(context),
           ),
         ],
       ),
@@ -306,22 +307,22 @@ class _WalletManagementView extends StatelessWidget {
   }
 
   void _showCreateWalletDialog(BuildContext context) {
-    // Note: You'll need to refactor wallet_form_dialog to work with WalletBloc
+    // ✅ Use new BLoC-driven dialog
     showWalletDialog(
       context: context,
-      repository: context.read<DataRepository>(), // Temporary
-      onUpdated: () {
+      wallet: null, // Create mode
+      onSuccess: () {
         context.read<WalletBloc>().add(LoadWalletsEvent());
       },
     );
   }
 
   void _showEditWalletDialog(BuildContext context, Wallet wallet) {
+    // ✅ Use new BLoC-driven dialog
     showWalletDialog(
       context: context,
-      repository: context.read<DataRepository>(), // Temporary
-      wallet: wallet,
-      onUpdated: () {
+      wallet: wallet, // Edit mode
+      onSuccess: () {
         context.read<WalletBloc>().add(LoadWalletsEvent());
       },
     );
@@ -337,35 +338,6 @@ class _WalletManagementView extends StatelessWidget {
       // ✅ Use BLoC to delete wallet
       context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id));
     }
-  }
-
-  void _showInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cüzdan Yönetimi'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('• Aktif cüzdanınızı değiştirmek için bir cüzdana tıklayın.'),
-            SizedBox(height: 8),
-            Text(
-                '• Aktif olan cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yapmalısınız.'),
-            SizedBox(height: 8),
-            Text('• Cüzdan bakiyeleri otomatik olarak güncellenir.'),
-            SizedBox(height: 8),
-            Text('• Her cüzdanın kendi gelir/gider kayıtları vardır.'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-        ],
-      ),
-    );
   }
 
   String _formatDate(DateTime date) {
