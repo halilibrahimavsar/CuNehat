@@ -5,7 +5,9 @@ import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/models/wallet_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cunehat/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/shared/dialogs/wallet_form_dialog.dart';
+import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -68,8 +70,11 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                   const Text('Henüz cüzdan eklenmemiş'),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
-                    onPressed: () =>
-                        _showCreateWalletDialog(context, repository),
+                    onPressed: () => showWalletDialog(
+                      context: context,
+                      repository: repository,
+                      onUpdated: () {},
+                    ),
                     icon: const Icon(Icons.add),
                     label: const Text('İlk Cüzdanı Oluştur'),
                   ),
@@ -99,7 +104,11 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateWalletDialog(context, repository),
+        onPressed: () => showWalletDialog(
+          context: context,
+          repository: repository,
+          onUpdated: () {},
+        ),
         icon: const Icon(Icons.add),
         label: const Text('Yeni Cüzdan'),
       ),
@@ -146,35 +155,11 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                   ),
                 );
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    Icon(
-                      WalletIcons.getIcon(wallet.iconName),
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text('${wallet.name} aktif cüzdan olarak seçildi'),
-                    ),
-                  ],
-                ),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-                action: SnackBarAction(
-                  label: 'Kapat',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  },
-                ),
-              ),
-            );
+            SnackbarHelper.showSuccess(
+                context, '${wallet.name} aktif cüzdan olarak seçildi');
 
             // ➕ YENİ: Bottom sheet'i kapat ve ana sayfaya dön
-            Navigator.pop(context);
+            // Navigator.pop(context);
           }
         },
         borderRadius: BorderRadius.circular(16),
@@ -281,8 +266,11 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _showEditWalletDialog(context, wallet, repository),
+                      onPressed: () => showWalletDialog(
+                          context: context,
+                          repository: repository,
+                          wallet: wallet,
+                          onUpdated: () => setState(() {})),
                       icon: const Icon(Icons.edit, size: 18),
                       label: const Text('Düzenle'),
                       style: OutlinedButton.styleFrom(
@@ -295,8 +283,19 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                   if (!isActive)
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showDeleteWalletDialog(
-                            context, wallet, repository),
+                        onPressed: () async {
+                          bool? result = await ConfirmDeleteDialog.show(context,
+                              title: wallet.name);
+                          if (result == true) {
+                            await repository.deleteWallet(wallet.id);
+                            setState(() {});
+                          } else {
+                            if (context.mounted) {
+                              SnackbarHelper.showInfo(
+                                  context, 'Silme işlemi iptal edildi.');
+                            }
+                          }
+                        },
                         icon: const Icon(Icons.delete, size: 18),
                         label: const Text('Sil'),
                         style: OutlinedButton.styleFrom(
@@ -310,383 +309,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showCreateWalletDialog(
-      BuildContext context, DataRepository repository) {
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController balanceController =
-        TextEditingController(text: '0.0');
-
-    String selectedColor = WalletDefaults.defaultColorHex;
-    String selectedIcon = WalletDefaults.defaultIconName;
-
-    // 🔥 DÜZELTME: Context'i kaydet
-    final scaffoldContext = context;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Yeni Cüzdan Ekle'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Cüzdan Adı',
-                      hintText: 'Örn: Ana Cüzdan, Tatil Fonu',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: balanceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Başlangıç Bakiyesi',
-                      hintText: '0.0',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Renk Seçin:'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: WalletColors.presetColors.map((color) {
-                      final colorHex = WalletColors.colorToHex(color);
-                      return GestureDetector(
-                        onTap: () {
-                          setDialogState(() {
-                            selectedColor = colorHex;
-                          });
-                        },
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: selectedColor == colorHex
-                                ? Border.all(color: Colors.black, width: 2)
-                                : null,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('İkon Seçin:'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: WalletIcons.icons.entries.map((entry) {
-                      return GestureDetector(
-                        onTap: () {
-                          setDialogState(() {
-                            selectedIcon = entry.key;
-                          });
-                        },
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: selectedIcon == entry.key
-                                ? Colors.blue.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: selectedIcon == entry.key
-                                ? Border.all(color: Colors.blue, width: 2)
-                                : null,
-                          ),
-                          child: Icon(
-                            entry.value,
-                            color: selectedIcon == entry.key
-                                ? Colors.blue
-                                : Colors.grey,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  final balance =
-                      double.tryParse(balanceController.text) ?? 0.0;
-
-                  if (name.isEmpty) {
-                    // 🔥 DÜZELTME: scaffoldContext kullan
-                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                      const SnackBar(content: Text('Lütfen cüzdan adı girin')),
-                    );
-                    return;
-                  }
-
-                  final userId =
-                      FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
-                  final wallet = Wallet.createLocal(
-                    userId: userId,
-                    name: name,
-                    balance: balance,
-                    colorHex: selectedColor,
-                    iconName: selectedIcon,
-                    isActive: false, // Yeni cüzdanlar başlangıçta aktif değil
-                    sortOrder: await _getNextSortOrder(repository),
-                  );
-
-                  try {
-                    await repository.createWallet(wallet: wallet);
-                    Navigator.pop(context);
-                    setState(() {});
-
-                    // 🔥 DÜZELTME: scaffoldContext kullan
-                    if (scaffoldContext.mounted) {
-                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                        SnackBar(
-                          content: Text('"$name" cüzdanı oluşturuldu'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    // 🔥 DÜZELTME: scaffoldContext kullan
-                    if (scaffoldContext.mounted) {
-                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                        SnackBar(
-                          content: Text('Hata: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Oluştur'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showEditWalletDialog(
-      BuildContext context, Wallet wallet, DataRepository repository) {
-    final TextEditingController nameController =
-        TextEditingController(text: wallet.name);
-    final TextEditingController balanceController =
-        TextEditingController(text: wallet.balance.toStringAsFixed(2));
-
-    String selectedColor = wallet.colorHex;
-    String selectedIcon = wallet.iconName;
-
-    // 🔥 DÜZELTME: Context'i kaydet
-    final scaffoldContext = context;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Cüzdanı Düzenle'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Cüzdan Adı',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: balanceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Bakiye',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Renk Seçin:'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: WalletColors.presetColors.map((color) {
-                      final colorHex = WalletColors.colorToHex(color);
-                      return GestureDetector(
-                        onTap: () {
-                          setDialogState(() {
-                            selectedColor = colorHex;
-                          });
-                        },
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: selectedColor == colorHex
-                                ? Border.all(color: Colors.black, width: 2)
-                                : null,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('İkon Seçin:'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: WalletIcons.icons.entries.map((entry) {
-                      return GestureDetector(
-                        onTap: () {
-                          setDialogState(() {
-                            selectedIcon = entry.key;
-                          });
-                        },
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: selectedIcon == entry.key
-                                ? Colors.blue.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: selectedIcon == entry.key
-                                ? Border.all(color: Colors.blue, width: 2)
-                                : null,
-                          ),
-                          child: Icon(
-                            entry.value,
-                            color: selectedIcon == entry.key
-                                ? Colors.blue
-                                : Colors.grey,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  final balance =
-                      double.tryParse(balanceController.text) ?? wallet.balance;
-
-                  if (name.isEmpty) {
-                    // 🔥 DÜZELTME: scaffoldContext kullan
-                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                      const SnackBar(content: Text('Lütfen cüzdan adı girin')),
-                    );
-                    return;
-                  }
-
-                  final updatedWallet = wallet.copyWith(
-                    name: name,
-                    balance: balance,
-                    colorHex: selectedColor,
-                    iconName: selectedIcon,
-                  );
-
-                  try {
-                    await repository.updateWallet(wallet: updatedWallet);
-                    Navigator.pop(context);
-                    setState(() {});
-
-                    // 🔥 DÜZELTME: scaffoldContext kullan
-                    if (scaffoldContext.mounted) {
-                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                        SnackBar(
-                          content: Text('"$name" cüzdanı güncellendi'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    // 🔥 DÜZELTME: scaffoldContext kullan
-                    if (scaffoldContext.mounted) {
-                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                        SnackBar(
-                          content: Text('Hata: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Kaydet'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showDeleteWalletDialog(
-      BuildContext context, Wallet wallet, DataRepository repository) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cüzdanı Sil'),
-        content: Text(
-            '"${wallet.name}" cüzdanını silmek istediğinizden emin misiniz? Bu cüzdana ait tüm gelir/gider kayıtları da silinecektir. '
-            'Bu işlem geri alınamaz.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await repository.deleteWallet(wallet.id);
-                setState(() {});
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('"${wallet.name}" cüzdanı silindi'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Silme hatası: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Sil'),
-          ),
-        ],
       ),
     );
   }
@@ -718,12 +340,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
         ],
       ),
     );
-  }
-
-  Future<int> _getNextSortOrder(DataRepository repository) async {
-    final wallets = await repository.getAllWallets();
-    if (wallets.isEmpty) return 0;
-    return wallets.map((w) => w.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
   }
 
   String _formatDate(DateTime date) {

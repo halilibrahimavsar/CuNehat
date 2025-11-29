@@ -2,6 +2,7 @@ import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/income_model.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
+import 'package:cunehat/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -91,8 +92,10 @@ class _IncomeViewState extends State<IncomeView> {
                         confirmDismiss: (direction) async {
                           if (direction == DismissDirection.endToStart) {
                             // SOLA KAYDIRMA - SİLME ONAYI
-                            return await _showDeleteConfirmDialog(
-                                context, income.title);
+                            return await ConfirmDeleteDialog.show(
+                              context,
+                              title: income.title,
+                            );
                           } else {
                             // SAĞA KAYDIRMA - DÜZENLEME
                             _showEditIncomeSheet(context, income);
@@ -104,10 +107,6 @@ class _IncomeViewState extends State<IncomeView> {
                           if (direction == DismissDirection.endToStart) {
                             context.read<DataBloc>().add(DeleteIncomeEvent(
                                 income: income, id: income.id));
-                            // ScaffoldMessenger.of(context).showSnackBar(
-                            //   SnackBar(
-                            //       content: Text("${income.title} silindi.")),
-                            // );
                           }
                         },
                         child: ListTile(
@@ -130,37 +129,6 @@ class _IncomeViewState extends State<IncomeView> {
         },
       ),
     );
-  }
-
-  Future<bool> _showDeleteConfirmDialog(
-      BuildContext context, String title) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            icon: const Icon(Icons.warning_amber_rounded,
-                color: Colors.orange, size: 48),
-            title: const Text('Silme Onayı'),
-            content: Text(
-              '"$title" adlı geliri silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
-              textAlign: TextAlign.center,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Sil'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
   }
 
   void _showEditIncomeSheet(BuildContext parentContext, Income income) {

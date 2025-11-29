@@ -1,13 +1,14 @@
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/settings_header.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/settings_item.dart';
-import 'package:cunehat/pages/settings_pages/settings_views_helpers/storage_mode_option.dart';
 import 'package:cunehat/pages/settings_pages/settings_views_helpers/theme_selector_dropdown.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/get_storage_mod.dart';
+import 'package:cunehat/shared/dialogs/storage_mode_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -36,59 +37,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final repository = context.read<GetStorageMod>();
     final currentMode = repository.getStorageMode();
 
-    final selectedMode = await showDialog<StorageMode>(
+    final selectedMode = await SettingsDialogManager.showStorageModeDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.storage, color: Colors.blue),
-            SizedBox(width: 8),
-            Text('Depolama Modu Seçin'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StorageModeOption(
-              mode: StorageMode.local,
-              currentMode: currentMode,
-              icon: Icons.phone_android,
-              title: 'Yerel Depolama',
-              description: 'Veriler sadece bu cihazda saklanır',
-              features: const [
-                '✓ Hızlı erişim',
-                '✓ İnternet gerektirmez',
-                '✓ Tamamen özel',
-                '✗ Cihaz arası senkronizasyon yok',
-              ],
-              onTap: () => Navigator.pop(dialogContext, StorageMode.local),
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
-            StorageModeOption(
-              mode: StorageMode.cloud,
-              currentMode: currentMode,
-              icon: Icons.cloud,
-              title: 'Bulut Depolama',
-              description: 'Veriler Google Firestore\'da saklanır',
-              features: const [
-                '✓ Çoklu cihaz desteği',
-                '✓ Otomatik yedekleme',
-                '✓ Veri güvenliği',
-                '⚠ İnternet gerektirir',
-              ],
-              onTap: () => Navigator.pop(dialogContext, StorageMode.cloud),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('İptal'),
-          ),
-        ],
-      ),
+      currentMode: currentMode,
+      onLocalTap: (mode) => mode,
+      onCloudTap: (mode) => mode,
     );
 
     if (selectedMode != null && selectedMode != currentMode) {
@@ -102,66 +55,49 @@ class _SettingsPageState extends State<SettingsPage> {
 
     // LOCAL → CLOUD: Upload and clear local
     if (newMode == StorageMode.cloud) {
-      final shouldMigrate = await _showMigrationDialog();
+      final shouldMigrate =
+          await SettingsDialogManager.showMigrationDialog(context);
       if (!shouldMigrate) return;
 
       setState(() => _isLoading = true);
+      if (mounted) {
+        SnackbarHelper.showLoading(context, 'Veriler buluta taşınıyor...');
+      }
 
       try {
-        print('🔄 [SETTINGS] Starting migration to cloud...');
         await repository.migrateLocalToCloud();
-        print('✓ [SETTINGS] Migration successful');
 
         if (mounted) {
           setState(() {
             _currentMode = StorageMode.cloud;
-            _isLoading =
-                false; // Bu satır zaten vardı, tekrar eklemeye gerek yok.
+            _isLoading = false;
           });
 
-          print('📤 [SETTINGS] Triggering data refresh after mode change');
           _refreshMainPageData();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.cloud_done, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('✓ Veriler buluta taşındı!'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
-          );
+          SnackbarHelper.showSuccess(context, 'Veriler buluta taşındı!');
         }
       } catch (e) {
-        print('❌ [SETTINGS] Migration failed: $e');
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✗ Geçiş başarısız: ${e.toString()}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 4),
-            ),
-          );
+          SnackbarHelper.showError(context, 'Geçiş başarısız: ${e.toString()}');
         }
       }
     }
 
     // CLOUD → LOCAL: Download cloud data to local
     else if (newMode == StorageMode.local) {
-      final confirmed = await _showCloudToLocalWarning();
+      final confirmed =
+          await SettingsDialogManager.showCloudToLocalWarning(context);
       if (!confirmed) return;
 
       setState(() => _isLoading = true);
+      if (mounted) {
+        SnackbarHelper.showLoading(context, 'Bulut verileri indiriliyor...');
+      }
 
       try {
-        print('🔄 [SETTINGS] Starting migration to local...');
         await repository.migrateCloudToLocal();
-        print('✓ [SETTINGS] Migration successful');
 
         if (mounted) {
           setState(() {
@@ -169,34 +105,15 @@ class _SettingsPageState extends State<SettingsPage> {
             _isLoading = false;
           });
 
-          print('📤 [SETTINGS] Triggering data refresh after mode change');
           _refreshMainPageData();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('✓ Bulut verileri yerel depolamaya indirildi!'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
-          );
+          SnackbarHelper.showSuccess(
+              context, 'Bulut verileri yerel depolamaya indirildi!');
         }
       } catch (e) {
-        print('❌ [SETTINGS] Mode change failed: $e');
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✗ Hata: ${e.toString()}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 4),
-            ),
-          );
+          SnackbarHelper.showError(context, 'Hata: ${e.toString()}');
         }
       }
     }
@@ -207,128 +124,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final now = DateTime.now();
     final startDate = now.subtract(const Duration(days: 30));
 
-    print('📤 [SETTINGS] Dispatching RefreshDataEvent');
     context.read<DataBloc>().add(
           RefreshDataEvent(
             filterStart: startDate,
             filterEnd: now,
           ),
         );
-  }
-
-  Future<bool> _showMigrationDialog() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            icon: const Icon(Icons.cloud_upload, size: 48, color: Colors.blue),
-            title: const Text('Buluta Taşıma'),
-            content: const Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tüm yerel verileriniz (gelir ve giderler) buluta yüklenecek ve '
-                  'cihazdan silinecektir.',
-                  style: TextStyle(fontSize: 14),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  '⚠️ Bu işlem geri alınamaz!',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  '✓ İnternet bağlantınızın aktif olduğundan emin olun.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context, true),
-                icon: const Icon(Icons.cloud_upload),
-                label: const Text('Taşı'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  Future<bool> _showCloudToLocalWarning() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            icon: const Icon(Icons.download, size: 48, color: Colors.blue),
-            title: const Text('Bulut Verilerini İndir'),
-            content: const Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tüm bulut verileriniz bu cihaza taşınacak ve buluttaki kopyaları silinecektir.',
-                  style: TextStyle(fontSize: 14),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  '✓ Ne Olacak:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                      fontSize: 13),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  '• Buluttaki tüm veriler bu cihaza indirilecek.\n'
-                  '• İndirme sonrası buluttaki verileriniz temizlenecek.\n'
-                  '• Yeni işlemler sadece bu cihazda tutulacak',
-                  style: TextStyle(fontSize: 12),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '⚠️ Dikkat:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                      fontSize: 13),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  '• Bu işlemden sonra çoklu cihaz senkronizasyonu duracaktır.\n'
-                  '• Verileriniz artık sadece bu cihazda saklanacaktır.',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context, true),
-                icon: const Icon(Icons.move_down),
-                label: const Text('İndir ve Geç'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
   }
 
   @override

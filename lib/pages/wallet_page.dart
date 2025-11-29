@@ -12,6 +12,7 @@ import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
 import 'package:cunehat/shared/widgets/build_drawer.dart';
 import 'package:cunehat/shared/widgets/date_rang_pck.dart';
 import 'package:cunehat/shared/widgets/shared_appbar.dart';
+import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:cunehat/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -274,55 +275,34 @@ class _WalletPageState extends State<WalletPage>
   void _routeStateEvents(BuildContext context, DataState state) {
     switch (state) {
       case SuccessfullyCreatedItemState():
-        _snackbar("✓ ${state.name} Başarıyla eklendi", Colors.green);
+        SnackbarHelper.showSuccess(context, "${state.name} başarıyla eklendi");
         _fetchData();
         break;
       case SuccessfullyDeletedItemState():
-        _snackbar("✓ ${state.name} Başarıyla silindi", Colors.green);
+        SnackbarHelper.showSuccess(context, "${state.name} başarıyla silindi");
         _fetchData();
         break;
       case SuccessfullyUpdatedItemState():
-        _snackbar("✓ ${state.name} Başarıyla güncellendi", Colors.green);
+        SnackbarHelper.showSuccess(
+            context, "${state.name} başarıyla güncellendi");
         _fetchData();
         break;
       case SyncingDataState():
-        _snackbar("Senkronizasyon yapılıyor...", Colors.blueGrey,
-            loading: true);
+        SnackbarHelper.showLoading(context, "Senkronizasyon yapılıyor...");
+        break;
       case SyncSuccessState():
-        _snackbar("✓ Senkronizasyon tamamlandı", Colors.green);
+        SnackbarHelper.showSuccess(context, "Senkronizasyon tamamlandı");
         break;
       case SyncFailedState():
-        _snackbar("✗ Senkronizasyon başarısız", Colors.orange);
+        SnackbarHelper.showError(context, "Senkronizasyon başarısız");
         break;
       case ErrorState():
-        _snackbar(state.err, Colors.red);
+        SnackbarHelper.showError(context, state.err);
         break;
       default:
+        // Diğer durumlar için bir işlem yapılmasına gerek yok.
+        break;
     }
-  }
-
-  void _snackbar(String text, Color color, {bool loading = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: color,
-        duration: const Duration(milliseconds: 1500),
-        content: Row(
-          children: [
-            if (loading)
-              const SizedBox(
-                height: 16,
-                width: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              ),
-            if (loading) const SizedBox(width: 8),
-            Text(text),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildErrorView(String err) {

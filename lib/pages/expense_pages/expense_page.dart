@@ -2,6 +2,7 @@ import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
+import 'package:cunehat/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,8 +93,10 @@ class _ExpenseViewState extends State<ExpenseView> {
                         confirmDismiss: (direction) async {
                           if (direction == DismissDirection.endToStart) {
                             // SOLA KAYDIRMA - SİLME ONAYI
-                            return await _showDeleteConfirmDialog(
-                                context, expense.title);
+                            return await ConfirmDeleteDialog.show(
+                              context,
+                              title: expense.title,
+                            );
                           } else {
                             // SAĞA KAYDIRMA - DÜZENLEME
                             _showEditExpenseSheet(context, expense);
@@ -105,10 +108,6 @@ class _ExpenseViewState extends State<ExpenseView> {
                           if (direction == DismissDirection.endToStart) {
                             context.read<DataBloc>().add(DeleteExpenseEvent(
                                 expense: expense, id: expense.id));
-                            // ScaffoldMessenger.of(context).showSnackBar(
-                            //   SnackBar(
-                            //       content: Text("${expense.title} silindi.")),
-                            // );
                           }
                         },
                         child: ListTile(
@@ -130,37 +129,6 @@ class _ExpenseViewState extends State<ExpenseView> {
         },
       ),
     );
-  }
-
-  Future<bool> _showDeleteConfirmDialog(
-      BuildContext context, String title) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            icon: const Icon(Icons.warning_amber_rounded,
-                color: Colors.orange, size: 48),
-            title: const Text('Silme Onayı'),
-            content: Text(
-              '"$title" adlı gideri silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
-              textAlign: TextAlign.center,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Sil'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
   }
 
   void _showEditExpenseSheet(BuildContext parentContext, Expense expense) {
