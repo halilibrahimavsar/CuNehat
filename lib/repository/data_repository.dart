@@ -33,6 +33,10 @@ class DataRepository {
         _getStorageMod = getStorageMod;
 
   // ============ WALLET MANAGEMENT ============
+// data_repository.dart içinde
+  StorageMode getStorageMode() {
+    return _getStorageMod.getStorageMode();
+  }
 
   /// Get active wallet ID
   String getActiveWalletId() {

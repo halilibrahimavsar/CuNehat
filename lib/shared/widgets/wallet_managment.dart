@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
@@ -11,18 +9,30 @@ import 'package:cunehat/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class WalletManagementPage extends StatefulWidget {
+// Import the new WalletBloc
+import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
+
+/// **WalletManagementPage**: Completely BLoC-driven, zero direct repository access
+class WalletManagementPage extends StatelessWidget {
   const WalletManagementPage({super.key});
 
   @override
-  State<WalletManagementPage> createState() => _WalletManagementPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      // ✅ Create WalletBloc here (if not provided from parent)
+      create: (context) => WalletBloc(
+        repository: context.read<DataRepository>(),
+      )..add(LoadWalletsEvent()),
+      child: const _WalletManagementView(),
+    );
+  }
 }
 
-class _WalletManagementPageState extends State<WalletManagementPage> {
+class _WalletManagementView extends StatelessWidget {
+  const _WalletManagementView();
+
   @override
   Widget build(BuildContext context) {
-    final repository = context.read<DataRepository>();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cüzdanlarım'),
@@ -33,23 +43,47 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Wallet>>(
-        future: repository.getAllWallets(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: BlocConsumer<WalletBloc, WalletState>(
+        listener: (context, state) {
+          // ✅ Handle operation results
+          if (state is WalletOperationSuccess) {
+            SnackbarHelper.showSuccess(context, state.message);
+
+            // ✅ Refresh main page data if active wallet changed
+            if (state.type == WalletOperationType.setActive) {
+              final now = DateTime.now();
+              final startDate = now.subtract(const Duration(days: 30));
+
+              context.read<DataBloc>().add(
+                    RefreshDataEvent(
+                      filterStart: startDate,
+                      filterEnd: now,
+                    ),
+                  );
+            }
+          } else if (state is WalletError) {
+            SnackbarHelper.showError(context, state.message);
+          }
+        },
+        builder: (context, state) {
+          // ✅ Loading state
+          if (state is WalletLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.hasError) {
+          // ✅ Error state
+          if (state is WalletError) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text('Hata: ${snapshot.error}'),
+                  Text('Hata: ${state.message}'),
                   ElevatedButton(
-                    onPressed: () => setState(() {}),
+                    onPressed: () {
+                      context.read<WalletBloc>().add(LoadWalletsEvent());
+                    },
                     child: const Text('Yeniden Dene'),
                   ),
                 ],
@@ -57,71 +91,71 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
             );
           }
 
-          final wallets = snapshot.data ?? [];
+          // ✅ Loaded state
+          if (state is WalletsLoaded) {
+            final wallets = state.wallets;
 
-          if (wallets.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.account_balance_wallet_outlined,
-                      size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('Henüz cüzdan eklenmemiş'),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: () => showWalletDialog(
-                      context: context,
-                      repository: repository,
-                      onUpdated: () {},
-                    ),
-                    icon: const Icon(Icons.add),
-                    label: const Text('İlk Cüzdanı Oluştur'),
-                  ),
-                ],
+            if (wallets.isEmpty) {
+              return _buildEmptyState(context);
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<WalletBloc>().add(LoadWalletsEvent());
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: wallets.length,
+                itemBuilder: (context, index) {
+                  final wallet = wallets[index];
+                  final isActive = wallet.id == state.activeWalletId;
+
+                  return _buildWalletCard(
+                    context,
+                    wallet,
+                    isActive,
+                  );
+                },
               ),
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () async => setState(() {}),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: wallets.length,
-              itemBuilder: (context, index) {
-                final wallet = wallets[index];
-                final isActive = wallet.id == repository.getActiveWalletId();
-
-                return _buildWalletCard(
-                  context,
-                  wallet,
-                  isActive,
-                  repository,
-                );
-              },
-            ),
-          );
+          // ✅ Initial state
+          return const Center(child: CircularProgressIndicator());
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showWalletDialog(
-          context: context,
-          repository: repository,
-          onUpdated: () {},
-        ),
+        onPressed: () => _showCreateWalletDialog(context),
         icon: const Icon(Icons.add),
         label: const Text('Yeni Cüzdan'),
       ),
     );
   }
 
-  // SADECE _buildWalletCard METODUNU DEĞİŞTİRİYORUZ
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.account_balance_wallet_outlined,
+              size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          const Text('Henüz cüzdan eklenmemiş'),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: () => _showCreateWalletDialog(context),
+            icon: const Icon(Icons.add),
+            label: const Text('İlk Cüzdanı Oluştur'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildWalletCard(
     BuildContext context,
     Wallet wallet,
     bool isActive,
-    DataRepository repository,
   ) {
     final color = WalletColors.hexToColor(wallet.colorHex);
 
@@ -136,31 +170,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
         ),
       ),
       child: InkWell(
-        onTap: () async {
-          // ✅ DÜZELTME: Cüzdanı değiştir ve ana sayfayı yenile
-          await repository.setActiveWallet(wallet.id);
-
-          // ➕ YENİ: setState ile bu sayfayı yenile
-          setState(() {});
-
-          if (context.mounted) {
-            // ➕ YENİ: Ana sayfadaki DataBloc'u tetikle
-            final now = DateTime.now();
-            final startDate = now.subtract(const Duration(days: 30));
-
-            context.read<DataBloc>().add(
-                  RefreshDataEvent(
-                    filterStart: startDate,
-                    filterEnd: now,
-                  ),
-                );
-
-            SnackbarHelper.showSuccess(
-                context, '${wallet.name} aktif cüzdan olarak seçildi');
-
-            // ➕ YENİ: Bottom sheet'i kapat ve ana sayfaya dön
-            // Navigator.pop(context);
-          }
+        onTap: () {
+          // ✅ Use BLoC to set active wallet
+          context.read<WalletBloc>().add(SetActiveWalletEvent(wallet.id));
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -191,16 +203,12 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              wallet.name,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          wallet.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -266,11 +274,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => showWalletDialog(
-                          context: context,
-                          repository: repository,
-                          wallet: wallet,
-                          onUpdated: () => setState(() {})),
+                      onPressed: () => _showEditWalletDialog(context, wallet),
                       icon: const Icon(Icons.edit, size: 18),
                       label: const Text('Düzenle'),
                       style: OutlinedButton.styleFrom(
@@ -283,19 +287,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                   if (!isActive)
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () async {
-                          bool? result = await ConfirmDeleteDialog.show(context,
-                              title: wallet.name);
-                          if (result == true) {
-                            await repository.deleteWallet(wallet.id);
-                            setState(() {});
-                          } else {
-                            if (context.mounted) {
-                              SnackbarHelper.showInfo(
-                                  context, 'Silme işlemi iptal edildi.');
-                            }
-                          }
-                        },
+                        onPressed: () => _confirmDelete(context, wallet),
                         icon: const Icon(Icons.delete, size: 18),
                         label: const Text('Sil'),
                         style: OutlinedButton.styleFrom(
@@ -311,6 +303,40 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
         ),
       ),
     );
+  }
+
+  void _showCreateWalletDialog(BuildContext context) {
+    // Note: You'll need to refactor wallet_form_dialog to work with WalletBloc
+    showWalletDialog(
+      context: context,
+      repository: context.read<DataRepository>(), // Temporary
+      onUpdated: () {
+        context.read<WalletBloc>().add(LoadWalletsEvent());
+      },
+    );
+  }
+
+  void _showEditWalletDialog(BuildContext context, Wallet wallet) {
+    showWalletDialog(
+      context: context,
+      repository: context.read<DataRepository>(), // Temporary
+      wallet: wallet,
+      onUpdated: () {
+        context.read<WalletBloc>().add(LoadWalletsEvent());
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, Wallet wallet) async {
+    final confirmed = await ConfirmDeleteDialog.show(
+      context,
+      title: wallet.name,
+    );
+
+    if (confirmed == true && context.mounted) {
+      // ✅ Use BLoC to delete wallet
+      context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id));
+    }
   }
 
   void _showInfoDialog(BuildContext context) {

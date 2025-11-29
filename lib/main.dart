@@ -9,6 +9,7 @@ import 'package:cunehat/repository/models/income_model.dart';
 import 'package:cunehat/repository/data_repository.dart';
 import 'package:cunehat/repository/repo_services/local/local_data_service.dart';
 import 'package:cunehat/repository/repo_services/sync_service.dart';
+import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -127,6 +128,11 @@ class CuNehatEngine extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => ThemeBloc(),
+        ),
+        BlocProvider(
+          create: (context) => WalletBloc(
+            repository: context.read<DataRepository>(),
+          )..add(LoadWalletsEvent()),
         ),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
