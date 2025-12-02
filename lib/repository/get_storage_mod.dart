@@ -1,4 +1,4 @@
-import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/repository/repo_services/firestore/firestore_service.dart';
 import 'package:cunehat/repository/repo_services/idata_service.dart';
 import 'package:cunehat/repository/repo_services/local/local_data_service.dart';

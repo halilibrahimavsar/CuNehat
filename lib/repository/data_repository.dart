@@ -1,6 +1,6 @@
 // ignore_for_file: unnecessary_null_comparison
 
-import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/repository/get_storage_mod.dart';
 import 'package:cunehat/repository/models/expense_model.dart';
 import 'package:cunehat/repository/models/income_model.dart';

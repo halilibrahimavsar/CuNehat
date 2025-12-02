@@ -1,22 +1,22 @@
 // lib/pages/wallet_page.dart
 // ✅ FIXED: No longer creates duplicate WalletBloc (uses app-level one)
 
-import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
 import 'package:cunehat/repository/data_bloc/data_state.dart';
-import 'package:cunehat/repository/wallet_bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/provider/wallet_bloc/wallet_bloc.dart';
 import 'package:cunehat/pages/expense_pages/expense_page.dart';
 import 'package:cunehat/pages/income_pages/income_page.dart';
 import 'package:cunehat/pages/summary_pages/compare_view.dart';
-import 'package:cunehat/shared/animations/cube_animation_view.dart';
-import 'package:cunehat/shared/animations/slider_button_view.dart';
-import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
-import 'package:cunehat/shared/widgets/build_drawer.dart';
-import 'package:cunehat/shared/widgets/date_rang_pck.dart';
-import 'package:cunehat/shared/widgets/shared_appbar.dart';
-import 'package:cunehat/utilities/snackbar_helper.dart';
-import 'package:cunehat/utilities/date_range_helper.dart';
+import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
+import 'package:cunehat/core/shared/animations/slider_button_view.dart';
+import 'package:cunehat/core/shared/widgets/finance_entry_widget.dart';
+import 'package:cunehat/core/shared/widgets/build_drawer.dart';
+import 'package:cunehat/core/shared/widgets/date_rang_pck.dart';
+import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
+import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

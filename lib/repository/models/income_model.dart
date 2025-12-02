@@ -1,6 +1,6 @@
 // ignore: depend_on_referenced_packages
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/constants/repository_constants.dart';
+import 'package:cunehat/core/constants/repository_constants.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 

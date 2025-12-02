@@ -1,9 +1,9 @@
-import 'package:cunehat/constants/app_constants.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/repository/models/income_model.dart';
 import 'package:cunehat/repository/data_bloc/data_bloc.dart';
 import 'package:cunehat/repository/data_bloc/data_event.dart';
-import 'package:cunehat/shared/dialogs/confirmation_delete_dialog.dart';
-import 'package:cunehat/shared/widgets/finance_entry_widget.dart';
+import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/core/shared/widgets/finance_entry_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
