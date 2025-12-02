@@ -59,11 +59,11 @@ class SyncService {
 
         switch (operationType) {
           case 'add_income':
-            final income = Income.fromJson(data['id'], data);
+            final income = IncomeModel.fromJson(data['id'], data);
             await _firestoreService.addIncome(income: income);
             break;
           case 'add_expense':
-            final expense = Expense.fromJson(data['id'], data);
+            final expense = ExpenseModel.fromJson(data['id'], data);
             await _firestoreService.addExpense(expense: expense);
             break;
           case 'delete_income':
@@ -73,11 +73,11 @@ class SyncService {
             await _firestoreService.deleteExpense(id: data['id']);
             break;
           case 'update_income':
-            final income = Income.fromJson(data['id'], data);
+            final income = IncomeModel.fromJson(data['id'], data);
             await _firestoreService.updateIncome(income: income);
             break;
           case 'update_expense':
-            final expense = Expense.fromJson(data['id'], data);
+            final expense = ExpenseModel.fromJson(data['id'], data);
             await _firestoreService.updateExpense(expense: expense);
             break;
         }

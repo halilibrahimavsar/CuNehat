@@ -180,8 +180,8 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   Future<void> _onRefreshData(
       RefreshDataEvent event, Emitter<DataState> emit) async {
     emit(LoadingDataState());
-    final Map<DateTime, List<Income>> incomeData;
-    final Map<DateTime, List<Expense>> expenseData;
+    final Map<DateTime, List<IncomeModel>> incomeData;
+    final Map<DateTime, List<ExpenseModel>> expenseData;
     bool isFetchedIncome = false;
     bool isFetchedExpense = false;
 
@@ -236,13 +236,13 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   }
 
   /// ✅ DÜZELTME: Artık repository üzerinden aktif cüzdana göre filtreliyor
-  Future<Map<DateTime, List<Income>>> _fetchAndGroupIncome(
+  Future<Map<DateTime, List<IncomeModel>>> _fetchAndGroupIncome(
       DateTime firstDate, DateTime lastDate) async {
     // Repository zaten aktif cüzdana göre filtreliyor
     final incomes = await dataRepository.getIncomeByDateRange(
         firstDate: firstDate, lastDate: lastDate);
 
-    final Map<DateTime, List<Income>> grouped = {};
+    final Map<DateTime, List<IncomeModel>> grouped = {};
 
     for (final income in incomes) {
       final dayKey =
@@ -254,13 +254,13 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   }
 
   /// ✅ DÜZELTME: Artık repository üzerinden aktif cüzdana göre filtreliyor
-  Future<Map<DateTime, List<Expense>>> _fetchAndGroupExpense(
+  Future<Map<DateTime, List<ExpenseModel>>> _fetchAndGroupExpense(
       DateTime firstDate, DateTime lastDate) async {
     // Repository zaten aktif cüzdana göre filtreliyor
     final expenses = await dataRepository.getExpenseByDateRange(
         firstDate: firstDate, lastDate: lastDate);
 
-    final Map<DateTime, List<Expense>> grouped = {};
+    final Map<DateTime, List<ExpenseModel>> grouped = {};
 
     for (final expense in expenses) {
       final dayKey =

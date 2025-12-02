@@ -78,7 +78,7 @@ final class SyncFailedState extends DataState {}
 
 /// Income data successfully loaded
 final class SuccessfullyGetIncomeState extends DataState {
-  final Map<DateTime, List<Income>> data;
+  final Map<DateTime, List<IncomeModel>> data;
 
   const SuccessfullyGetIncomeState({required this.data});
 
@@ -88,7 +88,7 @@ final class SuccessfullyGetIncomeState extends DataState {
 
 /// Expense data successfully loaded
 final class SuccessfullyGetExpenseState extends DataState {
-  final Map<DateTime, List<Expense>> data;
+  final Map<DateTime, List<ExpenseModel>> data;
 
   const SuccessfullyGetExpenseState({required this.data});
 
@@ -98,8 +98,8 @@ final class SuccessfullyGetExpenseState extends DataState {
 
 /// Both income and expense data loaded for comparison
 final class SuccessfullyGetCompareState extends DataState {
-  final Map<DateTime, List<Expense>> expense;
-  final Map<DateTime, List<Income>> income;
+  final Map<DateTime, List<ExpenseModel>> expense;
+  final Map<DateTime, List<IncomeModel>> income;
 
   const SuccessfullyGetCompareState({
     required this.expense,

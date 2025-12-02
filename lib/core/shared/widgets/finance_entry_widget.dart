@@ -189,7 +189,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     if (_isEditMode) {
       // Düzenleme modu - mevcut ID'yi koru
       if (widget.isExpense) {
-        model = Expense(
+        model = ExpenseModel(
           id: widget.initialData!.id,
           userId: userId,
           title: title,
@@ -200,7 +200,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           walletId: currentWalletId,
         );
       } else {
-        model = Income(
+        model = IncomeModel(
           id: widget.initialData!.id,
           userId: userId,
           title: title,
@@ -214,7 +214,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     } else {
       // Yeni kayıt modu
       model = widget.isExpense
-          ? Expense.createLocal(
+          ? ExpenseModel.createLocal(
               userId: userId,
               title: title,
               amount: amount,
@@ -223,7 +223,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
               time: timeString,
               walletId: currentWalletId,
             )
-          : Income.createLocal(
+          : IncomeModel.createLocal(
               userId: userId,
               title: title,
               amount: amount,

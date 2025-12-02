@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 part 'expense_model.g.dart';
 
 @HiveType(typeId: 1)
-class Expense extends HiveObject {
+class ExpenseModel extends HiveObject {
   @HiveField(0)
   final String id;
 
@@ -32,7 +32,7 @@ class Expense extends HiveObject {
   @HiveField(7) // ⚠️ NEW FIELD
   final String walletId;
 
-  Expense({
+  ExpenseModel({
     required this.id,
     required this.userId,
     required this.title,
@@ -43,8 +43,8 @@ class Expense extends HiveObject {
     required this.walletId,
   });
 
-  factory Expense.fromJson(String id, Map<String, dynamic> json) {
-    return Expense(
+  factory ExpenseModel.fromJson(String id, Map<String, dynamic> json) {
+    return ExpenseModel(
       id: id,
       userId: json[fieldUserId] ?? '',
       title: json[fieldTitle] ?? '',
@@ -69,7 +69,7 @@ class Expense extends HiveObject {
     };
   }
 
-  factory Expense.createLocal({
+  factory ExpenseModel.createLocal({
     required String userId,
     required String title,
     required String tag,
@@ -78,7 +78,7 @@ class Expense extends HiveObject {
     required String time,
     required String walletId, // ⚠️ NEW PARAMETER
   }) {
-    return Expense(
+    return ExpenseModel(
       id: const Uuid().v4(),
       userId: userId,
       title: title,
@@ -94,7 +94,7 @@ class Expense extends HiveObject {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  Expense copyWith({
+  ExpenseModel copyWith({
     String? id,
     String? userId,
     String? title,
@@ -104,7 +104,7 @@ class Expense extends HiveObject {
     String? time,
     String? walletId,
   }) {
-    return Expense(
+    return ExpenseModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,

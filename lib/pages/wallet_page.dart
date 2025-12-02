@@ -8,7 +8,7 @@ import 'package:cunehat/repository/data_bloc/data_state.dart';
 import 'package:cunehat/features/wallet/presentation/provider/wallet_bloc/wallet_bloc.dart';
 import 'package:cunehat/pages/expense_pages/expense_page.dart';
 import 'package:cunehat/pages/income_pages/income_page.dart';
-import 'package:cunehat/pages/summary_pages/compare_view.dart';
+import 'package:cunehat/features/compare/presentation/page/compare_view.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/core/shared/animations/slider_button_view.dart';
 import 'package:cunehat/core/shared/widgets/finance_entry_widget.dart';

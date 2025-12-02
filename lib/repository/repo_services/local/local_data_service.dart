@@ -11,19 +11,19 @@ class LocalDataService implements IDataService {
   static const String _walletBoxName = HiveBoxes.wallets; // ⚠️ NEW
 
   Future<void> init() async {
-    await Hive.openBox<Expense>(_expenseBoxName);
-    await Hive.openBox<Income>(_incomeBoxName);
+    await Hive.openBox<ExpenseModel>(_expenseBoxName);
+    await Hive.openBox<IncomeModel>(_incomeBoxName);
     await Hive.openBox<Wallet>(_walletBoxName); // ⚠️ NEW
   }
 
-  Box<Expense> get _expenseBox => Hive.box<Expense>(_expenseBoxName);
-  Box<Income> get _incomeBox => Hive.box<Income>(_incomeBoxName);
+  Box<ExpenseModel> get _expenseBox => Hive.box<ExpenseModel>(_expenseBoxName);
+  Box<IncomeModel> get _incomeBox => Hive.box<IncomeModel>(_incomeBoxName);
   Box<Wallet> get _walletBox => Hive.box<Wallet>(_walletBoxName); // ⚠️ NEW
 
   // ============ EXPENSE OPERATIONS ============
 
   @override
-  Future<void> addExpense({required Expense expense}) async {
+  Future<void> addExpense({required ExpenseModel expense}) async {
     await _expenseBox.put(expense.id, expense);
   }
 
@@ -33,12 +33,12 @@ class LocalDataService implements IDataService {
   }
 
   @override
-  Future<void> updateExpense({required Expense expense}) async {
+  Future<void> updateExpense({required ExpenseModel expense}) async {
     await _expenseBox.put(expense.id, expense);
   }
 
   @override
-  Future<Iterable<Expense>> getExpenseByDateRange({
+  Future<Iterable<ExpenseModel>> getExpenseByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
@@ -53,12 +53,12 @@ class LocalDataService implements IDataService {
   }
 
   @override
-  Future<Iterable<Expense>> getAllExpenses() async {
+  Future<Iterable<ExpenseModel>> getAllExpenses() async {
     return _expenseBox.values;
   }
 
   @override
-  Future<Iterable<Expense>> getExpensesByWalletId(String walletId) async {
+  Future<Iterable<ExpenseModel>> getExpensesByWalletId(String walletId) async {
     return _expenseBox.values
         .where((expense) => expense.walletId == walletId)
         .toList()
@@ -68,7 +68,7 @@ class LocalDataService implements IDataService {
   // ============ INCOME OPERATIONS ============
 
   @override
-  Future<void> addIncome({required Income income}) async {
+  Future<void> addIncome({required IncomeModel income}) async {
     await _incomeBox.put(income.id, income);
   }
 
@@ -78,12 +78,12 @@ class LocalDataService implements IDataService {
   }
 
   @override
-  Future<void> updateIncome({required Income income}) async {
+  Future<void> updateIncome({required IncomeModel income}) async {
     await _incomeBox.put(income.id, income);
   }
 
   @override
-  Future<Iterable<Income>> getIncomeByDateRange({
+  Future<Iterable<IncomeModel>> getIncomeByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
@@ -98,12 +98,12 @@ class LocalDataService implements IDataService {
   }
 
   @override
-  Future<Iterable<Income>> getAllIncomes() async {
+  Future<Iterable<IncomeModel>> getAllIncomes() async {
     return _incomeBox.values;
   }
 
   @override
-  Future<Iterable<Income>> getIncomesByWalletId(String walletId) async {
+  Future<Iterable<IncomeModel>> getIncomesByWalletId(String walletId) async {
     return _incomeBox.values
         .where((income) => income.walletId == walletId)
         .toList()
@@ -158,14 +158,14 @@ class LocalDataService implements IDataService {
   }
 
   @override
-  Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
+  Future<void> batchAddExpenses(Iterable<ExpenseModel> expenses) async {
     if (expenses.isEmpty) return;
     final expenseMap = {for (var expense in expenses) expense.id: expense};
     await _expenseBox.putAll(expenseMap);
   }
 
   @override
-  Future<void> batchAddIncomes(Iterable<Income> incomes) async {
+  Future<void> batchAddIncomes(Iterable<IncomeModel> incomes) async {
     if (incomes.isEmpty) return;
     final incomeMap = {for (var income in incomes) income.id: income};
     await _incomeBox.putAll(incomeMap);
@@ -177,13 +177,13 @@ class LocalDataService implements IDataService {
     await _walletBox.deleteAll(walletIds);
   }
 
-  Future<void> batchDeleteExpenses(List<Expense> expenses) async {
+  Future<void> batchDeleteExpenses(List<ExpenseModel> expenses) async {
     if (expenses.isEmpty) return;
     final expenseIds = expenses.map((e) => e.id);
     await _expenseBox.deleteAll(expenseIds);
   }
 
-  Future<void> batchDeleteIncomes(List<Income> incomes) async {
+  Future<void> batchDeleteIncomes(List<IncomeModel> incomes) async {
     if (incomes.isEmpty) return;
     final incomeIds = incomes.map((i) => i.id);
     await _incomeBox.deleteAll(incomeIds);

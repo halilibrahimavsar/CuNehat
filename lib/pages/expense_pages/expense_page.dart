@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ExpenseView extends StatefulWidget {
-  final Map<DateTime, List<Expense>> expenseData;
+  final Map<DateTime, List<ExpenseModel>> expenseData;
 
   const ExpenseView({
     super.key,
@@ -131,7 +131,7 @@ class _ExpenseViewState extends State<ExpenseView> {
     );
   }
 
-  void _showEditExpenseSheet(BuildContext parentContext, Expense expense) {
+  void _showEditExpenseSheet(BuildContext parentContext, ExpenseModel expense) {
     final dataBloc = parentContext.read<DataBloc>();
 
     showModalBottomSheet(

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class IncomeView extends StatefulWidget {
-  final Map<DateTime, List<Income>> incomeData;
+  final Map<DateTime, List<IncomeModel>> incomeData;
 
   const IncomeView({
     super.key,
@@ -131,7 +131,7 @@ class _IncomeViewState extends State<IncomeView> {
     );
   }
 
-  void _showEditIncomeSheet(BuildContext parentContext, Income income) {
+  void _showEditIncomeSheet(BuildContext parentContext, IncomeModel income) {
     final dataBloc = parentContext.read<DataBloc>();
 
     showModalBottomSheet(

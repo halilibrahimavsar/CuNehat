@@ -6,17 +6,17 @@ part of 'income_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class IncomeAdapter extends TypeAdapter<Income> {
+class IncomeAdapter extends TypeAdapter<IncomeModel> {
   @override
   final int typeId = 0;
 
   @override
-  Income read(BinaryReader reader) {
+  IncomeModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Income(
+    return IncomeModel(
       id: fields[0] as String,
       userId: fields[1] as String,
       title: fields[2] as String,
@@ -29,7 +29,7 @@ class IncomeAdapter extends TypeAdapter<Income> {
   }
 
   @override
-  void write(BinaryWriter writer, Income obj) {
+  void write(BinaryWriter writer, IncomeModel obj) {
     writer
       ..writeByte(8)
       ..writeByte(0)

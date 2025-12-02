@@ -1,6 +1,3 @@
-// lib/pages/summary_pages/compare_view.dart
-// ✅ FIXED: Now uses BLoC instead of direct repository access
-
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -11,16 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-/// **CompareView**: Displays combined income/expense transactions
-///
-/// ✅ IMPROVEMENTS:
-/// - Removed direct repository access
-/// - Now uses WalletBloc for wallet data
-/// - Proper BLoC pattern implementation
-/// - Better separation of concerns
 class CompareView extends StatelessWidget {
-  final Map<DateTime, List<Income>> incomeData;
-  final Map<DateTime, List<Expense>> expenseData;
+  final Map<DateTime, List<IncomeModel>> incomeData;
+  final Map<DateTime, List<ExpenseModel>> expenseData;
 
   CompareView({
     super.key,
@@ -352,11 +342,12 @@ class CompareView extends StatelessWidget {
 
                   for (int i = 0; i < index; i++) {
                     final transaction = combinedList[i];
-                    if (transaction.item is Income) {
-                      balanceAtThisPoint -= (transaction.item as Income).amount;
-                    } else if (transaction.item is Expense) {
+                    if (transaction.item is IncomeModel) {
+                      balanceAtThisPoint -=
+                          (transaction.item as IncomeModel).amount;
+                    } else if (transaction.item is ExpenseModel) {
                       balanceAtThisPoint +=
-                          (transaction.item as Expense).amount;
+                          (transaction.item as ExpenseModel).amount;
                     }
                   }
 
@@ -384,8 +375,8 @@ class CompareView extends StatelessWidget {
     required bool isBalanceVisible,
   }) {
     final item = transaction.item;
-    final isIncome = item is Income;
-    final amount = isIncome ? (item).amount : (item as Expense).amount;
+    final isIncome = item is IncomeModel;
+    final amount = isIncome ? (item).amount : (item as ExpenseModel).amount;
 
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + (index * 50)),

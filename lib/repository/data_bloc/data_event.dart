@@ -58,7 +58,7 @@ class GetIncomeByDateRngEvent extends DataEvent {
 
 /// Adds a new expense
 class AddExpenseEvent extends DataEvent {
-  final Expense expense;
+  final ExpenseModel expense;
   const AddExpenseEvent({required this.expense});
 
   @override
@@ -67,7 +67,7 @@ class AddExpenseEvent extends DataEvent {
 
 /// Adds a new income
 class AddIncomeEvent extends DataEvent {
-  final Income income;
+  final IncomeModel income;
   const AddIncomeEvent({required this.income});
 
   @override
@@ -77,7 +77,7 @@ class AddIncomeEvent extends DataEvent {
 /// Deletes an expense by ID
 class DeleteExpenseEvent extends DataEvent {
   final String id;
-  final Expense expense;
+  final ExpenseModel expense;
 
   const DeleteExpenseEvent({required this.expense, required this.id});
 
@@ -88,7 +88,7 @@ class DeleteExpenseEvent extends DataEvent {
 /// Deletes an income by ID
 class DeleteIncomeEvent extends DataEvent {
   final String id;
-  final Income income;
+  final IncomeModel income;
   const DeleteIncomeEvent({required this.income, required this.id});
 
   @override
@@ -97,7 +97,7 @@ class DeleteIncomeEvent extends DataEvent {
 
 /// Updates an existing expense
 class UpdateExpenseEvent extends DataEvent {
-  final Expense expense;
+  final ExpenseModel expense;
   const UpdateExpenseEvent({required this.expense});
 
   @override
@@ -106,7 +106,7 @@ class UpdateExpenseEvent extends DataEvent {
 
 /// Updates an existing income
 class UpdateIncomeEvent extends DataEvent {
-  final Income income;
+  final IncomeModel income;
   const UpdateIncomeEvent({required this.income});
 
   @override

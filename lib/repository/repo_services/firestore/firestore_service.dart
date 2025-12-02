@@ -33,7 +33,7 @@ class FirestoreService implements IDataService {
   // ============ EXPENSE OPERATIONS ============
 
   @override
-  Future<void> addExpense({required Expense expense}) async {
+  Future<void> addExpense({required ExpenseModel expense}) async {
     try {
       await _expenseCollection(expense.walletId)
           .doc(expense.id)
@@ -62,7 +62,7 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<void> updateExpense({required Expense expense}) async {
+  Future<void> updateExpense({required ExpenseModel expense}) async {
     try {
       await _expenseCollection(expense.walletId)
           .doc(expense.id)
@@ -73,14 +73,14 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<Iterable<Expense>> getExpenseByDateRange({
+  Future<Iterable<ExpenseModel>> getExpenseByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
     try {
       // 1. Kullanıcıya ait tüm cüzdanları al.
       final wallets = await getAllWallets();
-      final allExpenses = <Expense>[];
+      final allExpenses = <ExpenseModel>[];
 
       // 2. Her cüzdan için belirtilen tarih aralığındaki giderleri çek.
       for (final wallet in wallets) {
@@ -89,8 +89,8 @@ class FirestoreService implements IDataService {
                 isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
                 isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
             .get();
-        allExpenses.addAll(
-            snapshot.docs.map((doc) => Expense.fromJson(doc.id, doc.data())));
+        allExpenses.addAll(snapshot.docs
+            .map((doc) => ExpenseModel.fromJson(doc.id, doc.data())));
       }
       // DÜZELTME: Liste zaten doğru formatta, tekrar map'lemeye gerek yok.
       return allExpenses;
@@ -100,15 +100,15 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<Iterable<Expense>> getAllExpenses() async {
+  Future<Iterable<ExpenseModel>> getAllExpenses() async {
     try {
       final wallets = await getAllWallets();
-      final allExpenses = <Expense>[];
+      final allExpenses = <ExpenseModel>[];
 
       for (final wallet in wallets) {
         final snapshot = await _expenseCollection(wallet.id).get();
-        allExpenses.addAll(
-            snapshot.docs.map((doc) => Expense.fromJson(doc.id, doc.data())));
+        allExpenses.addAll(snapshot.docs
+            .map((doc) => ExpenseModel.fromJson(doc.id, doc.data())));
       }
 
       return allExpenses.toList();
@@ -118,12 +118,12 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<Iterable<Expense>> getExpensesByWalletId(String walletId) async {
+  Future<Iterable<ExpenseModel>> getExpensesByWalletId(String walletId) async {
     try {
       final snapshot = await _expenseCollection(walletId).get();
 
       return snapshot.docs
-          .map((doc) => Expense.fromJson(doc.id, doc.data()))
+          .map((doc) => ExpenseModel.fromJson(doc.id, doc.data()))
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
     } catch (e) {
@@ -134,7 +134,7 @@ class FirestoreService implements IDataService {
   // ============ INCOME OPERATIONS ============
 
   @override
-  Future<void> addIncome({required Income income}) async {
+  Future<void> addIncome({required IncomeModel income}) async {
     try {
       await _incomeCollection(income.walletId)
           .doc(income.id)
@@ -163,7 +163,7 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<void> updateIncome({required Income income}) async {
+  Future<void> updateIncome({required IncomeModel income}) async {
     try {
       await _incomeCollection(income.walletId)
           .doc(income.id)
@@ -174,14 +174,14 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<Iterable<Income>> getIncomeByDateRange({
+  Future<Iterable<IncomeModel>> getIncomeByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
     try {
       // 1. Kullanıcıya ait tüm cüzdanları al.
       final wallets = await getAllWallets();
-      final allIncomes = <Income>[];
+      final allIncomes = <IncomeModel>[];
 
       // 2. Her cüzdan için belirtilen tarih aralığındaki gelirleri çek.
       for (final wallet in wallets) {
@@ -190,8 +190,8 @@ class FirestoreService implements IDataService {
                 isGreaterThanOrEqualTo: Timestamp.fromDate(firstDate),
                 isLessThanOrEqualTo: Timestamp.fromDate(lastDate))
             .get();
-        allIncomes.addAll(
-            snapshot.docs.map((doc) => Income.fromJson(doc.id, doc.data())));
+        allIncomes.addAll(snapshot.docs
+            .map((doc) => IncomeModel.fromJson(doc.id, doc.data())));
       }
       // DÜZELTME: Liste zaten doğru formatta, tekrar map'lemeye gerek yok.
       return allIncomes;
@@ -201,15 +201,15 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<Iterable<Income>> getAllIncomes() async {
+  Future<Iterable<IncomeModel>> getAllIncomes() async {
     try {
       final wallets = await getAllWallets();
-      final allIncomes = <Income>[];
+      final allIncomes = <IncomeModel>[];
 
       for (final wallet in wallets) {
         final snapshot = await _incomeCollection(wallet.id).get();
-        allIncomes.addAll(
-            snapshot.docs.map((doc) => Income.fromJson(doc.id, doc.data())));
+        allIncomes.addAll(snapshot.docs
+            .map((doc) => IncomeModel.fromJson(doc.id, doc.data())));
       }
 
       return allIncomes.toList();
@@ -219,12 +219,12 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<Iterable<Income>> getIncomesByWalletId(String walletId) async {
+  Future<Iterable<IncomeModel>> getIncomesByWalletId(String walletId) async {
     try {
       final snapshot = await _incomeCollection(walletId).get();
 
       return snapshot.docs
-          .map((doc) => Income.fromJson(doc.id, doc.data()))
+          .map((doc) => IncomeModel.fromJson(doc.id, doc.data()))
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
     } catch (e) {
@@ -320,7 +320,7 @@ class FirestoreService implements IDataService {
 
 // ============ BATCH OPERATIONS ============
   @override
-  Future<void> batchAddExpenses(Iterable<Expense> expenses) async {
+  Future<void> batchAddExpenses(Iterable<ExpenseModel> expenses) async {
     try {
       if (expenses.isEmpty) return;
       final walletId = expenses
@@ -338,7 +338,7 @@ class FirestoreService implements IDataService {
   }
 
   @override
-  Future<void> batchAddIncomes(Iterable<Income> incomes) async {
+  Future<void> batchAddIncomes(Iterable<IncomeModel> incomes) async {
     try {
       if (incomes.isEmpty) return;
       final walletId = incomes
@@ -355,7 +355,7 @@ class FirestoreService implements IDataService {
     }
   }
 
-  Future<void> batchDeleteExpenses(Iterable<Expense> expenses) async {
+  Future<void> batchDeleteExpenses(Iterable<ExpenseModel> expenses) async {
     try {
       if (expenses.isEmpty) return;
       final walletId = expenses.first.walletId;
@@ -371,7 +371,7 @@ class FirestoreService implements IDataService {
     }
   }
 
-  Future<void> batchDeleteIncomes(Iterable<Income> incomes) async {
+  Future<void> batchDeleteIncomes(Iterable<IncomeModel> incomes) async {
     try {
       if (incomes.isEmpty) return;
       final walletId = incomes.first.walletId;

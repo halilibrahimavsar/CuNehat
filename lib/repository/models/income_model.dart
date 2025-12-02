@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 part 'income_model.g.dart';
 
 @HiveType(typeId: 0)
-class Income extends HiveObject {
+class IncomeModel extends HiveObject {
   @HiveField(0)
   final String id;
 
@@ -32,7 +32,7 @@ class Income extends HiveObject {
   @HiveField(7) // ⚠️ NEW FIELD
   final String walletId;
 
-  Income({
+  IncomeModel({
     required this.id,
     required this.userId,
     required this.title,
@@ -43,8 +43,8 @@ class Income extends HiveObject {
     required this.walletId,
   });
 
-  factory Income.fromJson(String id, Map<String, dynamic> json) {
-    return Income(
+  factory IncomeModel.fromJson(String id, Map<String, dynamic> json) {
+    return IncomeModel(
       id: id,
       userId: json[fieldUserId] ?? '',
       title: json[fieldTitle] ?? '',
@@ -69,7 +69,7 @@ class Income extends HiveObject {
     };
   }
 
-  factory Income.createLocal({
+  factory IncomeModel.createLocal({
     required String userId,
     required String title,
     required String tag,
@@ -78,7 +78,7 @@ class Income extends HiveObject {
     required String time,
     required String walletId, // ⚠️ NEW PARAMETER
   }) {
-    return Income(
+    return IncomeModel(
       id: const Uuid().v4(),
       userId: userId,
       title: title,
@@ -90,7 +90,7 @@ class Income extends HiveObject {
     );
   }
 
-  Income copyWith({
+  IncomeModel copyWith({
     String? id,
     String? userId,
     String? title,
@@ -100,7 +100,7 @@ class Income extends HiveObject {
     String? time,
     String? walletId,
   }) {
-    return Income(
+    return IncomeModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,

@@ -166,7 +166,7 @@ class DataRepository {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
     final now = DateTime.now();
 
-    final expense = Expense.createLocal(
+    final expense = ExpenseModel.createLocal(
       userId: userId,
       title: 'Transfer to ${toWallet.name}',
       tag: 'Transfer',
@@ -176,7 +176,7 @@ class DataRepository {
       walletId: fromWalletId,
     );
 
-    final income = Income.createLocal(
+    final income = IncomeModel.createLocal(
       userId: userId,
       title: 'Transfer from ${fromWallet.name}',
       tag: 'Transfer',
@@ -212,7 +212,7 @@ class DataRepository {
   /// Gider ekler ve cüzdan bakiyesini günceller.
   /// Eğer giderin ait olduğu cüzdan bulunamazsa, varsayılan bir cüzdan oluşturur
   /// ve gideri bu yeni cüzdana atar.
-  Future<void> addExpense({required Expense expense}) async {
+  Future<void> addExpense({required ExpenseModel expense}) async {
     var targetWallet = await getWalletById(expense.walletId);
     var expenseToAdd = expense;
 
@@ -247,7 +247,7 @@ class DataRepository {
   /// Gelir ekler ve cüzdan bakiyesini günceller.
   /// Eğer gelirin ait olduğu cüzdan bulunamazsa, varsayılan bir cüzdan oluşturur
   /// ve geliri bu yeni cüzdana atar.
-  Future<void> addIncome({required Income income}) async {
+  Future<void> addIncome({required IncomeModel income}) async {
     var targetWallet = await getWalletById(income.walletId);
     var incomeToAdd = income;
 
@@ -311,7 +311,7 @@ class DataRepository {
   }
 
 // ➕ YENİ: Helper methods - item'ı ID ile getir
-  Future<Expense?> _getExpenseById(String id) async {
+  Future<ExpenseModel?> _getExpenseById(String id) async {
     final allExpenses = await _getStorageMod.dataService.getAllExpenses();
     try {
       return allExpenses.firstWhere((e) => e.id == id);
@@ -320,7 +320,7 @@ class DataRepository {
     }
   }
 
-  Future<Income?> _getIncomeById(String id) async {
+  Future<IncomeModel?> _getIncomeById(String id) async {
     final allIncomes = await _getStorageMod.dataService.getAllIncomes();
     try {
       return allIncomes.firstWhere((i) => i.id == id);
@@ -330,7 +330,7 @@ class DataRepository {
   }
 
   // ============ UPDATE OPERATIONS ============
-  Future<void> updateExpense({required Expense expense}) async {
+  Future<void> updateExpense({required ExpenseModel expense}) async {
     debugPrint('🔄 [REPO] Updating expense: ${expense.id}');
 
     // 1. Eski expense'i çek
@@ -347,7 +347,7 @@ class DataRepository {
     await _updateBalanceAfterExpenseChange(oldExpense, expense);
   }
 
-  Future<void> updateIncome({required Income income}) async {
+  Future<void> updateIncome({required IncomeModel income}) async {
     debugPrint('🔄 [REPO] Updating income: ${income.id}');
 
     // 1. Eski income'u çek
@@ -366,8 +366,8 @@ class DataRepository {
 
 // ➕ YENİ: Balance update helpers
   Future<void> _updateBalanceAfterExpenseChange(
-    Expense oldExpense,
-    Expense newExpense,
+    ExpenseModel oldExpense,
+    ExpenseModel newExpense,
   ) async {
     // Senaryo 1: Farklı cüzdanlara taşındı
     if (oldExpense.walletId != newExpense.walletId) {
@@ -407,8 +407,8 @@ class DataRepository {
   }
 
   Future<void> _updateBalanceAfterIncomeChange(
-    Income oldIncome,
-    Income newIncome,
+    IncomeModel oldIncome,
+    IncomeModel newIncome,
   ) async {
     // Senaryo 1: Farklı cüzdanlara taşındı
     if (oldIncome.walletId != newIncome.walletId) {
@@ -450,7 +450,7 @@ class DataRepository {
   // ============ READ OPERATIONS - WALLET FILTERED ============
 
   /// ➕ YENİ: Aktif cüzdanın giderlerini tarih aralığına göre getir
-  Future<Iterable<Expense>> getExpenseByDateRange({
+  Future<Iterable<ExpenseModel>> getExpenseByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
@@ -471,7 +471,7 @@ class DataRepository {
   }
 
   /// ➕ YENİ: Aktif cüzdanın gelirlerini tarih aralığına göre getir
-  Future<Iterable<Income>> getIncomeByDateRange({
+  Future<Iterable<IncomeModel>> getIncomeByDateRange({
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
@@ -492,24 +492,24 @@ class DataRepository {
   }
 
   /// Tüm cüzdanların giderlerini getir (Ayarlar sayfası için)
-  Future<Iterable<Expense>> getAllExpensesAllWallets() async {
+  Future<Iterable<ExpenseModel>> getAllExpensesAllWallets() async {
     debugPrint('📥 [REPO] getAllExpensesAllWallets called');
     return await _getStorageMod.dataService.getAllExpenses();
   }
 
   /// Tüm cüzdanların gelirlerini getir (Ayarlar sayfası için)
-  Future<Iterable<Income>> getAllIncomesAllWallets() async {
+  Future<Iterable<IncomeModel>> getAllIncomesAllWallets() async {
     debugPrint('📥 [REPO] getAllIncomesAllWallets called');
     return await _getStorageMod.dataService.getAllIncomes();
   }
 
   /// Belirli bir cüzdanın giderlerini getir
-  Future<Iterable<Expense>> getExpensesByWalletId(String walletId) async {
+  Future<Iterable<ExpenseModel>> getExpensesByWalletId(String walletId) async {
     return _getStorageMod.dataService.getExpensesByWalletId(walletId);
   }
 
   /// Belirli bir cüzdanın gelirlerini getir
-  Future<Iterable<Income>> getIncomesByWalletId(String walletId) async {
+  Future<Iterable<IncomeModel>> getIncomesByWalletId(String walletId) async {
     return _getStorageMod.dataService.getIncomesByWalletId(walletId);
   }
 
@@ -583,12 +583,12 @@ class DataRepository {
     debugPrint('   Step 2: Writing data to destination ($newMode)...');
     if (destService is FirestoreService) {
       await destService.batchAddWallets(allWallets.cast<Wallet>());
-      await destService.batchAddIncomes(allIncomes.cast<Income>());
-      await destService.batchAddExpenses(allExpenses.cast<Expense>());
+      await destService.batchAddIncomes(allIncomes.cast<IncomeModel>());
+      await destService.batchAddExpenses(allExpenses.cast<ExpenseModel>());
     } else if (destService is LocalDataService) {
       await destService.batchAddWallets(allWallets.cast<Wallet>());
-      await destService.batchAddIncomes(allIncomes.cast<Income>());
-      await destService.batchAddExpenses(allExpenses.cast<Expense>());
+      await destService.batchAddIncomes(allIncomes.cast<IncomeModel>());
+      await destService.batchAddExpenses(allExpenses.cast<ExpenseModel>());
     }
     debugPrint('   ✓ Data successfully written.');
 
