@@ -1,0 +1,50 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/repository/wallet_data_service.dart';
+
+class WalletFirestoreDataSource implements WalletDataService {
+  @override
+  Future<void> createWallet(WalletModel wallet) async {
+    await FirebaseFirestore.instance
+        .collection('wallets')
+        .doc(wallet.id)
+        .set(wallet.toJson());
+  }
+
+  @override
+  Stream<List<WalletModel>> getWallets(String userId) {
+    return FirebaseFirestore.instance
+        .collection('wallets')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => WalletModel.fromJson(
+                  doc.id,
+                  doc.data(),
+                ))
+            .toList());
+  }
+
+  @override
+  Future<void> updateWallet(WalletModel wallet) async {
+    await FirebaseFirestore.instance
+        .collection('wallets')
+        .doc(wallet.id)
+        .update(wallet.toJson());
+  }
+
+  @override
+  Future<void> deleteWallet(String walletId) async {
+    await FirebaseFirestore.instance
+        .collection('wallets')
+        .doc(walletId)
+        .delete();
+  }
+
+  @override
+  Future<void> setActiveWallet(
+      {required String userId, required String newActiveWalletId}) async {
+    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+    await userRef.update({'activeWalletId': newActiveWalletId});
+  }
+}

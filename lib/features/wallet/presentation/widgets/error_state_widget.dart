@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
-class EmptyStateWidget extends StatelessWidget {
-  const EmptyStateWidget({
+class ErrorStateWidget extends StatelessWidget {
+  final String errorMessage;
+
+  const ErrorStateWidget({
     super.key,
+    required this.errorMessage,
   });
 
   @override
@@ -13,7 +16,7 @@ class EmptyStateWidget extends StatelessWidget {
         children: [
           Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
           const SizedBox(height: 16),
-          Text('cüzdan yok'),
+          Text('Hata: $errorMessage'),
           const SizedBox(height: 16),
         ],
       ),

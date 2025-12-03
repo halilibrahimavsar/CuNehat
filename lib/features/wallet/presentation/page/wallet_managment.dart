@@ -1,26 +1,13 @@
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/empty_state_widget.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/error_state_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_dialog_handler.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:flutter/material.dart';
-
-List<WalletModel> wallets = List.generate(
-  3,
-  (index) {
-    return WalletModel(
-      id: index.toString(),
-      userId: index.toString(),
-      name: index.toString(),
-      balance: index.toDouble(),
-      colorHex: index.toString(),
-      iconName: index.toString(),
-      createdAt: DateTime.now(),
-      isActive: index == 0,
-      sortOrder: index,
-    );
-  },
-);
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WalletManagementPage extends StatelessWidget {
   const WalletManagementPage({super.key});
@@ -36,37 +23,56 @@ class _WalletManagementView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cüzdanlarım'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => WalletInfoDialog.show(context),
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: wallets.length,
-        itemBuilder: (context, index) {
-          final wallet = wallets[index];
-          final isActive = true;
+    return BlocConsumer<WalletBloc, WalletState>(
+      listener: (context, walletState) {},
+      builder: (context, walletState) {
+        switch (walletState) {
+          case NoDataSt():
+            return EmptyStateWidget();
+          case WalletLoadingSt():
+            return const Center(child: CircularProgressIndicator());
+          case WalletLoadedSt():
+            final wallets = walletState.wallets;
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Cüzdanlarım'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () => WalletInfoDialog.show(context),
+                  ),
+                ],
+              ),
+              body: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: walletState.wallets.length,
+                itemBuilder: (context, index) {
+                  final wallet = wallets[index];
+                  final isActive = true;
 
-          return WalletCardWidget(
-            wallet: wallet,
-            isActive: isActive,
-            onTap: () {},
-            onEdit: () => _showEditWalletDialog(context, wallet),
-            onDelete: () => _confirmDelete(context, wallet),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateWalletDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Yeni Cüzdan'),
-      ),
+                  return WalletCardWidget(
+                    wallet: wallet,
+                    isActive: isActive,
+                    onTap: () {},
+                    onEdit: () => _showEditWalletDialog(context, wallet),
+                    onDelete: () => _confirmDelete(context, wallet),
+                  );
+                },
+              ),
+              floatingActionButton: FloatingActionButton.extended(
+                onPressed: () => _showCreateWalletDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Yeni Cüzdan'),
+              ),
+            );
+
+          case WalletErrorSt():
+            return ErrorStateWidget(errorMessage: walletState.err);
+
+          default:
+            return Text("default");
+        }
+      },
     );
   }
 

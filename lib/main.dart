@@ -1,6 +1,7 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
 import 'package:cunehat/models/investment_model.dart';
@@ -48,8 +49,15 @@ void main() async {
   // syncService.startAutoSync();
   // debugPrint('✅ Auto-sync enabled');
 
-  runApp(BlocProvider(
-    create: (context) => ThemeBloc(),
+  runApp(MultiBlocProvider(
+    providers: [
+      BlocProvider(
+        create: (context) => ThemeBloc(),
+      ),
+      BlocProvider(
+        create: (context) => WalletBloc(),
+      ),
+    ],
     child: const CallFirebaseAuth(privateWidget: CuNehatEngine()),
   ));
 }
