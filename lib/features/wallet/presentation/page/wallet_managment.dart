@@ -1,4 +1,5 @@
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
@@ -62,14 +63,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
                 userId: FirebaseAuth.instance.currentUser!.uid,
                 wallet: null, // null = create mode
                 onSuccess: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Cüzdan oluşturuldu!')),
-                  );
+                  SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');
                 },
                 onError: (error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Hata: $error')),
-                  );
+                  SnackbarHelper.showError(context, error);
                 },
               );
             },
@@ -117,8 +114,15 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
             );
           },
           // delete
-          onDelete: () =>
-              ConfirmDeleteDialog.show(context, title: "Cüzdanı Sil"),
+          onDelete: () => ConfirmDeleteDialog.show(
+            context,
+            title: "Cüzdanı Sil",
+            onDelete: () {
+              context.read<WalletBloc>().add(
+                    DeleteWalletEvent(wallet.id),
+                  );
+            },
+          ),
         );
       },
     );

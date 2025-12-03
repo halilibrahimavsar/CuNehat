@@ -2,18 +2,26 @@ import 'package:flutter/material.dart';
 
 class ConfirmDeleteDialog extends StatelessWidget {
   final String title;
+  final VoidCallback? onDelete;
 
-  const ConfirmDeleteDialog({super.key, required this.title});
+  const ConfirmDeleteDialog({
+    super.key,
+    required this.title,
+    this.onDelete, // opsiyonel
+  });
 
-  /// Kullanımı kolaylaştıran statik metod
   static Future<bool?> show(
     BuildContext context, {
     required String title,
-  }) async {
-    return await showDialog<bool>(
+    VoidCallback? onDelete, // buraya da ekleyelim ki dışarıdan verebilelim
+  }) {
+    return showDialog<bool>(
       context: context,
-      barrierDismissible: false, // dışarı tıklayınca kapanmasın
-      builder: (ctx) => ConfirmDeleteDialog(title: title),
+      barrierDismissible: false,
+      builder: (ctx) => ConfirmDeleteDialog(
+        title: title,
+        onDelete: onDelete,
+      ),
     );
   }
 
@@ -21,19 +29,12 @@ class ConfirmDeleteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      icon: const Icon(
-        Icons.warning_amber_rounded,
-        color: Colors.orange,
-        size: 48,
-      ),
-      title: const Text(
-        'Silme Onayı',
-        textAlign: TextAlign.center,
-      ),
+      icon: const Icon(Icons.warning_amber_rounded,
+          color: Colors.orange, size: 48),
+      title: const Text('Silme Onayı', textAlign: TextAlign.center),
       content: Text(
         '"$title" adlı geliri silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyMedium,
       ),
       actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: [
@@ -42,7 +43,10 @@ class ConfirmDeleteDialog extends StatelessWidget {
           child: const Text('İptal'),
         ),
         ElevatedButton.icon(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () {
+            onDelete?.call(); // <-- varsa çalışır, yoksa hiçbir şey yapmaz
+            Navigator.of(context).pop(true);
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,
