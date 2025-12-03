@@ -44,7 +44,22 @@ class WalletFirestoreDataSource implements WalletDataService {
   @override
   Future<void> setActiveWallet(
       {required String userId, required String newActiveWalletId}) async {
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-    await userRef.update({'activeWalletId': newActiveWalletId});
+    final walletsRef = FirebaseFirestore.instance.collection('wallets');
+    final querySnapshot =
+        await walletsRef.where('userId', isEqualTo: userId).get();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in querySnapshot.docs) {
+      final walletId = doc.id;
+      final isActive = walletId == newActiveWalletId;
+      batch.update(walletsRef.doc(walletId), {'isActive': isActive});
+    }
+
+    await batch.commit();
+
+    // Kullanıcı belgesinde aktif cüzdan ID'sini saklamaya devam edebilirsiniz.
+    // final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+    // await userRef.update({'activeWalletId': newActiveWalletId});
   }
 }

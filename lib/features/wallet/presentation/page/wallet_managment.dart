@@ -60,7 +60,8 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
             onPressed: () {
               showCreateEditDialog(
                 context: context,
-                userId: FirebaseAuth.instance.currentUser!.uid,
+                userId: FirebaseAuth.instance.currentUser!
+                    .uid, // TODO : This one is hardcoded, fix it ( in everywhere in the project)
                 wallet: null, // null = create mode
                 onSuccess: () {
                   SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');

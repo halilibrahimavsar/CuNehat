@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:flutter/material.dart';
