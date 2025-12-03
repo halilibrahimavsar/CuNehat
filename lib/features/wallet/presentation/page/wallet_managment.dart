@@ -1,10 +1,12 @@
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/empty_state_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/error_state_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -55,7 +57,21 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
           body: _buildBody(state),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () {
-              // TODO : yeni cüzdan ekle
+              showCreateEditDialog(
+                context: context,
+                userId: FirebaseAuth.instance.currentUser!.uid,
+                wallet: null, // null = create mode
+                onSuccess: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Cüzdan oluşturuldu!')),
+                  );
+                },
+                onError: (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Hata: $error')),
+                  );
+                },
+              );
             },
             icon: const Icon(Icons.add),
             label: const Text('Yeni Cüzdan'),
@@ -92,7 +108,13 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
               )),
           // edit
           onEdit: () {
-            // TODO : cüzdan düzenle
+            showCreateEditDialog(
+              context: context,
+              userId: FirebaseAuth.instance.currentUser!.uid,
+              wallet: wallet, // non-null = edit mode
+              onSuccess: () {/* ... */},
+              onError: (error) {/* ... */},
+            );
           },
           // delete
           onDelete: () =>
