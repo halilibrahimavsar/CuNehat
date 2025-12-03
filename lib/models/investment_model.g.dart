@@ -1,53 +1,50 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'expense_model.dart';
+part of 'investment_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
+class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
   @override
-  final int typeId = 1;
+  final int typeId = 4;
 
   @override
-  ExpenseModel read(BinaryReader reader) {
+  InvestmentModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ExpenseModel(
-      id: fields[0] as String,
-      userId: fields[1] as String,
-      title: fields[2] as String,
-      tag: fields[3] as String,
-      amount: fields[4] as double,
-      date: fields[5] as DateTime,
-      time: fields[6] as String,
-      walletId: fields[7] as String,
+    return InvestmentModel(
+      name: fields[0] as String,
+      symbol: fields[1] as String,
+      type: fields[2] as String,
+      quantity: fields[3] as double,
+      buyPrice: fields[4] as double,
+      currentPrice: fields[5] as double,
+      buyDate: fields[6] as DateTime,
     );
   }
 
   @override
-  void write(BinaryWriter writer, ExpenseModel obj) {
+  void write(BinaryWriter writer, InvestmentModel obj) {
     writer
-      ..writeByte(8)
-      ..writeByte(0)
-      ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.userId)
-      ..writeByte(2)
-      ..write(obj.title)
-      ..writeByte(3)
-      ..write(obj.tag)
-      ..writeByte(4)
-      ..write(obj.amount)
-      ..writeByte(5)
-      ..write(obj.date)
-      ..writeByte(6)
-      ..write(obj.time)
       ..writeByte(7)
-      ..write(obj.walletId);
+      ..writeByte(0)
+      ..write(obj.name)
+      ..writeByte(1)
+      ..write(obj.symbol)
+      ..writeByte(2)
+      ..write(obj.type)
+      ..writeByte(3)
+      ..write(obj.quantity)
+      ..writeByte(4)
+      ..write(obj.buyPrice)
+      ..writeByte(5)
+      ..write(obj.currentPrice)
+      ..writeByte(6)
+      ..write(obj.buyDate);
   }
 
   @override
@@ -56,7 +53,7 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ExpenseModelAdapter &&
+      other is InvestmentModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

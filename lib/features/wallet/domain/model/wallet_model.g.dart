@@ -6,7 +6,7 @@ part of 'wallet_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class WalletAdapter extends TypeAdapter<WalletModel> {
+class WalletModelAdapter extends TypeAdapter<WalletModel> {
   @override
   final int typeId = 3;
 
@@ -59,7 +59,7 @@ class WalletAdapter extends TypeAdapter<WalletModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WalletAdapter &&
+      other is WalletModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

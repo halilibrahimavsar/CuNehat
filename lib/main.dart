@@ -3,6 +3,7 @@ import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
+import 'package:cunehat/models/investment_model.dart';
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -21,9 +22,14 @@ void main() async {
   await Hive.initFlutter();
 
   // Register type adapters
-  Hive.registerAdapter(IncomeAdapter());
-  Hive.registerAdapter(ExpenseAdapter());
-  Hive.registerAdapter(WalletAdapter());
+  Hive.registerAdapter(IncomeModelAdapter());
+  Hive.registerAdapter(ExpenseModelAdapter());
+  Hive.registerAdapter(WalletModelAdapter());
+  Hive.registerAdapter(InvestmentModelAdapter());
+  // await Hive.openBox<IncomeModel>('incomes');
+  // await Hive.openBox<ExpenseModel>('expenses');
+  // await Hive.openBox<WalletModel>('wallets');
+  await Hive.openBox<InvestmentModel>('investments');
 
   debugPrint('✅ Hive TypeAdapters registered');
 

@@ -57,6 +57,14 @@ class SharedDrawer extends StatelessWidget {
               context.push(AppRoutes.settings);
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Yatırım Takip'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push(AppRoutes.investment);
+            },
+          ),
 
           // Future menu items can be added here:
           // - Analytics/Reports

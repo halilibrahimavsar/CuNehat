@@ -6,7 +6,7 @@ part of 'income_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class IncomeAdapter extends TypeAdapter<IncomeModel> {
+class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
   @override
   final int typeId = 0;
 
@@ -56,7 +56,7 @@ class IncomeAdapter extends TypeAdapter<IncomeModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is IncomeAdapter &&
+      other is IncomeModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
