@@ -3,11 +3,9 @@
 
 // ignore_for_file: deprecated_member_use
 
-import 'package:cunehat/features/wallet/presentation/provider/wallet_bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// **SharedAppbar**: Reactive app bar with wallet integration
 ///
@@ -97,25 +95,16 @@ class _SharedAppbarState extends State<SharedAppbar> {
       title: _buildTitle(context, currentValue),
       actions: [
         // ✅ Wallet management button with badge
-        BlocBuilder<WalletBloc, WalletState>(
-          builder: (context, state) {
-            return IconButton(
-              onPressed: () => _showWalletManagement(context),
-              icon: Badge(
-                label: state is WalletsLoaded && state.wallets.length > 1
-                    ? Text('${state.wallets.length}')
-                    : null,
-                isLabelVisible:
-                    state is WalletsLoaded && state.wallets.length > 1,
-                child: Icon(
-                  Icons.wallet_rounded,
-                  size: 24,
-                  color: _getContentColor(currentValue),
-                ),
-              ),
-              tooltip: 'Cüzdan Yönetimi',
-            );
-          },
+        IconButton(
+          onPressed: () => _showWalletManagement(context),
+          icon: Badge(
+            child: Icon(
+              Icons.wallet_rounded,
+              size: 24,
+              color: _getContentColor(currentValue),
+            ),
+          ),
+          tooltip: 'Cüzdan Yönetimi',
         ),
       ],
     );
@@ -148,9 +137,8 @@ class _SharedAppbarState extends State<SharedAppbar> {
 
         // ✅ Use shared WalletBloc for wallet info
         Expanded(
-          child: BlocBuilder<WalletBloc, WalletState>(
-            builder: (context, state) {
-              // Default user info
+          child: Builder(
+            builder: (context) {
               Widget userInfo = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -189,9 +177,7 @@ class _SharedAppbarState extends State<SharedAppbar> {
               );
 
               // ✅ Show active wallet info if loaded
-              if (state is WalletsLoaded && state.activeWallet != null) {
-                final activeWallet = state.activeWallet!;
-
+              if (true) {
                 userInfo = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -220,7 +206,7 @@ class _SharedAppbarState extends State<SharedAppbar> {
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            activeWallet.name,
+                            "activeWallet.name",
                             style: TextStyle(
                               fontSize: 10,
                               color: _getContentColor(currentValue)
