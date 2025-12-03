@@ -1,31 +1,63 @@
 part of 'wallet_bloc.dart';
 
+/// Her event'in kendi ihtiyacına göre parametresi olmalı
 sealed class WalletEvent extends Equatable {
-  const WalletEvent(this.wallet);
+  const WalletEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+/// Kullanıcının cüzdanlarını getir
+final class GetWalletsEvent extends WalletEvent {
+  final String userId;
+
+  const GetWalletsEvent(this.userId);
+
+  @override
+  List<Object> get props => [userId];
+}
+
+/// Yeni cüzdan oluştur
+final class CreateWalletEvent extends WalletEvent {
   final WalletModel wallet;
+
+  const CreateWalletEvent(this.wallet);
 
   @override
   List<Object> get props => [wallet];
 }
 
-final class DeleteEvent extends WalletEvent {
+/// Cüzdan güncelle
+final class UpdateWalletEvent extends WalletEvent {
+  final WalletModel wallet;
+
+  const UpdateWalletEvent(this.wallet);
+
+  @override
+  List<Object> get props => [wallet];
+}
+
+/// Cüzdan sil
+final class DeleteWalletEvent extends WalletEvent {
   final String walletId;
 
-  const DeleteEvent(super.wallet, {required this.walletId});
+  const DeleteWalletEvent(this.walletId);
+
+  @override
+  List<Object> get props => [walletId];
 }
 
-final class UpdateEvent extends WalletEvent {
-  const UpdateEvent(super.wallet);
-}
+/// Aktif cüzdanı değiştir
+final class SetActiveWalletEvent extends WalletEvent {
+  final String userId;
+  final String walletId;
 
-final class LoadEvent extends WalletEvent {
-  const LoadEvent(super.wallet);
-}
+  const SetActiveWalletEvent({
+    required this.userId,
+    required this.walletId,
+  });
 
-final class CreateEvent extends WalletEvent {
-  const CreateEvent(super.wallet);
-}
-
-final class GetEvent extends WalletEvent {
-  const GetEvent(super.wallet);
+  @override
+  List<Object> get props => [userId, walletId];
 }

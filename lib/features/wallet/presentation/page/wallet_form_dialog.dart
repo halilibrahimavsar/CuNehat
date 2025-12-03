@@ -4,7 +4,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:flutter/material.dart';
 
-Future<void> showWalletDialog({
+Future<void> showCreatEditDialog({
   required BuildContext context,
   WalletModel? wallet, // null → create, non-null → edit
   required Function(String message) onSuccess, // ✅ CHANGED: Pass message back
@@ -15,6 +15,7 @@ Future<void> showWalletDialog({
     builder: (context) {
       return _WalletFormDialog(
         isEditMode: wallet != null,
+        wallet: wallet,
         onSuccess: onSuccess,
         onError: onError,
       );
@@ -25,11 +26,13 @@ Future<void> showWalletDialog({
 /// **_WalletFormDialog**: Internal dialog widget
 class _WalletFormDialog extends StatelessWidget {
   final bool isEditMode;
+  final WalletModel? wallet;
   final Function(String message) onSuccess;
   final Function(String error)? onError;
 
   const _WalletFormDialog({
     required this.isEditMode,
+    this.wallet,
     required this.onSuccess,
     this.onError,
   });
@@ -44,29 +47,32 @@ class _WalletFormDialog extends StatelessWidget {
           children: [
             // ============ NAME FIELD ============
             TextField(
-              controller: TextEditingController(text: "state.name")
+              controller: TextEditingController(text: wallet?.name ?? "Başlık")
                 ..selection = TextSelection.collapsed(
                   offset: 3,
                 ),
               decoration: InputDecoration(
                 labelText: 'Cüzdan Adı',
                 hintText: 'Örn: Ana Cüzdan',
-                errorText: "state.nameError",
+                errorText: "error text",
               ),
-              onChanged: (value) {},
+              onChanged: (value) {
+                // TODO ADD
+              },
             ),
             const SizedBox(height: 16),
 
             // ============ BALANCE FIELD ============
             TextField(
-              controller: TextEditingController(text: "state.balance")
+              controller: TextEditingController(
+                  text: wallet?.balance.toString() ?? "0.0")
                 ..selection = TextSelection.collapsed(
                   offset: 4,
                 ),
               decoration: InputDecoration(
                 labelText: isEditMode ? 'Bakiye' : 'Başlangıç Bakiyesi',
                 hintText: '0.0',
-                errorText: "state.balanceError",
+                errorText: "error text",
               ),
               keyboardType: TextInputType.number,
               onChanged: (value) {},

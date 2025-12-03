@@ -244,7 +244,9 @@ class _SharedAppbarState extends State<SharedAppbar> {
           minChildSize: 0.5, // Can be dragged down to 50%
           maxChildSize: 0.95, // Can be dragged up to 95%
           builder: (context, scrollController) {
-            return WalletManagementPage();
+            return WalletManagementPage(
+              userId: FirebaseAuth.instance.currentUser!.uid,
+            );
           },
         );
       },
