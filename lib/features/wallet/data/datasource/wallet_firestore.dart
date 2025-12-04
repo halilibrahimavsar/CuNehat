@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_data_service.dart';
+import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
-class WalletFirestoreDataSource implements WalletDataService {
+class WalletFirestoreDataSource implements WalletRepository {
   @override
   Future<void> createWallet(WalletModel wallet) async {
     await FirebaseFirestore.instance

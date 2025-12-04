@@ -1,5 +1,7 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
+import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
+import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/models/expense_model.dart';
@@ -30,7 +32,7 @@ void main() async {
   // await Hive.openBox<IncomeModel>('incomes');
   // await Hive.openBox<ExpenseModel>('expenses');
   // await Hive.openBox<WalletModel>('wallets');
-  await Hive.openBox<InvestmentModel>('investments');
+  // await Hive.openBox<InvestmentModel>('investments');
 
   debugPrint('✅ Hive TypeAdapters registered');
 
@@ -49,17 +51,14 @@ void main() async {
   // syncService.startAutoSync();
   // debugPrint('✅ Auto-sync enabled');
 
-  runApp(MultiBlocProvider(
-    providers: [
-      BlocProvider(
-        create: (context) => ThemeBloc(),
+  runApp(
+    RepositoryProvider(
+      create: (context) => WalletRepositoryImpl(
+        dataSource: WalletHiveDataSource(), // This will be chenged
       ),
-      BlocProvider(
-        create: (context) => WalletBloc(),
-      ),
-    ],
-    child: const CallFirebaseAuth(privateWidget: CuNehatEngine()),
-  ));
+      child: CallFirebaseAuth(privateWidget: CuNehatEngine()),
+    ),
+  );
 }
 
 /// **Main App Widget**
@@ -70,16 +69,27 @@ class CuNehatEngine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ThemeBloc, ThemeState>(
-      builder: (context, state) {
-        return MaterialApp.router(
-          routerConfig: appRouter,
-          themeMode: ThemeMode.light,
-          theme: state.name,
-          title: "CuNehat",
-          debugShowCheckedModeBanner: false,
-        );
-      },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ThemeBloc(),
+        ),
+        BlocProvider(
+          create: (context) =>
+              WalletBloc(context.read<WalletRepositoryImpl>().dataSource),
+        ),
+      ],
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp.router(
+            routerConfig: appRouter,
+            themeMode: ThemeMode.light,
+            theme: state.name,
+            title: "CuNehat",
+            debugShowCheckedModeBanner: false,
+          );
+        },
+      ),
     );
   }
 }

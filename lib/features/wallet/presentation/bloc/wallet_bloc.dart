@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:cunehat/features/wallet/data/datasource/get_storage_mod.dart';
-import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:equatable/equatable.dart';
 
@@ -10,13 +9,12 @@ part 'wallet_event.dart';
 part 'wallet_state.dart';
 
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
-  final WalletRepositoryImpl repository =
-      WalletRepositoryImpl(dataSource: GetStorageMod.dataSource);
+  final WalletRepository repository;
 
   // Stream subscription'ı tutmak için
   StreamSubscription<List<WalletModel>>? _walletSubscription;
 
-  WalletBloc() : super(const WalletInitialSt()) {
+  WalletBloc(this.repository) : super(const WalletInitialSt()) {
     // ========== CÜZDANLARI GETİR (STREAM DİNLE) ==========
     on<GetWalletsEvent>((event, emit) async {
       emit(const WalletLoadingSt());
@@ -100,6 +98,13 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         emit(WalletErrorSt('Aktif cüzdan değiştirilemedi: ${e.toString()}'));
       }
     });
+  }
+
+  // Dispose ederken memory leak sorunu olmaz
+  @override
+  Future<void> close() {
+    _walletSubscription?.cancel();
+    return super.close();
   }
 }
 

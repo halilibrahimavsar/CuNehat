@@ -1,8 +1,8 @@
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_data_service.dart';
+import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-class WalletHiveDataSource implements WalletDataService {
+class WalletHiveDataSource implements WalletRepository {
   static const String _boxName = 'wallets';
   static const String _usersBoxName = 'users';
 
