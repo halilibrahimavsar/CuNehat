@@ -1,5 +1,3 @@
-// lib/features/settings/presentation/widgets/migration_dialog.dart
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
@@ -10,13 +8,14 @@ Future<void> showMigrationDialog({
   required BuildContext context,
   required String userId,
   required StorageMode currentMode,
+  required SettingsBloc settingsBloc, // ✅ SettingsBloc'u parametre olarak al
 }) async {
   return showDialog(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
       return BlocProvider.value(
-        value: context.read<SettingsBloc>(),
+        value: settingsBloc, // ✅ Parametreden gelen bloc'u kullan
         child: _MigrationDialog(
           userId: userId,
           currentMode: currentMode,
@@ -132,7 +131,7 @@ class _MigrationDialogState extends State<_MigrationDialog> {
         ElevatedButton(
           onPressed: _selectedMode == widget.currentMode
               ? null
-              : () => _confirmMigration(),
+              : () => _confirmMigration(context),
           child: const Text('Değiştir'),
         ),
       ],
@@ -253,12 +252,12 @@ class _MigrationDialogState extends State<_MigrationDialog> {
   }
 
   /// Show confirmation dialog before migration
-  void _confirmMigration() {
+  void _confirmMigration(BuildContext context) {
     final isGoingToCloud = _selectedMode == StorageMode.cloud;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (confirmContext) => AlertDialog(
         icon: Icon(
           isGoingToCloud ? Icons.cloud_upload : Icons.download,
           size: 48,
@@ -291,13 +290,13 @@ class _MigrationDialogState extends State<_MigrationDialog> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(confirmContext),
             child: const Text('İptal'),
           ),
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.pop(context); // Close confirmation
-              // Trigger migration
+              Navigator.pop(confirmContext); // Close confirmation
+              // Trigger migration using the bloc from the outer context
               context.read<SettingsBloc>().add(
                     ChangeStorageModeEvent(
                       userId: widget.userId,

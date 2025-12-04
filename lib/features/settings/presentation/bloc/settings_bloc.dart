@@ -1,5 +1,3 @@
-// lib/features/settings/presentation/bloc/settings_bloc.dart
-
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -12,26 +10,36 @@ part 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository repository;
-
   StreamSubscription<MigrationStatus>? _migrationSubscription;
 
   SettingsBloc(this.repository) : super(const SettingsInitialSt()) {
-    // ========== LOAD STORAGE MODE ==========
-    on<LoadStorageModeEvent>((event, emit) async {
-      try {
-        final mode = await GetStorageModeUseCase(repository).call();
-        emit(StorageModeLoadedSt(mode));
-      } catch (e) {
-        emit(SettingsErrorSt('Ayarlar yüklenemedi: $e'));
-      }
-    });
+    on<LoadStorageModeEvent>(_onLoadStorageMode);
+    on<ChangeStorageModeEvent>(_onChangeStorageMode);
+    on<_MigrationProgressEvent>(_onMigrationProgress);
+    on<_MigrationErrorEvent>(_onMigrationError);
+  }
 
-    // ========== CHANGE STORAGE MODE (with migration) ==========
-    on<ChangeStorageModeEvent>((event, emit) async {
-      emit(const MigrationInProgressSt(progress: 0.0, step: 'Başlatılıyor...'));
+  Future<void> _onLoadStorageMode(
+    LoadStorageModeEvent event,
+    Emitter<SettingsState> emit,
+  ) async {
+    try {
+      final mode = await GetStorageModeUseCase(repository).call();
+      emit(StorageModeLoadedSt(mode));
+    } catch (e) {
+      emit(SettingsErrorSt('Ayarlar yüklenemedi: $e'));
+    }
+  }
 
-      // Listen to migration progress
-      _migrationSubscription?.cancel();
+  Future<void> _onChangeStorageMode(
+    ChangeStorageModeEvent event,
+    Emitter<SettingsState> emit,
+  ) async {
+    try {
+      // 1. Cancel any existing subscription
+      await _migrationSubscription?.cancel();
+
+      // 2. Start listening to migration status BEFORE starting migration
       _migrationSubscription =
           WatchMigrationStatusUseCase(repository).call().listen((status) {
         if (status.isInProgress) {
@@ -39,33 +47,48 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         } else if (status.error != null) {
           add(_MigrationErrorEvent(status.error!));
         }
+      }, onError: (error) {
+        add(_MigrationErrorEvent(error.toString()));
       });
 
-      try {
-        await SetStorageModeUseCase(repository).call(
-          userId: event.userId,
-          newMode: event.newMode,
-        );
+      // 3. Initial progress state
+      emit(const MigrationInProgressSt(progress: 0.0, step: 'Hazırlanıyor...'));
 
-        emit(MigrationCompletedSt(event.newMode));
-      } catch (e) {
-        emit(SettingsErrorSt('Migration hatası: $e'));
-      } finally {
-        await _migrationSubscription?.cancel();
-      }
-    });
+      // 4. Execute migration
+      await SetStorageModeUseCase(repository).call(
+        userId: event.userId,
+        newMode: event.newMode,
+      );
 
-    // ========== INTERNAL EVENTS ==========
-    on<_MigrationProgressEvent>((event, emit) {
-      emit(MigrationInProgressSt(
-        progress: event.status.progress,
-        step: event.status.currentStep ?? '',
-      ));
-    });
+      // 5. Migration completed successfully
+      emit(MigrationCompletedSt(event.newMode));
 
-    on<_MigrationErrorEvent>((event, emit) {
-      emit(SettingsErrorSt(event.error));
-    });
+      // 6. Reload the new mode
+      final newMode = await GetStorageModeUseCase(repository).call();
+      emit(StorageModeLoadedSt(newMode));
+    } catch (e) {
+      emit(SettingsErrorSt('Migration hatası: $e'));
+    } finally {
+      await _migrationSubscription?.cancel();
+      _migrationSubscription = null;
+    }
+  }
+
+  void _onMigrationProgress(
+    _MigrationProgressEvent event,
+    Emitter<SettingsState> emit,
+  ) {
+    emit(MigrationInProgressSt(
+      progress: event.status.progress,
+      step: event.status.currentStep ?? '',
+    ));
+  }
+
+  void _onMigrationError(
+    _MigrationErrorEvent event,
+    Emitter<SettingsState> emit,
+  ) {
+    emit(SettingsErrorSt(event.error));
   }
 
   @override

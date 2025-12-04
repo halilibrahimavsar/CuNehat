@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final _migrationStatusController =
+  final StreamController<MigrationStatus> _migrationStatusController =
       StreamController<MigrationStatus>.broadcast();
   static const String _storageModeKey = 'storage_mode';
 
@@ -19,9 +19,16 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<StorageMode> getStorageMode() async {
     final prefs = await SharedPreferences.getInstance();
     final modeString = prefs.getString(_storageModeKey);
+
+    if (modeString == null) {
+      // First time, set default
+      await prefs.setString(_storageModeKey, StorageMode.local.toString());
+      return StorageMode.local;
+    }
+
     return StorageMode.values.firstWhere(
       (e) => e.toString() == modeString,
-      orElse: () => StorageMode.local, // Varsayılan mod
+      orElse: () => StorageMode.local,
     );
   }
 
@@ -36,14 +43,19 @@ class SettingsRepositoryImpl implements SettingsRepository {
     return _migrationStatusController.stream;
   }
 
+  void _sendProgress(double progress, String step) {
+    _migrationStatusController.add(MigrationStatus(
+      isInProgress: true,
+      progress: progress,
+      currentStep: step,
+    ));
+  }
+
   @override
   Future<void> migrateToCloud(String userId) async {
     try {
-      // 1. Adım: Yerel verileri oku
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Yerel veriler okunuyor...',
-          progress: 0.1));
+      _sendProgress(0.1, 'Yerel veriler kontrol ediliyor...');
+
       final incomeBox = await Hive.openBox<IncomeModel>('incomes');
       final expenseBox = await Hive.openBox<ExpenseModel>('expenses');
       final investmentBox = await Hive.openBox<InvestmentModel>('investments');
@@ -54,79 +66,82 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
       final totalOperations =
           incomes.length + expenses.length + investments.length;
+
       if (totalOperations == 0) {
+        _sendProgress(1.0, 'Taşınacak veri bulunamadı.');
         _migrationStatusController.add(const MigrationStatus(
-            isInProgress: true,
-            currentStep: 'Taşınacak veri bulunamadı.',
-            progress: 1.0));
+          isInProgress: false,
+          progress: 1.0,
+        ));
         return;
       }
 
-      // 2. Adım: Verileri Firestore'a yaz
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Veriler buluta yazılıyor...',
-          progress: 0.3));
-      final batch = _firestore.batch();
-      int operationsDone = 0;
+      _sendProgress(0.2, 'Buluta bağlanılıyor...');
 
-      for (var income in incomes) {
-        final docRef = _firestore
+      // Migrate incomes
+      for (int i = 0; i < incomes.length; i++) {
+        final income = incomes[i];
+        await _firestore
             .collection('users')
             .doc(userId)
             .collection('incomes')
-            .doc(income.id);
-        batch.set(docRef, income.toJson());
-        operationsDone++;
-        _migrationStatusController.add(MigrationStatus(
-            isInProgress: true,
-            currentStep: 'Gelirler aktarılıyor...',
-            progress: 0.3 + (0.5 * (operationsDone / totalOperations))));
+            .doc(income.id)
+            .set(income.toJson());
+
+        _sendProgress(
+          0.2 + (0.3 * (i / incomes.length)),
+          'Gelirler aktarılıyor... (${i + 1}/${incomes.length})',
+        );
       }
 
-      for (var expense in expenses) {
-        final docRef = _firestore
+      // Migrate expenses
+      for (int i = 0; i < expenses.length; i++) {
+        final expense = expenses[i];
+        await _firestore
             .collection('users')
             .doc(userId)
             .collection('expenses')
-            .doc(expense.id);
-        batch.set(docRef, expense.toJson());
-        operationsDone++;
-        _migrationStatusController.add(MigrationStatus(
-            isInProgress: true,
-            currentStep: 'Giderler aktarılıyor...',
-            progress: 0.3 + (0.5 * (operationsDone / totalOperations))));
+            .doc(expense.id)
+            .set(expense.toJson());
+
+        _sendProgress(
+          0.5 + (0.3 * (i / expenses.length)),
+          'Giderler aktarılıyor... (${i + 1}/${expenses.length})',
+        );
       }
 
-      // for (var investment in investments) {
-      //   final docRef = _firestore
+      // Migrate investments
+      // for (int i = 0; i < investments.length; i++) {
+      //   final investment = investments[i];
+      //   await _firestore
       //       .collection('users')
       //       .doc(userId)
       //       .collection('investments')
-      //       .doc(investment.id);
-      //   batch.set(docRef, investment.toJson());
-      //   operationsDone++;
-      //   _migrationStatusController.add(MigrationStatus(
-      //       isInProgress: true,
-      //       currentStep: 'Yatırımlar aktarılıyor...',
-      //       progress: 0.3 + (0.5 * (operationsDone / totalOperations))));
+      //       .doc(investment.id)
+      //       .set(investment.toJson());
+
+      //   _sendProgress(
+      //     0.8 + (0.2 * (i / investments.length)),
+      //     'Yatırımlar aktarılıyor... (${i + 1}/${investments.length})',
+      //   );
       // }
 
-      await batch.commit();
-
-      // 3. Adım: Yerel verileri temizle
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Yerel veriler temizleniyor...',
-          progress: 0.9));
+      // Clear local data
+      _sendProgress(0.95, 'Yerel veriler temizleniyor...');
       await incomeBox.clear();
       await expenseBox.clear();
       await investmentBox.clear();
 
       _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true, currentStep: 'Tamamlandı!', progress: 1.0));
+        isInProgress: false,
+        progress: 1.0,
+        currentStep: 'Migration tamamlandı!',
+      ));
     } catch (e) {
-      _migrationStatusController.addError('Buluta taşıma sırasında hata: $e');
+      _migrationStatusController.add(MigrationStatus(
+        isInProgress: false,
+        error: 'Buluta taşıma sırasında hata: $e',
+      ));
       rethrow;
     }
   }
@@ -134,51 +149,30 @@ class SettingsRepositoryImpl implements SettingsRepository {
   @override
   Future<void> migrateToLocal(String userId) async {
     try {
-      // 1. Adım: Buluttaki verileri oku
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Bulut verileri okunuyor...',
-          progress: 0.1));
+      _sendProgress(0.1, 'Bulut verileri kontrol ediliyor...');
+
+      // Download data from cloud
       final incomeDocs = await _firestore
           .collection('users')
           .doc(userId)
           .collection('incomes')
           .get();
+
       final expenseDocs = await _firestore
           .collection('users')
           .doc(userId)
           .collection('expenses')
           .get();
+
       final investmentDocs = await _firestore
           .collection('users')
           .doc(userId)
           .collection('investments')
           .get();
 
-      final incomes = incomeDocs.docs
-          .map((doc) => IncomeModel.fromJson(userId, doc.data()))
-          .toList();
-      final expenses = expenseDocs.docs
-          .map((doc) => ExpenseModel.fromJson(userId, doc.data()))
-          .toList();
-      // final investments = investmentDocs.docs
-      //     .map((doc) => InvestmentModel.fromJson(userId, doc.data()))
-      //     .toList();
+      _sendProgress(0.3, 'Veriler yerele indiriliyor...');
 
-      final totalOperations = incomes.length + expenses.length;
-      if (totalOperations == 0) {
-        _migrationStatusController.add(const MigrationStatus(
-            isInProgress: true,
-            currentStep: 'Taşınacak veri bulunamadı.',
-            progress: 1.0));
-        return;
-      }
-
-      // 2. Adım: Verileri yerel Hive'a yaz
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Veriler yerele yazılıyor...',
-          progress: 0.3));
+      // Save to local
       final incomeBox = await Hive.openBox<IncomeModel>('incomes');
       final expenseBox = await Hive.openBox<ExpenseModel>('expenses');
       final investmentBox = await Hive.openBox<InvestmentModel>('investments');
@@ -187,29 +181,24 @@ class SettingsRepositoryImpl implements SettingsRepository {
       await expenseBox.clear();
       await investmentBox.clear();
 
-      await incomeBox.putAll({for (var v in incomes) v.id: v});
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Gelirler aktarıldı.',
-          progress: 0.5));
+      for (var doc in incomeDocs.docs) {
+        final income = IncomeModel.fromJson(doc.id, doc.data());
+        await incomeBox.put(income.id, income);
+      }
 
-      await expenseBox.putAll({for (var v in expenses) v.id: v});
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Giderler aktarıldı.',
-          progress: 0.7));
+      for (var doc in expenseDocs.docs) {
+        final expense = ExpenseModel.fromJson(doc.id, doc.data());
+        await expenseBox.put(expense.id, expense);
+      }
 
-      // await investmentBox.putAll({for (var v in investments) v.id: v});
-      // _migrationStatusController.add(const MigrationStatus(
-      //     isInProgress: true,
-      //     currentStep: 'Yatırımlar aktarıldı.',
-      //     progress: 0.9));
+      // for (var doc in investmentDocs.docs) {
+      //   final investment = InvestmentModel.fromJson(doc.id, doc.data());
+      //   await investmentBox.put(investment.id, investment);
+      // }
 
-      // 3. Adım: Buluttaki verileri temizle
-      _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true,
-          currentStep: 'Bulut verileri temizleniyor...',
-          progress: 0.95));
+      _sendProgress(0.8, 'Bulut verileri temizleniyor...');
+
+      // Delete from cloud
       final batch = _firestore.batch();
       for (var doc in incomeDocs.docs) {
         batch.delete(doc.reference);
@@ -223,10 +212,21 @@ class SettingsRepositoryImpl implements SettingsRepository {
       await batch.commit();
 
       _migrationStatusController.add(const MigrationStatus(
-          isInProgress: true, currentStep: 'Tamamlandı!', progress: 1.0));
+        isInProgress: false,
+        progress: 1.0,
+        currentStep: 'Migration tamamlandı!',
+      ));
     } catch (e) {
-      _migrationStatusController.addError('Yerele taşıma sırasında hata: $e');
+      _migrationStatusController.add(MigrationStatus(
+        isInProgress: false,
+        error: 'Yerele taşıma sırasında hata: $e',
+      ));
       rethrow;
     }
+  }
+
+  @override
+  void dispose() {
+    _migrationStatusController.close();
   }
 }
