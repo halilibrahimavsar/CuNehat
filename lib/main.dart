@@ -23,26 +23,30 @@ void main() async {
   await Hive.initFlutter();
 
   // Register type adapters
-  Hive.registerAdapter(IncomeModelAdapter());
-  Hive.registerAdapter(ExpenseModelAdapter());
-  Hive.registerAdapter(WalletModelAdapter());
-  Hive.registerAdapter(InvestmentModelAdapter());
+  Hive.registerAdapter(IncomeModelAdapter()); // typeId: 0
+  Hive.registerAdapter(ExpenseModelAdapter()); // typeId: 1
+  Hive.registerAdapter(WalletModelAdapter()); // typeId: 3
+  Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 4
 
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
     MultiRepositoryProvider(
       providers: [
+        // ✅ Settings Repository
         RepositoryProvider(
           create: (context) => SettingsRepositoryImpl(),
         ),
+        // ✅ Wallet Repository
         RepositoryProvider(
           create: (context) => WalletRepositoryImpl(
-            dataSource: WalletHiveDataSource(), // This will be chenged
+            dataSource: WalletHiveDataSource(),
           ),
         ),
       ],
-      child: CallFirebaseAuth(privateWidget: CuNehatEngine()),
+      child: CallFirebaseAuth(
+        privateWidget: CuNehatEngine(),
+      ),
     ),
   );
 }
@@ -54,17 +58,16 @@ class CuNehatEngine extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        // Theme BLoC
         BlocProvider(
           create: (context) => ThemeBloc(),
         ),
-        // BlocProvider(
-        //   create: (context) =>
-        //       SettingsBloc(context.read<SettingsRepositoryImpl>()),
-        // ),
+        // Wallet BLoC
         BlocProvider(
           create: (context) =>
               WalletBloc(context.read<WalletRepositoryImpl>().dataSource),
         ),
+        // ⚠️ Settings BLoC burada oluşturulmaz, SettingsPage'de oluşturulur
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {

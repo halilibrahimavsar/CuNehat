@@ -1,4 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,11 +7,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Shows storage mode selection + migration confirmation dialog
 Future<void> showMigrationDialog({
   required BuildContext context,
-  required String userId,
-  required StorageMode currentMode,
-  required SettingsBloc settingsBloc, // ✅ SettingsBloc'u parametre olarak al
+  required String userId, // Kullanıcı kimliği
+  required StorageMode currentMode, // Mevcut depolama modu
+  required SettingsBloc settingsBloc, // Ayarlar Bloc'u
 }) async {
-  return showDialog(
+  final result = await showDialog<String?>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
@@ -23,6 +24,15 @@ Future<void> showMigrationDialog({
       );
     },
   );
+
+  // Dialog kapandıktan sonra gelen sonuca göre SnackBar göster
+  if (result != null && context.mounted) {
+    if (result.startsWith('✅')) {
+      SnackbarHelper.showSuccess(context, result);
+    } else {
+      SnackbarHelper.showError(context, result);
+    }
+  }
 }
 
 class _MigrationDialog extends StatefulWidget {
@@ -52,30 +62,18 @@ class _MigrationDialogState extends State<_MigrationDialog> {
     return BlocConsumer<SettingsBloc, SettingsState>(
       listener: (context, state) {
         if (state is MigrationCompletedSt) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Migration tamamlandı!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          Navigator.pop(context, '✅ Migration tamamlandı!');
         } else if (state is SettingsErrorSt) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Hata: ${state.error}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          Navigator.pop(context, '❌ Migration hatası: ${state.error}');
         }
       },
       builder: (context, state) {
-        // Show progress dialog during migration
+        // Migration sırasında ilerleme durumu diyaloğunu göster
         if (state is MigrationInProgressSt) {
           return _buildProgressDialog(state);
         }
 
-        // Show selection dialog
+        // Diğer tüm durumlarda seçim diyaloğunu göster
         return _buildSelectionDialog();
       },
     );
@@ -226,7 +224,10 @@ class _MigrationDialogState extends State<_MigrationDialog> {
         children: [
           CircularProgressIndicator(),
           SizedBox(width: 16),
-          Text('Migration Devam Ediyor'),
+          Text(
+            'Migration Devam Ediyor',
+            style: TextStyle(fontSize: 12),
+          ),
         ],
       ),
       content: Column(

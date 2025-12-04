@@ -32,6 +32,9 @@ abstract class SettingsRepository {
 
   /// Check if migration is in progress
   Stream<MigrationStatus> watchMigrationStatus();
+
+  /// Cleanup resources
+  void dispose();
 }
 
 /// Migration status tracker
