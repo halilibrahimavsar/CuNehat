@@ -101,12 +101,6 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       }
     });
   }
-
-  @override
-  Future<void> close() {
-    _walletSubscription?.cancel();
-    return super.close();
-  }
 }
 
 // ========== İÇ EVENT'LER (Stream sonuçlarını emit etmek için) ==========
