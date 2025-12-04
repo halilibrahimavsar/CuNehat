@@ -107,8 +107,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   // Dispose ederken memory leak sorunu olmaz
   @override
-  Future<void> close() {
-    _walletSubscription?.cancel();
+  Future<void> close() async {
+    await _walletSubscription?.cancel();
     return super.close();
   }
 }

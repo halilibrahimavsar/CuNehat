@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 class WalletCardWidget extends StatelessWidget {
   final WalletModel wallet;
-  final bool isActive;
+  // final bool wallet.isActive;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -14,7 +14,6 @@ class WalletCardWidget extends StatelessWidget {
   const WalletCardWidget({
     super.key,
     required this.wallet,
-    required this.isActive,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
@@ -25,12 +24,12 @@ class WalletCardWidget extends StatelessWidget {
     final color = WalletColors.hexToColor(wallet.colorHex);
 
     return Card(
-      elevation: isActive ? 8 : 2,
+      elevation: wallet.isActive ? 8 : 2,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isActive ? color : Colors.transparent,
+          color: wallet.isActive ? color : Colors.transparent,
           width: 2,
         ),
       ),
@@ -94,7 +93,7 @@ class WalletCardWidget extends StatelessWidget {
                   ),
 
                   // Active Indicator
-                  if (isActive)
+                  if (wallet.isActive)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -146,7 +145,7 @@ class WalletCardWidget extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (!isActive)
+                  if (!wallet.isActive)
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: onDelete,

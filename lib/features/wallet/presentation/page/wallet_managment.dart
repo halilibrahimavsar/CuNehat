@@ -7,7 +7,6 @@ import 'package:cunehat/features/wallet/presentation/widgets/empty_state_widget.
 import 'package:cunehat/features/wallet/presentation/widgets/error_state_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,11 +35,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
     return BlocConsumer<WalletBloc, WalletState>(
       listener: (context, state) {
         // ✅ İşlem başarılı olunca listeyi yenile
-        if (state is WalletCreatedSt) {
-          context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
-        } else if (state is WalletUpdatedSt) {
-          context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
-        } else if (state is WalletDeletedSt) {
+        if (state is WalletCreatedSt ||
+            state is WalletUpdatedSt ||
+            state is WalletDeletedSt) {
           context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
         }
       },
@@ -60,8 +57,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
             onPressed: () {
               showCreateEditDialog(
                 context: context,
-                userId: FirebaseAuth.instance.currentUser!
-                    .uid, // TODO : This one is hardcoded, fix it ( in everywhere in the project)
+                userId: widget.userId,
                 wallet: null, // null = create mode
                 onSuccess: () {
                   SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');
@@ -98,7 +94,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
         return WalletCardWidget(
           wallet: wallet,
-          isActive: wallet.isActive,
+          // isActive: wallet.isActive,
           // activate
           onTap: () => context.read<WalletBloc>().add(SetActiveWalletEvent(
                 userId: widget.userId,
@@ -108,10 +104,14 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
           onEdit: () {
             showCreateEditDialog(
               context: context,
-              userId: FirebaseAuth.instance.currentUser!.uid,
+              userId: widget.userId,
               wallet: wallet, // non-null = edit mode
-              onSuccess: () {/* ... */},
-              onError: (error) {/* ... */},
+              onSuccess: () {
+                SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi!');
+              },
+              onError: (error) {
+                SnackbarHelper.showError(context, error);
+              },
             );
           },
           // delete
