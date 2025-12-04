@@ -14,9 +14,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// **Main Entry Point**
-///
-/// ✅ FIXED: WalletBloc now provided at app level for proper state sharing
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -29,27 +26,8 @@ void main() async {
   Hive.registerAdapter(ExpenseModelAdapter());
   Hive.registerAdapter(WalletModelAdapter());
   Hive.registerAdapter(InvestmentModelAdapter());
-  // await Hive.openBox<IncomeModel>('incomes');
-  // await Hive.openBox<ExpenseModel>('expenses');
-  // await Hive.openBox<WalletModel>('wallets');
-  // await Hive.openBox<InvestmentModel>('investments');
 
   debugPrint('✅ Hive TypeAdapters registered');
-
-  // Initialize services
-  // final localDataService = LocalDataService();
-  // await localDataService.init();
-  // debugPrint('✅ Local storage initialized');
-
-  // final sharedPreferences = await SharedPreferences.getInstance();
-  // final firestoreService = FirestoreService();
-
-  // final syncService = SyncService(firestoreService: firestoreService);
-  // await syncService.init();
-  // debugPrint('✅ Sync service initialized');
-
-  // syncService.startAutoSync();
-  // debugPrint('✅ Auto-sync enabled');
 
   runApp(
     RepositoryProvider(
@@ -61,9 +39,6 @@ void main() async {
   );
 }
 
-/// **Main App Widget**
-///
-/// ✅ FIXED: WalletBloc provided at app level, shared across all pages
 class CuNehatEngine extends StatelessWidget {
   const CuNehatEngine({super.key});
 

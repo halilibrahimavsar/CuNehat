@@ -1,9 +1,9 @@
 // Ayar grupları için başlık
 import 'package:flutter/material.dart';
 
-class SectionHeader extends StatelessWidget {
+class SettingsHeader extends StatelessWidget {
   final String title;
-  const SectionHeader({super.key, required this.title});
+  const SettingsHeader({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

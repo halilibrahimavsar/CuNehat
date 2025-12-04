@@ -24,19 +24,19 @@ class _SettingsView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          const SectionHeader(title: 'TEMA'),
-          const ThemeDropdown(),
+          const SettingsHeader(title: 'TEMA'),
+          const ThemeSelectorDropdown(),
           const SizedBox(height: 24),
 
           // STORAGE SECTION
-          const SectionHeader(title: 'VERİ DEPOLAMA'),
+          const SettingsHeader(title: 'VERİ DEPOLAMA'),
           // _buildStorageModeCard(context, state),
           const SizedBox(height: 12),
           // _buildStorageInfoCard(context, state.storageMode),
           const SizedBox(height: 24),
 
           // APP INFO SECTION
-          const SectionHeader(title: 'UYGULAMA'),
+          const SettingsHeader(title: 'UYGULAMA'),
           Card(
             elevation: 1,
             child: Column(
@@ -58,7 +58,7 @@ class _SettingsView extends StatelessWidget {
           const SizedBox(height: 24),
 
           // PROFILE SECTION
-          const SectionHeader(title: "Profil"),
+          const SettingsHeader(title: "Profil"),
           SettingsItem(
             title: "Profil Ayarları",
             icon: Icons.person,
