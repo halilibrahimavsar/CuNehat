@@ -326,7 +326,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       sortOrder: DateTime.now().millisecondsSinceEpoch,
     );
 
-    context.read<WalletBloc>().add(CreateWalletEvent(wallet));
+    context.read<WalletBloc>().add(CreateWalletEvent(wallet, widget.userId));
   }
 
   /// Mevcut cüzdanı güncelle
