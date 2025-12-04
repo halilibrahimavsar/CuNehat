@@ -1,6 +1,9 @@
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/features/settings/presentation/widgets/migration_dialog.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_item.dart';
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,7 +33,14 @@ class _SettingsView extends StatelessWidget {
 
           // STORAGE SECTION
           const SettingsHeader(title: 'VERİ DEPOLAMA'),
-          // _buildStorageModeCard(context, state),
+          ElevatedButton(
+              onPressed: () {
+                showMigrationDialog(
+                    context: context,
+                    userId: FirebaseAuth.instance.currentUser!.uid,
+                    currentMode: StorageMode.cloud);
+              },
+              child: Text("data")),
           const SizedBox(height: 12),
           // _buildStorageInfoCard(context, state.storageMode),
           const SizedBox(height: 24),

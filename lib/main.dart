@@ -1,5 +1,8 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
+import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
+import 'package:cunehat/features/settings/domain/repository/settings_repository.dart';
+import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
@@ -30,10 +33,17 @@ void main() async {
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
-    RepositoryProvider(
-      create: (context) => WalletRepositoryImpl(
-        dataSource: WalletHiveDataSource(), // This will be chenged
-      ),
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(
+          create: (context) => WalletRepositoryImpl(
+            dataSource: WalletHiveDataSource(), // This will be chenged
+          ),
+        ),
+        RepositoryProvider(
+          create: (context) => SettingsRepositoryImpl(),
+        ),
+      ],
       child: CallFirebaseAuth(privateWidget: CuNehatEngine()),
     ),
   );
@@ -46,6 +56,9 @@ class CuNehatEngine extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(
+          create: (context) => SettingsBloc(context.read<SettingsRepository>()),
+        ),
         BlocProvider(
           create: (context) => ThemeBloc(),
         ),
