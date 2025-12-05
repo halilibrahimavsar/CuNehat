@@ -1,8 +1,8 @@
-// lib/pages/wallet_page.dart
-// ✅ FIXED: No longer creates duplicate WalletBloc (uses app-level one)
+// lib/features/main_feature/presentation/pages/home_page.dart
 
-import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
+import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
 import 'package:cunehat/features/compare/presentation/page/compare_view.dart';
+import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/finance_entry_handler.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
@@ -10,45 +10,19 @@ import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/features/main_feature/presentation/pages/expense_page.dart';
 import 'package:cunehat/features/main_feature/presentation/pages/income_page.dart';
+import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-Map<DateTime, List<IncomeModel>> incomeData = {
-  for (var date in List.generate(
-      30, (index) => DateTime.now().subtract(Duration(days: index))))
-    date: List.generate(
-        5,
-        (index) => IncomeModel(
-            amount: index.toDouble(),
-            date: date,
-            id: index.toString(),
-            tag: index.toString(),
-            title: 'Income $index',
-            userId: index.toString(),
-            walletId: index.toString(),
-            time: DateTime.now().toString()))
-};
+// Dummy data için mock
+Map<DateTime, List<IncomeModel>> incomeData = {};
+Map<DateTime, List<ExpenseModel>> expenseData = {};
 
-Map<DateTime, List<ExpenseModel>> expenseData = {
-  for (var date in List.generate(
-      30, (index) => DateTime.now().subtract(Duration(days: index))))
-    date: List.generate(
-        5,
-        (index) => ExpenseModel(
-            amount: index.toDouble(),
-            date: date,
-            id: index.toString(),
-            tag: index.toString(),
-            title: 'Income $index',
-            userId: index.toString(),
-            walletId: index.toString(),
-            time: DateTime.now().toString()))
-};
-
-/// **WalletPage**: Main page that uses app-level BLoCs
-///
-/// ✅ FIXED: Now uses existing WalletBloc from app level
+/// **HomePage**: Main page with wallet-based data display
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -59,11 +33,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late DateTime _startDate;
+  late DateTime _endDate;
 
   @override
   void initState() {
     super.initState();
     _initAnimation();
+    _initDateRange();
+    _loadUserWallets();
   }
 
   void _initAnimation() {
@@ -74,6 +52,18 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  void _initDateRange() {
+    _endDate = DateTime.now();
+    _startDate = DateTime.now().subtract(const Duration(days: 30));
+  }
+
+  void _loadUserWallets() {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      context.read<WalletBloc>().add(GetWalletsEvent(userId));
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -82,7 +72,6 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    // ✅ FIXED: Use existing BLoCs, don't create new ones
     return SafeArea(
       top: false,
       child: Scaffold(
@@ -96,43 +85,78 @@ class _HomePageState extends State<HomePage>
           ),
         ),
         drawer: const SharedDrawer(),
-        body: Column(
-          children: [
-            DateRangeIndicator(
-              endDate: DateTime.now(),
-              startDate: DateTime.now().subtract(const Duration(days: 30)),
-              onTap: () {},
-            ),
-            Expanded(
-              child: CubeAnimationView(
-                controller: _controller,
-                firstView: ExpenseView(expenseData: expenseData),
-                secondView: IncomeView(incomeData: incomeData),
-                thirdView: CompareView(
-                  incomeData: incomeData,
-                  expenseData: expenseData,
+        body: BlocBuilder<WalletBloc, WalletState>(
+          builder: (context, walletState) {
+            // Aktif cüzdanı bul
+            WalletModel? activeWallet;
+            if (walletState is WalletLoadedSt) {
+              activeWallet = walletState.wallets.firstWhere((w) => w.isActive,
+                  orElse: () => walletState.wallets.first);
+            }
+
+            return Column(
+              children: [
+                DateRangeIndicator(
+                  endDate: _endDate,
+                  startDate: _startDate,
+                  onTap: () {
+                    // TODO: Date range picker
+                  },
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: SliderButtonEnhanced(
-                controller: _controller,
-                onTap: (value) => _handleSliderAction(context, value),
-              ),
-            ),
-          ],
+                Expanded(
+                  child: activeWallet != null
+                      ? CubeAnimationView(
+                          controller: _controller,
+                          firstView: ExpenseView(expenseData: expenseData),
+                          secondView: IncomeView(incomeData: incomeData),
+                          thirdView: CompareView(
+                            userId: FirebaseAuth.instance.currentUser!.uid,
+                            wallet: activeWallet,
+                            startDate: _startDate,
+                            endDate: _endDate,
+                          ),
+                        )
+                      : const Center(
+                          child: Text('Cüzdan bulunamadı'),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: SliderButtonEnhanced(
+                    controller: _controller,
+                    onTap: (value) => _handleSliderAction(context, value),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
   void _handleSliderAction(BuildContext context, SliderState value) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    // Aktif cüzdanı al
+    final walletState = context.read<WalletBloc>().state;
+    if (walletState is! WalletLoadedSt) return;
+
+    final activeWallet = walletState.wallets
+        .firstWhere((w) => w.isActive, orElse: () => walletState.wallets.first);
+
     switch (value) {
       case SliderState.compare:
-        // context.read<DataBloc>().add(
-        //       GetCompareEvent(filterStart: _startDate, filterEnd: _endDate),
-        //     );
+        // Compare view için veri yükle
+        context.read<CompareBloc>().add(
+              GetTransactionsEvent(
+                userId: userId,
+                walletId: activeWallet.id,
+                startDate: _startDate,
+                endDate: _endDate,
+              ),
+            );
         break;
       case SliderState.expense:
         FinanceSheetHandler.showExpenseSheet(context);

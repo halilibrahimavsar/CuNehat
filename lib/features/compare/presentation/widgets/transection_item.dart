@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/compare/domain/model/combine_model.dart';
+import 'package:cunehat/features/compare/domain/models/combine_model.dart';
 import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
 import 'package:flutter/material.dart';

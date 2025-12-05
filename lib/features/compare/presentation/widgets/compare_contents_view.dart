@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/compare/domain/model/combine_model.dart';
+import 'package:cunehat/features/compare/domain/models/combine_model.dart';
 import 'package:cunehat/features/compare/presentation/widgets/balance_header.dart';
 import 'package:cunehat/features/compare/presentation/widgets/empty_item_view.dart';
 import 'package:cunehat/features/compare/presentation/widgets/transection_item.dart';

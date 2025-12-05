@@ -1,5 +1,8 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
+import 'package:cunehat/features/compare/data/datasource/compare_hive_datasource.dart';
+import 'package:cunehat/features/compare/data/repository/compare_repository_impl.dart';
+import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
@@ -43,6 +46,12 @@ void main() async {
             dataSource: WalletHiveDataSource(),
           ),
         ),
+        // ✅ Compare Repository (NEW)
+        RepositoryProvider(
+          create: (context) => CompareRepositoryImpl(
+            dataSource: CompareHiveDataSource(),
+          ),
+        ),
       ],
       child: CallFirebaseAuth(
         privateWidget: CuNehatEngine(),
@@ -67,7 +76,11 @@ class CuNehatEngine extends StatelessWidget {
           create: (context) =>
               WalletBloc(context.read<WalletRepositoryImpl>().dataSource),
         ),
-        // ⚠️ Settings BLoC burada oluşturulmaz, SettingsPage'de oluşturulur
+        // Compare BLoC (NEW)
+        BlocProvider(
+          create: (context) =>
+              CompareBloc(context.read<CompareRepositoryImpl>().dataSource),
+        ),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {
