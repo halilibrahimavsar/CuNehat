@@ -6,6 +6,7 @@ import 'package:cunehat/features/compare/data/datasource/compare_hive_datasource
 import 'package:cunehat/features/compare/data/repository/compare_repository_impl.dart';
 import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
+import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
@@ -37,17 +38,14 @@ void main() async {
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
-    MultiRepositoryProvider(
-      providers: [
-        // ✅ Settings Repository
-        RepositoryProvider(
-          create: (context) => SettingsRepositoryImpl(),
-        ),
-        // ✅ Wallet Repository
-
-        // ✅ Compare Repository (NEW)
-      ],
-      child: CuNehatEngine(),
+    RepositoryProvider(
+      create: (context) => SettingsRepositoryImpl(),
+      child: BlocProvider(
+        create: (context) => SettingsBloc(
+          context.read<SettingsRepositoryImpl>(),
+        )..add(LoadStorageModeEvent()), // Settings'i yükle
+        child: CuNehatEngine(),
+      ),
     ),
   );
 }
@@ -57,31 +55,34 @@ class CuNehatEngine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final storageMode = context.read<SettingsRepositoryImpl>().getStorageMode();
-    return FutureBuilder(
-      future: storageMode,
-      initialData: storageMode,
-      builder: (context, snapshot) {
-        debugPrint(
-            "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-        debugPrint(
-            "||||||||||||||||||||||||MAIN BUILD||||||||||||||||||||||||||");
-        debugPrint(snapshot.data.toString());
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, state) {
+        // State'ten storageMode'u al
+        final storageMode = state.storageMode;
 
-        debugPrint(
-            "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+        // Eğer storageMode henüz yüklenmediyse, loading göster
+        if (storageMode == null) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
         return MultiRepositoryProvider(
           providers: [
             RepositoryProvider(
               create: (context) => WalletRepositoryImpl(
-                dataSource: snapshot.data == StorageMode.local
+                dataSource: storageMode == StorageMode.local
                     ? WalletHiveDataSource()
                     : WalletFirestoreDataSource(),
               ),
             ),
             RepositoryProvider(
               create: (context) => CompareRepositoryImpl(
-                dataSource: snapshot.data == StorageMode.local
+                dataSource: storageMode == StorageMode.local
                     ? CompareHiveDataSource()
                     : CompareFirestoreDataSource(),
               ),
