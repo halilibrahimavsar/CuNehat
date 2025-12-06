@@ -1,9 +1,12 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/features/compare/data/datasource/compare_firestore_datasource.dart';
 import 'package:cunehat/features/compare/data/datasource/compare_hive_datasource.dart';
 import 'package:cunehat/features/compare/data/repository/compare_repository_impl.dart';
 import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
+import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
@@ -41,21 +44,10 @@ void main() async {
           create: (context) => SettingsRepositoryImpl(),
         ),
         // ✅ Wallet Repository
-        RepositoryProvider(
-          create: (context) => WalletRepositoryImpl(
-            dataSource: WalletHiveDataSource(),
-          ),
-        ),
+
         // ✅ Compare Repository (NEW)
-        RepositoryProvider(
-          create: (context) => CompareRepositoryImpl(
-            dataSource: CompareHiveDataSource(),
-          ),
-        ),
       ],
-      child: CallFirebaseAuth(
-        privateWidget: CuNehatEngine(),
-      ),
+      child: CuNehatEngine(),
     ),
   );
 }
@@ -65,34 +57,71 @@ class CuNehatEngine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        // Theme BLoC
-        BlocProvider(
-          create: (context) => ThemeBloc(),
-        ),
-        // Wallet BLoC
-        BlocProvider(
-          create: (context) =>
-              WalletBloc(context.read<WalletRepositoryImpl>().dataSource),
-        ),
-        // Compare BLoC (NEW)
-        BlocProvider(
-          create: (context) =>
-              CompareBloc(context.read<CompareRepositoryImpl>().dataSource),
-        ),
-      ],
-      child: BlocBuilder<ThemeBloc, ThemeState>(
-        builder: (context, state) {
-          return MaterialApp.router(
-            routerConfig: appRouter,
-            themeMode: ThemeMode.light,
-            theme: state.name,
-            title: "CuNehat",
-            debugShowCheckedModeBanner: false,
-          );
-        },
-      ),
+    final storageMode = context.read<SettingsRepositoryImpl>().getStorageMode();
+    return FutureBuilder(
+      future: storageMode,
+      initialData: storageMode,
+      builder: (context, snapshot) {
+        debugPrint(
+            "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+        debugPrint(
+            "||||||||||||||||||||||||MAIN BUILD||||||||||||||||||||||||||");
+        debugPrint(snapshot.data.toString());
+
+        debugPrint(
+            "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+        return MultiRepositoryProvider(
+          providers: [
+            RepositoryProvider(
+              create: (context) => WalletRepositoryImpl(
+                dataSource: snapshot.data == StorageMode.local
+                    ? WalletHiveDataSource()
+                    : WalletFirestoreDataSource(),
+              ),
+            ),
+            RepositoryProvider(
+              create: (context) => CompareRepositoryImpl(
+                dataSource: snapshot.data == StorageMode.local
+                    ? CompareHiveDataSource()
+                    : CompareFirestoreDataSource(),
+              ),
+            ),
+          ],
+          child: MultiBlocProvider(
+            providers: [
+              // Theme BLoC
+              BlocProvider(
+                create: (context) => ThemeBloc(),
+              ),
+              // Wallet BLoC
+              BlocProvider(
+                create: (context) =>
+                    WalletBloc(context.read<WalletRepositoryImpl>().dataSource),
+              ),
+              // Compare BLoC (NEW)
+              BlocProvider(
+                create: (context) => CompareBloc(
+                    context.read<CompareRepositoryImpl>().dataSource),
+              ),
+            ],
+            child: BlocBuilder<ThemeBloc, ThemeState>(
+              builder: (context, state) {
+                return CallFirebaseAuth(
+                  createUserCollection: true,
+                  themeData: state.name,
+                  privateWidget: MaterialApp.router(
+                    routerConfig: appRouter,
+                    themeMode: ThemeMode.light,
+                    theme: state.name,
+                    title: "CuNehat",
+                    debugShowCheckedModeBanner: false,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }
