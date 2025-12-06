@@ -6,17 +6,6 @@ import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// Generic Migration DataSource
-///
-/// Handles data transfer between Hive and Firestore
-///
-/// **NEW DATABASE STRUCTURE:**
-/// ```
-/// users/{userId}/
-///   └── wallets/{walletId}/
-///       ├── incomes/{incomeId}
-///       └── expenses/{expenseId}
-/// ```
 class MigrationDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -59,12 +48,7 @@ class MigrationDataSource {
     final batch = _firestore.batch();
 
     for (var wallet in wallets) {
-      final ref = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('wallets')
-          .doc(wallet.id);
-
+      final ref = _firestore.collection('wallets').doc(wallet.id);
       batch.set(ref, wallet.toJson());
     }
 
@@ -78,33 +62,15 @@ class MigrationDataSource {
 
     if (expenses.isEmpty) return;
 
-    // Group by wallet
-    final expensesByWallet = <String, List<ExpenseModel>>{};
+    final batch = _firestore.batch();
+
     for (var expense in expenses) {
-      expensesByWallet.putIfAbsent(expense.walletId, () => []).add(expense);
+      final ref = _firestore.collection('expenses').doc(expense.id);
+      batch.set(ref, expense.toJson());
+      // Firestore batch limiti 500'dür. Büyük veri setleri için ek kontrol gerekebilir.
     }
 
-    // Upload to subcollections
-    for (var entry in expensesByWallet.entries) {
-      final walletId = entry.key;
-      final walletExpenses = entry.value;
-
-      final batch = _firestore.batch();
-
-      for (var expense in walletExpenses) {
-        final ref = _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('wallets')
-            .doc(walletId)
-            .collection('expenses')
-            .doc(expense.id);
-
-        batch.set(ref, expense.toJson());
-      }
-
-      await batch.commit();
-    }
+    await batch.commit();
   }
 
   Future<void> _migrateIncomesToCloud(String userId) async {
@@ -113,33 +79,15 @@ class MigrationDataSource {
 
     if (incomes.isEmpty) return;
 
-    // Group by wallet
-    final incomesByWallet = <String, List<IncomeModel>>{};
+    final batch = _firestore.batch();
+
     for (var income in incomes) {
-      incomesByWallet.putIfAbsent(income.walletId, () => []).add(income);
+      final ref = _firestore.collection('incomes').doc(income.id);
+      batch.set(ref, income.toJson());
+      // Firestore batch limiti 500'dür. Büyük veri setleri için ek kontrol gerekebilir.
     }
 
-    // Upload to subcollections
-    for (var entry in incomesByWallet.entries) {
-      final walletId = entry.key;
-      final walletIncomes = entry.value;
-
-      final batch = _firestore.batch();
-
-      for (var income in walletIncomes) {
-        final ref = _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('wallets')
-            .doc(walletId)
-            .collection('incomes')
-            .doc(income.id);
-
-        batch.set(ref, income.toJson());
-      }
-
-      await batch.commit();
-    }
+    await batch.commit();
   }
 
   // ========== CLOUD → LOCAL ==========
@@ -170,9 +118,8 @@ class MigrationDataSource {
 
   Future<void> _migrateWalletsToLocal(String userId) async {
     final snapshot = await _firestore
-        .collection('users')
-        .doc(userId)
         .collection('wallets')
+        .where('userId', isEqualTo: userId)
         .get();
 
     if (snapshot.docs.isEmpty) return;
@@ -234,31 +181,67 @@ class MigrationDataSource {
   }
 
   Future<void> _clearFirestoreData(String userId) async {
-    final walletsSnapshot = await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('wallets')
-        .get();
+    await _deleteWhere(
+        collectionPath: "wallets", field: 'userId', value: userId);
+    await _deleteWhere(
+        collectionPath: "expenses", field: 'userId', value: userId);
+    await _deleteWhere(
+        collectionPath: "incomes", field: 'userId', value: userId);
+  }
 
-    for (var walletDoc in walletsSnapshot.docs) {
-      final batch = _firestore.batch();
+  /// Belirli bir where sorgusuna uyan tüm belgeleri siler
+  Future<void> _deleteWhere({
+    required String collectionPath,
+    required String field,
+    required dynamic value,
+  }) async {
+    final firestore = FirebaseFirestore.instance;
+    final collectionRef = firestore.collection(collectionPath);
 
-      // Delete expenses subcollection
-      final expenses = await walletDoc.reference.collection('expenses').get();
-      for (var expense in expenses.docs) {
-        batch.delete(expense.reference);
+    WriteBatch batch = firestore.batch();
+    int deletedCount = 0;
+    int batchIndex = 0;
+
+    try {
+      // 1. Sorguyu oluştur
+      Query query = collectionRef.where(field, isEqualTo: value);
+
+      // Eğer indeks hatası alırsan (Firestore indeks gerektirir), konsolda link çıkar, tıkla oluştur.
+      QuerySnapshot snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        print("Silinecek belge bulunamadı.");
+        return;
       }
 
-      // Delete incomes subcollection
-      final incomes = await walletDoc.reference.collection('incomes').get();
-      for (var income in incomes.docs) {
-        batch.delete(income.reference);
+      print("Toplam ${snapshot.docs.length} belge silinecek...");
+
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+        deletedCount++;
+
+        // Her 500 belgede bir commit at (Firestore batch limiti)
+        if (deletedCount % 500 == 0) {
+          await batch.commit();
+          print(
+              "Batch ${++batchIndex}: 500 belge silindi. Toplam: $deletedCount");
+          batch = firestore.batch(); // yeni batch başlat
+        }
       }
 
-      // Delete wallet document
-      batch.delete(walletDoc.reference);
+      // Kalanları sil
+      if (deletedCount % 500 != 0) {
+        await batch.commit();
+        print("Son batch tamamlandı. Kalan belgeler silindi.");
+      }
 
-      await batch.commit();
+      print("Toplam $deletedCount belge başarıyla silindi! ✅");
+    } catch (e) {
+      print("Hata oluştu: $e");
+      if (e.toString().contains("index")) {
+        print(
+            "Firestore indeks eksik! Konsola bak, oluşturman gereken indeks linki var.");
+      }
     }
   }
 }

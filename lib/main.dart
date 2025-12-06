@@ -45,7 +45,7 @@ void main() async {
           context.read<SettingsRepositoryImpl>(),
         )..add(LoadStorageModeEvent()), // Settings'i yükle
         child: CallFirebaseAuth(
-          createUserCollection: true,
+          createUserCollection: false,
           privateWidget: CuNehatEngine(),
         ),
       ),
