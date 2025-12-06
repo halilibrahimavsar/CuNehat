@@ -1,5 +1,4 @@
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/settings/presentation/widgets/migration_dialog.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
@@ -15,11 +14,7 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => SettingsBloc(context.read<SettingsRepositoryImpl>())
-        ..add(const LoadStorageModeEvent()),
-      child: const _SettingsView(),
-    );
+    return _SettingsView();
   }
 }
 

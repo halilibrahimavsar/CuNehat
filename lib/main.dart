@@ -44,7 +44,10 @@ void main() async {
         create: (context) => SettingsBloc(
           context.read<SettingsRepositoryImpl>(),
         )..add(LoadStorageModeEvent()), // Settings'i yükle
-        child: CuNehatEngine(),
+        child: CallFirebaseAuth(
+          createUserCollection: true,
+          privateWidget: CuNehatEngine(),
+        ),
       ),
     ),
   );
@@ -57,71 +60,80 @@ class CuNehatEngine extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsBloc, SettingsState>(
       builder: (context, state) {
-        // State'ten storageMode'u al
-        final storageMode = state.storageMode;
+        switch (state) {
+          case StorageModeLoadedSt():
+            final storageMode = state.mode;
+            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+            print(storageMode.toString());
+            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 
-        // Eğer storageMode henüz yüklenmediyse, loading göster
-        if (storageMode == null) {
-          return MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-        }
-
-        return MultiRepositoryProvider(
-          providers: [
-            RepositoryProvider(
-              create: (context) => WalletRepositoryImpl(
-                dataSource: storageMode == StorageMode.local
-                    ? WalletHiveDataSource()
-                    : WalletFirestoreDataSource(),
-              ),
-            ),
-            RepositoryProvider(
-              create: (context) => CompareRepositoryImpl(
-                dataSource: storageMode == StorageMode.local
-                    ? CompareHiveDataSource()
-                    : CompareFirestoreDataSource(),
-              ),
-            ),
-          ],
-          child: MultiBlocProvider(
-            providers: [
-              // Theme BLoC
-              BlocProvider(
-                create: (context) => ThemeBloc(),
-              ),
-              // Wallet BLoC
-              BlocProvider(
-                create: (context) =>
-                    WalletBloc(context.read<WalletRepositoryImpl>().dataSource),
-              ),
-              // Compare BLoC (NEW)
-              BlocProvider(
-                create: (context) => CompareBloc(
-                    context.read<CompareRepositoryImpl>().dataSource),
-              ),
-            ],
-            child: BlocBuilder<ThemeBloc, ThemeState>(
-              builder: (context, state) {
-                return CallFirebaseAuth(
-                  createUserCollection: true,
-                  themeData: state.name,
-                  privateWidget: MaterialApp.router(
-                    routerConfig: appRouter,
-                    themeMode: ThemeMode.light,
-                    theme: state.name,
-                    title: "CuNehat",
-                    debugShowCheckedModeBanner: false,
+            return MultiRepositoryProvider(
+              providers: [
+                RepositoryProvider(
+                  create: (context) => WalletRepositoryImpl(
+                    dataSource: storageMode == StorageMode.local
+                        ? WalletHiveDataSource()
+                        : WalletFirestoreDataSource(),
                   ),
-                );
-              },
-            ),
-          ),
-        );
+                ),
+                RepositoryProvider(
+                  create: (context) => CompareRepositoryImpl(
+                    dataSource: storageMode == StorageMode.local
+                        ? CompareHiveDataSource()
+                        : CompareFirestoreDataSource(),
+                  ),
+                ),
+              ],
+              child: MultiBlocProvider(
+                providers: [
+                  // Theme BLoC
+                  BlocProvider(
+                    create: (context) => ThemeBloc(),
+                  ),
+                  // Wallet BLoC
+                  BlocProvider(
+                    create: (context) => WalletBloc(
+                        context.read<WalletRepositoryImpl>().dataSource),
+                  ),
+                  // Compare BLoC (NEW)
+                  BlocProvider(
+                    create: (context) => CompareBloc(
+                        context.read<CompareRepositoryImpl>().dataSource),
+                  ),
+                ],
+                child: BlocBuilder<ThemeBloc, ThemeState>(
+                  builder: (context, state) {
+                    return MaterialApp.router(
+                      routerConfig: appRouter,
+                      themeMode: ThemeMode.light,
+                      theme: state.name,
+                      title: "CuNehat",
+                      debugShowCheckedModeBanner: false,
+                    );
+                  },
+                ),
+              ),
+            );
+          case SettingsErrorSt():
+            return MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: Text(state.error),
+                ),
+              ),
+            );
+          default:
+            return MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: Text(
+                      "Birşeyler yanlış gitti uygulamayı yeniden başlatın"),
+                ),
+              ),
+            );
+        }
       },
     );
   }
