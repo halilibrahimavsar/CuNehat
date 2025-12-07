@@ -38,7 +38,7 @@ void main() async {
   Hive.registerAdapter(WalletModelAdapter()); // typeId: 2
   Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 3
   Hive.registerAdapter(TransactionModelAdapter()); // typeId: 4
-  Hive.registerAdapter(TransactionTypeAdapter()); // typeId: 6
+  Hive.registerAdapter(TransactionTypeAdapter()); // typeId: 5
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
@@ -67,11 +67,6 @@ class CuNehatEngine extends StatelessWidget {
         switch (state) {
           case StorageModeLoadedSt():
             final storageMode = state.mode;
-            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-            print(storageMode.toString());
-            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-            print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 
             return MultiRepositoryProvider(
               providers: [
@@ -82,13 +77,7 @@ class CuNehatEngine extends StatelessWidget {
                         : WalletFirestoreDataSource(),
                   ),
                 ),
-                // RepositoryProvider(
-                //   create: (context) => CompareRepositoryImpl(
-                //     dataSource: storageMode == StorageMode.local
-                //         ? CompareHiveDataSource()
-                //         : CompareFirestoreDataSource(),
-                //   ),
-                // ),
+
                 // Transaction Repository
                 RepositoryProvider(
                   create: (context) => TransactionRepositoryImpl(
@@ -109,11 +98,7 @@ class CuNehatEngine extends StatelessWidget {
                     create: (context) => WalletBloc(
                         context.read<WalletRepositoryImpl>().dataSource),
                   ),
-                  // Compare BLoC
-                  // BlocProvider(
-                  //   create: (context) => CompareBloc(
-                  //       context.read<CompareRepositoryImpl>().dataSource),
-                  // ),
+
                   // Transaction BLoC (NEW)
                   BlocProvider(
                     create: (context) => TransactionBloc(
