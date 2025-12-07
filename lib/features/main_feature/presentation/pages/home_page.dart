@@ -4,10 +4,12 @@
 
 // lib/features/main_feature/presentation/pages/home_page.dart
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/transaction_list_page.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/error_view.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
@@ -152,26 +154,39 @@ class _HomePageState extends State<HomePage>
                     startDate: _startDate,
                     onTap: _showDateRangePicker,
                   ),
-                  Expanded(
-                    child: CubeAnimationView(
-                      controller: _controller,
-                      firstView: TransactionListPage(
-                        type: TransactionType.expense,
-                        userId: userId,
-                        walletId: activeWallet.id,
-                      ),
-                      secondView: TransactionListPage(
-                        type: TransactionType.income,
-                        userId: userId,
-                        walletId: activeWallet.id,
-                      ),
-                      thirdView: CompareView(
-                        userId: userId,
-                        wallet: activeWallet,
-                        startDate: _startDate,
-                        endDate: _endDate,
-                      ),
-                    ),
+                  BlocBuilder<TransactionBloc, TransactionState>(
+                    builder: (context, transactionState) {
+                      if (transactionState is TransactionLoaded) {
+                        return Expanded(
+                          child: CubeAnimationView(
+                            controller: _controller,
+                            firstView: TransactionListPage(
+                              type: TransactionType.expense,
+                              userId: userId,
+                              walletId: activeWallet.id,
+                            ),
+                            secondView: TransactionListPage(
+                              type: TransactionType.income,
+                              userId: userId,
+                              walletId: activeWallet.id,
+                            ),
+                            thirdView: CompareView(
+                              userId: userId,
+                              wallet: activeWallet,
+                              startDate: _startDate,
+                              endDate: _endDate,
+                              allTransactions: transactionState.allTransactions,
+                            ),
+                          ),
+                        );
+                      } else if (transactionState is TransactionError) {
+                        return ErrorView(message: transactionState.message);
+                      } else if (transactionState is TransactionLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
                   ),
                   Padding(
                     padding: const EdgeInsets.all(20.0),
