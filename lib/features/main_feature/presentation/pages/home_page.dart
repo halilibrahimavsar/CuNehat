@@ -148,6 +148,7 @@ class _HomePageState extends State<HomePage>
               }
 
               return Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   DateRangeIndicator(
                     endDate: _endDate,
@@ -164,11 +165,15 @@ class _HomePageState extends State<HomePage>
                               type: TransactionType.expense,
                               userId: userId,
                               walletId: activeWallet.id,
+                              groupedTransactions:
+                                  transactionState.groupedTransactions,
                             ),
                             secondView: TransactionListPage(
                               type: TransactionType.income,
                               userId: userId,
                               walletId: activeWallet.id,
+                              groupedTransactions:
+                                  transactionState.groupedTransactions,
                             ),
                             thirdView: CompareView(
                               userId: userId,
