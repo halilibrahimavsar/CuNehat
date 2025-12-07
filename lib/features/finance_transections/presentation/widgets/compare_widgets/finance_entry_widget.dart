@@ -3,8 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/models/expense_model.dart';
-import 'package:cunehat/models/income_model.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 
 // Düzenleme modu için başlangıç verileri
 class FinanceInitialData {
@@ -14,7 +13,7 @@ class FinanceInitialData {
   final String tag;
   final DateTime date;
   final String time;
-  final String walletId; // ⚠️ NEW FIELD
+  final String walletId;
 
   FinanceInitialData({
     required this.id,
@@ -23,23 +22,24 @@ class FinanceInitialData {
     required this.tag,
     required this.date,
     required this.time,
-    required this.walletId, // ⚠️ NEW FIELD
+    required this.walletId,
   });
 }
 
 class FinanceEntryWidget extends StatefulWidget {
   final bool isExpense;
-  final Function(dynamic model) onSave;
+  final Function(TransactionEntity)
+      onSave; // ⚠️ FIX: Changed to TransactionEntity
   final VoidCallback onCancel;
-  final String? walletId; // ➕ YENİ: Yeni kayıtlar için cüzdan ID'si
-  final FinanceInitialData? initialData; // Düzenleme modu için
+  final String? walletId;
+  final FinanceInitialData? initialData;
 
   const FinanceEntryWidget({
     super.key,
     required this.isExpense,
     required this.onSave,
     required this.onCancel,
-    this.walletId, // ➕ YENİ
+    this.walletId,
     this.initialData,
   });
 
@@ -82,7 +82,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
   void initState() {
     super.initState();
 
-    // Düzenleme modunda başlangıç verilerini yükle
     if (_isEditMode) {
       _titleController = TextEditingController(text: widget.initialData!.title);
       _amountController =
@@ -91,7 +90,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
       _selectedDate = widget.initialData!.date;
       _selectedTag = widget.initialData!.tag;
 
-      // Time string'i TimeOfDay'e çevir
       final timeParts = widget.initialData!.time.split(':');
       if (timeParts.length >= 2) {
         _selectedTime = TimeOfDay(
@@ -151,12 +149,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     super.dispose();
   }
 
-  // ⚠️ CRITICAL FIX: Change onSave callback signature
-// OLD: Function(Map<String, dynamic>) onSave
-// NEW: Function(dynamic model) onSave
-
-// In _validateAndSave() method, instead of passing a Map, pass the model directly:
-
+  // ⚠️ FIX: Return TransactionEntity instead of model
   void _validateAndSave() {
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
@@ -189,56 +182,20 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     final timeString = AppFormatters.dateTime.format(combinedDate);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "local_user";
 
-    // ⚠️ CRITICAL FIX: Pass the model directly, not a Map
-    dynamic model;
+    // ⚠️ FIX: Create TransactionEntity directly
+    final transaction = TransactionEntity(
+      id: _isEditMode ? widget.initialData!.id : '',
+      userId: userId,
+      walletId: currentWalletId,
+      title: title,
+      tag: tag,
+      amount: amount,
+      date: combinedDate,
+      time: timeString,
+      type: widget.isExpense ? TransactionType.expense : TransactionType.income,
+    );
 
-    if (_isEditMode) {
-      if (widget.isExpense) {
-        model = ExpenseModel(
-          id: widget.initialData!.id,
-          userId: userId,
-          title: title,
-          amount: amount,
-          tag: tag,
-          date: combinedDate,
-          time: timeString,
-          walletId: currentWalletId,
-        );
-      } else {
-        model = IncomeModel(
-          id: widget.initialData!.id,
-          userId: userId,
-          title: title,
-          amount: amount,
-          tag: tag,
-          date: combinedDate,
-          time: timeString,
-          walletId: currentWalletId,
-        );
-      }
-    } else {
-      model = widget.isExpense
-          ? ExpenseModel.createLocal(
-              userId: userId,
-              title: title,
-              amount: amount,
-              tag: tag,
-              date: combinedDate,
-              time: timeString,
-              walletId: currentWalletId,
-            )
-          : IncomeModel.createLocal(
-              userId: userId,
-              title: title,
-              amount: amount,
-              tag: tag,
-              date: combinedDate,
-              time: timeString,
-              walletId: currentWalletId,
-            );
-    }
-
-    widget.onSave(model); // ⚠️ Pass model directly
+    widget.onSave(transaction);
   }
 
   void _showErrorAnimation() {
@@ -302,7 +259,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        FocusScope.of(context).unfocus(); // Klavyeyi kapat
+        FocusScope.of(context).unfocus();
       },
       child: SafeArea(
         child: SlideTransition(
@@ -312,7 +269,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Container(
-                // 3. OVERFLOW DÜZELTMESİ - maxHeight eklendi
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.9,
                 ),
@@ -330,7 +286,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                     ),
                   ],
                 ),
-                // 3. OVERFLOW DÜZELTMESİ - SingleChildScrollView eklendi
                 child: SingleChildScrollView(
                   padding: EdgeInsets.only(
                     bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -342,11 +297,8 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // HEADER
                       _buildHeader(primaryColor, typeText, actionText),
                       const SizedBox(height: 24),
-
-                      // TITLE FIELD
                       _buildTextField(
                         controller: _titleController,
                         label: "$typeText Başlığı",
@@ -356,8 +308,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                         primaryColor: primaryColor,
                       ),
                       const SizedBox(height: 16),
-
-                      // AMOUNT FIELD
                       _buildTextField(
                         controller: _amountController,
                         label: "Tutar (₺)",
@@ -370,16 +320,10 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
                             _isAmountValid ? null : "Geçerli bir tutar girin",
                       ),
                       const SizedBox(height: 16),
-
-                      // TAG SELECTION
                       _buildTagSection(primaryColor),
                       const SizedBox(height: 16),
-
-                      // DATE & TIME ROW
                       _buildDateTimeRow(primaryColor),
                       const SizedBox(height: 32),
-
-                      // SAVE BUTTON
                       _buildSaveButton(primaryColor, typeText, actionText),
                       const SizedBox(height: 16),
                     ],
@@ -512,8 +456,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
           ),
         ),
         const SizedBox(height: 8),
-
-        // TAG CHIPS
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -521,8 +463,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             final isSelected = _selectedTag == tag;
             return GestureDetector(
               onTap: () {
-                FocusScope.of(context).unfocus(); // Klavyeyi kapat
-
+                FocusScope.of(context).unfocus();
                 setState(() {
                   _selectedTag = tag;
                   _tagController.text = tag;
@@ -560,10 +501,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             );
           }).toList(),
         ),
-
         const SizedBox(height: 12),
-
-        // CUSTOM TAG INPUT
         _buildTextField(
           controller: _tagController,
           label: "Özel Kategori",

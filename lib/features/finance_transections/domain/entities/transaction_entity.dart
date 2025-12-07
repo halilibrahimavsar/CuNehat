@@ -4,7 +4,9 @@ import 'package:hive/hive.dart';
 
 part 'transaction_entity.g.dart';
 
-@HiveType(typeId: 5) // ⚠️ NEW typeId (5 was taken)
+// ⚠️ FIX: Changed typeId from 5 to 6 to avoid conflict
+
+@HiveType(typeId: 6)
 enum TransactionType {
   @HiveField(0)
   income,
@@ -12,7 +14,7 @@ enum TransactionType {
   expense,
 }
 
-/// ⚠️ CRITICAL FIX: Entity should NOT have @HiveField annotations
+/// ⚠️ Entity should NOT have @HiveField annotations
 /// Only the Model (TransactionModel) should have Hive fields
 class TransactionEntity extends Equatable {
   final String id;

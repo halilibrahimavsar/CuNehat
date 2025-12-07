@@ -34,33 +34,18 @@ class TransactionSheetHandler {
                   walletId: initialTransaction.walletId,
                 )
               : null,
-          onSave: (model) {
-            // ⚠️ CRITICAL FIX: Now receives a model, not a map
+          onSave: (transaction) {
+            // ⚠️ FIX: Now receives TransactionEntity directly
             Navigator.pop(sheetContext);
-
-            // Convert to TransactionEntity
-            final entity = TransactionEntity(
-              id: model.id,
-              userId: userId,
-              walletId: walletId,
-              title: model.title,
-              tag: model.tag,
-              amount: model.amount,
-              date: model.date,
-              time: model.time,
-              type: type,
-            );
 
             // Send to BLoC
             if (initialTransaction != null) {
-              // Update
               context.read<TransactionBloc>().add(
-                    UpdateTransactionEvent(entity),
+                    UpdateTransactionEvent(transaction),
                   );
             } else {
-              // Add
               context.read<TransactionBloc>().add(
-                    AddTransactionEvent(entity),
+                    AddTransactionEvent(transaction),
                   );
             }
           },

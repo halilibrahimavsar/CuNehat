@@ -2,8 +2,6 @@
 
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
-import 'package:cunehat/models/expense_model.dart';
-import 'package:cunehat/models/income_model.dart';
 import 'package:flutter/material.dart';
 
 class TransectionListView extends StatelessWidget {
@@ -75,14 +73,13 @@ class TransectionListView extends StatelessWidget {
                 itemBuilder: (context, index) {
                   double balanceAtThisPoint = initialBalance;
 
-                  // Geçmiş işlemlerin bakiyesini hesapla
+                  // ⚠️ FIX: Calculate balance using TransactionEntity
                   for (int i = 0; i <= index; i++) {
                     final transaction = combinedList[i];
-                    if (transaction is IncomeModel) {
-                      balanceAtThisPoint += (transaction as IncomeModel).amount;
-                    } else if (transaction is ExpenseModel) {
-                      balanceAtThisPoint -=
-                          (transaction as ExpenseModel).amount;
+                    if (transaction.isIncome) {
+                      balanceAtThisPoint += transaction.amount;
+                    } else {
+                      balanceAtThisPoint -= transaction.amount;
                     }
                   }
 
@@ -109,12 +106,10 @@ class TransectionListView extends StatelessWidget {
     double balanceAfter,
     bool isBalanceVisible,
   ) {
-    final isIncome = transaction is IncomeModel;
-    final item = transaction;
-    final amount =
-        isIncome ? (item as IncomeModel).amount : (item as ExpenseModel).amount;
-    final title =
-        isIncome ? (item as IncomeModel).title : (item as ExpenseModel).title;
+    // ⚠️ FIX: Use TransactionEntity properties directly
+    final isIncome = transaction.isIncome;
+    final amount = transaction.amount;
+    final title = transaction.title;
     final date = transaction.date;
 
     return AnimatedContainer(
@@ -170,7 +165,6 @@ class TransectionListView extends StatelessWidget {
                   children: [
                     const SizedBox(height: 4),
                     Text(
-                      // DateFormat('dd MMMM yyyy', 'tr_TR').format(date),
                       AppFormatters.dateShort.format(date),
                       style: TextStyle(
                         fontSize: 12,

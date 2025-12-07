@@ -5,6 +5,7 @@ import 'package:cunehat/features/finance_transections/data/datasources/transacti
 import 'package:cunehat/features/finance_transections/data/datasources/transaction_remote_datasource.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/data/repositories/transaction_repository_impl.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
@@ -37,7 +38,7 @@ void main() async {
   Hive.registerAdapter(WalletModelAdapter()); // typeId: 2
   Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 3
   Hive.registerAdapter(TransactionModelAdapter()); // typeId: 4
-
+  Hive.registerAdapter(TransactionTypeAdapter()); // typeId: 6
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
