@@ -1,10 +1,6 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/compare/data/datasource/compare_firestore_datasource.dart';
-import 'package:cunehat/features/compare/data/datasource/compare_hive_datasource.dart';
-import 'package:cunehat/features/compare/data/repository/compare_repository_impl.dart';
-import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transaction_remote_datasource.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
@@ -41,8 +37,6 @@ void main() async {
   Hive.registerAdapter(WalletModelAdapter()); // typeId: 2
   Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 3
   Hive.registerAdapter(TransactionModelAdapter()); // typeId: 4
-  // TODO: Transaction Model için de adapter eklenmeli (typeId: 5)
-  // Hive.registerAdapter(TransactionModelAdapter()); // typeId: 5
 
   debugPrint('✅ Hive TypeAdapters registered');
 
@@ -87,13 +81,13 @@ class CuNehatEngine extends StatelessWidget {
                         : WalletFirestoreDataSource(),
                   ),
                 ),
-                RepositoryProvider(
-                  create: (context) => CompareRepositoryImpl(
-                    dataSource: storageMode == StorageMode.local
-                        ? CompareHiveDataSource()
-                        : CompareFirestoreDataSource(),
-                  ),
-                ),
+                // RepositoryProvider(
+                //   create: (context) => CompareRepositoryImpl(
+                //     dataSource: storageMode == StorageMode.local
+                //         ? CompareHiveDataSource()
+                //         : CompareFirestoreDataSource(),
+                //   ),
+                // ),
                 // Transaction Repository
                 RepositoryProvider(
                   create: (context) => TransactionRepositoryImpl(
@@ -115,10 +109,10 @@ class CuNehatEngine extends StatelessWidget {
                         context.read<WalletRepositoryImpl>().dataSource),
                   ),
                   // Compare BLoC
-                  BlocProvider(
-                    create: (context) => CompareBloc(
-                        context.read<CompareRepositoryImpl>().dataSource),
-                  ),
+                  // BlocProvider(
+                  //   create: (context) => CompareBloc(
+                  //       context.read<CompareRepositoryImpl>().dataSource),
+                  // ),
                   // Transaction BLoC (NEW)
                   BlocProvider(
                     create: (context) => TransactionBloc(

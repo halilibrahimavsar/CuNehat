@@ -1,13 +1,13 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/compare/domain/models/combine_model.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
 import 'package:flutter/material.dart';
 
 class TransectionListView extends StatelessWidget {
-  final List<CombinedTransaction> combinedList;
+  final List<TransactionEntity> combinedList;
   final ValueNotifier<bool> isBalanceVisible;
   final double initialBalance;
 
@@ -78,12 +78,11 @@ class TransectionListView extends StatelessWidget {
                   // Geçmiş işlemlerin bakiyesini hesapla
                   for (int i = 0; i <= index; i++) {
                     final transaction = combinedList[i];
-                    if (transaction.item is IncomeModel) {
-                      balanceAtThisPoint +=
-                          (transaction.item as IncomeModel).amount;
-                    } else if (transaction.item is ExpenseModel) {
+                    if (transaction is IncomeModel) {
+                      balanceAtThisPoint += (transaction as IncomeModel).amount;
+                    } else if (transaction is ExpenseModel) {
                       balanceAtThisPoint -=
-                          (transaction.item as ExpenseModel).amount;
+                          (transaction as ExpenseModel).amount;
                     }
                   }
 
@@ -105,13 +104,13 @@ class TransectionListView extends StatelessWidget {
 
   Widget _buildTransactionItem(
     BuildContext context,
-    CombinedTransaction transaction,
+    TransactionEntity transaction,
     int index,
     double balanceAfter,
     bool isBalanceVisible,
   ) {
-    final isIncome = transaction.item is IncomeModel;
-    final item = transaction.item;
+    final isIncome = transaction is IncomeModel;
+    final item = transaction;
     final amount =
         isIncome ? (item as IncomeModel).amount : (item as ExpenseModel).amount;
     final title =

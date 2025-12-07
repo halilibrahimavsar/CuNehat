@@ -151,6 +151,12 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     super.dispose();
   }
 
+  // ⚠️ CRITICAL FIX: Change onSave callback signature
+// OLD: Function(Map<String, dynamic>) onSave
+// NEW: Function(dynamic model) onSave
+
+// In _validateAndSave() method, instead of passing a Map, pass the model directly:
+
   void _validateAndSave() {
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
@@ -167,11 +173,10 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
       return;
     }
 
-    // Cüzdan ID'sini al: Düzenleme modundaysa initialData'dan, değilse widget'tan.
     final String? currentWalletId =
         _isEditMode ? widget.initialData!.walletId : widget.walletId;
 
-    if (currentWalletId == null) return; // Cüzdan ID'si yoksa işlemi durdur.
+    if (currentWalletId == null) return;
 
     final combinedDate = DateTime(
       _selectedDate.year,
@@ -184,10 +189,10 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     final timeString = AppFormatters.dateTime.format(combinedDate);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "local_user";
 
+    // ⚠️ CRITICAL FIX: Pass the model directly, not a Map
     dynamic model;
 
     if (_isEditMode) {
-      // Düzenleme modu - mevcut ID'yi koru
       if (widget.isExpense) {
         model = ExpenseModel(
           id: widget.initialData!.id,
@@ -212,7 +217,6 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
         );
       }
     } else {
-      // Yeni kayıt modu
       model = widget.isExpense
           ? ExpenseModel.createLocal(
               userId: userId,
@@ -234,7 +238,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
             );
     }
 
-    widget.onSave(model);
+    widget.onSave(model); // ⚠️ Pass model directly
   }
 
   void _showErrorAnimation() {

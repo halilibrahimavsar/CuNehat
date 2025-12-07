@@ -5,7 +5,7 @@
 // lib/features/transaction/presentation/pages/transaction_list_page.dart
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
-import 'package:cunehat/features/compare/presentation/widgets/finance_entry_widget.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/finance_entry_widget.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:flutter/material.dart';

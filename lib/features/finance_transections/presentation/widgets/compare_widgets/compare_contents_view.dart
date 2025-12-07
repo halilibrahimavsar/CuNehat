@@ -1,14 +1,14 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/compare/domain/models/combine_model.dart';
-import 'package:cunehat/features/compare/presentation/widgets/balance_header.dart';
-import 'package:cunehat/features/compare/presentation/widgets/empty_item_view.dart';
-import 'package:cunehat/features/compare/presentation/widgets/transection_item.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/balance_header.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/empty_item_view.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/transection_item.dart';
 import 'package:flutter/material.dart';
 
 class CompareContent extends StatelessWidget {
-  final List<CombinedTransaction> combinedList;
+  final List<TransactionEntity> combinedList;
   final ValueNotifier<bool> isBalanceVisible;
   final String walletName;
   final Icon walletIcon;

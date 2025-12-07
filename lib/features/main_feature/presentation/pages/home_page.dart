@@ -3,8 +3,7 @@
 // ==========================================
 
 // lib/features/main_feature/presentation/pages/home_page.dart
-import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
-import 'package:cunehat/features/compare/presentation/page/compare_view.dart';
+import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
@@ -206,8 +205,8 @@ class _HomePageState extends State<HomePage>
     switch (value) {
       case SliderState.compare:
         // Compare view için veri yükle
-        context.read<CompareBloc>().add(
-              GetTransactionsCompareEvent(
+        context.read<TransactionBloc>().add(
+              LoadTransactionsEvent(
                 userId: userId,
                 walletId: activeWallet.id,
                 startDate: _startDate,

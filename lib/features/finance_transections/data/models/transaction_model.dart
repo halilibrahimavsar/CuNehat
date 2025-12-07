@@ -1,10 +1,13 @@
-// lib/features/transaction/data/models/transaction_model.dart
+// lib/features/finance_transections/data/models/transaction_model.dart
 import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
 
-part 'transaction_model.g.dart'; // Build runner ile oluşturulacak
+part 'transaction_model.g.dart';
 
-@HiveType(typeId: 5) // TypeId 5 kullanıyoruz
+/// ⚠️ CRITICAL FIX: Remove field overrides
+/// The model extends entity, so it inherits all fields
+/// We only need to add @HiveField annotations
+@HiveType(typeId: 5)
 class TransactionModel extends TransactionEntity {
   @HiveField(0)
   @override

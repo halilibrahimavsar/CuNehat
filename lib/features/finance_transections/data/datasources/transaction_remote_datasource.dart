@@ -1,8 +1,4 @@
-// ==========================================
-// FIRESTORE IMPLEMENTATION
-// ==========================================
-
-// lib/features/transaction/data/datasources/transaction_firestore_datasource.dart
+// lib/features/finance_transections/data/datasources/transaction_remote_datasource.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
@@ -21,34 +17,40 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
     TransactionType? type,
   }) async {
     try {
-      Query query = _firestore
-          .collection('transactions')
-          .where('userId', isEqualTo: userId)
-          .where('walletId', isEqualTo: walletId);
+      // ⚠️ CRITICAL FIX: Simplify query to avoid complex composite index
+      // Instead of multiple where clauses, filter in memory
 
-      if (type != null) {
-        query = query.where('type',
-            isEqualTo: type == TransactionType.income ? 'income' : 'expense');
-      }
+      Query query = _firestore.collection('transactions');
 
-      if (startDate != null) {
-        query = query.where('date',
-            isGreaterThanOrEqualTo: startDate.toIso8601String());
-      }
+      // Only filter by userId (simple index)
+      query = query.where('userId', isEqualTo: userId);
 
-      if (endDate != null) {
-        query =
-            query.where('date', isLessThanOrEqualTo: endDate.toIso8601String());
-      }
+      // Sort by date
+      query = query.orderBy('date', descending: true);
 
-      final snapshot = await query.orderBy('date', descending: true).get();
+      final snapshot = await query.get();
 
-      return snapshot.docs
+      // Filter in memory (avoids complex Firestore index)
+      final transactions = snapshot.docs
           .map((doc) => TransactionModel.fromJson({
                 'id': doc.id,
                 ...doc.data() as Map<String, dynamic>,
               }))
-          .toList();
+          .where((t) {
+        // Filter by walletId
+        if (t.walletId != walletId) return false;
+
+        // Filter by type
+        if (type != null && t.type != type) return false;
+
+        // Filter by date range
+        if (startDate != null && t.date.isBefore(startDate)) return false;
+        if (endDate != null && t.date.isAfter(endDate)) return false;
+
+        return true;
+      }).toList();
+
+      return transactions;
     } on FirebaseException catch (e) {
       throw ServerException('Firebase hatası: ${e.message}', e);
     } catch (e) {
@@ -119,3 +121,18 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
     }
   }
 }
+
+// ⚠️ FIRESTORE INDEX REQUIREMENT (if you want server-side filtering):
+// 
+// If you prefer Firestore to do the filtering (better for large datasets),
+// create this composite index in Firebase Console:
+//
+// Collection: transactions
+// Fields:
+//   1. userId (Ascending)
+//   2. walletId (Ascending)  
+//   3. type (Ascending)
+//   4. date (Descending)
+//
+// Index creation link will appear in logs when you run the query.
+// Click it to auto-create the index.
