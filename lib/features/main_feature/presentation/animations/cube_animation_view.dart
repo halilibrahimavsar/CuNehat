@@ -1,11 +1,16 @@
+// ==========================================
+// UPDATED CUBE ANIMATION VIEW (No changes needed, but included for reference)
+// ==========================================
+
+// lib/features/main_feature/presentation/animations/cube_animation_view.dart
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-/// 3 Aşamalı (Income, Compare, Expense) 3D Kart Çevirme Animasyonu.
+/// 3 Aşamalı (Expense, Compare, Income) 3D Kart Çevirme Animasyonu.
 class CubeAnimationView extends StatelessWidget {
   final AnimationController controller;
-  final Widget firstView; // Income (value = 0.0)
-  final Widget secondView; // Expense (value = 1.0)
+  final Widget firstView; // Expense (value = 0.0)
+  final Widget secondView; // Income (value = 1.0)
   final Widget thirdView; // Compare (value = 0.5)
 
   const CubeAnimationView({
@@ -13,10 +18,9 @@ class CubeAnimationView extends StatelessWidget {
     required this.controller,
     required this.firstView,
     required this.secondView,
-    required this.thirdView, // Yeni eklendi
+    required this.thirdView,
   });
 
-  // 3D perspektifi için gerekli matris dönüşümü.
   Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.001);
 
   @override
@@ -26,49 +30,42 @@ class CubeAnimationView extends StatelessWidget {
       builder: (context, child) {
         final double value = controller.value;
 
-        // Geçerli animasyon aşaması için giden ve gelen widget'ları belirle
         final Widget outgoingWidget;
         final Widget incomingWidget;
-        // Geçerli aşamanın animasyon değerini hesapla (0.0 -> 1.0)
         final double phaseValue;
 
         if (value < 0.5) {
-          // AŞAMA 1: Income -> Compare (0.0'dan 0.5'e)
-          outgoingWidget = firstView; // Income çıkıyor
-          incomingWidget = thirdView; // Compare giriyor
-          phaseValue = value * 2; // Değeri 0.0-1.0 aralığına ölçekle
+          // PHASE 1: Expense -> Compare (0.0 to 0.5)
+          outgoingWidget = firstView;
+          incomingWidget = thirdView;
+          phaseValue = value * 2;
         } else {
-          // AŞAMA 2: Compare -> Expense (0.5'ten 1.0'a)
-          outgoingWidget = thirdView; // Compare çıkıyor
-          incomingWidget = secondView; // Expense giriyor
-          phaseValue = (value - 0.5) * 2; // Değeri 0.0-1.0 aralığına ölçekle
+          // PHASE 2: Compare -> Income (0.5 to 1.0)
+          outgoingWidget = thirdView;
+          incomingWidget = secondView;
+          phaseValue = (value - 0.5) * 2;
         }
 
-        // Animasyonlar artık 'controller' yerine 'phaseValue' kullanır
-        // .transform(phaseValue) metodu, o anki double değere göre bir Offset döndürür.
         final outgoingRotation =
             Tween(begin: 0.0, end: math.pi / 2).transform(phaseValue);
         final outgoingOffset = Tween<Offset>(
           begin: Offset.zero,
-          end: const Offset(-1.0, 0.0), // Sol tarafa kayar
+          end: const Offset(-1.0, 0.0),
         ).transform(phaseValue);
 
         final incomingRotation =
             Tween(begin: -math.pi / 2, end: 0.0).transform(phaseValue);
         final incomingOffset = Tween<Offset>(
-          begin: const Offset(1.0, 0.0), // Sağdan gelir
+          begin: const Offset(1.0, 0.0),
           end: Offset.zero,
         ).transform(phaseValue);
 
         return Stack(
           alignment: Alignment.center,
           children: [
-            // GİDEN WIDGET (Income veya Compare)
             Visibility(
-              visible: phaseValue < 0.9, // Çapraz geçiş için
-              // HATA DÜZELTİLDİ: SlideTransition yerine FractionalTranslation
+              visible: phaseValue < 0.9,
               child: FractionalTranslation(
-                // HATA DÜZELTİLDİ: incomingOffset yerine outgoingOffset
                 translation: outgoingOffset,
                 child: Transform(
                   alignment: Alignment.centerRight,
@@ -77,10 +74,8 @@ class CubeAnimationView extends StatelessWidget {
                 ),
               ),
             ),
-            // GELEN WIDGET (Compare veya Expense)
             Visibility(
-              visible: phaseValue > 0.1, // Çapraz geçiş için
-              // HATA DÜZELTİLDİ: SlideTransition yerine FractionalTranslation
+              visible: phaseValue > 0.1,
               child: FractionalTranslation(
                 translation: incomingOffset,
                 child: Transform(

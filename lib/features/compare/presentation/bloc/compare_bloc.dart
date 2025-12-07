@@ -15,7 +15,7 @@ class CompareBloc extends Bloc<CompareEvent, CompareState> {
   StreamSubscription<List<CombinedTransaction>>? _transactionSubscription;
 
   CompareBloc(this.repository) : super(const CompareInitialSt()) {
-    on<GetTransactionsEvent>(_onGetTransactions);
+    on<GetTransactionsCompareEvent>(_onGetTransactions);
     on<GetExpensesOnlyEvent>(_onGetExpensesOnly);
     on<GetIncomesOnlyEvent>(_onGetIncomesOnly);
     on<_EmitLoadedEvent>(_onEmitLoaded);
@@ -24,7 +24,7 @@ class CompareBloc extends Bloc<CompareEvent, CompareState> {
   }
 
   Future<void> _onGetTransactions(
-    GetTransactionsEvent event,
+    GetTransactionsCompareEvent event,
     Emitter<CompareState> emit,
   ) async {
     emit(const CompareLoadingSt());

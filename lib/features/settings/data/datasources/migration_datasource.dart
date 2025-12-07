@@ -175,6 +175,7 @@ class MigrationDataSource {
   // ========== CLEANUP ==========
 
   Future<void> _clearHiveData() async {
+    // TODO : Eğer user başka bir hesapla giriş yaparsa bütün veriler siliniyormu kontrol edilecek
     await Hive.deleteBoxFromDisk('wallets');
     await Hive.deleteBoxFromDisk('expenses_box');
     await Hive.deleteBoxFromDisk('incomes_box');

@@ -1,26 +1,25 @@
-// lib/features/main_feature/presentation/pages/home_page.dart
+// ==========================================
+// UPDATED HOME PAGE
+// ==========================================
 
+// lib/features/main_feature/presentation/pages/home_page.dart
 import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
 import 'package:cunehat/features/compare/presentation/page/compare_view.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
+import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
+import 'package:cunehat/features/finance_transections/presentation/pages/transaction_list_page.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
-import 'package:cunehat/features/main_feature/presentation/widgets/finance_entry_handler.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
-import 'package:cunehat/features/main_feature/presentation/pages/expense_page.dart';
-import 'package:cunehat/features/main_feature/presentation/pages/income_page.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-import 'package:cunehat/models/expense_model.dart';
-import 'package:cunehat/models/income_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// Dummy data için mock
-Map<DateTime, List<IncomeModel>> incomeData = {};
-Map<DateTime, List<ExpenseModel>> expenseData = {};
 
 /// **HomePage**: Main page with wallet-based data display
 class HomePage extends StatefulWidget {
@@ -41,14 +40,14 @@ class _HomePageState extends State<HomePage>
     super.initState();
     _initAnimation();
     _initDateRange();
-    _loadUserWallets();
+    _loadUserData();
   }
 
   void _initAnimation() {
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
-      value: 0.5,
+      value: 0.5, // Start at Compare view
     );
   }
 
@@ -57,11 +56,24 @@ class _HomePageState extends State<HomePage>
     _startDate = DateTime.now().subtract(const Duration(days: 30));
   }
 
-  void _loadUserWallets() {
+  void _loadUserData() {
     final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      context.read<WalletBloc>().add(GetWalletsEvent(userId));
-    }
+    if (userId == null) return;
+
+    // Load wallets
+    context.read<WalletBloc>().add(GetWalletsEvent(userId));
+  }
+
+  void _loadTransactions(String userId, String walletId) {
+    // Load all transactions (will be filtered in UI)
+    context.read<TransactionBloc>().add(
+          LoadTransactionsEvent(
+            userId: userId,
+            walletId: walletId,
+            startDate: _startDate,
+            endDate: _endDate,
+          ),
+        );
   }
 
   @override
@@ -85,72 +97,117 @@ class _HomePageState extends State<HomePage>
           ),
         ),
         drawer: const SharedDrawer(),
-        body: BlocBuilder<WalletBloc, WalletState>(
-          builder: (context, walletState) {
-            // Aktif cüzdanı bul
-            WalletModel? activeWallet;
+        body: BlocConsumer<WalletBloc, WalletState>(
+          listener: (context, walletState) {
+            // When wallet is loaded, load transactions
             if (walletState is WalletLoadedSt) {
-              activeWallet = walletState.wallets.firstWhere((w) => w.isActive,
-                  orElse: () => walletState.wallets.first);
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              if (userId != null) {
+                final activeWallet = walletState.wallets.firstWhere(
+                  (w) => w.isActive,
+                  orElse: () => walletState.wallets.first,
+                );
+                _loadTransactions(userId, activeWallet.id);
+              }
+            }
+          },
+          builder: (context, walletState) {
+            if (walletState is WalletLoadingSt) {
+              return const Center(child: CircularProgressIndicator());
             }
 
-            return Column(
-              children: [
-                DateRangeIndicator(
-                  endDate: _endDate,
-                  startDate: _startDate,
-                  onTap: () {
-                    // TODO: Date range picker
-                  },
+            if (walletState is WalletErrorSt) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
+                    const SizedBox(height: 12),
+                    Text(walletState.err),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _loadUserData,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Tekrar Dene'),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: activeWallet != null
-                      ? CubeAnimationView(
-                          controller: _controller,
-                          firstView: ExpenseView(expenseData: expenseData),
-                          secondView: IncomeView(incomeData: incomeData),
-                          thirdView: CompareView(
-                            userId: FirebaseAuth.instance.currentUser!.uid,
-                            wallet: activeWallet,
-                            startDate: _startDate,
-                            endDate: _endDate,
-                          ),
-                        )
-                      : const Center(
-                          child: Text('Cüzdan bulunamadı'),
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SliderButtonEnhanced(
-                    controller: _controller,
-                    onTap: (value) => _handleSliderAction(context, value),
+              );
+            }
+
+            if (walletState is WalletLoadedSt) {
+              final activeWallet = walletState.wallets.firstWhere(
+                (w) => w.isActive,
+                orElse: () => walletState.wallets.first,
+              );
+
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              if (userId == null) {
+                return const Center(child: Text('Kullanıcı girişi yapılmamış'));
+              }
+
+              return Column(
+                children: [
+                  DateRangeIndicator(
+                    endDate: _endDate,
+                    startDate: _startDate,
+                    onTap: _showDateRangePicker,
                   ),
-                ),
-              ],
-            );
+                  Expanded(
+                    child: CubeAnimationView(
+                      controller: _controller,
+                      firstView: TransactionListPage(
+                        type: TransactionType.expense,
+                        userId: userId,
+                        walletId: activeWallet.id,
+                      ),
+                      secondView: TransactionListPage(
+                        type: TransactionType.income,
+                        userId: userId,
+                        walletId: activeWallet.id,
+                      ),
+                      thirdView: CompareView(
+                        userId: userId,
+                        wallet: activeWallet,
+                        startDate: _startDate,
+                        endDate: _endDate,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SliderButtonEnhanced(
+                      controller: _controller,
+                      onTap: (value) => _handleSliderAction(
+                        context,
+                        value,
+                        userId,
+                        activeWallet,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return const Center(child: Text('Cüzdan bulunamadı'));
           },
         ),
       ),
     );
   }
 
-  void _handleSliderAction(BuildContext context, SliderState value) {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
-
-    // Aktif cüzdanı al
-    final walletState = context.read<WalletBloc>().state;
-    if (walletState is! WalletLoadedSt) return;
-
-    final activeWallet = walletState.wallets
-        .firstWhere((w) => w.isActive, orElse: () => walletState.wallets.first);
-
+  void _handleSliderAction(
+    BuildContext context,
+    SliderState value,
+    String userId,
+    WalletModel activeWallet,
+  ) {
     switch (value) {
       case SliderState.compare:
         // Compare view için veri yükle
         context.read<CompareBloc>().add(
-              GetTransactionsEvent(
+              GetTransactionsCompareEvent(
                 userId: userId,
                 walletId: activeWallet.id,
                 startDate: _startDate,
@@ -159,11 +216,57 @@ class _HomePageState extends State<HomePage>
             );
         break;
       case SliderState.expense:
-        FinanceSheetHandler.showExpenseSheet(context);
+        TransactionSheetHandler.showExpenseSheet(
+          context,
+          userId,
+          activeWallet.id,
+        );
         break;
       case SliderState.income:
-        FinanceSheetHandler.showIncomeSheet(context);
+        TransactionSheetHandler.showIncomeSheet(
+          context,
+          userId,
+          activeWallet.id,
+        );
         break;
+    }
+  }
+
+  Future<void> _showDateRangePicker() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+
+      // Reload transactions with new date range
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      final walletState = context.read<WalletBloc>().state;
+
+      if (userId != null && walletState is WalletLoadedSt) {
+        final activeWallet = walletState.wallets.firstWhere(
+          (w) => w.isActive,
+          orElse: () => walletState.wallets.first,
+        );
+        _loadTransactions(userId, activeWallet.id);
+      }
     }
   }
 }

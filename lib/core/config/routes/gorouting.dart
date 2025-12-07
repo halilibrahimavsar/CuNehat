@@ -1,10 +1,10 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/animations/page_transations_views.dart';
 import 'package:cunehat/features/investment_feature/presentation/page/investment_page.dart';
+import 'package:cunehat/features/main_feature/presentation/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/profile_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 
-import 'package:cunehat/features/main_feature/presentation/pages/home_page.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(

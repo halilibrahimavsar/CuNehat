@@ -38,7 +38,7 @@ class _CompareViewState extends State<CompareView> {
 
   void _loadTransactions() {
     context.read<CompareBloc>().add(
-          GetTransactionsEvent(
+          GetTransactionsCompareEvent(
             userId: widget.userId,
             walletId: widget.wallet.id,
             startDate: widget.startDate,

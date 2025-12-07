@@ -8,13 +8,13 @@ enum StorageMode { local, cloud }
 
 // ============ ROUTES ============
 
-class AppRoutes {
-  static const String wallet = '/wallet';
-  static const String profile = '/profile';
-  static const String settings = '/settings';
-  static const String investment = '/investment';
-  static const String walletManagement = '/wallet-management'; // ⚠️ NEW
-}
+// class AppRoutes {
+//   static const String wallet = '/wallet';
+//   static const String profile = '/profile';
+//   static const String settings = '/settings';
+//   static const String investment = '/investment';
+//   static const String walletManagement = '/wallet-management'; // ⚠️ NEW
+// }
 
 // ============ STORAGE KEYS ============
 
@@ -45,16 +45,16 @@ class WalletDefaults {
 
 // ============ FORMATTERS ============
 
-class AppFormatters {
-  static final NumberFormat currency = NumberFormat.currency(
-    symbol: "₺",
-    decimalDigits: 2,
-  );
+// class AppFormatters {
+//   static final NumberFormat currency = NumberFormat.currency(
+//     symbol: "₺",
+//     decimalDigits: 2,
+//   );
 
-  static final DateFormat dateShort = DateFormat.yMd('tr_TR');
-  static final DateFormat dateLong = DateFormat.yMMMEd('tr_TR');
-  static final DateFormat time = DateFormat.Hm('tr_TR');
-}
+//   static final DateFormat dateShort = DateFormat.yMd('tr_TR');
+//   static final DateFormat dateLong = DateFormat.yMMMEd('tr_TR');
+//   static final DateFormat time = DateFormat.Hm('tr_TR');
+// }
 
 // ============ THEME NAMES ============
 
@@ -116,4 +116,53 @@ class WalletColors {
   static Color hexToColor(String hex) {
     return Color(int.parse(hex));
   }
+}
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+///new ones
+
+class AppConstants {
+  // App Info
+  static const String appName = 'CuNehat';
+  static const String appVersion = '1.0.0';
+
+  // Timeouts
+  static const Duration apiTimeout = Duration(seconds: 30);
+  static const Duration cacheTimeout = Duration(hours: 24);
+
+  // Limits
+  static const int maxTransactionsPerPage = 50;
+  static const double maxTransactionAmount = 999999999.99;
+
+  // Currency
+  static const String currency = '₺';
+  static const String currencyCode = 'TRY';
+}
+
+class AppFormatters {
+  static final DateFormat dateShort = DateFormat('dd.MM.yy', 'tr_TR');
+  static final DateFormat dateLong = DateFormat('dd MMMM yyyy', 'tr_TR');
+  static final DateFormat dateTime = DateFormat('dd.MM.yyyy HH:mm', 'tr_TR');
+
+  static final NumberFormat currency = NumberFormat.currency(
+    locale: 'tr_TR',
+    symbol: AppConstants.currency,
+    decimalDigits: 2,
+  );
+
+  static final NumberFormat number = NumberFormat('#,##0.00', 'tr_TR');
+}
+
+class AppRoutes {
+  static const String home = '/';
+  static const String settings = '/settings';
+  static const String investment = '/investment';
+  static const String wallet = '/wallet';
+  static const String transaction = '/transaction';
+  static const String profile = '/profile';
 }

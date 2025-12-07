@@ -54,6 +54,12 @@ dependencies:
   animated_toggle_switch: ^0.8.2
   keyboard_dismisser: ^3.0.0
   connectivity_plus: ^6.0.5
+  # fpdart: ^1.2.0
+  # Dependency Injection
+  get_it: ^7.6.4
+  
+  # Functional Programming
+  dartz: ^0.10.1
 
     # YEREL DEPOLAMA İÇİN EKLENDİ
   hive: ^2.2.3

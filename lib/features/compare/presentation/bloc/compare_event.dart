@@ -10,13 +10,13 @@ sealed class CompareEvent extends Equatable {
 }
 
 /// Get all transactions (incomes + expenses)
-final class GetTransactionsEvent extends CompareEvent {
+final class GetTransactionsCompareEvent extends CompareEvent {
   final String userId;
   final String walletId;
   final DateTime startDate;
   final DateTime endDate;
 
-  const GetTransactionsEvent({
+  const GetTransactionsCompareEvent({
     required this.userId,
     required this.walletId,
     required this.startDate,

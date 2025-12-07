@@ -181,7 +181,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
       _selectedTime.minute,
     );
 
-    final timeString = AppFormatters.time.format(combinedDate);
+    final timeString = AppFormatters.dateTime.format(combinedDate);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "local_user";
 
     dynamic model;
