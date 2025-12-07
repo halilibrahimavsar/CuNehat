@@ -1,18 +1,11 @@
 // lib/features/finance_transections/domain/entities/transaction_entity.dart
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hive/hive.dart';
 
 part 'transaction_entity.g.dart';
 
 // ⚠️ FIX: Changed typeId from 5 to 6 to avoid conflict
-
-@HiveType(typeId: 6)
-enum TransactionType {
-  @HiveField(0)
-  income,
-  @HiveField(1)
-  expense,
-}
 
 /// ⚠️ Entity should NOT have @HiveField annotations
 /// Only the Model (TransactionModel) should have Hive fields

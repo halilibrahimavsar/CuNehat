@@ -3,8 +3,8 @@
 // ==========================================
 
 // lib/features/main_feature/presentation/pages/home_page.dart
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/transaction_list_page.dart';

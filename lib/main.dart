@@ -15,9 +15,6 @@ import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.d
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 // Transaction Feature Imports
-import 'package:cunehat/models/expense_model.dart';
-import 'package:cunehat/models/income_model.dart';
-import 'package:cunehat/models/investment_model.dart';
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -33,12 +30,9 @@ void main() async {
   await Hive.initFlutter();
 
   // Register type adapters
-  Hive.registerAdapter(IncomeModelAdapter()); // typeId: 0
-  Hive.registerAdapter(ExpenseModelAdapter()); // typeId: 1
-  Hive.registerAdapter(WalletModelAdapter()); // typeId: 2
-  Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 3
-  Hive.registerAdapter(TransactionModelAdapter()); // typeId: 4
-  Hive.registerAdapter(TransactionTypeAdapter()); // typeId: 5
+  Hive.registerAdapter(WalletModelAdapter()); // typeId: 0
+  Hive.registerAdapter(TransactionModelAdapter()); // typeId: 1
+  Hive.registerAdapter(TransactionTypeAdapter()); // typeId: 2
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(

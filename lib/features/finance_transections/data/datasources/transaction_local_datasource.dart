@@ -8,10 +8,10 @@
 
 // lib/features/transaction/data/datasources/transaction_hive_datasource.dart
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import '../models/transaction_model.dart';
-import '../../domain/entities/transaction_entity.dart';
 
 class TransactionHiveDataSource implements TransactionDataSource {
   static const String _boxName = 'transactions';

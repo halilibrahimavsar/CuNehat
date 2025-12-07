@@ -1,4 +1,5 @@
 // lib/features/finance_transections/data/models/transaction_model.dart
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
 
@@ -67,9 +68,9 @@ class TransactionModel extends TransactionEntity {
           type: type,
         );
 
-  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+  factory TransactionModel.fromJson(String id, Map<String, dynamic> json) {
     return TransactionModel(
-      id: json['id'] as String,
+      id: id,
       userId: json['userId'] as String,
       walletId: json['walletId'] as String,
       title: json['title'] as String,

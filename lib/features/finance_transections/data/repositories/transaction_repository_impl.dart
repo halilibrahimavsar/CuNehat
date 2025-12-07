@@ -5,6 +5,7 @@
 // lib/features/transaction/data/repositories/transaction_repository_impl.dart
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/utils/error_handler.dart';
 import '../../domain/entities/transaction_entity.dart';

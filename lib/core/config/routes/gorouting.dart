@@ -1,6 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/animations/page_transations_views.dart';
-import 'package:cunehat/features/investment_feature/presentation/page/investment_page.dart';
 import 'package:cunehat/features/main_feature/presentation/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/profile_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
@@ -34,15 +33,6 @@ final appRouter = GoRouter(
         return ExternalCubeSlideLeftToRight(
           key: state.pageKey,
           child: const SettingsPage(),
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.investment,
-      pageBuilder: (context, state) {
-        return ExternalCubeSlideLeftToRight(
-          key: state.pageKey,
-          child: InvestmentScreen(),
         );
       },
     ),

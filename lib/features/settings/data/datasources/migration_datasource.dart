@@ -1,9 +1,8 @@
 // lib/features/settings/data/datasources/migration_datasource.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
-import 'package:cunehat/models/expense_model.dart';
-import 'package:cunehat/models/income_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MigrationDataSource {
@@ -23,13 +22,13 @@ class MigrationDataSource {
       onProgress(++currentStep, totalSteps, 'Cüzdanlar taşınıyor...');
       await _migrateWalletsToCloud(userId);
 
-      // STEP 2: Migrate Expenses (subcollection)
+      // STEP 2: Migrate Transactions (subcollection)
       onProgress(++currentStep, totalSteps, 'Giderler taşınıyor...');
-      await _migrateExpensesToCloud(userId);
+      await _migrateTransectionsToCloud(userId);
 
       // STEP 3: Migrate Incomes (subcollection)
       onProgress(++currentStep, totalSteps, 'Gelirler taşınıyor...');
-      await _migrateIncomesToCloud(userId);
+      // await _migrateIncomesToCloud(userId);
 
       // STEP 4: Clear Hive
       onProgress(++currentStep, totalSteps, 'Yerel veriler temizleniyor...');
@@ -55,35 +54,19 @@ class MigrationDataSource {
     await batch.commit();
   }
 
-  Future<void> _migrateExpensesToCloud(String userId) async {
-    final expensesBox = await Hive.openBox<ExpenseModel>('expenses_box');
-    final expenses =
-        expensesBox.values.where((e) => e.userId == userId).toList();
+  Future<void> _migrateTransectionsToCloud(String userId) async {
+    final transactionsBox =
+        await Hive.openBox<TransactionModel>('transactions');
+    final transactions =
+        transactionsBox.values.where((e) => e.userId == userId).toList();
 
-    if (expenses.isEmpty) return;
-
-    final batch = _firestore.batch();
-
-    for (var expense in expenses) {
-      final ref = _firestore.collection('expenses').doc(expense.id);
-      batch.set(ref, expense.toJson());
-      // Firestore batch limiti 500'dür. Büyük veri setleri için ek kontrol gerekebilir.
-    }
-
-    await batch.commit();
-  }
-
-  Future<void> _migrateIncomesToCloud(String userId) async {
-    final incomesBox = await Hive.openBox<IncomeModel>('incomes_box');
-    final incomes = incomesBox.values.where((i) => i.userId == userId).toList();
-
-    if (incomes.isEmpty) return;
+    if (transactions.isEmpty) return;
 
     final batch = _firestore.batch();
 
-    for (var income in incomes) {
-      final ref = _firestore.collection('incomes').doc(income.id);
-      batch.set(ref, income.toJson());
+    for (var transactions in transactions) {
+      final ref = _firestore.collection('transactions').doc(transactions.id);
+      batch.set(ref, transactions.toJson());
       // Firestore batch limiti 500'dür. Büyük veri setleri için ek kontrol gerekebilir.
     }
 
@@ -104,10 +87,10 @@ class MigrationDataSource {
       await _migrateWalletsToLocal(userId);
 
       onProgress(++currentStep, totalSteps, 'Giderler indiriliyor...');
-      await _migrateExpensesToLocal(userId);
+      await _migrateTransectionsToLocal(userId);
 
       onProgress(++currentStep, totalSteps, 'Gelirler indiriliyor...');
-      await _migrateIncomesToLocal(userId);
+      // await _migrateIncomesToLocal(userId);
 
       onProgress(++currentStep, totalSteps, 'Bulut verisi temizleniyor...');
       await _clearFirestoreData(userId);
@@ -132,42 +115,22 @@ class MigrationDataSource {
     }
   }
 
-  Future<void> _migrateExpensesToLocal(String userId) async {
+  Future<void> _migrateTransectionsToLocal(String userId) async {
     final walletsSnapshot = await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('wallets')
+        .collection('transections')
+        .where('userId', isEqualTo: userId)
         .get();
 
-    final expensesBox = await Hive.openBox<ExpenseModel>('expenses_box');
+    final expensesBox = await Hive.openBox<TransactionModel>('transections');
 
     for (var walletDoc in walletsSnapshot.docs) {
-      final expensesSnapshot =
-          await walletDoc.reference.collection('expenses').get();
+      final transactionsSnapshot =
+          await walletDoc.reference.collection('transections').get();
 
-      for (var expenseDoc in expensesSnapshot.docs) {
-        final expense = ExpenseModel.fromJson(expenseDoc.id, expenseDoc.data());
+      for (var transactionDoc in transactionsSnapshot.docs) {
+        final expense =
+            TransactionModel.fromJson(transactionDoc.id, transactionDoc.data());
         await expensesBox.put(expense.id, expense);
-      }
-    }
-  }
-
-  Future<void> _migrateIncomesToLocal(String userId) async {
-    final walletsSnapshot = await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('wallets')
-        .get();
-
-    final incomesBox = await Hive.openBox<IncomeModel>('incomes_box');
-
-    for (var walletDoc in walletsSnapshot.docs) {
-      final incomesSnapshot =
-          await walletDoc.reference.collection('incomes').get();
-
-      for (var incomeDoc in incomesSnapshot.docs) {
-        final income = IncomeModel.fromJson(incomeDoc.id, incomeDoc.data());
-        await incomesBox.put(income.id, income);
       }
     }
   }

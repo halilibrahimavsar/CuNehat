@@ -1,4 +1,5 @@
 // lib/features/finance_transections/presentation/widgets/transaction_entry_sheet.dart
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/finance_entry_widget.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';

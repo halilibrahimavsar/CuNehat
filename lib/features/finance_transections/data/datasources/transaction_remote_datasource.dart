@@ -2,8 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import '../models/transaction_model.dart';
-import '../../domain/entities/transaction_entity.dart';
 
 class TransactionFirestoreDataSource implements TransactionDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -32,8 +32,7 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
 
       // Filter in memory (avoids complex Firestore index)
       final transactions = snapshot.docs
-          .map((doc) => TransactionModel.fromJson({
-                'id': doc.id,
+          .map((doc) => TransactionModel.fromJson(doc.id, {
                 ...doc.data() as Map<String, dynamic>,
               }))
           .where((t) {
@@ -67,8 +66,7 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
         throw NotFoundException('İşlem bulunamadı');
       }
 
-      return TransactionModel.fromJson({
-        'id': doc.id,
+      return TransactionModel.fromJson(doc.id, {
         ...doc.data() as Map<String, dynamic>,
       });
     } on FirebaseException catch (e) {

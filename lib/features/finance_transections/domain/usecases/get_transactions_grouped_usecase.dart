@@ -3,6 +3,7 @@
 
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/usecases/usecase.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:dartz/dartz.dart';
 
 import '../entities/transaction_entity.dart';

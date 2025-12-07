@@ -1,6 +1,7 @@
 // lib/features/transaction/data/datasources/transaction_datasource.dart
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
+
 import '../models/transaction_model.dart';
-import '../../domain/entities/transaction_entity.dart';
 
 /// Base interface for transaction data sources
 abstract class TransactionDataSource {
