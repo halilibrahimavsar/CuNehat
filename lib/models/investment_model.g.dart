@@ -8,7 +8,7 @@ part of 'investment_model.dart';
 
 class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
   @override
-  final int typeId = 4;
+  final int typeId = 3;
 
   @override
   InvestmentModel read(BinaryReader reader) {

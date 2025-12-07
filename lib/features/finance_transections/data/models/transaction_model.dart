@@ -1,22 +1,68 @@
-// ==========================================
-// DATA LAYER
-// ==========================================
-
 // lib/features/transaction/data/models/transaction_model.dart
+import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
 
+part 'transaction_model.g.dart'; // Build runner ile oluşturulacak
+
+@HiveType(typeId: 5) // TypeId 5 kullanıyoruz
 class TransactionModel extends TransactionEntity {
+  @HiveField(0)
+  @override
+  final String id;
+
+  @HiveField(1)
+  @override
+  final String userId;
+
+  @HiveField(2)
+  @override
+  final String walletId;
+
+  @HiveField(3)
+  @override
+  final String title;
+
+  @HiveField(4)
+  @override
+  final String tag;
+
+  @HiveField(5)
+  @override
+  final double amount;
+
+  @HiveField(6)
+  @override
+  final DateTime date;
+
+  @HiveField(7)
+  @override
+  final String time;
+
+  @HiveField(8)
+  @override
+  final TransactionType type;
+
   const TransactionModel({
-    required super.id,
-    required super.userId,
-    required super.walletId,
-    required super.title,
-    required super.tag,
-    required super.amount,
-    required super.date,
-    required super.time,
-    required super.type,
-  });
+    required this.id,
+    required this.userId,
+    required this.walletId,
+    required this.title,
+    required this.tag,
+    required this.amount,
+    required this.date,
+    required this.time,
+    required this.type,
+  }) : super(
+          id: id,
+          userId: userId,
+          walletId: walletId,
+          title: title,
+          tag: tag,
+          amount: amount,
+          date: date,
+          time: time,
+          type: type,
+        );
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(

@@ -1,30 +1,20 @@
 // ==========================================
-// PRESENTATION LAYER - BLoC
+// UPDATED TRANSACTION BLOC (simplified)
 // ==========================================
 
-// ==========================================
 // lib/features/transaction/presentation/bloc/transaction_bloc.dart
+
+import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/usecases/get_transactions_grouped_usecase.dart';
-import '../../domain/usecases/add_transaction_usecase.dart';
-import '../../domain/usecases/update_transaction_usecase.dart';
-import '../../domain/usecases/delete_transaction_usecase.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
-  final GetTransactionsGroupedUseCase getTransactionsGrouped;
-  final AddTransactionUseCase addTransaction;
-  final UpdateTransactionUseCase updateTransaction;
-  final DeleteTransactionUseCase deleteTransaction;
+  final TransactionDataSource dataSource;
 
-  TransactionBloc({
-    required this.getTransactionsGrouped,
-    required this.addTransaction,
-    required this.updateTransaction,
-    required this.deleteTransaction,
-  }) : super(TransactionInitial()) {
+  TransactionBloc(this.dataSource) : super(TransactionInitial()) {
     on<LoadTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
@@ -37,28 +27,40 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     emit(TransactionLoading());
 
-    final result = await getTransactionsGrouped(
-      GetTransactionsGroupedParams(
+    try {
+      final transactions = await dataSource.getTransactions(
         userId: event.userId,
         walletId: event.walletId,
-        type: event.type,
         startDate: event.startDate,
         endDate: event.endDate,
-      ),
-    );
+        type: event.type,
+      );
 
-    result.fold(
-      (failure) => emit(TransactionError(failure.message)),
-      (groupedTransactions) {
-        final allTransactions =
-            groupedTransactions.values.expand((list) => list).toList();
+      // Group by date
+      final Map<DateTime, List<TransactionEntity>> grouped = {};
+      for (var transaction in transactions) {
+        final dateKey = DateTime(
+          transaction.date.year,
+          transaction.date.month,
+          transaction.date.day,
+        );
 
-        emit(TransactionLoaded(
-          groupedTransactions: groupedTransactions,
-          allTransactions: allTransactions,
-        ));
-      },
-    );
+        if (grouped.containsKey(dateKey)) {
+          grouped[dateKey]!.add(transaction);
+        } else {
+          grouped[dateKey] = [transaction];
+        }
+      }
+
+      final allTransactions = grouped.values.expand((list) => list).toList();
+
+      emit(TransactionLoaded(
+        groupedTransactions: grouped,
+        allTransactions: allTransactions,
+      ));
+    } catch (e) {
+      emit(TransactionError('İşlemler yüklenirken hata oluştu: $e'));
+    }
   }
 
   Future<void> _onAddTransaction(
@@ -68,26 +70,25 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     final currentState = state;
     emit(TransactionLoading());
 
-    final result = await addTransaction(event.transaction);
+    try {
+      final model = TransactionModel.fromEntity(event.transaction);
+      await dataSource.addTransaction(model);
 
-    result.fold(
-      (failure) {
-        emit(TransactionError(failure.message));
-        if (currentState is TransactionLoaded) {
-          emit(currentState);
-        }
-      },
-      (id) {
-        emit(const TransactionActionSuccess('İşlem başarıyla eklendi'));
-        // Refresh the list
-        if (currentState is TransactionLoaded) {
-          add(LoadTransactionsEvent(
-            userId: event.transaction.userId,
-            walletId: event.transaction.walletId,
-          ));
-        }
-      },
-    );
+      emit(const TransactionActionSuccess('İşlem başarıyla eklendi'));
+
+      // Refresh the list
+      if (currentState is TransactionLoaded) {
+        add(LoadTransactionsEvent(
+          userId: event.transaction.userId,
+          walletId: event.transaction.walletId,
+        ));
+      }
+    } catch (e) {
+      emit(TransactionError('İşlem eklenirken hata oluştu: $e'));
+      if (currentState is TransactionLoaded) {
+        emit(currentState);
+      }
+    }
   }
 
   Future<void> _onUpdateTransaction(
@@ -97,26 +98,25 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     final currentState = state;
     emit(TransactionLoading());
 
-    final result = await updateTransaction(event.transaction);
+    try {
+      final model = TransactionModel.fromEntity(event.transaction);
+      await dataSource.updateTransaction(model);
 
-    result.fold(
-      (failure) {
-        emit(TransactionError(failure.message));
-        if (currentState is TransactionLoaded) {
-          emit(currentState);
-        }
-      },
-      (_) {
-        emit(const TransactionActionSuccess('İşlem başarıyla güncellendi'));
-        // Refresh the list
-        if (currentState is TransactionLoaded) {
-          add(LoadTransactionsEvent(
-            userId: event.transaction.userId,
-            walletId: event.transaction.walletId,
-          ));
-        }
-      },
-    );
+      emit(const TransactionActionSuccess('İşlem başarıyla güncellendi'));
+
+      // Refresh the list
+      if (currentState is TransactionLoaded) {
+        add(LoadTransactionsEvent(
+          userId: event.transaction.userId,
+          walletId: event.transaction.walletId,
+        ));
+      }
+    } catch (e) {
+      emit(TransactionError('İşlem güncellenirken hata oluştu: $e'));
+      if (currentState is TransactionLoaded) {
+        emit(currentState);
+      }
+    }
   }
 
   Future<void> _onDeleteTransaction(
@@ -125,40 +125,37 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     final currentState = state;
 
-    final result = await deleteTransaction(event.transactionId);
+    try {
+      await dataSource.deleteTransaction(event.transactionId);
 
-    result.fold(
-      (failure) {
-        emit(TransactionError(failure.message));
-        if (currentState is TransactionLoaded) {
-          emit(currentState);
-        }
-      },
-      (_) {
-        if (currentState is TransactionLoaded) {
-          // Optimistic update - remove from current list
-          final updatedGrouped = Map<DateTime, List<TransactionEntity>>.from(
-            currentState.groupedTransactions,
-          );
+      if (currentState is TransactionLoaded) {
+        // Optimistic update
+        final updatedGrouped = Map<DateTime, List<TransactionEntity>>.from(
+          currentState.groupedTransactions,
+        );
 
-          updatedGrouped.forEach((date, transactions) {
-            transactions.removeWhere((t) => t.id == event.transactionId);
-          });
+        updatedGrouped.forEach((date, transactions) {
+          transactions.removeWhere((t) => t.id == event.transactionId);
+        });
 
-          updatedGrouped
-              .removeWhere((date, transactions) => transactions.isEmpty);
+        updatedGrouped
+            .removeWhere((date, transactions) => transactions.isEmpty);
 
-          final allTransactions =
-              updatedGrouped.values.expand((list) => list).toList();
+        final allTransactions =
+            updatedGrouped.values.expand((list) => list).toList();
 
-          emit(TransactionLoaded(
-            groupedTransactions: updatedGrouped,
-            allTransactions: allTransactions,
-          ));
-        }
+        emit(TransactionLoaded(
+          groupedTransactions: updatedGrouped,
+          allTransactions: allTransactions,
+        ));
+      }
 
-        emit(const TransactionActionSuccess('İşlem başarıyla silindi'));
-      },
-    );
+      emit(const TransactionActionSuccess('İşlem başarıyla silindi'));
+    } catch (e) {
+      emit(TransactionError('İşlem silinirken hata oluştu: $e'));
+      if (currentState is TransactionLoaded) {
+        emit(currentState);
+      }
+    }
   }
 }

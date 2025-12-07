@@ -5,6 +5,11 @@ import 'package:cunehat/features/compare/data/datasource/compare_firestore_datas
 import 'package:cunehat/features/compare/data/datasource/compare_hive_datasource.dart';
 import 'package:cunehat/features/compare/data/repository/compare_repository_impl.dart';
 import 'package:cunehat/features/compare/presentation/bloc/compare_bloc.dart';
+import 'package:cunehat/features/finance_transections/data/datasources/transaction_local_datasource.dart';
+import 'package:cunehat/features/finance_transections/data/datasources/transaction_remote_datasource.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
+import 'package:cunehat/features/finance_transections/data/repositories/transaction_repository_impl.dart';
+import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
@@ -12,6 +17,7 @@ import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+// Transaction Feature Imports
 import 'package:cunehat/models/expense_model.dart';
 import 'package:cunehat/models/income_model.dart';
 import 'package:cunehat/models/investment_model.dart';
@@ -32,8 +38,11 @@ void main() async {
   // Register type adapters
   Hive.registerAdapter(IncomeModelAdapter()); // typeId: 0
   Hive.registerAdapter(ExpenseModelAdapter()); // typeId: 1
-  Hive.registerAdapter(WalletModelAdapter()); // typeId: 3
-  Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 4
+  Hive.registerAdapter(WalletModelAdapter()); // typeId: 2
+  Hive.registerAdapter(InvestmentModelAdapter()); // typeId: 3
+  Hive.registerAdapter(TransactionModelAdapter()); // typeId: 4
+  // TODO: Transaction Model için de adapter eklenmeli (typeId: 5)
+  // Hive.registerAdapter(TransactionModelAdapter()); // typeId: 5
 
   debugPrint('✅ Hive TypeAdapters registered');
 
@@ -85,6 +94,14 @@ class CuNehatEngine extends StatelessWidget {
                         : CompareFirestoreDataSource(),
                   ),
                 ),
+                // Transaction Repository
+                RepositoryProvider(
+                  create: (context) => TransactionRepositoryImpl(
+                    dataSource: storageMode == StorageMode.local
+                        ? TransactionHiveDataSource()
+                        : TransactionFirestoreDataSource(),
+                  ),
+                ),
               ],
               child: MultiBlocProvider(
                 providers: [
@@ -97,10 +114,15 @@ class CuNehatEngine extends StatelessWidget {
                     create: (context) => WalletBloc(
                         context.read<WalletRepositoryImpl>().dataSource),
                   ),
-                  // Compare BLoC (NEW)
+                  // Compare BLoC
                   BlocProvider(
                     create: (context) => CompareBloc(
                         context.read<CompareRepositoryImpl>().dataSource),
+                  ),
+                  // Transaction BLoC (NEW)
+                  BlocProvider(
+                    create: (context) => TransactionBloc(
+                        context.read<TransactionRepositoryImpl>().dataSource),
                   ),
                 ],
                 child: BlocBuilder<ThemeBloc, ThemeState>(

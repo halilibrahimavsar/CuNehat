@@ -1,29 +1,16 @@
+// ==========================================
+// FIRESTORE IMPLEMENTATION
+// ==========================================
 
-// lib/features/transaction/data/datasources/transaction_remote_datasource.dart
+// lib/features/transaction/data/datasources/transaction_firestore_datasource.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
+import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
 import '../models/transaction_model.dart';
 import '../../domain/entities/transaction_entity.dart';
 
-abstract class TransactionRemoteDataSource {
-  Future<List<TransactionModel>> getTransactions({
-    required String userId,
-    required String walletId,
-    DateTime? startDate,
-    DateTime? endDate,
-    TransactionType? type,
-  });
-
-  Future<TransactionModel> getTransactionById(String id);
-  Future<String> addTransaction(TransactionModel transaction);
-  Future<void> updateTransaction(TransactionModel transaction);
-  Future<void> deleteTransaction(String id);
-}
-
-class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
-  final FirebaseFirestore firestore;
-
-  TransactionRemoteDataSourceImpl({required this.firestore});
+class TransactionFirestoreDataSource implements TransactionDataSource {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Future<List<TransactionModel>> getTransactions({
@@ -34,7 +21,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
     TransactionType? type,
   }) async {
     try {
-      Query query = firestore
+      Query query = _firestore
           .collection('transactions')
           .where('userId', isEqualTo: userId)
           .where('walletId', isEqualTo: walletId);
@@ -72,7 +59,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   @override
   Future<TransactionModel> getTransactionById(String id) async {
     try {
-      final doc = await firestore.collection('transactions').doc(id).get();
+      final doc = await _firestore.collection('transactions').doc(id).get();
 
       if (!doc.exists) {
         throw NotFoundException('İşlem bulunamadı');
@@ -95,7 +82,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
       final data = transaction.toJson()..remove('id');
-      final docRef = await firestore.collection('transactions').add(data);
+      final docRef = await _firestore.collection('transactions').add(data);
       return docRef.id;
     } on FirebaseException catch (e) {
       throw ServerException('Firebase hatası: ${e.message}', e);
@@ -107,7 +94,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   @override
   Future<void> updateTransaction(TransactionModel transaction) async {
     try {
-      await firestore
+      await _firestore
           .collection('transactions')
           .doc(transaction.id)
           .update(transaction.toJson());
@@ -124,7 +111,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   @override
   Future<void> deleteTransaction(String id) async {
     try {
-      await firestore.collection('transactions').doc(id).delete();
+      await _firestore.collection('transactions').doc(id).delete();
     } on FirebaseException catch (e) {
       throw ServerException('Firebase hatası: ${e.message}', e);
     } catch (e) {

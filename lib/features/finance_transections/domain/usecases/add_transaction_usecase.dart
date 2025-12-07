@@ -3,10 +3,9 @@
 
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/usecases/usecase.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
 import 'package:dartz/dartz.dart';
-
-import '../entities/transaction_entity.dart';
-import '../repositories/transaction_repository.dart';
 
 class AddTransactionUseCase implements UseCase<String, TransactionEntity> {
   final TransactionRepository repository;

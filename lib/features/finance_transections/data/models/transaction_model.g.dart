@@ -1,36 +1,36 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'wallet_model.dart';
+part of 'transaction_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class WalletModelAdapter extends TypeAdapter<WalletModel> {
+class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
   @override
-  final int typeId = 2;
+  final int typeId = 4;
 
   @override
-  WalletModel read(BinaryReader reader) {
+  TransactionModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return WalletModel(
+    return TransactionModel(
       id: fields[0] as String,
       userId: fields[1] as String,
-      name: fields[2] as String,
-      balance: fields[3] as double,
-      colorHex: fields[4] as String,
-      iconName: fields[5] as String,
-      createdAt: fields[6] as DateTime,
-      isActive: fields[7] as bool,
-      sortOrder: fields[8] as int,
+      walletId: fields[2] as String,
+      title: fields[3] as String,
+      tag: fields[4] as String,
+      amount: fields[5] as double,
+      date: fields[6] as DateTime,
+      time: fields[7] as String,
+      type: fields[8] as TransactionType,
     );
   }
 
   @override
-  void write(BinaryWriter writer, WalletModel obj) {
+  void write(BinaryWriter writer, TransactionModel obj) {
     writer
       ..writeByte(9)
       ..writeByte(0)
@@ -38,19 +38,19 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(1)
       ..write(obj.userId)
       ..writeByte(2)
-      ..write(obj.name)
+      ..write(obj.walletId)
       ..writeByte(3)
-      ..write(obj.balance)
+      ..write(obj.title)
       ..writeByte(4)
-      ..write(obj.colorHex)
+      ..write(obj.tag)
       ..writeByte(5)
-      ..write(obj.iconName)
+      ..write(obj.amount)
       ..writeByte(6)
-      ..write(obj.createdAt)
+      ..write(obj.date)
       ..writeByte(7)
-      ..write(obj.isActive)
+      ..write(obj.time)
       ..writeByte(8)
-      ..write(obj.sortOrder);
+      ..write(obj.type);
   }
 
   @override
@@ -59,7 +59,7 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WalletModelAdapter &&
+      other is TransactionModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
