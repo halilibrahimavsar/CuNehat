@@ -1,108 +1,116 @@
 // lib/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart
 
+import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
 /// ========== WALLET BALANCE SYNC USE CASE ==========
 ///
-/// Calculates wallet balance from transactions and updates wallet
+/// ✅ FIXED: Recalculates balance from ALL transactions (not incremental)
 class WalletBalanceSyncUseCase {
-  final WalletRepository repository;
+  final WalletRepository walletRepository;
+  final TransactionDataSource transactionDataSource;
 
-  WalletBalanceSyncUseCase(this.repository);
+  WalletBalanceSyncUseCase({
+    required this.walletRepository,
+    required this.transactionDataSource,
+  });
 
-  /// Calculate and update wallet balance based on transactions
+  /// ✅ MAIN METHOD: Recalculate wallet balance from scratch
   ///
-  /// [walletId] - Wallet to update
-  /// [transactions] - All transactions for this wallet
-  /// [initialBalance] - Starting balance (optional, defaults to 0)
-  Future<void> call({
+  /// This method:
+  /// 1. Gets ALL transactions for this wallet
+  /// 2. Sorts them by date (oldest first)
+  /// 3. Calculates balance step-by-step
+  /// 4. Updates wallet with final balance
+  Future<void> recalculateBalance({
+    required String userId,
     required String walletId,
-    required List<TransactionEntity> transactions,
-    double initialBalance = 0.0,
   }) async {
-    // Calculate total balance
-    double balance = initialBalance;
+    try {
+      // 1. Get ALL transactions for this wallet (no date filter)
+      final transactions = await transactionDataSource.getTransactions(
+        userId: userId,
+        walletId: walletId,
+      );
 
-    for (var transaction in transactions) {
-      if (transaction.type == TransactionTypeModel.income) {
-        balance += transaction.amount;
-      } else {
-        balance -= transaction.amount;
+      // 2. Sort by date (oldest first)
+      transactions.sort((a, b) => a.date.compareTo(b.date));
+
+      // 3. Calculate balance from scratch
+      double balance = 0.0;
+
+      for (var transaction in transactions) {
+        if (transaction.type == TransactionTypeModel.income) {
+          balance += transaction.amount;
+        } else {
+          balance -= transaction.amount;
+        }
       }
+
+      // 4. Get current wallet
+      final wallets = await walletRepository.getWallets(userId).first;
+      final wallet = wallets.firstWhere((w) => w.id == walletId);
+
+      // 5. Update wallet with new balance
+      final updatedWallet = wallet.copyWith(balance: balance);
+      await walletRepository.updateWallet(updatedWallet);
+
+      print('✅ Balance recalculated for wallet $walletId: $balance₺');
+    } catch (e) {
+      print('❌ Error recalculating balance: $e');
+      rethrow;
     }
-
-    // Get current wallet
-    final wallets =
-        await repository.getWallets(transactions.first.userId).first;
-    final wallet = wallets.firstWhere((w) => w.id == walletId);
-
-    // Update wallet with new balance
-    final updatedWallet = wallet.copyWith(balance: balance);
-    await repository.updateWallet(updatedWallet);
   }
 
-  /// Update wallet balance by adding/subtracting a single transaction
+  /// ✅ SIMPLIFIED: Apply single transaction (calls recalculate)
   ///
   /// [walletId] - Wallet to update
   /// [transaction] - Transaction to apply
-  /// [isReversal] - If true, reverses the transaction (for deletion/update)
+  /// [isReversal] - NOT USED (we recalculate everything anyway)
   Future<void> applyTransaction({
     required String walletId,
     required TransactionEntity transaction,
-    bool isReversal = false,
+    bool isReversal = false, // Kept for API compatibility
   }) async {
-    // Get current wallet
-    final wallets = await repository.getWallets(transaction.userId).first;
-    final wallet = wallets.firstWhere((w) => w.id == walletId);
-
-    // Calculate new balance
-    double newBalance = wallet.balance;
-
-    if (transaction.type == TransactionTypeModel.income) {
-      newBalance += isReversal ? -transaction.amount : transaction.amount;
-    } else {
-      newBalance -= isReversal ? -transaction.amount : transaction.amount;
-    }
-
-    // Update wallet
-    final updatedWallet = wallet.copyWith(balance: newBalance);
-    await repository.updateWallet(updatedWallet);
+    // Just recalculate everything - simpler and always correct
+    await recalculateBalance(
+      userId: transaction.userId,
+      walletId: walletId,
+    );
   }
 
-  /// Update wallet when a transaction is modified
+  /// ✅ SIMPLIFIED: Update transaction (calls recalculate)
   ///
   /// [walletId] - Wallet to update
-  /// [oldTransaction] - Original transaction
-  /// [newTransaction] - Updated transaction
+  /// [oldTransaction] - NOT USED (we recalculate)
+  /// [newTransaction] - NOT USED (we recalculate)
   Future<void> updateTransaction({
     required String walletId,
     required TransactionEntity oldTransaction,
     required TransactionEntity newTransaction,
   }) async {
-    // Get current wallet
-    final wallets = await repository.getWallets(oldTransaction.userId).first;
-    final wallet = wallets.firstWhere((w) => w.id == walletId);
-
-    // Reverse old transaction
-    double balance = wallet.balance;
-
-    if (oldTransaction.type == TransactionTypeModel.income) {
-      balance -= oldTransaction.amount;
-    } else {
-      balance += oldTransaction.amount;
-    }
-
-    // Apply new transaction
-    if (newTransaction.type == TransactionTypeModel.income) {
-      balance += newTransaction.amount;
-    } else {
-      balance -= newTransaction.amount;
-    }
-
-    // Update wallet
-    final updatedWallet = wallet.copyWith(balance: balance);
-    await repository.updateWallet(updatedWallet);
+    // Just recalculate everything - simpler and always correct
+    await recalculateBalance(
+      userId: oldTransaction.userId,
+      walletId: walletId,
+    );
   }
+
+  /// ⚠️ DEPRECATED: Use recalculateBalance instead
+  ///
+  /// This method is kept for backward compatibility
+  // Future<void> call({
+  //   required String walletId,
+  //   required List<TransactionEntity> transactions,
+  //   double initialBalance = 0.0,
+  // }) async {
+  //   if (transactions.isEmpty) return;
+
+  //   await recalculateBalance(
+  //     userId: transactions.first.userId,
+  //     walletId: walletId,
+  //   );
+  // }
 }

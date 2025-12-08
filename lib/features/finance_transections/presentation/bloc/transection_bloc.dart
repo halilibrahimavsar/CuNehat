@@ -75,7 +75,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final model = TransactionModel.fromEntity(event.transaction);
       await dataSource.addTransaction(model);
 
-      // 2. ✅ NEW: Update wallet balance
+      // 2. ✅ UPDATE: Sync wallet balance
       await walletSyncUseCase.applyTransaction(
         walletId: event.transaction.walletId,
         transaction: event.transaction,
@@ -83,7 +83,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       emit(const TransactionActionSuccess('İşlem başarıyla eklendi'));
 
-      // 3. Reload transactions
+      // 3. ✅ CRITICAL: Reload transactions to reflect new state
       if (previousState is TransactionLoaded ||
           previousState is TransactionInitial) {
         add(LoadTransactionsEvent(
@@ -111,7 +111,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       final model = TransactionModel.fromEntity(event.transaction);
       await dataSource.updateTransaction(model);
 
-      // 3. ✅ NEW: Update wallet balance (reverse old, apply new)
+      // 3. ✅ UPDATE: Sync wallet balance (reverse old, apply new)
       await walletSyncUseCase.updateTransaction(
         walletId: event.transaction.walletId,
         oldTransaction: oldTransaction,
@@ -120,7 +120,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       emit(const TransactionActionSuccess('İşlem başarıyla güncellendi'));
 
-      // 4. Reload transactions
+      // 4. ✅ CRITICAL: Reload transactions
       if (previousState is TransactionLoaded) {
         add(LoadTransactionsEvent(
           userId: event.transaction.userId,
@@ -144,14 +144,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // 2. Delete from database
       await dataSource.deleteTransaction(event.transactionId);
 
-      // 3. Update wallet balance
+      // 3. ✅ UPDATE: Sync wallet balance (reverse the transaction)
       await walletSyncUseCase.applyTransaction(
         walletId: transaction.walletId,
         transaction: transaction,
-        isReversal: true,
+        isReversal: true, // ✅ Reverse the amount
       );
 
-      // 4. Update UI state - TEK emit
+      // 4. ✅ UPDATE: Update UI state immediately
       if (state is TransactionLoaded) {
         final currentState = state as TransactionLoaded;
 
@@ -159,19 +159,19 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           currentState.groupedTransactions,
         );
 
-        // Remove the deleted transaction
+        // Remove the deleted transaction from groups
         updatedGrouped.forEach((date, transactions) {
           transactions.removeWhere((t) => t.id == event.transactionId);
         });
 
-        // Remove empty dates
+        // Remove empty date groups
         updatedGrouped
             .removeWhere((date, transactions) => transactions.isEmpty);
 
         final allTransactions =
             updatedGrouped.values.expand((list) => list).toList();
 
-        // ✅ TEK emit - güncellenmiş state
+        // ✅ Emit updated state
         emit(TransactionLoaded(
           groupedTransactions: updatedGrouped,
           allTransactions: allTransactions,

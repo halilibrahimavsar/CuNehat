@@ -43,8 +43,8 @@ void main() async {
       child: BlocProvider(
         create: (context) => SettingsBloc(
           context.read<SettingsRepositoryImpl>(),
-        )..add(LoadStorageModeEvent()),
-        child: CallFirebaseAuth(
+        )..add(const LoadStorageModeEvent()),
+        child: const CallFirebaseAuth(
           createUserCollection: false,
           privateWidget: CuNehatEngine(),
         ),
@@ -84,11 +84,18 @@ class CuNehatEngine extends StatelessWidget {
                   ),
                 ),
 
-                // ========== ✅ NEW: Wallet Balance Sync Use Case ==========
+                // ========== ✅ FIXED: Wallet Balance Sync Use Case ==========
                 RepositoryProvider(
-                  create: (context) => WalletBalanceSyncUseCase(
-                    context.read<WalletRepositoryImpl>().dataSource,
-                  ),
+                  create: (context) {
+                    final walletRepo = context.read<WalletRepositoryImpl>();
+                    final transactionRepo =
+                        context.read<TransactionRepositoryImpl>();
+
+                    return WalletBalanceSyncUseCase(
+                      walletRepository: walletRepo.dataSource,
+                      transactionDataSource: transactionRepo.dataSource,
+                    );
+                  },
                 ),
               ],
               child: MultiBlocProvider(
@@ -101,10 +108,11 @@ class CuNehatEngine extends StatelessWidget {
                   // Wallet BLoC
                   BlocProvider(
                     create: (context) => WalletBloc(
-                        context.read<WalletRepositoryImpl>().dataSource),
+                      context.read<WalletRepositoryImpl>().dataSource,
+                    ),
                   ),
 
-                  // ========== ✅ UPDATED: Transaction BLoC with Sync ==========
+                  // ========== Transaction BLoC ==========
                   BlocProvider(
                     create: (context) => TransactionBloc(
                       dataSource:
@@ -138,14 +146,6 @@ class CuNehatEngine extends StatelessWidget {
             );
 
           default:
-            print("|||||||||||||||||||||||||||||||||");
-
-            print("|||||||||||||||||||||||||||||||||");
-            print(state);
-            print(state.runtimeType);
-            print(state.toString());
-            print("|||||||||||||||||||||||||||||||||");
-
             return MaterialApp(
               home: Scaffold(
                 body: Center(
@@ -153,14 +153,15 @@ class CuNehatEngine extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                          "Birşeyler yanlış gitti uygulamayı yeniden başlatın"),
+                      const Text(
+                        "Birşeyler yanlış gitti, uygulamayı yeniden başlatın",
+                      ),
                       IconButton(
                         onPressed: () {
                           BlocProvider.of<SettingsBloc>(context)
-                              .add(LoadStorageModeEvent());
+                              .add(const LoadStorageModeEvent());
                         },
-                        icon: Icon(Icons.refresh),
+                        icon: const Icon(Icons.refresh),
                       )
                     ],
                   ),
