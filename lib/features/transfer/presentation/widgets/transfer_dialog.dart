@@ -3,6 +3,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:flutter/material.dart';
@@ -80,22 +81,20 @@ class _TransferDialogState extends State<_TransferDialog> {
       ),
       content: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildFromWalletSelector(),
-              const SizedBox(height: 16),
-              _buildTransferIcon(),
-              const SizedBox(height: 16),
-              _buildToWalletSelector(),
-              const SizedBox(height: 16),
-              _buildAmountField(),
-              const SizedBox(height: 16),
-              _buildNoteField(),
-            ],
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildFromWalletSelector(),
+            const SizedBox(height: 16),
+            _buildTransferIcon(),
+            const SizedBox(height: 16),
+            _buildToWalletSelector(),
+            const SizedBox(height: 16),
+            _buildAmountField(),
+            const SizedBox(height: 16),
+            _buildNoteField(),
+          ],
         ),
       ),
       actions: [
@@ -148,11 +147,9 @@ class _TransferDialogState extends State<_TransferDialog> {
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${wallet.name} (${wallet.balance.toStringAsFixed(2)} ₺)',
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Text(
+                    '${wallet.name} (${wallet.balance.toStringAsFixed(2)} ₺)',
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -221,11 +218,9 @@ class _TransferDialogState extends State<_TransferDialog> {
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${wallet.name} (${wallet.balance.toStringAsFixed(2)} ₺)',
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Text(
+                    '${wallet.name} (${wallet.balance.toStringAsFixed(2)} ₺)',
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -306,21 +301,11 @@ class _TransferDialogState extends State<_TransferDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Transfer başarılı!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Hata: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackbarHelper.showError(context, '❌ Hata: $e');
       }
     } finally {
       if (mounted) {
