@@ -224,15 +224,6 @@ class _HomePageState extends State<HomePage>
   ) {
     switch (value) {
       case SliderState.compare:
-        // Compare view için veri yükle
-        context.read<TransactionBloc>().add(
-              LoadTransactionsEvent(
-                userId: userId,
-                walletId: activeWallet.id,
-                startDate: _startDate,
-                endDate: _endDate,
-              ),
-            );
         break;
       case SliderState.expense:
         TransactionSheetHandler.showExpenseSheet(
