@@ -137,16 +137,22 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
   }
 
   // ========== ✅ NEW: Show Transfer Dialog ==========
-  void _showTransferDialog(BuildContext context, List<WalletModel> wallets) {
+  Future<void> _showTransferDialog(
+      BuildContext context, List<WalletModel> wallets) async {
     final transferUseCase = TransferMoneyUseCase(
       context.read<WalletBloc>().repository,
     );
 
-    showTransferDialog(
+    final bool? transferSuccessful = await showTransferDialog(
       context: context,
       userId: widget.userId,
       wallets: wallets,
       transferUseCase: transferUseCase,
     );
+
+    // Show snackbar here, after the dialog is closed
+    if (transferSuccessful == true && context.mounted) {
+      SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
+    }
   }
 }

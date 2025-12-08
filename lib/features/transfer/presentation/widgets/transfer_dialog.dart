@@ -11,14 +11,14 @@ import 'package:flutter/material.dart';
 /// **Transfer Money Dialog**
 ///
 /// Shows dialog for transferring money between wallets
-Future<void> showTransferDialog({
+Future<bool?> showTransferDialog({
   required BuildContext context,
   required String userId,
   required List<WalletModel> wallets,
   required TransferMoneyUseCase transferUseCase,
   String? preSelectedWalletId,
 }) async {
-  await showDialog(
+  return await showDialog<bool>(
     context: context,
     builder: (context) => _TransferDialog(
       userId: userId,
@@ -300,12 +300,14 @@ class _TransferDialogState extends State<_TransferDialog> {
       );
 
       if (mounted) {
-        Navigator.pop(context);
-        SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
+        // Pop with a success result, let the caller show the snackbar
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        SnackbarHelper.showError(context, '❌ Hata: $e');
+        // Show error inside the dialog, as it remains open
+        SnackbarHelper.showError(
+            context, '❌ Hata: ${e.toString().replaceAll("Exception: ", "")}');
       }
     } finally {
       if (mounted) {
