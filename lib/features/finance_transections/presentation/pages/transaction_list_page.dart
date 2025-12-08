@@ -92,8 +92,10 @@ class TransactionListPage extends StatelessWidget {
             walletId: transaction.walletId,
           ),
           onSave: (item) {
+            context.read<TransactionBloc>().add(
+                  UpdateTransactionEvent(item),
+                );
             Navigator.pop(sheetContext);
-            // BLoC will handle the update
           },
           onCancel: () => Navigator.pop(sheetContext),
         );

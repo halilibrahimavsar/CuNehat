@@ -113,103 +113,110 @@ class _HomePageState extends State<HomePage>
             }
           },
           builder: (context, walletState) {
-            if (walletState is WalletLoadingSt) {
-              return const Center(child: CircularProgressIndicator());
-            }
+            switch (walletState) {
+              case WalletLoadingSt():
+                return const Center(child: CircularProgressIndicator());
 
-            if (walletState is WalletErrorSt) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+              case WalletErrorSt():
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 48, color: Colors.red[400]),
+                      const SizedBox(height: 12),
+                      Text(walletState.err),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _loadUserData,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tekrar Dene'),
+                      ),
+                    ],
+                  ),
+                );
+
+              case WalletLoadedSt():
+                final activeWallet = walletState.wallets.firstWhere(
+                  (w) => w.isActive,
+                  orElse: () => walletState.wallets.first,
+                );
+
+                final userId = FirebaseAuth.instance.currentUser?.uid;
+                if (userId == null) {
+                  return const Center(
+                      child: Text('Kullanıcı girişi yapılmamış'));
+                }
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
-                    const SizedBox(height: 12),
-                    Text(walletState.err),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _loadUserData,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Tekrar Dene'),
+                    DateRangeIndicator(
+                      endDate: _endDate,
+                      startDate: _startDate,
+                      onTap: _showDateRangePicker,
                     ),
-                  ],
-                ),
-              );
-            }
+                    BlocBuilder<TransactionBloc, TransactionState>(
+                      builder: (context, transactionState) {
+                        switch (transactionState) {
+                          case TransactionLoading():
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          case TransactionError():
+                            return ErrorView(message: transactionState.message);
 
-            if (walletState is WalletLoadedSt) {
-              final activeWallet = walletState.wallets.firstWhere(
-                (w) => w.isActive,
-                orElse: () => walletState.wallets.first,
-              );
+                          case TransactionLoaded():
+                            return Expanded(
+                              child: CubeAnimationView(
+                                controller: _controller,
+                                firstView: TransactionListPage(
+                                  type: TransactionTypeModel.expense,
+                                  userId: userId,
+                                  walletId: activeWallet.id,
+                                  groupedTransactions:
+                                      transactionState.groupedTransactions,
+                                ),
+                                secondView: TransactionListPage(
+                                  type: TransactionTypeModel.income,
+                                  userId: userId,
+                                  walletId: activeWallet.id,
+                                  groupedTransactions:
+                                      transactionState.groupedTransactions,
+                                ),
+                                thirdView: CompareView(
+                                  userId: userId,
+                                  wallet: activeWallet,
+                                  startDate: _startDate,
+                                  endDate: _endDate,
+                                  allTransactions:
+                                      transactionState.allTransactions,
+                                ),
+                              ),
+                            );
 
-              final userId = FirebaseAuth.instance.currentUser?.uid;
-              if (userId == null) {
-                return const Center(child: Text('Kullanıcı girişi yapılmamış'));
-              }
-
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  DateRangeIndicator(
-                    endDate: _endDate,
-                    startDate: _startDate,
-                    onTap: _showDateRangePicker,
-                  ),
-                  BlocBuilder<TransactionBloc, TransactionState>(
-                    builder: (context, transactionState) {
-                      if (transactionState is TransactionLoaded) {
-                        return Expanded(
-                          child: CubeAnimationView(
-                            controller: _controller,
-                            firstView: TransactionListPage(
-                              type: TransactionTypeModel.expense,
-                              userId: userId,
-                              walletId: activeWallet.id,
-                              groupedTransactions:
-                                  transactionState.groupedTransactions,
-                            ),
-                            secondView: TransactionListPage(
-                              type: TransactionTypeModel.income,
-                              userId: userId,
-                              walletId: activeWallet.id,
-                              groupedTransactions:
-                                  transactionState.groupedTransactions,
-                            ),
-                            thirdView: CompareView(
-                              userId: userId,
-                              wallet: activeWallet,
-                              startDate: _startDate,
-                              endDate: _endDate,
-                              allTransactions: transactionState.allTransactions,
-                            ),
-                          ),
-                        );
-                      } else if (transactionState is TransactionError) {
-                        return ErrorView(message: transactionState.message);
-                      } else if (transactionState is TransactionLoading) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: SliderButtonEnhanced(
-                      controller: _controller,
-                      onTap: (value) => _handleSliderAction(
-                        context,
-                        value,
-                        userId,
-                        activeWallet,
+                          default:
+                            return const SizedBox.shrink();
+                        }
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: SliderButtonEnhanced(
+                        controller: _controller,
+                        onTap: (value) => _handleSliderAction(
+                          context,
+                          value,
+                          userId,
+                          activeWallet,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            }
+                  ],
+                );
 
-            return const Center(child: Text('Cüzdan bulunamadı'));
+              default:
+                return const Center(child: Text('Cüzdan bulunamadı'));
+            }
           },
         ),
       ),

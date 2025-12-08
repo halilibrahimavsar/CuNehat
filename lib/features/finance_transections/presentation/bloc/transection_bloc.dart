@@ -137,21 +137,21 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     try {
-      // 1. Get transaction before deleting (for wallet balance update)
+      // 1. Get transaction before deleting
       final transaction =
           await dataSource.getTransactionById(event.transactionId);
 
-      // 2. Delete transaction from database
+      // 2. Delete from database
       await dataSource.deleteTransaction(event.transactionId);
 
-      // 3. ✅ NEW: Update wallet balance (reverse transaction)
+      // 3. Update wallet balance
       await walletSyncUseCase.applyTransaction(
         walletId: transaction.walletId,
         transaction: transaction,
-        isReversal: true, // Reverse the transaction
+        isReversal: true,
       );
 
-      // 4. Update UI immediately
+      // 4. Update UI state - TEK emit
       if (state is TransactionLoaded) {
         final currentState = state as TransactionLoaded;
 
@@ -159,23 +159,24 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           currentState.groupedTransactions,
         );
 
+        // Remove the deleted transaction
         updatedGrouped.forEach((date, transactions) {
           transactions.removeWhere((t) => t.id == event.transactionId);
         });
 
+        // Remove empty dates
         updatedGrouped
             .removeWhere((date, transactions) => transactions.isEmpty);
 
         final allTransactions =
             updatedGrouped.values.expand((list) => list).toList();
 
+        // ✅ TEK emit - güncellenmiş state
         emit(TransactionLoaded(
           groupedTransactions: updatedGrouped,
           allTransactions: allTransactions,
         ));
       }
-
-      emit(const TransactionActionSuccess('İşlem başarıyla silindi'));
     } catch (e) {
       emit(TransactionError('İşlem silinirken hata oluştu: $e'));
     }
