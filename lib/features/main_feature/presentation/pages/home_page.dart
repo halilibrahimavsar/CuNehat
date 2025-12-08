@@ -10,6 +10,7 @@ import 'package:cunehat/features/finance_transections/presentation/bloc/transect
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/transaction_list_page.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/error_view.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/no_wallet_view.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
@@ -215,7 +216,7 @@ class _HomePageState extends State<HomePage>
                 );
 
               default:
-                return const Center(child: Text('Cüzdan bulunamadı'));
+                return const NoWalletView();
             }
           },
         ),

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -15,7 +16,9 @@ class WalletHiveDataSource implements WalletRepository {
   @override
   Future<void> createWallet(WalletModel wallet) async {
     final box = await _box;
-    await box.put(wallet.id, wallet);
+    final id = UidGenerator.generateWithUserId(wallet.userId);
+
+    await box.put(id, wallet);
   }
 
   @override

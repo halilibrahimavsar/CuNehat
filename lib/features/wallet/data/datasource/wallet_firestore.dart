@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
@@ -7,7 +8,7 @@ class WalletFirestoreDataSource implements WalletRepository {
   Future<void> createWallet(WalletModel wallet) async {
     await FirebaseFirestore.instance
         .collection('wallets')
-        .doc(wallet.id)
+        .doc(UidGenerator.generateWithUserId(wallet.userId))
         .set(wallet.toJson());
   }
 

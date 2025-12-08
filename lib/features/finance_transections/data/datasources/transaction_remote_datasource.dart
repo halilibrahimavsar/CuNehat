@@ -1,6 +1,7 @@
 // lib/features/finance_transections/data/datasources/transaction_remote_datasource.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import '../models/transaction_model.dart';
@@ -81,9 +82,12 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
   @override
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
-      final data = transaction.toJson()..remove('id');
-      final docRef = await _firestore.collection('transactions').add(data);
-      return docRef.id;
+      final String generateId =
+          UidGenerator.generateWithUserId(transaction.userId);
+      final data = transaction.toJson();
+
+      await _firestore.collection('transactions').doc(generateId).set(data);
+      return generateId;
     } on FirebaseException catch (e) {
       throw ServerException('Firebase hatası: ${e.message}', e);
     } catch (e) {

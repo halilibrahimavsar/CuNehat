@@ -138,11 +138,32 @@ class CuNehatEngine extends StatelessWidget {
             );
 
           default:
+            print("|||||||||||||||||||||||||||||||||");
+
+            print("|||||||||||||||||||||||||||||||||");
+            print(state);
+            print(state.runtimeType);
+            print(state.toString());
+            print("|||||||||||||||||||||||||||||||||");
+
             return MaterialApp(
               home: Scaffold(
                 body: Center(
-                  child: Text(
-                      "Birşeyler yanlış gitti uygulamayı yeniden başlatın"),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                          "Birşeyler yanlış gitti uygulamayı yeniden başlatın"),
+                      IconButton(
+                        onPressed: () {
+                          BlocProvider.of<SettingsBloc>(context)
+                              .add(LoadStorageModeEvent());
+                        },
+                        icon: Icon(Icons.refresh),
+                      )
+                    ],
+                  ),
                 ),
               ),
             );

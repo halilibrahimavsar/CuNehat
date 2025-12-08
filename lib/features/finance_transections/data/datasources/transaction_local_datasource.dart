@@ -7,6 +7,7 @@
 // ==========================================
 
 // lib/features/transaction/data/datasources/transaction_hive_datasource.dart
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -86,23 +87,9 @@ class TransactionHiveDataSource implements TransactionDataSource {
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
-      final id = transaction.id.isEmpty
-          ? DateTime.now().millisecondsSinceEpoch.toString()
-          : transaction.id;
+      final id = UidGenerator.generateWithUserId(transaction.userId);
 
-      final transactionWithId = TransactionModel(
-        id: id,
-        userId: transaction.userId,
-        walletId: transaction.walletId,
-        title: transaction.title,
-        tag: transaction.tag,
-        amount: transaction.amount,
-        date: transaction.date,
-        time: transaction.time,
-        type: transaction.type,
-      );
-
-      await box.put(id, transactionWithId);
+      await box.put(id, transaction);
       return id;
     } catch (e) {
       throw CacheException('İşlem eklenirken hata oluştu', e);
