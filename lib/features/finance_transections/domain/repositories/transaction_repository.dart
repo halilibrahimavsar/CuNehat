@@ -12,7 +12,7 @@ abstract class TransactionRepository {
     required String walletId,
     DateTime? startDate,
     DateTime? endDate,
-    TransactionType? type,
+    TransactionTypeModel? type,
   });
 
   Future<Either<Failure, TransactionEntity>> getTransactionById(String id);
@@ -28,7 +28,7 @@ abstract class TransactionRepository {
       getTransactionsGroupedByDate({
     required String userId,
     required String walletId,
-    TransactionType? type,
+    TransactionTypeModel? type,
     DateTime? startDate,
     DateTime? endDate,
   });

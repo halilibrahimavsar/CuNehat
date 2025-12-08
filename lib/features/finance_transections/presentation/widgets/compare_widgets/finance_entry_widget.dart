@@ -193,7 +193,9 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
       amount: amount,
       date: combinedDate,
       time: timeString,
-      type: widget.isExpense ? TransactionType.expense : TransactionType.income,
+      type: widget.isExpense
+          ? TransactionTypeModel.expense
+          : TransactionTypeModel.income,
     );
 
     widget.onSave(transaction);

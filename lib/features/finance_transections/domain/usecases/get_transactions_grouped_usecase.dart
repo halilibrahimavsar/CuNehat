@@ -12,7 +12,7 @@ import '../repositories/transaction_repository.dart';
 class GetTransactionsGroupedParams {
   final String userId;
   final String walletId;
-  final TransactionType? type;
+  final TransactionTypeModel? type;
   final DateTime? startDate;
   final DateTime? endDate;
 

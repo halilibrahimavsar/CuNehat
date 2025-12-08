@@ -1,14 +1,7 @@
 // lib/features/finance_transections/domain/entities/transaction_entity.dart
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
-import 'package:hive/hive.dart';
 
-part 'transaction_entity.g.dart';
-
-// ⚠️ FIX: Changed typeId from 5 to 6 to avoid conflict
-
-/// ⚠️ Entity should NOT have @HiveField annotations
-/// Only the Model (TransactionModel) should have Hive fields
 class TransactionEntity extends Equatable {
   final String id;
   final String userId;
@@ -18,7 +11,7 @@ class TransactionEntity extends Equatable {
   final double amount;
   final DateTime date;
   final String time;
-  final TransactionType type;
+  final TransactionTypeModel type;
 
   const TransactionEntity({
     required this.id,
@@ -32,8 +25,8 @@ class TransactionEntity extends Equatable {
     required this.type,
   });
 
-  bool get isIncome => type == TransactionType.income;
-  bool get isExpense => type == TransactionType.expense;
+  bool get isIncome => type == TransactionTypeModel.income;
+  bool get isExpense => type == TransactionTypeModel.expense;
 
   @override
   List<Object?> get props => [

@@ -14,7 +14,7 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
     required String walletId,
     DateTime? startDate,
     DateTime? endDate,
-    TransactionType? type,
+    TransactionTypeModel? type,
   }) async {
     try {
       // ⚠️ CRITICAL FIX: Simplify query to avoid complex composite index

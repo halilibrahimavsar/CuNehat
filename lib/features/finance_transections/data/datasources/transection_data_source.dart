@@ -10,7 +10,7 @@ abstract class TransactionDataSource {
     required String walletId,
     DateTime? startDate,
     DateTime? endDate,
-    TransactionType? type,
+    TransactionTypeModel? type,
   });
 
   Future<TransactionModel> getTransactionById(String id);

@@ -12,7 +12,7 @@ class TransactionSheetHandler {
     required BuildContext context,
     required String userId,
     required String walletId,
-    required TransactionType type,
+    required TransactionTypeModel type,
     TransactionEntity? initialTransaction,
   }) {
     showModalBottomSheet(
@@ -23,7 +23,7 @@ class TransactionSheetHandler {
       builder: (sheetContext) {
         return FinanceEntryWidget(
           walletId: walletId,
-          isExpense: type == TransactionType.expense,
+          isExpense: type == TransactionTypeModel.expense,
           initialData: initialTransaction != null
               ? FinanceInitialData(
                   id: initialTransaction.id,
@@ -65,7 +65,7 @@ class TransactionSheetHandler {
       context: context,
       userId: userId,
       walletId: walletId,
-      type: TransactionType.expense,
+      type: TransactionTypeModel.expense,
     );
   }
 
@@ -78,7 +78,7 @@ class TransactionSheetHandler {
       context: context,
       userId: userId,
       walletId: walletId,
-      type: TransactionType.income,
+      type: TransactionTypeModel.income,
     );
   }
 }

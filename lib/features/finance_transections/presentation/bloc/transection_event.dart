@@ -15,7 +15,7 @@ class LoadTransactionsEvent extends TransactionEvent {
   final String walletId;
   final DateTime? startDate;
   final DateTime? endDate;
-  final TransactionType? type;
+  final TransactionTypeModel? type;
 
   const LoadTransactionsEvent({
     required this.userId,

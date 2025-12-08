@@ -23,7 +23,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
     required String walletId,
     DateTime? startDate,
     DateTime? endDate,
-    TransactionType? type,
+    TransactionTypeModel? type,
   }) async {
     try {
       final transactions = await dataSource.getTransactions(
@@ -89,7 +89,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
       getTransactionsGroupedByDate({
     required String userId,
     required String walletId,
-    TransactionType? type,
+    TransactionTypeModel? type,
     DateTime? startDate,
     DateTime? endDate,
   }) async {

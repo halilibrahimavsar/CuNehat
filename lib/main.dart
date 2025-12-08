@@ -1,11 +1,13 @@
+// lib/main.dart
+
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transaction_remote_datasource.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
+import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/data/repositories/transaction_repository_impl.dart';
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
@@ -13,8 +15,8 @@ import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-// Transaction Feature Imports
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +34,7 @@ void main() async {
   // Register type adapters
   Hive.registerAdapter(WalletModelAdapter()); // typeId: 0
   Hive.registerAdapter(TransactionModelAdapter()); // typeId: 1
-  Hive.registerAdapter(TransactionTypeAdapter()); // typeId: 2
+  Hive.registerAdapter(TransactionTypeModelAdapter()); // typeId: 2
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
@@ -41,7 +43,7 @@ void main() async {
       child: BlocProvider(
         create: (context) => SettingsBloc(
           context.read<SettingsRepositoryImpl>(),
-        )..add(LoadStorageModeEvent()), // Settings'i yükle
+        )..add(LoadStorageModeEvent()),
         child: CallFirebaseAuth(
           createUserCollection: false,
           privateWidget: CuNehatEngine(),
@@ -64,6 +66,7 @@ class CuNehatEngine extends StatelessWidget {
 
             return MultiRepositoryProvider(
               providers: [
+                // ========== Wallet Repository ==========
                 RepositoryProvider(
                   create: (context) => WalletRepositoryImpl(
                     dataSource: storageMode == StorageMode.local
@@ -72,12 +75,19 @@ class CuNehatEngine extends StatelessWidget {
                   ),
                 ),
 
-                // Transaction Repository
+                // ========== Transaction Repository ==========
                 RepositoryProvider(
                   create: (context) => TransactionRepositoryImpl(
                     dataSource: storageMode == StorageMode.local
                         ? TransactionHiveDataSource()
                         : TransactionFirestoreDataSource(),
+                  ),
+                ),
+
+                // ========== ✅ NEW: Wallet Balance Sync Use Case ==========
+                RepositoryProvider(
+                  create: (context) => WalletBalanceSyncUseCase(
+                    context.read<WalletRepositoryImpl>().dataSource,
                   ),
                 ),
               ],
@@ -87,16 +97,21 @@ class CuNehatEngine extends StatelessWidget {
                   BlocProvider(
                     create: (context) => ThemeBloc(),
                   ),
+
                   // Wallet BLoC
                   BlocProvider(
                     create: (context) => WalletBloc(
                         context.read<WalletRepositoryImpl>().dataSource),
                   ),
 
-                  // Transaction BLoC (NEW)
+                  // ========== ✅ UPDATED: Transaction BLoC with Sync ==========
                   BlocProvider(
                     create: (context) => TransactionBloc(
-                        context.read<TransactionRepositoryImpl>().dataSource),
+                      dataSource:
+                          context.read<TransactionRepositoryImpl>().dataSource,
+                      walletSyncUseCase:
+                          context.read<WalletBalanceSyncUseCase>(),
+                    ),
                   ),
                 ],
                 child: BlocBuilder<ThemeBloc, ThemeState>(
@@ -112,6 +127,7 @@ class CuNehatEngine extends StatelessWidget {
                 ),
               ),
             );
+
           case SettingsErrorSt():
             return MaterialApp(
               home: Scaffold(
@@ -120,6 +136,7 @@ class CuNehatEngine extends StatelessWidget {
                 ),
               ),
             );
+
           default:
             return MaterialApp(
               home: Scaffold(

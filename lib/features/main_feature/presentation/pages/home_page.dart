@@ -162,14 +162,14 @@ class _HomePageState extends State<HomePage>
                           child: CubeAnimationView(
                             controller: _controller,
                             firstView: TransactionListPage(
-                              type: TransactionType.expense,
+                              type: TransactionTypeModel.expense,
                               userId: userId,
                               walletId: activeWallet.id,
                               groupedTransactions:
                                   transactionState.groupedTransactions,
                             ),
                             secondView: TransactionListPage(
-                              type: TransactionType.income,
+                              type: TransactionTypeModel.income,
                               userId: userId,
                               walletId: activeWallet.id,
                               groupedTransactions:

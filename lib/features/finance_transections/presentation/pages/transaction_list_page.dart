@@ -15,7 +15,7 @@ import '../bloc/transection_event.dart';
 import '../widgets/transaction_dismissible_item.dart';
 
 class TransactionListPage extends StatelessWidget {
-  final TransactionType type;
+  final TransactionTypeModel type;
   final String userId;
   final String walletId;
   final Map<DateTime, List<TransactionEntity>> groupedTransactions;
@@ -81,7 +81,7 @@ class TransactionListPage extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return FinanceEntryWidget(
-          isExpense: transaction.type == TransactionType.expense,
+          isExpense: transaction.type == TransactionTypeModel.expense,
           initialData: FinanceInitialData(
             id: transaction.id,
             title: transaction.title,

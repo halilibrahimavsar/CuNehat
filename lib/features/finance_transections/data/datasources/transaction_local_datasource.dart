@@ -29,7 +29,7 @@ class TransactionHiveDataSource implements TransactionDataSource {
     required String walletId,
     DateTime? startDate,
     DateTime? endDate,
-    TransactionType? type,
+    TransactionTypeModel? type,
   }) async {
     try {
       final box = await _getBox();

@@ -1,34 +1,34 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'transaction_entity.dart';
+part of 'transaction_type_enum.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class TransactionTypeAdapter extends TypeAdapter<TransactionType> {
+class TransactionTypeModelAdapter extends TypeAdapter<TransactionTypeModel> {
   @override
   final int typeId = 2;
 
   @override
-  TransactionType read(BinaryReader reader) {
+  TransactionTypeModel read(BinaryReader reader) {
     switch (reader.readByte()) {
       case 0:
-        return TransactionType.income;
+        return TransactionTypeModel.income;
       case 1:
-        return TransactionType.expense;
+        return TransactionTypeModel.expense;
       default:
-        return TransactionType.income;
+        return TransactionTypeModel.income;
     }
   }
 
   @override
-  void write(BinaryWriter writer, TransactionType obj) {
+  void write(BinaryWriter writer, TransactionTypeModel obj) {
     switch (obj) {
-      case TransactionType.income:
+      case TransactionTypeModel.income:
         writer.writeByte(0);
         break;
-      case TransactionType.expense:
+      case TransactionTypeModel.expense:
         writer.writeByte(1);
         break;
     }
@@ -40,7 +40,7 @@ class TransactionTypeAdapter extends TypeAdapter<TransactionType> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TransactionTypeAdapter &&
+      other is TransactionTypeModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

@@ -1,5 +1,10 @@
+// lib/features/wallet/presentation/page/wallet_managment.dart
+// ✅ UPDATED: Add transfer button
+
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
+import 'package:cunehat/features/transfer/presentation/widgets/transfer_dialog.dart';
 import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
@@ -11,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WalletManagementPage extends StatefulWidget {
-  final String userId; // ✅ userId gerekli
+  final String userId;
 
   const WalletManagementPage({
     super.key,
@@ -26,7 +31,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
   @override
   void initState() {
     super.initState();
-    // ✅ Sayfa açıldığında cüzdanları yükle
     context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
   }
 
@@ -34,7 +38,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
       listener: (context, state) {
-        // ✅ İşlem başarılı olunca listeyi yenile
         if (state is WalletCreatedSt ||
             state is WalletUpdatedSt ||
             state is WalletDeletedSt) {
@@ -46,6 +49,14 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
           appBar: AppBar(
             title: const Text('Cüzdanlarım'),
             actions: [
+              // ========== ✅ NEW: Transfer Button ==========
+              if (state is WalletLoadedSt && state.wallets.length >= 2)
+                IconButton(
+                  icon: const Icon(Icons.swap_horiz),
+                  onPressed: () => _showTransferDialog(context, state.wallets),
+                  tooltip: 'Para Transferi',
+                ),
+
               IconButton(
                 icon: const Icon(Icons.info_outline),
                 onPressed: () => WalletInfoDialog.show(context),
@@ -58,7 +69,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
               showCreateEditDialog(
                 context: context,
                 userId: widget.userId,
-                wallet: null, // null = create mode
+                wallet: null,
                 onSuccess: () {
                   SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');
                 },
@@ -94,18 +105,15 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
         return WalletCardWidget(
           wallet: wallet,
-          // isActive: wallet.isActive,
-          // activate
           onTap: () => context.read<WalletBloc>().add(SetActiveWalletEvent(
                 userId: widget.userId,
                 walletId: wallet.id,
               )),
-          // edit
           onEdit: () {
             showCreateEditDialog(
               context: context,
               userId: widget.userId,
-              wallet: wallet, // non-null = edit mode
+              wallet: wallet,
               onSuccess: () {
                 SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi!');
               },
@@ -114,7 +122,6 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
               },
             );
           },
-          // delete
           onDelete: () => ConfirmDeleteDialog.show(
             context,
             title: "Cüzdanı Sil",
@@ -126,6 +133,20 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
           ),
         );
       },
+    );
+  }
+
+  // ========== ✅ NEW: Show Transfer Dialog ==========
+  void _showTransferDialog(BuildContext context, List<WalletModel> wallets) {
+    final transferUseCase = TransferMoneyUseCase(
+      context.read<WalletBloc>().repository,
+    );
+
+    showTransferDialog(
+      context: context,
+      userId: widget.userId,
+      wallets: wallets,
+      transferUseCase: transferUseCase,
     );
   }
 }

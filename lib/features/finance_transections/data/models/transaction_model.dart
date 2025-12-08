@@ -44,7 +44,7 @@ class TransactionModel extends TransactionEntity {
 
   @HiveField(8)
   @override
-  final TransactionType type;
+  final TransactionTypeModel type;
 
   const TransactionModel({
     required this.id,
@@ -92,7 +92,7 @@ class TransactionModel extends TransactionEntity {
       'amount': amount,
       'date': date.toIso8601String(),
       'time': time,
-      'type': type == TransactionType.income ? 'income' : 'expense',
+      'type': type == TransactionTypeModel.income ? 'income' : 'expense',
     };
   }
 
@@ -110,8 +110,10 @@ class TransactionModel extends TransactionEntity {
     );
   }
 
-  static TransactionType _parseTransactionType(String type) {
-    return type == 'income' ? TransactionType.income : TransactionType.expense;
+  static TransactionTypeModel _parseTransactionType(String type) {
+    return type == 'income'
+        ? TransactionTypeModel.income
+        : TransactionTypeModel.expense;
   }
 
   TransactionModel copyWith({
@@ -123,7 +125,7 @@ class TransactionModel extends TransactionEntity {
     double? amount,
     DateTime? date,
     String? time,
-    TransactionType? type,
+    TransactionTypeModel? type,
   }) {
     return TransactionModel(
       id: id ?? this.id,
