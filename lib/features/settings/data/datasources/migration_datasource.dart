@@ -2,7 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
-import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class MigrationDataSource {

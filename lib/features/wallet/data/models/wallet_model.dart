@@ -9,7 +9,7 @@ part 'wallet_model.g.dart';
 ///
 /// Each user can have multiple wallets for organizing finances
 /// Example: "Ana Cüzdan", "Tatil Fonu", "Acil Durum"
-@HiveType(typeId: 3)
+@HiveType(typeId: 0)
 class WalletModel extends HiveObject {
   @HiveField(0)
   final String id;

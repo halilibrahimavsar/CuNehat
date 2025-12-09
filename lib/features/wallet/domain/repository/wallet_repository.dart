@@ -1,4 +1,4 @@
-import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 
 abstract class WalletRepository {
   Future<void> createWallet(WalletModel wallet);

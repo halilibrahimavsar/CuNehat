@@ -14,7 +14,7 @@ import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
-import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';

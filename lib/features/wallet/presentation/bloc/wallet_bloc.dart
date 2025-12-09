@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:equatable/equatable.dart';

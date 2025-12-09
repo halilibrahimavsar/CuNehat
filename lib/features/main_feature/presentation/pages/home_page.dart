@@ -14,7 +14,7 @@ import 'package:cunehat/features/main_feature/presentation/widgets/date_range_in
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
-import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

@@ -8,7 +8,7 @@ part 'transaction_model.g.dart';
 /// ⚠️ CRITICAL FIX: Remove field overrides
 /// The model extends entity, so it inherits all fields
 /// We only need to add @HiveField annotations
-@HiveType(typeId: 5)
+@HiveType(typeId: 1)
 class TransactionModel extends TransactionEntity {
   @HiveField(0)
   @override

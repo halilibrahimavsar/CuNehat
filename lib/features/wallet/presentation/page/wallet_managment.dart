@@ -5,7 +5,7 @@ import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
 import 'package:cunehat/features/transfer/presentation/widgets/transfer_dialog.dart';
-import 'package:cunehat/features/wallet/domain/model/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/empty_state_widget.dart';
