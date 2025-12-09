@@ -102,7 +102,9 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
       itemCount: wallets.length,
       itemBuilder: (context, index) {
         final wallet = wallets[index];
-
+        print("||||||||||||||||||||||||||");
+        print(wallet);
+        print("||||||||||||||||||||||||||");
         return WalletCardWidget(
           wallet: wallet,
           onTap: () => context.read<WalletBloc>().add(SetActiveWalletEvent(

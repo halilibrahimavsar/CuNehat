@@ -87,7 +87,7 @@ class TransactionHiveDataSource implements TransactionDataSource {
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
-      final id = UidGenerator.generateWithUserId(transaction.userId);
+      final id = UidGenerator.generateWithUserId();
 
       await box.put(id, transaction);
       return id;

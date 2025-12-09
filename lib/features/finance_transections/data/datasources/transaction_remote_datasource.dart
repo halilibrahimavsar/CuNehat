@@ -82,8 +82,7 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
   @override
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
-      final String generateId =
-          UidGenerator.generateWithUserId(transaction.userId);
+      final String generateId = UidGenerator.generateWithUserId();
       final data = transaction.toJson();
 
       await _firestore.collection('transactions').doc(generateId).set(data);

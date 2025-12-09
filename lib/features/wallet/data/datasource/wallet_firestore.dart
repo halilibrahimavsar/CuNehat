@@ -8,7 +8,7 @@ class WalletFirestoreDataSource implements WalletRepository {
   Future<void> createWallet(WalletModel wallet) async {
     await FirebaseFirestore.instance
         .collection('wallets')
-        .doc(UidGenerator.generateWithUserId(wallet.userId))
+        .doc(UidGenerator.generateWithUserId())
         .set(wallet.toJson());
   }
 
