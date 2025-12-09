@@ -27,7 +27,7 @@ class WalletGetUseCase {
   WalletGetUseCase(this.repository);
 
   // ✅ Stream döndürüyor, await'e gerek yok
-  Stream<List<WalletModel>> call(String userId) {
+  Future<List<WalletModel>> call(String userId) {
     return repository.getWallets(userId);
   }
 }

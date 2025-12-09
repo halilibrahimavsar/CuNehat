@@ -13,17 +13,26 @@ class WalletFirestoreDataSource implements WalletRepository {
   }
 
   @override
-  Stream<List<WalletModel>> getWallets(String userId) {
-    return FirebaseFirestore.instance
+  Future<List<WalletModel>> getWallets(String userId) async {
+    final walletsRef = FirebaseFirestore.instance
         .collection('wallets')
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => WalletModel.fromJson(
-                  doc.id,
-                  doc.data(),
-                ))
-            .toList());
+        .where('userId', isEqualTo: userId);
+
+    return walletsRef.get().then((snapshot) {
+      return snapshot.docs
+          .map((doc) => WalletModel.fromJson(
+                doc.id,
+                doc.data(),
+              ))
+          .toList();
+    });
+
+    // walletsRef.get()..map((snapshot) => snapshot.docs
+    //     .map((doc) => WalletModel.fromJson(
+    //           doc.id,
+    //           doc.data(),
+    //         ))
+    //     .toList());
   }
 
   @override

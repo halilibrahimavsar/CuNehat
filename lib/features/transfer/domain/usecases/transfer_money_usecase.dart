@@ -36,7 +36,7 @@ class TransferMoneyUseCase {
     }
 
     // Get wallets
-    final wallets = await walletRepository.getWallets(userId).first;
+    final wallets = await walletRepository.getWallets(userId);
     final fromWallet = wallets.firstWhere(
       (w) => w.id == fromWalletId,
       orElse: () => throw Exception('Kaynak cüzdan bulunamadı'),

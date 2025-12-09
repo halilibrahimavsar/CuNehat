@@ -17,7 +17,7 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Stream<List<WalletModel>> getWallets(String userId) {
+  Future<List<WalletModel>> getWallets(String userId) {
     return dataSource.getWallets(userId);
   }
 

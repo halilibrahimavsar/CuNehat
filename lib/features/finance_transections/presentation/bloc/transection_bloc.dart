@@ -16,14 +16,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     required this.dataSource,
     required this.walletSyncUseCase,
   }) : super(TransactionInitial()) {
-    on<LoadTransactionsEvent>(_onLoadTransactions);
+    on<GetTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
   }
 
   Future<void> _onLoadTransactions(
-    LoadTransactionsEvent event,
+    GetTransactionsEvent event,
     Emitter<TransactionState> emit,
   ) async {
     emit(TransactionLoading());
@@ -86,7 +86,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // 3. ✅ CRITICAL: Reload transactions to reflect new state
       if (previousState is TransactionLoaded ||
           previousState is TransactionInitial) {
-        add(LoadTransactionsEvent(
+        add(GetTransactionsEvent(
           userId: event.transaction.userId,
           walletId: event.transaction.walletId,
         ));
@@ -122,7 +122,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       // 4. ✅ CRITICAL: Reload transactions
       if (previousState is TransactionLoaded) {
-        add(LoadTransactionsEvent(
+        add(GetTransactionsEvent(
           userId: event.transaction.userId,
           walletId: event.transaction.walletId,
         ));

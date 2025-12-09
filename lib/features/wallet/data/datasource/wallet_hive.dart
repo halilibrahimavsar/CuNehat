@@ -36,14 +36,9 @@ class WalletHiveDataSource implements WalletRepository {
   }
 
   @override
-  Stream<List<WalletModel>> getWallets(String userId) async* {
+  Future<List<WalletModel>> getWallets(String userId) async {
     final box = await _getWalletBox();
-
-    // İlk veriyi gönder
-    yield _filterWalletsByUser(box, userId);
-
-    // Değişiklikleri dinle
-    yield* box.watch().map((_) => _filterWalletsByUser(box, userId));
+    return _filterWalletsByUser(box, userId);
   }
 
   List<WalletModel> _filterWalletsByUser(Box<WalletModel> box, String userId) {

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
@@ -10,49 +9,26 @@ part 'wallet_state.dart';
 
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository repository;
-
-  // Stream subscription'ı tutmak için
-  StreamSubscription<List<WalletModel>>? _walletSubscription;
-
   WalletBloc(this.repository) : super(const WalletInitialSt()) {
-    // ========== CÜZDANLARI GETİR (STREAM DİNLE) ==========
     on<GetWalletsEvent>((event, emit) async {
       emit(const WalletLoadingSt());
 
-      // Önceki subscription'ı iptal et
-      await _walletSubscription?.cancel();
-
       try {
-        // Stream'i dinle
-        _walletSubscription =
-            WalletGetUseCase(repository).call(event.userId).listen(
+        await WalletGetUseCase(repository).call(event.userId).then(
           (wallets) {
             if (wallets.isEmpty) {
-              add(const _EmitNoDataEvent());
+              emit(const NoWalletSt());
             } else {
-              add(_EmitLoadedEvent(wallets));
+              emit(WalletLoadedSt(wallets));
             }
           },
           onError: (error) {
-            add(_EmitErrorEvent(error.toString()));
+            emit(WalletErrorSt(error.toString()));
           },
         );
       } catch (e) {
         emit(WalletErrorSt(e.toString()));
       }
-    });
-
-    // ========== İÇ EVENT'LER (STREAM'DEN GELEN DATA) ==========
-    on<_EmitLoadedEvent>((event, emit) {
-      emit(WalletLoadedSt(event.wallets));
-    });
-
-    on<_EmitNoDataEvent>((event, emit) {
-      emit(const NoDataSt());
-    });
-
-    on<_EmitErrorEvent>((event, emit) {
-      emit(WalletErrorSt(event.error));
     });
 
     // ========== CÜZDAN OLUŞTUR ==========
@@ -104,34 +80,4 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       }
     });
   }
-
-  // Dispose ederken memory leak sorunu olmaz
-  @override
-  Future<void> close() async {
-    await _walletSubscription?.cancel();
-    return super.close();
-  }
-}
-
-// ========== İÇ EVENT'LER (Stream sonuçlarını emit etmek için) ==========
-class _EmitLoadedEvent extends WalletEvent {
-  final List<WalletModel> wallets;
-
-  const _EmitLoadedEvent(this.wallets);
-
-  @override
-  List<Object> get props => [wallets];
-}
-
-class _EmitNoDataEvent extends WalletEvent {
-  const _EmitNoDataEvent();
-}
-
-class _EmitErrorEvent extends WalletEvent {
-  final String error;
-
-  const _EmitErrorEvent(this.error);
-
-  @override
-  List<Object> get props => [error];
 }

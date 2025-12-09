@@ -88,7 +88,7 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
 
   Widget _buildBody(WalletState state) {
     return switch (state) {
-      NoDataSt() => const EmptyStateWidget(),
+      NoWalletSt() => const EmptyStateWidget(),
       WalletLoadingSt() => const Center(child: CircularProgressIndicator()),
       WalletLoadedSt() => _buildWalletList(state.wallets),
       WalletErrorSt() => ErrorStateWidget(errorMessage: state.err),

@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage>
     super.initState();
     _initAnimation();
     _initDateRange();
-    _loadUserData();
+    _loadWallets();
   }
 
   void _initAnimation() {
@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage>
     _startDate = DateTime.now().subtract(const Duration(days: 30));
   }
 
-  void _loadUserData() {
+  void _loadWallets() {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage>
 
   void _loadTransactions(String userId, String walletId) {
     context.read<TransactionBloc>().add(
-          LoadTransactionsEvent(
+          GetTransactionsEvent(
             userId: userId,
             walletId: walletId,
             startDate: _startDate,
@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage>
                         Text(walletState.err),
                         const SizedBox(height: 20),
                         ElevatedButton.icon(
-                          onPressed: _loadUserData,
+                          onPressed: _loadWallets,
                           icon: const Icon(Icons.refresh),
                           label: const Text('Tekrar Dene'),
                         ),

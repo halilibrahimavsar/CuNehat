@@ -37,6 +37,6 @@ final class WalletUpdatedSt extends WalletState {
   const WalletUpdatedSt();
 }
 
-final class NoDataSt extends WalletState {
-  const NoDataSt();
+final class NoWalletSt extends WalletState {
+  const NoWalletSt();
 }

@@ -50,7 +50,7 @@ class WalletBalanceSyncUseCase {
       }
 
       // 4. Get current wallet
-      final wallets = await walletRepository.getWallets(userId).first;
+      final wallets = await walletRepository.getWallets(userId);
       final wallet = wallets.firstWhere((w) => w.id == walletId);
 
       // 5. Update wallet with new balance

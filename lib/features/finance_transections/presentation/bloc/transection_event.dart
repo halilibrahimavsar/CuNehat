@@ -10,14 +10,14 @@ abstract class TransactionEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadTransactionsEvent extends TransactionEvent {
+class GetTransactionsEvent extends TransactionEvent {
   final String userId;
   final String walletId;
   final DateTime? startDate;
   final DateTime? endDate;
   final TransactionTypeModel? type;
 
-  const LoadTransactionsEvent({
+  const GetTransactionsEvent({
     required this.userId,
     required this.walletId,
     this.startDate,
