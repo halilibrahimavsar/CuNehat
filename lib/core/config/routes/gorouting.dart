@@ -7,10 +7,10 @@ import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.wallet,
+  initialLocation: AppRoutes.home,
   routes: [
     GoRoute(
-      path: AppRoutes.wallet,
+      path: AppRoutes.home,
       pageBuilder: (context, state) {
         return ExternalCubeSlideLeftToRight(
           key: state.pageKey,
