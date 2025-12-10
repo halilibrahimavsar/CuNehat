@@ -7,13 +7,10 @@ sealed class WalletState extends Equatable {
   List<Object> get props => [];
 }
 
-final class WalletInitialSt extends WalletState {
-  const WalletInitialSt();
-}
-
 final class WalletLoadedSt extends WalletState {
   final List<WalletModel> wallets;
-  const WalletLoadedSt(this.wallets);
+  final WalletModel? activeWallet;
+  const WalletLoadedSt(this.wallets, this.activeWallet);
 }
 
 final class WalletErrorSt extends WalletState {

@@ -9,7 +9,7 @@ part 'wallet_state.dart';
 
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository repository;
-  WalletBloc(this.repository) : super(const WalletInitialSt()) {
+  WalletBloc(this.repository) : super(const NoWalletSt()) {
     on<GetWalletsEvent>((event, emit) async {
       emit(const WalletLoadingSt());
 
@@ -19,7 +19,15 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
             if (wallets.isEmpty) {
               emit(const NoWalletSt());
             } else {
-              emit(WalletLoadedSt(wallets));
+              final activeWallet = wallets.firstWhere(
+                (wallet) {
+                  return wallet.isActive == true;
+                },
+                orElse: () {
+                  return wallets.first;
+                },
+              );
+              emit(WalletLoadedSt(wallets, activeWallet));
             }
           },
           onError: (error) {

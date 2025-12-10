@@ -1,5 +1,6 @@
 // lib/features/main_feature/presentation/pages/home_page.dart
 
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
@@ -94,146 +95,145 @@ class _HomePageState extends State<HomePage>
           ),
         ),
         drawer: const SharedDrawer(),
-        body: MultiBlocListener(
-          listeners: [
-            // ✅ LISTENER 1: When wallet changes, reload transactions
-            BlocListener<WalletBloc, WalletState>(
-              listener: (context, walletState) {
-                if (walletState is WalletLoadedSt) {
-                  final userId = FirebaseAuth.instance.currentUser?.uid;
-                  if (userId != null) {
-                    final activeWallet = walletState.wallets.firstWhere(
-                      (w) => w.isActive,
-                      orElse: () => walletState.wallets.first,
-                    );
-                    _loadTransactions(userId, activeWallet.id);
-                  }
-                }
-              },
-            ),
+        body: BlocBuilder<WalletBloc, WalletState>(
+          builder: (context, walletState) {
+            final userId = FirebaseAuth.instance.currentUser?.uid;
+            if (userId == null) {
+              return const Center(child: Text('Kullanıcı girişi yapılmamış'));
+            }
+            switch (walletState) {
+              case WalletLoadingSt():
+                return const Center(child: CircularProgressIndicator());
 
-            // ✅ LISTENER 2: When transaction action succeeds, reload wallet
-            BlocListener<TransactionBloc, TransactionState>(
-              listener: (context, transactionState) {
-                if (transactionState is TransactionActionSuccess) {
-                  // Reload wallet to get updated balance
-                  final userId = FirebaseAuth.instance.currentUser?.uid;
-                  if (userId != null) {
-                    context.read<WalletBloc>().add(GetWalletsEvent(userId));
-                  }
-                }
-              },
-            ),
-          ],
-          child: BlocBuilder<WalletBloc, WalletState>(
-            builder: (context, walletState) {
-              switch (walletState) {
-                case WalletLoadingSt():
-                  return const Center(child: CircularProgressIndicator());
-
-                case WalletErrorSt():
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline,
-                            size: 48, color: Colors.red[400]),
-                        const SizedBox(height: 12),
-                        Text(walletState.err),
-                        const SizedBox(height: 20),
-                        ElevatedButton.icon(
-                          onPressed: _loadWallets,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Tekrar Dene'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                case WalletLoadedSt():
-                  final activeWallet = walletState.wallets.firstWhere(
-                    (w) => w.isActive,
-                    orElse: () => walletState.wallets.first,
-                  );
-
-                  final userId = FirebaseAuth.instance.currentUser?.uid;
-                  if (userId == null) {
-                    return const Center(
-                        child: Text('Kullanıcı girişi yapılmamış'));
-                  }
-
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              case WalletErrorSt():
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      DateRangeIndicator(
-                        endDate: _endDate,
-                        startDate: _startDate,
-                        onTap: _showDateRangePicker,
-                      ),
-                      BlocBuilder<TransactionBloc, TransactionState>(
-                        builder: (context, transactionState) {
-                          switch (transactionState) {
-                            case TransactionLoading():
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            case TransactionError():
-                              return ErrorView(
-                                  message: transactionState.message);
-
-                            case TransactionLoaded():
-                              return Expanded(
-                                child: CubeAnimationView(
-                                  controller: _controller,
-                                  firstView: TransactionListPage(
-                                    type: TransactionTypeModel.expense,
-                                    userId: userId,
-                                    walletId: activeWallet.id,
-                                    groupedTransactions:
-                                        transactionState.groupedTransactions,
-                                  ),
-                                  secondView: TransactionListPage(
-                                    type: TransactionTypeModel.income,
-                                    userId: userId,
-                                    walletId: activeWallet.id,
-                                    groupedTransactions:
-                                        transactionState.groupedTransactions,
-                                  ),
-                                  thirdView: CompareView(
-                                    userId: userId,
-                                    wallet: activeWallet, // ✅ Always updated
-                                    startDate: _startDate,
-                                    endDate: _endDate,
-                                    allTransactions:
-                                        transactionState.allTransactions,
-                                  ),
-                                ),
-                              );
-
-                            default:
-                              return const SizedBox.shrink();
-                          }
-                        },
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: SliderButtonEnhanced(
-                          controller: _controller,
-                          onTap: (value) => _handleSliderAction(
-                            context,
-                            value,
-                            userId,
-                            activeWallet,
-                          ),
-                        ),
+                      Icon(Icons.error_outline,
+                          size: 48, color: Colors.red[400]),
+                      const SizedBox(height: 12),
+                      Text(walletState.err),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _loadWallets,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tekrar Dene'),
                       ),
                     ],
-                  );
+                  ),
+                );
 
-                default:
-                  return const NoWalletView();
-              }
-            },
-          ),
+              case WalletLoadedSt():
+                switch (walletState.activeWallet?.isActive) {
+                  case true:
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        DateRangeIndicator(
+                          endDate: _endDate,
+                          startDate: _startDate,
+                          onTap: _showDateRangePicker,
+                        ),
+                        BlocBuilder<TransactionBloc, TransactionState>(
+                          builder: (context, transactionState) {
+                            switch (transactionState) {
+                              case TransactionLoading():
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              case TransactionError():
+                                return ErrorView(
+                                    message: transactionState.message);
+
+                              case TransactionLoaded():
+                                return BlocListener<TransactionBloc,
+                                    TransactionState>(
+                                  listener: (context, transactionState) {
+                                    if (transactionState
+                                        is TransactionActionSuccess) {
+                                      // Reload wallet to get updated balance
+                                      final userId = FirebaseAuth
+                                          .instance.currentUser?.uid;
+                                      if (userId != null) {
+                                        context
+                                            .read<WalletBloc>()
+                                            .add(GetWalletsEvent(userId));
+                                      }
+                                    }
+                                  },
+                                  child: Expanded(
+                                    child: CubeAnimationView(
+                                      controller: _controller,
+                                      firstView: TransactionListPage(
+                                        type: TransactionTypeModel.expense,
+                                        userId: userId,
+                                        walletId: walletState.activeWallet!.id,
+                                        groupedTransactions: transactionState
+                                            .groupedTransactions,
+                                      ),
+                                      secondView: TransactionListPage(
+                                        type: TransactionTypeModel.income,
+                                        userId: userId,
+                                        walletId: walletState.activeWallet!.id,
+                                        groupedTransactions: transactionState
+                                            .groupedTransactions,
+                                      ),
+                                      thirdView: CompareView(
+                                        userId: userId,
+                                        wallet: walletState.activeWallet!,
+                                        startDate: _startDate,
+                                        endDate: _endDate,
+                                        allTransactions:
+                                            transactionState.allTransactions,
+                                      ),
+                                    ),
+                                  ),
+                                );
+
+                              default:
+                                return const SizedBox.shrink();
+                            }
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: SliderButtonEnhanced(
+                            controller: _controller,
+                            onTap: (value) => _handleSliderAction(
+                              context,
+                              value,
+                              userId,
+                              walletState.activeWallet!,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  case false:
+                    return Center(
+                      child: Column(
+                        children: [
+                          Text(
+                              "Actif cüzdan bulunamadı, Aşşağıdaki butona tıklayarak yeni bir cüzdan secebilir veya oluşturabilirsiniz"),
+                          IconButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, AppRoutes.wallet);
+                              },
+                              icon: Icon(Icons.wallet))
+                        ],
+                      ),
+                    );
+                  case null:
+                    break;
+                }
+              case WalletDeletedSt() || WalletCreatedSt() || WalletUpdatedSt():
+                context.read<WalletBloc>().add(GetWalletsEvent(userId));
+                break;
+              default:
+                return const NoWalletView();
+            }
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );
