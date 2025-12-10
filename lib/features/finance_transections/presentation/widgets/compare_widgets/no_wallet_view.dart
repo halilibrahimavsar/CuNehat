@@ -1,5 +1,4 @@
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class NoWalletView extends StatelessWidget {
@@ -25,25 +24,7 @@ class NoWalletView extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  isDismissible: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (bottomSheetContext) {
-                    // ✅ CRITICAL: Don't wrap in provider, it already exists in parent
-                    return DraggableScrollableSheet(
-                      initialChildSize: 0.7, // Start at 70% of screen
-                      minChildSize: 0.5, // Can be dragged down to 50%
-                      maxChildSize: 0.95, // Can be dragged up to 95%
-                      builder: (context, scrollController) {
-                        return WalletManagementPage(
-                          userId: FirebaseAuth.instance.currentUser!.uid,
-                        );
-                      },
-                    );
-                  },
-                );
+                showWalletManagement(context);
               },
               child: const Text('Yeni Cüzdan Oluştur'),
             ),

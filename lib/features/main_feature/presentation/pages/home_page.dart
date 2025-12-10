@@ -1,6 +1,5 @@
 // lib/features/main_feature/presentation/pages/home_page.dart
 
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
@@ -17,6 +16,7 @@ import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -210,17 +210,26 @@ class _HomePageState extends State<HomePage>
                       ],
                     );
                   case false:
-                    return Center(
-                      child: Column(
-                        children: [
-                          Text(
-                              "Actif cüzdan bulunamadı, Aşşağıdaki butona tıklayarak yeni bir cüzdan secebilir veya oluşturabilirsiniz"),
-                          IconButton(
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Aktif cüzdan bulunamadı, Aşşağıdaki butona tıklayarak yeni bir cüzdan secebilir veya oluşturabilirsiniz",
+                              textAlign: TextAlign.center,
+                            ),
+                            IconButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, AppRoutes.wallet);
+                                showWalletManagement(context);
                               },
-                              icon: Icon(Icons.wallet))
-                        ],
+                              icon: Icon(Icons.wallet),
+                              iconSize: 46,
+                            )
+                          ],
+                        ),
                       ),
                     );
                   case null:

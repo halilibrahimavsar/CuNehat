@@ -96,7 +96,7 @@ class _SharedAppbarState extends State<SharedAppbar> {
       actions: [
         // ✅ Wallet management button with badge
         IconButton(
-          onPressed: () => _showWalletManagement(context),
+          onPressed: () => showWalletManagement(context),
           icon: Badge(
             child: Icon(
               Icons.wallet_rounded,
@@ -228,28 +228,6 @@ class _SharedAppbarState extends State<SharedAppbar> {
           ),
         ),
       ],
-    );
-  }
-
-  void _showWalletManagement(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      backgroundColor: Colors.transparent,
-      builder: (bottomSheetContext) {
-        // ✅ CRITICAL: Don't wrap in provider, it already exists in parent
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7, // Start at 70% of screen
-          minChildSize: 0.5, // Can be dragged down to 50%
-          maxChildSize: 0.95, // Can be dragged up to 95%
-          builder: (context, scrollController) {
-            return WalletManagementPage(
-              userId: FirebaseAuth.instance.currentUser!.uid,
-            );
-          },
-        );
-      },
     );
   }
 }
