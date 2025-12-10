@@ -6,8 +6,7 @@ import 'package:cunehat/features/finance_transections/presentation/pages/compare
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/transaction_list_page.dart';
-import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/error_view.dart';
-import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/no_wallet_view.dart';
+import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
@@ -16,7 +15,7 @@ import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -127,124 +126,100 @@ class _HomePageState extends State<HomePage>
               case WalletLoadedSt():
                 switch (walletState.activeWallet?.isActive) {
                   case true:
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        DateRangeIndicator(
-                          endDate: _endDate,
-                          startDate: _startDate,
-                          onTap: _showDateRangePicker,
-                        ),
-                        BlocBuilder<TransactionBloc, TransactionState>(
-                          builder: (context, transactionState) {
-                            switch (transactionState) {
-                              case TransactionLoading():
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              case TransactionError():
-                                return ErrorView(
-                                    message: transactionState.message);
-
-                              case TransactionLoaded():
-                                return BlocListener<TransactionBloc,
-                                    TransactionState>(
-                                  listener: (context, transactionState) {
-                                    if (transactionState
-                                        is TransactionActionSuccess) {
-                                      // Reload wallet to get updated balance
-                                      final userId = FirebaseAuth
-                                          .instance.currentUser?.uid;
-                                      if (userId != null) {
-                                        context
-                                            .read<WalletBloc>()
-                                            .add(GetWalletsEvent(userId));
-                                      }
-                                    }
-                                  },
-                                  child: Expanded(
-                                    child: CubeAnimationView(
-                                      controller: _controller,
-                                      firstView: TransactionListPage(
-                                        type: TransactionTypeModel.expense,
-                                        userId: userId,
-                                        walletId: walletState.activeWallet!.id,
-                                        groupedTransactions: transactionState
-                                            .groupedTransactions,
-                                      ),
-                                      secondView: TransactionListPage(
-                                        type: TransactionTypeModel.income,
-                                        userId: userId,
-                                        walletId: walletState.activeWallet!.id,
-                                        groupedTransactions: transactionState
-                                            .groupedTransactions,
-                                      ),
-                                      thirdView: CompareView(
-                                        userId: userId,
-                                        wallet: walletState.activeWallet!,
-                                        startDate: _startDate,
-                                        endDate: _endDate,
-                                        allTransactions:
-                                            transactionState.allTransactions,
-                                      ),
-                                    ),
-                                  ),
-                                );
-
-                              default:
-                                return const SizedBox.shrink();
-                            }
-                          },
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: SliderButtonEnhanced(
-                            controller: _controller,
-                            onTap: (value) => _handleSliderAction(
-                              context,
-                              value,
-                              userId,
-                              walletState.activeWallet!,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
+                    print(walletState.activeWallet!.id);
+                    _loadTransactions(userId, walletState.activeWallet!.id);
+                    return _buildBody(userId, walletState, context);
                   case false:
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Aktif cüzdan bulunamadı, Aşşağıdaki butona tıklayarak yeni bir cüzdan secebilir veya oluşturabilirsiniz",
-                              textAlign: TextAlign.center,
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                showWalletManagement(context);
-                              },
-                              icon: Icon(Icons.wallet),
-                              iconSize: 46,
-                            )
-                          ],
-                        ),
-                      ),
-                    );
+                    return NoWalletView(infoText: "Cüzdan seçiniz");
                   case null:
-                    break;
+                    return NoWalletView(infoText: "Cüzdan oluşturunuz");
                 }
               case WalletDeletedSt() || WalletCreatedSt() || WalletUpdatedSt():
                 context.read<WalletBloc>().add(GetWalletsEvent(userId));
                 break;
               default:
-                return const NoWalletView();
+                return const NoWalletView(
+                  infoText: "Cüzdan oluşturunuz",
+                );
             }
             return const SizedBox.shrink();
           },
         ),
       ),
+    );
+  }
+
+  Column _buildBody(
+      String userId, WalletLoadedSt walletState, BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        DateRangeIndicator(
+          endDate: _endDate,
+          startDate: _startDate,
+          onTap: _showDateRangePicker,
+        ),
+        BlocConsumer<TransactionBloc, TransactionState>(
+          listener: (context, transactionState) {
+            if (transactionState is TransactionActionSuccess) {
+              // Reload wallet to get updated balance
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              if (userId != null) {
+                context.read<WalletBloc>().add(GetWalletsEvent(userId));
+              }
+            }
+          },
+          builder: (context, transactionState) {
+            switch (transactionState) {
+              case TransactionLoading():
+                return const Center(child: CircularProgressIndicator());
+              case TransactionError():
+                return ErrorView(message: transactionState.message);
+
+              case TransactionLoaded():
+                return Expanded(
+                  child: CubeAnimationView(
+                    controller: _controller,
+                    firstView: TransactionListPage(
+                      type: TransactionTypeModel.expense,
+                      userId: userId,
+                      walletId: walletState.activeWallet!.id,
+                      groupedTransactions: transactionState.groupedTransactions,
+                    ),
+                    secondView: TransactionListPage(
+                      type: TransactionTypeModel.income,
+                      userId: userId,
+                      walletId: walletState.activeWallet!.id,
+                      groupedTransactions: transactionState.groupedTransactions,
+                    ),
+                    thirdView: CompareView(
+                      userId: userId,
+                      wallet: walletState.activeWallet!,
+                      startDate: _startDate,
+                      endDate: _endDate,
+                      allTransactions: transactionState.allTransactions,
+                    ),
+                  ),
+                );
+
+              default:
+                return const SizedBox.shrink();
+            }
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: SliderButtonEnhanced(
+            controller: _controller,
+            onTap: (value) => _handleSliderAction(
+              context,
+              value,
+              userId,
+              walletState.activeWallet!,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -1,9 +1,10 @@
-import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:flutter/material.dart';
 
 class NoWalletView extends StatelessWidget {
+  final String infoText;
   const NoWalletView({
     super.key,
+    required this.infoText,
   });
 
   @override
@@ -18,15 +19,8 @@ class NoWalletView extends StatelessWidget {
             const Icon(Icons.wallet, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'Aktif cüzdan bulunamadı. Aşağıdaki düğme ile ilk cüzdanınızı oluşturun.',
+              infoText,
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                showWalletManagement(context);
-              },
-              child: const Text('Yeni Cüzdan Oluştur'),
             ),
           ],
         ),

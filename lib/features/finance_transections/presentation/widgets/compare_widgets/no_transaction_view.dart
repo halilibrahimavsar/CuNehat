@@ -1,7 +1,9 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
-class EmptyItemsView extends StatelessWidget {
-  const EmptyItemsView({
+class NoTransactionView extends StatelessWidget {
+  const NoTransactionView({
     super.key,
   });
 

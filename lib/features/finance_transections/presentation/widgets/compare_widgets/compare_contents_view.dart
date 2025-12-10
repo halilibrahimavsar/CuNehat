@@ -3,7 +3,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/balance_header.dart';
-import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/empty_item_view.dart';
+import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/no_transaction_view.dart';
 import 'package:cunehat/features/finance_transections/presentation/widgets/compare_widgets/transection_item.dart';
 import 'package:flutter/material.dart';
 
@@ -59,7 +59,7 @@ class CompareContent extends StatelessWidget {
             ),
             Expanded(
               child: combinedList.isEmpty
-                  ? const EmptyItemsView()
+                  ? const NoTransactionView()
                   : TransectionListView(
                       combinedList: combinedList,
                       isBalanceVisible: isBalanceVisible,

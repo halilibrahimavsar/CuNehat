@@ -15,7 +15,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   TransactionBloc({
     required this.dataSource,
     required this.walletSyncUseCase,
-  }) : super(TransactionInitial()) {
+  }) : super(TransactionLoading()) {
     on<GetTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
@@ -84,8 +84,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       emit(const TransactionActionSuccess('İşlem başarıyla eklendi'));
 
       // 3. ✅ CRITICAL: Reload transactions to reflect new state
-      if (previousState is TransactionLoaded ||
-          previousState is TransactionInitial) {
+      if (previousState is TransactionLoaded) {
         add(GetTransactionsEvent(
           userId: event.transaction.userId,
           walletId: event.transaction.walletId,

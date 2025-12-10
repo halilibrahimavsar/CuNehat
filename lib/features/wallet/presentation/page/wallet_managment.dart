@@ -2,14 +2,14 @@
 // ✅ UPDATED: Add transfer button
 
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
 import 'package:cunehat/features/transfer/presentation/widgets/transfer_dialog.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
-import 'package:cunehat/features/wallet/presentation/widgets/empty_state_widget.dart';
-import 'package:cunehat/features/wallet/presentation/widgets/error_state_widget.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -110,10 +110,12 @@ class _WalletManagementPageState extends State<_WalletManagementPage> {
 
   Widget _buildBody(WalletState state) {
     return switch (state) {
-      NoWalletSt() => const EmptyStateWidget(),
+      NoWalletSt() => const NoWalletView(
+          infoText: "Henüz cüzdan oluşturmadınız",
+        ),
       WalletLoadingSt() => const Center(child: CircularProgressIndicator()),
       WalletLoadedSt() => _buildWalletList(state.wallets),
-      WalletErrorSt() => ErrorStateWidget(errorMessage: state.err),
+      WalletErrorSt() => ErrorView(message: state.err),
       _ => const Center(child: Text('Beklenmeyen durum')),
     };
   }
