@@ -26,13 +26,6 @@ class WalletFirestoreDataSource implements WalletRepository {
               ))
           .toList();
     });
-
-    // walletsRef.get()..map((snapshot) => snapshot.docs
-    //     .map((doc) => WalletModel.fromJson(
-    //           doc.id,
-    //           doc.data(),
-    //         ))
-    //     .toList());
   }
 
   @override

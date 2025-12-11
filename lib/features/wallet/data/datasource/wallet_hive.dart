@@ -26,10 +26,10 @@ class WalletHiveDataSource implements WalletRepository {
     // Event ile idyi vermezsek oluşturulurken farklı bir id verilir ve
     // burada farklı bir id oluşturulacağı için hangisine sececeğini bilemez
     // final id = UidGenerator.generateWithUserId();
-    final newWallet = wallet.copyWith(id: wallet.id);
+    // final newWallet = wallet.copyWith(id: wallet.id);
 
     await box.put(
-        wallet.id, newWallet); // Firestore'daki kaydedilen document ID gibi
+        wallet.id, wallet); // Firestore'daki kaydedilen document ID gibi
   }
 
   @override
