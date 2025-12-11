@@ -1,13 +1,12 @@
-// ==========================================
-// lib/features/transaction/domain/repositories/transaction_repository.dart
-import 'package:cunehat/core/error/failure.dart';
+// lib/features/transaction/data/datasources/transaction_datasource.dart
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
-import 'package:dartz/dartz.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 
-import '../entities/transaction_entity.dart';
+import '../../data/models/transaction_model.dart';
 
-abstract class TransactionRepository {
-  Future<Either<Failure, List<TransactionEntity>>> getTransactions({
+/// Base interface for transaction data sources
+abstract class TransactionsRepository {
+  Future<List<TransactionModel>> getTransactions({
     required String userId,
     required String walletId,
     DateTime? startDate,
@@ -15,21 +14,15 @@ abstract class TransactionRepository {
     TransactionTypeModel? type,
   });
 
-  Future<Either<Failure, TransactionEntity>> getTransactionById(String id);
-
-  Future<Either<Failure, String>> addTransaction(TransactionEntity transaction);
-
-  Future<Either<Failure, void>> updateTransaction(
-      TransactionEntity transaction);
-
-  Future<Either<Failure, void>> deleteTransaction(String id);
-
-  Future<Either<Failure, Map<DateTime, List<TransactionEntity>>>>
-      getTransactionsGroupedByDate({
+  Future<Map<DateTime, List<TransactionEntity>>> getTransactionsGroupedByDate({
     required String userId,
     required String walletId,
     TransactionTypeModel? type,
     DateTime? startDate,
     DateTime? endDate,
   });
+  Future<TransactionModel> getTransactionById(String id);
+  Future<String> addTransaction(TransactionModel transaction);
+  Future<void> updateTransaction(TransactionModel transaction);
+  Future<void> deleteTransaction(String id);
 }

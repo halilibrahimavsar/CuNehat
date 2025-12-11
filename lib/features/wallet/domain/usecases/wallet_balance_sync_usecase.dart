@@ -1,6 +1,6 @@
 // lib/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart
 
-import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
@@ -10,7 +10,7 @@ import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart
 /// ✅ FIXED: Recalculates balance from ALL transactions (not incremental)
 class WalletBalanceSyncUseCase {
   final WalletRepository walletRepository;
-  final TransactionDataSource transactionDataSource;
+  final TransactionsRepository transactionDataSource;
 
   WalletBalanceSyncUseCase({
     required this.walletRepository,

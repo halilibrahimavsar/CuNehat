@@ -1,10 +1,11 @@
-import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import '../models/transaction_model.dart';
 
-class TransactionHiveDataSource implements TransactionDataSource {
+class TransactionHiveDataSource implements TransactionsRepository {
   static const String _boxName = 'transactions';
 
   Future<Box<TransactionModel>> _getBox() async {
@@ -123,5 +124,16 @@ class TransactionHiveDataSource implements TransactionDataSource {
     } catch (e) {
       throw CacheException('İşlem silinirken hata oluştu', e);
     }
+  }
+
+  @override
+  Future<Map<DateTime, List<TransactionEntity>>> getTransactionsGroupedByDate(
+      {required String userId,
+      required String walletId,
+      TransactionTypeModel? type,
+      DateTime? startDate,
+      DateTime? endDate}) {
+    // TODO: implement getTransactionsGroupedByDate
+    throw UnimplementedError();
   }
 }

@@ -1,6 +1,6 @@
 // lib/features/finance_transections/presentation/bloc/transection_bloc.dart
 
-import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
@@ -9,7 +9,7 @@ import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usec
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
-  final TransactionDataSource dataSource;
+  final TransactionsRepository dataSource;
   final WalletBalanceSyncUseCase walletSyncUseCase;
 
   TransactionBloc({

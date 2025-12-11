@@ -3,11 +3,12 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
-import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
+import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import '../models/transaction_model.dart';
 
-class TransactionFirestoreDataSource implements TransactionDataSource {
+class TransactionFirestoreDataSource implements TransactionsRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -122,5 +123,16 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
     } catch (e) {
       throw ServerException('İşlem silinirken hata oluştu', e);
     }
+  }
+
+  @override
+  Future<Map<DateTime, List<TransactionEntity>>> getTransactionsGroupedByDate(
+      {required String userId,
+      required String walletId,
+      TransactionTypeModel? type,
+      DateTime? startDate,
+      DateTime? endDate}) {
+    // TODO: implement getTransactionsGroupedByDate
+    throw UnimplementedError();
   }
 }
