@@ -44,10 +44,14 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       try {
         await WalletCreateUseCase(repository).call(event.wallet);
         // after creation, set it as active
-        await WalletSetActiveUseCase(repository).call(
-          userId: event.userId,
-          walletId: event.wallet.id,
-        );
+        try {
+          await WalletSetActiveUseCase(repository).call(
+            userId: event.userId,
+            walletId: event.wallet.id,
+          );
+        } catch (e) {
+          emit(WalletErrorSt('Aktif cüzdan ayarlanamadı: ${e.toString()}'));
+        }
         emit(const WalletCreatedSt());
       } catch (e) {
         emit(WalletErrorSt('Cüzdan oluşturulamadı: ${e.toString()}'));

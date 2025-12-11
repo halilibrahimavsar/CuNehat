@@ -1,4 +1,3 @@
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -24,10 +23,13 @@ class WalletHiveDataSource implements WalletRepository {
   @override
   Future<void> createWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
-    final id = UidGenerator.generateWithUserId();
-    final newWallet = wallet.copyWith(id: id);
+    // Event ile idyi vermezsek oluşturulurken farklı bir id verilir ve
+    // burada farklı bir id oluşturulacağı için hangisine sececeğini bilemez
+    // final id = UidGenerator.generateWithUserId();
+    final newWallet = wallet.copyWith(id: wallet.id);
 
-    await box.put(id, newWallet); // Firestore'daki kaydedilen document ID gibi
+    await box.put(
+        wallet.id, newWallet); // Firestore'daki kaydedilen document ID gibi
   }
 
   @override

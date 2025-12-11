@@ -1,5 +1,6 @@
 // lib/features/main_feature/presentation/pages/home_page.dart
 
+import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
@@ -94,7 +95,26 @@ class _HomePageState extends State<HomePage>
           ),
         ),
         drawer: const SharedDrawer(),
-        body: BlocBuilder<WalletBloc, WalletState>(
+        body: BlocConsumer<WalletBloc, WalletState>(
+          listener: (context, walletState) {
+            switch (walletState) {
+              case WalletDeletedSt():
+                SnackbarHelper.showSuccess(context, 'Cüzdan silindi!');
+
+                _loadWallets();
+                break;
+              case WalletCreatedSt():
+                SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');
+                _loadWallets();
+                break;
+              case WalletUpdatedSt():
+                SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi!');
+                _loadWallets();
+                break;
+              default:
+                break;
+            }
+          },
           builder: (context, walletState) {
             final userId = FirebaseAuth.instance.currentUser?.uid;
             if (userId == null) {
@@ -126,7 +146,6 @@ class _HomePageState extends State<HomePage>
               case WalletLoadedSt():
                 switch (walletState.activeWallet?.isActive) {
                   case true:
-                    print(walletState.activeWallet!.id);
                     _loadTransactions(userId, walletState.activeWallet!.id);
                     return _buildBody(userId, walletState, context);
                   case false:
@@ -134,15 +153,12 @@ class _HomePageState extends State<HomePage>
                   case null:
                     return NoWalletView(infoText: "Cüzdan oluşturunuz");
                 }
-              case WalletDeletedSt() || WalletCreatedSt() || WalletUpdatedSt():
-                context.read<WalletBloc>().add(GetWalletsEvent(userId));
-                break;
+
               default:
                 return const NoWalletView(
                   infoText: "Cüzdan oluşturunuz",
                 );
             }
-            return const SizedBox.shrink();
           },
         ),
       ),

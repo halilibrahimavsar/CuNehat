@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
@@ -8,7 +7,8 @@ class WalletFirestoreDataSource implements WalletRepository {
   Future<void> createWallet(WalletModel wallet) async {
     await FirebaseFirestore.instance
         .collection('wallets')
-        .doc(UidGenerator.generateWithUserId())
+        .doc(wallet
+            .id) // hivedaki create walletta olduğu gibi, yeni id verirsek hangisini sececeğini bilemez
         .set(wallet.toJson());
   }
 

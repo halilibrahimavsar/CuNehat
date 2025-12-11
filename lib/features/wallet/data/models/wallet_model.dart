@@ -90,7 +90,8 @@ class WalletModel extends HiveObject {
     int sortOrder = 0,
   }) {
     return WalletModel(
-      id: const Uuid().v4(),
+      id: const Uuid()
+          .v4(), // burada ilk id yi veriyoruz, Geri kalanında zaten bir id kullanılacak
       userId: userId,
       name: name,
       balance: balance,
