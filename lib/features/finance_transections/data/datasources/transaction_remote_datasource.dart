@@ -1,7 +1,8 @@
 // lib/features/finance_transections/data/datasources/transaction_remote_datasource.dart
+// ✅ FIXED: Use transaction.id directly
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import '../models/transaction_model.dart';
@@ -18,9 +19,6 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
     TransactionTypeModel? type,
   }) async {
     try {
-      // ⚠️ CRITICAL FIX: Simplify query to avoid complex composite index
-      // Instead of multiple where clauses, filter in memory
-
       Query query = _firestore.collection('transactions');
 
       // Only filter by userId (simple index)
@@ -82,11 +80,15 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
   @override
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
-      final String generateId = UidGenerator.generateWithUserId();
+      // ✅ FIXED: Use transaction.id (already set by UI layer)
+      if (transaction.id.isEmpty) {
+        throw ValidationException('Transaction ID boş olamaz');
+      }
+
       final data = transaction.toJson();
 
-      await _firestore.collection('transactions').doc(generateId).set(data);
-      return generateId;
+      await _firestore.collection('transactions').doc(transaction.id).set(data);
+      return transaction.id;
     } on FirebaseException catch (e) {
       throw ServerException('Firebase hatası: ${e.message}', e);
     } catch (e) {
@@ -122,18 +124,3 @@ class TransactionFirestoreDataSource implements TransactionDataSource {
     }
   }
 }
-
-// ⚠️ FIRESTORE INDEX REQUIREMENT (if you want server-side filtering):
-// 
-// If you prefer Firestore to do the filtering (better for large datasets),
-// create this composite index in Firebase Console:
-//
-// Collection: transactions
-// Fields:
-//   1. userId (Ascending)
-//   2. walletId (Ascending)  
-//   3. type (Ascending)
-//   4. date (Descending)
-//
-// Index creation link will appear in logs when you run the query.
-// Click it to auto-create the index.

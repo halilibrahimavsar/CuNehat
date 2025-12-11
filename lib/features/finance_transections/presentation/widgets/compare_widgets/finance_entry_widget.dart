@@ -1,12 +1,15 @@
+// lib/features/finance_transections/presentation/widgets/compare_widgets/finance_entry_widget.dart
+// ✅ FIXED: Don't create entity with ID, let repository handle it
+
 // ignore_for_file: deprecated_member_use
 
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 
-// Düzenleme modu için başlangıç verileri
 class FinanceInitialData {
   final String id;
   final String title;
@@ -29,8 +32,7 @@ class FinanceInitialData {
 
 class FinanceEntryWidget extends StatefulWidget {
   final bool isExpense;
-  final Function(TransactionEntity)
-      onSave; // ⚠️ FIX: Changed to TransactionEntity
+  final Function(TransactionEntity) onSave;
   final VoidCallback onCancel;
   final String? walletId;
   final FinanceInitialData? initialData;
@@ -150,7 +152,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     super.dispose();
   }
 
-  // ⚠️ FIX: Return TransactionEntity instead of model
+  // ✅ FIXED: Create TransactionEntity with proper ID
   void _validateAndSave() {
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
@@ -183,9 +185,13 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     final timeString = AppFormatters.dateTime.format(combinedDate);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "local_user";
 
-    // ⚠️ FIX: Create TransactionEntity directly
+    // ✅ FIXED: Generate ID here for new transactions
+    final String transactionId = _isEditMode
+        ? widget.initialData!.id
+        : UidGenerator.generateWithUserId();
+
     final transaction = TransactionEntity(
-      id: _isEditMode ? widget.initialData!.id : '',
+      id: transactionId, // ✅ ID properly set
       userId: userId,
       walletId: currentWalletId,
       title: title,

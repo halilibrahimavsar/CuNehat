@@ -1,13 +1,3 @@
-// ==========================================
-// TRANSACTION DATA SOURCES
-// ==========================================
-
-// ==========================================
-// HIVE IMPLEMENTATION
-// ==========================================
-
-// lib/features/transaction/data/datasources/transaction_hive_datasource.dart
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transections/data/datasources/transection_data_source.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -87,10 +77,15 @@ class TransactionHiveDataSource implements TransactionDataSource {
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
-      final id = UidGenerator.generateWithUserId();
 
-      await box.put(id, transaction);
-      return id;
+      // ✅ FIXED: Use transaction.id (already set by UI layer)
+      // No need to generate new ID here
+      if (transaction.id.isEmpty) {
+        throw ValidationException('Transaction ID boş olamaz');
+      }
+
+      await box.put(transaction.id, transaction);
+      return transaction.id;
     } catch (e) {
       throw CacheException('İşlem eklenirken hata oluştu', e);
     }
