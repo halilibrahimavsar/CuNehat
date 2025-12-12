@@ -1,8 +1,8 @@
 // lib/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart
 
-import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
-import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
 /// ========== WALLET BALANCE SYNC USE CASE ==========

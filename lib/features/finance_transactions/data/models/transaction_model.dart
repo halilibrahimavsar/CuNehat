@@ -1,5 +1,5 @@
 // lib/features/finance_transections/data/models/transaction_model.dart
-import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
 

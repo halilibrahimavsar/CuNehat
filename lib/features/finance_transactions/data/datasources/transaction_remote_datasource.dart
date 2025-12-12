@@ -3,9 +3,9 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
-import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import '../models/transaction_model.dart';
 
 class TransactionFirestoreDataSource implements TransactionsRepository {

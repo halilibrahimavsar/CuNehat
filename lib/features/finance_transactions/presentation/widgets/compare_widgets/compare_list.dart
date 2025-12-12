@@ -1,15 +1,15 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 
-class TransectionListView extends StatelessWidget {
+class CompareListView extends StatelessWidget {
   final List<TransactionEntity> combinedList;
   final ValueNotifier<bool> isBalanceVisible;
   final double initialBalance;
 
-  const TransectionListView({
+  const CompareListView({
     super.key,
     required this.combinedList,
     required this.isBalanceVisible,

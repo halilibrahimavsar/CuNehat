@@ -1,6 +1,6 @@
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
-import 'package:cunehat/features/finance_transections/domain/usecases/usecase_params.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
 
 class AddTransactionUseCase {
   final TransactionsRepository repository;

@@ -1,5 +1,5 @@
 // lib/features/transaction/presentation/bloc/transaction_event.dart
-import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/transaction_entity.dart';
 

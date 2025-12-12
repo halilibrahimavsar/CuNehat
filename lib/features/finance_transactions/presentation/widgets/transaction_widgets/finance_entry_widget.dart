@@ -4,11 +4,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/id_generate/uid_generator.dart';
-import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
 class FinanceInitialData {
   final String id;

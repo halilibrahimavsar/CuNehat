@@ -1,14 +1,14 @@
 // lib/features/main_feature/presentation/pages/home_page.dart
 
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
-import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
-import 'package:cunehat/features/finance_transections/presentation/pages/compare_view.dart';
-import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
-import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
-import 'package:cunehat/features/finance_transections/presentation/pages/transaction_list_page.dart';
+import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_list_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
-import 'package:cunehat/features/finance_transections/presentation/widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
