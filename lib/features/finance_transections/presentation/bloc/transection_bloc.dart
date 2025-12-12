@@ -11,7 +11,7 @@ import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usec
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
-  final GetTransactionsUseCase getTransactionsUseCase;
+  final GetTransactionsGroupedUseCase getTransactionsGroupedUseCase;
   final AddTransactionUseCase addTransactionUseCase;
   final UpdateTransactionUseCase updateTransactionUseCase;
   final DeleteTransactionUseCase deleteTransactionUseCase;
@@ -19,7 +19,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final WalletBalanceSyncUseCase walletSyncUseCase;
 
   TransactionBloc({
-    required this.getTransactionsUseCase,
+    required this.getTransactionsGroupedUseCase,
     required this.addTransactionUseCase,
     required this.updateTransactionUseCase,
     required this.deleteTransactionUseCase,
@@ -39,8 +39,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
 
     try {
-      final transactions = await getTransactionsUseCase(
-        GetTransactionsParams(
+      final transactions = await getTransactionsGroupedUseCase(
+        GetTransactionsGroupedParams(
           userId: event.userId,
           walletId: event.walletId,
           startDate: event.startDate,
@@ -49,26 +49,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         ),
       );
 
-      // Group by date
-      final Map<DateTime, List<TransactionEntity>> grouped = {};
-      for (var transaction in transactions) {
-        final dateKey = DateTime(
-          transaction.date.year,
-          transaction.date.month,
-          transaction.date.day,
-        );
-
-        if (grouped.containsKey(dateKey)) {
-          grouped[dateKey]!.add(transaction);
-        } else {
-          grouped[dateKey] = [transaction];
-        }
-      }
-
-      final allTransactions = grouped.values.expand((list) => list).toList();
+      final List<TransactionEntity> allTransactions =
+          transactions.values.expand((group) => group).toList();
 
       emit(TransactionLoaded(
-        groupedTransactions: grouped,
+        groupedTransactions: transactions,
         allTransactions: allTransactions,
       ));
     } catch (e) {
@@ -82,27 +67,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     try {
-      final previousState = state;
-
       // 1. Add transaction to database
       final model = TransactionModel.fromEntity(event.transaction);
       await addTransactionUseCase(model);
 
-      // 2. ✅ UPDATE: Sync wallet balance
-      await walletSyncUseCase.applyTransaction(
-        walletId: event.transaction.walletId,
-        transaction: event.transaction,
-      );
-
-      emit(const TransactionActionSuccess('İşlem başarıyla eklendi'));
-
-      // 3. ✅ CRITICAL: Reload transactions to reflect new state
-      if (previousState is TransactionLoaded) {
-        add(GetTransactionsEvent(
-          userId: event.transaction.userId,
-          walletId: event.transaction.walletId,
-        ));
-      }
+      emit(TransactionActionSuccess('${model.title} başarıyla eklendi'));
     } catch (e) {
       emit(TransactionError(
           'İşlem eklenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
@@ -114,32 +83,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     try {
-      final previousState = state;
-
-      // 1. Get old transaction for wallet balance calculation
-      final oldTransaction =
-          await getTransactionByIdUseCase(event.transaction.id);
-
       // 2. Update transaction in database
       final model = TransactionModel.fromEntity(event.transaction);
       await updateTransactionUseCase(model);
 
-      // 3. ✅ UPDATE: Sync wallet balance (reverse old, apply new)
-      await walletSyncUseCase.updateTransaction(
-        walletId: event.transaction.walletId,
-        oldTransaction: oldTransaction,
-        newTransaction: event.transaction,
-      );
-
-      emit(const TransactionActionSuccess('İşlem başarıyla güncellendi'));
-
-      // 4. ✅ CRITICAL: Reload transactions
-      if (previousState is TransactionLoaded) {
-        add(GetTransactionsEvent(
-          userId: event.transaction.userId,
-          walletId: event.transaction.walletId,
-        ));
-      }
+      emit(TransactionActionSuccess('${model.title} başarıyla güncellendi'));
     } catch (e) {
       emit(TransactionError(
           'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
@@ -157,39 +105,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // 2. Delete from database
       await deleteTransactionUseCase(event.transactionId);
 
-      // 3. ✅ UPDATE: Sync wallet balance (reverse the transaction)
-      await walletSyncUseCase.applyTransaction(
-        walletId: transaction.walletId,
-        transaction: transaction,
-        isReversal: true, // ✅ Reverse the amount
-      );
-
-      // 4. ✅ UPDATE: Update UI state immediately
-      if (state is TransactionLoaded) {
-        final currentState = state as TransactionLoaded;
-
-        final updatedGrouped = Map<DateTime, List<TransactionEntity>>.from(
-          currentState.groupedTransactions,
-        );
-
-        // Remove the deleted transaction from groups
-        updatedGrouped.forEach((date, transactions) {
-          transactions.removeWhere((t) => t.id == event.transactionId);
-        });
-
-        // Remove empty date groups
-        updatedGrouped
-            .removeWhere((date, transactions) => transactions.isEmpty);
-
-        final allTransactions =
-            updatedGrouped.values.expand((list) => list).toList();
-
-        // ✅ Emit updated state
-        emit(TransactionLoaded(
-          groupedTransactions: updatedGrouped,
-          allTransactions: allTransactions,
-        ));
-      }
+      // 3 Başarılı
+      emit(TransactionActionSuccess("${transaction.title} silindi"));
     } catch (e) {
       emit(TransactionError(
           'İşlem silinirken hata oluştu: ${ErrorHandler.handleException(e).message}'));

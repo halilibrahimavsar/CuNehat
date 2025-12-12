@@ -116,8 +116,9 @@ class CuNehatEngine extends StatelessWidget {
                   // ========== Transaction BLoC ==========
                   BlocProvider(
                     create: (context) => TransactionBloc(
-                      getTransactionsUseCase: GetTransactionsUseCase(
-                          context.read<TransactionRepositoryImpl>()),
+                      getTransactionsGroupedUseCase:
+                          GetTransactionsGroupedUseCase(
+                              context.read<TransactionRepositoryImpl>()),
                       addTransactionUseCase: AddTransactionUseCase(
                           context.read<TransactionRepositoryImpl>()),
                       updateTransactionUseCase: UpdateTransactionUseCase(

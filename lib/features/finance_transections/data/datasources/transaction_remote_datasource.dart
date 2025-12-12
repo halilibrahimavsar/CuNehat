@@ -131,8 +131,29 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
       required String walletId,
       TransactionTypeModel? type,
       DateTime? startDate,
-      DateTime? endDate}) {
-    // TODO: implement getTransactionsGroupedByDate
-    throw UnimplementedError();
+      DateTime? endDate}) async {
+    try {
+      final transactions = await getTransactions(
+        userId: userId,
+        walletId: walletId,
+        startDate: startDate,
+        endDate: endDate,
+        type: type,
+      );
+
+      final groupedTransactions = <DateTime, List<TransactionEntity>>{};
+
+      for (final transaction in transactions) {
+        final dateWithoutTime = DateTime(transaction.date.year,
+            transaction.date.month, transaction.date.day);
+        if (groupedTransactions[dateWithoutTime] == null) {
+          groupedTransactions[dateWithoutTime] = [];
+        }
+        groupedTransactions[dateWithoutTime]!.add(transaction);
+      }
+      return groupedTransactions;
+    } catch (e) {
+      throw ServerException('İşlemler gruplanırken hata oluştu', e);
+    }
   }
 }
