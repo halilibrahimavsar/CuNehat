@@ -59,6 +59,20 @@ class TransactionModel extends TransactionEntity {
     );
   }
 
+  TransactionEntity toEntity() {
+    return TransactionEntity(
+      id: id,
+      userId: userId,
+      walletId: walletId,
+      title: title,
+      tag: tag,
+      amount: amount,
+      date: date,
+      time: time,
+      type: type,
+    );
+  }
+
   static TransactionTypeModel _parseTransactionType(String type) {
     return type == 'income'
         ? TransactionTypeModel.income

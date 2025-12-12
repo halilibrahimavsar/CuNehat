@@ -1,11 +1,10 @@
+import 'package:cunehat/features/finance_transactions/data/datasources/transaction_data_repository.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 
-class TransactionHiveDataSource implements TransactionsRepository {
+class TransactionHiveDataSource implements TransactionDataRepository {
   static const String _boxName = 'transactions';
 
   Future<Box<TransactionModel>> _getBox() async {

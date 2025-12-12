@@ -17,7 +17,6 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return TransactionModel(
-      id: fields[0] as String,
       userId: fields[1] as String,
       walletId: fields[2] as String,
       title: fields[3] as String,

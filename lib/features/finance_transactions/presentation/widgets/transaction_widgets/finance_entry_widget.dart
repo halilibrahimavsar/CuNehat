@@ -1,9 +1,5 @@
-// lib/features/finance_transections/presentation/widgets/compare_widgets/finance_entry_widget.dart
-// ✅ FIXED: Don't create entity with ID, let repository handle it
-
 // ignore_for_file: deprecated_member_use
 
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -152,7 +148,7 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     super.dispose();
   }
 
-  // ✅ FIXED: Create TransactionEntity with proper ID
+  // ✅ FIXED: Create TransactionEntity WITHOUT ID (repository will handle it)
   void _validateAndSave() {
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
@@ -185,13 +181,11 @@ class _FinanceEntryWidgetState extends State<FinanceEntryWidget>
     final timeString = AppFormatters.dateTime.format(combinedDate);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "local_user";
 
-    // ✅ FIXED: Generate ID here for new transactions
-    final String transactionId = _isEditMode
-        ? widget.initialData!.id
-        : UidGenerator.generateWithUserId();
-
+    // ✅ FIXED: Only provide ID if editing (existing transaction)
     final transaction = TransactionEntity(
-      id: transactionId, // ✅ ID properly set
+      id: _isEditMode
+          ? widget.initialData!.id
+          : '', // ✅ Empty string for new transactions
       userId: userId,
       walletId: currentWalletId,
       title: title,
