@@ -1,7 +1,7 @@
 // ignore: depend_on_referenced_packages
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:hive/hive.dart';
-import 'package:uuid/uuid.dart';
 
 part 'wallet_model.g.dart';
 
@@ -90,8 +90,8 @@ class WalletModel extends HiveObject {
     int sortOrder = 0,
   }) {
     return WalletModel(
-      id: const Uuid()
-          .v4(), // burada ilk id yi veriyoruz, Geri kalanında zaten bir id kullanılacak
+      id: UidGenerator
+          .generateWithUserId(), // burada ilk id yi veriyoruz, Geri kalanında zaten bir id kullanılacak
       userId: userId,
       name: name,
       balance: balance,
