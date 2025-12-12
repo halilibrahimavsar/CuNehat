@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
@@ -7,15 +8,15 @@ import 'package:cunehat/core/error/exceptions.dart';
 class TransactionHiveDataSource implements TransactionsRepository {
   static const String _boxName = 'transactions';
 
-  Future<Box<TransactionEntity>> _getBox() async {
+  Future<Box<TransactionModel>> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox<TransactionEntity>(_boxName);
+      return await Hive.openBox<TransactionModel>(_boxName);
     }
-    return Hive.box<TransactionEntity>(_boxName);
+    return Hive.box<TransactionModel>(_boxName);
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactions({
+  Future<List<TransactionModel>> getTransactions({
     required String userId,
     required String walletId,
     DateTime? startDate,
@@ -56,7 +57,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<TransactionEntity> getTransactionById(String id) async {
+  Future<TransactionModel> getTransactionById(String id) async {
     try {
       final box = await _getBox();
       final transaction = box.get(id);
@@ -74,7 +75,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<String> addTransaction(TransactionEntity transaction) async {
+  Future<String> addTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
 
@@ -92,7 +93,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<void> updateTransaction(TransactionEntity transaction) async {
+  Future<void> updateTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
 
@@ -126,7 +127,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<Map<DateTime, List<TransactionEntity>>> getTransactionsGroupedByDate(
+  Future<Map<DateTime, List<TransactionModel>>> getTransactionsGroupedByDate(
       {required String userId,
       required String walletId,
       TransactionTypeModel? type,
@@ -141,7 +142,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
         endDate: endDate,
       );
 
-      final groupedTransactions = <DateTime, List<TransactionEntity>>{};
+      final groupedTransactions = <DateTime, List<TransactionModel>>{};
 
       for (final transaction in transactions) {
         final dateWithoutTime = DateTime(transaction.date.year,

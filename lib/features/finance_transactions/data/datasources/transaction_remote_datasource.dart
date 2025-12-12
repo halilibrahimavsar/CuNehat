@@ -3,7 +3,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import '../models/transaction_model.dart';
@@ -79,7 +78,7 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<String> addTransaction(TransactionEntity transaction) async {
+  Future<String> addTransaction(TransactionModel transaction) async {
     try {
       // ✅ FIXED: Use transaction.id (already set by UI layer)
       if (transaction.id.isEmpty) {
@@ -98,7 +97,7 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<void> updateTransaction(TransactionEntity transaction) async {
+  Future<void> updateTransaction(TransactionModel transaction) async {
     try {
       await _firestore
           .collection('transactions')
@@ -126,7 +125,7 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<Map<DateTime, List<TransactionEntity>>> getTransactionsGroupedByDate(
+  Future<Map<DateTime, List<TransactionModel>>> getTransactionsGroupedByDate(
       {required String userId,
       required String walletId,
       TransactionTypeModel? type,
@@ -141,7 +140,7 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
         type: type,
       );
 
-      final groupedTransactions = <DateTime, List<TransactionEntity>>{};
+      final groupedTransactions = <DateTime, List<TransactionModel>>{};
 
       for (final transaction in transactions) {
         final dateWithoutTime = DateTime(transaction.date.year,
