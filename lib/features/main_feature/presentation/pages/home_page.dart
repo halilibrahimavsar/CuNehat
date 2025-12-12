@@ -100,7 +100,6 @@ class _HomePageState extends State<HomePage>
             switch (walletState) {
               case WalletDeletedSt():
                 SnackbarHelper.showSuccess(context, 'Cüzdan silindi!');
-
                 _loadWallets();
                 break;
               case WalletCreatedSt():
@@ -111,15 +110,14 @@ class _HomePageState extends State<HomePage>
                 SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi!');
                 _loadWallets();
                 break;
+              case WalletErrorSt():
+                SnackbarHelper.showError(context, walletState.err);
+                break;
               default:
                 break;
             }
           },
           builder: (context, walletState) {
-            final userId = FirebaseAuth.instance.currentUser?.uid;
-            if (userId == null) {
-              return const Center(child: Text('Kullanıcı girişi yapılmamış'));
-            }
             switch (walletState) {
               case WalletLoadingSt():
                 return const Center(child: CircularProgressIndicator());
@@ -144,20 +142,25 @@ class _HomePageState extends State<HomePage>
                 );
 
               case WalletLoadedSt():
+                final userId = walletState.wallets.first.userId;
+                final activeWalletId = walletState.activeWallet!.id;
+
                 switch (walletState.activeWallet?.isActive) {
-                  case true:
-                    _loadTransactions(userId, walletState.activeWallet!.id);
-                    return _buildBody(userId, walletState, context);
                   case false:
                     return NoWalletView(infoText: "Cüzdan seçiniz");
                   case null:
                     return NoWalletView(infoText: "Cüzdan oluşturunuz");
+                  case true:
+                    _loadTransactions(userId, activeWalletId);
+                    return _buildBody(
+                      context: context,
+                      userId: userId,
+                      walletState: walletState,
+                    );
                 }
 
               default:
-                return const NoWalletView(
-                  infoText: "Cüzdan oluşturunuz",
-                );
+                return const NoWalletView(infoText: "Cüzdan oluşturunuz");
             }
           },
         ),
@@ -165,8 +168,13 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Column _buildBody(
-      String userId, WalletLoadedSt walletState, BuildContext context) {
+  Column _buildBody({
+    required BuildContext context,
+    required String userId,
+    required WalletLoadedSt walletState,
+  }) {
+    final String walletId = walletState.activeWallet!.id;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -180,7 +188,7 @@ class _HomePageState extends State<HomePage>
             switch (transactionState) {
               case TransactionActionSuccess():
                 SnackbarHelper.showSuccess(context, transactionState.message);
-                _loadTransactions(userId, walletState.activeWallet!.id);
+                _loadTransactions(userId, walletId);
                 break;
               case TransactionError():
                 SnackbarHelper.showError(context, transactionState.message);
@@ -201,13 +209,13 @@ class _HomePageState extends State<HomePage>
                     firstView: TransactionListPage(
                       type: TransactionTypeModel.expense,
                       userId: userId,
-                      walletId: walletState.activeWallet!.id,
+                      walletId: walletId,
                       groupedTransactions: transactionState.groupedTransactions,
                     ),
                     secondView: TransactionListPage(
                       type: TransactionTypeModel.income,
                       userId: userId,
-                      walletId: walletState.activeWallet!.id,
+                      walletId: walletId,
                       groupedTransactions: transactionState.groupedTransactions,
                     ),
                     thirdView: CompareView(
