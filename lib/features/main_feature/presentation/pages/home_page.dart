@@ -177,12 +177,14 @@ class _HomePageState extends State<HomePage>
         ),
         BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, transactionState) {
-            if (transactionState is TransactionActionSuccess) {
-              // Reload wallet to get updated balance
-              final userId = FirebaseAuth.instance.currentUser?.uid;
-              if (userId != null) {
-                context.read<WalletBloc>().add(GetWalletsEvent(userId));
-              }
+            switch (transactionState) {
+              case TransactionActionSuccess():
+                SnackbarHelper.showSuccess(context, transactionState.message);
+                _loadTransactions(userId, walletState.activeWallet!.id);
+                break;
+              case TransactionError():
+                SnackbarHelper.showError(context, transactionState.message);
+                break;
             }
           },
           builder: (context, transactionState) {
