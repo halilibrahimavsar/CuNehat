@@ -123,21 +123,14 @@ class _HomePageState extends State<HomePage>
                 return const Center(child: CircularProgressIndicator());
 
               case WalletErrorSt():
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.error_outline,
-                          size: 48, color: Colors.red[400]),
-                      const SizedBox(height: 12),
-                      Text(walletState.err),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _loadWallets,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Tekrar Dene'),
-                      ),
-                    ],
+                return ErrorView(
+                  message: walletState.err,
+                  onPressed: _loadWallets,
+                  buttonText: "Tekrar Dene",
+                  customIcon: Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.red[400],
                   ),
                 );
 
