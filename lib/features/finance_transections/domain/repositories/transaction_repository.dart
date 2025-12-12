@@ -2,11 +2,9 @@
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 
-import '../../data/models/transaction_model.dart';
-
 /// Base interface for transaction data sources
 abstract class TransactionsRepository {
-  Future<List<TransactionModel>> getTransactions({
+  Future<List<TransactionEntity>> getTransactions({
     required String userId,
     required String walletId,
     DateTime? startDate,
@@ -21,8 +19,8 @@ abstract class TransactionsRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
-  Future<TransactionModel> getTransactionById(String id);
-  Future<String> addTransaction(TransactionModel transaction);
-  Future<void> updateTransaction(TransactionModel transaction);
+  Future<TransactionEntity> getTransactionById(String id);
+  Future<String> addTransaction(TransactionEntity transaction);
+  Future<void> updateTransaction(TransactionEntity transaction);
   Future<void> deleteTransaction(String id);
 }

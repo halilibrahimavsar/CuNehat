@@ -28,6 +28,20 @@ class TransactionEntity extends Equatable {
   bool get isIncome => type == TransactionTypeModel.income;
   bool get isExpense => type == TransactionTypeModel.expense;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'walletId': walletId,
+      'title': title,
+      'tag': tag,
+      'amount': amount,
+      'date': date.toIso8601String(),
+      'time': time,
+      'type': type.name,
+    };
+  }
+
   @override
   List<Object?> get props => [
         id,

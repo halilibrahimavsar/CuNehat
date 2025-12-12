@@ -8,6 +8,7 @@ import 'package:cunehat/features/finance_transections/data/datasources/transacti
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/data/repositories/transaction_repository_impl.dart';
+import 'package:cunehat/features/finance_transections/domain/usecases/transactions_usecases.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
@@ -115,8 +116,17 @@ class CuNehatEngine extends StatelessWidget {
                   // ========== Transaction BLoC ==========
                   BlocProvider(
                     create: (context) => TransactionBloc(
-                      dataSource:
-                          context.read<TransactionRepositoryImpl>().dataSource,
+                      getTransactionsUseCase: GetTransactionsUseCase(
+                          context.read<TransactionRepositoryImpl>()),
+                      addTransactionUseCase: AddTransactionUseCase(
+                          context.read<TransactionRepositoryImpl>()),
+                      updateTransactionUseCase: UpdateTransactionUseCase(
+                          context.read<TransactionRepositoryImpl>()),
+                      deleteTransactionUseCase: DeleteTransactionUseCase(
+                          context.read<TransactionRepositoryImpl>()),
+                      getTransactionByIdUseCase: GetTransactionByIdUseCase(
+                        context.read<TransactionRepositoryImpl>(),
+                      ),
                       walletSyncUseCase:
                           context.read<WalletBalanceSyncUseCase>(),
                     ),

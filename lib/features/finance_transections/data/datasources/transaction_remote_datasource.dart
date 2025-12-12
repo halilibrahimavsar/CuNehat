@@ -79,7 +79,7 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<String> addTransaction(TransactionModel transaction) async {
+  Future<String> addTransaction(TransactionEntity transaction) async {
     try {
       // ✅ FIXED: Use transaction.id (already set by UI layer)
       if (transaction.id.isEmpty) {
@@ -98,7 +98,7 @@ class TransactionFirestoreDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<void> updateTransaction(TransactionModel transaction) async {
+  Future<void> updateTransaction(TransactionEntity transaction) async {
     try {
       await _firestore
           .collection('transactions')

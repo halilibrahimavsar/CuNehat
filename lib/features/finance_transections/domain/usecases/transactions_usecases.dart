@@ -1,4 +1,3 @@
-import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transections/domain/usecases/usecase_params.dart';
@@ -8,7 +7,7 @@ class AddTransactionUseCase {
 
   AddTransactionUseCase(this.repository);
 
-  Future<String> call(TransactionModel params) async {
+  Future<String> call(TransactionEntity params) async {
     return await repository.addTransaction(params);
   }
 }
@@ -64,7 +63,17 @@ class UpdateTransactionUseCase {
 
   UpdateTransactionUseCase(this.repository);
 
-  Future<void> call(TransactionModel params) async {
+  Future<void> call(TransactionEntity params) async {
     return await repository.updateTransaction(params);
+  }
+}
+
+class GetTransactionByIdUseCase {
+  final TransactionsRepository repository;
+
+  GetTransactionByIdUseCase(this.repository);
+
+  Future<TransactionEntity> call(String transactionId) async {
+    return await repository.getTransactionById(transactionId);
   }
 }

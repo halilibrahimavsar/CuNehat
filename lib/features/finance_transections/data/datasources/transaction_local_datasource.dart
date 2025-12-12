@@ -3,20 +3,19 @@ import 'package:cunehat/features/finance_transections/domain/repositories/transa
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
-import '../models/transaction_model.dart';
 
 class TransactionHiveDataSource implements TransactionsRepository {
   static const String _boxName = 'transactions';
 
-  Future<Box<TransactionModel>> _getBox() async {
+  Future<Box<TransactionEntity>> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox<TransactionModel>(_boxName);
+      return await Hive.openBox<TransactionEntity>(_boxName);
     }
-    return Hive.box<TransactionModel>(_boxName);
+    return Hive.box<TransactionEntity>(_boxName);
   }
 
   @override
-  Future<List<TransactionModel>> getTransactions({
+  Future<List<TransactionEntity>> getTransactions({
     required String userId,
     required String walletId,
     DateTime? startDate,
@@ -57,7 +56,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<TransactionModel> getTransactionById(String id) async {
+  Future<TransactionEntity> getTransactionById(String id) async {
     try {
       final box = await _getBox();
       final transaction = box.get(id);
@@ -75,7 +74,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<String> addTransaction(TransactionModel transaction) async {
+  Future<String> addTransaction(TransactionEntity transaction) async {
     try {
       final box = await _getBox();
 
@@ -93,7 +92,7 @@ class TransactionHiveDataSource implements TransactionsRepository {
   }
 
   @override
-  Future<void> updateTransaction(TransactionModel transaction) async {
+  Future<void> updateTransaction(TransactionEntity transaction) async {
     try {
       final box = await _getBox();
 

@@ -1,19 +1,29 @@
 // lib/features/finance_transections/presentation/bloc/transection_bloc.dart
 
-import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transections/domain/usecases/transactions_usecases.dart';
+import 'package:cunehat/features/finance_transections/domain/usecases/usecase_params.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_event.dart';
 import 'package:cunehat/features/finance_transections/presentation/bloc/transection_state.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
-  final TransactionsRepository dataSource;
+  final GetTransactionsUseCase getTransactionsUseCase;
+  final AddTransactionUseCase addTransactionUseCase;
+  final UpdateTransactionUseCase updateTransactionUseCase;
+  final DeleteTransactionUseCase deleteTransactionUseCase;
+  final GetTransactionByIdUseCase getTransactionByIdUseCase;
   final WalletBalanceSyncUseCase walletSyncUseCase;
 
   TransactionBloc({
-    required this.dataSource,
+    required this.getTransactionsUseCase,
+    required this.addTransactionUseCase,
+    required this.updateTransactionUseCase,
+    required this.deleteTransactionUseCase,
+    required this.getTransactionByIdUseCase,
     required this.walletSyncUseCase,
   }) : super(TransactionLoading()) {
     on<GetTransactionsEvent>(_onLoadTransactions);
@@ -29,12 +39,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
 
     try {
-      final transactions = await dataSource.getTransactions(
-        userId: event.userId,
-        walletId: event.walletId,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        type: event.type,
+      final transactions = await getTransactionsUseCase(
+        GetTransactionsParams(
+          userId: event.userId,
+          walletId: event.walletId,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          type: event.type,
+        ),
       );
 
       // Group by date
@@ -60,7 +72,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         allTransactions: allTransactions,
       ));
     } catch (e) {
-      emit(TransactionError('İşlemler yüklenirken hata oluştu: $e'));
+      emit(TransactionError(
+          'İşlemler yüklenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
     }
   }
 
@@ -73,7 +86,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       // 1. Add transaction to database
       final model = TransactionModel.fromEntity(event.transaction);
-      await dataSource.addTransaction(model);
+      await addTransactionUseCase(model);
 
       // 2. ✅ UPDATE: Sync wallet balance
       await walletSyncUseCase.applyTransaction(
@@ -91,7 +104,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         ));
       }
     } catch (e) {
-      emit(TransactionError('İşlem eklenirken hata oluştu: $e'));
+      emit(TransactionError(
+          'İşlem eklenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
     }
   }
 
@@ -104,11 +118,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       // 1. Get old transaction for wallet balance calculation
       final oldTransaction =
-          await dataSource.getTransactionById(event.transaction.id);
+          await getTransactionByIdUseCase(event.transaction.id);
 
       // 2. Update transaction in database
       final model = TransactionModel.fromEntity(event.transaction);
-      await dataSource.updateTransaction(model);
+      await updateTransactionUseCase(model);
 
       // 3. ✅ UPDATE: Sync wallet balance (reverse old, apply new)
       await walletSyncUseCase.updateTransaction(
@@ -127,7 +141,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         ));
       }
     } catch (e) {
-      emit(TransactionError('İşlem güncellenirken hata oluştu: $e'));
+      emit(TransactionError(
+          'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
     }
   }
 
@@ -137,11 +152,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       // 1. Get transaction before deleting
-      final transaction =
-          await dataSource.getTransactionById(event.transactionId);
+      final transaction = await getTransactionByIdUseCase(event.transactionId);
 
       // 2. Delete from database
-      await dataSource.deleteTransaction(event.transactionId);
+      await deleteTransactionUseCase(event.transactionId);
 
       // 3. ✅ UPDATE: Sync wallet balance (reverse the transaction)
       await walletSyncUseCase.applyTransaction(
@@ -177,7 +191,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         ));
       }
     } catch (e) {
-      emit(TransactionError('İşlem silinirken hata oluştu: $e'));
+      emit(TransactionError(
+          'İşlem silinirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
     }
   }
 }

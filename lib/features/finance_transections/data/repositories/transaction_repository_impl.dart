@@ -1,4 +1,3 @@
-import 'package:cunehat/features/finance_transections/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transections/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transections/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transections/domain/repositories/transaction_repository.dart';
@@ -10,31 +9,33 @@ class TransactionRepositoryImpl implements TransactionsRepository {
 
   @override
   Future<String> addTransaction(TransactionEntity transaction) {
-    // TODO: implement addTransaction
-    throw UnimplementedError();
+    return dataSource.addTransaction(transaction);
   }
 
   @override
   Future<void> deleteTransaction(String id) {
-    // TODO: implement deleteTransaction
-    throw UnimplementedError();
+    return dataSource.deleteTransaction(id);
   }
 
   @override
-  Future<TransactionModel> getTransactionById(String id) {
-    // TODO: implement getTransactionById
-    throw UnimplementedError();
+  Future<TransactionEntity> getTransactionById(String id) {
+    return dataSource.getTransactionById(id);
   }
 
   @override
-  Future<List<TransactionModel>> getTransactions(
+  Future<List<TransactionEntity>> getTransactions(
       {required String userId,
       required String walletId,
       DateTime? startDate,
       DateTime? endDate,
       TransactionTypeModel? type}) {
-    // TODO: implement getTransactions
-    throw UnimplementedError();
+    return dataSource.getTransactions(
+      userId: userId,
+      walletId: walletId,
+      startDate: startDate,
+      endDate: endDate,
+      type: type,
+    );
   }
 
   @override
@@ -44,13 +45,17 @@ class TransactionRepositoryImpl implements TransactionsRepository {
       TransactionTypeModel? type,
       DateTime? startDate,
       DateTime? endDate}) {
-    // TODO: implement getTransactionsGroupedByDate
-    throw UnimplementedError();
+    return dataSource.getTransactionsGroupedByDate(
+      userId: userId,
+      walletId: walletId,
+      type: type,
+      startDate: startDate,
+      endDate: endDate,
+    );
   }
 
   @override
   Future<void> updateTransaction(TransactionEntity transaction) {
-    // TODO: implement updateTransaction
-    throw UnimplementedError();
+    return dataSource.updateTransaction(transaction);
   }
 }
