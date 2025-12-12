@@ -5,67 +5,22 @@ import '../../domain/entities/transaction_entity.dart';
 
 part 'transaction_model.g.dart';
 
-/// ⚠️ CRITICAL FIX: Remove field overrides
-/// The model extends entity, so it inherits all fields
-/// We only need to add @HiveField annotations
 @HiveType(typeId: 1)
 class TransactionModel extends TransactionEntity {
-  @HiveField(0)
-  @override
-  final String id;
-
-  @HiveField(1)
-  @override
-  final String userId;
-
-  @HiveField(2)
-  @override
-  final String walletId;
-
-  @HiveField(3)
-  @override
-  final String title;
-
-  @HiveField(4)
-  @override
-  final String tag;
-
-  @HiveField(5)
-  @override
-  final double amount;
-
-  @HiveField(6)
-  @override
-  final DateTime date;
-
-  @HiveField(7)
-  @override
-  final String time;
-
-  @HiveField(8)
-  @override
-  final TransactionTypeModel type;
-
   const TransactionModel({
-    required this.id,
-    required this.userId,
-    required this.walletId,
-    required this.title,
-    required this.tag,
-    required this.amount,
-    required this.date,
-    required this.time,
-    required this.type,
+    required super.id,
+    required super.userId,
+    required super.walletId,
+    required super.title,
+    required super.tag,
+    required super.amount,
+    required super.date,
+    required super.time,
+    required super.type,
   }) : super(
-          id: id,
-          userId: userId,
-          walletId: walletId,
-          title: title,
-          tag: tag,
-          amount: amount,
-          date: date,
-          time: time,
-          type: type,
+        // Alanlar zaten `TransactionEntity`'de tanımlı olduğu için
+        // burada tekrar `this` ile atamaya gerek yok.
+        // `super` constructor'ı çağırmak yeterli.
         );
 
   factory TransactionModel.fromJson(String id, Map<String, dynamic> json) {
@@ -82,6 +37,7 @@ class TransactionModel extends TransactionEntity {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'userId': userId,
@@ -138,4 +94,42 @@ class TransactionModel extends TransactionEntity {
       type: type ?? this.type,
     );
   }
+
+  // Hive alanlarını `TransactionEntity`'deki alanlarla eşleştirmek için
+  // getter'ları override edip HiveField annotation'larını ekliyoruz.
+  @override
+  @HiveField(0)
+  String get id => super.id;
+
+  @override
+  @HiveField(1)
+  String get userId => super.userId;
+
+  @override
+  @HiveField(2)
+  String get walletId => super.walletId;
+
+  @override
+  @HiveField(3)
+  String get title => super.title;
+
+  @override
+  @HiveField(4)
+  String get tag => super.tag;
+
+  @override
+  @HiveField(5)
+  double get amount => super.amount;
+
+  @override
+  @HiveField(6)
+  DateTime get date => super.date;
+
+  @override
+  @HiveField(7)
+  String get time => super.time;
+
+  @override
+  @HiveField(8)
+  TransactionTypeModel get type => super.type;
 }
