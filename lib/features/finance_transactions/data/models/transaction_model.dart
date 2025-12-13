@@ -1,5 +1,4 @@
 // lib/features/finance_transections/data/models/transaction_model.dart
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -8,7 +7,8 @@ part 'transaction_model.g.dart';
 
 @HiveType(typeId: 1)
 class TransactionModel extends TransactionEntity {
-  TransactionModel({
+  const TransactionModel({
+    required super.id,
     required super.userId,
     required super.walletId,
     required super.title,
@@ -17,10 +17,11 @@ class TransactionModel extends TransactionEntity {
     required super.date,
     required super.time,
     required super.type,
-  }) : super(id: UidGenerator.generateWithUserId());
+  });
 
   factory TransactionModel.fromJson(String id, Map<String, dynamic> json) {
     return TransactionModel(
+      id: id,
       userId: json['userId'] as String,
       walletId: json['walletId'] as String,
       title: json['title'] as String,
@@ -35,6 +36,7 @@ class TransactionModel extends TransactionEntity {
   @override
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'userId': userId,
       'walletId': walletId,
       'title': title,
@@ -48,6 +50,7 @@ class TransactionModel extends TransactionEntity {
 
   factory TransactionModel.fromEntity(TransactionEntity entity) {
     return TransactionModel(
+      id: entity.id,
       userId: entity.userId,
       walletId: entity.walletId,
       title: entity.title,
@@ -91,6 +94,7 @@ class TransactionModel extends TransactionEntity {
     TransactionTypeModel? type,
   }) {
     return TransactionModel(
+      id: id ?? this.id,
       userId: userId ?? this.userId,
       walletId: walletId ?? this.walletId,
       title: title ?? this.title,

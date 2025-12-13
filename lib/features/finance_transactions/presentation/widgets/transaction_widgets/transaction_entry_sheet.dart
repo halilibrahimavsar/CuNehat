@@ -32,27 +32,36 @@ class TransactionSheetHandler {
           onSave: (transaction) {
             Navigator.pop(sheetContext);
 
-            // Create transaction with user ID
-            final completeTransaction = TransactionEntity(
-              id: transaction.id,
-              userId: userId,
-              walletId: transaction.walletId,
-              title: transaction.title,
-              tag: transaction.tag,
-              amount: transaction.amount,
-              date: transaction.date,
-              time: transaction.time,
-              type: transaction.type,
-            );
-
             // Send to BLoC
             if (initialTransaction != null) {
+              final updateTransaction = initialTransaction.copyWith(
+                userId: userId,
+                walletId: transaction.walletId,
+                title: transaction.title,
+                tag: transaction.tag,
+                amount: transaction.amount,
+                date: transaction.date,
+                time: transaction.time,
+                type: transaction.type,
+                id: initialTransaction.id,
+              );
               context.read<TransactionBloc>().add(
-                    UpdateTransactionEvent(completeTransaction),
+                    UpdateTransactionEvent(updateTransaction),
                   );
             } else {
+              final createTransaction = TransactionEntity.create(
+                userId: userId,
+                walletId: transaction.walletId,
+                title: transaction.title,
+                tag: transaction.tag,
+                amount: transaction.amount,
+                date: transaction.date,
+                time: transaction.time,
+                type: transaction.type,
+              );
+
               context.read<TransactionBloc>().add(
-                    AddTransactionEvent(completeTransaction),
+                    AddTransactionEvent(createTransaction),
                   );
             }
           },

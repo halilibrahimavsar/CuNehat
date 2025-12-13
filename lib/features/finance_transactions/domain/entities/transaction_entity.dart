@@ -1,4 +1,5 @@
 // lib/features/finance_transactions/domain/entities/transaction_entity.dart
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
 
@@ -15,7 +16,7 @@ class TransactionEntity extends Equatable {
   final TransactionTypeModel type;
 
   const TransactionEntity({
-    this.id = '', // ✅ Optional with default empty string
+    required this.id,
     required this.userId,
     required this.walletId,
     required this.title,
@@ -25,6 +26,53 @@ class TransactionEntity extends Equatable {
     required this.time,
     required this.type,
   });
+
+  factory TransactionEntity.create({
+    required String userId,
+    required String walletId,
+    required String title,
+    required String tag,
+    required double amount,
+    required DateTime date,
+    required String time,
+    required TransactionTypeModel type,
+  }) {
+    return TransactionEntity(
+      id: UidGenerator.generateWithUserId(),
+      userId: userId,
+      walletId: walletId,
+      title: title,
+      tag: tag,
+      amount: amount,
+      date: date,
+      time: time,
+      type: type,
+    );
+  }
+
+  TransactionEntity copyWith({
+    String? id,
+    String? userId,
+    String? walletId,
+    String? title,
+    String? tag,
+    double? amount,
+    DateTime? date,
+    String? time,
+    TransactionTypeModel? type,
+  }) {
+    return TransactionEntity(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      walletId: walletId ?? this.walletId,
+      title: title ?? this.title,
+      tag: tag ?? this.tag,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      type: type ?? this.type,
+    );
+  }
 
   bool get isIncome => type == TransactionTypeModel.income;
   bool get isExpense => type == TransactionTypeModel.expense;
