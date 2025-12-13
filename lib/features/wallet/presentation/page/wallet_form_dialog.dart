@@ -317,7 +317,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
   /// Yeni cüzdan oluştur
   void _createWallet(String name, double balance) {
-    final wallet = WalletModel.createLocal(
+    final wallet = WalletModel.create(
       userId: widget.userId,
       name: name,
       balance: balance,

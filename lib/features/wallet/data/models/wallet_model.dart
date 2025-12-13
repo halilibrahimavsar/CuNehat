@@ -80,7 +80,7 @@ class WalletModel extends HiveObject {
   }
 
   /// Creates new Wallet for local storage
-  factory WalletModel.createLocal({
+  factory WalletModel.create({
     required String userId,
     required String name,
     double balance = 0.0,
