@@ -68,6 +68,7 @@ class WalletModel extends HiveObject {
   /// Converts Wallet to Firestore-compatible map
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'userId': userId,
       'name': name,
       'balance': balance,

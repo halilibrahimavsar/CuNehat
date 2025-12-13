@@ -85,7 +85,6 @@ class TransactionFirestoreDataSource implements TransactionDataRepository {
       if (transaction.id.isEmpty) {
         throw ValidationException('Transaction ID boş olamaz');
       }
-
       final data = transaction.toJson();
 
       await _firestore.collection('transactions').doc(transaction.id).set(data);
