@@ -3,6 +3,8 @@
 // lib/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_form_sheet.dart
 // ==========================================
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -14,6 +16,7 @@ import 'package:flutter/material.dart';
 class TransactionFormSheet extends StatefulWidget {
   final bool isExpense;
   final String walletId;
+  final String userId;
   final TransactionEntity? initialTransaction;
   final Function(TransactionEntity) onSave;
   final VoidCallback onCancel;
@@ -22,6 +25,7 @@ class TransactionFormSheet extends StatefulWidget {
     super.key,
     required this.isExpense,
     required this.walletId,
+    required this.userId,
     this.initialTransaction,
     required this.onSave,
     required this.onCancel,
@@ -289,21 +293,26 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         _controller.selectedTime.minute,
       );
 
-      final transaction = TransactionEntity(
-        id: _isEditMode ? widget.initialTransaction!.id : '',
-        userId: _isEditMode
-            ? widget.initialTransaction!.userId
-            : '', // Will be set by BLoC
-        walletId: widget.walletId,
-        title: _controller.titleController.text.trim(),
-        tag: _controller.selectedCategoryId!,
-        amount: double.parse(_controller.amountController.text.trim()),
-        date: combinedDateTime,
-        time: AppFormatters.dateTime.format(combinedDateTime),
-        type: widget.isExpense
-            ? TransactionTypeModel.expense
-            : TransactionTypeModel.income,
-      );
+      final transaction = _isEditMode
+          ? widget.initialTransaction!.copyWith(
+              title: _controller.titleController.text.trim(),
+              tag: _controller.selectedCategoryId!,
+              amount: double.parse(_controller.amountController.text.trim()),
+              date: combinedDateTime,
+              time: AppFormatters.dateTime.format(combinedDateTime),
+            )
+          : TransactionEntity.create(
+              userId: widget.userId, //  Will be set by sheet handler
+              walletId: widget.walletId,
+              title: _controller.titleController.text.trim(),
+              tag: _controller.selectedCategoryId!,
+              amount: double.parse(_controller.amountController.text.trim()),
+              date: combinedDateTime,
+              time: AppFormatters.dateTime.format(combinedDateTime),
+              type: widget.isExpense
+                  ? TransactionTypeModel.expense
+                  : TransactionTypeModel.income,
+            );
 
       widget.onSave(transaction);
     } catch (e) {

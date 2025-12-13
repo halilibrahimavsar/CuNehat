@@ -27,6 +27,7 @@ class TransactionSheetHandler {
       builder: (sheetContext) {
         return TransactionFormSheet(
           walletId: walletId,
+          userId: userId,
           isExpense: type == TransactionTypeModel.expense,
           initialTransaction: initialTransaction,
           onSave: (transaction) {
