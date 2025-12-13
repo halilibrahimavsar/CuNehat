@@ -1,5 +1,6 @@
 // lib/features/main_feature/presentation/pages/home_page.dart
 
+import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_state.dart';
@@ -10,7 +11,7 @@ import 'package:cunehat/features/finance_transactions/presentation/pages/transac
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
-import 'package:cunehat/features/main_feature/presentation/widgets/date_range_indicator.dart';
+import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
@@ -140,9 +141,9 @@ class _HomePageState extends State<HomePage>
 
                 switch (walletState.activeWallet?.isActive) {
                   case false:
-                    return NoWalletView(infoText: "Cüzdan seçiniz");
+                    return const NoWalletView(infoText: "Cüzdan seçiniz");
                   case null:
-                    return NoWalletView(infoText: "Cüzdan oluşturunuz");
+                    return const NoWalletView(infoText: "Cüzdan oluşturunuz");
                   case true:
                     _loadTransactions(userId, activeWalletId);
                     return _buildBody(
@@ -171,10 +172,11 @@ class _HomePageState extends State<HomePage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        DateRangeIndicator(
+        // ✅ UPDATED: Use shared DateRangeIndicator
+        FilterView(
           endDate: _endDate,
           startDate: _startDate,
-          onTap: _showDateRangePicker,
+          onTap: () => _showDateRangePicker(userId, walletId),
         ),
         BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, transactionState) {
@@ -191,9 +193,13 @@ class _HomePageState extends State<HomePage>
           builder: (context, transactionState) {
             switch (transactionState) {
               case TransactionLoading():
-                return const Center(child: CircularProgressIndicator());
+                return const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                );
               case TransactionError():
-                return ErrorView(message: transactionState.message);
+                return Expanded(
+                  child: ErrorView(message: transactionState.message),
+                );
 
               case TransactionLoaded():
                 return Expanded(
@@ -268,41 +274,21 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  Future<void> _showDateRangePicker() async {
-    final picked = await showDateRangePicker(
+  /// ✅ UPDATED: Use shared DateRangePicker
+  Future<void> _showDateRangePicker(String userId, String walletId) async {
+    await showDateRangePickerBottomSheet(
       context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Theme.of(context).primaryColor,
-            ),
-          ),
-          child: child!,
-        );
+      initialStartDate: _startDate,
+      initialEndDate: _endDate,
+      onDateRangeSelected: (startDate, endDate) {
+        setState(() {
+          _startDate = startDate;
+          _endDate = endDate;
+        });
+
+        // Reload transactions with new date range
+        _loadTransactions(userId, walletId);
       },
     );
-
-    if (picked != null && mounted) {
-      setState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-
-      // Reload transactions with new date range
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      final walletState = context.read<WalletBloc>().state;
-
-      if (userId != null && walletState is WalletLoadedSt) {
-        final activeWallet = walletState.wallets.firstWhere(
-          (w) => w.isActive,
-          orElse: () => walletState.wallets.first,
-        );
-        _loadTransactions(userId, activeWallet.id);
-      }
-    }
   }
 }

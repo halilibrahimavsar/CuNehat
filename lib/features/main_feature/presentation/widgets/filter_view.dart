@@ -1,12 +1,12 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 
-class DateRangeIndicator extends StatelessWidget {
+class FilterView extends StatelessWidget {
   final DateTime startDate;
   final DateTime endDate;
   final VoidCallback onTap;
 
-  const DateRangeIndicator({
+  const FilterView({
     super.key,
     required this.startDate,
     required this.endDate,
