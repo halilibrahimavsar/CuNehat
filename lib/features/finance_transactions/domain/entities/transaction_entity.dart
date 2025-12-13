@@ -51,9 +51,6 @@ class TransactionEntity extends Equatable {
   }
 
   TransactionEntity copyWith({
-    String? id,
-    String? userId,
-    String? walletId,
     String? title,
     String? tag,
     double? amount,
@@ -62,9 +59,9 @@ class TransactionEntity extends Equatable {
     TransactionTypeModel? type,
   }) {
     return TransactionEntity(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      walletId: walletId ?? this.walletId,
+      id: id, // preserve id
+      userId: userId, // preserve id
+      walletId: walletId, // preserve id
       title: title ?? this.title,
       tag: tag ?? this.tag,
       amount: amount ?? this.amount,

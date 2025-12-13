@@ -105,8 +105,6 @@ class WalletModel extends HiveObject {
 
   /// Copy with method for updates
   WalletModel copyWith({
-    String? id,
-    String? userId,
     String? name,
     double? balance,
     String? colorHex,
@@ -115,8 +113,8 @@ class WalletModel extends HiveObject {
     int? sortOrder,
   }) {
     return WalletModel(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
+      id: id, // preserve id to not change
+      userId: userId, // preserve id to not change
       name: name ?? this.name,
       balance: balance ?? this.balance,
       colorHex: colorHex ?? this.colorHex,

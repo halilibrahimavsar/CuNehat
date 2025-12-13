@@ -82,10 +82,8 @@ class TransactionModel extends TransactionEntity {
         : TransactionTypeModel.expense;
   }
 
+  @override
   TransactionModel copyWith({
-    String? id,
-    String? userId,
-    String? walletId,
     String? title,
     String? tag,
     double? amount,
@@ -94,9 +92,9 @@ class TransactionModel extends TransactionEntity {
     TransactionTypeModel? type,
   }) {
     return TransactionModel(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      walletId: walletId ?? this.walletId,
+      id: id, // preserve id
+      userId: userId, // preserve id
+      walletId: walletId, // preserve id
       title: title ?? this.title,
       tag: tag ?? this.tag,
       amount: amount ?? this.amount,
