@@ -6,13 +6,13 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/finance_entry_widget.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../bloc/transection_event.dart';
-import '../widgets/transaction_widgets/transaction_dismissible_item.dart';
+import '../widgets/transaction_dismissible_item.dart';
 
 class TransactionListPage extends StatelessWidget {
   final TransactionTypeModel type;
@@ -74,32 +74,12 @@ class TransactionListPage extends StatelessWidget {
   }
 
   void _showEditSheet(BuildContext context, TransactionEntity transaction) {
-    showModalBottomSheet(
+    TransactionSheetHandler.showSheet(
       context: context,
-      isScrollControlled: true,
-      enableDrag: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return FinanceEntryWidget(
-          isExpense: transaction.type == TransactionTypeModel.expense,
-          initialData: FinanceInitialData(
-            id: transaction.id,
-            title: transaction.title,
-            amount: transaction.amount,
-            tag: transaction.tag,
-            date: transaction.date,
-            time: transaction.time,
-            walletId: transaction.walletId,
-          ),
-          onSave: (item) {
-            context.read<TransactionBloc>().add(
-                  UpdateTransactionEvent(item),
-                );
-            Navigator.pop(sheetContext);
-          },
-          onCancel: () => Navigator.pop(sheetContext),
-        );
-      },
+      userId: userId,
+      walletId: walletId,
+      type: transaction.type,
+      initialTransaction: transaction,
     );
   }
 
