@@ -36,15 +36,11 @@ class TransactionSheetHandler {
             // Send to BLoC
             if (initialTransaction != null) {
               final updateTransaction = initialTransaction.copyWith(
-                userId: userId,
-                walletId: transaction.walletId,
                 title: transaction.title,
                 tag: transaction.tag,
                 amount: transaction.amount,
                 date: transaction.date,
                 time: transaction.time,
-                type: transaction.type,
-                id: initialTransaction.id,
               );
               context.read<TransactionBloc>().add(
                     UpdateTransactionEvent(updateTransaction),
@@ -52,7 +48,7 @@ class TransactionSheetHandler {
             } else {
               final createTransaction = TransactionEntity.create(
                 userId: userId,
-                walletId: transaction.walletId,
+                walletId: walletId,
                 title: transaction.title,
                 tag: transaction.tag,
                 amount: transaction.amount,
