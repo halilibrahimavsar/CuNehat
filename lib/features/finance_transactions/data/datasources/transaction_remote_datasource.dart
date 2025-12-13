@@ -21,32 +21,33 @@ class TransactionFirestoreDataSource implements TransactionDataRepository {
     try {
       Query query = _firestore.collection('transactions');
 
-      // Only filter by userId (simple index)
-      query = query.where('userId', isEqualTo: userId);
+      // Sunucu tarafında filtreleme
+      query = query
+          .where('userId', isEqualTo: userId)
+          .where('walletId', isEqualTo: walletId);
 
-      // Sort by date
+      if (type != null) {
+        query = query.where('type', isEqualTo: type.name);
+      }
+
+      if (startDate != null) {
+        query = query.where('date', isGreaterThanOrEqualTo: startDate);
+      }
+
+      if (endDate != null) {
+        query = query.where('date', isLessThanOrEqualTo: endDate);
+      }
+
+      // Sıralama
       query = query.orderBy('date', descending: true);
 
       final snapshot = await query.get();
 
-      // Filter in memory (avoids complex Firestore index)
       final transactions = snapshot.docs
           .map((doc) => TransactionModel.fromJson(doc.id, {
                 ...doc.data() as Map<String, dynamic>,
               }))
-          .where((t) {
-        // Filter by walletId
-        if (t.walletId != walletId) return false;
-
-        // Filter by type
-        if (type != null && t.type != type) return false;
-
-        // Filter by date range
-        if (startDate != null && t.date.isBefore(startDate)) return false;
-        if (endDate != null && t.date.isAfter(endDate)) return false;
-
-        return true;
-      }).toList();
+          .toList();
 
       return transactions;
     } on FirebaseException catch (e) {
