@@ -1,5 +1,3 @@
-// lib/features/settings/data/datasources/migration_datasource.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
@@ -15,7 +13,7 @@ class MigrationDataSource {
     required Function(int step, int total, String desc) onProgress,
   }) async {
     int currentStep = 0;
-    const totalSteps = 4;
+    const totalSteps = 3;
 
     try {
       // STEP 1: Migrate Wallets
@@ -23,12 +21,10 @@ class MigrationDataSource {
       await _migrateWalletsToCloud(userId);
 
       // STEP 2: Migrate Transactions (subcollection)
-      onProgress(++currentStep, totalSteps, 'Giderler taşınıyor...');
-      await _migrateTransectionsToCloud(userId);
+      onProgress(++currentStep, totalSteps, 'işlemler taşınıyor...');
+      await _migrateTransactionsToCloud(userId);
 
-      onProgress(++currentStep, totalSteps, 'Gelirler taşınıyor...');
-
-      // STEP 4: Clear Hive
+      // STEP 3: Clear Hive
       onProgress(++currentStep, totalSteps, 'Yerel veriler temizleniyor...');
       await _clearHiveData();
     } catch (e) {
@@ -52,7 +48,7 @@ class MigrationDataSource {
     await batch.commit();
   }
 
-  Future<void> _migrateTransectionsToCloud(String userId) async {
+  Future<void> _migrateTransactionsToCloud(String userId) async {
     final transactionsBox =
         await Hive.openBox<TransactionModel>('transactions');
     final transactions =
@@ -78,16 +74,14 @@ class MigrationDataSource {
     required Function(int step, int total, String desc) onProgress,
   }) async {
     int currentStep = 0;
-    const totalSteps = 4;
+    const totalSteps = 3;
 
     try {
       onProgress(++currentStep, totalSteps, 'Cüzdanlar indiriliyor...');
       await _migrateWalletsToLocal(userId);
 
-      onProgress(++currentStep, totalSteps, 'Giderler indiriliyor...');
-      await _migrateTransectionsToLocal(userId);
-
-      onProgress(++currentStep, totalSteps, 'Gelirler indiriliyor...');
+      onProgress(++currentStep, totalSteps, 'İşlemler indiriliyor...');
+      await _migrateTransactionsToLocal(userId);
 
       onProgress(++currentStep, totalSteps, 'Bulut verisi temizleniyor...');
       await _clearFirestoreData(userId);
@@ -112,18 +106,18 @@ class MigrationDataSource {
     }
   }
 
-  Future<void> _migrateTransectionsToLocal(String userId) async {
+  Future<void> _migrateTransactionsToLocal(String userId) async {
     final walletsSnapshot = await _firestore
-        .collection('transections')
+        .collection('transactions')
         .where('userId', isEqualTo: userId)
         .get();
 
     final transactionsBox =
-        await Hive.openBox<TransactionModel>('transections');
+        await Hive.openBox<TransactionModel>('transactions');
 
     for (var walletDoc in walletsSnapshot.docs) {
       final transactionsSnapshot =
-          await walletDoc.reference.collection('transections').get();
+          await walletDoc.reference.collection('transactions').get();
 
       for (var transactionDoc in transactionsSnapshot.docs) {
         final transaction =

@@ -1,6 +1,3 @@
-// lib/features/finance_transections/data/datasources/transaction_remote_datasource.dart
-// ✅ FIXED: Use transaction.id directly
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_data_repository.dart';

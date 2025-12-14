@@ -1,6 +1,3 @@
-// lib/features/finance_transections/data/models/transaction_model.dart
-// ✅ FIXED: Use Firestore Timestamp for cloud storage compatibility
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive/hive.dart';

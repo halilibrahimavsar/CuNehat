@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -9,7 +7,7 @@ import 'package:cunehat/features/finance_transactions/data/models/transaction_mo
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';

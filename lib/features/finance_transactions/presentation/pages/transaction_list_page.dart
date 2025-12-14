@@ -1,17 +1,12 @@
-// ==========================================
-// PRESENTATION LAYER - UI
-// ==========================================
-
-// lib/features/transaction/presentation/pages/transaction_list_page.dart
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/transaction_entity.dart';
-import '../bloc/transection_event.dart';
+import '../bloc/transaction_event.dart';
 import '../widgets/transaction_dismissible_item.dart';
 
 class TransactionListPage extends StatelessWidget {

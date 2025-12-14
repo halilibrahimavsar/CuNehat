@@ -1,13 +1,11 @@
-// lib/features/main_feature/presentation/pages/home_page.dart
-
 import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
 import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_bloc.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_list_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
