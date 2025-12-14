@@ -13,7 +13,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
-import 'package:cunehat/features/main_feature/presentation/widgets/build_drawer.dart';
+import 'package:cunehat/core/shared/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';

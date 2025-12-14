@@ -2,11 +2,6 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// **SharedDrawer**: Navigation drawer for the app
-///
-/// Provides quick access to:
-/// - Settings page
-/// - (Future: Analytics, Export, etc.)
 class SharedDrawer extends StatelessWidget {
   const SharedDrawer({super.key});
 
