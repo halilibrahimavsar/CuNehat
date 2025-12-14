@@ -20,8 +20,8 @@ class MigrationDataSource {
       onProgress(++currentStep, totalSteps, 'Cüzdanlar taşınıyor...');
       await _migrateWalletsToCloud(userId);
 
-      // STEP 2: Migrate Transactions (subcollection)
-      onProgress(++currentStep, totalSteps, 'işlemler taşınıyor...');
+      // STEP 2: Migrate Transactions
+      onProgress(++currentStep, totalSteps, 'İşlemler taşınıyor...');
       await _migrateTransactionsToCloud(userId);
 
       // STEP 3: Clear Hive
@@ -52,19 +52,26 @@ class MigrationDataSource {
     final transactionsBox =
         await Hive.openBox<TransactionModel>('transactions');
     final transactions =
-        transactionsBox.values.where((e) => e.userId == userId).toList();
+        transactionsBox.values.where((t) => t.userId == userId).toList();
 
     if (transactions.isEmpty) return;
 
-    final batch = _firestore.batch();
+    // ✅ FIX: Batch işlemlerini 500'lük gruplara böl
+    const batchSize = 500;
+    for (var i = 0; i < transactions.length; i += batchSize) {
+      final batch = _firestore.batch();
+      final end = (i + batchSize < transactions.length)
+          ? i + batchSize
+          : transactions.length;
 
-    for (var transactions in transactions) {
-      final ref = _firestore.collection('transactions').doc(transactions.id);
-      batch.set(ref, transactions.toJson());
-      // Firestore batch limiti 500'dür. Büyük veri setleri için ek kontrol gerekebilir.
+      for (var j = i; j < end; j++) {
+        final transaction = transactions[j];
+        final ref = _firestore.collection('transactions').doc(transaction.id);
+        batch.set(ref, transaction.toJson());
+      }
+
+      await batch.commit();
     }
-
-    await batch.commit();
   }
 
   // ========== CLOUD → LOCAL ==========
@@ -106,31 +113,34 @@ class MigrationDataSource {
     }
   }
 
+  // ✅ FIX: Transactions'ları doğru şekilde oku
   Future<void> _migrateTransactionsToLocal(String userId) async {
-    final walletsSnapshot = await _firestore
+    // ❌ YANLIŞ: Subcollection olarak okumaya çalışıyordu
+    // final walletsSnapshot = await _firestore
+    //     .collection('transactions')
+    //     .where('userId', isEqualTo: userId)
+    //     .get();
+
+    // ✅ DOĞRU: Ana collection'dan oku
+    final transactionsSnapshot = await _firestore
         .collection('transactions')
         .where('userId', isEqualTo: userId)
         .get();
 
+    if (transactionsSnapshot.docs.isEmpty) return;
+
     final transactionsBox =
         await Hive.openBox<TransactionModel>('transactions');
 
-    for (var walletDoc in walletsSnapshot.docs) {
-      final transactionsSnapshot =
-          await walletDoc.reference.collection('transactions').get();
-
-      for (var transactionDoc in transactionsSnapshot.docs) {
-        final transaction =
-            TransactionModel.fromJson(transactionDoc.id, transactionDoc.data());
-        await transactionsBox.put(transaction.id, transaction);
-      }
+    for (var doc in transactionsSnapshot.docs) {
+      final transaction = TransactionModel.fromJson(doc.id, doc.data());
+      await transactionsBox.put(transaction.id, transaction);
     }
   }
 
   // ========== CLEANUP ==========
 
   Future<void> _clearHiveData() async {
-    // TODO : Eğer user başka bir hesapla giriş yaparsa bütün veriler siliniyormu kontrol edilecek
     await Hive.deleteBoxFromDisk('wallets');
     await Hive.deleteBoxFromDisk('transactions');
   }
@@ -159,15 +169,15 @@ class MigrationDataSource {
       // 1. Sorguyu oluştur
       Query query = collectionRef.where(field, isEqualTo: value);
 
-      // Eğer indeks hatası alırsan (Firestore indeks gerektirir), konsolda link çıkar, tıkla oluştur.
       QuerySnapshot snapshot = await query.get();
 
       if (snapshot.docs.isEmpty) {
-        print("Silinecek belge bulunamadı.");
+        print("$collectionPath: Silinecek belge bulunamadı.");
         return;
       }
 
-      print("Toplam ${snapshot.docs.length} belge silinecek...");
+      print(
+          "$collectionPath: Toplam ${snapshot.docs.length} belge silinecek...");
 
       for (var doc in snapshot.docs) {
         batch.delete(doc.reference);
@@ -177,7 +187,7 @@ class MigrationDataSource {
         if (deletedCount % 500 == 0) {
           await batch.commit();
           print(
-              "Batch ${++batchIndex}: 500 belge silindi. Toplam: $deletedCount");
+              "$collectionPath - Batch ${++batchIndex}: 500 belge silindi. Toplam: $deletedCount");
           batch = firestore.batch(); // yeni batch başlat
         }
       }
@@ -185,16 +195,18 @@ class MigrationDataSource {
       // Kalanları sil
       if (deletedCount % 500 != 0) {
         await batch.commit();
-        print("Son batch tamamlandı. Kalan belgeler silindi.");
+        print(
+            "$collectionPath - Son batch tamamlandı. Kalan belgeler silindi.");
       }
 
-      print("Toplam $deletedCount belge başarıyla silindi! ✅");
+      print("$collectionPath: Toplam $deletedCount belge başarıyla silindi! ✅");
     } catch (e) {
-      print("Hata oluştu: $e");
+      print("$collectionPath - Hata oluştu: $e");
       if (e.toString().contains("index")) {
         print(
             "Firestore indeks eksik! Konsola bak, oluşturman gereken indeks linki var.");
       }
+      rethrow;
     }
   }
 }
