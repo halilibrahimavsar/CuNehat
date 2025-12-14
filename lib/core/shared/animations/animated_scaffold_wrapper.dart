@@ -116,7 +116,7 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
 
   /// Wallet dialog'unu aç (animasyonlu)
   void openWalletDialog(Widget walletContent) {
-    setState(() => _isWalletOpen = true);
+    // setState(() => _isWalletOpen = true);
     _walletController.forward();
 
     showModalBottomSheet(
@@ -133,7 +133,7 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
       },
     ).whenComplete(() {
       _walletController.reverse();
-      setState(() => _isWalletOpen = false);
+      // setState(() => _isWalletOpen = false);
     });
   }
 
