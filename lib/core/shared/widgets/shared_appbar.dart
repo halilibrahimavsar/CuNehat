@@ -118,7 +118,11 @@ class _SharedAppbarState extends State<SharedAppbar> {
       children: [
         // User Avatar (opens drawer)
         GestureDetector(
-          onTap: () => Scaffold.of(context).openDrawer(),
+          onTap: () {
+            final scaffoldState =
+                context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+            scaffoldState?.openDrawer();
+          },
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,

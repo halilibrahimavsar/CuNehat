@@ -137,6 +137,11 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
     });
   }
 
+  /// Drawer'ı aç (animasyonlu)
+  void openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
