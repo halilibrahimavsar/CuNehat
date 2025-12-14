@@ -47,14 +47,14 @@ class CubeAnimationView extends StatelessWidget {
         }
 
         final outgoingRotation =
-            Tween(begin: 0.0, end: math.pi / 2).transform(phaseValue);
+            Tween(begin: 0.0, end: math.pi / 2.5).transform(phaseValue);
         final outgoingOffset = Tween<Offset>(
           begin: Offset.zero,
           end: const Offset(-1.0, 0.0),
         ).transform(phaseValue);
 
         final incomingRotation =
-            Tween(begin: -math.pi / 2, end: 0.0).transform(phaseValue);
+            Tween(begin: -math.pi / 2.5, end: 0.0).transform(phaseValue);
         final incomingOffset = Tween<Offset>(
           begin: const Offset(1.0, 0.0),
           end: Offset.zero,
@@ -64,7 +64,7 @@ class CubeAnimationView extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Visibility(
-              visible: phaseValue < 0.9,
+              visible: phaseValue < 0.95,
               child: FractionalTranslation(
                 translation: outgoingOffset,
                 child: Transform(
@@ -75,7 +75,7 @@ class CubeAnimationView extends StatelessWidget {
               ),
             ),
             Visibility(
-              visible: phaseValue > 0.1,
+              visible: phaseValue > 0.05,
               child: FractionalTranslation(
                 translation: incomingOffset,
                 child: Transform(
