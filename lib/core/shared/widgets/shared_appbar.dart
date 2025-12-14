@@ -3,6 +3,7 @@
 
 // ignore_for_file: deprecated_member_use
 
+import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -96,15 +97,17 @@ class _SharedAppbarState extends State<SharedAppbar> {
       actions: [
         // ✅ Wallet management button with badge
         IconButton(
-          onPressed: () => showWalletManagement(context),
-          icon: Badge(
-            child: Icon(
-              Icons.wallet_rounded,
-              size: 24,
-              color: _getContentColor(currentValue),
-            ),
-          ),
-          tooltip: 'Cüzdan Yönetimi',
+          onPressed: () {
+            // AnimatedScaffoldWrapper'ın state'ine eriş
+            final scaffoldState =
+                context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+            scaffoldState?.openWalletDialog(
+              WalletManagementPage(
+                userId: FirebaseAuth.instance.currentUser!.uid,
+              ),
+            );
+          },
+          icon: const Icon(Icons.wallet),
         ),
       ],
     );

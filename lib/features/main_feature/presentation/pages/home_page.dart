@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
 import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
@@ -9,7 +10,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_list_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
-import 'package:cunehat/features/main_feature/presentation/animations/cube_animation_view.dart';
+import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/core/shared/widgets/build_drawer.dart';
@@ -83,9 +84,13 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldKey = GlobalKey<AnimatedScaffoldWrapperState>();
+
     return SafeArea(
       top: false,
-      child: Scaffold(
+      child: AnimatedScaffoldWrapper(
+        key: scaffoldKey,
+        drawer: const SharedDrawer(),
         appBar: PreferredSize(
           preferredSize: const Size(double.maxFinite, 50),
           child: AnimatedBuilder(
@@ -95,8 +100,7 @@ class _HomePageState extends State<HomePage>
             },
           ),
         ),
-        drawer: const SharedDrawer(),
-        body: BlocConsumer<WalletBloc, WalletState>(
+        child: BlocConsumer<WalletBloc, WalletState>(
           listener: (context, walletState) {
             switch (walletState) {
               case WalletDeletedSt():

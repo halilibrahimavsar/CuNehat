@@ -12,44 +12,22 @@ import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dar
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void showWalletManagement(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: true,
-    backgroundColor: Colors.transparent,
-    builder: (bottomSheetContext) {
-      // ✅ CRITICAL: Don't wrap in provider, it already exists in parent
-      return DraggableScrollableSheet(
-        initialChildSize: 0.7, // Start at 70% of screen
-        minChildSize: 0.5, // Can be dragged down to 50%
-        maxChildSize: 0.95, // Can be dragged up to 95%
-        builder: (context, scrollController) {
-          return _WalletManagementPage(
-            userId: FirebaseAuth.instance.currentUser!.uid,
-          );
-        },
-      );
-    },
-  );
-}
-
-class _WalletManagementPage extends StatefulWidget {
+class WalletManagementPage extends StatefulWidget {
   final String userId;
 
-  const _WalletManagementPage({
+  const WalletManagementPage({
+    super.key,
     required this.userId,
   });
 
   @override
-  State<_WalletManagementPage> createState() => _WalletManagementPageState();
+  State<WalletManagementPage> createState() => _WalletManagementPageState();
 }
 
-class _WalletManagementPageState extends State<_WalletManagementPage> {
+class _WalletManagementPageState extends State<WalletManagementPage> {
   @override
   void initState() {
     super.initState();
