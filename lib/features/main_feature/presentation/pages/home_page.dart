@@ -1,6 +1,7 @@
 // lib/features/main_feature/presentation/pages/home_page.dart
 
 import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
+import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transection_state.dart';
@@ -52,8 +53,9 @@ class _HomePageState extends State<HomePage>
   }
 
   void _initDateRange() {
-    _endDate = DateTime.now();
-    _startDate = DateTime.now().subtract(const Duration(days: 30));
+    final now = DateRangeHelper.getMonthRange(DateTime.now());
+    _startDate = now['firstDate']!;
+    _endDate = now['lastDate']!;
   }
 
   void _loadWallets() {
