@@ -102,7 +102,8 @@ class _SharedAppbarState extends State<SharedAppbar> {
             final scaffoldState =
                 context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
             scaffoldState?.openWalletDialog(
-              WalletManagementPage(
+              WalletSheetContent(
+                scrollController: ScrollController(),
                 userId: FirebaseAuth.instance.currentUser!.uid,
               ),
             );

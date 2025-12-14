@@ -1,5 +1,7 @@
 // lib/features/wallet/presentation/page/wallet_managment.dart
-// ✅ UPDATED: Add transfer button
+// ✅ UPDATED: Modern sheet design without Scaffold
+
+// ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
@@ -15,19 +17,54 @@ import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class WalletManagementPage extends StatefulWidget {
-  final String userId;
+/// ========================================
+/// 🎯 MAIN FUNCTION: Show Wallet Sheet
+/// ========================================
+// void showWalletManagement(BuildContext context, String userId) {
+//   showModalBottomSheet(
+//     context: context,
+//     isScrollControlled: true,
+//     isDismissible: true, // ✅ Dışarı tıklayınca kapanır
+//     enableDrag: true, // ✅ Aşağı kaydırarak kapanır
+//     backgroundColor: Colors.transparent,
+//     builder: (sheetContext) {
+//       // ✅ BLoC'u parent'tan al
+//       return BlocProvider.value(
+//         value: context.read<WalletBloc>(),
+//         child: DraggableScrollableSheet(
+//           initialChildSize: 0.75,
+//           minChildSize: 0.5,
+//           maxChildSize: 0.95,
+//           builder: (context, scrollController) {
+//             return _WalletSheetContent(
+//               userId: userId,
+//               scrollController: scrollController,
+//             );
+//           },
+//         ),
+//       );
+//     },
+//   );
+// }
 
-  const WalletManagementPage({
+/// ========================================
+/// 📄 WALLET SHEET CONTENT
+/// ========================================
+class WalletSheetContent extends StatefulWidget {
+  final String userId;
+  final ScrollController scrollController;
+
+  const WalletSheetContent({
     super.key,
     required this.userId,
+    required this.scrollController,
   });
 
   @override
-  State<WalletManagementPage> createState() => _WalletManagementPageState();
+  State<WalletSheetContent> createState() => _WalletSheetContentState();
 }
 
-class _WalletManagementPageState extends State<WalletManagementPage> {
+class _WalletSheetContentState extends State<WalletSheetContent> {
   @override
   void initState() {
     super.initState();
@@ -45,101 +82,285 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Cüzdanlarım'),
-            actions: [
-              // ========== ✅ NEW: Transfer Button ==========
-              if (state is WalletLoadedSt && state.wallets.length >= 2)
-                IconButton(
-                  icon: const Icon(Icons.swap_horiz),
-                  onPressed: () => _showTransferDialog(context, state.wallets),
-                  tooltip: 'Para Transferi',
-                ),
-
-              IconButton(
-                icon: const Icon(Icons.info_outline),
-                onPressed: () => WalletInfoDialog.show(context),
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(28),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                spreadRadius: -5,
+                offset: const Offset(0, -5),
               ),
             ],
           ),
-          body: _buildBody(state),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              showCreateEditDialog(
-                context: context,
-                userId: widget.userId,
-                wallet: null,
-                onSuccess: () {
-                  SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');
-                },
-                onError: (error) {
-                  SnackbarHelper.showError(context, error);
-                },
-              );
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Yeni Cüzdan'),
+          child: Column(
+            children: [
+              // ========== DRAG HANDLE ==========
+              _buildDragHandle(),
+
+              // ========== HEADER ==========
+              _buildHeader(context, state),
+
+              // ========== DIVIDER ==========
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: Colors.grey.shade200,
+              ),
+
+              // ========== BODY CONTENT ==========
+              Expanded(
+                child: _buildBody(state),
+              ),
+
+              // ========== FLOATING ADD BUTTON ==========
+              _buildFloatingAddButton(context),
+            ],
           ),
         );
       },
     );
   }
 
+  /// Drag handle (sürükleme göstergesi)
+  Widget _buildDragHandle() {
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 8),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  /// Header with title and actions
+  Widget _buildHeader(BuildContext context, WalletState state) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 16, 16),
+      child: Row(
+        children: [
+          // Icon + Title
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet,
+              color: Theme.of(context).primaryColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cüzdanlarım',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Cüzdanlarınızı yönetin',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Actions
+          if (state is WalletLoadedSt && state.wallets.length >= 2)
+            IconButton(
+              icon: const Icon(Icons.swap_horiz),
+              onPressed: () => _showTransferDialog(context, state.wallets),
+              tooltip: 'Para Transferi',
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.blue.shade50,
+                foregroundColor: Colors.blue.shade700,
+              ),
+            ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => WalletInfoDialog.show(context),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              foregroundColor: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.red.shade50,
+              foregroundColor: Colors.red.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Body content based on state
   Widget _buildBody(WalletState state) {
     return switch (state) {
-      NoWalletSt() => const NoWalletView(
-          infoText: "Henüz cüzdan oluşturmadınız",
+      NoWalletSt() => const Center(
+          child: NoWalletView(
+            infoText: "Henüz cüzdan oluşturmadınız",
+          ),
         ),
-      WalletLoadingSt() => const Center(child: CircularProgressIndicator()),
+      WalletLoadingSt() => const Center(
+          child: CircularProgressIndicator(),
+        ),
       WalletLoadedSt() => _buildWalletList(state.wallets),
-      WalletErrorSt() => ErrorView(message: state.err),
-      _ => const Center(child: Text('Beklenmeyen durum')),
+      WalletErrorSt() => Center(
+          child: ErrorView(message: state.err),
+        ),
+      _ => const Center(
+          child: Text('Beklenmeyen durum'),
+        ),
     };
   }
 
+  /// Wallet list
   Widget _buildWalletList(List<WalletModel> wallets) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      controller: widget.scrollController,
+      padding:
+          const EdgeInsets.fromLTRB(16, 16, 16, 100), // Bottom padding for FAB
       itemCount: wallets.length,
       itemBuilder: (context, index) {
         final wallet = wallets[index];
-        return WalletCardWidget(
-          wallet: wallet,
-          onTap: () => context.read<WalletBloc>().add(SetActiveWalletEvent(
-                userId: widget.userId,
-                walletId: wallet.id,
-              )),
-          onEdit: () {
-            showCreateEditDialog(
-              context: context,
-              userId: widget.userId,
-              wallet: wallet,
-              onSuccess: () {
-                SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi!');
-              },
-              onError: (error) {
-                SnackbarHelper.showError(context, error);
-              },
-            );
-          },
-          onDelete: () => ConfirmDeleteDialog.show(
-            context,
-            title: "Cüzdanı Sil",
-            onDelete: () {
-              context.read<WalletBloc>().add(
-                    DeleteWalletEvent(wallet.id),
-                  );
-            },
+        return AnimatedScale(
+          scale: 1.0,
+          duration: Duration(milliseconds: 200 + (index * 50)),
+          curve: Curves.easeOutCubic,
+          child: WalletCardWidget(
+            wallet: wallet,
+            onTap: () => context.read<WalletBloc>().add(
+                  SetActiveWalletEvent(
+                    userId: widget.userId,
+                    walletId: wallet.id,
+                  ),
+                ),
+            onEdit: () => _editWallet(context, wallet),
+            onDelete: () => _deleteWallet(context, wallet),
           ),
         );
       },
     );
   }
 
-  // ========== ✅ NEW: Show Transfer Dialog ==========
+  /// Floating add button (fixed at bottom)
+  Widget _buildFloatingAddButton(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton.icon(
+            onPressed: () => _createWallet(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(Icons.add, size: 22),
+            label: const Text(
+              'Yeni Cüzdan Oluştur',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ========================================
+  // 🔧 HELPER METHODS
+  // ========================================
+
+  void _createWallet(BuildContext context) {
+    showCreateEditDialog(
+      context: context,
+      userId: widget.userId,
+      wallet: null,
+      onSuccess: () {
+        SnackbarHelper.showSuccess(context, '✅ Cüzdan oluşturuldu!');
+      },
+      onError: (error) {
+        SnackbarHelper.showError(context, '❌ $error');
+      },
+    );
+  }
+
+  void _editWallet(BuildContext context, WalletModel wallet) {
+    showCreateEditDialog(
+      context: context,
+      userId: widget.userId,
+      wallet: wallet,
+      onSuccess: () {
+        SnackbarHelper.showSuccess(context, '✅ Cüzdan güncellendi!');
+      },
+      onError: (error) {
+        SnackbarHelper.showError(context, '❌ $error');
+      },
+    );
+  }
+
+  void _deleteWallet(BuildContext context, WalletModel wallet) {
+    ConfirmDeleteDialog.show(
+      context,
+      title: wallet.name,
+      onDelete: () {
+        context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id));
+        SnackbarHelper.showSuccess(context, '🗑️ Cüzdan silindi');
+      },
+    );
+  }
+
   Future<void> _showTransferDialog(
-      BuildContext context, List<WalletModel> wallets) async {
+    BuildContext context,
+    List<WalletModel> wallets,
+  ) async {
     final transferUseCase = TransferMoneyUseCase(
       context.read<WalletBloc>().repository,
     );
@@ -151,9 +372,10 @@ class _WalletManagementPageState extends State<WalletManagementPage> {
       transferUseCase: transferUseCase,
     );
 
-    // Show snackbar here, after the dialog is closed
     if (transferSuccessful == true && context.mounted) {
       SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
+      // Refresh wallets
+      context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
     }
   }
 }
