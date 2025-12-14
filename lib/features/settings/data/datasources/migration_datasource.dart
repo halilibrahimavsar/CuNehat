@@ -26,9 +26,7 @@ class MigrationDataSource {
       onProgress(++currentStep, totalSteps, 'Giderler taşınıyor...');
       await _migrateTransectionsToCloud(userId);
 
-      // STEP 3: Migrate Incomes (subcollection)
       onProgress(++currentStep, totalSteps, 'Gelirler taşınıyor...');
-      // await _migrateIncomesToCloud(userId);
 
       // STEP 4: Clear Hive
       onProgress(++currentStep, totalSteps, 'Yerel veriler temizleniyor...');
@@ -90,7 +88,6 @@ class MigrationDataSource {
       await _migrateTransectionsToLocal(userId);
 
       onProgress(++currentStep, totalSteps, 'Gelirler indiriliyor...');
-      // await _migrateIncomesToLocal(userId);
 
       onProgress(++currentStep, totalSteps, 'Bulut verisi temizleniyor...');
       await _clearFirestoreData(userId);
@@ -121,16 +118,17 @@ class MigrationDataSource {
         .where('userId', isEqualTo: userId)
         .get();
 
-    final expensesBox = await Hive.openBox<TransactionModel>('transections');
+    final transactionsBox =
+        await Hive.openBox<TransactionModel>('transections');
 
     for (var walletDoc in walletsSnapshot.docs) {
       final transactionsSnapshot =
           await walletDoc.reference.collection('transections').get();
 
       for (var transactionDoc in transactionsSnapshot.docs) {
-        final expense =
+        final transaction =
             TransactionModel.fromJson(transactionDoc.id, transactionDoc.data());
-        await expensesBox.put(expense.id, expense);
+        await transactionsBox.put(transaction.id, transaction);
       }
     }
   }
@@ -140,17 +138,14 @@ class MigrationDataSource {
   Future<void> _clearHiveData() async {
     // TODO : Eğer user başka bir hesapla giriş yaparsa bütün veriler siliniyormu kontrol edilecek
     await Hive.deleteBoxFromDisk('wallets');
-    await Hive.deleteBoxFromDisk('expenses_box');
-    await Hive.deleteBoxFromDisk('incomes_box');
+    await Hive.deleteBoxFromDisk('transactions');
   }
 
   Future<void> _clearFirestoreData(String userId) async {
     await _deleteWhere(
         collectionPath: "wallets", field: 'userId', value: userId);
     await _deleteWhere(
-        collectionPath: "expenses", field: 'userId', value: userId);
-    await _deleteWhere(
-        collectionPath: "incomes", field: 'userId', value: userId);
+        collectionPath: "transactions", field: 'userId', value: userId);
   }
 
   /// Belirli bir where sorgusuna uyan tüm belgeleri siler
