@@ -1,4 +1,7 @@
 // lib/features/finance_transections/data/models/transaction_model.dart
+// ✅ FIXED: Use Firestore Timestamp for cloud storage compatibility
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -19,7 +22,22 @@ class TransactionModel extends TransactionEntity {
     required super.type,
   });
 
+  /// ✅ FIXED: Handle both Timestamp (Firestore) and String (Hive/old data)
   factory TransactionModel.fromJson(String id, Map<String, dynamic> json) {
+    // Parse date - support both Timestamp and String
+    DateTime parsedDate;
+    final dateField = json['date'];
+
+    if (dateField is Timestamp) {
+      // From Firestore
+      parsedDate = dateField.toDate();
+    } else if (dateField is String) {
+      // From old data or Hive
+      parsedDate = DateTime.parse(dateField);
+    } else {
+      throw Exception('Invalid date format in transaction data');
+    }
+
     return TransactionModel(
       id: id,
       userId: json['userId'] as String,
@@ -27,7 +45,7 @@ class TransactionModel extends TransactionEntity {
       title: json['title'] as String,
       tag: json['tag'] as String,
       amount: (json['amount'] as num).toDouble(),
-      date: DateTime.parse(json['date'] as String),
+      date: parsedDate,
       time: json['time'] as String,
       type: _parseTransactionType(json['type'] as String),
     );
@@ -42,7 +60,7 @@ class TransactionModel extends TransactionEntity {
       'title': title,
       'tag': tag,
       'amount': amount,
-      'date': date.toIso8601String(),
+      'date': Timestamp.fromDate(date), // ✅ Use Timestamp like WalletModel
       'time': time,
       'type': type == TransactionTypeModel.income ? 'income' : 'expense',
     };
@@ -104,8 +122,6 @@ class TransactionModel extends TransactionEntity {
     );
   }
 
-  // Hive alanlarını `TransactionEntity`'deki alanlarla eşleştirmek için
-  // getter'ları override edip HiveField annotation'larını ekliyoruz.
   @override
   @HiveField(0)
   String get id => super.id;
