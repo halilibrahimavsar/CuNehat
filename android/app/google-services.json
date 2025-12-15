@@ -7,18 +7,18 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:330272412409:android:872edcf7b29c1c3fc8c828",
+        "mobilesdk_app_id": "1:330272412409:android:51c7e1729b554947c8c828",
         "android_client_info": {
-          "package_name": "com.cunehat.cunehat"
+          "package_name": "com.example.cunehat"
         }
       },
       "oauth_client": [
         {
-          "client_id": "330272412409-b01pqectggrrpqg238ad1f7ma9tcb5gv.apps.googleusercontent.com",
+          "client_id": "330272412409-qnrr1md73hs6pk2p3jp7nik9s6t1fp3v.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.cunehat.cunehat",
-            "certificate_hash": "a4513247aae240a227e4693e33b405b457aa5c93"
+            "package_name": "com.example.cunehat",
+            "certificate_hash": "c50dd62425fafaab6f7f5e68a27fbb7299d2920b"
           }
         },
         {
@@ -37,35 +37,13 @@
             {
               "client_id": "330272412409-71kghnd97t5u211qd1tho0a5aa3f7alg.apps.googleusercontent.com",
               "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:330272412409:android:51c7e1729b554947c8c828",
-        "android_client_info": {
-          "package_name": "com.example.cunehat"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "330272412409-ou46294l0bc5tac9g8eqmiuqcitv8pbn.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCVfQogMHdZEGkwXJ32yf3x-fEsg7Ss394"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
+            },
             {
-              "client_id": "330272412409-71kghnd97t5u211qd1tho0a5aa3f7alg.apps.googleusercontent.com",
-              "client_type": 3
+              "client_id": "330272412409-n0ktel712qp3019r36vl6h67vfrnghn9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cunehat"
+              }
             }
           ]
         }
