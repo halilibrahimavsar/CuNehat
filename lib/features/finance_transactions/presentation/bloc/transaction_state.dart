@@ -1,5 +1,3 @@
-// ==========================================
-// lib/features/transaction/presentation/bloc/transaction_state.dart
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/transaction_entity.dart';
 

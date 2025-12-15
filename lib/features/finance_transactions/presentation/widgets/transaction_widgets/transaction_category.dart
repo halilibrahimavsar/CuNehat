@@ -1,8 +1,3 @@
-// ==========================================
-// 1. TRANSACTION CATEGORY MODEL
-// lib/features/finance_transactions/data/models/transaction_category.dart
-// ==========================================
-
 import 'package:flutter/material.dart';
 
 class TransactionCategory {

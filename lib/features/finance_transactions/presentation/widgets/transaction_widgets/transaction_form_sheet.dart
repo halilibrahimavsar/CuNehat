@@ -1,13 +1,9 @@
-// ==========================================
-// 3. REUSABLE FORM WIDGETS
-// lib/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_form_fields.dart
-// ==========================================
+// ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/finance_entry_widget.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_category.dart';
 import 'package:flutter/material.dart';
 
-// ========== TITLE FIELD ==========
 class TransactionTitleField extends StatelessWidget {
   final TextEditingController controller;
   final String? Function()? validator;

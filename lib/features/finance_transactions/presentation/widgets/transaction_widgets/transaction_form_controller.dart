@@ -1,8 +1,3 @@
-// ==========================================
-// 2. FORM CONTROLLER
-// lib/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_form_controller.dart
-// ==========================================
-
 import 'package:flutter/material.dart';
 
 class TransactionFormController extends ChangeNotifier {

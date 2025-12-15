@@ -1,9 +1,7 @@
-// lib/features/finance_transactions/domain/entities/transaction_entity.dart
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
 
-/// ✅ FIXED: ID is optional in constructor (will be set by repository)
 class TransactionEntity extends Equatable {
   final String? id;
   final String userId;

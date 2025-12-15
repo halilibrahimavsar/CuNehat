@@ -1,13 +1,8 @@
-// lib/features/compare/presentation/pages/compare_view.dart
-
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/compare_contents.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:flutter/material.dart';
 
-/// **Compare View**
-///
-/// Displays combined income/expense transactions with balance tracking
 class CompareView extends StatefulWidget {
   final String userId;
   final WalletModel wallet;

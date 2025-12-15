@@ -1,5 +1,3 @@
-// ==========================================
-// lib/features/transaction/presentation/widgets/transaction_dismissible_item.dart
 import 'package:flutter/material.dart';
 import '../../domain/entities/transaction_entity.dart';
 
