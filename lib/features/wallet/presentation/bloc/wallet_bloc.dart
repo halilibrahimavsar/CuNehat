@@ -1,20 +1,31 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:equatable/equatable.dart';
 
 part 'wallet_event.dart';
 part 'wallet_state.dart';
 
+// ✅ DOĞRU - UseCase'leri inject et
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
-  final WalletRepository repository;
-  WalletBloc(this.repository) : super(const NoWalletSt()) {
+  final WalletGetUseCase getWalletsUseCase;
+  final WalletCreateUseCase createWalletUseCase;
+  final WalletUpdateUseCase updateWalletUseCase;
+  final WalletDeleteUseCase deleteWalletUseCase;
+  final WalletSetActiveUseCase setActiveWalletUseCase;
+
+  WalletBloc({
+    required this.getWalletsUseCase,
+    required this.createWalletUseCase,
+    required this.updateWalletUseCase,
+    required this.deleteWalletUseCase,
+    required this.setActiveWalletUseCase,
+  }) : super(const NoWalletSt()) {
     on<GetWalletsEvent>((event, emit) async {
       emit(const WalletLoadingSt());
 
       try {
-        await WalletGetUseCase(repository).call(event.userId).then(
+        await getWalletsUseCase.call(event.userId).then(
           (wallets) {
             if (wallets.isEmpty) {
               emit(const NoWalletSt());
@@ -42,10 +53,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     // ========== CÜZDAN OLUŞTUR ==========
     on<CreateWalletEvent>((event, emit) async {
       try {
-        await WalletCreateUseCase(repository).call(event.wallet);
+        await createWalletUseCase.call(event.wallet);
         // after creation, set it as active
         try {
-          await WalletSetActiveUseCase(repository).call(
+          await setActiveWalletUseCase.call(
             userId: event.userId,
             walletId: event.wallet.id,
           );
@@ -61,7 +72,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     // ========== CÜZDAN GÜNCELLE ==========
     on<UpdateWalletEvent>((event, emit) async {
       try {
-        await WalletUpdateUseCase(repository).call(event.wallet);
+        await updateWalletUseCase.call(event.wallet);
         emit(const WalletUpdatedSt());
       } catch (e) {
         emit(WalletErrorSt('Cüzdan güncellenemedi: ${e.toString()}'));
@@ -71,7 +82,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     // ========== CÜZDAN SİL ==========
     on<DeleteWalletEvent>((event, emit) async {
       try {
-        await WalletDeleteUseCase(repository).call(event.walletId);
+        await deleteWalletUseCase.call(event.walletId);
         emit(const WalletDeletedSt());
       } catch (e) {
         emit(WalletErrorSt('Cüzdan silinemedi: ${e.toString()}'));
@@ -81,7 +92,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     // ========== AKTİF CÜZDANI DEĞİŞTİR ==========
     on<SetActiveWalletEvent>((event, emit) async {
       try {
-        await WalletSetActiveUseCase(repository).call(
+        await setActiveWalletUseCase.call(
           userId: event.userId,
           walletId: event.walletId,
         );

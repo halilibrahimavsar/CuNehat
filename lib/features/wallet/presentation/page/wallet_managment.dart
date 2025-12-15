@@ -9,6 +9,7 @@ import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
 import 'package:cunehat/features/transfer/presentation/widgets/transfer_dialog.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
@@ -362,7 +363,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     List<WalletModel> wallets,
   ) async {
     final transferUseCase = TransferMoneyUseCase(
-      context.read<WalletBloc>().repository,
+      context.read<WalletRepositoryImpl>().dataSource,
     );
 
     final bool? transferSuccessful = await showTransferDialog(

@@ -15,6 +15,7 @@ import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -107,7 +108,23 @@ class CuNehatEngine extends StatelessWidget {
                   // Wallet BLoC
                   BlocProvider(
                     create: (context) => WalletBloc(
-                      context.read<WalletRepositoryImpl>().dataSource,
+                      getWalletsUseCase: WalletGetUseCase(
+                        context.read<WalletRepositoryImpl>(),
+                      ),
+                      createWalletUseCase: WalletCreateUseCase(
+                        context.read<WalletRepositoryImpl>(),
+                      ),
+                      updateWalletUseCase: WalletUpdateUseCase(
+                        context.read<WalletRepositoryImpl>(),
+                      ),
+                      deleteWalletUseCase: WalletDeleteUseCase(
+                        context.read<WalletRepositoryImpl>(),
+                      ),
+                      setActiveWalletUseCase: WalletSetActiveUseCase(
+                        context.read<WalletRepositoryImpl>(),
+                      ),
+
+                      // context.read<WalletRepositoryImpl>().dataSource,
                     ),
                   ),
 
@@ -116,13 +133,17 @@ class CuNehatEngine extends StatelessWidget {
                     create: (context) => TransactionBloc(
                       getTransactionsGroupedUseCase:
                           GetTransactionsGroupedUseCase(
-                              context.read<TransactionRepositoryImpl>()),
+                        context.read<TransactionRepositoryImpl>(),
+                      ),
                       addTransactionUseCase: AddTransactionUseCase(
-                          context.read<TransactionRepositoryImpl>()),
+                        context.read<TransactionRepositoryImpl>(),
+                      ),
                       updateTransactionUseCase: UpdateTransactionUseCase(
-                          context.read<TransactionRepositoryImpl>()),
+                        context.read<TransactionRepositoryImpl>(),
+                      ),
                       deleteTransactionUseCase: DeleteTransactionUseCase(
-                          context.read<TransactionRepositoryImpl>()),
+                        context.read<TransactionRepositoryImpl>(),
+                      ),
                       getTransactionByIdUseCase: GetTransactionByIdUseCase(
                         context.read<TransactionRepositoryImpl>(),
                       ),
