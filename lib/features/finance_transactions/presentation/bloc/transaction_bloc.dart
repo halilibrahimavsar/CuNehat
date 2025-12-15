@@ -1,5 +1,4 @@
 import 'package:cunehat/core/utils/error_handler.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
@@ -67,10 +66,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       // 1. Add transaction to database
-      final model = TransactionModel.fromEntity(event.transaction);
-      await addTransactionUseCase(model);
+      await addTransactionUseCase(event.transaction);
 
-      emit(TransactionActionSuccess('${model.title} başarıyla eklendi'));
+      emit(TransactionActionSuccess(
+          '${event.transaction.title} başarıyla eklendi'));
     } catch (e) {
       emit(TransactionError(
           'İşlem eklenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
@@ -83,10 +82,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       // 2. Update transaction in database
-      final model = TransactionModel.fromEntity(event.transaction);
-      await updateTransactionUseCase(model);
+      await updateTransactionUseCase(event.transaction);
 
-      emit(TransactionActionSuccess('${model.title} başarıyla güncellendi'));
+      emit(TransactionActionSuccess(
+          '${event.transaction.title} başarıyla güncellendi'));
     } catch (e) {
       emit(TransactionError(
           'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
