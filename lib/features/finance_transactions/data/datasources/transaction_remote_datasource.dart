@@ -79,13 +79,18 @@ class TransactionFirestoreDataSource implements TransactionDataRepository {
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
       // ✅ FIXED: Use transaction.id (already set by UI layer)
-      if (transaction.id.isEmpty) {
+      if (transaction.id == null) {
         throw ValidationException('Transaction ID boş olamaz');
+      } else if (transaction.userId.isEmpty) {
+        throw ValidationException('Kullanıcı ID boş olamaz');
+      } else {
+        final data = transaction.toJson();
+        await _firestore
+            .collection('transactions')
+            .doc(transaction.id)
+            .set(data);
+        return transaction.id!;
       }
-      final data = transaction.toJson();
-
-      await _firestore.collection('transactions').doc(transaction.id).set(data);
-      return transaction.id;
     } on FirebaseException catch (e) {
       throw ServerException('Firebase hatası: ${e.message}', e);
     } catch (e) {

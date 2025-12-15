@@ -80,12 +80,14 @@ class TransactionHiveDataSource implements TransactionDataRepository {
 
       // ✅ FIXED: Use transaction.id (already set by UI layer)
       // No need to generate new ID here
-      if (transaction.id.isEmpty) {
+      if (transaction.id == null) {
         throw ValidationException('Transaction ID boş olamaz');
+      } else if (transaction.userId.isEmpty) {
+        throw ValidationException('Kullanıcı ID boş olamaz');
+      } else {
+        await box.put(transaction.id, transaction);
+        return transaction.id!;
       }
-
-      await box.put(transaction.id, transaction);
-      return transaction.id;
     } catch (e) {
       throw CacheException('İşlem eklenirken hata oluştu', e);
     }

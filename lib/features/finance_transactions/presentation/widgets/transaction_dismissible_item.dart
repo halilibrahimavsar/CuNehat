@@ -18,7 +18,7 @@ class TransactionDismissibleItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: Key(transaction.id),
+      key: Key(transaction.id ?? ''),
       direction: DismissDirection.horizontal,
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) {

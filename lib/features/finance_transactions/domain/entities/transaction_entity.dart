@@ -5,7 +5,7 @@ import 'package:equatable/equatable.dart';
 
 /// ✅ FIXED: ID is optional in constructor (will be set by repository)
 class TransactionEntity extends Equatable {
-  final String id;
+  final String? id;
   final String userId;
   final String walletId;
   final String title;
@@ -16,7 +16,7 @@ class TransactionEntity extends Equatable {
   final TransactionTypeModel type;
 
   const TransactionEntity({
-    required this.id,
+    this.id,
     required this.userId,
     required this.walletId,
     required this.title,

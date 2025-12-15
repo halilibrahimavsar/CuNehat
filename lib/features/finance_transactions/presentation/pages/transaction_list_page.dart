@@ -88,9 +88,11 @@ class TransactionListPage extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      context.read<TransactionBloc>().add(
-            DeleteTransactionEvent(transaction.id),
-          );
+      if (transaction.id != null) {
+        context.read<TransactionBloc>().add(
+              DeleteTransactionEvent(transaction.id!),
+            );
+      }
     }
   }
 }

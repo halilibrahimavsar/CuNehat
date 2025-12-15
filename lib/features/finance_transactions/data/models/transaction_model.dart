@@ -121,7 +121,7 @@ class TransactionModel extends TransactionEntity {
 
   @override
   @HiveField(0)
-  String get id => super.id;
+  String? get id => super.id;
 
   @override
   @HiveField(1)
