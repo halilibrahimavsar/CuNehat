@@ -36,7 +36,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionLoading());
 
     try {
-      print("CALLLED.............");
       final transactions = await getTransactionsGroupedUseCase(
         GetTransactionsGroupedParams(
           userId: event.userId,

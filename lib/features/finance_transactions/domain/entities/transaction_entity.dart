@@ -1,4 +1,3 @@
-import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
 
@@ -14,7 +13,7 @@ class TransactionEntity extends Equatable {
   final TransactionTypeModel type;
 
   const TransactionEntity({
-    this.id,
+    required this.id,
     required this.userId,
     required this.walletId,
     required this.title,
@@ -25,30 +24,10 @@ class TransactionEntity extends Equatable {
     required this.type,
   });
 
-  factory TransactionEntity.create({
-    required String userId,
-    required String walletId,
-    required String title,
-    required String tag,
-    required double amount,
-    required DateTime date,
-    required String time,
-    required TransactionTypeModel type,
-  }) {
-    return TransactionEntity(
-      id: UidGenerator.generateV7(),
-      userId: userId,
-      walletId: walletId,
-      title: title,
-      tag: tag,
-      amount: amount,
-      date: date,
-      time: time,
-      type: type,
-    );
-  }
-
   TransactionEntity copyWith({
+    String? id,
+    String? userId,
+    String? walletId,
     String? title,
     String? tag,
     double? amount,
@@ -57,9 +36,9 @@ class TransactionEntity extends Equatable {
     TransactionTypeModel? type,
   }) {
     return TransactionEntity(
-      id: id, // preserve id
-      userId: userId, // preserve id
-      walletId: walletId, // preserve id
+      id: id,
+      userId: userId ?? this.userId,
+      walletId: walletId ?? this.walletId,
       title: title ?? this.title,
       tag: tag ?? this.tag,
       amount: amount ?? this.amount,

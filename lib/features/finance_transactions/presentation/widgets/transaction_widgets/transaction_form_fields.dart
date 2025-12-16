@@ -288,26 +288,19 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         _controller.selectedTime.minute,
       );
 
-      final transaction = _isEditMode
-          ? widget.initialTransaction!.copyWith(
-              title: _controller.titleController.text.trim(),
-              tag: _controller.selectedCategoryId!,
-              amount: double.parse(_controller.amountController.text.trim()),
-              date: combinedDateTime,
-              time: AppFormatters.dateTime.format(combinedDateTime),
-            )
-          : TransactionEntity.create(
-              userId: widget.userId, //  Will be set by sheet handler
-              walletId: widget.walletId,
-              title: _controller.titleController.text.trim(),
-              tag: _controller.selectedCategoryId!,
-              amount: double.parse(_controller.amountController.text.trim()),
-              date: combinedDateTime,
-              time: AppFormatters.dateTime.format(combinedDateTime),
-              type: widget.isExpense
-                  ? TransactionTypeModel.expense
-                  : TransactionTypeModel.income,
-            );
+      final transaction = TransactionEntity(
+        id: _isEditMode ? widget.initialTransaction!.id : null,
+        userId: widget.userId, //  Will be set by sheet handler
+        walletId: widget.walletId,
+        title: _controller.titleController.text.trim(),
+        tag: _controller.selectedCategoryId!,
+        amount: double.parse(_controller.amountController.text.trim()),
+        date: combinedDateTime,
+        time: AppFormatters.dateTime.format(combinedDateTime),
+        type: widget.isExpense
+            ? TransactionTypeModel.expense
+            : TransactionTypeModel.income,
+      );
 
       widget.onSave(transaction);
     } catch (e) {

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
@@ -8,6 +9,13 @@ class AddTransactionUseCase {
   AddTransactionUseCase(this.repository);
 
   Future<String> call(TransactionEntity params) async {
+    print("*********");
+    print(params.toJson());
+    if (params.id == null) {
+      print("Generating id...");
+      params = params.copyWith(id: UidGenerator.generateV7());
+    }
+    print("id: ${params.id}");
     return await repository.addTransaction(params);
   }
 }
@@ -64,6 +72,12 @@ class UpdateTransactionUseCase {
   UpdateTransactionUseCase(this.repository);
 
   Future<void> call(TransactionEntity params) async {
+    print("*********");
+    print(params.toJson());
+    if (params.id == null) {
+      params = params.copyWith(id: null);
+    }
+    print("id: ${params.id}");
     return await repository.updateTransaction(params);
   }
 }
