@@ -20,11 +20,9 @@ final class GetWalletsEvent extends WalletEvent {
 
 /// Yeni cüzdan oluştur
 final class CreateWalletEvent extends WalletEvent {
-  final String userId;
-
   final WalletEntity wallet;
 
-  const CreateWalletEvent(this.wallet, this.userId);
+  const CreateWalletEvent(this.wallet);
 
   @override
   List<Object> get props => [wallet];

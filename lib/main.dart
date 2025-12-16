@@ -120,6 +120,8 @@ class CuNehatEngine extends StatelessWidget {
                       deleteWalletUseCase: WalletDeleteUseCase(
                         context.read<WalletRepositoryImpl>(),
                       ),
+                      // walletBalanceSyncUseCase:
+                      //     context.read<WalletBalanceSyncUseCase>(),
                       setActiveWalletUseCase: WalletSetActiveUseCase(
                         context.read<WalletRepositoryImpl>(),
                       ),

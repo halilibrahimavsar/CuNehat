@@ -8,9 +8,9 @@ class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({required this.dataSource});
 
   @override
-  Future<void> createWallet(WalletEntity wallet) async {
+  Future<String> createWallet(WalletEntity wallet) async {
     final model = WalletModel.fromEntity(wallet);
-    await dataSource.createWallet(model);
+    return await dataSource.createWallet(model);
   }
 
   @override

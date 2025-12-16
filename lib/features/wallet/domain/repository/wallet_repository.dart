@@ -1,7 +1,7 @@
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 
 abstract class WalletRepository {
-  Future<void> createWallet(WalletEntity wallet);
+  Future<String> createWallet(WalletEntity wallet);
   Future<List<WalletEntity>> getWallets(String userId);
   Future<void> updateWallet(WalletEntity wallet);
   Future<void> deleteWallet(String walletId);

@@ -307,7 +307,6 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
     final name = _nameController.text.trim();
     final balance = double.parse(_balanceController.text.trim());
-    final userId = widget.userId;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
     final createdAt = DateTime.now();
@@ -325,7 +324,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     if (isEditMode) {
       context.read<WalletBloc>().add(UpdateWalletEvent(wallet));
     } else {
-      context.read<WalletBloc>().add(CreateWalletEvent(wallet, userId));
+      context.read<WalletBloc>().add(CreateWalletEvent(wallet));
     }
   }
 

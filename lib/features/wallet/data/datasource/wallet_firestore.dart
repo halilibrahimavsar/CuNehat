@@ -4,12 +4,13 @@ import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 
 class WalletFirestoreDataSource implements WalletDataRepository {
   @override
-  Future<void> createWallet(WalletModel wallet) async {
+  Future<String> createWallet(WalletModel wallet) async {
     await FirebaseFirestore.instance
         .collection('wallets')
         .doc(wallet
             .id) // hivedaki create walletta olduğu gibi, yeni id verirsek hangisini sececeğini bilemez
         .set(wallet.toJson());
+    return wallet.id!;
   }
 
   @override

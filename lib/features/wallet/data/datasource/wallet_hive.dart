@@ -21,11 +21,12 @@ class WalletHiveDataSource implements WalletDataRepository {
   }
 
   @override
-  Future<void> createWallet(WalletModel wallet) async {
+  Future<String> createWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
 
     await box.put(
         wallet.id, wallet); // Firestore'daki kaydedilen document ID gibi
+    return wallet.id!;
   }
 
   @override

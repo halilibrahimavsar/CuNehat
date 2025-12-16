@@ -7,11 +7,10 @@ class WalletCreateUseCase {
   final WalletRepository repository;
   WalletCreateUseCase(this.repository);
 
-  Future<void> call(WalletEntity wallet) async {
-    if (wallet.id == null) {
-      wallet = wallet.copyWith(id: UidGenerator.generateV7());
-    }
-    await repository.createWallet(wallet); // ✅ await eklendi
+  Future<String> call(WalletEntity wallet) async {
+    final walletWithId = wallet.copyWith(id: UidGenerator.generateV7());
+    final id = await repository.createWallet(walletWithId);
+    return id;
   }
 }
 

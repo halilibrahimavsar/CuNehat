@@ -57,7 +57,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         // after creation, set it as active
         try {
           await setActiveWalletUseCase.call(
-            userId: event.userId,
+            userId: event.wallet.userId,
             walletId: event.wallet.id!,
           );
         } catch (e) {

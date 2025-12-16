@@ -6,7 +6,7 @@ abstract class WalletDataRepository {
     required String userId,
     required String newActiveWalletId,
   });
-  Future<void> createWallet(WalletModel wallet);
+  Future<String> createWallet(WalletModel wallet);
   Future<List<WalletModel>> getWallets(String userId);
   Future<void> updateWallet(WalletModel wallet);
   Future<void> deleteWallet(String walletId);
