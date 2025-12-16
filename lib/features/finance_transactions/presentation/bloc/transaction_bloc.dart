@@ -64,8 +64,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     try {
-      // 1. Add transaction to database
-      await addTransactionUseCase(event.transaction);
+      // ID oluşturma sorumluluğu Usecase'de.
+      // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
+      // Örnek: final entityWithId = event.transaction.copyWith(id: UidGenerator.generateWithUserId(event.transaction.userId));
+      await addTransactionUseCase(event.transaction); // Usecase ID'yi halleder.
 
       emit(TransactionActionSuccess(
           '${event.transaction.title} başarıyla eklendi'));

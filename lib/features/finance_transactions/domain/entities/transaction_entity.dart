@@ -36,7 +36,7 @@ class TransactionEntity extends Equatable {
     TransactionTypeModel? type,
   }) {
     return TransactionEntity(
-      id: id,
+      id: id ?? this.id,
       userId: userId ?? this.userId,
       walletId: walletId ?? this.walletId,
       title: title ?? this.title,
