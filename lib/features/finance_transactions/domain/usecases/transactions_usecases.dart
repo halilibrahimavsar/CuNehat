@@ -1,3 +1,4 @@
+import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
@@ -72,12 +73,10 @@ class UpdateTransactionUseCase {
   UpdateTransactionUseCase(this.repository);
 
   Future<void> call(TransactionEntity params) async {
-    print("*********");
-    print(params.toJson());
     if (params.id == null) {
-      params = params.copyWith(id: null);
+      throw ValidationException(
+          'Transaction ID cannot be null for update operation');
     }
-    print("id: ${params.id}");
     return await repository.updateTransaction(params);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
@@ -41,6 +42,10 @@ class WalletUpdateUseCase {
   WalletUpdateUseCase(this.repository);
 
   Future<void> call(WalletEntity wallet) async {
+    if (wallet.id == null) {
+      throw ValidationException(
+          'Wallet ID cannot be null for update operation');
+    }
     await repository.updateWallet(wallet); // ✅ await eklendi
   }
 }
