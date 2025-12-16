@@ -92,7 +92,7 @@ class WalletModel extends HiveObject {
   }) {
     return WalletModel(
       id: UidGenerator
-          .generateWithUserId(), // burada ilk id yi veriyoruz, Geri kalanında zaten bir id kullanılacak
+          .generateV7(), // burada ilk id yi veriyoruz, Geri kalanında zaten bir id kullanılacak
       userId: userId,
       name: name,
       balance: balance,

@@ -36,7 +36,7 @@ class TransactionEntity extends Equatable {
     required TransactionTypeModel type,
   }) {
     return TransactionEntity(
-      id: UidGenerator.generateWithUserId(),
+      id: UidGenerator.generateV7(),
       userId: userId,
       walletId: walletId,
       title: title,
