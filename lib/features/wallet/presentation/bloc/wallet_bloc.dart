@@ -27,6 +27,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       try {
         await getWalletsUseCase.call(event.userId).then(
           (wallets) {
+            print(wallets);
             if (wallets.isEmpty) {
               emit(const NoWalletSt());
             } else {
@@ -53,12 +54,15 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     // ========== CÜZDAN OLUŞTUR ==========
     on<CreateWalletEvent>((event, emit) async {
       try {
-        await createWalletUseCase.call(event.wallet);
+        // 1. UseCase'i çağır ve oluşturulan yeni ID'yi al.
+        final newWalletId = await createWalletUseCase.call(event.wallet);
+
         // after creation, set it as active
         try {
+          // 2. Dönen yeni ID'yi kullanarak cüzdanı aktif yap.
           await setActiveWalletUseCase.call(
             userId: event.wallet.userId,
-            walletId: event.wallet.id!,
+            walletId: newWalletId,
           );
         } catch (e) {
           emit(WalletErrorSt('Aktif cüzdan ayarlanamadı: ${e.toString()}'));

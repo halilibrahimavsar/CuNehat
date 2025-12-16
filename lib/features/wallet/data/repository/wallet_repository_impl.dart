@@ -19,8 +19,11 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<List<WalletEntity>> getWallets(String userId) {
-    return dataSource.getWallets(userId);
+  Future<List<WalletEntity>> getWallets(String userId) async {
+    // 1. Veri kaynağından Model listesini al.
+    final walletModels = await dataSource.getWallets(userId);
+    // 2. Model listesini Entity listesine dönüştür ve döndür.
+    return walletModels.map((model) => model as WalletEntity).toList();
   }
 
   @override

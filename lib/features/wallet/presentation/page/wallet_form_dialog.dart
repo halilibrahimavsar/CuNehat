@@ -312,18 +312,26 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     final createdAt = DateTime.now();
     final sortOrder = DateTime.now().millisecondsSinceEpoch;
 
-    final WalletEntity wallet = widget.wallet!.copyWith(
-      name: name,
-      balance: balance,
-      colorHex: colorHex,
-      iconName: iconName,
-      createdAt: createdAt,
-      sortOrder: sortOrder,
-    );
-
     if (isEditMode) {
+      final WalletEntity wallet = widget.wallet!.copyWith(
+        name: name,
+        balance: balance,
+        colorHex: colorHex,
+        iconName: iconName,
+      );
       context.read<WalletBloc>().add(UpdateWalletEvent(wallet));
     } else {
+      final WalletEntity wallet = WalletEntity(
+        id: null, // ID usecase'de oluşturulacak
+        userId: widget.userId,
+        name: name,
+        balance: balance,
+        colorHex: colorHex,
+        iconName: iconName,
+        createdAt: createdAt,
+        sortOrder: sortOrder,
+        isActive: false, // Başlangıçta false
+      );
       context.read<WalletBloc>().add(CreateWalletEvent(wallet));
     }
   }
