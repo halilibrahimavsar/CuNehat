@@ -3,13 +3,13 @@
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_data_repository.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
 
 /// ========== WALLET BALANCE SYNC USE CASE ==========
 ///
 /// ✅ FIXED: Recalculates balance from ALL transactions (not incremental)
 class WalletBalanceSyncUseCase {
-  final WalletRepository walletRepository;
+  final WalletDataRepository walletRepository;
   final TransactionDataRepository transactionDataSource;
 
   WalletBalanceSyncUseCase({

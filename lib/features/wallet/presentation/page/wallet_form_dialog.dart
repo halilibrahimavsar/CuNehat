@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,7 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 Future<void> showCreateEditDialog({
   required BuildContext context,
   required String userId,
-  WalletModel? wallet,
+  WalletEntity? wallet,
   required VoidCallback onSuccess,
   required Function(String error) onError,
 }) async {
@@ -37,7 +37,7 @@ Future<void> showCreateEditDialog({
 /// **Cüzdan Form Dialog Widget**
 class _WalletFormDialog extends StatefulWidget {
   final String userId;
-  final WalletModel? wallet;
+  final WalletEntity? wallet;
   final VoidCallback onSuccess;
   final Function(String error) onError;
 
@@ -307,37 +307,26 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
     final name = _nameController.text.trim();
     final balance = double.parse(_balanceController.text.trim());
+    final userId = widget.userId;
+    final colorHex = _selectedColorHex;
+    final iconName = _selectedIconName;
+    final createdAt = DateTime.now();
+    final sortOrder = DateTime.now().millisecondsSinceEpoch;
+
+    final WalletEntity wallet = widget.wallet!.copyWith(
+      name: name,
+      balance: balance,
+      colorHex: colorHex,
+      iconName: iconName,
+      createdAt: createdAt,
+      sortOrder: sortOrder,
+    );
 
     if (isEditMode) {
-      _updateWallet(name, balance);
+      context.read<WalletBloc>().add(UpdateWalletEvent(wallet));
     } else {
-      _createWallet(name, balance);
+      context.read<WalletBloc>().add(CreateWalletEvent(wallet, userId));
     }
-  }
-
-  /// Yeni cüzdan oluştur
-  void _createWallet(String name, double balance) {
-    final wallet = WalletModel.create(
-      userId: widget.userId,
-      name: name,
-      balance: balance,
-      colorHex: _selectedColorHex,
-      iconName: _selectedIconName,
-      sortOrder: DateTime.now().millisecondsSinceEpoch,
-    );
-    context.read<WalletBloc>().add(CreateWalletEvent(wallet, widget.userId));
-  }
-
-  /// Mevcut cüzdanı güncelle
-  void _updateWallet(String name, double balance) {
-    final updatedWallet = widget.wallet!.copyWith(
-      name: name,
-      balance: balance,
-      colorHex: _selectedColorHex,
-      iconName: _selectedIconName,
-    );
-
-    context.read<WalletBloc>().add(UpdateWalletEvent(updatedWallet));
   }
 
   /// BLoC state değişikliklerini dinle

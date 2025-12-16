@@ -8,8 +8,8 @@ import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
 import 'package:cunehat/features/transfer/presentation/widgets/transfer_dialog.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
@@ -238,7 +238,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   }
 
   /// Wallet list
-  Widget _buildWalletList(List<WalletModel> wallets) {
+  Widget _buildWalletList(List<WalletEntity> wallets) {
     return ListView.builder(
       controller: widget.scrollController,
       padding:
@@ -255,7 +255,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
             onTap: () => context.read<WalletBloc>().add(
                   SetActiveWalletEvent(
                     userId: widget.userId,
-                    walletId: wallet.id,
+                    walletId: wallet.id!,
                   ),
                 ),
             onEdit: () => _editWallet(context, wallet),
@@ -333,7 +333,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     );
   }
 
-  void _editWallet(BuildContext context, WalletModel wallet) {
+  void _editWallet(BuildContext context, WalletEntity wallet) {
     showCreateEditDialog(
       context: context,
       userId: widget.userId,
@@ -347,12 +347,12 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     );
   }
 
-  void _deleteWallet(BuildContext context, WalletModel wallet) {
+  void _deleteWallet(BuildContext context, WalletEntity wallet) {
     ConfirmDeleteDialog.show(
       context,
       title: wallet.name,
       onDelete: () {
-        context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id));
+        context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
         SnackbarHelper.showSuccess(context, '🗑️ Cüzdan silindi');
       },
     );
@@ -360,7 +360,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
   Future<void> _showTransferDialog(
     BuildContext context,
-    List<WalletModel> wallets,
+    List<WalletEntity> wallets,
   ) async {
     final transferUseCase = TransferMoneyUseCase(
       context.read<WalletRepositoryImpl>().dataSource,

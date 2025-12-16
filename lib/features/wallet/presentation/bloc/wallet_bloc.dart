@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:equatable/equatable.dart';
 
@@ -58,7 +58,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         try {
           await setActiveWalletUseCase.call(
             userId: event.userId,
-            walletId: event.wallet.id,
+            walletId: event.wallet.id!,
           );
         } catch (e) {
           emit(WalletErrorSt('Aktif cüzdan ayarlanamadı: ${e.toString()}'));

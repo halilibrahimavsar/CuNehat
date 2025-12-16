@@ -1,11 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
 class WalletCardWidget extends StatelessWidget {
-  final WalletModel wallet;
+  final WalletEntity wallet;
   // final bool wallet.isActive;
   final VoidCallback onTap;
   final VoidCallback onEdit;

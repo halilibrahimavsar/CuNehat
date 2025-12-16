@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
-class WalletFirestoreDataSource implements WalletRepository {
+class WalletFirestoreDataSource implements WalletDataRepository {
   @override
   Future<void> createWallet(WalletModel wallet) async {
     await FirebaseFirestore.instance
@@ -64,5 +64,17 @@ class WalletFirestoreDataSource implements WalletRepository {
     // Kullanıcı belgesinde aktif cüzdan ID'sini saklamaya devam edebilirsiniz.
     // final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
     // await userRef.update({'activeWalletId': newActiveWalletId});
+  }
+
+  @override
+  Future<WalletModel?> getActiveWallet(String userId) async {
+    final walletsRef = FirebaseFirestore.instance.collection('wallets');
+    final querySnapshot =
+        await walletsRef.where('userId', isEqualTo: userId).get();
+    final activeWallet = querySnapshot.docs.firstWhere(
+      (doc) => doc.data()['isActive'] == true,
+      orElse: () => querySnapshot.docs.first,
+    );
+    return WalletModel.fromJson(activeWallet.id, activeWallet.data());
   }
 }

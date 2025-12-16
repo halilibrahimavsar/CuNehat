@@ -22,7 +22,7 @@ final class GetWalletsEvent extends WalletEvent {
 final class CreateWalletEvent extends WalletEvent {
   final String userId;
 
-  final WalletModel wallet;
+  final WalletEntity wallet;
 
   const CreateWalletEvent(this.wallet, this.userId);
 
@@ -32,7 +32,7 @@ final class CreateWalletEvent extends WalletEvent {
 
 /// Cüzdan güncelle
 final class UpdateWalletEvent extends WalletEvent {
-  final WalletModel wallet;
+  final WalletEntity wallet;
 
   const UpdateWalletEvent(this.wallet);
 

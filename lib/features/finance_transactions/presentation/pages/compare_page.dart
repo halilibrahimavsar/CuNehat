@@ -1,11 +1,11 @@
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/compare_contents.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
 class CompareView extends StatefulWidget {
   final String userId;
-  final WalletModel wallet;
+  final WalletEntity wallet;
   final DateTime startDate;
   final DateTime endDate;
   final List<TransactionEntity> allTransactions;

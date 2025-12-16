@@ -1,4 +1,5 @@
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
 /// ========== CÜZDAN OLUŞTUR ==========
@@ -6,7 +7,10 @@ class WalletCreateUseCase {
   final WalletRepository repository;
   WalletCreateUseCase(this.repository);
 
-  Future<void> call(WalletModel wallet) async {
+  Future<void> call(WalletEntity wallet) async {
+    if (wallet.id == null) {
+      wallet = wallet.copyWith(id: UidGenerator.generateV7());
+    }
     await repository.createWallet(wallet); // ✅ await eklendi
   }
 }
@@ -27,7 +31,7 @@ class WalletGetUseCase {
   WalletGetUseCase(this.repository);
 
   // ✅ Stream döndürüyor, await'e gerek yok
-  Future<List<WalletModel>> call(String userId) {
+  Future<List<WalletEntity>> call(String userId) {
     return repository.getWallets(userId);
   }
 }
@@ -37,7 +41,7 @@ class WalletUpdateUseCase {
   final WalletRepository repository;
   WalletUpdateUseCase(this.repository);
 
-  Future<void> call(WalletModel wallet) async {
+  Future<void> call(WalletEntity wallet) async {
     await repository.updateWallet(wallet); // ✅ await eklendi
   }
 }

@@ -8,8 +8,8 @@ sealed class WalletState extends Equatable {
 }
 
 final class WalletLoadedSt extends WalletState {
-  final List<WalletModel> wallets;
-  final WalletModel? activeWallet;
+  final List<WalletEntity> wallets;
+  final WalletEntity? activeWallet;
   const WalletLoadedSt(this.wallets, this.activeWallet);
 }
 

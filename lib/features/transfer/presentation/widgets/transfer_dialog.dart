@@ -5,7 +5,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
 /// **Transfer Money Dialog**
@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 Future<bool?> showTransferDialog({
   required BuildContext context,
   required String userId,
-  required List<WalletModel> wallets,
+  required List<WalletEntity> wallets,
   required TransferMoneyUseCase transferUseCase,
   String? preSelectedWalletId,
 }) async {
@@ -31,7 +31,7 @@ Future<bool?> showTransferDialog({
 
 class _TransferDialog extends StatefulWidget {
   final String userId;
-  final List<WalletModel> wallets;
+  final List<WalletEntity> wallets;
   final TransferMoneyUseCase transferUseCase;
   final String? preSelectedWalletId;
 

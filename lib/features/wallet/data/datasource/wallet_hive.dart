@@ -1,8 +1,8 @@
+import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-class WalletHiveDataSource implements WalletRepository {
+class WalletHiveDataSource implements WalletDataRepository {
   static const String _boxName = 'wallets';
   static const String _usersBoxName = 'users';
 
@@ -23,10 +23,6 @@ class WalletHiveDataSource implements WalletRepository {
   @override
   Future<void> createWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
-    // Event ile idyi vermezsek oluşturulurken farklı bir id verilir ve
-    // burada farklı bir id oluşturulacağı için hangisine sececeğini bilemez
-    // final id = UidGenerator.generateWithUserId();
-    // final newWallet = wallet.copyWith(id: wallet.id);
 
     await box.put(
         wallet.id, wallet); // Firestore'daki kaydedilen document ID gibi
@@ -73,5 +69,17 @@ class WalletHiveDataSource implements WalletRepository {
   Future<void> updateWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
     await box.put(wallet.id, wallet);
+  }
+
+  @override
+  Future<WalletModel?> getActiveWallet(String userId) async {
+    final usersBox = await _getUserBox();
+    final userData = usersBox.get(userId, defaultValue: {}) as Map;
+    final activeWalletId = userData['activeWalletId'] as String?;
+    if (activeWalletId != null) {
+      final box = await _getWalletBox();
+      return box.get(activeWalletId);
+    }
+    return null;
   }
 }

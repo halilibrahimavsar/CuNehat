@@ -15,7 +15,7 @@ import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.d
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/core/shared/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
-import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -149,7 +149,7 @@ class _HomePageState extends State<HomePage>
                   case null:
                     return const NoWalletView(infoText: "Cüzdan oluşturunuz");
                   case true:
-                    _loadTransactions(userId, activeWalletId);
+                    _loadTransactions(userId, activeWalletId!);
                     return _buildBody(
                       context: context,
                       userId: userId,
@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage>
     required String userId,
     required WalletLoadedSt walletState,
   }) {
-    final String walletId = walletState.activeWallet!.id;
+    final String walletId = walletState.activeWallet!.id!;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -256,7 +256,7 @@ class _HomePageState extends State<HomePage>
     BuildContext context,
     SliderState value,
     String userId,
-    WalletModel activeWallet,
+    WalletEntity activeWallet,
   ) {
     switch (value) {
       case SliderState.compare:
@@ -265,14 +265,14 @@ class _HomePageState extends State<HomePage>
         TransactionSheetHandler.showExpenseSheet(
           context,
           userId,
-          activeWallet.id,
+          activeWallet.id!,
         );
         break;
       case SliderState.income:
         TransactionSheetHandler.showIncomeSheet(
           context,
           userId,
-          activeWallet.id,
+          activeWallet.id!,
         );
         break;
     }

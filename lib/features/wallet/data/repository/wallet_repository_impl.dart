@@ -1,14 +1,16 @@
+import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 
 class WalletRepositoryImpl implements WalletRepository {
-  // Basically we are using polymorphic to access the data soruce.
-  WalletRepository dataSource;
+  WalletDataRepository dataSource;
   WalletRepositoryImpl({required this.dataSource});
 
   @override
-  Future<void> createWallet(WalletModel wallet) async {
-    await dataSource.createWallet(wallet);
+  Future<void> createWallet(WalletEntity wallet) async {
+    final model = WalletModel.fromEntity(wallet);
+    await dataSource.createWallet(model);
   }
 
   @override
@@ -17,7 +19,7 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<List<WalletModel>> getWallets(String userId) {
+  Future<List<WalletEntity>> getWallets(String userId) {
     return dataSource.getWallets(userId);
   }
 
@@ -29,7 +31,8 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Future<void> updateWallet(WalletModel wallet) async {
-    await dataSource.updateWallet(wallet);
+  Future<void> updateWallet(WalletEntity wallet) async {
+    final model = WalletModel.fromEntity(wallet);
+    await dataSource.updateWallet(model);
   }
 }
