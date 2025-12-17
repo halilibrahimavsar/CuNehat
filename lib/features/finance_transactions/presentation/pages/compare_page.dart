@@ -3,15 +3,16 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/compa
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
-class CompareView extends StatefulWidget {
+class CompareView extends StatelessWidget {
+  // ✅ Stateless
   final String userId;
   final WalletEntity wallet;
   final DateTime startDate;
   final DateTime endDate;
-  final List<TransactionEntity> allTransactions;
+  final List<TransactionEntity> allTransactions; // ✅ Props
 
   const CompareView({
-    super.key,
+    super.key, // ✅ Unique key
     required this.userId,
     required this.wallet,
     required this.startDate,
@@ -20,27 +21,17 @@ class CompareView extends StatefulWidget {
   });
 
   @override
-  State<CompareView> createState() => _CompareViewState();
-}
-
-class _CompareViewState extends State<CompareView> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return CompareContent(
-      combinedList: widget.allTransactions,
+      combinedList: allTransactions,
       isBalanceVisible: ValueNotifier<bool>(true),
-      walletName: widget.wallet.name,
+      walletName: wallet.name,
       walletIcon: Icon(
-        Icons.wallet, // WalletIcons.getIcon(widget.wallet.iconName)
+        Icons.wallet,
         color: Colors.white,
       ),
-      balance: widget.wallet.balance,
-      initialBalance: widget.wallet.balance,
+      balance: wallet.balance,
+      initialBalance: wallet.balance,
     );
   }
 }

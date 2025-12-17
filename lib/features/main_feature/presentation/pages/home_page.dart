@@ -210,27 +210,32 @@ class _HomePageState extends State<HomePage>
                   child: CubeAnimationView(
                     controller: _controller,
                     firstView: TransactionListPage(
+                      key: const ValueKey('expense-list'), // ✅ Unique key
                       type: TransactionTypeModel.expense,
                       userId: userId,
                       walletId: walletId,
-                      groupedTransactions: transactionState.groupedTransactions,
+                      groupedTransactions:
+                          transactionState.groupedTransactions, // ✅ Veriyi geç
                     ),
                     secondView: TransactionListPage(
+                      key: const ValueKey('income-list'), // ✅ Unique key
                       type: TransactionTypeModel.income,
                       userId: userId,
                       walletId: walletId,
-                      groupedTransactions: transactionState.groupedTransactions,
+                      groupedTransactions:
+                          transactionState.groupedTransactions, // ✅ Veriyi geç
                     ),
                     thirdView: CompareView(
+                      key: const ValueKey('compare-view'), // ✅ Unique key
                       userId: userId,
                       wallet: walletState.activeWallet!,
                       startDate: _startDate,
                       endDate: _endDate,
-                      allTransactions: transactionState.allTransactions,
+                      allTransactions:
+                          transactionState.allTransactions, // ✅ Veriyi geç
                     ),
                   ),
                 );
-
               default:
                 return const SizedBox.shrink();
             }
