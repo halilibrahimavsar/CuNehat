@@ -1,6 +1,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
@@ -9,20 +10,20 @@ import '../../domain/entities/transaction_entity.dart';
 import '../bloc/transaction_event.dart';
 import '../widgets/transaction_dismissible_item.dart';
 
-/// ✅ CLEAN ARCH: Sadece props alır, kendi state'i yok
-/// Parent'tan gelen veriyi render eder
 class TransactionListPage extends StatelessWidget {
   final TransactionTypeModel type;
   final String userId;
   final String walletId;
   final Map<DateTime, List<TransactionEntity>> groupedTransactions;
+  final TransactionViewType viewType;
 
   const TransactionListPage({
-    super.key, // ✅ Unique key kullan
+    super.key,
     required this.type,
     required this.userId,
     required this.walletId,
     required this.groupedTransactions,
+    this.viewType = TransactionViewType.list,
   });
 
   @override
@@ -37,35 +38,23 @@ class TransactionListPage extends StatelessWidget {
 
     // ✅ Boş durumda placeholder göster
     if (filteredTransactions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              type == TransactionTypeModel.expense
-                  ? Icons.shopping_cart_outlined
-                  : Icons.account_balance_wallet_outlined,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              type == TransactionTypeModel.expense
-                  ? 'Henüz gider kaydı yok, sol alt butona basarak ekleyebilirsiniz'
-                  : 'Henüz gelir kaydı yok sağ alt butona basarak ekleyebilirsiniz',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
+      return _placeHolder();
     }
 
-    // ✅ Transaction listesini render et
+    // ✅ Seçilen görünüme göre render et
+    switch (viewType) {
+      case TransactionViewType.list:
+        return _buildListView(context, filteredTransactions);
+      case TransactionViewType.timeline:
+        return _buildTimelineView(context, filteredTransactions);
+    }
+  }
+
+  // ========================================
+  // 🎨 RENDER: LIST VIEW (Original)
+  // ========================================
+  Widget _buildListView(BuildContext context,
+      Map<DateTime, List<TransactionEntity>> filteredTransactions) {
     return ListView.builder(
       key: PageStorageKey<String>(
           'transaction-list-${type.name}'), // ✅ Scroll pozisyonunu koru
@@ -150,6 +139,125 @@ class TransactionListPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  // ========================================
+  // 🎨 RENDER: TIMELINE VIEW (New)
+  // ========================================
+  Widget _buildTimelineView(BuildContext context,
+      Map<DateTime, List<TransactionEntity>> filteredTransactions) {
+    final sortedDates = filteredTransactions.keys.toList()
+      ..sort((a, b) => b.compareTo(a)); // En yeni tarih en üstte
+
+    return ListView.builder(
+      key: PageStorageKey<String>('timeline-${type.name}'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      itemCount: sortedDates.length,
+      itemBuilder: (context, index) {
+        final date = sortedDates[index];
+        final items = filteredTransactions[date]!;
+
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // --- SOL TARAF: TIMELINE ÇİZGİSİ VE TARİH ---
+              _buildTimelineIndicator(
+                  context, date, index == 0, index == sortedDates.length - 1),
+
+              // --- SAĞ TARAF: İŞLEM KARTLARI (TREE NODES) ---
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24, left: 12),
+                  child: Column(
+                    children: items.map((transaction) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: TransactionDismissibleItem(
+                          transaction: transaction,
+                          onEdit: () => _showEditSheet(context, transaction),
+                          onDelete: () =>
+                              _deleteTransaction(context, transaction),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTimelineIndicator(
+      BuildContext context, DateTime date, bool isFirst, bool isLast) {
+    return SizedBox(
+      width: 60,
+      child: Column(
+        children: [
+          // Tarih Balonu (Günün günü: örn 15)
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: type == TransactionTypeModel.expense
+                  ? Colors.red.shade50
+                  : Colors.green.shade50,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: type == TransactionTypeModel.expense
+                    ? Colors.red.shade200
+                    : Colors.green.shade200,
+                width: 2,
+              ),
+            ),
+            child: Text(
+              date.day.toString(),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: type == TransactionTypeModel.expense
+                    ? Colors.red.shade800
+                    : Colors.green.shade800,
+              ),
+            ),
+          ),
+          // Dikey Çizgi (Tree Trunk)
+          Expanded(
+            child: Container(width: 2, color: Colors.grey.withOpacity(0.3)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Center _placeHolder() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            type == TransactionTypeModel.expense
+                ? Icons.shopping_cart_outlined
+                : Icons.account_balance_wallet_outlined,
+            size: 64,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            type == TransactionTypeModel.expense
+                ? 'Henüz gider kaydı yok, sol alt butona basarak ekleyebilirsiniz'
+                : 'Henüz gelir kaydı yok sağ alt butona basarak ekleyebilirsiniz',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 

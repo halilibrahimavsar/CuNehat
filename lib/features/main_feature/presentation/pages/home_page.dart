@@ -15,6 +15,7 @@ import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.d
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/core/shared/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
+import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
@@ -34,6 +35,7 @@ class _HomePageState extends State<HomePage>
   late final AnimationController _controller;
   late DateTime _startDate;
   late DateTime _endDate;
+  TransactionViewType _currentViewType = TransactionViewType.list;
 
   @override
   void initState() {
@@ -180,7 +182,13 @@ class _HomePageState extends State<HomePage>
         FilterView(
           endDate: _endDate,
           startDate: _startDate,
-          onTap: () => _showDateRangePicker(userId, walletId),
+          currentViewType: _currentViewType,
+          onViewTypeChanged: (newType) {
+            setState(() {
+              _currentViewType = newType;
+            });
+          },
+          onDateTap: () => _showDateRangePicker(userId, walletId),
         ),
         BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, transactionState) {
@@ -216,6 +224,7 @@ class _HomePageState extends State<HomePage>
                       walletId: walletId,
                       groupedTransactions:
                           transactionState.groupedTransactions, // ✅ Veriyi geç
+                      viewType: _currentViewType,
                     ),
                     secondView: TransactionListPage(
                       key: const ValueKey('income-list'), // ✅ Unique key
@@ -224,6 +233,7 @@ class _HomePageState extends State<HomePage>
                       walletId: walletId,
                       groupedTransactions:
                           transactionState.groupedTransactions, // ✅ Veriyi geç
+                      viewType: _currentViewType,
                     ),
                     thirdView: CompareView(
                       key: const ValueKey('compare-view'), // ✅ Unique key
