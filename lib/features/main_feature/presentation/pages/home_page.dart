@@ -92,13 +92,13 @@ class _HomePageState extends State<HomePage>
       top: false,
       child: AnimatedScaffoldWrapper(
         key: scaffoldKey,
-        drawer: const SharedDrawer(),
+        drawer: const ModernSharedDrawer(),
         appBar: PreferredSize(
           preferredSize: const Size(double.maxFinite, 50),
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              return SharedAppbar(currentSliderValue: _controller.value);
+              return ModernSharedAppbar(currentSliderValue: _controller.value);
             },
           ),
         ),
