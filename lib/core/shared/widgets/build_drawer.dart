@@ -1,4 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +8,7 @@ class SharedDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Drawer(
       elevation: 1,
       child: ListView(
@@ -16,26 +18,27 @@ class SharedDrawer extends StatelessWidget {
           DrawerHeader(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text(
-                  'CuNehat',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  backgroundImage: NetworkImage(
+                    FirebaseAuth
+                            .instance.currentUser?.providerData[0].photoURL ??
+                        "assets/images/logo.jpg",
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
-                  'Finansal Yönetim',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  user?.displayName ?? "Anonymous",
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -60,11 +63,6 @@ class SharedDrawer extends StatelessWidget {
               context.push(AppRoutes.investment);
             },
           ),
-
-          // Future menu items can be added here:
-          // - Analytics/Reports
-          // - Export Data
-          // - Help/About
         ],
       ),
     );

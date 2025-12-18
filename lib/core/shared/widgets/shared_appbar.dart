@@ -4,9 +4,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// **SharedAppbar**: Reactive app bar with wallet integration
 ///
@@ -93,7 +95,80 @@ class _SharedAppbarState extends State<SharedAppbar> {
           ),
         ),
       ),
-      title: _buildTitle(context, currentValue),
+      title: BlocBuilder<WalletBloc, WalletState>(
+        builder: (context, state) {
+          switch (state) {
+            case WalletLoadedSt():
+              return Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      final scaffoldState = context.findAncestorStateOfType<
+                          AnimatedScaffoldWrapperState>();
+                      scaffoldState?.openDrawer();
+                    },
+                    icon: Icon(Icons.menu_rounded),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        state.activeWallet?.balance.toString() ?? "0",
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: _getContentColor(currentValue),
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            state.activeWallet?.name ??
+                                "Aktif cüzdan Bulunamadı",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: _getContentColor(currentValue),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                _getCurrentModeIcon(currentValue),
+                                size: 12,
+                                color: _getContentColor(currentValue)
+                                    .withOpacity(0.8),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _getCurrentModeText(currentValue),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: _getContentColor(currentValue)
+                                      .withOpacity(0.8),
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            case WalletLoadingSt():
+              return Center(
+                child: SingleChildScrollView(),
+              );
+            default:
+              return Text(
+                "Aktif cüzdan Bulunamadı",
+              );
+          }
+        },
+      ),
       actions: [
         // ✅ Wallet management button with badge
         IconButton(
@@ -109,131 +184,6 @@ class _SharedAppbarState extends State<SharedAppbar> {
             );
           },
           icon: const Icon(Icons.wallet),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTitle(BuildContext context, double currentValue) {
-    return Row(
-      children: [
-        // User Avatar (opens drawer)
-        GestureDetector(
-          onTap: () {
-            final scaffoldState =
-                context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
-            scaffoldState?.openDrawer();
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _getContentColor(currentValue).withOpacity(0.5),
-                width: 2,
-              ),
-            ),
-            child: CircleAvatar(
-              backgroundColor: Colors.transparent,
-              backgroundImage: NetworkImage(
-                FirebaseAuth.instance.currentUser?.providerData[0].photoURL ??
-                    "assets/images/logo.jpg",
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-
-        // ✅ Use shared WalletBloc for wallet info
-        Expanded(
-          child: Builder(
-            builder: (context) {
-              Widget userInfo = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    FirebaseAuth.instance.currentUser?.displayName ??
-                        "Anonymous",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _getContentColor(currentValue),
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        _getCurrentModeIcon(currentValue),
-                        size: 12,
-                        color: _getContentColor(currentValue).withOpacity(0.8),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _getCurrentModeText(currentValue),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color:
-                              _getContentColor(currentValue).withOpacity(0.8),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-
-              // ✅ Show active wallet info if loaded
-              if (true) {
-                userInfo = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // User name
-                    Text(
-                      FirebaseAuth.instance.currentUser?.displayName ??
-                          "Anonymous",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _getContentColor(currentValue),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    // Active wallet name
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.account_balance_wallet,
-                          size: 10,
-                          color:
-                              _getContentColor(currentValue).withOpacity(0.8),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            "activeWallet.name",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: _getContentColor(currentValue)
-                                  .withOpacity(0.8),
-                              fontWeight: FontWeight.w400,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              }
-
-              return userInfo;
-            },
-          ),
         ),
       ],
     );
