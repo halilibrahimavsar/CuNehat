@@ -68,7 +68,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
       // Örnek: final entityWithId = event.transaction.copyWith(id: UidGenerator.generateWithUserId(event.transaction.userId));
       await addTransactionUseCase(event.transaction); // Usecase ID'yi halleder.
-
+      await walletSyncUseCase.updateBalance(
+        event.transaction.userId,
+        event.transaction.isExpense,
+        event.transaction.amount,
+      );
       emit(TransactionActionSuccess(
           '${event.transaction.title} başarıyla eklendi'));
     } catch (e) {
@@ -84,6 +88,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       // 2. Update transaction in database
       await updateTransactionUseCase(event.transaction);
+      await walletSyncUseCase.updateBalance(
+        event.transaction.userId,
+        event.transaction.isExpense,
+        event.transaction.amount,
+      );
 
       emit(TransactionActionSuccess(
           '${event.transaction.title} başarıyla güncellendi'));

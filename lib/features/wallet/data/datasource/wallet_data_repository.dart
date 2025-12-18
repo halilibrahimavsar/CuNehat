@@ -10,4 +10,5 @@ abstract class WalletDataRepository {
   Future<List<WalletModel>> getWallets(String userId);
   Future<void> updateWallet(WalletModel wallet);
   Future<void> deleteWallet(String walletId);
+  Future<void> updateBalance(String userId, double balance);
 }

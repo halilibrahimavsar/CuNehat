@@ -78,4 +78,18 @@ class WalletFirestoreDataSource implements WalletDataRepository {
     );
     return WalletModel.fromJson(activeWallet.id, activeWallet.data());
   }
+
+  @override
+  Future<void> updateBalance(String userId, double balance) async {
+    final activeWallet = await getActiveWallet(userId);
+    if (activeWallet != null) {
+      print(
+          "----------------------active wallet balance update-------------- ");
+      print(balance);
+      print(activeWallet.balance);
+
+      final updatedWallet = activeWallet.copyWith(balance: balance);
+      await updateWallet(updatedWallet);
+    }
+  }
 }

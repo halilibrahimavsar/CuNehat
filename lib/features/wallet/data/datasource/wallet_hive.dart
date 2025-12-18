@@ -83,4 +83,13 @@ class WalletHiveDataSource implements WalletDataRepository {
     }
     return null;
   }
+
+  @override
+  Future<void> updateBalance(String userId, double balance) async {
+    final activeWallet = await getActiveWallet(userId);
+    if (activeWallet != null) {
+      final updatedWallet = activeWallet.copyWith(balance: balance);
+      await updateWallet(updatedWallet);
+    }
+  }
 }
