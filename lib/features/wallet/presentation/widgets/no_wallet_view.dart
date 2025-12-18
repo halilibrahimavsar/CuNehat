@@ -1,4 +1,6 @@
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class NoWalletView extends StatelessWidget {
   final String infoText;
@@ -21,6 +23,13 @@ class NoWalletView extends StatelessWidget {
             Text(
               infoText,
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                context.go(AppRoutes.wallet);
+              },
+              child: const Text('Yeni Cüzdan Oluştur'),
             ),
           ],
         ),
