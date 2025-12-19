@@ -93,7 +93,7 @@ class CuNehatEngine extends StatelessWidget {
 
                     return WalletBalanceSyncUseCase(
                       walletRepository: walletRepo.dataSource,
-                      transactionDataSource: transactionRepo.dataSource,
+                      transactionRepository: transactionRepo.dataSource,
                     );
                   },
                 ),

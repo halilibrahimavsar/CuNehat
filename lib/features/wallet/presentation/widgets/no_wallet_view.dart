@@ -1,12 +1,15 @@
-import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
+import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class NoWalletView extends StatelessWidget {
   final String infoText;
+  final bool showButton;
   const NoWalletView({
     super.key,
     required this.infoText,
+    this.showButton = true,
   });
 
   @override
@@ -25,11 +28,21 @@ class NoWalletView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                context.go(AppRoutes.wallet);
-              },
-              child: const Text('Yeni Cüzdan Oluştur'),
+            Visibility(
+              visible: showButton,
+              child: ElevatedButton(
+                onPressed: () {
+                  final scaffoldState = context
+                      .findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+                  scaffoldState?.openWalletDialog(
+                    WalletSheetContent(
+                      scrollController: ScrollController(),
+                      userId: FirebaseAuth.instance.currentUser!.uid,
+                    ),
+                  );
+                },
+                child: const Text('Yeni Cüzdan Oluştur'),
+              ),
             ),
           ],
         ),

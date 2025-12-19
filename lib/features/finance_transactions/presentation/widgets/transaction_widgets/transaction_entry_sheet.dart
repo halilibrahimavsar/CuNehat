@@ -26,12 +26,22 @@ class TransactionSheetHandler {
           isExpense: type == TransactionTypeModel.expense,
           initialTransaction: initialTransaction,
           onSave: (transaction) {
+            print("-------------------update screen-------------");
+            print("initial;");
+            print(initialTransaction);
+            print("new;");
+            print(transaction);
+            print("-------------------update screen-------------");
+
             Navigator.pop(sheetContext);
 
             // Send to BLoC
             if (initialTransaction != null) {
               context.read<TransactionBloc>().add(
-                    UpdateTransactionEvent(transaction),
+                    UpdateTransactionEvent(
+                      newTransaction: transaction,
+                      previousTransaction: initialTransaction,
+                    ),
                   );
             } else {
               context.read<TransactionBloc>().add(

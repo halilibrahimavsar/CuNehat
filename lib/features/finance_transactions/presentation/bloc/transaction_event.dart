@@ -38,12 +38,19 @@ class AddTransactionEvent extends TransactionEvent {
 }
 
 class UpdateTransactionEvent extends TransactionEvent {
-  final TransactionEntity transaction;
+  final TransactionEntity previousTransaction;
+  final TransactionEntity newTransaction;
 
-  const UpdateTransactionEvent(this.transaction);
+  const UpdateTransactionEvent({
+    required this.previousTransaction,
+    required this.newTransaction,
+  });
 
   @override
-  List<Object> get props => [transaction];
+  List<Object> get props => [
+        previousTransaction,
+        newTransaction,
+      ];
 }
 
 class DeleteTransactionEvent extends TransactionEvent {

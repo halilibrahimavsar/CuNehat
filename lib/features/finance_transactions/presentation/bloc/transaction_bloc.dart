@@ -13,7 +13,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final UpdateTransactionUseCase updateTransactionUseCase;
   final DeleteTransactionUseCase deleteTransactionUseCase;
   final GetTransactionByIdUseCase getTransactionByIdUseCase;
-  final WalletBalanceSyncUseCase walletSyncUseCase;
+  final WalletBalanceSyncUseCase
+      walletSyncUseCase; // this one is for updating wallet feature
 
   TransactionBloc({
     required this.getTransactionsGroupedUseCase,
@@ -55,7 +56,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       ));
     } catch (e) {
       emit(TransactionError(
-          'İşlemler yüklenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
+        'İşlemler yüklenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
+      ));
     }
   }
 
@@ -68,10 +70,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
       // Örnek: final entityWithId = event.transaction.copyWith(id: UidGenerator.generateWithUserId(event.transaction.userId));
       await addTransactionUseCase(event.transaction); // Usecase ID'yi halleder.
-      await walletSyncUseCase.updateBalance(
-        event.transaction.userId,
-        event.transaction.isExpense,
-        event.transaction.amount,
+      await walletSyncUseCase.addBalance(
+        userId: event.transaction.userId,
+        amount: event.transaction.amount,
+        isExpense: event.transaction.isExpense,
       );
       emit(TransactionActionSuccess(
           '${event.transaction.title} başarıyla eklendi'));
@@ -87,15 +89,16 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     try {
       // 2. Update transaction in database
-      await updateTransactionUseCase(event.transaction);
+      await updateTransactionUseCase(event.newTransaction);
       await walletSyncUseCase.updateBalance(
-        event.transaction.userId,
-        event.transaction.isExpense,
-        event.transaction.amount,
+        userId: event.newTransaction.userId,
+        isExpense: event.newTransaction.isExpense,
+        prevAmount: event.previousTransaction.amount,
+        newAmount: event.newTransaction.amount,
       );
 
       emit(TransactionActionSuccess(
-          '${event.transaction.title} başarıyla güncellendi'));
+          '${event.newTransaction.title} başarıyla güncellendi'));
     } catch (e) {
       emit(TransactionError(
           'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
@@ -112,6 +115,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       // 2. Delete from database
       await deleteTransactionUseCase(event.transactionId);
+      await walletSyncUseCase.deleteBalance(
+        userId: transaction.userId,
+        amount: transaction.amount,
+        isExpense: transaction.isExpense,
+      );
 
       // 3 Başarılı
       emit(TransactionActionSuccess("${transaction.title} silindi"));

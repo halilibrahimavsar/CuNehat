@@ -196,6 +196,7 @@ class _HomePageState extends State<HomePage>
               case TransactionActionSuccess():
                 SnackbarHelper.showSuccess(context, transactionState.message);
                 _loadTransactions(userId, walletId);
+                _loadWallets(); // update balance
                 break;
               case TransactionError():
                 SnackbarHelper.showError(context, transactionState.message);

@@ -222,6 +222,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       NoWalletSt() => const Center(
           child: NoWalletView(
             infoText: "Henüz cüzdan oluşturmadınız",
+            showButton: false,
           ),
         ),
       WalletLoadingSt() => const Center(
