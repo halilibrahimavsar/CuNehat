@@ -244,6 +244,7 @@ class _HomePageState extends State<HomePage>
                       endDate: _endDate,
                       allTransactions:
                           transactionState.allTransactions, // ✅ Veriyi geç
+                      viewType: _currentViewType,
                     ),
                   ),
                 );
