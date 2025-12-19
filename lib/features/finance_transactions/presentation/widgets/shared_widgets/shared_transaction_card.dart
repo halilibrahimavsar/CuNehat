@@ -1,9 +1,11 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:flutter/material.dart';
 
-class TransactionCard extends StatelessWidget {
-  const TransactionCard({
+class SharedTransactionCard extends StatelessWidget {
+  const SharedTransactionCard({
     super.key,
     required this.context,
     required this.item,

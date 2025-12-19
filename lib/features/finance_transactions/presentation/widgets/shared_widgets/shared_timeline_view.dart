@@ -1,15 +1,15 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/dismissable_widget.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/transaction_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/dismissable_widget.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_transaction_card.dart';
 import 'package:flutter/material.dart';
 
-class TimelineView extends StatelessWidget {
+class SharedTimelineView extends StatelessWidget {
   final List<TransactionWithBalance> transactions;
 
-  const TimelineView({super.key, required this.transactions});
+  const SharedTimelineView({super.key, required this.transactions});
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +70,7 @@ class TimelineView extends StatelessWidget {
                       // İşlem Kartları
                       ...items.map((item) => DismissableWidget(
                           item: item,
-                          child: TransactionCard(
+                          child: SharedTransactionCard(
                             context: context,
                             item: item,
                           ))),

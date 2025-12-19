@@ -2,7 +2,7 @@ import 'package:cunehat/features/finance_transactions/data/models/transaction_ty
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_form_fields.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

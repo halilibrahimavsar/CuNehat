@@ -1,9 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/compare_header.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/compare_list_view.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/compare_widgets/timeline_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/compare_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_list_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_timeline_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class CompareView extends StatelessWidget {
       ..sort((a, b) => b.date.compareTo(a.date));
 
     // ✅ Calculate running balance for each transaction
-    final transactionsWithBalance = _calculateRunningBalance(
+    final transactionsWithBalance = calculateRunningBalance(
       sortedTransactions,
       wallet.balance,
     );
@@ -73,8 +74,8 @@ class CompareView extends StatelessWidget {
               child: transactionsWithBalance.isEmpty
                   ? _buildEmptyState()
                   : viewType == TransactionViewType.list
-                      ? CompareListView(transactions: transactionsWithBalance)
-                      : TimelineView(
+                      ? SharedListView(transactions: transactionsWithBalance)
+                      : SharedTimelineView(
                           transactions: transactionsWithBalance,
                         ),
             ),
@@ -87,32 +88,6 @@ class CompareView extends StatelessWidget {
   // ========================================
   // 💰 CALCULATE RUNNING BALANCE
   // ========================================
-  List<TransactionWithBalance> _calculateRunningBalance(
-    List<TransactionEntity> transactions,
-    double finalBalance,
-  ) {
-    final result = <TransactionWithBalance>[];
-    double runningBalance = finalBalance;
-
-    // ✅ Work backwards from final balance
-    for (var i = 0; i < transactions.length; i++) {
-      final transaction = transactions[i];
-
-      result.add(TransactionWithBalance(
-        transaction: transaction,
-        balanceAfter: runningBalance,
-      ));
-
-      // Calculate balance BEFORE this transaction
-      if (transaction.isIncome) {
-        runningBalance -= transaction.amount;
-      } else {
-        runningBalance += transaction.amount;
-      }
-    }
-
-    return result;
-  }
 
   // ========================================
   // 🚫 EMPTY STATE
@@ -139,17 +114,4 @@ class CompareView extends StatelessWidget {
       ],
     );
   }
-}
-
-// ========================================
-// 📊 HELPER CLASS
-// ========================================
-class TransactionWithBalance {
-  final TransactionEntity transaction;
-  final double balanceAfter;
-
-  TransactionWithBalance({
-    required this.transaction,
-    required this.balanceAfter,
-  });
 }

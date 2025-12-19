@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_category.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_category.dart';
 import 'package:flutter/material.dart';
 
 class TransactionTitleField extends StatelessWidget {

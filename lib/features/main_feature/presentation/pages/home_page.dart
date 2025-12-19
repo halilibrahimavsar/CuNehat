@@ -9,7 +9,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_list_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
@@ -222,18 +222,19 @@ class _HomePageState extends State<HomePage>
                       key: const ValueKey('expense-list'), // ✅ Unique key
                       type: TransactionTypeModel.expense,
                       userId: userId,
-                      walletId: walletId,
-                      groupedTransactions:
-                          transactionState.groupedTransactions, // ✅ Veriyi geç
+                      wallet: walletState.activeWallet!,
+
+                      allTransactions:
+                          transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
                     ),
                     secondView: TransactionListPage(
                       key: const ValueKey('income-list'), // ✅ Unique key
                       type: TransactionTypeModel.income,
                       userId: userId,
-                      walletId: walletId,
-                      groupedTransactions:
-                          transactionState.groupedTransactions, // ✅ Veriyi geç
+                      wallet: walletState.activeWallet!,
+                      allTransactions:
+                          transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
                     ),
                     thirdView: CompareView(

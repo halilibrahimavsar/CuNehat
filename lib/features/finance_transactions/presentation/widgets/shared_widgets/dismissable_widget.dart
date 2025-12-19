@@ -1,8 +1,8 @@
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
