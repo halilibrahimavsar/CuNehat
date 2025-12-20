@@ -1,20 +1,43 @@
+// shared_widgets/shared_timeline_view.dart
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/dismissable_widget.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_transaction_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
 
-class SharedTimelineView extends StatelessWidget {
+class SharedTimelineView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
+  final FinanceMode mode;
+  final bool showBalanceAfter;
 
-  const SharedTimelineView({super.key, required this.transactions});
+  const SharedTimelineView({
+    super.key,
+    required this.transactions,
+    this.mode = FinanceMode.compare,
+    this.showBalanceAfter = true,
+  });
+
+  @override
+  State<SharedTimelineView> createState() => _SharedTimelineViewState();
+}
+
+class _SharedTimelineViewState extends State<SharedTimelineView> {
+  final Map<DateTime, bool> _expandedStates = {};
 
   @override
   Widget build(BuildContext context) {
+    // Veri İşleme (Mevcut mantık korundu)
+    final filteredTransactions = widget.mode == FinanceMode.compare
+        ? widget.transactions
+        : widget.transactions
+            .where((item) => widget.mode == FinanceMode.income
+                ? item.transaction.isIncome
+                : item.transaction.isExpense)
+            .toList();
+
     final grouped = <DateTime, List<TransactionWithBalance>>{};
-    for (var item in transactions) {
+    for (var item in filteredTransactions) {
       final date = DateTime(
         item.transaction.date.year,
         item.transaction.date.month,
@@ -26,184 +49,224 @@ class SharedTimelineView extends StatelessWidget {
     final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       itemCount: sortedDates.length,
       itemBuilder: (context, index) {
         final date = sortedDates[index];
         final items = grouped[date]!;
+        final isExpanded = _expandedStates[date] ?? true;
 
-        // --- GÜNLÜK RAPOR HESAPLAMA ---
-        final dailyIncome = items
-            .where((e) => e.transaction.isIncome)
-            .fold(0.0, (sum, e) => sum + e.transaction.amount);
-        final dailyExpense = items
-            .where((e) => e.transaction.isExpense)
-            .fold(0.0, (sum, e) => sum + e.transaction.amount);
-        final dailyNet = dailyIncome - dailyExpense;
-
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Sol Taraftaki Timeline Hattı
-              TimeLineDateView(
-                  date: date,
-                  isFirst: index == 0,
-                  isLast: index == sortedDates.length - 1),
-
-              // Sağ Taraftaki İçerik (Rapor + İşlemler)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 35),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 📊 GÜNLÜK MİNİ RAPOR PANELİ
-                      _buildDailyReportCard(
-                        dailyIncome,
-                        dailyExpense,
-                        dailyNet,
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // İşlem Kartları
-                      ...items.map((item) => DismissableWidget(
-                          item: item,
-                          child: SharedTransactionCard(
-                            context: context,
-                            item: item,
-                          ))),
-                    ],
-                  ),
-                ),
+        return Stack(
+          children: [
+            // 1. ADIM: Dinamik Sol Çizgi (Overflow yapmaz çünkü Stack içinde)
+            Positioned(
+              left: 15,
+              top: 40,
+              bottom: 0,
+              child: Container(
+                width: 2,
+                color: index == sortedDates.length - 1
+                    ? Colors.transparent // Son elemanın alt çizgisi yok
+                    : widget.mode.primaryColor.withOpacity(0.2),
               ),
-            ],
-          ),
+            ),
+
+            // 2. ADIM: Ana İçerik
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tarih ve Node Satırı
+                _buildDateHeaderRow(date, items, isExpanded),
+
+                // İşlemler Listesi
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) {
+                    return SizeTransition(
+                      sizeFactor: animation,
+                      axisAlignment: -1, // Yukarıdan aşağıya pürüzsüz açılış
+                      child: FadeTransition(opacity: animation, child: child),
+                    );
+                  },
+                  child: isExpanded
+                      ? Padding(
+                          key: ValueKey('list_$date'),
+                          padding: const EdgeInsets.only(
+                              left: 42, top: 4, bottom: 20),
+                          child: Column(
+                            children: items
+                                .map((item) => _buildTransactionNode(item))
+                                .toList(),
+                          ),
+                        )
+                      : const SizedBox(key: ValueKey('empty'), height: 16),
+                ),
+              ],
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildDailyReportCard(double income, double expense, double net) {
+  // Tarih Başlığı ve Yuvarlak Node (Düğüm) bir arada
+  Widget _buildDateHeaderRow(
+      DateTime date, List<TransactionWithBalance> items, bool isExpanded) {
+    final dailyIncome = items
+        .where((e) => e.transaction.isIncome)
+        .fold(0.0, (sum, e) => sum + e.transaction.amount);
+    final dailyExpense = items
+        .where((e) => e.transaction.isExpense)
+        .fold(0.0, (sum, e) => sum + e.transaction.amount);
+    final dailyNet = dailyIncome - dailyExpense;
+
+    return GestureDetector(
+      onTap: () => setState(() => _expandedStates[date] = !isExpanded),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            // Timeline Node (Yuvarlak)
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: widget.mode.primaryColor, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.mode.primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                  )
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  date.day.toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: widget.mode.primaryColor,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Başlık ve Özet
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppFormatters.dateLong.format(date),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  _buildDailySummary(dailyIncome, dailyExpense, dailyNet),
+                ],
+              ),
+            ),
+            Icon(
+              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: Colors.grey,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDailySummary(double income, double expense, double net) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.blue.shade100.withOpacity(0.5)),
+        borderRadius: BorderRadius.all(Radius.circular(25)),
+        color: Colors.blueGrey.shade50,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildMiniStat(Icons.trending_up, Colors.green, income),
-          _buildMiniStat(Icons.trending_down, Colors.red, expense),
-          _buildMiniStat(Icons.account_balance,
-              net >= 0 ? Colors.blue.shade700 : Colors.orange.shade700, net,
-              isBold: true),
+          if (income > 0) ...[
+            Text(AppFormatters.currency.format(income),
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600)),
+          ],
+          if (expense > 0) ...[
+            Text(AppFormatters.currency.format(expense),
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600)),
+          ],
+          Text(AppFormatters.currency.format(net),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: net >= 0 ? Colors.blue : Colors.orange,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  Widget _buildMiniStat(IconData icon, Color color, double amount,
-      {bool isBold = false}) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: color.withOpacity(0.7)),
-        const SizedBox(width: 4),
-        Text(
-          '${amount.toStringAsFixed(0)} ₺',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+  // İşlem Kartı (Node) - Görsel Tasarım
+  Widget _buildTransactionNode(TransactionWithBalance item) {
+    final t = item.transaction;
+    final color = t.isIncome ? Colors.green : Colors.red;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            t.isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+            size: 16,
             color: color,
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class TimeLineDateView extends StatelessWidget {
-  const TimeLineDateView({
-    super.key,
-    required this.date,
-    required this.isFirst,
-    required this.isLast,
-  });
-
-  final DateTime date;
-  final bool isFirst;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 70,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
-        children: [
-          // Üst Çizgi (İlk eleman değilse)
-          Container(
-            width: 2,
-            height: 10,
-            color: isFirst ? Colors.transparent : Colors.blue.withOpacity(0.2),
-          ),
-          // Tarih Balonu
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade600, Colors.blue.shade400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  date.day.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-                Text(
-                  AppFormatters.dateShort.format(date), // örn: "Ara"
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Alt Çizgi (Sürekli Hat)
+          const SizedBox(width: 12),
           Expanded(
-            child: Container(
-              width: 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.blue.withOpacity(0.5),
-                    isLast ? Colors.transparent : Colors.blue.withOpacity(0.1),
-                  ],
-                ),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(t.title,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: color)),
+                Text(t.tag,
+                    style:
+                        TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+              ],
             ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${t.isIncome ? '+' : '-'}${AppFormatters.currency.format(t.amount)}',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 13, color: color),
+              ),
+              if (widget.showBalanceAfter)
+                Text(
+                  'Kalan: ${AppFormatters.currency.format(item.balanceAfter)}',
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                ),
+            ],
           ),
         ],
       ),

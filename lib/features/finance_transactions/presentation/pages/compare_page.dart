@@ -2,6 +2,7 @@
 
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/compare_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_list_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_timeline_view.dart';
@@ -67,6 +68,7 @@ class CompareView extends StatelessWidget {
               startDate: startDate,
               endDate: endDate,
               allTransactions: allTransactions,
+              mode: FinanceMode.compare,
             ),
 
             // ========== TRANSACTION LIST ==========
@@ -74,9 +76,13 @@ class CompareView extends StatelessWidget {
               child: transactionsWithBalance.isEmpty
                   ? _buildEmptyState()
                   : viewType == TransactionViewType.list
-                      ? SharedListView(transactions: transactionsWithBalance)
+                      ? SharedListView(
+                          transactions: transactionsWithBalance,
+                          mode: FinanceMode.compare,
+                        )
                       : SharedTimelineView(
                           transactions: transactionsWithBalance,
+                          mode: FinanceMode.compare,
                         ),
             ),
           ],

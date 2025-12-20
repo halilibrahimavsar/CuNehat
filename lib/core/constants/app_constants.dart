@@ -148,6 +148,7 @@ class AppFormatters {
   static final DateFormat dateShort = DateFormat('dd.MM.yy', 'tr_TR');
   static final DateFormat dateLong = DateFormat('dd MMMM yyyy', 'tr_TR');
   static final DateFormat dateTime = DateFormat('dd.MM.yyyy HH:mm', 'tr_TR');
+  static final DateFormat time = DateFormat('HH:mm', 'tr_TR');
 
   static final NumberFormat currency = NumberFormat.currency(
     locale: 'tr_TR',

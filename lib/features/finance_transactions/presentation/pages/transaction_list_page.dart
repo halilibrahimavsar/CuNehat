@@ -1,5 +1,7 @@
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/compare_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_list_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_timeline_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
@@ -11,6 +13,8 @@ class TransactionListPage extends StatelessWidget {
   final TransactionTypeModel type;
   final String userId;
   final WalletEntity wallet;
+  final DateTime startDate;
+  final DateTime endDate;
   final List<TransactionEntity> allTransactions;
   final TransactionViewType viewType;
 
@@ -19,6 +23,8 @@ class TransactionListPage extends StatelessWidget {
     required this.type,
     required this.userId,
     required this.wallet,
+    required this.startDate,
+    required this.endDate,
     required this.allTransactions,
     this.viewType = TransactionViewType.list,
   });
@@ -42,14 +48,39 @@ class TransactionListPage extends StatelessWidget {
     if (transactionsWithBalance.isEmpty) {
       return _placeHolder();
     }
-
-    // ✅ Seçilen görünüme göre render et
-    switch (viewType) {
-      case TransactionViewType.list:
-        return SharedListView(transactions: transactionsWithBalance);
-      case TransactionViewType.timeline:
-        return SharedTimelineView(transactions: transactionsWithBalance);
-    }
+// ✅ Mode belirle (income veya expense)
+    final mode = type == TransactionTypeModel.income
+        ? FinanceMode.income
+        : FinanceMode.expense;
+    return Builder(
+      builder: (context) {
+        Widget listView;
+        // ✅ Görünüm tipine göre render et
+        switch (viewType) {
+          case TransactionViewType.list:
+            listView = SharedListView(
+              transactions: transactionsWithBalance,
+              mode: mode,
+            );
+          case TransactionViewType.timeline:
+            listView = SharedTimelineView(
+              transactions: transactionsWithBalance,
+              mode: mode,
+            );
+        }
+        return Column(
+          children: [
+            CompareHeader(
+              startDate: startDate,
+              endDate: endDate,
+              allTransactions: allTransactions,
+              mode: mode,
+            ),
+            Expanded(child: listView),
+          ],
+        );
+      },
+    );
   }
 
   Center _placeHolder() {

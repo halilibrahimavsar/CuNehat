@@ -223,7 +223,8 @@ class _HomePageState extends State<HomePage>
                       type: TransactionTypeModel.expense,
                       userId: userId,
                       wallet: walletState.activeWallet!,
-
+                      startDate: _startDate,
+                      endDate: _endDate,
                       allTransactions:
                           transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
@@ -233,6 +234,8 @@ class _HomePageState extends State<HomePage>
                       type: TransactionTypeModel.income,
                       userId: userId,
                       wallet: walletState.activeWallet!,
+                      startDate: _startDate,
+                      endDate: _endDate,
                       allTransactions:
                           transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
