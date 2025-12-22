@@ -234,44 +234,65 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
               offset: const Offset(0, 2)),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Icon(
-            t.isIncome ? Icons.arrow_upward : Icons.arrow_downward,
-            size: 16,
-            color: color,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(t.title,
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: color)),
-                Text(t.tag,
-                    style:
-                        TextStyle(fontSize: 10, color: Colors.grey.shade500)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
+              Icon(
+                t.isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 16,
+                color: color,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(t.title,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: color)),
+                    Text(t.tag,
+                        style: TextStyle(
+                            fontSize: 10, color: Colors.grey.shade500)),
+                  ],
+                ),
+              ),
               Text(
                 '${t.isIncome ? '+' : '-'}${AppFormatters.currency.format(t.amount)}',
                 style: TextStyle(
                     fontWeight: FontWeight.bold, fontSize: 13, color: color),
               ),
-              if (widget.showBalanceAfter)
-                Text(
-                  'İşlem sonrası cüzdan bakiyesi: ${AppFormatters.currency.format(item.balanceAfter)}',
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade900),
-                ),
             ],
           ),
+          if (widget.showBalanceAfter) ...[
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'İşlem sonrası bakiye : ',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  Text(
+                    AppFormatters.currency.format(item.balanceAfter),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          item.balanceAfter >= 0 ? Colors.blue : Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
