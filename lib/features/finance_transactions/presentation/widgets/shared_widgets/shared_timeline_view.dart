@@ -45,6 +45,10 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
       );
       grouped.putIfAbsent(date, () => []).add(item);
     }
+    // Başlangıçta hepsi kapalı olsun
+    for (var date in grouped.keys) {
+      _expandedStates.putIfAbsent(date, () => false);
+    }
 
     final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
@@ -263,8 +267,8 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
               ),
               if (widget.showBalanceAfter)
                 Text(
-                  'Kalan: ${AppFormatters.currency.format(item.balanceAfter)}',
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  'İşlem sonrası cüzdan bakiyesi: ${AppFormatters.currency.format(item.balanceAfter)}',
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade900),
                 ),
             ],
           ),

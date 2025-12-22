@@ -49,9 +49,9 @@ class _SharedListViewState extends State<SharedListView> {
     }
 
     // Başlangıçta hepsi kapalı olsun
-    grouped.keys.forEach((date) {
+    for (var date in grouped.keys) {
       _expandedStates.putIfAbsent(date, () => false);
-    });
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -125,16 +125,31 @@ class _SharedListViewState extends State<SharedListView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  AppFormatters.dateLong.format(date),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade800,
-                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      AppFormatters.dateLong.format(date),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                    Text(
+                                      '(${items.length} işlem)',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
                                     if (widget.mode != FinanceMode.expense)
                                       _buildMiniIndicator(
@@ -190,39 +205,39 @@ class _SharedListViewState extends State<SharedListView> {
                   ),
 
                   // İşlem sayısı
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${items.length} işlem',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          'Toplam: ${(dailyIncome + dailyExpense).toStringAsFixed(0)}₺',
-                          style: TextStyle(
-                            color: widget.mode.primaryColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(
+                  //     horizontal: 16,
+                  //     vertical: 10,
+                  //   ),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.grey.shade50,
+                  //     borderRadius: const BorderRadius.only(
+                  //       bottomLeft: Radius.circular(16),
+                  //       bottomRight: Radius.circular(16),
+                  //     ),
+                  //   ),
+                  //   child: Row(
+                  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //     children: [
+                  //       Text(
+                  //         '${items.length} işlem',
+                  //         style: TextStyle(
+                  //           color: Colors.grey.shade600,
+                  //           fontSize: 12,
+                  //         ),
+                  //       ),
+                  //       // Text(
+                  //       //   'Toplam: ${(dailyIncome + dailyExpense).toStringAsFixed(0)}₺',
+                  //       //   style: TextStyle(
+                  //       //     color: widget.mode.primaryColor,
+                  //       //     fontSize: 12,
+                  //       //     fontWeight: FontWeight.w600,
+                  //       //   ),
+                  //       // ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
             ),
