@@ -1,15 +1,28 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
-import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/core/utilities/date_range_helper.dart';
+import 'package:intl/intl.dart';
 
-class DateRangePicker extends StatefulWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// NASIL KULLANILIR?
+// ─────────────────────────────────────────────────────────────────────────────
+// showModernDateRangePicker(
+//   context: context,
+//   start: _startDate,
+//   end: _endDate,
+//   onApply: (start, end) {
+//     setState(() {
+//       _startDate = start;
+//       _endDate = end;
+//     });
+//   },
+// );
+// ─────────────────────────────────────────────────────────────────────────────
+
+class ModernDateRangePicker extends StatefulWidget {
   final DateTime initialStartDate;
   final DateTime initialEndDate;
   final void Function(DateTime startDate, DateTime endDate) onApply;
 
-  const DateRangePicker({
+  const ModernDateRangePicker({
     super.key,
     required this.initialStartDate,
     required this.initialEndDate,
@@ -17,66 +30,109 @@ class DateRangePicker extends StatefulWidget {
   });
 
   @override
-  State<DateRangePicker> createState() => _DateRangePickerState();
+  State<ModernDateRangePicker> createState() => _ModernDateRangePickerState();
 }
 
-class _DateRangePickerState extends State<DateRangePicker> {
+class _ModernDateRangePickerState extends State<ModernDateRangePicker> {
   late DateTime _startDate;
   late DateTime _endDate;
-  int _selectedIndex = -1; // -1 = custom
+  int _selectedIndex = -1;
+  static const int _maxDays = 45;
 
-  late final List<_QuickRange> _ranges;
+  // Tema Renkleri (Modern Mavi)
+  final Color _primaryColor = const Color(0xFF2563EB); // Modern Royal Blue
+  final Color _surfaceColor = const Color(0xFFEFF6FF); // Light Blue Surface
+
+  late final List<_QuickOption> _quickOptions;
 
   @override
   void initState() {
     super.initState();
-
     _startDate = widget.initialStartDate;
     _endDate = widget.initialEndDate;
-
-    _ranges = _buildQuickRanges();
-    _selectedIndex = _detectInitialIndex();
+    _quickOptions = _buildQuickOptions();
+    _checkInitialSelection();
   }
 
-  List<_QuickRange> _buildQuickRanges() {
+  // Tarihleri saatten arındırarak karşılaştırma yapar
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  // Başlangıçta hangi hızlı seçeneğin seçili olduğunu bulur
+  void _checkInitialSelection() {
+    _selectedIndex = -1;
+    for (int i = 0; i < _quickOptions.length; i++) {
+      final range = _quickOptions[i].range;
+      if (_isSameDay(_startDate, range.start) &&
+          _isSameDay(_endDate, range.end)) {
+        _selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  // Hızlı Seçenek Listesi (DateRangeHelper yerine burada tanımladık)
+  List<_QuickOption> _buildQuickOptions() {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Yardımcı fonksiyonlar
+    DateTime startOfWeek(DateTime date) =>
+        date.subtract(Duration(days: date.weekday - 1));
+    DateTime startOfMonth(DateTime date) => DateTime(date.year, date.month, 1);
+    DateTime endOfMonth(DateTime date) =>
+        DateTime(date.year, date.month + 1, 0);
+
     return [
-      _QuickRange('Bugün', DateRangeHelper.getTodayRange()),
-      _QuickRange('Dün', DateRangeHelper.getYesterdayRange()),
-      _QuickRange('Bu Hafta', DateRangeHelper.getWeekRange(now)),
-      _QuickRange('Geçen Hafta', DateRangeHelper.getLastWeekRange(now)),
-      _QuickRange('Bu Ay', DateRangeHelper.getMonthRange(now)),
-      _QuickRange(
+      _QuickOption('Bugün', DateTimeRange(start: today, end: today)),
+      _QuickOption(
+        'Dün',
+        DateTimeRange(
+          start: today.subtract(const Duration(days: 1)),
+          end: today.subtract(const Duration(days: 1)),
+        ),
+      ),
+      _QuickOption(
+        'Bu Hafta',
+        DateTimeRange(start: startOfWeek(today), end: today),
+      ),
+      _QuickOption(
+        'Geçen Hafta',
+        DateTimeRange(
+          start: startOfWeek(today.subtract(const Duration(days: 7))),
+          end: startOfWeek(today).subtract(const Duration(days: 1)),
+        ),
+      ),
+      _QuickOption(
+        'Bu Ay',
+        DateTimeRange(start: startOfMonth(today), end: today),
+      ),
+      _QuickOption(
         'Geçen Ay',
-        DateRangeHelper.getMonthRange(DateTime(now.year, now.month - 1)),
+        DateTimeRange(
+          start: startOfMonth(DateTime(today.year, today.month - 1)),
+          end: endOfMonth(DateTime(today.year, today.month - 1)),
+        ),
       ),
     ];
   }
 
-  int _detectInitialIndex() {
-    for (int i = 0; i < _ranges.length; i++) {
-      final r = _ranges[i].range;
-      if (_sameDay(_startDate, r.start) && _sameDay(_endDate, r.end)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
   Future<void> _pickCustomRange() async {
+    final now = DateTime.now();
+    _startDate = _startDate.isBefore(now) ? _startDate : now;
+    _endDate = _endDate.isBefore(now) ? _endDate : now;
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: now,
       initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.blue.shade700,
+              primary: _primaryColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
             ),
           ),
           child: child!,
@@ -84,78 +140,201 @@ class _DateRangePickerState extends State<DateRangePicker> {
       },
     );
 
-    if (picked == null) return;
-
-    setState(() {
-      _startDate = picked.start;
-      _endDate = picked.end;
-      _selectedIndex = -1;
-    });
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+        _selectedIndex = -1; // Özel seçim yapıldı, hızlı seçimi kaldır
+      });
+    }
   }
 
-  void _selectQuickRange(int index) {
-    final r = _ranges[index].range;
+  void _onQuickOptionTap(int index) {
     setState(() {
-      _startDate = r.start;
-      _endDate = r.end;
+      _startDate = _quickOptions[index].range.start;
+      _endDate = _quickOptions[index].range.end;
       _selectedIndex = index;
     });
   }
 
   void _apply() {
-    widget.onApply(_startDate, _endDate);
+    // Saatleri normalize et (Start: 00:00, End: 23:59)
+    final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
+    final end =
+        DateTime(_endDate.year, _endDate.month, _endDate.day, 23, 59, 59);
+
+    // Gelecek zaman kontrolü
+    final now = DateTime.now();
+    final safeEnd = end.isAfter(now) ? now : end;
+
+    widget.onApply(start, safeEnd);
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Gün farkını hesapla (Mutlak değer ve +1 ekleyerek)
+    final diff = _endDate.difference(_startDate).inDays.abs() + 1;
+    final isLimitExceeded = diff > _maxDays;
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(onClose: () => Navigator.pop(context)),
+            // 1. Üst Tutacak (Drag Handle)
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // 2. Başlık ve Kapat Butonu
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Tarih Aralığı',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: Colors.grey.shade600),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.grey.shade100,
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Divider(height: 1),
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _CustomRangeTile(
+                    // 3. Seçili Tarih Kartı (Hero Section)
+                    _SelectionCard(
                       start: _startDate,
                       end: _endDate,
-                      selected: _selectedIndex == -1,
+                      days: diff,
+                      isError: isLimitExceeded,
                       onTap: _pickCustomRange,
+                      primaryColor: _primaryColor,
                     ),
+
+                    // 4. Uyarı Mesajı (Sadece limit aşılınca görünür)
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: isLimitExceeded
+                          ? Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.red.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline,
+                                      color: Colors.red.shade700, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Maksimum $_maxDays gün seçebilirsiniz. Lütfen aralığı daraltın.',
+                                      style: TextStyle(
+                                          color: Colors.red.shade800,
+                                          fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+
                     const SizedBox(height: 24),
-                    _SectionTitle('HIZLI SEÇİM'),
+                    Text(
+                      'HIZLI SEÇİM',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _ranges.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 2.6,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemBuilder: (_, i) => _QuickTile(
-                        title: _ranges[i].title,
-                        selected: _selectedIndex == i,
-                        onTap: () => _selectQuickRange(i),
-                      ),
+
+                    // 5. Hızlı Seçim Grid'i
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: List.generate(_quickOptions.length, (index) {
+                        final isSelected = _selectedIndex == index;
+                        return _QuickChip(
+                          label: _quickOptions[index].title,
+                          isSelected: isSelected,
+                          primaryColor: _primaryColor,
+                          surfaceColor: _surfaceColor,
+                          onTap: () => _onQuickOptionTap(index),
+                        );
+                      }),
                     ),
                   ],
                 ),
               ),
             ),
-            _BottomActions(onApply: _apply),
+
+            // 6. Alt Buton Alanı
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: FilledButton(
+                onPressed: isLimitExceeded ? null : _apply,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'Uygula',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -163,189 +342,175 @@ class _DateRangePickerState extends State<DateRangePicker> {
   }
 }
 
-/* ───────────────────────── SUB WIDGETS ───────────────────────── */
+// ────────────────────── ALT BİLEŞENLER ──────────────────────
 
-class _QuickRange {
+class _QuickOption {
   final String title;
   final DateTimeRange range;
-
-  _QuickRange(this.title, this.range);
+  _QuickOption(this.title, this.range);
 }
 
-class _Header extends StatelessWidget {
-  final VoidCallback onClose;
-
-  const _Header({required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade700, Colors.blue.shade900],
-        ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.date_range, color: Colors.white),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Tarih Aralığı',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(Icons.close, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 12,
-        letterSpacing: 0.6,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey.shade600,
-      ),
-    );
-  }
-}
-
-class _QuickTile extends StatelessWidget {
-  final String title;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _QuickTile({
-    required this.title,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: selected ? Colors.blue.shade600 : Colors.grey.shade300,
-          width: selected ? 2 : 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Center(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              color: selected ? Colors.blue.shade700 : Colors.grey.shade800,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CustomRangeTile extends StatelessWidget {
+class _SelectionCard extends StatelessWidget {
   final DateTime start;
   final DateTime end;
-  final bool selected;
+  final int days;
+  final bool isError;
   final VoidCallback onTap;
+  final Color primaryColor;
 
-  const _CustomRangeTile({
+  const _SelectionCard({
     required this.start,
     required this.end,
-    required this.selected,
+    required this.days,
+    required this.isError,
     required this.onTap,
+    required this.primaryColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: selected ? Colors.blue.shade600 : Colors.grey.shade300,
-          width: selected ? 2 : 1,
+    final dateFormat = DateFormat('dd MMM yyyy', 'tr_TR');
+    final borderColor = isError ? Colors.red.shade300 : Colors.grey.shade200;
+    final iconColor = isError ? Colors.red : primaryColor;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderColor, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(
-          Icons.calendar_today,
-          color: selected ? Colors.blue.shade700 : Colors.grey,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.calendar_month_rounded, color: iconColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        dateFormat.format(start),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(Icons.arrow_forward_rounded,
+                            size: 14, color: Colors.grey),
+                      ),
+                      Text(
+                        dateFormat.format(end),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Özel aralık seçmek için dokunun',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isError ? Colors.red : Colors.grey.shade800,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$days gün',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
-        title: const Text(
-          'Özel Tarih Aralığı',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${AppFormatters.dateShort.format(start)} - ${AppFormatters.dateShort.format(end)}',
-        ),
-        trailing: selected
-            ? Icon(Icons.check_circle, color: Colors.blue.shade700)
-            : null,
       ),
     );
   }
 }
 
-class _BottomActions extends StatelessWidget {
-  final VoidCallback onApply;
+class _QuickChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color primaryColor;
+  final Color surfaceColor;
 
-  const _BottomActions({required this.onApply});
+  const _QuickChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.primaryColor,
+    required this.surfaceColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: onApply,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? surfaceColor : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? primaryColor : Colors.grey.shade200,
+              width: isSelected ? 1.5 : 1,
             ),
           ),
-          child: const Text('Uygula'),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? primaryColor : Colors.grey.shade700,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/* ───────────────────────── SHOW BOTTOM SHEET ───────────────────────── */
+// ────────────────────── HELPER FONKSİYONU ──────────────────────
 
-Future<void> showDateRangePickerBottomSheet({
+Future<void> showModernDateRangePicker({
   required BuildContext context,
   required DateTime start,
   required DateTime end,
@@ -355,10 +520,17 @@ Future<void> showDateRangePickerBottomSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => DateRangePicker(
-      initialStartDate: start,
-      initialEndDate: end,
-      onApply: onApply,
+    builder: (_) => Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75, // Ekranın %75'i
+        child: ModernDateRangePicker(
+          initialStartDate: start,
+          initialEndDate: end,
+          onApply: onApply,
+        ),
+      ),
     ),
   );
 }

@@ -301,7 +301,7 @@ class _HomePageState extends State<HomePage>
 
   /// ✅ UPDATED: Use shared DateRangePicker
   Future<void> _showDateRangePicker(String userId, String walletId) async {
-    await showDateRangePickerBottomSheet(
+    await showModernDateRangePicker(
       context: context,
       start: _startDate,
       end: _endDate,
