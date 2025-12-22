@@ -189,22 +189,25 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
         color: Colors.blueGrey.shade50,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (income > 0) ...[
-            Text(AppFormatters.currency.format(income),
-                style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.green,
-                    fontWeight: FontWeight.w600)),
-          ],
-          if (expense > 0) ...[
-            Text(AppFormatters.currency.format(expense),
-                style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.red,
-                    fontWeight: FontWeight.w600)),
-          ],
+          Text(
+            "Günün raporu :",
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          Text(AppFormatters.currency.format(income),
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.green,
+                  fontWeight: FontWeight.w600)),
+          Text(AppFormatters.currency.format(expense),
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600)),
           Text(AppFormatters.currency.format(net),
               style: TextStyle(
                   fontSize: 11,
@@ -274,7 +277,7 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'İşlem sonrası bakiye : ',
+                    'İşlem sonrası : ',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade800,

@@ -363,7 +363,7 @@ class _SharedListViewState extends State<SharedListView> {
                         widget.mode == FinanceMode.compare) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Kalan: ${AppFormatters.currency.format(item.balanceAfter)}',
+                        'İşlem sonrası : ${AppFormatters.currency.format(item.balanceAfter)}',
                         style: TextStyle(
                           fontSize: 10,
                           color: Colors.grey.shade500,
