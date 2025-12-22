@@ -54,9 +54,9 @@ class _HomePageState extends State<HomePage>
   }
 
   void _initDateRange() {
-    final now = DateRangeHelper.getMonthRange(DateTime.now());
-    _startDate = now['firstDate']!;
-    _endDate = now['lastDate']!;
+    final range = DateRangeHelper.getMonthRange(DateTime.now());
+    _startDate = range.start;
+    _endDate = range.end;
   }
 
   void _loadWallets() {
@@ -303,9 +303,9 @@ class _HomePageState extends State<HomePage>
   Future<void> _showDateRangePicker(String userId, String walletId) async {
     await showDateRangePickerBottomSheet(
       context: context,
-      initialStartDate: _startDate,
-      initialEndDate: _endDate,
-      onDateRangeSelected: (startDate, endDate) {
+      start: _startDate,
+      end: _endDate,
+      onApply: (startDate, endDate) {
         setState(() {
           _startDate = startDate;
           _endDate = endDate;
