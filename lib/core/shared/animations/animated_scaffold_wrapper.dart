@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 /// ========================================
@@ -37,7 +39,7 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
   late Animation<double> _walletRotationAnimation;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isWalletOpen = false;
+  final bool _isWalletOpen = false;
 
   @override
   void initState() {

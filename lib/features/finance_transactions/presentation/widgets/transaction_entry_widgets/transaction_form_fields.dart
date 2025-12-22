@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -187,7 +185,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _primaryColor.withOpacity(0.1),
+        color: _primaryColor.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Row(
@@ -195,7 +193,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _primaryColor.withOpacity(0.2),
+              color: _primaryColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -236,7 +234,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         onPressed: _controller.isSubmitting ? null : _handleSubmit,
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryColor,
-          disabledBackgroundColor: _primaryColor.withOpacity(0.5),
+          disabledBackgroundColor: _primaryColor.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

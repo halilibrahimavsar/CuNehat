@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -46,14 +44,14 @@ class CompareView extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue[50]!.withOpacity(0.3),
-            Colors.purple[50]!.withOpacity(0.2),
+            Colors.blue[50]!.withValues(alpha: 0.3),
+            Colors.purple[50]!.withValues(alpha: 0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

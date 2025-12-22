@@ -18,43 +18,36 @@ abstract class AppException implements Exception {
 
 /// Server exception - API/Backend errors
 class ServerException extends AppException {
-  ServerException([String message = 'Sunucu hatası oluştu', dynamic error])
-      : super(message, error);
+  ServerException([super.message = 'Sunucu hatası oluştu', super.error]);
 }
 
 /// Cache exception - Local storage errors
 class CacheException extends AppException {
-  CacheException([String message = 'Önbellek hatası oluştu', dynamic error])
-      : super(message, error);
+  CacheException([super.message = 'Önbellek hatası oluştu', super.error]);
 }
 
 /// Network exception - Internet connection errors
 class NetworkException extends AppException {
-  NetworkException([String message = 'İnternet bağlantısı yok', dynamic error])
-      : super(message, error);
+  NetworkException([super.message = 'İnternet bağlantısı yok', super.error]);
 }
 
 /// Authentication exception - Auth related errors
 class AuthenticationException extends AppException {
   AuthenticationException(
-      [String message = 'Kimlik doğrulama hatası', dynamic error])
-      : super(message, error);
+      [super.message = 'Kimlik doğrulama hatası', super.error]);
 }
 
 /// Validation exception - Input validation errors
 class ValidationException extends AppException {
-  ValidationException([String message = 'Geçersiz veri', dynamic error])
-      : super(message, error);
+  ValidationException([super.message = 'Geçersiz veri', super.error]);
 }
 
 /// Not found exception - Resource not found
 class NotFoundException extends AppException {
-  NotFoundException([String message = 'Kayıt bulunamadı', dynamic error])
-      : super(message, error);
+  NotFoundException([super.message = 'Kayıt bulunamadı', super.error]);
 }
 
 /// Permission exception - Permission denied
 class PermissionException extends AppException {
-  PermissionException([String message = 'İzin reddedildi', dynamic error])
-      : super(message, error);
+  PermissionException([super.message = 'İzin reddedildi', super.error]);
 }

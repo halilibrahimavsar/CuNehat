@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +46,7 @@ class WalletCardWidget extends StatelessWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -100,10 +98,10 @@ class WalletCardWidget extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.green.withOpacity(0.3),
+                          color: Colors.green.withValues(alpha: 0.3),
                         ),
                       ),
                       child: const Row(
@@ -140,7 +138,8 @@ class WalletCardWidget extends StatelessWidget {
                       label: const Text('Düzenle'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.blue,
-                        side: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                        side: BorderSide(
+                            color: Colors.blue.withValues(alpha: 0.3)),
                       ),
                     ),
                   ),
@@ -153,7 +152,8 @@ class WalletCardWidget extends StatelessWidget {
                         label: const Text('Sil'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
-                          side: BorderSide(color: Colors.red.withOpacity(0.3)),
+                          side: BorderSide(
+                              color: Colors.red.withValues(alpha: 0.3)),
                         ),
                       ),
                     ),

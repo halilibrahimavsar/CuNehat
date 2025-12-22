@@ -1,6 +1,3 @@
-// shared_widgets/shared_list_view.dart
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -80,7 +77,7 @@ class _SharedListViewState extends State<SharedListView> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -98,7 +95,8 @@ class _SharedListViewState extends State<SharedListView> {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: widget.mode.secondaryColor.withOpacity(0.1),
+                        color:
+                            widget.mode.secondaryColor.withValues(alpha: 0.1),
                         border: Border(
                           bottom: BorderSide(
                             color: Colors.grey.shade200,
@@ -203,41 +201,6 @@ class _SharedListViewState extends State<SharedListView> {
                       ),
                     ),
                   ),
-
-                  // İşlem sayısı
-                  // Container(
-                  //   padding: const EdgeInsets.symmetric(
-                  //     horizontal: 16,
-                  //     vertical: 10,
-                  //   ),
-                  //   decoration: BoxDecoration(
-                  //     color: Colors.grey.shade50,
-                  //     borderRadius: const BorderRadius.only(
-                  //       bottomLeft: Radius.circular(16),
-                  //       bottomRight: Radius.circular(16),
-                  //     ),
-                  //   ),
-                  //   child: Row(
-                  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //     children: [
-                  //       Text(
-                  //         '${items.length} işlem',
-                  //         style: TextStyle(
-                  //           color: Colors.grey.shade600,
-                  //           fontSize: 12,
-                  //         ),
-                  //       ),
-                  //       // Text(
-                  //       //   'Toplam: ${(dailyIncome + dailyExpense).toStringAsFixed(0)}₺',
-                  //       //   style: TextStyle(
-                  //       //     color: widget.mode.primaryColor,
-                  //       //     fontSize: 12,
-                  //       //     fontWeight: FontWeight.w600,
-                  //       //   ),
-                  //       // ),
-                  //     ],
-                  //   ),
-                  // ),
                 ],
               ),
             ),
@@ -251,9 +214,9 @@ class _SharedListViewState extends State<SharedListView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         text,
@@ -278,13 +241,13 @@ class _SharedListViewState extends State<SharedListView> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: transaction.isIncome
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -299,8 +262,8 @@ class _SharedListViewState extends State<SharedListView> {
                 margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: transaction.isIncome
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

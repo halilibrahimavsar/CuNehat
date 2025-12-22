@@ -1,6 +1,3 @@
-// ========================================
-// 📊 HELPER CLASS
-// ========================================
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
 class TransactionWithBalance {

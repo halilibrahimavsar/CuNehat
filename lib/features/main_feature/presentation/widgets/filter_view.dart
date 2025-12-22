@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +42,7 @@ class _FilterViewState extends State<FilterView> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -77,7 +75,7 @@ class _FilterViewState extends State<FilterView> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -113,11 +111,11 @@ class _FilterViewState extends State<FilterView> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _getViewTypeColor(widget.currentViewType)
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: _getViewTypeColor(widget.currentViewType)
-                        .withOpacity(0.3),
+                        .withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -331,12 +329,14 @@ class _FilterViewState extends State<FilterView> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? _getViewTypeColor(viewType).withOpacity(0.15)
+                            ? _getViewTypeColor(viewType)
+                                .withValues(alpha: 0.15)
                             : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isSelected
-                              ? _getViewTypeColor(viewType).withOpacity(0.3)
+                              ? _getViewTypeColor(viewType)
+                                  .withValues(alpha: 0.3)
                               : Colors.transparent,
                           width: 1,
                         ),
@@ -508,7 +508,7 @@ class _FilterViewState extends State<FilterView> {
                           )
                         : null,
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

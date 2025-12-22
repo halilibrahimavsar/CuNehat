@@ -1,4 +1,3 @@
-// lib/core/enums/finance_mode.dart
 import 'package:flutter/material.dart';
 
 enum FinanceMode {

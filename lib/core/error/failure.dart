@@ -20,40 +20,35 @@ abstract class Failure extends Equatable {
 
 /// Server failure - API/Backend errors
 class ServerFailure extends Failure {
-  const ServerFailure([String message = 'Sunucu hatası oluştu'])
-      : super(message);
+  const ServerFailure([super.message = 'Sunucu hatası oluştu']);
 }
 
 /// Cache failure - Local storage errors
 class CacheFailure extends Failure {
-  const CacheFailure([String message = 'Önbellek hatası oluştu'])
-      : super(message);
+  const CacheFailure([super.message = 'Önbellek hatası oluştu']);
 }
 
 /// Network failure - Internet connection errors
 class NetworkFailure extends Failure {
-  const NetworkFailure([String message = 'İnternet bağlantısı yok'])
-      : super(message);
+  const NetworkFailure([super.message = 'İnternet bağlantısı yok']);
 }
 
 /// Authentication failure - Auth related errors
 class AuthenticationFailure extends Failure {
-  const AuthenticationFailure([String message = 'Kimlik doğrulama hatası'])
-      : super(message);
+  const AuthenticationFailure([super.message = 'Kimlik doğrulama hatası']);
 }
 
 /// Validation failure - Input validation errors
 class ValidationFailure extends Failure {
-  const ValidationFailure([String message = 'Geçersiz veri']) : super(message);
+  const ValidationFailure([super.message = 'Geçersiz veri']);
 }
 
 /// Not found failure - Resource not found
 class NotFoundFailure extends Failure {
-  const NotFoundFailure([String message = 'Kayıt bulunamadı']) : super(message);
+  const NotFoundFailure([super.message = 'Kayıt bulunamadı']);
 }
 
 /// Permission failure - Permission denied
 class PermissionFailure extends Failure {
-  const PermissionFailure([String message = 'İzin reddedildi'])
-      : super(message);
+  const PermissionFailure([super.message = 'İzin reddedildi']);
 }

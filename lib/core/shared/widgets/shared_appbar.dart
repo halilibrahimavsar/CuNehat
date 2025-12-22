@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
-import 'package:cunehat/core/shared/widgets/Info_action_menu.dart';
+import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';

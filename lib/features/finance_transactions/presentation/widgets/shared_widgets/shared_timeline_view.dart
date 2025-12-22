@@ -1,6 +1,3 @@
-// shared_widgets/shared_timeline_view.dart
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -71,7 +68,7 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
                 width: 2,
                 color: index == sortedDates.length - 1
                     ? Colors.transparent // Son elemanın alt çizgisi yok
-                    : widget.mode.primaryColor.withOpacity(0.2),
+                    : widget.mode.primaryColor.withValues(alpha: 0.2),
               ),
             ),
 
@@ -141,7 +138,7 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
                 border: Border.all(color: widget.mode.primaryColor, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.mode.primaryColor.withOpacity(0.3),
+                    color: widget.mode.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                   )
                 ],
@@ -229,10 +226,10 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 4,
               offset: const Offset(0, 2)),
         ],

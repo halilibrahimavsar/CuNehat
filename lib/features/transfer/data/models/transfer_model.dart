@@ -10,55 +10,46 @@ part 'transfer_model.g.dart';
 class TransferModel extends TransferEntity {
   @HiveField(0)
   @override
-  final String id;
+  String get id => super.id;
 
   @HiveField(1)
   @override
-  final String userId;
+  String get userId => super.userId;
 
   @HiveField(2)
   @override
-  final String fromWalletId;
+  String get fromWalletId => super.fromWalletId;
 
   @HiveField(3)
   @override
-  final String toWalletId;
+  String get toWalletId => super.toWalletId;
 
   @HiveField(4)
   @override
-  final double amount;
+  double get amount => super.amount;
 
   @HiveField(5)
   @override
-  final String note;
+  String get note => super.note;
 
   @HiveField(6)
   @override
-  final DateTime date;
+  DateTime get date => super.date;
 
   @HiveField(7)
   @override
-  final String time;
+  String get time => super.time;
 
   const TransferModel({
-    required this.id,
-    required this.userId,
-    required this.fromWalletId,
-    required this.toWalletId,
-    required this.amount,
-    required this.note,
-    required this.date,
-    required this.time,
-  }) : super(
-          id: id,
-          userId: userId,
-          fromWalletId: fromWalletId,
-          toWalletId: toWalletId,
-          amount: amount,
-          note: note,
-          date: date,
-          time: time,
-        );
+    required super.id,
+    required super.userId,
+    required super.fromWalletId,
+    required super.toWalletId,
+    required super.amount,
+    required super.note,
+    required super.date,
+    required super.time,
+  });
 
   factory TransferModel.fromJson(String id, Map<String, dynamic> json) {
     return TransferModel(

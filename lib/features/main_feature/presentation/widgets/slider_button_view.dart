@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -239,13 +237,13 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                                 shape: BoxShape.circle,
                                 color: Colors.white,
                                 border: Border.all(
-                                    color:
-                                        _getActiveColor(value).withOpacity(0.5),
+                                    color: _getActiveColor(value)
+                                        .withValues(alpha: 0.5),
                                     width: 1.5),
                                 boxShadow: [
                                   BoxShadow(
                                       color: _getActiveColor(value)
-                                          .withOpacity(0.4),
+                                          .withValues(alpha: 0.4),
                                       blurRadius: 12,
                                       offset: const Offset(0, 6),
                                       spreadRadius: 2),
@@ -318,7 +316,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: color.withOpacity(opacity.clamp(0.0, 1.0)),
+              color: color.withValues(alpha: opacity.clamp(0.0, 1.0)),
               fontWeight: fontWeight,
               fontSize: 14,
               letterSpacing: 0.5,

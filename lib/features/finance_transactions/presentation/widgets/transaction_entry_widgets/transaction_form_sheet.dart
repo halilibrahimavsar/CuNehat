@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_category.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +21,8 @@ class TransactionTitleField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Başlık *',
         hintText: 'Örn: Market alışverişi',
-        prefixIcon: Icon(Icons.title, color: primaryColor.withOpacity(0.7)),
+        prefixIcon:
+            Icon(Icons.title, color: primaryColor.withValues(alpha: 0.7)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -57,8 +56,8 @@ class TransactionAmountField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Tutar *',
         hintText: '0.00',
-        prefixIcon:
-            Icon(Icons.attach_money, color: primaryColor.withOpacity(0.7)),
+        prefixIcon: Icon(Icons.attach_money,
+            color: primaryColor.withValues(alpha: 0.7)),
         suffixText: '₺',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -120,7 +119,7 @@ class TransactionCategorySelector extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? primaryColor.withOpacity(0.1)
+                      ? primaryColor.withValues(alpha: 0.1)
                       : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
@@ -235,9 +234,9 @@ class _DateTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: primaryColor.withOpacity(0.05),
+          color: primaryColor.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: primaryColor.withOpacity(0.2)),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -277,7 +276,8 @@ class TransactionNoteField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Not (Opsiyonel)',
         hintText: 'Açıklama ekleyin...',
-        prefixIcon: Icon(Icons.note, color: primaryColor.withOpacity(0.7)),
+        prefixIcon:
+            Icon(Icons.note, color: primaryColor.withValues(alpha: 0.7)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
