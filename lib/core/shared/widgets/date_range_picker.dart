@@ -289,11 +289,19 @@ class _ModernDateRangePickerState extends State<ModernDateRangePicker> {
                     ),
                     const SizedBox(height: 12),
 
-                    // 5. Hızlı Seçim Grid'i
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: List.generate(_quickOptions.length, (index) {
+                    // 5. Hızlı Seçim Grid'i (Wrap yerine GridView)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _quickOptions.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 3.5,
+                      ),
+                      itemBuilder: (context, index) {
                         final isSelected = _selectedIndex == index;
                         return _QuickChip(
                           label: _quickOptions[index].title,
@@ -302,7 +310,7 @@ class _ModernDateRangePickerState extends State<ModernDateRangePicker> {
                           surfaceColor: _surfaceColor,
                           onTap: () => _onQuickOptionTap(index),
                         );
-                      }),
+                      },
                     ),
                   ],
                 ),
@@ -375,77 +383,90 @@ class _SelectionCard extends StatelessWidget {
     final borderColor = isError ? Colors.red.shade300 : Colors.grey.shade200;
     final iconColor = isError ? Colors.red : primaryColor;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blue.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 4),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: borderColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.calendar_month_rounded, color: iconColor),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.calendar_month_rounded, color: iconColor),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        dateFormat.format(start),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            dateFormat.format(start),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Icon(Icons.arrow_forward_rounded,
+                                size: 14, color: Colors.grey),
+                          ),
+                          Text(
+                            dateFormat.format(end),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Icon(Icons.arrow_forward_rounded,
-                            size: 14, color: Colors.grey),
-                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        dateFormat.format(end),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        'Özel aralık seçmek için dokunun',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Özel aralık seçmek için dokunun',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Container(
+          ),
+        ),
+        Positioned(
+          bottom: -12,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isError ? Colors.red : Colors.grey.shade800,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white, width: 2),
               ),
               child: Text(
                 '$days gün',
@@ -456,9 +477,9 @@ class _SelectionCard extends StatelessWidget {
                 ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -487,7 +508,8 @@ class _QuickChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? surfaceColor : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
