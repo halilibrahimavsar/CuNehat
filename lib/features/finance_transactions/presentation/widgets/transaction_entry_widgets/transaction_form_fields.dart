@@ -1,7 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_category.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_sheet.dart';
 import 'package:flutter/material.dart';
@@ -53,10 +52,6 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
           minute: t.date.minute,
         ),
       );
-    } else {
-      // Set default category
-      final categories = TransactionCategory.getCategories(widget.isExpense);
-      _controller.setCategory(categories.first.id);
     }
   }
 

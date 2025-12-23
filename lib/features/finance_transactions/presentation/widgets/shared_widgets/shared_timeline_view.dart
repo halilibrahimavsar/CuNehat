@@ -253,6 +253,7 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: color)),
+                    // TODO : CHANGE TAG
                     Text(t.tag,
                         style: TextStyle(
                             fontSize: 10, color: Colors.grey.shade500)),

@@ -72,14 +72,7 @@ class TransactionAmountField extends StatelessWidget {
     );
   }
 }
-// lib/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_category_selector.dart
-// ✅ UPDATED VERSION - Replace the old TransactionCategorySelector in transaction_form_sheet.dart
 
-// import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
-// import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
-// import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart';
-// import 'package:flutter/material.dart';
-//
 class TransactionCategorySelector extends StatefulWidget {
   final bool isExpense;
   final String? selectedCategoryId;

@@ -2,7 +2,6 @@ import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 /// Show Category Form Dialog
 Future<bool?> showCategoryFormDialog({
@@ -243,7 +242,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
       } else {
         // Create new category
         final newCategory = CategoryModel(
-          id: const Uuid().v4(),
+          id: name,
           name: name,
           iconName: _selectedIcon,
           isExpense: widget.isExpense,
