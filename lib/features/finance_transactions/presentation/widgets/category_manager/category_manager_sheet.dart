@@ -263,7 +263,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
             const SizedBox(width: 16),
             Expanded(
               child: Text(
-                category.name,
+                category.id,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -399,7 +399,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
       builder: (context) => AlertDialog(
         title: const Text('Kategori Sil'),
         content: Text(
-          '"${category.name}" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
+          '"${category.id}" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
         ),
         actions: [
           TextButton(

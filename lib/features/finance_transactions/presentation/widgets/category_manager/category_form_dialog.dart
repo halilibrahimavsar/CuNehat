@@ -83,7 +83,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
   void initState() {
     super.initState();
     if (_isEditMode) {
-      _nameController.text = widget.category!.name;
+      _nameController.text = widget.category!.id;
       _selectedIcon = widget.category!.iconName;
     }
   }
@@ -243,7 +243,6 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
         // Create new category
         final newCategory = CategoryModel(
           id: name,
-          name: name,
           iconName: _selectedIcon,
           isExpense: widget.isExpense,
           isDefault: false,

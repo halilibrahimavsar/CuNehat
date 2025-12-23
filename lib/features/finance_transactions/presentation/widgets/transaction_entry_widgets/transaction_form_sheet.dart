@@ -239,7 +239,7 @@ class _TransactionCategorySelectorState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  category.name,
+                  category.id,
                   style: TextStyle(
                     color:
                         isSelected ? widget.primaryColor : Colors.grey.shade700,

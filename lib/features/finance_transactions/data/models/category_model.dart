@@ -3,7 +3,6 @@
 /// Represents a category for income or expense transactions
 class CategoryModel {
   final String id;
-  final String name;
   final String iconName;
   final bool isExpense; // true for expense, false for income
   final bool isDefault; // true if it's a system category (cannot be deleted)
@@ -11,7 +10,6 @@ class CategoryModel {
 
   const CategoryModel({
     required this.id,
-    required this.name,
     required this.iconName,
     required this.isExpense,
     this.isDefault = false,
@@ -23,7 +21,6 @@ class CategoryModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
       'iconName': iconName,
       'isExpense': isExpense,
       'isDefault': isDefault,
@@ -34,7 +31,6 @@ class CategoryModel {
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
       id: json['id'] as String,
-      name: json['name'] as String,
       iconName: json['iconName'] as String,
       isExpense: json['isExpense'] as bool,
       isDefault: json['isDefault'] as bool? ?? false,
@@ -54,7 +50,6 @@ class CategoryModel {
   }) {
     return CategoryModel(
       id: id ?? this.id,
-      name: name ?? this.name,
       iconName: iconName ?? this.iconName,
       isExpense: isExpense ?? this.isExpense,
       isDefault: isDefault ?? this.isDefault,
@@ -68,40 +63,35 @@ class CategoryModel {
   static List<CategoryModel> getDefaultExpenseCategories() {
     return [
       const CategoryModel(
-        id: 'exp_food',
-        name: 'Yemek',
+        id: 'Yemek',
         iconName: 'restaurant',
         isExpense: true,
         isDefault: true,
         sortOrder: 1,
       ),
       const CategoryModel(
-        id: 'exp_transport',
-        name: 'Ulaşım',
+        id: 'Ulaşım',
         iconName: 'directions_bus',
         isExpense: true,
         isDefault: true,
         sortOrder: 2,
       ),
       const CategoryModel(
-        id: 'exp_shopping',
-        name: 'Alışveriş',
+        id: 'Alışveriş',
         iconName: 'shopping_bag',
         isExpense: true,
         isDefault: true,
         sortOrder: 3,
       ),
       const CategoryModel(
-        id: 'exp_bills',
-        name: 'Fatura',
+        id: 'Fatura',
         iconName: 'receipt_long',
         isExpense: true,
         isDefault: true,
         sortOrder: 4,
       ),
       const CategoryModel(
-        id: 'exp_entertainment',
-        name: 'Eğlence',
+        id: 'Eğlence',
         iconName: 'movie',
         isExpense: true,
         isDefault: true,
@@ -114,24 +104,21 @@ class CategoryModel {
   static List<CategoryModel> getDefaultIncomeCategories() {
     return [
       const CategoryModel(
-        id: 'inc_salary',
-        name: 'Maaş',
+        id: 'Maaş',
         iconName: 'payments',
         isExpense: false,
         isDefault: true,
         sortOrder: 1,
       ),
       const CategoryModel(
-        id: 'inc_investment',
-        name: 'Yatırım',
+        id: 'Yatırım',
         iconName: 'trending_up',
         isExpense: false,
         isDefault: true,
         sortOrder: 2,
       ),
       const CategoryModel(
-        id: 'inc_freelance',
-        name: 'Serbest',
+        id: 'Serbest',
         iconName: 'work',
         isExpense: false,
         isDefault: true,
@@ -142,7 +129,7 @@ class CategoryModel {
 
   @override
   String toString() {
-    return 'CategoryModel(id: $id, name: $name, isExpense: $isExpense)';
+    return 'CategoryModel(id(name): $id, isExpense: $isExpense)';
   }
 
   @override

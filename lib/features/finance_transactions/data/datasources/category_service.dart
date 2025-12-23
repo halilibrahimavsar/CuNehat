@@ -78,7 +78,7 @@ class CategoryService {
 
     // Check if category with same name already exists
     if (categories
-        .any((c) => c.name.toLowerCase() == category.name.toLowerCase())) {
+        .any((c) => c.id.toLowerCase() == category.id.toLowerCase())) {
       throw Exception('Bu isimde bir kategori zaten var');
     }
 
