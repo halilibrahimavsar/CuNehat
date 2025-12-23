@@ -1,7 +1,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/dismissable_widget.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_transaction_card.dart';
 import 'package:flutter/material.dart';
 
 class SharedListView extends StatefulWidget {
@@ -230,115 +230,12 @@ class _SharedListViewState extends State<SharedListView> {
   }
 
   Widget _buildTransactionItem(TransactionWithBalance item) {
-    final transaction = item.transaction;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: DismissableWidget(
+      child: SharedTransactionCard(
+        context: context,
         item: item,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: transaction.isIncome
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.red.withValues(alpha: 0.1),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // İkon bölümü
-              Container(
-                width: 40,
-                height: 40,
-                margin: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: transaction.isIncome
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.red.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  transaction.isIncome
-                      ? Icons.arrow_upward
-                      : Icons.arrow_downward,
-                  color: transaction.isIncome ? Colors.green : Colors.red,
-                  size: 18,
-                ),
-              ),
-
-              // Detaylar
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      transaction.title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      transaction.tag,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    Text(
-                      AppFormatters.time.format(transaction.date),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Tutar
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${transaction.isIncome ? '+' : '-'}${AppFormatters.currency.format(transaction.amount)}',
-                      style: TextStyle(
-                        color: transaction.isIncome ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    if (widget.showBalanceAfter &&
-                        widget.mode == FinanceMode.compare) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'İşlem sonrası : ${AppFormatters.currency.format(item.balanceAfter)}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        isListView: true,
       ),
     );
   }

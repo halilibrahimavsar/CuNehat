@@ -1,6 +1,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_transaction_card.dart';
 import 'package:flutter/material.dart';
 
 class SharedTimelineView extends StatefulWidget {
@@ -96,7 +97,13 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
                               left: 42, top: 4, bottom: 20),
                           child: Column(
                             children: items
-                                .map((item) => _buildTransactionNode(item))
+                                .map(
+                                  (item) => SharedTransactionCard(
+                                    context: context,
+                                    item: item,
+                                    isListView: false,
+                                  ),
+                                )
                                 .toList(),
                           ),
                         )
@@ -216,86 +223,86 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
   }
 
   // İşlem Kartı (Node) - Görsel Tasarım
-  Widget _buildTransactionNode(TransactionWithBalance item) {
-    final t = item.transaction;
-    final color = t.isIncome ? Colors.green : Colors.red;
+  // Widget _buildTransactionNode(TransactionWithBalance item) {
+  //   final t = item.transaction;
+  //   final color = t.isIncome ? Colors.green : Colors.red;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                t.isIncome ? Icons.arrow_upward : Icons.arrow_downward,
-                size: 16,
-                color: color,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(t.title,
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: color)),
-                    // TODO : CHANGE TAG
-                    Text(t.tag,
-                        style: TextStyle(
-                            fontSize: 10, color: Colors.grey.shade500)),
-                  ],
-                ),
-              ),
-              Text(
-                '${t.isIncome ? '+' : '-'}${AppFormatters.currency.format(t.amount)}',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 13, color: color),
-              ),
-            ],
-          ),
-          if (widget.showBalanceAfter) ...[
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'İşlem sonrası : ',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  Text(
-                    AppFormatters.currency.format(item.balanceAfter),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          item.balanceAfter >= 0 ? Colors.blue : Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  //   return Container(
+  //     margin: const EdgeInsets.only(bottom: 10),
+  //     padding: const EdgeInsets.all(12),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+  //       boxShadow: [
+  //         BoxShadow(
+  //             color: Colors.black.withValues(alpha: 0.02),
+  //             blurRadius: 4,
+  //             offset: const Offset(0, 2)),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Icon(
+  //               t.isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+  //               size: 16,
+  //               color: color,
+  //             ),
+  //             const SizedBox(width: 12),
+  //             Expanded(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Text(t.title,
+  //                       style: TextStyle(
+  //                           fontSize: 13,
+  //                           fontWeight: FontWeight.w600,
+  //                           color: color)),
+  //                   // TODO : CHANGE TAG
+  //                   Text(t.tag,
+  //                       style: TextStyle(
+  //                           fontSize: 10, color: Colors.grey.shade500)),
+  //                 ],
+  //               ),
+  //             ),
+  //             Text(
+  //               '${t.isIncome ? '+' : '-'}${AppFormatters.currency.format(t.amount)}',
+  //               style: TextStyle(
+  //                   fontWeight: FontWeight.bold, fontSize: 13, color: color),
+  //             ),
+  //           ],
+  //         ),
+  //         if (widget.showBalanceAfter) ...[
+  //           const SizedBox(height: 6),
+  //           Align(
+  //             alignment: Alignment.centerRight,
+  //             child: Row(
+  //               mainAxisAlignment: MainAxisAlignment.end,
+  //               children: [
+  //                 Text(
+  //                   'İşlem sonrası : ',
+  //                   style: TextStyle(
+  //                     fontSize: 11,
+  //                     color: Colors.grey.shade800,
+  //                   ),
+  //                 ),
+  //                 Text(
+  //                   AppFormatters.currency.format(item.balanceAfter),
+  //                   style: TextStyle(
+  //                     fontSize: 11,
+  //                     fontWeight: FontWeight.w600,
+  //                     color:
+  //                         item.balanceAfter >= 0 ? Colors.blue : Colors.orange,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ],
+  //     ),
+  //   );
+  // }
 }
