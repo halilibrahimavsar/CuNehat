@@ -7,7 +7,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_list_page.dart';
+import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
@@ -215,10 +215,15 @@ class _HomePageState extends State<HomePage>
                 );
 
               case TransactionLoaded():
+                print("Transactions:---------------------");
+                for (var element in transactionState.allTransactions) {
+                  print(element.tag);
+                }
+                print("Transactions:---------------------");
                 return Expanded(
                   child: CubeAnimationView(
                     controller: _controller,
-                    firstView: TransactionListPage(
+                    firstView: TransactionPage(
                       key: const ValueKey('expense-list'), // ✅ Unique key
                       type: TransactionTypeModel.expense,
                       userId: userId,
@@ -229,7 +234,7 @@ class _HomePageState extends State<HomePage>
                           transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
                     ),
-                    secondView: TransactionListPage(
+                    secondView: TransactionPage(
                       key: const ValueKey('income-list'), // ✅ Unique key
                       type: TransactionTypeModel.income,
                       userId: userId,

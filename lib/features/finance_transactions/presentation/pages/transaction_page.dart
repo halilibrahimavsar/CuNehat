@@ -9,7 +9,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/transaction_entity.dart';
 
-class TransactionListPage extends StatelessWidget {
+class TransactionPage extends StatelessWidget {
   final TransactionTypeModel type;
   final String userId;
   final WalletEntity wallet;
@@ -18,7 +18,7 @@ class TransactionListPage extends StatelessWidget {
   final List<TransactionEntity> allTransactions;
   final TransactionViewType viewType;
 
-  const TransactionListPage({
+  const TransactionPage({
     super.key,
     required this.type,
     required this.userId,
