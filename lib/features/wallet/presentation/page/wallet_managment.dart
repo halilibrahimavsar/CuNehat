@@ -1,8 +1,3 @@
-// lib/features/wallet/presentation/page/wallet_managment.dart
-// ✅ UPDATED: Modern sheet design without Scaffold
-
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
@@ -18,39 +13,6 @@ import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// ========================================
-/// 🎯 MAIN FUNCTION: Show Wallet Sheet
-/// ========================================
-// void showWalletManagement(BuildContext context, String userId) {
-//   showModalBottomSheet(
-//     context: context,
-//     isScrollControlled: true,
-//     isDismissible: true, // ✅ Dışarı tıklayınca kapanır
-//     enableDrag: true, // ✅ Aşağı kaydırarak kapanır
-//     backgroundColor: Colors.transparent,
-//     builder: (sheetContext) {
-//       // ✅ BLoC'u parent'tan al
-//       return BlocProvider.value(
-//         value: context.read<WalletBloc>(),
-//         child: DraggableScrollableSheet(
-//           initialChildSize: 0.75,
-//           minChildSize: 0.5,
-//           maxChildSize: 0.95,
-//           builder: (context, scrollController) {
-//             return _WalletSheetContent(
-//               userId: userId,
-//               scrollController: scrollController,
-//             );
-//           },
-//         ),
-//       );
-//     },
-//   );
-// }
-
-/// ========================================
-/// 📄 WALLET SHEET CONTENT
-/// ========================================
 class WalletSheetContent extends StatefulWidget {
   final String userId;
   final ScrollController scrollController;
@@ -83,44 +45,46 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
         }
       },
       builder: (context, state) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(28),
+        return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  spreadRadius: -5,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 20,
-                spreadRadius: -5,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // ========== DRAG HANDLE ==========
-              _buildDragHandle(),
+            child: Column(
+              children: [
+                // ========== DRAG HANDLE ==========
+                _buildDragHandle(),
 
-              // ========== HEADER ==========
-              _buildHeader(context, state),
+                // ========== HEADER ==========
+                _buildHeader(context, state),
 
-              // ========== DIVIDER ==========
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: Colors.grey.shade200,
-              ),
+                // ========== DIVIDER ==========
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade200,
+                ),
 
-              // ========== BODY CONTENT ==========
-              Expanded(
-                child: _buildBody(state),
-              ),
+                // ========== BODY CONTENT ==========
+                Expanded(
+                  child: _buildBody(state),
+                ),
 
-              // ========== FLOATING ADD BUTTON ==========
-              _buildFloatingAddButton(context),
-            ],
+                // ========== FLOATING ADD BUTTON ==========
+                _buildFloatingAddButton(context),
+              ],
+            ),
           ),
         );
       },
@@ -150,7 +114,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -281,7 +245,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
