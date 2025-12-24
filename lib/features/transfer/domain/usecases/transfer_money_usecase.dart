@@ -76,7 +76,6 @@ class TransferMoneyUseCase {
         amount: amount,
         note: note,
         date: DateTime.now(),
-        time: DateTime.now().toIso8601String(),
       );
 
       return transfer;

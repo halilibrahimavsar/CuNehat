@@ -11,7 +11,6 @@ class TransferEntity extends Equatable {
   final double amount;
   final String note; // Transfer açıklaması
   final DateTime date;
-  final String time;
 
   const TransferEntity({
     required this.id,
@@ -21,7 +20,6 @@ class TransferEntity extends Equatable {
     required this.amount,
     required this.note,
     required this.date,
-    required this.time,
   });
 
   @override
@@ -33,6 +31,5 @@ class TransferEntity extends Equatable {
         amount,
         note,
         date,
-        time,
       ];
 }

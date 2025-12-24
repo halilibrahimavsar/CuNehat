@@ -15,7 +15,6 @@ class TransactionModel extends TransactionEntity {
     required super.tag,
     required super.amount,
     required super.date,
-    required super.time,
     required super.type,
   });
 
@@ -43,7 +42,6 @@ class TransactionModel extends TransactionEntity {
       tag: json['tag'] as String,
       amount: (json['amount'] as num).toDouble(),
       date: parsedDate,
-      time: json['time'] as String,
       type: _parseTransactionType(json['type'] as String),
     );
   }
@@ -58,7 +56,6 @@ class TransactionModel extends TransactionEntity {
       'tag': tag,
       'amount': amount,
       'date': Timestamp.fromDate(date), // ✅ Use Timestamp like WalletModel
-      'time': time,
       'type': type == TransactionTypeModel.income ? 'income' : 'expense',
     };
   }
@@ -72,7 +69,6 @@ class TransactionModel extends TransactionEntity {
       tag: entity.tag,
       amount: entity.amount,
       date: entity.date,
-      time: entity.time,
       type: entity.type,
     );
   }
@@ -86,7 +82,6 @@ class TransactionModel extends TransactionEntity {
       tag: tag,
       amount: amount,
       date: date,
-      time: time,
       type: type,
     );
   }
@@ -106,7 +101,6 @@ class TransactionModel extends TransactionEntity {
     String? tag,
     double? amount,
     DateTime? date,
-    String? time,
     TransactionTypeModel? type,
   }) {
     return TransactionModel(
@@ -117,7 +111,6 @@ class TransactionModel extends TransactionEntity {
       tag: tag ?? this.tag,
       amount: amount ?? this.amount,
       date: date ?? this.date,
-      time: time ?? this.time,
       type: type ?? this.type,
     );
   }
@@ -152,9 +145,5 @@ class TransactionModel extends TransactionEntity {
 
   @override
   @HiveField(7)
-  String get time => super.time;
-
-  @override
-  @HiveField(8)
   TransactionTypeModel get type => super.type;
 }

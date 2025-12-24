@@ -9,7 +9,6 @@ class TransactionEntity extends Equatable {
   final String tag;
   final double amount;
   final DateTime date;
-  final String time;
   final TransactionTypeModel type;
 
   const TransactionEntity({
@@ -20,7 +19,6 @@ class TransactionEntity extends Equatable {
     required this.tag,
     required this.amount,
     required this.date,
-    required this.time,
     required this.type,
   });
 
@@ -32,7 +30,6 @@ class TransactionEntity extends Equatable {
     String? tag,
     double? amount,
     DateTime? date,
-    String? time,
     TransactionTypeModel? type,
   }) {
     return TransactionEntity(
@@ -43,7 +40,6 @@ class TransactionEntity extends Equatable {
       tag: tag ?? this.tag,
       amount: amount ?? this.amount,
       date: date ?? this.date,
-      time: time ?? this.time,
       type: type ?? this.type,
     );
   }
@@ -60,7 +56,6 @@ class TransactionEntity extends Equatable {
       'tag': tag,
       'amount': amount,
       'date': date.toIso8601String(),
-      'time': time,
       'type': type.name,
     };
   }
@@ -74,7 +69,6 @@ class TransactionEntity extends Equatable {
         tag,
         amount,
         date,
-        time,
         type,
       ];
 }

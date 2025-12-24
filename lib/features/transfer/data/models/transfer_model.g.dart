@@ -24,14 +24,13 @@ class TransferModelAdapter extends TypeAdapter<TransferModel> {
       amount: fields[4] as double,
       note: fields[5] as String,
       date: fields[6] as DateTime,
-      time: fields[7] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransferModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -45,9 +44,7 @@ class TransferModelAdapter extends TypeAdapter<TransferModel> {
       ..writeByte(5)
       ..write(obj.note)
       ..writeByte(6)
-      ..write(obj.date)
-      ..writeByte(7)
-      ..write(obj.time);
+      ..write(obj.date);
   }
 
   @override

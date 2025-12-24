@@ -36,10 +36,6 @@ class TransferModel extends TransferEntity {
   @override
   DateTime get date => super.date;
 
-  @HiveField(7)
-  @override
-  String get time => super.time;
-
   const TransferModel({
     required super.id,
     required super.userId,
@@ -48,7 +44,6 @@ class TransferModel extends TransferEntity {
     required super.amount,
     required super.note,
     required super.date,
-    required super.time,
   });
 
   factory TransferModel.fromJson(String id, Map<String, dynamic> json) {
@@ -60,7 +55,6 @@ class TransferModel extends TransferEntity {
       amount: (json['amount'] as num).toDouble(),
       note: json['note'] as String,
       date: DateTime.parse(json['date'] as String),
-      time: json['time'] as String,
     );
   }
 
@@ -73,7 +67,6 @@ class TransferModel extends TransferEntity {
       'amount': amount,
       'note': note,
       'date': date.toIso8601String(),
-      'time': time,
     };
   }
 
@@ -86,7 +79,6 @@ class TransferModel extends TransferEntity {
       amount: entity.amount,
       note: entity.note,
       date: entity.date,
-      time: entity.time,
     );
   }
 }

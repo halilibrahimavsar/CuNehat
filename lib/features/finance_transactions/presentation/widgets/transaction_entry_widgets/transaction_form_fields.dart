@@ -1,4 +1,3 @@
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -289,7 +288,6 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
         tag: _controller.selectedCategoryId!,
         amount: double.parse(_controller.amountController.text.trim()),
         date: combinedDateTime,
-        time: AppFormatters.dateTime.format(combinedDateTime),
         type: widget.isExpense
             ? TransactionTypeModel.expense
             : TransactionTypeModel.income,
