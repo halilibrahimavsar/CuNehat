@@ -75,30 +75,32 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
   Widget build(BuildContext context) {
     final color = widget.isExpense ? Colors.red : Colors.green;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildDragHandle(),
-          _buildHeader(context, color),
-          const Divider(height: 1),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildCategoryList(),
-          ),
-          _buildAddButton(context, color),
-        ],
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            _buildDragHandle(),
+            _buildHeader(context, color),
+            const Divider(height: 1),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildCategoryList(),
+            ),
+            _buildAddButton(context, color),
+          ],
+        ),
       ),
     );
   }

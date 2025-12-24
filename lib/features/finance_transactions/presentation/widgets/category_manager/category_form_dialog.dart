@@ -1,4 +1,3 @@
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +39,7 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
 
   String _selectedIcon = 'category';
   bool _isLoading = false;
+  String? _errorMessage; // Hata mesajını tutmak için değişken
 
   bool get _isEditMode => widget.category != null;
 
@@ -116,6 +116,34 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
               _buildNameField(),
               const SizedBox(height: 24),
               _buildIconPicker(color),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 20, color: Colors.red.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -226,7 +254,10 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null; // Önceki hatayı temizle
+    });
 
     try {
       final name = _nameController.text.trim();
@@ -255,13 +286,10 @@ class _CategoryFormDialogState extends State<CategoryFormDialog> {
         Navigator.pop(context, true);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        SnackbarHelper.showError(
-          context,
-          e.toString().replaceAll('Exception: ', ''),
-        );
-      }
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+      });
     }
   }
 }
