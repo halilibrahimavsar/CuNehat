@@ -46,6 +46,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       },
       builder: (context, state) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           body: Container(
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
@@ -54,7 +55,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: Colors.black.withValues(alpha: 0.9),
                   blurRadius: 20,
                   spreadRadius: -5,
                   offset: const Offset(0, -5),
