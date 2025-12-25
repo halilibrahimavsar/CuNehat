@@ -30,3 +30,12 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthLocked extends AuthState {
+  final UserEntity user;
+
+  const AuthLocked(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}

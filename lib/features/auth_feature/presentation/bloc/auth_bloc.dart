@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/domain/entities/user_entity.dart';
 import 'package:cunehat/features/auth_feature/domain/repository/auth_repository.dart';
 import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
@@ -24,6 +25,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInWithGoogleRequested>(_onSignInRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
+    on<AuthUnlockRequested>(_onAuthUnlockRequested);
 
     // App başlatıldığında auth state kontrolü
     add(AuthCheckRequested());
@@ -46,10 +48,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     if (event.user != null) {
-      emit(Authenticated(event.user!));
+      // Kullanıcı var, peki yerel güvenlik (PIN/Bio) açık mı?
+      final bioService = BiometricService();
+      final isBioEnabled = await bioService.isBiometricEnabled();
+      final isPinSet = await bioService.isPinCodeSet();
+
+      // Eğer PIN veya Biyometrik açıksa "Locked" durumuna geç, değilse direkt içeri al
+      if (isBioEnabled || isPinSet) {
+        emit(AuthLocked(event.user!));
+      } else {
+        emit(Authenticated(event.user!));
+      }
     } else {
       emit(Unauthenticated());
     }
+  }
+
+  Future<void> _onAuthUnlockRequested(
+    AuthUnlockRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    // Kilit ekranı başarıyla geçildi, normal authenticated durumuna dön
+    emit(Authenticated(event.user));
   }
 
   Future<void> _onSignInRequested(

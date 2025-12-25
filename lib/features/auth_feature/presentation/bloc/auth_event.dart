@@ -21,3 +21,12 @@ class AuthStateChanged extends AuthEvent {
   @override
   List<UserEntity?> get props => [user];
 }
+
+class AuthUnlockRequested extends AuthEvent {
+  final UserEntity user;
+
+  const AuthUnlockRequested(this.user);
+
+  @override
+  List<UserEntity> get props => [user];
+}
