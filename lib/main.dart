@@ -1,6 +1,11 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart';
+import 'package:cunehat/features/auth_feature/data/repository/auth_repository_impl.dart';
+import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/pages/login_page.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_remote_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
@@ -17,7 +22,6 @@ import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,16 +42,33 @@ void main() async {
   debugPrint('✅ Hive TypeAdapters registered');
 
   runApp(
-    RepositoryProvider(
-      create: (context) => SettingsRepositoryImpl(),
-      child: BlocProvider(
-        create: (context) => SettingsBloc(
-          context.read<SettingsRepositoryImpl>(),
-        )..add(const LoadStorageModeEvent()),
-        child: const CallFirebaseAuth(
-          createUserCollection: false,
-          privateWidget: CuNehatEngine(),
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(
+          create: (context) => SettingsRepositoryImpl(),
         ),
+        RepositoryProvider(
+          create: (context) =>
+              AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSource()),
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => SettingsBloc(
+              context.read<SettingsRepositoryImpl>(),
+            )..add(const LoadStorageModeEvent()),
+          ),
+          BlocProvider(
+            create: (context) => AuthBloc(
+              authRepository: context.read<AuthRepositoryImpl>(),
+              signInWithGoogle: SignInWithGoogle(
+                context.read<AuthRepositoryImpl>(),
+              ),
+            ),
+          ),
+        ],
+        child: CuNehatEngine(),
       ),
     ),
   );
@@ -58,148 +79,160 @@ class CuNehatEngine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
+    return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        switch (state) {
-          case StorageModeLoadedSt():
-            final storageMode = state.mode;
+        if (state is Authenticated) {
+          return BlocBuilder<SettingsBloc, SettingsState>(
+            builder: (context, state) {
+              switch (state) {
+                case StorageModeLoadedSt():
+                  final storageMode = state.mode;
 
-            return MultiRepositoryProvider(
-              providers: [
-                // ========== Wallet Repository ==========
-                RepositoryProvider(
-                  create: (context) => WalletRepositoryImpl(
-                    dataSource: storageMode == StorageMode.local
-                        ? WalletHiveDataSource()
-                        : WalletFirestoreDataSource(),
-                  ),
-                ),
-
-                // ========== Transaction Repository ==========
-                RepositoryProvider(
-                  create: (context) => TransactionRepositoryImpl(
-                    dataSource: storageMode == StorageMode.local
-                        ? TransactionHiveDataSource()
-                        : TransactionFirestoreDataSource(),
-                  ),
-                ),
-
-                // ========== ✅ FIXED: Wallet Balance Sync Use Case ==========
-                RepositoryProvider(
-                  create: (context) {
-                    final walletRepo = context.read<WalletRepositoryImpl>();
-                    final transactionRepo =
-                        context.read<TransactionRepositoryImpl>();
-
-                    return WalletBalanceSyncUseCase(
-                      walletRepository: walletRepo.dataSource,
-                      transactionRepository: transactionRepo.dataSource,
-                    );
-                  },
-                ),
-              ],
-              child: MultiBlocProvider(
-                providers: [
-                  // Theme BLoC
-                  BlocProvider(
-                    create: (context) => ThemeBloc(),
-                  ),
-
-                  // Wallet BLoC
-                  BlocProvider(
-                    create: (context) => WalletBloc(
-                      getWalletsUseCase: WalletGetUseCase(
-                        context.read<WalletRepositoryImpl>(),
-                      ),
-                      createWalletUseCase: WalletCreateUseCase(
-                        context.read<WalletRepositoryImpl>(),
-                      ),
-                      updateWalletUseCase: WalletUpdateUseCase(
-                        context.read<WalletRepositoryImpl>(),
-                      ),
-                      deleteWalletUseCase: WalletDeleteUseCase(
-                        context.read<WalletRepositoryImpl>(),
-                      ),
-                      // walletBalanceSyncUseCase:
-                      //     context.read<WalletBalanceSyncUseCase>(),
-                      setActiveWalletUseCase: WalletSetActiveUseCase(
-                        context.read<WalletRepositoryImpl>(),
+                  return MultiRepositoryProvider(
+                    providers: [
+                      // ========== Wallet Repository ==========
+                      RepositoryProvider(
+                        create: (context) => WalletRepositoryImpl(
+                          dataSource: storageMode == StorageMode.local
+                              ? WalletHiveDataSource()
+                              : WalletFirestoreDataSource(),
+                        ),
                       ),
 
-                      // context.read<WalletRepositoryImpl>().dataSource,
-                    ),
-                  ),
+                      // ========== Transaction Repository ==========
+                      RepositoryProvider(
+                        create: (context) => TransactionRepositoryImpl(
+                          dataSource: storageMode == StorageMode.local
+                              ? TransactionHiveDataSource()
+                              : TransactionFirestoreDataSource(),
+                        ),
+                      ),
 
-                  // ========== Transaction BLoC ==========
-                  BlocProvider(
-                    create: (context) => TransactionBloc(
-                      getTransactionsGroupedUseCase:
-                          GetTransactionsGroupedUseCase(
-                        context.read<TransactionRepositoryImpl>(),
-                      ),
-                      addTransactionUseCase: AddTransactionUseCase(
-                        context.read<TransactionRepositoryImpl>(),
-                      ),
-                      updateTransactionUseCase: UpdateTransactionUseCase(
-                        context.read<TransactionRepositoryImpl>(),
-                      ),
-                      deleteTransactionUseCase: DeleteTransactionUseCase(
-                        context.read<TransactionRepositoryImpl>(),
-                      ),
-                      getTransactionByIdUseCase: GetTransactionByIdUseCase(
-                        context.read<TransactionRepositoryImpl>(),
-                      ),
-                      walletSyncUseCase:
-                          context.read<WalletBalanceSyncUseCase>(),
-                    ),
-                  ),
-                ],
-                child: BlocBuilder<ThemeBloc, ThemeState>(
-                  builder: (context, state) {
-                    return MaterialApp.router(
-                      routerConfig: appRouter,
-                      themeMode: ThemeMode.light,
-                      theme: state.name,
-                      title: "CuNehat",
-                      debugShowCheckedModeBanner: false,
-                    );
-                  },
-                ),
-              ),
-            );
+                      // ========== ✅ FIXED: Wallet Balance Sync Use Case ==========
+                      RepositoryProvider(
+                        create: (context) {
+                          final walletRepo =
+                              context.read<WalletRepositoryImpl>();
+                          final transactionRepo =
+                              context.read<TransactionRepositoryImpl>();
 
-          case SettingsErrorSt():
-            return MaterialApp(
-              home: Scaffold(
-                body: Center(
-                  child: Text(state.error),
-                ),
-              ),
-            );
-
-          default:
-            return MaterialApp(
-              home: Scaffold(
-                body: Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Birşeyler yanlış gitti, uygulamayı yeniden başlatın",
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          BlocProvider.of<SettingsBloc>(context)
-                              .add(const LoadStorageModeEvent());
+                          return WalletBalanceSyncUseCase(
+                            walletRepository: walletRepo.dataSource,
+                            transactionRepository: transactionRepo.dataSource,
+                          );
                         },
-                        icon: const Icon(Icons.refresh),
-                      )
+                      ),
                     ],
-                  ),
-                ),
-              ),
-            );
+                    child: MultiBlocProvider(
+                      providers: [
+                        // Theme BLoC
+                        BlocProvider(
+                          create: (context) => ThemeBloc(),
+                        ),
+
+                        // Wallet BLoC
+                        BlocProvider(
+                          create: (context) => WalletBloc(
+                            getWalletsUseCase: WalletGetUseCase(
+                              context.read<WalletRepositoryImpl>(),
+                            ),
+                            createWalletUseCase: WalletCreateUseCase(
+                              context.read<WalletRepositoryImpl>(),
+                            ),
+                            updateWalletUseCase: WalletUpdateUseCase(
+                              context.read<WalletRepositoryImpl>(),
+                            ),
+                            deleteWalletUseCase: WalletDeleteUseCase(
+                              context.read<WalletRepositoryImpl>(),
+                            ),
+                            // walletBalanceSyncUseCase:
+                            //     context.read<WalletBalanceSyncUseCase>(),
+                            setActiveWalletUseCase: WalletSetActiveUseCase(
+                              context.read<WalletRepositoryImpl>(),
+                            ),
+
+                            // context.read<WalletRepositoryImpl>().dataSource,
+                          ),
+                        ),
+
+                        // ========== Transaction BLoC ==========
+                        BlocProvider(
+                          create: (context) => TransactionBloc(
+                            getTransactionsGroupedUseCase:
+                                GetTransactionsGroupedUseCase(
+                              context.read<TransactionRepositoryImpl>(),
+                            ),
+                            addTransactionUseCase: AddTransactionUseCase(
+                              context.read<TransactionRepositoryImpl>(),
+                            ),
+                            updateTransactionUseCase: UpdateTransactionUseCase(
+                              context.read<TransactionRepositoryImpl>(),
+                            ),
+                            deleteTransactionUseCase: DeleteTransactionUseCase(
+                              context.read<TransactionRepositoryImpl>(),
+                            ),
+                            getTransactionByIdUseCase:
+                                GetTransactionByIdUseCase(
+                              context.read<TransactionRepositoryImpl>(),
+                            ),
+                            walletSyncUseCase:
+                                context.read<WalletBalanceSyncUseCase>(),
+                          ),
+                        ),
+                      ],
+                      child: BlocBuilder<ThemeBloc, ThemeState>(
+                        builder: (context, state) {
+                          return MaterialApp.router(
+                            routerConfig: appRouter,
+                            themeMode: ThemeMode.light,
+                            theme: state.name,
+                            title: "CuNehat",
+                            debugShowCheckedModeBanner: false,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+
+                case SettingsErrorSt():
+                  return MaterialApp(
+                    home: Scaffold(
+                      body: Center(
+                        child: Text(state.error),
+                      ),
+                    ),
+                  );
+
+                default:
+                  return MaterialApp(
+                    home: Scaffold(
+                      body: Center(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Birşeyler yanlış gitti, uygulamayı yeniden başlatın",
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                BlocProvider.of<SettingsBloc>(context)
+                                    .add(const LoadStorageModeEvent());
+                              },
+                              icon: const Icon(Icons.refresh),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+              }
+            },
+          );
+        } else {
+          return MaterialApp(
+            home: LoginScreen(),
+          );
         }
       },
     );

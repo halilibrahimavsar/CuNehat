@@ -56,7 +56,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   # fpdart: ^1.2.0
   # Dependency Injection
-  get_it: ^9.2.0
+  # get_it: ^9.2.0
   
   # Functional Programming
   dartz: ^0.10.1
@@ -72,14 +72,14 @@ dependencies:
 
   
   # chips_choice: ^3.0.0
-  flutter_neumorphic:
-    git:
-      url: https://github.com/den0206/Flutter-Neumorphic.git
-      ref: feature/remoce_accentcolor
+  # flutter_neumorphic:
+  #   git:
+  #     url: https://github.com/den0206/Flutter-Neumorphic.git
+  #     ref: feature/remoce_accentcolor
  
 
-  firebase_bloc_auth:
-    path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth
+  # firebase_bloc_auth:
+  #   path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth
   # firebase_analytics: ^10.1.5
   # connectivity_plus: ^4.0.0
   # floating_action_bubble: ^1.1.4
@@ -124,6 +124,7 @@ flutter:
      - assets/images/logo.jpg
      - assets/images/splashScreen.png
      - assets/images/background.png
+     - assets/images/google_logo.png
      
   #   - images/a_dot_ham.jpeg
 

@@ -1,4 +1,3 @@
-import 'package:firebase_bloc_auth/call_firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -10,7 +9,7 @@ class ProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Profil ayarları"),
       ),
-      body: ProfileUpdatePage(),
+      body: Text("nothing to show"),
     );
   }
 }
