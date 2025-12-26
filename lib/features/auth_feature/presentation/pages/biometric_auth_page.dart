@@ -22,7 +22,7 @@ class BiometricAuthPage extends StatefulWidget {
 
 class _BiometricAuthPageState extends State<BiometricAuthPage>
     with SingleTickerProviderStateMixin {
-  final BiometricService _biometricService = BiometricService();
+  final BiometricDataSource _biometricService = BiometricDataSource();
 
   String _enteredPin = '';
   bool _isBiometricAvailable = false;

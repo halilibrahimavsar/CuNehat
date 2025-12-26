@@ -2,6 +2,7 @@ import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart';
+import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/data/repository/auth_repository_impl.dart';
 import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/auth_bloc.dart';
@@ -65,6 +66,7 @@ void main() async {
               signInWithGoogle: SignInWithGoogle(
                 context.read<AuthRepositoryImpl>(),
               ),
+              biometricService: BiometricDataSource(),
             ),
           ),
         ],

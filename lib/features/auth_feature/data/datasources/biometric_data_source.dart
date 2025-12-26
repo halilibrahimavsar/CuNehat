@@ -1,10 +1,10 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
-class BiometricService {
-  static final BiometricService _instance = BiometricService._internal();
-  factory BiometricService() => _instance;
-  BiometricService._internal();
+class BiometricDataSource {
+  static final BiometricDataSource _instance = BiometricDataSource._internal();
+  factory BiometricDataSource() => _instance;
+  BiometricDataSource._internal();
 
   final LocalAuthentication _localAuth = LocalAuthentication();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();

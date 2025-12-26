@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
+import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/auth_feature/domain/entities/user_entity.dart';
 import 'package:cunehat/features/auth_feature/domain/repository/auth_repository.dart';
 import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
@@ -14,13 +15,16 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
   final SignInWithGoogle _signInWithGoogle;
   final AuthRepository _authRepository;
+  final BiometricDataSource _biometricService;
   StreamSubscription<UserEntity?>? _userSubscription;
 
   AuthBloc({
     required SignInWithGoogle signInWithGoogle,
     required AuthRepository authRepository,
+    required BiometricDataSource biometricService,
   })  : _signInWithGoogle = signInWithGoogle,
         _authRepository = authRepository,
+        _biometricService = biometricService,
         super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<SignInWithGoogleRequested>(_onSignInRequested);
@@ -61,9 +65,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
   ) async {
     if (event.user != null) {
       // Kullanıcı var, peki yerel güvenlik (PIN/Bio) açık mı?
-      final bioService = BiometricService();
-      final isBioEnabled = await bioService.isBiometricEnabled();
-      final isPinSet = await bioService.isPinCodeSet();
+      final isBioEnabled = await _biometricService.isBiometricEnabled();
+      final isPinSet = await _biometricService.isPinCodeSet();
 
       // Eğer PIN veya Biyometrik açıksa "Locked" durumuna geç, değilse direkt içeri al
       if (isBioEnabled || isPinSet) {
@@ -91,9 +94,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
     // Sadece zaten giriş yapmış (Authenticated) kullanıcılar için kontrol et
     if (state is Authenticated) {
       final currentUser = (state as Authenticated).user;
-      final bioService = BiometricService();
-      final isBioEnabled = await bioService.isBiometricEnabled();
-      final isPinSet = await bioService.isPinCodeSet();
+      final isBioEnabled = await _biometricService.isBiometricEnabled();
+      final isPinSet = await _biometricService.isPinCodeSet();
 
       if (isBioEnabled || isPinSet) {
         emit(AuthLocked(currentUser));
@@ -110,7 +112,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
       await _signInWithGoogle();
       // Başarılı olursa stream tetiklenecek ve AuthStateChanged çalışacak
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(ErrorHandler.handleException(e).message));
     }
   }
 
@@ -123,7 +125,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
       await _authRepository.signOut();
       // Başarılı olursa stream tetiklenecek ve AuthStateChanged çalışacak
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(ErrorHandler.handleException(e).message));
     }
   }
 

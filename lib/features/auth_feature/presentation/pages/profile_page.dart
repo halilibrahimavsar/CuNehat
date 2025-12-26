@@ -12,7 +12,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final BiometricService _biometricService = BiometricService();
+  final BiometricDataSource _biometricService = BiometricDataSource();
   bool _isBiometricEnabled = false;
   bool _isPinSet = false;
   bool _isLoading = true;
