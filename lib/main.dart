@@ -81,24 +81,6 @@ class CuNehatEngine extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        // ✅ FIX: AuthInitial durumunda loading göster
-        if (authState is AuthInitial || authState is AuthLoading) {
-          return const MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-        }
-
-        // ✅ FIX: Unauthenticated ise LoginScreen göster
-        if (authState is Unauthenticated) {
-          return const MaterialApp(
-            home: LoginScreen(),
-          );
-        }
-
         // ✅ Authenticated veya AuthLocked - Ana app'i yükle
         if (authState is Authenticated || authState is AuthLocked) {
           return BlocBuilder<SettingsBloc, SettingsState>(
@@ -129,39 +111,10 @@ class CuNehatEngine extends StatelessWidget {
           );
         }
 
-        // ✅ AuthError durumunda hata göster
-        if (authState is AuthError) {
-          return MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(authState.message),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(AuthCheckRequested());
-                      },
-                      child: const Text('Tekrar Dene'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        // Fallback
+        // Fallback: LoginScreen
+        // Unauthenticated, AuthLoading ve AuthError durumlarını kapsar.
         return const MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
+          home: LoginScreen(),
         );
       },
     );
