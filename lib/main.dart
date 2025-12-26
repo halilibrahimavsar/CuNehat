@@ -4,8 +4,11 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/data/repository/auth_repository_impl.dart';
-import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/data/repository/biometric_repository_impl.dart';
+import 'package:cunehat/features/auth_feature/domain/usecases/local_auth_usecases/manage_local_auth_usecase.dart';
+import 'package:cunehat/features/auth_feature/domain/usecases/remote_auth_usecases/sign_in_with_google.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/security_settings/local_auth_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/pages/login_page.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_remote_datasource.dart';
@@ -52,6 +55,9 @@ void main() async {
           create: (context) =>
               AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSource()),
         ),
+        RepositoryProvider(
+          create: (context) => BiometricRepositoryImpl(BiometricDataSource()),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -61,12 +67,14 @@ void main() async {
             )..add(const LoadStorageModeEvent()),
           ),
           BlocProvider(
-            create: (context) => AuthBloc(
+            create: (context) => RemoteAuthBloc(
               authRepository: context.read<AuthRepositoryImpl>(),
               signInWithGoogle: SignInWithGoogle(
                 context.read<AuthRepositoryImpl>(),
               ),
-              biometricService: BiometricDataSource(),
+              manageLocalAuthUseCase: ManageLocalAuthUseCase(
+                context.read<BiometricRepositoryImpl>(),
+              ),
             ),
           ),
         ],
@@ -81,7 +89,7 @@ class CuNehatEngine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocBuilder<RemoteAuthBloc, AuthState>(
       builder: (context, authState) {
         // ✅ Authenticated veya AuthLocked - Ana app'i yükle
         if (authState is Authenticated || authState is AuthLocked) {
@@ -205,11 +213,20 @@ class CuNehatEngine extends StatelessWidget {
               walletSyncUseCase: context.read<WalletBalanceSyncUseCase>(),
             ),
           ),
+
+          // Security Settings BLoC
+          BlocProvider(
+            create: (context) => LocalAuthBloc(
+              manageLocalAuthUseCase: ManageLocalAuthUseCase(
+                context.read<BiometricRepositoryImpl>(),
+              ),
+            )..add(LoadSecurityEvent()),
+          ),
         ],
         child: BlocBuilder<ThemeBloc, ThemeState>(
           builder: (context, themeState) {
             // ✅ FIX: GoRouter'ı context ile oluştur
-            final authBloc = context.read<AuthBloc>();
+            final authBloc = context.read<RemoteAuthBloc>();
             final router = createAppRouter(authBloc);
 
             return MaterialApp.router(

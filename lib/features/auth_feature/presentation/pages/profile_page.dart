@@ -1,5 +1,5 @@
-import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/security_settings/local_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,65 +12,25 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final BiometricDataSource _biometricService = BiometricDataSource();
-  bool _isBiometricEnabled = false;
-  bool _isPinSet = false;
-  bool _isLoading = true;
-  bool _isAvailable = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final [bioEnabled, pinSet, isAvailable] = await Future.wait([
-      _biometricService.isBiometricEnabled(),
-      _biometricService.isPinCodeSet(),
-      _biometricService.isBiometricAvailable(),
-    ]);
-
-    if (mounted) {
-      setState(() {
-        _isBiometricEnabled = bioEnabled;
-        _isPinSet = pinSet;
-        _isAvailable = isAvailable;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _toggleBiometric(bool value) async {
+  void _toggleBiometric(bool value, LocalAuthState state) {
     if (value) {
-      if (!_isPinSet) {
+      if (!state.isPinSet) {
         _showSnackBar('⚠️ Önce PIN oluşturmalısınız', type: SnackbarType.error);
         return;
       }
 
-      if (!_isAvailable) {
+      if (!state.isBiometricAvailable) {
         _showSnackBar('❌ Cihazınız biyometrik desteklemiyor',
             type: SnackbarType.error);
         return;
       }
-
-      final authenticated =
-          await _biometricService.authenticateWithBiometrics();
-      if (authenticated && mounted) {
-        await _biometricService.enableBiometric();
-        _showSnackBar('✅ Biyometrik giriş etkinleştirildi',
-            type: SnackbarType.success);
-      }
-    } else {
-      await _biometricService.disableBiometric();
-      _showSnackBar('🔒 Biyometrik giriş kapatıldı', type: SnackbarType.info);
     }
 
-    await _loadSettings();
+    context.read<LocalAuthBloc>().add(ToggleBiometricEvent(value));
   }
 
-  void _handlePinOperation() async {
-    if (_isPinSet) {
+  void _handlePinOperation(bool isPinSet) {
+    if (isPinSet) {
       _showPinOptions();
     } else {
       _showPinSetupDialog();
@@ -118,11 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: const Text('PIN Kaldır'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await _biometricService.deletePinCode();
-                  await _biometricService.disableBiometric();
-                  await _loadSettings();
-                  _showSnackBar('🗑️ PIN kaldırıldı',
-                      type: SnackbarType.success);
+                  context.read<LocalAuthBloc>().add(DeletePinEvent());
                 },
               ),
             ],
@@ -216,12 +172,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 return;
               }
 
-              await _biometricService.savePinCode(pinController.text);
-              if (context.mounted) {
-                Navigator.pop(context);
-                await _loadSettings();
-                _showSnackBar('✅ PIN kaydedildi', type: SnackbarType.success);
-              }
+              context
+                  .read<LocalAuthBloc>()
+                  .add(SavePinEvent(pinController.text));
+              Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
@@ -255,54 +209,69 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
-              slivers: [
-                SliverAppBar.large(
-                  title: const Text('Profil'),
-                  centerTitle: false,
-                  backgroundColor: theme.scaffoldBackgroundColor,
-                  surfaceTintColor: theme.scaffoldBackgroundColor,
-                  actions: [
-                    IconButton(
-                      onPressed: () => _loadSettings(),
-                      icon: const Icon(Icons.refresh),
-                      tooltip: 'Yenile',
-                    ),
-                  ],
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildUserInfo(theme),
-                        const SizedBox(height: 32),
-                        _buildSectionHeader(theme, 'GÜVENLİK'),
+      body: BlocConsumer<LocalAuthBloc, LocalAuthState>(
+        listener: (context, state) {
+          if (state.message != null) {
+            _showSnackBar(state.message!,
+                type: state.status == SecurityStatus.error
+                    ? SnackbarType.error
+                    : SnackbarType.success);
+          }
+        },
+        builder: (context, state) {
+          if (state.status == SecurityStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar.large(
+                title: const Text('Profil'),
+                centerTitle: false,
+                backgroundColor: theme.scaffoldBackgroundColor,
+                surfaceTintColor: theme.scaffoldBackgroundColor,
+                actions: [
+                  IconButton(
+                    onPressed: () =>
+                        context.read<LocalAuthBloc>().add(LoadSecurityEvent()),
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Yenile',
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildUserInfo(theme),
+                      const SizedBox(height: 32),
+                      _buildSectionHeader(theme, 'GÜVENLİK'),
+                      const SizedBox(height: 16),
+                      _buildSecurityCard(theme, isDark, state),
+                      if (!state.isBiometricAvailable) ...[
                         const SizedBox(height: 16),
-                        _buildSecurityCard(theme, isDark),
-                        if (!_isAvailable) ...[
-                          const SizedBox(height: 16),
-                          _buildWarningCard(theme),
-                        ],
-                        const SizedBox(height: 32),
-                        _buildSectionHeader(theme, 'HESAP'),
-                        const SizedBox(height: 16),
-                        _buildLogoutButton(theme),
-                        const SizedBox(height: 50), // Bottom padding
+                        _buildWarningCard(theme),
                       ],
-                    ),
+                      const SizedBox(height: 32),
+                      _buildSectionHeader(theme, 'HESAP'),
+                      const SizedBox(height: 16),
+                      _buildLogoutButton(theme),
+                      const SizedBox(height: 50), // Bottom padding
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
   Widget _buildUserInfo(ThemeData theme) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocBuilder<RemoteAuthBloc, AuthState>(
       builder: (context, state) {
         String email = 'Kullanıcı';
         String initial = 'K';
@@ -392,7 +361,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSecurityCard(ThemeData theme, bool isDark) {
+  Widget _buildSecurityCard(
+      ThemeData theme, bool isDark, LocalAuthState state) {
     return Container(
       decoration: BoxDecoration(
         color: theme.cardColor,
@@ -414,25 +384,25 @@ class _ProfilePageState extends State<ProfilePage> {
             theme,
             icon: Icons.lock_outline_rounded,
             title: 'PIN Kodu',
-            subtitle: _isPinSet ? 'Aktif' : 'Ayarlanmadı',
+            subtitle: state.isPinSet ? 'Aktif' : 'Ayarlanmadı',
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _isPinSet
+                color: state.isPinSet
                     ? Colors.green.withValues(alpha: 0.1)
                     : Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                _isPinSet ? 'Değiştir' : 'Kur',
+                state.isPinSet ? 'Değiştir' : 'Kur',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: _isPinSet ? Colors.green : Colors.orange,
+                  color: state.isPinSet ? Colors.green : Colors.orange,
                 ),
               ),
             ),
-            onTap: _handlePinOperation,
+            onTap: () => _handlePinOperation(state.isPinSet),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -445,12 +415,14 @@ class _ProfilePageState extends State<ProfilePage> {
             title: 'Biyometrik Giriş',
             subtitle: 'Yüz veya parmak izi ile giriş',
             trailing: Switch.adaptive(
-              value: _isBiometricEnabled,
-              onChanged: _isPinSet ? _toggleBiometric : null,
+              value: state.isBiometricEnabled,
+              onChanged:
+                  state.isPinSet ? (val) => _toggleBiometric(val, state) : null,
               activeColor: theme.primaryColor,
             ),
-            onTap:
-                _isPinSet ? () => _toggleBiometric(!_isBiometricEnabled) : null,
+            onTap: state.isPinSet
+                ? () => _toggleBiometric(!state.isBiometricEnabled, state)
+                : null,
           ),
         ],
       ),
@@ -539,7 +511,7 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          context.read<AuthBloc>().add(SignOutRequested());
+          context.read<RemoteAuthBloc>().add(SignOutRequested());
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.colorScheme.error.withValues(alpha: 0.1),

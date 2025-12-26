@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocConsumer<AuthBloc, AuthState>(
+      body: BlocConsumer<RemoteAuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen>
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () {
-          context.read<AuthBloc>().add(SignInWithGoogleRequested());
+          context.read<RemoteAuthBloc>().add(SignInWithGoogleRequested());
         },
         child: Container(
           width: MediaQuery.of(context).size.width * 0.8,

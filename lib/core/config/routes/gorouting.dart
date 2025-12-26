@@ -6,12 +6,12 @@ import 'package:cunehat/features/auth_feature/presentation/pages/biometric_auth_
 import 'package:cunehat/features/auth_feature/presentation/pages/profile_page.dart';
 import 'package:cunehat/features/main_feature/presentation/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // ✅ FIX: GoRouter'ı fonksiyon olarak oluştur
-GoRouter createAppRouter(AuthBloc authBloc) {
+GoRouter createAppRouter(RemoteAuthBloc authBloc) {
   return GoRouter(
     initialLocation: AppRoutes.home,
     redirect: (context, state) {

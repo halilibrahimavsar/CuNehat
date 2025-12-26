@@ -1,30 +1,31 @@
 import 'dart:async';
 
-import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/auth_feature/domain/entities/user_entity.dart';
 import 'package:cunehat/features/auth_feature/domain/repository/auth_repository.dart';
-import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
+import 'package:cunehat/features/auth_feature/domain/usecases/local_auth_usecases/manage_local_auth_usecase.dart';
+import 'package:cunehat/features/auth_feature/domain/usecases/remote_auth_usecases/sign_in_with_google.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
-part 'auth_event.dart';
-part 'auth_state.dart';
+part 'remote_auth_event.dart';
+part 'remote_auth_state.dart';
 
-class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
+class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
+    with WidgetsBindingObserver {
   final SignInWithGoogle _signInWithGoogle;
   final AuthRepository _authRepository;
-  final BiometricDataSource _biometricService;
+  final ManageLocalAuthUseCase _manageLocalAuthUseCase;
   StreamSubscription<UserEntity?>? _userSubscription;
 
-  AuthBloc({
+  RemoteAuthBloc({
     required SignInWithGoogle signInWithGoogle,
     required AuthRepository authRepository,
-    required BiometricDataSource biometricService,
+    required ManageLocalAuthUseCase manageLocalAuthUseCase,
   })  : _signInWithGoogle = signInWithGoogle,
         _authRepository = authRepository,
-        _biometricService = biometricService,
+        _manageLocalAuthUseCase = manageLocalAuthUseCase,
         super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<SignInWithGoogleRequested>(_onSignInRequested);
@@ -64,11 +65,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
     Emitter<AuthState> emit,
   ) async {
     if (event.user != null) {
-      // Kullanıcı var, peki yerel güvenlik (PIN/Bio) açık mı?
-      final isBioEnabled = await _biometricService.isBiometricEnabled();
-      final isPinSet = await _biometricService.isPinCodeSet();
+      // Kullanıcı giriş yapmış, şimdi yerel güvenlik kontrolü yapalım
+      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnable();
+      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSetUsecase();
 
-      // Eğer PIN veya Biyometrik açıksa "Locked" durumuna geç, değilse direkt içeri al
       if (isBioEnabled || isPinSet) {
         emit(AuthLocked(event.user!));
       } else {
@@ -94,8 +94,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
     // Sadece zaten giriş yapmış (Authenticated) kullanıcılar için kontrol et
     if (state is Authenticated) {
       final currentUser = (state as Authenticated).user;
-      final isBioEnabled = await _biometricService.isBiometricEnabled();
-      final isPinSet = await _biometricService.isPinCodeSet();
+      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnable();
+      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSetUsecase();
 
       if (isBioEnabled || isPinSet) {
         emit(AuthLocked(currentUser));

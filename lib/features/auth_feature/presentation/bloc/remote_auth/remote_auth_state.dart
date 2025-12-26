@@ -1,4 +1,4 @@
-part of 'auth_bloc.dart';
+part of 'remote_auth_bloc.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
