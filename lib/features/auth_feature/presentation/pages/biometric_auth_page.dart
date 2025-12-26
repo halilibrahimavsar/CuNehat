@@ -1,33 +1,51 @@
+// ignore_for_file: unused_field
+
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:math' as math;
 
-class ModernAuthPage extends StatefulWidget {
+class BiometricAuthPage extends StatefulWidget {
   final VoidCallback onSuccess;
   final VoidCallback onLogout;
 
-  const ModernAuthPage({
+  const BiometricAuthPage({
     super.key,
     required this.onSuccess,
     required this.onLogout,
   });
 
   @override
-  State<ModernAuthPage> createState() => _ModernAuthPageState();
+  State<BiometricAuthPage> createState() => _BiometricAuthPageState();
 }
 
-class _ModernAuthPageState extends State<ModernAuthPage> {
+class _BiometricAuthPageState extends State<BiometricAuthPage>
+    with SingleTickerProviderStateMixin {
   final BiometricService _biometricService = BiometricService();
-  final TextEditingController _pinController = TextEditingController();
 
+  String _enteredPin = '';
   bool _isBiometricAvailable = false;
   bool _isPinEnabled = false;
   String? _errorText;
   int _failedAttempts = 0;
+  bool _isLoading = false;
+
+  late AnimationController _shakeController;
 
   @override
   void initState() {
     super.initState();
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
     _checkAuthMethods();
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkAuthMethods() async {
@@ -35,10 +53,12 @@ class _ModernAuthPageState extends State<ModernAuthPage> {
     final bioEnabled = await _biometricService.isBiometricEnabled();
     final pinSet = await _biometricService.isPinCodeSet();
 
-    setState(() {
-      _isBiometricAvailable = bioAvailable;
-      _isPinEnabled = pinSet;
-    });
+    if (mounted) {
+      setState(() {
+        _isBiometricAvailable = bioAvailable;
+        _isPinEnabled = pinSet;
+      });
+    }
 
     // ✅ Auto-trigger biometric if enabled
     if (bioAvailable && bioEnabled) {
@@ -51,29 +71,57 @@ class _ModernAuthPageState extends State<ModernAuthPage> {
     final success = await _biometricService.authenticateWithBiometrics();
     if (success && mounted) {
       widget.onSuccess();
+      HapticFeedback.heavyImpact();
     }
   }
 
-  void _verifyPin() async {
-    if (_pinController.text.length != 6) {
-      setState(() => _errorText = 'PIN 6 haneli olmalıdır');
-      return;
-    }
+  Future<void> _verifyPin() async {
+    setState(() => _isLoading = true);
+    // Kısa bir gecikme hissi (UX için)
+    await Future.delayed(const Duration(milliseconds: 150));
 
-    final isCorrect =
-        await _biometricService.verifyPinCode(_pinController.text);
-    if (isCorrect && mounted) {
+    final isCorrect = await _biometricService.verifyPinCode(_enteredPin);
+
+    if (!mounted) return;
+
+    if (isCorrect) {
+      HapticFeedback.heavyImpact();
       widget.onSuccess();
     } else {
+      HapticFeedback.vibrate();
+      _shakeController.forward(from: 0.0);
       setState(() {
+        _isLoading = false;
+        _enteredPin = '';
         _failedAttempts++;
-        _errorText = 'Hatalı PIN (${_failedAttempts}/3)';
+        _errorText = 'Hatalı PIN';
       });
-      _pinController.clear();
 
       if (_failedAttempts >= 3) {
         _showLockoutDialog();
       }
+    }
+  }
+
+  void _onKeyPressed(String value) {
+    if (_enteredPin.length < 6) {
+      HapticFeedback.lightImpact();
+      setState(() {
+        _enteredPin += value;
+        _errorText = null;
+      });
+      if (_enteredPin.length == 6) {
+        _verifyPin();
+      }
+    }
+  }
+
+  void _onDeletePressed() {
+    if (_enteredPin.isNotEmpty) {
+      HapticFeedback.lightImpact();
+      setState(() {
+        _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1);
+      });
     }
   }
 
@@ -82,10 +130,12 @@ class _ModernAuthPageState extends State<ModernAuthPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
-        title: const Text('Çok Fazla Deneme'),
+        icon:
+            const Icon(Icons.lock_clock_outlined, color: Colors.red, size: 48),
+        title: const Text('Geçici Olarak Kilitlendi'),
         content: const Text(
-          '3 başarısız deneme yaptınız.\nLütfen 30 saniye bekleyin veya biyometrik ile giriş yapın.',
+          '3 başarısız deneme yaptınız.\nGüvenliğiniz için lütfen 30 saniye bekleyin veya biyometrik doğrulama kullanın.',
+          textAlign: TextAlign.center,
         ),
         actions: [
           TextButton(
@@ -98,122 +148,210 @@ class _ModernAuthPageState extends State<ModernAuthPage> {
   }
 
   @override
-  void dispose() {
-    _pinController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              // ========== TOP BAR: Logout Button ==========
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton.icon(
-                  onPressed: widget.onLogout,
-                  icon: const Icon(Icons.logout, size: 18),
-                  label: const Text('Çıkış'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              // ========== LOCK ICON ==========
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: theme.primaryColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.lock_outline,
-                  size: 80,
-                  color: theme.primaryColor,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // ========== TITLE ==========
-              Text(
-                'Güvenli Giriş',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Kimliğinizi doğrulayın',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // ========== PIN INPUT ==========
-              if (_isPinEnabled) ...[
-                TextField(
-                  controller: _pinController,
-                  obscureText: true,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    letterSpacing: 12,
-                    fontWeight: FontWeight.w300,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '• • • • • •',
-                    errorText: _errorText,
-                    counterText: '',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            // ========== TOP BAR: Logout Button ==========
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: widget.onLogout,
+                    icon: Icon(Icons.logout_rounded,
+                        size: 20, color: theme.colorScheme.error),
+                    label: Text('Çıkış',
+                        style: TextStyle(color: theme.colorScheme.error)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      backgroundColor:
+                          theme.colorScheme.error.withValues(alpha: 0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
-                  onChanged: (_) {
-                    setState(() => _errorText = null);
-                    if (_pinController.text.length == 6) {
-                      _verifyPin();
-                    }
-                  },
-                ),
-                const SizedBox(height: 24),
-              ],
+                ],
+              ),
+            ),
 
-              // ========== BIOMETRIC BUTTON ==========
-              if (_isBiometricAvailable)
-                ElevatedButton.icon(
-                  onPressed: _authenticateWithBiometric,
-                  icon: const Icon(Icons.fingerprint, size: 28),
-                  label: const Text('Biyometrik ile Giriş'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // ========== ICON & TITLE ==========
+                  Icon(
+                    Icons.lock_person_rounded,
+                    size: 64,
+                    color: theme.primaryColor,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Tekrar Hoşgeldiniz',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorText ?? 'Devam etmek için PIN girin',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: _errorText != null
+                          ? theme.colorScheme.error
+                          : theme.textTheme.bodyMedium?.color
+                              ?.withValues(alpha: 0.6),
+                      fontWeight: _errorText != null
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
 
-              const Spacer(),
-            ],
+                  const SizedBox(height: 48),
+
+                  // ========== PIN DOTS ==========
+                  AnimatedBuilder(
+                    animation: _shakeController,
+                    builder: (context, child) {
+                      // Shake animation math (damped sine wave)
+                      final offset = 20 *
+                          math.sin(_shakeController.value * math.pi * 3) *
+                          (1 - _shakeController.value);
+                      return Transform.translate(
+                        offset: Offset(offset, 0),
+                        child: child,
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(6, (index) {
+                        final isFilled = index < _enteredPin.length;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isFilled
+                                ? theme.primaryColor
+                                : theme.dividerColor.withValues(alpha: 0.2),
+                            border: isFilled
+                                ? null
+                                : Border.all(
+                                    color: theme.dividerColor
+                                        .withValues(alpha: 0.5)),
+                            boxShadow: isFilled
+                                ? [
+                                    BoxShadow(
+                                      color: theme.primaryColor
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ========== NUMBER PAD ==========
+            Container(
+              padding: const EdgeInsets.only(bottom: 32, left: 32, right: 32),
+              child: Column(
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          for (var j = 1; j <= 3; j++)
+                            _buildNumberButton((i * 3 + j).toString(), theme),
+                        ],
+                      ),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Biometric Button
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: _isBiometricAvailable
+                            ? InkWell(
+                                onTap: _authenticateWithBiometric,
+                                borderRadius: BorderRadius.circular(36),
+                                child: Icon(
+                                  Icons.fingerprint,
+                                  size: 32,
+                                  color: theme.primaryColor,
+                                ),
+                              )
+                            : null,
+                      ),
+                      _buildNumberButton('0', theme),
+                      // Delete Button
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: InkWell(
+                          onTap: _onDeletePressed,
+                          borderRadius: BorderRadius.circular(36),
+                          child: Icon(
+                            Icons.backspace_outlined,
+                            size: 26,
+                            color:
+                                theme.iconTheme.color?.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNumberButton(String number, ThemeData theme) {
+    return InkWell(
+      onTap: () => _onKeyPressed(number),
+      borderRadius: BorderRadius.circular(36),
+      child: Container(
+        width: 72,
+        height: 72,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: theme.cardColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Text(
+          number,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ),

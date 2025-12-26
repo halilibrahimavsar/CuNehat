@@ -65,7 +65,7 @@ GoRouter createAppRouter(AuthBloc authBloc) {
         pageBuilder: (context, state) {
           return ExternalCubeSlideLeftToRight(
             key: state.pageKey,
-            child: ModernAuthPage(
+            child: BiometricAuthPage(
               onSuccess: () {
                 final currentState = authBloc.state;
                 if (currentState is AuthLocked) {
