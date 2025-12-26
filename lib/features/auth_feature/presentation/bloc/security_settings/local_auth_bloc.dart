@@ -26,8 +26,8 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   ) async {
     emit(state.copyWith(status: SecurityStatus.loading));
     try {
-      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnable();
-      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSetUsecase();
+      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnabled();
+      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSet();
       final isAvailable = await _manageLocalAuthUseCase.isBiometricAvailable();
 
       emit(state.copyWith(

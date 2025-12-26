@@ -20,6 +20,6 @@ class ManageLocalAuthUseCase {
 
   Future<void> deletePinCode() => _repository.deletePinCode();
 
-  Future<bool> isBiometricEnable() => _repository.isBiometricEnabled();
-  Future<bool> isPinCodeSetUsecase() => _repository.isPinCodeSet();
+  Future<bool> isBiometricEnabled() => _repository.isBiometricEnabled();
+  Future<bool> isPinCodeSet() => _repository.isPinCodeSet();
 }

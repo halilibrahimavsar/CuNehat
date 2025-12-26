@@ -66,8 +66,8 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
   ) async {
     if (event.user != null) {
       // Kullanıcı giriş yapmış, şimdi yerel güvenlik kontrolü yapalım
-      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnable();
-      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSetUsecase();
+      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnabled();
+      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSet();
 
       if (isBioEnabled || isPinSet) {
         emit(AuthLocked(event.user!));
@@ -94,8 +94,8 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
     // Sadece zaten giriş yapmış (Authenticated) kullanıcılar için kontrol et
     if (state is Authenticated) {
       final currentUser = (state as Authenticated).user;
-      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnable();
-      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSetUsecase();
+      final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnabled();
+      final isPinSet = await _manageLocalAuthUseCase.isPinCodeSet();
 
       if (isBioEnabled || isPinSet) {
         emit(AuthLocked(currentUser));
