@@ -99,9 +99,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     if (_isLockedOut) return;
     final success = await _biometricService.authenticateWithBiometrics();
     if (success && mounted) {
-      _failedAttempts = 0;
-      _lockoutLevel = 0;
-      await _biometricService.clearLockoutState();
+      await _resetSecurityState();
       widget.onSuccess();
       HapticFeedback.heavyImpact();
     }
@@ -119,9 +117,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
 
     if (isCorrect) {
       HapticFeedback.heavyImpact();
-      _failedAttempts = 0;
-      _lockoutLevel = 0;
-      await _biometricService.clearLockoutState();
+      await _resetSecurityState();
       widget.onSuccess();
     } else {
       HapticFeedback.vibrate();
@@ -142,16 +138,28 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     }
   }
 
+  Future<void> _resetSecurityState() async {
+    if (mounted) {
+      setState(() {
+        _failedAttempts = 0;
+        _lockoutLevel = 0;
+        _remainingSeconds = 0;
+        _errorText = null;
+      });
+    }
+    await _biometricService.clearLockoutState();
+  }
+
   void _startLockout() {
     int duration;
     if (_lockoutLevel == 0) {
-      duration = 3; // İlk kilitlenme: 30 saniye
+      duration = 30; // İlk kilitlenme: 30 saniye
     } else if (_lockoutLevel == 1) {
-      duration = 6; // İkinci kilitlenme: 2 dakika
+      duration = 120; // İkinci kilitlenme: 2 dakika
     } else if (_lockoutLevel == 2) {
-      duration = 9; // Sonraki kilitlenmeler: 5 dakika
+      duration = 300; // Sonraki kilitlenmeler: 5 dakika
     } else {
-      duration = 12;
+      duration = 1000; // sonraki kilitlenmeler: 16 dakika
     }
 
     // Kalıcı hafızaya kaydet
