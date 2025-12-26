@@ -36,7 +36,7 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.home,
         pageBuilder: (context, state) {
-          return ExternalCubeSlideLeftToRight(
+          return CubeInTransition(
             key: state.pageKey,
             child: const HomePage(),
           );
@@ -45,7 +45,7 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.profile,
         pageBuilder: (context, state) {
-          return ExternalCubeSlideLeftToRight(
+          return CubeInTransition(
             key: state.pageKey,
             child: const ProfilePage(),
           );
@@ -54,7 +54,7 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.settings,
         pageBuilder: (context, state) {
-          return ExternalCubeSlideLeftToRight(
+          return CubeInTransition(
             key: state.pageKey,
             child: const SettingsPage(),
           );
@@ -63,7 +63,7 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.lockScreen,
         pageBuilder: (context, state) {
-          return ExternalCubeSlideLeftToRight(
+          return CubeInTransition(
             key: state.pageKey,
             child: BiometricAuthPage(
               onSuccess: () {
