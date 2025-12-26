@@ -3,6 +3,7 @@
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'dart:math' as math;
 
 class BiometricAuthPage extends StatefulWidget {
@@ -29,6 +30,9 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   String? _errorText;
   int _failedAttempts = 0;
   bool _isLoading = false;
+  Timer? _lockoutTimer;
+  int _remainingSeconds = 0;
+  bool get _isLockedOut => _remainingSeconds > 0;
 
   late AnimationController _shakeController;
 
@@ -44,6 +48,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
 
   @override
   void dispose() {
+    _lockoutTimer?.cancel();
     _shakeController.dispose();
     super.dispose();
   }
@@ -68,6 +73,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   }
 
   Future<void> _authenticateWithBiometric() async {
+    if (_isLockedOut) return;
     final success = await _biometricService.authenticateWithBiometrics();
     if (success && mounted) {
       widget.onSuccess();
@@ -76,6 +82,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   }
 
   Future<void> _verifyPin() async {
+    if (_isLockedOut) return;
     setState(() => _isLoading = true);
     // Kısa bir gecikme hissi (UX için)
     await Future.delayed(const Duration(milliseconds: 150));
@@ -94,16 +101,52 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
         _isLoading = false;
         _enteredPin = '';
         _failedAttempts++;
-        _errorText = 'Hatalı PIN';
       });
 
       if (_failedAttempts >= 3) {
-        _showLockoutDialog();
+        _startLockout();
+      } else {
+        setState(() {
+          _errorText = 'Hatalı PIN. Kalan hak: ${3 - _failedAttempts}';
+        });
       }
     }
   }
 
+  void _startLockout() {
+    setState(() {
+      _remainingSeconds = 30;
+      _errorText = null;
+    });
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (_remainingSeconds > 0) {
+            _remainingSeconds--;
+          } else {
+            _resetLockout();
+          }
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void _resetLockout() {
+    _lockoutTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _remainingSeconds = 0;
+        _failedAttempts = 0;
+        _errorText = null;
+      });
+    }
+  }
+
   void _onKeyPressed(String value) {
+    if (_isLockedOut) return;
     if (_enteredPin.length < 6) {
       HapticFeedback.lightImpact();
       setState(() {
@@ -117,34 +160,13 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   }
 
   void _onDeletePressed() {
+    if (_isLockedOut) return;
     if (_enteredPin.isNotEmpty) {
       HapticFeedback.lightImpact();
       setState(() {
         _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1);
       });
     }
-  }
-
-  void _showLockoutDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        icon:
-            const Icon(Icons.lock_clock_outlined, color: Colors.red, size: 48),
-        title: const Text('Geçici Olarak Kilitlendi'),
-        content: const Text(
-          '3 başarısız deneme yaptınız.\nGüvenliğiniz için lütfen 30 saniye bekleyin veya biyometrik doğrulama kullanın.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -200,18 +222,27 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    _errorText ?? 'Devam etmek için PIN girin',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: _errorText != null
-                          ? theme.colorScheme.error
-                          : theme.textTheme.bodyMedium?.color
-                              ?.withValues(alpha: 0.6),
-                      fontWeight: _errorText != null
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
+                  _isLockedOut
+                      ? Text(
+                          'Çok fazla hatalı deneme.\n$_remainingSeconds saniye bekleyin.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : Text(
+                          _errorText ?? 'Devam etmek için PIN girin',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: _errorText != null
+                                ? theme.colorScheme.error
+                                : theme.textTheme.bodyMedium?.color
+                                    ?.withValues(alpha: 0.6),
+                            fontWeight: _errorText != null
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
 
                   const SizedBox(height: 48),
 
@@ -291,12 +322,17 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                         height: 72,
                         child: _isBiometricAvailable
                             ? InkWell(
-                                onTap: _authenticateWithBiometric,
+                                onTap: _isLockedOut
+                                    ? null
+                                    : _authenticateWithBiometric,
                                 borderRadius: BorderRadius.circular(36),
-                                child: Icon(
-                                  Icons.fingerprint,
-                                  size: 32,
-                                  color: theme.primaryColor,
+                                child: Opacity(
+                                  opacity: _isLockedOut ? 0.5 : 1.0,
+                                  child: Icon(
+                                    Icons.fingerprint,
+                                    size: 32,
+                                    color: theme.primaryColor,
+                                  ),
                                 ),
                               )
                             : null,
@@ -307,13 +343,16 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                         width: 72,
                         height: 72,
                         child: InkWell(
-                          onTap: _onDeletePressed,
+                          onTap: _isLockedOut ? null : _onDeletePressed,
                           borderRadius: BorderRadius.circular(36),
-                          child: Icon(
-                            Icons.backspace_outlined,
-                            size: 26,
-                            color:
-                                theme.iconTheme.color?.withValues(alpha: 0.7),
+                          child: Opacity(
+                            opacity: _isLockedOut ? 0.5 : 1.0,
+                            child: Icon(
+                              Icons.backspace_outlined,
+                              size: 26,
+                              color:
+                                  theme.iconTheme.color?.withValues(alpha: 0.7),
+                            ),
                           ),
                         ),
                       ),
@@ -330,28 +369,31 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
 
   Widget _buildNumberButton(String number, ThemeData theme) {
     return InkWell(
-      onTap: () => _onKeyPressed(number),
+      onTap: _isLockedOut ? null : () => _onKeyPressed(number),
       borderRadius: BorderRadius.circular(36),
-      child: Container(
-        width: 72,
-        height: 72,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: theme.cardColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      child: Opacity(
+        opacity: _isLockedOut ? 0.5 : 1.0,
+        child: Container(
+          width: 72,
+          height: 72,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: theme.cardColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            number,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w400,
             ),
-          ],
-        ),
-        child: Text(
-          number,
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w400,
           ),
         ),
       ),
