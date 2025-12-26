@@ -18,6 +18,7 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
   final AuthRepository _authRepository;
   final ManageLocalAuthUseCase _manageLocalAuthUseCase;
   StreamSubscription<UserEntity?>? _userSubscription;
+  DateTime? _lastUnlockTime;
 
   RemoteAuthBloc({
     required SignInWithGoogle signInWithGoogle,
@@ -83,6 +84,7 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
     AuthUnlockRequested event,
     Emitter<AuthState> emit,
   ) async {
+    _lastUnlockTime = DateTime.now();
     // Kilit ekranı başarıyla geçildi, normal authenticated durumuna dön
     emit(Authenticated(event.user));
   }
@@ -93,6 +95,12 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
   ) async {
     // Sadece zaten giriş yapmış (Authenticated) kullanıcılar için kontrol et
     if (state is Authenticated) {
+      // Eğer son 2 saniye içinde kilit açıldıysa, bu resume işlemi biyometrik pencereden dönüş olabilir.
+      if (_lastUnlockTime != null &&
+          DateTime.now().difference(_lastUnlockTime!).inSeconds < 2) {
+        return;
+      }
+
       final currentUser = (state as Authenticated).user;
       final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnabled();
       final isPinSet = await _manageLocalAuthUseCase.isPinCodeSet();
