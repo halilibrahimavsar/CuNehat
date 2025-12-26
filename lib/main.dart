@@ -1,6 +1,7 @@
 import 'package:cunehat/core/config/routes/gorouting.dart';
 import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/privacy_guard.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/data/repository/auth_repository_impl.dart';
@@ -235,6 +236,18 @@ class CuNehatEngine extends StatelessWidget {
               theme: themeState.name,
               title: "CuNehat",
               debugShowCheckedModeBanner: false,
+              // Tüm uygulamayı PrivacyGuard ile sarmalıyoruz ve LocalAuth durumuna bağlıyoruz
+              builder: (context, child) {
+                return BlocBuilder<LocalAuthBloc, LocalAuthState>(
+                  builder: (context, localAuthState) {
+                    // PIN veya Biyometrik ayarlıysa PrivacyGuard devreye girsin
+                    final isSecurityEnabled = localAuthState.isPinSet ||
+                        localAuthState.isBiometricEnabled;
+                    return PrivacyGuard(
+                        enabled: isSecurityEnabled, child: child!);
+                  },
+                );
+              },
             );
           },
         ),

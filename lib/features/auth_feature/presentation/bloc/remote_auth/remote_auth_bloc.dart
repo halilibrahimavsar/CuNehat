@@ -19,6 +19,8 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
   final ManageLocalAuthUseCase _manageLocalAuthUseCase;
   StreamSubscription<UserEntity?>? _userSubscription;
   DateTime? _lastUnlockTime;
+  DateTime? _lastPausedTime;
+  static const int _backgroundLockTimeoutSeconds = 30; // 30 saniye mühlet
 
   RemoteAuthBloc({
     required SignInWithGoogle signInWithGoogle,
@@ -44,8 +46,17 @@ class RemoteAuthBloc extends Bloc<RemoteAuthEvent, AuthState>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _lastPausedTime = DateTime.now();
+    }
+
     if (state == AppLifecycleState.resumed) {
-      add(AuthAppResumed());
+      // Eğer son duraklatma üzerinden belirlenen süre geçtiyse kontrol et
+      if (_lastPausedTime != null &&
+          DateTime.now().difference(_lastPausedTime!).inSeconds >
+              _backgroundLockTimeoutSeconds) {
+        add(AuthAppResumed());
+      }
     }
   }
 

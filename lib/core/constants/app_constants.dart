@@ -157,5 +157,4 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String investment = '/investment';
   static const String wallet = '/wallet';
-  static const String profile = '/profile';
 }

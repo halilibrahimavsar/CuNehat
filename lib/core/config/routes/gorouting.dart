@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/animations/page_transations_views.dart';
 import 'package:cunehat/features/auth_feature/presentation/pages/biometric_auth_page.dart';
-import 'package:cunehat/features/auth_feature/presentation/pages/profile_page.dart';
 import 'package:cunehat/features/main_feature/presentation/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
@@ -39,15 +38,6 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
           return CubeInTransition(
             key: state.pageKey,
             child: const HomePage(),
-          );
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.profile,
-        pageBuilder: (context, state) {
-          return CubeInTransition(
-            key: state.pageKey,
-            child: const ProfilePage(),
           );
         },
       ),
