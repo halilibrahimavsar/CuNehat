@@ -30,3 +30,5 @@ class AuthUnlockRequested extends AuthEvent {
   @override
   List<UserEntity> get props => [user];
 }
+
+class AuthAppResumed extends AuthEvent {}

@@ -11,6 +11,8 @@ class BiometricService {
 
   static const String _biometricEnabledKey = 'biometric_enabled';
   static const String _pinCodeKey = 'pin_code';
+  static const String _lockoutEndTimeKey = 'auth_lockout_end_time';
+  static const String _lockoutLevelKey = 'auth_lockout_level';
 
   /// Check if device supports biometric authentication
   Future<bool> canCheckBiometrics() async {
@@ -111,5 +113,31 @@ class BiometricService {
   /// Clear all security settings
   Future<void> clearAllSecuritySettings() async {
     await _secureStorage.deleteAll();
+  }
+
+  /// Save lockout details
+  Future<void> saveLockoutState(int level, int endTimestamp) async {
+    await _secureStorage.write(key: _lockoutLevelKey, value: level.toString());
+    await _secureStorage.write(
+        key: _lockoutEndTimeKey, value: endTimestamp.toString());
+  }
+
+  /// Get lockout end time (milliseconds since epoch)
+  Future<int?> getLockoutEndTime() async {
+    final val = await _secureStorage.read(key: _lockoutEndTimeKey);
+    return val != null ? int.tryParse(val) : null;
+  }
+
+  /// Get lockout level
+  Future<int> getLockoutLevel() async {
+    final val = await _secureStorage.read(key: _lockoutLevelKey);
+    return val != null ? int.tryParse(val) ?? 0 : 0;
+  }
+
+  /// Clear lockout state (on successful login)
+  Future<void> clearLockoutState() async {
+    await _secureStorage.delete(key: _lockoutEndTimeKey);
+    // Seviyeyi de sıfırlamak istersek:
+    await _secureStorage.delete(key: _lockoutLevelKey);
   }
 }

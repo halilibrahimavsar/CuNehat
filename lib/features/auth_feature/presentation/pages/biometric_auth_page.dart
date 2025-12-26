@@ -30,6 +30,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   String? _errorText;
   int _failedAttempts = 0;
   bool _isLoading = false;
+  int _lockoutLevel = 0;
   Timer? _lockoutTimer;
   int _remainingSeconds = 0;
   bool get _isLockedOut => _remainingSeconds > 0;
@@ -44,6 +45,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
       vsync: this,
     );
     _checkAuthMethods();
+    _checkExistingLockout();
   }
 
   @override
@@ -51,6 +53,27 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     _lockoutTimer?.cancel();
     _shakeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkExistingLockout() async {
+    final endTime = await _biometricService.getLockoutEndTime();
+    final level = await _biometricService.getLockoutLevel();
+
+    if (endTime != null) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final remaining = ((endTime - now) / 1000).ceil();
+
+      if (remaining > 0) {
+        setState(() {
+          _lockoutLevel = level;
+          _remainingSeconds = remaining;
+        });
+        _startTimerOnly();
+      } else {
+        // Süre dolmuş ama level'ı hatırlayalım (isteğe bağlı)
+        setState(() => _lockoutLevel = level);
+      }
+    }
   }
 
   Future<void> _checkAuthMethods() async {
@@ -76,6 +99,9 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     if (_isLockedOut) return;
     final success = await _biometricService.authenticateWithBiometrics();
     if (success && mounted) {
+      _failedAttempts = 0;
+      _lockoutLevel = 0;
+      await _biometricService.clearLockoutState();
       widget.onSuccess();
       HapticFeedback.heavyImpact();
     }
@@ -93,6 +119,9 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
 
     if (isCorrect) {
       HapticFeedback.heavyImpact();
+      _failedAttempts = 0;
+      _lockoutLevel = 0;
+      await _biometricService.clearLockoutState();
       widget.onSuccess();
     } else {
       HapticFeedback.vibrate();
@@ -114,10 +143,30 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   }
 
   void _startLockout() {
+    int duration;
+    if (_lockoutLevel == 0) {
+      duration = 3; // İlk kilitlenme: 30 saniye
+    } else if (_lockoutLevel == 1) {
+      duration = 6; // İkinci kilitlenme: 2 dakika
+    } else if (_lockoutLevel == 2) {
+      duration = 9; // Sonraki kilitlenmeler: 5 dakika
+    } else {
+      duration = 12;
+    }
+
+    // Kalıcı hafızaya kaydet
+    final endTime = DateTime.now().millisecondsSinceEpoch + (duration * 1000);
+    _biometricService.saveLockoutState(_lockoutLevel + 1, endTime);
+
     setState(() {
-      _remainingSeconds = 30;
+      _remainingSeconds = duration;
       _errorText = null;
+      _lockoutLevel++;
     });
+    _startTimerOnly();
+  }
+
+  void _startTimerOnly() {
     _lockoutTimer?.cancel();
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {

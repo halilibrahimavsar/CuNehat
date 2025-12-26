@@ -4,13 +4,14 @@ import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_so
 import 'package:cunehat/features/auth_feature/domain/entities/user_entity.dart';
 import 'package:cunehat/features/auth_feature/domain/repository/auth_repository.dart';
 import 'package:cunehat/features/auth_feature/domain/usecases/sign_in_with_google.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
-class AuthBloc extends Bloc<AuthEvent, AuthState> {
+class AuthBloc extends Bloc<AuthEvent, AuthState> with WidgetsBindingObserver {
   final SignInWithGoogle _signInWithGoogle;
   final AuthRepository _authRepository;
   StreamSubscription<UserEntity?>? _userSubscription;
@@ -26,9 +27,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOutRequested>(_onSignOutRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
     on<AuthUnlockRequested>(_onAuthUnlockRequested);
+    on<AuthAppResumed>(_onAuthAppResumed);
 
     // App başlatıldığında auth state kontrolü
     add(AuthCheckRequested());
+
+    // Lifecycle dinleyicisini kaydet
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      add(AuthAppResumed());
+    }
   }
 
   Future<void> _onAuthCheckRequested(
@@ -72,6 +84,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(Authenticated(event.user));
   }
 
+  Future<void> _onAuthAppResumed(
+    AuthAppResumed event,
+    Emitter<AuthState> emit,
+  ) async {
+    // Sadece zaten giriş yapmış (Authenticated) kullanıcılar için kontrol et
+    if (state is Authenticated) {
+      final currentUser = (state as Authenticated).user;
+      final bioService = BiometricService();
+      final isBioEnabled = await bioService.isBiometricEnabled();
+      final isPinSet = await bioService.isPinCodeSet();
+
+      if (isBioEnabled || isPinSet) {
+        emit(AuthLocked(currentUser));
+      }
+    }
+  }
+
   Future<void> _onSignInRequested(
     SignInWithGoogleRequested event,
     Emitter<AuthState> emit,
@@ -100,6 +129,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
+    WidgetsBinding.instance.removeObserver(this);
     _userSubscription?.cancel();
     return super.close();
   }
