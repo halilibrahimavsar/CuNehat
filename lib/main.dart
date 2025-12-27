@@ -44,10 +44,74 @@ void main() async {
   Hive.registerAdapter(WalletModelAdapter());
   Hive.registerAdapter(TransactionModelAdapter());
   Hive.registerAdapter(TransactionTypeModelAdapter());
-  debugPrint('✅ Hive TypeAdapters registered');
 
-  runApp(
-    MultiRepositoryProvider(
+  runApp(const _GlobalProviders(child: CuNehatEngine()));
+}
+
+class CuNehatEngine extends StatelessWidget {
+  const CuNehatEngine({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RemoteAuthBloc, AuthState>(
+      builder: (context, authState) {
+        // ✅ Authenticated veya AuthLocked - Ana app'i yükle
+        if (authState is Authenticated || authState is AuthLocked) {
+          return BlocBuilder<SettingsBloc, SettingsState>(
+            builder: (context, settingsState) {
+              switch (settingsState) {
+                case StorageModeLoadedSt():
+                  return _AuthenticatedProviders(
+                    storageMode: settingsState.mode,
+                    child: const _CuNehatApp(),
+                  );
+
+                case SettingsErrorSt():
+                  return MaterialApp(
+                    debugShowCheckedModeBanner: false,
+                    home: Scaffold(
+                      body: Center(
+                        child: Text(settingsState.error),
+                      ),
+                    ),
+                  );
+
+                default:
+                  return const MaterialApp(
+                    debugShowCheckedModeBanner: false,
+                    home: Scaffold(
+                      body: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+              }
+            },
+          );
+        }
+
+        // Fallback: LoginScreen
+        // Unauthenticated, AuthLoading ve AuthError durumlarını kapsar.
+        return const MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: LoginScreen(),
+        );
+      },
+    );
+  }
+}
+
+/// 1. GLOBAL PROVIDERS
+/// Uygulamanın en üst seviyesindeki temel bağımlılıkları yönetir.
+/// (Settings, Auth, Biometric)
+class _GlobalProviders extends StatelessWidget {
+  final Widget child;
+
+  const _GlobalProviders({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiRepositoryProvider(
       providers: [
         RepositoryProvider(
           create: (context) => SettingsRepositoryImpl(),
@@ -79,59 +143,26 @@ void main() async {
             ),
           ),
         ],
-        child: const CuNehatEngine(),
+        child: child,
       ),
-    ),
-  );
+    );
+  }
 }
 
-class CuNehatEngine extends StatelessWidget {
-  const CuNehatEngine({super.key});
+/// 2. AUTHENTICATED SESSION PROVIDERS
+/// Sadece giriş yapmış kullanıcılar için gerekli olan veri kaynaklarını yönetir.
+/// (Wallet, Transaction ve bunların Bloc'ları)
+class _AuthenticatedProviders extends StatelessWidget {
+  final StorageMode storageMode;
+  final Widget child;
+
+  const _AuthenticatedProviders({
+    required this.storageMode,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<RemoteAuthBloc, AuthState>(
-      builder: (context, authState) {
-        // ✅ Authenticated veya AuthLocked - Ana app'i yükle
-        if (authState is Authenticated || authState is AuthLocked) {
-          return BlocBuilder<SettingsBloc, SettingsState>(
-            builder: (context, settingsState) {
-              switch (settingsState) {
-                case StorageModeLoadedSt():
-                  return _buildAuthenticatedApp(context, settingsState.mode);
-
-                case SettingsErrorSt():
-                  return MaterialApp(
-                    home: Scaffold(
-                      body: Center(
-                        child: Text(settingsState.error),
-                      ),
-                    ),
-                  );
-
-                default:
-                  return const MaterialApp(
-                    home: Scaffold(
-                      body: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                  );
-              }
-            },
-          );
-        }
-
-        // Fallback: LoginScreen
-        // Unauthenticated, AuthLoading ve AuthError durumlarını kapsar.
-        return const MaterialApp(
-          home: LoginScreen(),
-        );
-      },
-    );
-  }
-
-  Widget _buildAuthenticatedApp(BuildContext context, StorageMode storageMode) {
     return MultiRepositoryProvider(
       providers: [
         // Wallet Repository
@@ -168,10 +199,7 @@ class CuNehatEngine extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           // Theme BLoC
-          BlocProvider(
-            create: (context) => ThemeBloc(),
-          ),
-
+          BlocProvider(create: (context) => ThemeBloc()),
           // Wallet BLoC
           BlocProvider(
             create: (context) => WalletBloc(
@@ -224,34 +252,41 @@ class CuNehatEngine extends StatelessWidget {
             )..add(LoadSecurityEvent()),
           ),
         ],
-        child: BlocBuilder<ThemeBloc, ThemeState>(
-          builder: (context, themeState) {
-            // ✅ FIX: GoRouter'ı context ile oluştur
-            final authBloc = context.read<RemoteAuthBloc>();
-            final router = createAppRouter(authBloc);
+        child: child,
+      ),
+    );
+  }
+}
 
-            return MaterialApp.router(
-              routerConfig: router,
-              themeMode: ThemeMode.light,
-              theme: themeState.name,
-              title: "CuNehat",
-              debugShowCheckedModeBanner: false,
-              // Tüm uygulamayı PrivacyGuard ile sarmalıyoruz ve LocalAuth durumuna bağlıyoruz
-              builder: (context, child) {
-                return BlocBuilder<LocalAuthBloc, LocalAuthState>(
-                  builder: (context, localAuthState) {
-                    // PIN veya Biyometrik ayarlıysa PrivacyGuard devreye girsin
-                    final isSecurityEnabled = localAuthState.isPinSet ||
-                        localAuthState.isBiometricEnabled;
-                    return PrivacyGuard(
-                        enabled: isSecurityEnabled, child: child!);
-                  },
-                );
+/// 3. MAIN APP VIEW
+/// Uygulamanın görsel yapısını (MaterialApp, Router, Theme) kurar.
+class _CuNehatApp extends StatelessWidget {
+  const _CuNehatApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final authBloc = context.read<RemoteAuthBloc>();
+        final router = createAppRouter(authBloc);
+
+        return MaterialApp.router(
+          routerConfig: router,
+          themeMode: ThemeMode.light,
+          theme: themeState.name,
+          title: "CuNehat",
+          debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            return BlocBuilder<LocalAuthBloc, LocalAuthState>(
+              builder: (context, localAuthState) {
+                final isSecurityEnabled = localAuthState.isPinSet ||
+                    localAuthState.isBiometricEnabled;
+                return PrivacyGuard(enabled: isSecurityEnabled, child: child!);
               },
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }
