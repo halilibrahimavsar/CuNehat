@@ -47,14 +47,14 @@ class CubeAnimationView extends StatelessWidget {
         }
 
         final outgoingRotation =
-            Tween(begin: 0.0, end: math.pi / 2.5).transform(phaseValue);
+            Tween(begin: 0.0, end: math.pi / 2.2).transform(phaseValue);
         final outgoingOffset = Tween<Offset>(
           begin: Offset.zero,
           end: const Offset(-1.0, 0.0),
         ).transform(phaseValue);
 
         final incomingRotation =
-            Tween(begin: -math.pi / 2.5, end: 0.0).transform(phaseValue);
+            Tween(begin: -math.pi / 2.2, end: 0.0).transform(phaseValue);
         final incomingOffset = Tween<Offset>(
           begin: const Offset(1.0, 0.0),
           end: Offset.zero,

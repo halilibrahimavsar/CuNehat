@@ -56,8 +56,12 @@ class CubeInTransition extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return Transform(
                   alignment: alignment,
                   transform: _perspective()
@@ -104,8 +108,12 @@ class CubeOutTransition extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return Transform(
                   alignment: alignment,
                   transform: _perspective()
@@ -152,8 +160,12 @@ class FlipDoorTransition extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return Transform(
                   alignment: alignment,
                   transform: _perspective()
@@ -213,8 +225,12 @@ class LiftUp3DTransition extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return Transform(
                   alignment: alignment,
                   transform: _perspective()
@@ -258,8 +274,12 @@ class Depth3DTransition extends CustomTransitionPage<void> {
             ).animate(secondaryAnimation);
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return Opacity(
                   opacity: opacity.value * secondaryOpacity.value,
                   child: Transform(
@@ -319,8 +339,12 @@ class FoldingCubeTransition extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return SlideTransition(
                   position: outgoingOffset,
                   child: Transform(
@@ -383,8 +407,12 @@ class ExternalCubeSlideTransition extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return SlideTransition(
                   // İleri giderken yeni sayfayı içeri kaydırır.
                   // Geri giderken mevcut sayfayı dışarı kaydırır.
@@ -451,8 +479,12 @@ class ExternalCubeSlideRightToLeft extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return SlideTransition(
                   position: outgoingOffset,
                   child: SlideTransition(
@@ -518,8 +550,12 @@ class ExternalCubeSlideLeftToRight extends CustomTransitionPage<void> {
             );
 
             return AnimatedBuilder(
-              animation: animation,
+              animation: Listenable.merge([animation, secondaryAnimation]),
               builder: (context, _) {
+                if (animation.status == AnimationStatus.completed &&
+                    secondaryAnimation.status == AnimationStatus.dismissed) {
+                  return child;
+                }
                 return SlideTransition(
                   position: outgoingOffset,
                   child: SlideTransition(
