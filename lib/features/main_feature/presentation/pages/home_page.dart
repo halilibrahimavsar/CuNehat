@@ -215,11 +215,6 @@ class _HomePageState extends State<HomePage>
                 );
 
               case TransactionLoaded():
-                print("Transactions:---------------------");
-                for (var element in transactionState.allTransactions) {
-                  print(element.tag);
-                }
-                print("Transactions:---------------------");
                 return Expanded(
                   child: CubeAnimationView(
                     controller: _controller,

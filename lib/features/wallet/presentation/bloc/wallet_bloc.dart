@@ -27,7 +27,6 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       try {
         await getWalletsUseCase.call(event.userId).then(
           (wallets) {
-            print(wallets);
             if (wallets.isEmpty) {
               emit(const NoWalletSt());
             } else {

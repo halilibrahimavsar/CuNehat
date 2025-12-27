@@ -10,13 +10,9 @@ class AddTransactionUseCase {
   AddTransactionUseCase(this.repository);
 
   Future<String> call(TransactionEntity params) async {
-    print("*********");
-    print(params.toJson());
     if (params.id == null) {
-      print("Generating id...");
       params = params.copyWith(id: UidGenerator.generateV7());
     }
-    print("id: ${params.id}");
     return await repository.addTransaction(params);
   }
 }
