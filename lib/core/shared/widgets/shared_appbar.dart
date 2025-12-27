@@ -128,174 +128,180 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
 
   Widget _buildAppBarContent(
       BuildContext context, WalletState state, double currentValue) {
-    switch (state) {
-      case WalletLoadedSt():
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Row(
-            children: [
-              // Menu Button with Animation
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      final scaffoldState = context.findAncestorStateOfType<
-                          AnimatedScaffoldWrapperState>();
-                      scaffoldState?.openDrawer();
-                    },
-                    icon: const Icon(Icons.grid_view_rounded,
-                        color: Colors.white, size: 22),
-                  ),
-                ),
-              ),
+    // 1. Menu Button (Always visible)
+    final menuButton = ScaleTransition(
+      scale: _scaleAnimation,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: IconButton(
+          onPressed: () {
+            final scaffoldState =
+                context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+            scaffoldState?.openDrawer();
+          },
+          icon: const Icon(Icons.grid_view_rounded,
+              color: Colors.white, size: 22),
+        ),
+      ),
+    );
 
-              // Wallet Info (Center)
-              Expanded(
-                child: InfoActionMenu<String>(
-                  onSelected: (p0) {
-                    if (p0 == 'detail') {
-                      WalletInfoDialog.show(context);
-                    }
-                  },
-                  items: [
-                    PopupMenuItem(
-                      value: 'detail',
-                      child: Text("Detay"),
-                    )
-                  ],
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Wallet Name Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.1), width: 1),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.wallet,
-                                size: 12, color: Colors.white.withOpacity(0.9)),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                state.activeWallet?.name.toUpperCase() ??
-                                    "CÜZDAN",
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.white.withOpacity(0.95),
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      // Balance
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(
-                          begin: 0,
-                          end: state.activeWallet?.balance.toDouble() ?? 0,
-                        ),
-                        duration: const Duration(milliseconds: 1200),
-                        curve: Curves.easeOutExpo,
-                        builder: (context, value, child) {
-                          return Text(
-                            '${value.toStringAsFixed(2)} ₺',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
-                              shadows: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+    // 2. Wallet Button (Always visible)
+    final walletButton = TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 1500),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+            child: IconButton(
+              onPressed: () {
+                final scaffoldState = context
+                    .findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+                scaffoldState?.openWalletDialog(
+                  WalletSheetContent(
+                    scrollController: ScrollController(),
+                    userId: FirebaseAuth.instance.currentUser!.uid,
                   ),
-                ),
+                );
+              },
+              icon: const Icon(
+                Icons.wallet,
+                color: Colors.white,
+                size: 24,
               ),
-
-              // Wallet Button with Pulse Animation
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 1500),
-                curve: Curves.elasticOut,
-                builder: (context, value, child) {
-                  return Transform.scale(
-                    scale: value,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          final scaffoldState = context.findAncestorStateOfType<
-                              AnimatedScaffoldWrapperState>();
-                          scaffoldState?.openWalletDialog(
-                            WalletSheetContent(
-                              scrollController: ScrollController(),
-                              userId: FirebaseAuth.instance.currentUser!.uid,
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.wallet,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-
-      case WalletLoadingSt():
-        return const Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 2,
             ),
           ),
         );
+      },
+    );
 
-      default:
-        return const Text(
-          "Aktif cüzdan bulunamadı",
-          style: TextStyle(color: Colors.white),
-        );
+    // 3. Center Content (Depends on state)
+    Widget centerContent;
+
+    if (state is WalletLoadedSt) {
+      centerContent = InfoActionMenu<String>(
+        onSelected: (p0) {
+          if (p0 == 'detail') {
+            WalletInfoDialog.show(context);
+          }
+        },
+        items: const [
+          PopupMenuItem(
+            value: 'detail',
+            child: Text("Detay"),
+          )
+        ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Wallet Name Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border:
+                    Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wallet,
+                      size: 12, color: Colors.white.withOpacity(0.9)),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      state.activeWallet?.name.toUpperCase() ?? "CÜZDAN",
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.95),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            // Balance
+            TweenAnimationBuilder<double>(
+              tween: Tween(
+                begin: 0,
+                end: state.activeWallet?.balance.toDouble() ?? 0,
+              ),
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeOutExpo,
+              builder: (context, value, child) {
+                return Text(
+                  '${value.toStringAsFixed(2)} ₺',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    shadows: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    } else if (state is WalletLoadingSt) {
+      centerContent = const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    } else {
+      // NoWalletSt or Error
+      centerContent = Center(
+        child: Text(
+          state is NoWalletSt ? "Cüzdan Oluştur" : "Cüzdan Seçin",
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      );
     }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Row(
+        children: [
+          menuButton,
+          Expanded(child: centerContent),
+          walletButton,
+        ],
+      ),
+    );
   }
 }
