@@ -3,13 +3,13 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
 
-class CompareHeader extends StatelessWidget {
+class TransactionHeader extends StatelessWidget {
   final DateTime startDate;
   final DateTime endDate;
   final List<TransactionEntity> allTransactions;
   final FinanceMode mode;
 
-  const CompareHeader({
+  const TransactionHeader({
     super.key,
     required this.startDate,
     required this.endDate,

@@ -3,13 +3,12 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/dismissable_widget.dart';
 import 'package:flutter/material.dart';
 
-class SharedTransactionCard extends StatelessWidget {
+class TransactionCard extends StatelessWidget {
   final BuildContext context;
   final TransactionWithBalance item;
   final bool isListView;
-  // TODO : We add isListView for later usage, for example you can add detailed thing after you finish your models etc.
 
-  const SharedTransactionCard({
+  const TransactionCard({
     super.key,
     required this.context,
     required this.item,

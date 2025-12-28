@@ -2,13 +2,12 @@ import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
 import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/compare_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.dart';
@@ -36,6 +35,7 @@ class _HomePageState extends State<HomePage>
   late DateTime _startDate;
   late DateTime _endDate;
   TransactionViewType _currentViewType = TransactionViewType.list;
+  FinanceMode _currentMode = FinanceMode.compare;
 
   @override
   void initState() {
@@ -98,7 +98,15 @@ class _HomePageState extends State<HomePage>
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              return ModernSharedAppbar(currentSliderValue: _controller.value);
+              double gradientValue = 0.5;
+              if (_currentMode == FinanceMode.income) {
+                gradientValue = 1;
+              } else if (_currentMode == FinanceMode.expense) {
+                gradientValue = 0;
+              } else if (_currentMode == FinanceMode.compare) {
+                gradientValue = 0.5;
+              }
+              return ModernSharedAppbar(currentSliderValue: gradientValue);
             },
           ),
         ),
@@ -183,8 +191,15 @@ class _HomePageState extends State<HomePage>
           endDate: _endDate,
           startDate: _startDate,
           currentViewType: _currentViewType,
+          selectedFinanceMode: _currentMode,
+          onModeChanged: (newMode) {
+            setState(() {
+              _currentMode = newMode;
+            });
+          },
           onViewTypeChanged: (newType) {
             setState(() {
+              print(newType);
               _currentViewType = newType;
             });
           },
@@ -218,29 +233,9 @@ class _HomePageState extends State<HomePage>
                 return Expanded(
                   child: CubeAnimationView(
                     controller: _controller,
-                    firstView: TransactionPage(
-                      key: const ValueKey('expense-list'), // ✅ Unique key
-                      type: TransactionTypeModel.expense,
-                      userId: userId,
-                      wallet: walletState.activeWallet!,
-                      startDate: _startDate,
-                      endDate: _endDate,
-                      allTransactions:
-                          transactionState.allTransactions, // ✅ Veriyi geç
-                      viewType: _currentViewType,
-                    ),
-                    secondView: TransactionPage(
-                      key: const ValueKey('income-list'), // ✅ Unique key
-                      type: TransactionTypeModel.income,
-                      userId: userId,
-                      wallet: walletState.activeWallet!,
-                      startDate: _startDate,
-                      endDate: _endDate,
-                      allTransactions:
-                          transactionState.allTransactions, // ✅ Veriyi geç
-                      viewType: _currentViewType,
-                    ),
-                    thirdView: CompareView(
+                    firstView: Text(" 1. View "),
+                    secondView: Text(" 2. View "),
+                    thirdView: TransactionsPage(
                       key: const ValueKey('compare-view'), // ✅ Unique key
                       userId: userId,
                       wallet: walletState.activeWallet!,
@@ -249,6 +244,7 @@ class _HomePageState extends State<HomePage>
                       allTransactions:
                           transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
+                      mode: _currentMode,
                     ),
                   ),
                 );
@@ -280,6 +276,7 @@ class _HomePageState extends State<HomePage>
     WalletEntity activeWallet,
   ) {
     switch (value) {
+      // TODO : in here we should replace add new data into it
       case SliderState.compare:
         break;
       case SliderState.expense:

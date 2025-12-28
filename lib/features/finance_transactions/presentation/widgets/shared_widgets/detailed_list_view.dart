@@ -1,15 +1,15 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_transaction_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 
-class SharedListView extends StatefulWidget {
+class DetailedListView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final FinanceMode mode;
   final bool showBalanceAfter; // Gelir/Gider modunda false yapacağız
 
-  const SharedListView({
+  const DetailedListView({
     super.key,
     required this.transactions,
     this.mode = FinanceMode.compare,
@@ -17,10 +17,10 @@ class SharedListView extends StatefulWidget {
   });
 
   @override
-  State<SharedListView> createState() => _SharedListViewState();
+  State<DetailedListView> createState() => _DetailedListViewState();
 }
 
-class _SharedListViewState extends State<SharedListView> {
+class _DetailedListViewState extends State<DetailedListView> {
   final Map<DateTime, bool> _expandedStates = {};
 
   @override
@@ -232,7 +232,7 @@ class _SharedListViewState extends State<SharedListView> {
   Widget _buildTransactionItem(TransactionWithBalance item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: SharedTransactionCard(
+      child: TransactionCard(
         context: context,
         item: item,
         isListView: true,

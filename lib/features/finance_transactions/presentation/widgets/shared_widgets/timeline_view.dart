@@ -1,15 +1,15 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_transaction_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 
-class SharedTimelineView extends StatefulWidget {
+class TimelineView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final FinanceMode mode;
   final bool showBalanceAfter;
 
-  const SharedTimelineView({
+  const TimelineView({
     super.key,
     required this.transactions,
     this.mode = FinanceMode.compare,
@@ -17,10 +17,10 @@ class SharedTimelineView extends StatefulWidget {
   });
 
   @override
-  State<SharedTimelineView> createState() => _SharedTimelineViewState();
+  State<TimelineView> createState() => _TimelineViewState();
 }
 
-class _SharedTimelineViewState extends State<SharedTimelineView> {
+class _TimelineViewState extends State<TimelineView> {
   final Map<DateTime, bool> _expandedStates = {};
 
   @override
@@ -98,7 +98,7 @@ class _SharedTimelineViewState extends State<SharedTimelineView> {
                           child: Column(
                             children: items
                                 .map(
-                                  (item) => SharedTransactionCard(
+                                  (item) => TransactionCard(
                                     context: context,
                                     item: item,
                                     isListView: false,

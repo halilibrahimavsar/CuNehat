@@ -1,36 +1,56 @@
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/compare_header.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_list_view.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/shared_timeline_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/transaction_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/detailed_list_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/timeline_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
-class CompareView extends StatelessWidget {
+class TransactionsPage extends StatelessWidget {
   final String userId;
   final WalletEntity wallet;
   final DateTime startDate;
   final DateTime endDate;
   final List<TransactionEntity> allTransactions;
   final TransactionViewType viewType;
+  final FinanceMode mode;
 
-  const CompareView({
+  const TransactionsPage({
     super.key,
     required this.userId,
     required this.wallet,
     required this.startDate,
     required this.endDate,
     required this.allTransactions,
+    this.mode = FinanceMode.compare,
     this.viewType = TransactionViewType.list,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  List<TransactionWithBalance> _getFilteredData(FinanceMode mode) {
     // ✅ Sort transactions by date (newest first)
-    final sortedTransactions = List<TransactionEntity>.from(allTransactions)
-      ..sort((a, b) => b.date.compareTo(a.date));
+    List<TransactionEntity> sortedTransactions;
+
+    if (mode == FinanceMode.expense) {
+      print("expense working");
+      final expenseTransactions =
+          allTransactions.where((element) => element.isExpense).toList();
+
+      sortedTransactions = List<TransactionEntity>.from(expenseTransactions)
+        ..sort((a, b) => a.date.compareTo(b.date));
+    } else if (mode == FinanceMode.income) {
+      print("income working");
+      final expenseTransactions =
+          allTransactions.where((element) => !element.isExpense).toList();
+
+      sortedTransactions = List<TransactionEntity>.from(expenseTransactions)
+        ..sort((a, b) => a.date.compareTo(b.date));
+    } else {
+      print("compare working");
+      sortedTransactions = List<TransactionEntity>.from(allTransactions)
+        ..sort((a, b) => b.date.compareTo(a.date));
+    }
 
     // ✅ Calculate running balance for each transaction
     final transactionsWithBalance = calculateRunningBalance(
@@ -38,6 +58,11 @@ class CompareView extends StatelessWidget {
       wallet.balance,
     );
 
+    return transactionsWithBalance;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -62,25 +87,25 @@ class CompareView extends StatelessWidget {
         child: Column(
           children: [
             // ========== MODERN HEADER ==========
-            CompareHeader(
+            TransactionHeader(
               startDate: startDate,
               endDate: endDate,
               allTransactions: allTransactions,
-              mode: FinanceMode.compare,
+              mode: mode,
             ),
 
             // ========== TRANSACTION LIST ==========
             Expanded(
-              child: transactionsWithBalance.isEmpty
+              child: _getFilteredData(mode).isEmpty
                   ? _buildEmptyState()
                   : viewType == TransactionViewType.list
-                      ? SharedListView(
-                          transactions: transactionsWithBalance,
-                          mode: FinanceMode.compare,
+                      ? DetailedListView(
+                          transactions: _getFilteredData(mode),
+                          mode: mode,
                         )
-                      : SharedTimelineView(
-                          transactions: transactionsWithBalance,
-                          mode: FinanceMode.compare,
+                      : TimelineView(
+                          transactions: _getFilteredData(mode),
+                          mode: mode,
                         ),
             ),
           ],
