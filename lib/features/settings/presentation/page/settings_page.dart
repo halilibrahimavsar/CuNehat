@@ -49,18 +49,24 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showPinOptions() {
+    // 1. ADIM: BLoC referansını burada, güvenli context ile yakalıyoruz.
+    // Bu sayede aşağıda context ölü olsa bile bloc referansı elimizde olur.
+    final localAuthBloc = context.read<LocalAuthBloc>();
+
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => SafeArea(
+      // Builder context'ine 'sheetContext' adını verelim ki karışmasın
+      builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // --- PIN DEĞİŞTİR SEÇENEĞİ ---
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -72,10 +78,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 title: const Text('PIN Değiştir'),
                 onTap: () {
-                  Navigator.pop(context);
-                  _showOldPinDialog();
+                  Navigator.pop(sheetContext); // BottomSheet'i kapat
+
+                  _showVerificationDialog(
+                    onSuccess: () {
+                      _showPinSetupDialog(isChanging: true);
+                    },
+                  );
                 },
               ),
+
+              // --- PIN KALDIR SEÇENEĞİ ---
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -87,9 +100,19 @@ class _SettingsPageState extends State<SettingsPage> {
                       color: Colors.red),
                 ),
                 title: const Text('PIN Kaldır'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  context.read<LocalAuthBloc>().add(DeletePinEvent());
+                onTap: () {
+                  Navigator.pop(sheetContext); // BottomSheet'i kapat
+
+                  _showVerificationDialog(
+                    title: 'PIN Kaldırılıyor',
+                    subtitle:
+                        'Güvenliğiniz için lütfen mevcut şifrenizi girin.',
+                    onSuccess: () {
+                      // 2. ADIM: Burada 'context.read' yerine yukarıda yakaladığımız değişkeni kullanıyoruz.
+                      // Bu referans güvenlidir çünkü UI ağacından bağımsızdır.
+                      localAuthBloc.add(DeletePinEvent());
+                    },
+                  );
                 },
               ),
             ],
@@ -99,84 +122,68 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _showOldPinDialog() async {
+  // Eski _showOldPinDialog yerine bunu kullanın
+  Future<void> _showVerificationDialog({
+    required VoidCallback onSuccess,
+    String title = 'Doğrulama Gerekli',
+    String subtitle = 'Devam etmek için mevcut PIN kodunuzu doğrulayın.',
+  }) async {
     final pinController = TextEditingController();
+    String? error;
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
-          'Mevcut PIN',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Devam etmek için mevcut PIN kodunuzu girin.',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: pinController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              obscureText: true,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                hintText: 'PIN',
-                counterText: '',
-                filled: true,
-                fillColor:
-                    Theme.of(context).dividerColor.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(subtitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey)),
+              const SizedBox(height: 24),
+              _buildPinField(
+                // Senin yazdığın helper widget
+                context: context,
+                controller: pinController,
+                hint: 'Mevcut PIN',
+                errorText: error,
+                autoFocus: true,
               ),
-              autofocus: true,
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                setDialogState(() => error = null); // Hatayı temizle
+
+                // Doğrulama işlemi
+                final isValid = await BiometricDataSource()
+                    .verifyPinCode(pinController.text);
+
+                if (context.mounted) {
+                  if (isValid) {
+                    Navigator.pop(context); // Dialogu kapat
+                    onSuccess(); // ✅ Başarılıysa istenen işlemi yap (Sil veya Değiştir)
+                  } else {
+                    setDialogState(() => error = 'Hatalı PIN kodu');
+                    pinController.clear();
+                  }
+                }
+              },
+              child: const Text('Doğrula'),
             ),
           ],
         ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final pin = pinController.text;
-              if (pin.isEmpty) return;
-
-              // Singleton DataSource üzerinden doğrudan doğrulama
-              final isValid = await BiometricDataSource().verifyPinCode(pin);
-
-              if (context.mounted) {
-                if (isValid) {
-                  Navigator.pop(context); // Eski PIN dialogunu kapat
-                  _showPinSetupDialog(
-                      isChanging: true); // Yeni PIN dialogunu aç
-                } else {
-                  SnackbarHelper.showError(context, '❌ Mevcut PIN hatalı');
-                  pinController.clear();
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Devam Et'),
-          ),
-        ],
       ),
     );
   }
@@ -184,102 +191,60 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _showPinSetupDialog({bool isChanging = false}) async {
     final pinController = TextEditingController();
     final confirmController = TextEditingController();
+    String? errorMessage;
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          isChanging ? 'PIN Değiştir' : 'PIN Oluştur',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '4 veya 6 haneli bir PIN belirleyin.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: pinController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              obscureText: true,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                hintText: 'PIN',
-                counterText: '',
-                filled: true,
-                fillColor:
-                    Theme.of(context).dividerColor.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
+      builder: (context) => StatefulBuilder(
+        // Hataları anlık göstermek için gerekli
+        builder: (context, setDialogState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(isChanging ? 'Yeni PIN Belirleyin' : 'PIN Oluştur'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Güvenliğiniz için 4 haneli bir kod girin.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey)),
+              const SizedBox(height: 24),
+              _buildPinField(
+                context: context,
+                controller: pinController,
+                hint: 'Yeni PIN',
+                autoFocus: true,
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmController,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              obscureText: true,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                hintText: 'Tekrar',
-                counterText: '',
-                filled: true,
-                fillColor:
-                    Theme.of(context).dividerColor.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
+              const SizedBox(height: 16),
+              _buildPinField(
+                context: context,
+                controller: confirmController,
+                hint: 'Tekrar Girin',
+                errorText: errorMessage, // Hata burada gösterilecek
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('İptal')),
+            ElevatedButton(
+              onPressed: () async {
+                final p1 = pinController.text;
+                final p2 = confirmController.text;
+
+                if (p1.length < 4) {
+                  setDialogState(() => errorMessage = 'PIN 4 haneli olmalı');
+                } else if (p1 != p2) {
+                  setDialogState(() => errorMessage = 'PIN kodları eşleşmiyor');
+                } else {
+                  context.read<LocalAuthBloc>().add(SavePinEvent(p1));
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Kaydet'),
             ),
           ],
         ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final length = pinController.text.length;
-              // 4 veya 6 hane kontrolü
-              if (length != 4 && length != 6) {
-                SnackbarHelper.showError(
-                    context, '❌PIN 4 veya 6 haneli olmalı');
-                return;
-              }
-              if (pinController.text != confirmController.text) {
-                SnackbarHelper.showError(context, 'PIN kodları eşleşmiyor');
-                return;
-              }
-
-              context
-                  .read<LocalAuthBloc>()
-                  .add(SavePinEvent(pinController.text));
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Kaydet'),
-          ),
-        ],
       ),
     );
   }
@@ -518,4 +483,44 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-// enum SnackbarType { success, error, info }
+// Bu fonksiyonu _SettingsPageState içine ekleyin
+Widget _buildPinField({
+  required BuildContext context,
+  required TextEditingController controller,
+  required String hint,
+  String? errorText,
+  FocusNode? focusNode,
+  bool autoFocus = false,
+}) {
+  return TextField(
+    controller: controller,
+    focusNode: focusNode,
+    autofocus: autoFocus,
+    keyboardType: TextInputType.number,
+    maxLength: 4, // 4 haneye sabitledik
+    obscureText: true,
+    textAlign: TextAlign.center,
+    style: const TextStyle(
+        fontSize: 16, letterSpacing: 4, fontWeight: FontWeight.bold),
+    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+    decoration: InputDecoration(
+      hintText: hint,
+      errorText: errorText, // Hata mesajı burada görünecek
+      counterText: '',
+      filled: true,
+      fillColor: Theme.of(context).dividerColor.withValues(alpha: 0.05),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.red, width: 1),
+      ),
+    ),
+  );
+}
