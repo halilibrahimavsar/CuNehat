@@ -18,6 +18,10 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     on<ToggleBiometricEvent>(_onToggleBiometric);
     on<SavePinEvent>(_onSavePin);
     on<DeletePinEvent>(_onDeletePin);
+    // Login Handlers
+    on<VerifyPinLoginEvent>(_onVerifyPinLogin);
+    on<BiometricAuthLoginEvent>(_onBiometricAuthLogin);
+    on<CheckLockoutEvent>(_onCheckLockout);
   }
 
   Future<void> _onLoadSettings(
@@ -29,6 +33,9 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
       final isBioEnabled = await _manageLocalAuthUseCase.isBiometricEnabled();
       final isPinSet = await _manageLocalAuthUseCase.isPinCodeSet();
       final isAvailable = await _manageLocalAuthUseCase.isBiometricAvailable();
+
+      // Also check lockout status on load
+      add(CheckLockoutEvent());
 
       emit(state.copyWith(
         status: SecurityStatus.success,
@@ -105,5 +112,100 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     } catch (e) {
       emit(state.copyWith(status: SecurityStatus.error, message: e.toString()));
     }
+  }
+
+  // ================= LOGIN LOGIC =================
+
+  Future<void> _onCheckLockout(
+    CheckLockoutEvent event,
+    Emitter<LocalAuthState> emit,
+  ) async {
+    final endTime = await _manageLocalAuthUseCase.getLockoutEndTime();
+    if (endTime != null) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (endTime > now) {
+        emit(state.copyWith(
+          authStatus: AuthStatus.lockedOut,
+          lockoutEndTime: endTime,
+        ));
+      } else {
+        // Lockout expired
+        emit(state.copyWith(
+          authStatus: AuthStatus.initial,
+          lockoutEndTime: null,
+          failedAttempts: 0,
+        ));
+      }
+    }
+  }
+
+  Future<void> _onVerifyPinLogin(
+    VerifyPinLoginEvent event,
+    Emitter<LocalAuthState> emit,
+  ) async {
+    if (state.authStatus == AuthStatus.lockedOut) return;
+
+    emit(state.copyWith(authStatus: AuthStatus.loading));
+    // Simulate small delay for UX
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    try {
+      final isCorrect = await _manageLocalAuthUseCase.verifyPinCode(event.pin);
+
+      if (isCorrect) {
+        await _manageLocalAuthUseCase.clearLockoutState();
+        emit(state.copyWith(
+          authStatus: AuthStatus.authenticated,
+          failedAttempts: 0,
+          lockoutEndTime: null,
+        ));
+      } else {
+        int newAttempts = state.failedAttempts + 1;
+        if (newAttempts >= 3) {
+          // Calculate lockout
+          final level = await _manageLocalAuthUseCase.getLockoutLevel();
+          int duration =
+              level == 0 ? 30 : (level == 1 ? 120 : (level == 2 ? 300 : 1000));
+          final endTime =
+              DateTime.now().millisecondsSinceEpoch + (duration * 1000);
+
+          await _manageLocalAuthUseCase.saveLockoutState(level + 1, endTime);
+
+          emit(state.copyWith(
+            authStatus: AuthStatus.lockedOut,
+            lockoutEndTime: endTime,
+            failedAttempts: 0, // Reset attempts during lockout
+          ));
+        } else {
+          emit(state.copyWith(
+            authStatus: AuthStatus.failure,
+            failedAttempts: newAttempts,
+            message: 'Hatalı PIN. Kalan hak: ${3 - newAttempts}',
+          ));
+        }
+      }
+    } catch (e) {
+      emit(state.copyWith(
+          authStatus: AuthStatus.failure, message: e.toString()));
+    }
+  }
+
+  Future<void> _onBiometricAuthLogin(
+    BiometricAuthLoginEvent event,
+    Emitter<LocalAuthState> emit,
+  ) async {
+    if (state.authStatus == AuthStatus.lockedOut) return;
+
+    final success = await _manageLocalAuthUseCase.authenticateWithBiometrics();
+    if (success) {
+      await _manageLocalAuthUseCase.clearLockoutState();
+      emit(state.copyWith(
+        authStatus: AuthStatus.authenticated,
+        failedAttempts: 0,
+        lockoutEndTime: null,
+      ));
+    }
+    // If failed, usually biometric OS dialog handles retry, so we might not need to do much here
+    // unless we want to count it towards lockout.
   }
 }

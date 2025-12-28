@@ -22,4 +22,12 @@ class ManageLocalAuthUseCase {
 
   Future<bool> isBiometricEnabled() => _repository.isBiometricEnabled();
   Future<bool> isPinCodeSet() => _repository.isPinCodeSet();
+  Future<bool> verifyPinCode(String pin) => _repository.verifyPinCode(pin);
+  Future<void> clearAllSecuritySettings() =>
+      _repository.clearAllSecuritySettings();
+  Future<void> saveLockoutState(int level, int endTimestamp) =>
+      _repository.saveLockoutState(level, endTimestamp);
+  Future<int?> getLockoutEndTime() => _repository.getLockoutEndTime();
+  Future<int> getLockoutLevel() => _repository.getLockoutLevel();
+  Future<void> clearLockoutState() => _repository.clearLockoutState();
 }

@@ -1,8 +1,9 @@
 // ignore_for_file: unused_field
 
-import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -22,18 +23,10 @@ class BiometricAuthPage extends StatefulWidget {
 
 class _BiometricAuthPageState extends State<BiometricAuthPage>
     with SingleTickerProviderStateMixin {
-  final BiometricDataSource _biometricService = BiometricDataSource();
-
   String _enteredPin = '';
-  bool _isBiometricAvailable = false;
-  bool _isPinEnabled = false;
-  String? _errorText;
-  int _failedAttempts = 0;
-  bool _isLoading = false;
-  int _lockoutLevel = 0;
+  // Timer is purely for UI countdown display
   Timer? _lockoutTimer;
   int _remainingSeconds = 0;
-  bool get _isLockedOut => _remainingSeconds > 0;
 
   late AnimationController _shakeController;
 
@@ -44,8 +37,8 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    _checkAuthMethods();
-    _checkExistingLockout();
+    // Trigger initial check
+    context.read<LocalAuthBloc>().add(LoadSecurityEvent());
   }
 
   @override
@@ -55,134 +48,26 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     super.dispose();
   }
 
-  Future<void> _checkExistingLockout() async {
-    final endTime = await _biometricService.getLockoutEndTime();
-    final level = await _biometricService.getLockoutLevel();
-
-    if (endTime != null) {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final remaining = ((endTime - now) / 1000).ceil();
-
-      if (remaining > 0) {
-        setState(() {
-          _lockoutLevel = level;
-          _remainingSeconds = remaining;
-        });
-        _startTimerOnly();
-      } else {
-        // Süre dolmuş ama level'ı hatırlayalım (isteğe bağlı)
-        setState(() => _lockoutLevel = level);
-      }
-    }
-  }
-
-  Future<void> _checkAuthMethods() async {
-    final bioAvailable = await _biometricService.isBiometricAvailable();
-    final bioEnabled = await _biometricService.isBiometricEnabled();
-    final pinSet = await _biometricService.isPinCodeSet();
-
-    if (mounted) {
-      setState(() {
-        _isBiometricAvailable = bioAvailable;
-        _isPinEnabled = pinSet;
-      });
-    }
-
-    // ✅ Auto-trigger biometric if enabled
-    if (bioAvailable && bioEnabled) {
-      Future.delayed(
-          const Duration(milliseconds: 300), _authenticateWithBiometric);
-    }
-  }
-
-  Future<void> _authenticateWithBiometric() async {
-    if (_isLockedOut) return;
-    final success = await _biometricService.authenticateWithBiometrics();
-    if (success && mounted) {
-      await _resetSecurityState();
-      widget.onSuccess();
-      HapticFeedback.heavyImpact();
-    }
-  }
-
-  Future<void> _verifyPin() async {
-    if (_isLockedOut) return;
-    setState(() => _isLoading = true);
-    // Kısa bir gecikme hissi (UX için)
-    await Future.delayed(const Duration(milliseconds: 150));
-
-    final isCorrect = await _biometricService.verifyPinCode(_enteredPin);
-
-    if (!mounted) return;
-
-    if (isCorrect) {
-      HapticFeedback.heavyImpact();
-      await _resetSecurityState();
-      widget.onSuccess();
-    } else {
-      HapticFeedback.vibrate();
-      _shakeController.forward(from: 0.0);
-      setState(() {
-        _isLoading = false;
-        _enteredPin = '';
-        _failedAttempts++;
-      });
-
-      if (_failedAttempts >= 3) {
-        _startLockout();
-      } else {
-        setState(() {
-          _errorText = 'Hatalı PIN. Kalan hak: ${3 - _failedAttempts}';
-        });
-      }
-    }
-  }
-
-  Future<void> _resetSecurityState() async {
-    if (mounted) {
-      setState(() {
-        _failedAttempts = 0;
-        _lockoutLevel = 0;
-        _remainingSeconds = 0;
-        _errorText = null;
-      });
-    }
-    await _biometricService.clearLockoutState();
-  }
-
-  void _startLockout() {
-    int duration;
-    if (_lockoutLevel == 0) {
-      duration = 30; // İlk kilitlenme: 30 saniye
-    } else if (_lockoutLevel == 1) {
-      duration = 120; // İkinci kilitlenme: 2 dakika
-    } else if (_lockoutLevel == 2) {
-      duration = 300; // Sonraki kilitlenmeler: 5 dakika
-    } else {
-      duration = 1000; // sonraki kilitlenmeler: 16 dakika
-    }
-
-    // Kalıcı hafızaya kaydet
-    final endTime = DateTime.now().millisecondsSinceEpoch + (duration * 1000);
-    _biometricService.saveLockoutState(_lockoutLevel + 1, endTime);
-
-    setState(() {
-      _remainingSeconds = duration;
-      _errorText = null;
-      _lockoutLevel++;
-    });
-    _startTimerOnly();
-  }
-
-  void _startTimerOnly() {
+  void _startTimer(int endTime) {
     _lockoutTimer?.cancel();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final remaining = ((endTime - now) / 1000).ceil();
+
+    if (remaining <= 0) {
+      context.read<LocalAuthBloc>().add(CheckLockoutEvent());
+      return;
+    }
+
+    setState(() => _remainingSeconds = remaining);
+
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
           if (_remainingSeconds > 0) {
             _remainingSeconds--;
           } else {
-            _resetLockout();
+            timer.cancel();
+            context.read<LocalAuthBloc>().add(CheckLockoutEvent());
           }
         });
       } else {
@@ -191,33 +76,21 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     });
   }
 
-  void _resetLockout() {
-    _lockoutTimer?.cancel();
-    if (mounted) {
-      setState(() {
-        _remainingSeconds = 0;
-        _failedAttempts = 0;
-        _errorText = null;
-      });
-    }
-  }
-
-  void _onKeyPressed(String value) {
-    if (_isLockedOut) return;
-    if (_enteredPin.length < 6) {
+  void _onKeyPressed(String value, bool isLockedOut) {
+    if (isLockedOut) return;
+    if (_enteredPin.length < 4) {
       HapticFeedback.lightImpact();
       setState(() {
         _enteredPin += value;
-        _errorText = null;
       });
       if (_enteredPin.length == 6) {
-        _verifyPin();
+        context.read<LocalAuthBloc>().add(VerifyPinLoginEvent(_enteredPin));
       }
     }
   }
 
-  void _onDeletePressed() {
-    if (_isLockedOut) return;
+  void _onDeletePressed(bool isLockedOut) {
+    if (isLockedOut) return;
     if (_enteredPin.isNotEmpty) {
       HapticFeedback.lightImpact();
       setState(() {
@@ -230,6 +103,42 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    return BlocConsumer<LocalAuthBloc, LocalAuthState>(
+      listener: (context, state) {
+        if (state.authStatus == AuthStatus.authenticated) {
+          HapticFeedback.heavyImpact();
+          widget.onSuccess();
+        } else if (state.authStatus == AuthStatus.failure) {
+          HapticFeedback.vibrate();
+          _shakeController.forward(from: 0.0);
+          setState(() => _enteredPin = '');
+        } else if (state.authStatus == AuthStatus.lockedOut) {
+          if (state.lockoutEndTime != null) {
+            _startTimer(state.lockoutEndTime!);
+          }
+        }
+
+        // Auto-trigger biometric if available and enabled
+        // We check this once when status becomes success (loaded)
+        if (state.status == SecurityStatus.success &&
+            state.isBiometricAvailable &&
+            state.isBiometricEnabled &&
+            state.authStatus == AuthStatus.initial) {
+          // Prevent loop by checking authStatus
+          context.read<LocalAuthBloc>().add(BiometricAuthLoginEvent());
+        }
+      },
+      builder: (context, state) {
+        final isLockedOut = state.authStatus == AuthStatus.lockedOut;
+        final errorText = state.message;
+
+        return _buildScaffold(context, theme, isLockedOut, errorText, state);
+      },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, ThemeData theme, bool isLockedOut,
+      String? errorText, LocalAuthState state) {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -279,7 +188,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _isLockedOut
+                  isLockedOut
                       ? Text(
                           'Çok fazla hatalı deneme.\n$_remainingSeconds saniye bekleyin.',
                           textAlign: TextAlign.center,
@@ -289,13 +198,13 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                           ),
                         )
                       : Text(
-                          _errorText ?? 'Devam etmek için PIN girin',
+                          errorText ?? 'Devam etmek için PIN girin',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: _errorText != null
+                            color: errorText != null
                                 ? theme.colorScheme.error
                                 : theme.textTheme.bodyMedium?.color
                                     ?.withValues(alpha: 0.6),
-                            fontWeight: _errorText != null
+                            fontWeight: errorText != null
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                           ),
@@ -318,7 +227,8 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(6, (index) {
+                      children: List.generate(math.max(4, _enteredPin.length),
+                          (index) {
                         final isFilled = index < _enteredPin.length;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
@@ -358,7 +268,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
             Container(
               padding: const EdgeInsets.only(bottom: 32, left: 32, right: 32),
               child: Column(
-                children: [
+                children: <Widget>[
                   for (var i = 0; i < 3; i++)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24),
@@ -366,7 +276,8 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           for (var j = 1; j <= 3; j++)
-                            _buildNumberButton((i * 3 + j).toString(), theme),
+                            _buildNumberButton(
+                                (i * 3 + j).toString(), theme, isLockedOut),
                         ],
                       ),
                     ),
@@ -377,33 +288,55 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                       SizedBox(
                         width: 72,
                         height: 72,
-                        child: _isBiometricAvailable
+                        child: _enteredPin.length >= 4
                             ? InkWell(
-                                onTap: _isLockedOut
+                                onTap: isLockedOut
                                     ? null
-                                    : _authenticateWithBiometric,
+                                    : () => context
+                                        .read<LocalAuthBloc>()
+                                        .add(VerifyPinLoginEvent(_enteredPin)),
                                 borderRadius: BorderRadius.circular(36),
                                 child: Opacity(
-                                  opacity: _isLockedOut ? 0.5 : 1.0,
+                                  opacity: isLockedOut ? 0.5 : 1.0,
                                   child: Icon(
-                                    Icons.fingerprint,
+                                    Icons.check_circle_rounded,
                                     size: 32,
                                     color: theme.primaryColor,
                                   ),
                                 ),
                               )
-                            : null,
+                            : (state.isBiometricAvailable &&
+                                    state.isBiometricEnabled
+                                ? InkWell(
+                                    onTap: isLockedOut
+                                        ? null
+                                        : () => context
+                                            .read<LocalAuthBloc>()
+                                            .add(BiometricAuthLoginEvent()),
+                                    borderRadius: BorderRadius.circular(36),
+                                    child: Opacity(
+                                      opacity: isLockedOut ? 0.5 : 1.0,
+                                      child: Icon(
+                                        Icons.fingerprint,
+                                        size: 32,
+                                        color: theme.primaryColor,
+                                      ),
+                                    ),
+                                  )
+                                : null),
                       ),
-                      _buildNumberButton('0', theme),
+                      _buildNumberButton('0', theme, isLockedOut),
                       // Delete Button
                       SizedBox(
                         width: 72,
                         height: 72,
                         child: InkWell(
-                          onTap: _isLockedOut ? null : _onDeletePressed,
+                          onTap: isLockedOut
+                              ? null
+                              : () => _onDeletePressed(isLockedOut),
                           borderRadius: BorderRadius.circular(36),
                           child: Opacity(
-                            opacity: _isLockedOut ? 0.5 : 1.0,
+                            opacity: isLockedOut ? 0.5 : 1.0,
                             child: Icon(
                               Icons.backspace_outlined,
                               size: 26,
@@ -424,12 +357,12 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     );
   }
 
-  Widget _buildNumberButton(String number, ThemeData theme) {
+  Widget _buildNumberButton(String number, ThemeData theme, bool isLockedOut) {
     return InkWell(
-      onTap: _isLockedOut ? null : () => _onKeyPressed(number),
+      onTap: isLockedOut ? null : () => _onKeyPressed(number, isLockedOut),
       borderRadius: BorderRadius.circular(36),
       child: Opacity(
-        opacity: _isLockedOut ? 0.5 : 1.0,
+        opacity: isLockedOut ? 0.5 : 1.0,
         child: Container(
           width: 72,
           height: 72,

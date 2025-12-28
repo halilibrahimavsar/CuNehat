@@ -2,7 +2,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/security_settings/local_auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/settings/presentation/widgets/migration_dialog.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
@@ -37,7 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     }
 
-    context.read<LocalAuthBloc>().add(ToggleBiometricEvent(value));
+    context.read<LocalAuthBloc>().add(ToggleBiometricEvent(enable: value));
   }
 
   void _handlePinOperation(bool isPinSet) {

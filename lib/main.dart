@@ -9,7 +9,7 @@ import 'package:cunehat/features/auth_feature/data/repository/biometric_reposito
 import 'package:cunehat/features/auth_feature/domain/usecases/local_auth_usecases/manage_local_auth_usecase.dart';
 import 'package:cunehat/features/auth_feature/domain/usecases/remote_auth_usecases/sign_in_with_google.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/security_settings/local_auth_bloc.dart';
+import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/pages/login_page.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_remote_datasource.dart';
