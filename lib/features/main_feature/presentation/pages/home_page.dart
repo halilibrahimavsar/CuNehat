@@ -15,7 +15,6 @@ import 'package:cunehat/features/main_feature/presentation/widgets/slider_button
 import 'package:cunehat/core/shared/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
-import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -299,7 +298,20 @@ class _HomePageState extends State<HomePage>
                   },
                 ),
               ],
-              SliderState.income: [],
+              SliderState.income: [
+                MiniButtonData(
+                  icon: Icons.add,
+                  label: 'Gelir',
+                  color: Colors.green,
+                  onTap: () {},
+                ),
+                MiniButtonData(
+                  icon: Icons.abc,
+                  label: "gid",
+                  color: Colors.yellow,
+                  onTap: () {},
+                )
+              ],
             },
             onValueChanged: (action) {},
             onTap: (value) {},
@@ -309,32 +321,32 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  void _handleSliderAction(
-    BuildContext context,
-    SliderState value,
-    String userId,
-    WalletEntity activeWallet,
-  ) {
-    switch (value) {
-      // TODO : in here we should replace add new data into it
-      case SliderState.compare:
-        break;
-      case SliderState.expense:
-        TransactionSheetHandler.showExpenseSheet(
-          context,
-          userId,
-          activeWallet.id!,
-        );
-        break;
-      case SliderState.income:
-        TransactionSheetHandler.showIncomeSheet(
-          context,
-          userId,
-          activeWallet.id!,
-        );
-        break;
-    }
-  }
+  // void _handleSliderAction(
+  //   BuildContext context,
+  //   SliderState value,
+  //   String userId,
+  //   WalletEntity activeWallet,
+  // ) {
+  //   switch (value) {
+  //     // TODO : in here we should replace add new data into it
+  //     case SliderState.compare:
+  //       break;
+  //     case SliderState.expense:
+  //       TransactionSheetHandler.showExpenseSheet(
+  //         context,
+  //         userId,
+  //         activeWallet.id!,
+  //       );
+  //       break;
+  //     case SliderState.income:
+  //       TransactionSheetHandler.showIncomeSheet(
+  //         context,
+  //         userId,
+  //         activeWallet.id!,
+  //       );
+  //       break;
+  //   }
+  // }
 
   /// ✅ UPDATED: Use shared DateRangePicker
   Future<void> _showDateRangePicker(String userId, String walletId) async {
