@@ -40,13 +40,15 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
   bool _dragging = false;
   double _widgetWidth = 0.0;
   bool _showMiniButtons = false;
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(() {
       if (_dragging && _showMiniButtons) {
-        setState(() => _showMiniButtons = false);
+        _hideMiniButtons();
       }
     });
   }
@@ -63,71 +65,179 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
     return const Color(0xFF1E88E5);
   }
 
-  // Mini butonları oluşturan yardımcı metod
-  List<Widget> _buildRadialButtons(double sliderValue, SliderState state) {
-    final buttons = widget.miniButtons[state] ?? [];
-    if (buttons.isEmpty) return [];
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
 
-    return List.generate(buttons.length, (index) {
-      // Slider kenardayken butonların dışarı taşmaması için açı hesabı
-      double baseAngle = -math.pi / 2; // Tam yukarı
-      double spread = 2; // Butonlar arası açıklık
+    _overlayEntry = OverlayEntry(
+      builder: (context) {
+        final buttons =
+            widget.miniButtons[_getCurrentState(widget.controller.value)] ?? [];
+        if (buttons.isEmpty) return const SizedBox.shrink();
 
-      // Kenar kontrolü: Eğer slider en soldaysa sağa, en sağdaysa sola yatık açıl
-      if (sliderValue < 0.2) baseAngle += 0.4;
-      if (sliderValue > 0.8) baseAngle -= 0.4;
-
-      double angle = baseAngle + (index - (buttons.length - 1) / 2) * spread;
-      double distance = _showMiniButtons ? 55.0 : 0.0;
-
-      return AnimatedPositioned(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.bounceOut,
-        bottom: 28 + (math.sin(angle) * distance).abs(),
-        left: (math.cos(angle) * distance),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: _showMiniButtons ? 1.0 : 0.0,
+        return Positioned.fill(
           child: GestureDetector(
-            onTap: () {
-              buttons[index].onTap();
-              setState(() => _showMiniButtons = false);
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: buttons[index].color.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                          color: buttons[index].color.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: Offset(0, 4))
+            onTap: _hideMiniButtons,
+            behavior: HitTestBehavior.opaque,
+            child: CompositedTransformFollower(
+              link: _layerLink,
+              showWhenUnlinked: false,
+              offset: const Offset(-72,
+                  -72), // 200x200'lük alanı 56x56'lık butona ortalamak için: (56-200)/2
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      ...List.generate(buttons.length, (index) {
+                        final button = buttons[index];
+
+                        double baseAngle = -math.pi / 2;
+                        double spread = math.pi / (buttons.length + 1);
+                        double angle = baseAngle +
+                            (index - (buttons.length - 1) / 2) * spread * 0.8;
+                        double distance = 70.0;
+
+                        double left = 100 + (math.cos(angle) * distance);
+                        double top = 100 +
+                            (math.sin(angle) *
+                                distance); // .abs() kaldırıldı, yukarı doğru açılması için
+
+                        return Positioned(
+                          left: left - 20,
+                          top: top - 20,
+                          child: GestureDetector(
+                            onTap: () {
+                              button.onTap();
+                              _hideMiniButtons();
+                              HapticFeedback.selectionClick();
+                            },
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 300),
+                              curve: _showMiniButtons
+                                  ? Curves.elasticOut
+                                  : Curves.easeOut,
+                              scale: _showMiniButtons ? 1.0 : 0.0,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                opacity: _showMiniButtons ? 1.0 : 0.0,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: button.color
+                                            .withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: button.color
+                                                .withValues(alpha: 0.2),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        button.icon,
+                                        color: button.color,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        button.label,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
                     ],
                   ),
-                  child: Icon(buttons[index].icon,
-                      color: buttons[index].color, size: 20),
                 ),
-                const SizedBox(height: 4),
-                Material(
-                  color: Colors.transparent,
-                  child: Text(
-                    buttons[index].label,
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54),
-                  ),
-                )
-              ],
+              ),
             ),
           ),
-        ),
-      );
+        );
+      },
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Animasyonu tetiklemek için bir frame bekle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() => _showMiniButtons = true);
+        _overlayEntry?.markNeedsBuild();
+      }
     });
+  }
+
+  void _hideMiniButtons() {
+    if (_overlayEntry == null) return;
+
+    setState(() => _showMiniButtons = false);
+    _overlayEntry?.markNeedsBuild();
+
+    // Animasyonun bitmesini bekle sonra kaldır
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && !_showMiniButtons && _overlayEntry != null) {
+        _overlayEntry!.remove();
+        _overlayEntry = null;
+      }
+    });
+  }
+
+  void _toggleMiniButtons() {
+    bool willOpen = !_showMiniButtons;
+    if (_showMiniButtons) {
+      _hideMiniButtons();
+    } else if (_overlayEntry != null) {
+      // Kapanırken tekrar açılmak istenirse
+      setState(() => _showMiniButtons = true);
+      _overlayEntry?.markNeedsBuild();
+    } else {
+      _showOverlay();
+    }
+    widget.onTap?.call(_getCurrentState(widget.controller.value));
+    if (willOpen) {
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_overlayEntry != null) {
+      _overlayEntry!.remove();
+      _overlayEntry = null;
+    }
+    super.dispose();
   }
 
   @override
@@ -142,7 +252,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
           final activeColor = _getActiveColor(value);
 
           return SizedBox(
-            height: 100, // Yelpaze ve alt metinler için yeterli alan
+            height: 100,
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
@@ -160,8 +270,9 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                       color: activeColor.withValues(alpha: 0.1),
                       boxShadow: [
                         BoxShadow(
-                            color: activeColor.withValues(alpha: 0.1),
-                            blurRadius: 10)
+                          color: activeColor.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                        ),
                       ],
                     ),
                   ),
@@ -175,78 +286,86 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildBottomLabel("Gider", state == SliderState.expense,
-                          const Color(0xFFE53935), 0.0),
-                      _buildBottomLabel("Kıyasla", state == SliderState.compare,
-                          const Color(0xFF1E88E5), 0.5),
-                      _buildBottomLabel("Gelir", state == SliderState.income,
-                          const Color(0xFF43A047), 1.0),
+                      _buildBottomLabel(
+                        "Gider",
+                        state == SliderState.expense,
+                        const Color(0xFFE53935),
+                        0.0,
+                      ),
+                      _buildBottomLabel(
+                        "Kıyasla",
+                        state == SliderState.compare,
+                        const Color(0xFF1E88E5),
+                        0.5,
+                      ),
+                      _buildBottomLabel(
+                        "Gelir",
+                        state == SliderState.income,
+                        const Color(0xFF43A047),
+                        1.0,
+                      ),
                     ],
                   ),
                 ),
 
-                // --- KNOB VE MİNİ BUTONLAR ---
+                // --- KNOB ---
                 Positioned(
                   bottom: 30,
                   left: 25 + (value * (_widgetWidth - 100)),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Mini Butonlar (Knob'un arkasından fırlarlar)
-                      ..._buildRadialButtons(value, state),
-
-                      // Ana Buton (Knob)
-                      GestureDetector(
-                        onHorizontalDragStart: (_) =>
-                            setState(() => _dragging = true),
-                        onHorizontalDragUpdate: (details) {
-                          double newValue = (widget.controller.value +
-                                  details.delta.dx / (_widgetWidth - 60))
-                              .clamp(0.0, 1.0);
-                          widget.controller.value = newValue;
-                          widget.onValueChanged?.call(newValue);
-                        },
-                        onHorizontalDragEnd: (_) {
-                          setState(() => _dragging = false);
-                          double target =
-                              value < 0.33 ? 0.0 : (value > 0.66 ? 1.0 : 0.5);
-                          widget.controller.animateTo(target,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeOutBack);
-                          HapticFeedback.lightImpact();
-                        },
-                        onTap: () {
-                          setState(() => _showMiniButtons = !_showMiniButtons);
-                          widget.onTap?.call(state);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: 56,
-                          width: 56,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: activeColor,
-                            boxShadow: [
-                              BoxShadow(
-                                color: activeColor.withValues(alpha: 0.4),
-                                blurRadius: _dragging ? 20 : 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            state == SliderState.expense
-                                ? Icons.remove
-                                : (state == SliderState.income
-                                    ? Icons.add
-                                    : Icons.compare_arrows),
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                  child: CompositedTransformTarget(
+                    link: _layerLink,
+                    child: GestureDetector(
+                      onHorizontalDragStart: (_) =>
+                          setState(() => _dragging = true),
+                      onHorizontalDragUpdate: (details) {
+                        double newValue = (widget.controller.value +
+                                details.delta.dx / (_widgetWidth - 60))
+                            .clamp(0.0, 1.0);
+                        widget.controller.value = newValue;
+                        widget.onValueChanged?.call(newValue);
+                      },
+                      onHorizontalDragEnd: (_) {
+                        setState(() => _dragging = false);
+                        double target =
+                            value < 0.33 ? 0.0 : (value > 0.66 ? 1.0 : 0.5);
+                        widget.controller.animateTo(
+                          target,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeOutBack,
+                        );
+                        HapticFeedback.lightImpact();
+                      },
+                      onTap: () {
+                        if (!_dragging) {
+                          _toggleMiniButtons();
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 56,
+                        width: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: activeColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: activeColor.withValues(alpha: 0.4),
+                              blurRadius: _dragging ? 20 : 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          state == SliderState.expense
+                              ? Icons.remove
+                              : (state == SliderState.income
+                                  ? Icons.add
+                                  : Icons.compare_arrows),
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -258,13 +377,20 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
   }
 
   Widget _buildBottomLabel(
-      String text, bool isActive, Color color, double targetValue) {
+    String text,
+    bool isActive,
+    Color color,
+    double targetValue,
+  ) {
     return GestureDetector(
       onTap: () {
-        widget.controller.animateTo(targetValue,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutBack);
+        widget.controller.animateTo(
+          targetValue,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutBack,
+        );
         widget.onValueChanged?.call(targetValue);
+        _hideMiniButtons();
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(

@@ -274,38 +274,35 @@ class _HomePageState extends State<HomePage>
               ],
               SliderState.compare: [
                 MiniButtonData(
-                  icon: Icons.add,
+                  icon: Icons.remove,
                   label: 'Gider',
                   color: Colors.red,
-                  onTap: () => print('Filtre tıklandı'),
+                  onTap: () {
+                    TransactionSheetHandler.showExpenseSheet(
+                      context,
+                      userId,
+                      walletId,
+                    );
+                  },
                 ),
                 MiniButtonData(
                   icon: Icons.add,
                   label: 'Gelir',
                   color: Colors.green,
-                  onTap: () => print('Analiz tıklandı'),
+                  onTap: () {
+                    print("tapped income");
+                    TransactionSheetHandler.showIncomeSheet(
+                      context,
+                      userId,
+                      walletId,
+                    );
+                  },
                 ),
               ],
-              SliderState.income: [
-                MiniButtonData(
-                  icon: Icons.work,
-                  label: 'Maaş',
-                  color: Colors.green,
-                  onTap: () => print('Maaş tıklandı'),
-                ),
-                MiniButtonData(
-                  icon: Icons.attach_money,
-                  label: 'Yatırım',
-                  color: Colors.teal,
-                  onTap: () => print('Yatırım tıklandı'),
-                ),
-              ],
+              SliderState.income: [],
             },
             onValueChanged: (action) {},
-            onTap: (value) {
-              _handleSliderAction(
-                  context, value, userId, walletState.activeWallet!);
-            },
+            onTap: (value) {},
           ),
         ),
       ],
