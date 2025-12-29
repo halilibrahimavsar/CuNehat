@@ -257,12 +257,55 @@ class _HomePageState extends State<HomePage>
           padding: const EdgeInsets.all(20.0),
           child: SliderButtonEnhanced(
             controller: _controller,
-            onTap: (value) => _handleSliderAction(
-              context,
-              value,
-              userId,
-              walletState.activeWallet!,
-            ),
+            miniButtons: {
+              SliderState.expense: [
+                MiniButtonData(
+                  icon: Icons.fastfood,
+                  label: 'Yiyecek',
+                  color: Colors.red,
+                  onTap: () => print('Yiyecek tıklandı'),
+                ),
+                MiniButtonData(
+                  icon: Icons.directions_car,
+                  label: 'Ulaşım',
+                  color: Colors.orange,
+                  onTap: () => print('Ulaşım tıklandı'),
+                ),
+              ],
+              SliderState.compare: [
+                MiniButtonData(
+                  icon: Icons.add,
+                  label: 'Gider',
+                  color: Colors.red,
+                  onTap: () => print('Filtre tıklandı'),
+                ),
+                MiniButtonData(
+                  icon: Icons.add,
+                  label: 'Gelir',
+                  color: Colors.green,
+                  onTap: () => print('Analiz tıklandı'),
+                ),
+              ],
+              SliderState.income: [
+                MiniButtonData(
+                  icon: Icons.work,
+                  label: 'Maaş',
+                  color: Colors.green,
+                  onTap: () => print('Maaş tıklandı'),
+                ),
+                MiniButtonData(
+                  icon: Icons.attach_money,
+                  label: 'Yatırım',
+                  color: Colors.teal,
+                  onTap: () => print('Yatırım tıklandı'),
+                ),
+              ],
+            },
+            onValueChanged: (action) {},
+            onTap: (value) {
+              _handleSliderAction(
+                  context, value, userId, walletState.activeWallet!);
+            },
           ),
         ),
       ],
