@@ -169,18 +169,18 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
 
                 // --- ALT BİLGİ METİNLERİ ---
                 Positioned(
-                  bottom: 45,
+                  bottom: 40,
                   left: 0,
                   right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildBottomLabel("Gider", state == SliderState.expense,
-                          const Color(0xFFE53935)),
+                          const Color(0xFFE53935), 0.0),
                       _buildBottomLabel("Kıyasla", state == SliderState.compare,
-                          const Color(0xFF1E88E5)),
+                          const Color(0xFF1E88E5), 0.5),
                       _buildBottomLabel("Gelir", state == SliderState.income,
-                          const Color(0xFF43A047)),
+                          const Color(0xFF43A047), 1.0),
                     ],
                   ),
                 ),
@@ -257,19 +257,37 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
     });
   }
 
-  Widget _buildBottomLabel(String text, bool isActive, Color color) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutBack,
-      transform: Matrix4.translationValues(0, isActive ? 40 : 0, 0),
-      child: AnimatedDefaultTextStyle(
-        duration: const Duration(milliseconds: 200),
-        style: TextStyle(
-          color: isActive ? color : Colors.grey[600],
-          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-          fontSize: isActive ? 14 : 12,
+  Widget _buildBottomLabel(
+      String text, bool isActive, Color color, double targetValue) {
+    return GestureDetector(
+      onTap: () {
+        widget.controller.animateTo(targetValue,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutBack);
+        widget.onValueChanged?.call(targetValue);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
+        transform: Matrix4.translationValues(0, isActive ? 45 : 0, 0),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: TextStyle(
+              color: isActive ? color : Colors.grey[600],
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              fontSize: isActive ? 14 : 12,
+            ),
+            child: Text(text),
+          ),
         ),
-        child: Text(text),
       ),
     );
   }
