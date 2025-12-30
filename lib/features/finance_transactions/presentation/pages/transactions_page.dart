@@ -16,7 +16,6 @@ class TransactionsPage extends StatelessWidget {
   final List<TransactionEntity> allTransactions;
   final TransactionViewType viewType;
   final FinanceMode mode;
-  final Widget filter_widget;
 
   const TransactionsPage({
     super.key,
@@ -25,7 +24,6 @@ class TransactionsPage extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     required this.allTransactions,
-    required this.filter_widget,
     this.mode = FinanceMode.compare,
     this.viewType = TransactionViewType.list,
   });
@@ -88,7 +86,6 @@ class TransactionsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Column(
           children: [
-            filter_widget,
             // ========== MODERN HEADER ==========
             TransactionHeader(
               startDate: startDate,

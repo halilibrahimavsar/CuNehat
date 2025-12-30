@@ -186,24 +186,7 @@ class _HomePageState extends State<HomePage>
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // ✅ UPDATED: Use shared DateRangeIndicator
-        FilterView(
-          endDate: _endDate,
-          startDate: _startDate,
-          currentViewType: _currentViewType,
-          selectedFinanceMode: _currentMode,
-          onModeChanged: (newMode) {
-            setState(() {
-              _currentMode = newMode;
-            });
-          },
-          onViewTypeChanged: (newType) {
-            setState(() {
-              print(newType);
-              _currentViewType = newType;
-            });
-          },
-          onDateTap: () => _showDateRangePicker(userId, walletId),
-        ),
+
         BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, transactionState) {
             switch (transactionState) {
@@ -244,6 +227,24 @@ class _HomePageState extends State<HomePage>
                           transactionState.allTransactions, // ✅ Veriyi geç
                       viewType: _currentViewType,
                       mode: _currentMode,
+                      filter_widget: FilterView(
+                        endDate: _endDate,
+                        startDate: _startDate,
+                        currentViewType: _currentViewType,
+                        selectedFinanceMode: _currentMode,
+                        onModeChanged: (newMode) {
+                          setState(() {
+                            _currentMode = newMode;
+                          });
+                        },
+                        onViewTypeChanged: (newType) {
+                          setState(() {
+                            print(newType);
+                            _currentViewType = newType;
+                          });
+                        },
+                        onDateTap: () => _showDateRangePicker(userId, walletId),
+                      ),
                     ),
                   ),
                 );
