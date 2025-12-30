@@ -31,10 +31,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late DateTime _startDate;
-  late DateTime _endDate;
-  TransactionViewType _currentViewType = TransactionViewType.list;
-  FinanceMode _currentMode = FinanceMode.compare;
+  late TransactionFilter _filter;
+  bool _isFilterMenuOpen = false;
 
   @override
   void initState() {
@@ -54,8 +52,12 @@ class _HomePageState extends State<HomePage>
 
   void _initDateRange() {
     final range = DateRangeHelper.getMonthRange(DateTime.now());
-    _startDate = range.start;
-    _endDate = range.end;
+    _filter = TransactionFilter(
+      financeMode: FinanceMode.compare,
+      viewType: TransactionViewType.list,
+      startDate: range.start,
+      endDate: range.end,
+    );
   }
 
   void _loadWallets() {
@@ -71,8 +73,8 @@ class _HomePageState extends State<HomePage>
           GetTransactionsEvent(
             userId: userId,
             walletId: walletId,
-            startDate: _startDate,
-            endDate: _endDate,
+            startDate: _filter.startDate,
+            endDate: _filter.endDate,
           ),
         );
   }
@@ -98,11 +100,11 @@ class _HomePageState extends State<HomePage>
             animation: _controller,
             builder: (context, child) {
               double gradientValue = 0.5;
-              if (_currentMode == FinanceMode.income) {
+              if (_filter.financeMode == FinanceMode.income) {
                 gradientValue = 1;
-              } else if (_currentMode == FinanceMode.expense) {
+              } else if (_filter.financeMode == FinanceMode.expense) {
                 gradientValue = 0;
-              } else if (_currentMode == FinanceMode.compare) {
+              } else if (_filter.financeMode == FinanceMode.compare) {
                 gradientValue = 0.5;
               }
               return ModernSharedAppbar(currentSliderValue: gradientValue);
@@ -221,29 +223,21 @@ class _HomePageState extends State<HomePage>
                       key: const ValueKey('compare-view'), // ✅ Unique key
                       userId: userId,
                       wallet: walletState.activeWallet!,
-                      startDate: _startDate,
-                      endDate: _endDate,
+                      startDate: _filter.startDate,
+                      endDate: _filter.endDate,
                       allTransactions:
                           transactionState.allTransactions, // ✅ Veriyi geç
-                      viewType: _currentViewType,
-                      mode: _currentMode,
+                      viewType: _filter.viewType,
+                      mode: _filter.financeMode,
                       filter_widget: FilterView(
-                        endDate: _endDate,
-                        startDate: _startDate,
-                        currentViewType: _currentViewType,
-                        selectedFinanceMode: _currentMode,
-                        onModeChanged: (newMode) {
-                          setState(() {
-                            _currentMode = newMode;
-                          });
-                        },
-                        onViewTypeChanged: (newType) {
-                          setState(() {
-                            print(newType);
-                            _currentViewType = newType;
-                          });
-                        },
+                        filter: _filter,
+                        onFilterChanged: (newFilter) =>
+                            setState(() => _filter = newFilter),
                         onDateTap: () => _showDateRangePicker(userId, walletId),
+                        isMenuOpen: _isFilterMenuOpen,
+                        onMenuToggle: () => setState(() {
+                          _isFilterMenuOpen = !_isFilterMenuOpen;
+                        }),
                       ),
                     ),
                   ),
@@ -324,12 +318,11 @@ class _HomePageState extends State<HomePage>
   Future<void> _showDateRangePicker(String userId, String walletId) async {
     await showModernDateRangePicker(
       context: context,
-      start: _startDate,
-      end: _endDate,
+      start: _filter.startDate,
+      end: _filter.endDate,
       onApply: (startDate, endDate) {
         setState(() {
-          _startDate = startDate;
-          _endDate = endDate;
+          _filter = _filter.copyWith(startDate: startDate, endDate: endDate);
         });
 
         // Reload transactions with new date range
