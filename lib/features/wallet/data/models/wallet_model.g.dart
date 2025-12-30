@@ -21,18 +21,21 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       userId: fields[1] as String,
       name: fields[2] as String,
       balance: fields[3] as double,
-      colorHex: fields[4] as String,
-      iconName: fields[5] as String,
-      createdAt: fields[6] as DateTime,
-      isActive: fields[7] as bool,
-      sortOrder: fields[8] as int,
+      debt: fields[4] as double,
+      credit: fields[5] as double,
+      save: fields[6] as double,
+      colorHex: fields[7] as String,
+      iconName: fields[8] as String,
+      createdAt: fields[9] as DateTime,
+      isActive: fields[10] as bool,
+      sortOrder: fields[11] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -42,14 +45,20 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(3)
       ..write(obj.balance)
       ..writeByte(4)
-      ..write(obj.colorHex)
+      ..write(obj.debt)
       ..writeByte(5)
-      ..write(obj.iconName)
+      ..write(obj.credit)
       ..writeByte(6)
-      ..write(obj.createdAt)
+      ..write(obj.save)
       ..writeByte(7)
-      ..write(obj.isActive)
+      ..write(obj.colorHex)
       ..writeByte(8)
+      ..write(obj.iconName)
+      ..writeByte(9)
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.isActive)
+      ..writeByte(11)
       ..write(obj.sortOrder);
   }
 

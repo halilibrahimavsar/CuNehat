@@ -12,6 +12,9 @@ class WalletModel extends WalletEntity {
     required super.userId,
     required super.name,
     required super.balance,
+    required super.debt,
+    required super.credit,
+    required super.save,
     required super.colorHex,
     required super.iconName,
     required super.createdAt,
@@ -26,6 +29,9 @@ class WalletModel extends WalletEntity {
       userId: json['userId'] ?? '',
       name: json['name'] ?? 'Cüzdan',
       balance: (json['balance'] as num? ?? 0.0).toDouble(),
+      debt: (json['debt'] as num? ?? 0.0).toDouble(),
+      credit: (json['credit'] as num? ?? 0.0).toDouble(),
+      save: (json['save'] as num? ?? 0.0).toDouble(),
       colorHex: json['colorHex'] ?? '0xFF2196F3',
       iconName: json['iconName'] ?? 'wallet',
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -40,6 +46,9 @@ class WalletModel extends WalletEntity {
           userId: entity.userId,
           name: entity.name,
           balance: entity.balance,
+          debt: entity.debt,
+          credit: entity.credit,
+          save: entity.save,
           colorHex: entity.colorHex,
           iconName: entity.iconName,
           createdAt: entity.createdAt,
@@ -54,6 +63,9 @@ class WalletModel extends WalletEntity {
       'userId': userId,
       'name': name,
       'balance': balance,
+      'debt': debt,
+      'credit': credit,
+      'save': save,
       'colorHex': colorHex,
       'iconName': iconName,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -69,6 +81,9 @@ class WalletModel extends WalletEntity {
     String? userId,
     String? name,
     double? balance,
+    double? debt,
+    double? credit,
+    double? save,
     String? colorHex,
     String? iconName,
     bool? isActive,
@@ -80,6 +95,9 @@ class WalletModel extends WalletEntity {
       userId: userId ?? this.userId,
       name: name ?? this.name,
       balance: balance ?? this.balance,
+      debt: debt ?? this.debt,
+      credit: credit ?? this.credit,
+      save: save ?? this.save,
       colorHex: colorHex ?? this.colorHex,
       iconName: iconName ?? this.iconName,
       createdAt: createdAt ?? this.createdAt,
@@ -107,17 +125,26 @@ class WalletModel extends WalletEntity {
   double get balance => super.balance;
   @override
   @HiveField(4)
-  String get colorHex => super.colorHex;
+  double get debt => super.debt;
   @override
   @HiveField(5)
-  String get iconName => super.iconName;
+  double get credit => super.credit;
   @override
   @HiveField(6)
-  DateTime get createdAt => super.createdAt;
+  double get save => super.save;
   @override
   @HiveField(7)
-  bool get isActive => super.isActive;
+  String get colorHex => super.colorHex;
   @override
   @HiveField(8)
+  String get iconName => super.iconName;
+  @override
+  @HiveField(9)
+  DateTime get createdAt => super.createdAt;
+  @override
+  @HiveField(10)
+  bool get isActive => super.isActive;
+  @override
+  @HiveField(11)
   int get sortOrder => super.sortOrder;
 }

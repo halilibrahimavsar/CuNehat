@@ -5,6 +5,9 @@ class WalletEntity extends Equatable {
   final String userId;
   final String name;
   final double balance;
+  final double debt;
+  final double credit;
+  final double save;
   final String colorHex;
   final String iconName;
   final DateTime createdAt;
@@ -16,6 +19,9 @@ class WalletEntity extends Equatable {
     required this.userId,
     required this.name,
     required this.balance,
+    required this.debt,
+    required this.credit,
+    required this.save,
     required this.colorHex,
     required this.iconName,
     required this.createdAt,
@@ -28,6 +34,9 @@ class WalletEntity extends Equatable {
     String? userId,
     String? name,
     double? balance,
+    double? debt,
+    double? credit,
+    double? save,
     String? colorHex,
     String? iconName,
     DateTime? createdAt,
@@ -39,6 +48,9 @@ class WalletEntity extends Equatable {
       userId: userId ?? this.userId,
       name: name ?? this.name,
       balance: balance ?? this.balance,
+      debt: debt ?? this.debt,
+      credit: credit ?? this.credit,
+      save: save ?? this.save,
       colorHex: colorHex ?? this.colorHex,
       iconName: iconName ?? this.iconName,
       createdAt: createdAt ?? this.createdAt,
@@ -53,6 +65,9 @@ class WalletEntity extends Equatable {
         userId,
         name,
         balance,
+        debt,
+        credit,
+        save,
         colorHex,
         iconName,
         createdAt,

@@ -1,4 +1,4 @@
-import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
+import 'package:cunehat/features/wallet/data/repository/wallet_data_repository.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -89,6 +89,33 @@ class WalletHiveDataSource implements WalletDataRepository {
     final activeWallet = await getActiveWallet(userId);
     if (activeWallet != null) {
       final updatedWallet = activeWallet.copyWith(balance: balance);
+      await updateWallet(updatedWallet);
+    }
+  }
+
+  @override
+  Future<void> updateDebt(String userId, double debt) async {
+    final activeWallet = await getActiveWallet(userId);
+    if (activeWallet != null) {
+      final updatedWallet = activeWallet.copyWith(debt: debt);
+      await updateWallet(updatedWallet);
+    }
+  }
+
+  @override
+  Future<void> updateCredit(String userId, double credit) async {
+    final activeWallet = await getActiveWallet(userId);
+    if (activeWallet != null) {
+      final updatedWallet = activeWallet.copyWith(credit: credit);
+      await updateWallet(updatedWallet);
+    }
+  }
+
+  @override
+  Future<void> updateSave(String userId, double save) async {
+    final activeWallet = await getActiveWallet(userId);
+    if (activeWallet != null) {
+      final updatedWallet = activeWallet.copyWith(save: save);
       await updateWallet(updatedWallet);
     }
   }

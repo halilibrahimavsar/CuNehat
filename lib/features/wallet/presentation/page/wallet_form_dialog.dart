@@ -56,6 +56,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   // ========== CONTROLLERS ==========
   late final TextEditingController _nameController;
   late final TextEditingController _balanceController;
+  late final TextEditingController _debtController;
+  late final TextEditingController _creditController;
+  late final TextEditingController _saveController;
   final _formKey = GlobalKey<FormState>();
 
   // ========== STATE ==========
@@ -81,6 +84,15 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     _balanceController = TextEditingController(
       text: widget.wallet?.balance.toStringAsFixed(2) ?? '0.00',
     );
+    _debtController = TextEditingController(
+      text: widget.wallet?.debt.toStringAsFixed(2) ?? '0.00',
+    );
+    _creditController = TextEditingController(
+      text: widget.wallet?.credit.toStringAsFixed(2) ?? '0.00',
+    );
+    _saveController = TextEditingController(
+      text: widget.wallet?.save.toStringAsFixed(2) ?? '0.00',
+    );
   }
 
   /// State değerlerini başlat
@@ -93,6 +105,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   void dispose() {
     _nameController.dispose();
     _balanceController.dispose();
+    _debtController.dispose();
+    _creditController.dispose();
+    _saveController.dispose();
     super.dispose();
   }
 
@@ -121,6 +136,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             _buildNameField(),
             const SizedBox(height: 16),
             _buildBalanceField(),
+            const SizedBox(height: 16),
+            _buildAdditionalInfoFields(),
             const SizedBox(height: 16),
             _buildColorPicker(),
             const SizedBox(height: 16),
@@ -175,6 +192,56 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         }
         return null;
       },
+    );
+  }
+
+  /// Ek Bilgiler (Borç, Alacak, Birikim)
+  Widget _buildAdditionalInfoFields() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ek Bilgiler:',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMoneyField(
+                  _debtController, 'Borç', Icons.arrow_downward, Colors.red),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildMoneyField(_creditController, 'Alacak',
+                  Icons.arrow_upward, Colors.green),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildMoneyField(
+            _saveController, 'Birikim', Icons.savings, Colors.orange),
+      ],
+    );
+  }
+
+  Widget _buildMoneyField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: color, size: 20),
+        suffixText: '₺',
+        border: const OutlineInputBorder(),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
   }
 
@@ -307,6 +374,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
     final name = _nameController.text.trim();
     final balance = double.parse(_balanceController.text.trim());
+    final debt = double.tryParse(_debtController.text.trim()) ?? 0.0;
+    final credit = double.tryParse(_creditController.text.trim()) ?? 0.0;
+    final save = double.tryParse(_saveController.text.trim()) ?? 0.0;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
     final createdAt = DateTime.now();
@@ -316,6 +386,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       final WalletEntity wallet = widget.wallet!.copyWith(
         name: name,
         balance: balance,
+        debt: debt,
+        credit: credit,
+        save: save,
         colorHex: colorHex,
         iconName: iconName,
       );
@@ -326,6 +399,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         userId: widget.userId,
         name: name,
         balance: balance,
+        debt: debt,
+        credit: credit,
+        save: save,
         colorHex: colorHex,
         iconName: iconName,
         createdAt: createdAt,

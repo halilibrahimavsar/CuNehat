@@ -11,4 +11,7 @@ abstract class WalletDataRepository {
   Future<void> updateWallet(WalletModel wallet);
   Future<void> deleteWallet(String walletId);
   Future<void> updateBalance(String userId, double balance);
+  Future<void> updateDebt(String userId, double debt);
+  Future<void> updateCredit(String userId, double credit);
+  Future<void> updateSave(String userId, double save);
 }

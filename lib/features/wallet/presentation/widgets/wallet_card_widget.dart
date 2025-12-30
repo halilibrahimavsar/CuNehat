@@ -127,6 +127,30 @@ class WalletCardWidget extends StatelessWidget {
                 ],
               ),
 
+              // Stats Row (Debt, Credit, Save)
+              if (wallet.debt > 0 || wallet.credit > 0 || wallet.save > 0) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatItem('Borç', wallet.debt, Colors.red,
+                          Icons.arrow_downward),
+                      _buildStatItem('Alacak', wallet.credit, Colors.green,
+                          Icons.arrow_upward),
+                      _buildStatItem(
+                          'Birikim', wallet.save, Colors.orange, Icons.savings),
+                    ],
+                  ),
+                ),
+              ],
+
               // Action Buttons
               const SizedBox(height: 12),
               Row(
@@ -163,6 +187,41 @@ class WalletCardWidget extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem(
+    String label,
+    double amount,
+    Color color,
+    IconData icon,
+  ) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${amount.toStringAsFixed(2)} ₺',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }

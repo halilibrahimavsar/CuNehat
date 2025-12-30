@@ -31,6 +31,9 @@ class _WalletInfoDialogContent extends StatelessWidget {
           Text('• Cüzdan bakiyeleri otomatik olarak güncellenir.'),
           SizedBox(height: 8),
           Text('• Her cüzdanın kendi gelir/gider kayıtları vardır.'),
+          SizedBox(height: 8),
+          Text(
+              '• Cüzdanlarınıza ait Borç, Alacak ve Birikim tutarlarını düzenle sayfasından manuel olarak yönetebilirsiniz.'),
         ],
       ),
       actions: [

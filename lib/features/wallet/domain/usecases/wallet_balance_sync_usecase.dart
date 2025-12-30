@@ -1,5 +1,5 @@
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_data_repository.dart';
-import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
+import 'package:cunehat/features/wallet/data/repository/wallet_data_repository.dart';
 
 /// ========== WALLET BALANCE SYNC USE CASE ==========
 class WalletBalanceSyncUseCase {

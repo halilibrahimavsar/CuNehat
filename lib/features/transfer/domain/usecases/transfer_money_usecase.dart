@@ -1,7 +1,7 @@
 // lib/features/transfer/domain/usecases/transfer_money_usecase.dart
 
 import 'package:cunehat/features/transfer/domain/entities/transfer_entity.dart';
-import 'package:cunehat/features/wallet/data/datasource/wallet_data_repository.dart';
+import 'package:cunehat/features/wallet/data/repository/wallet_data_repository.dart';
 import 'package:uuid/uuid.dart';
 
 /// **Transfer Money Use Case**
