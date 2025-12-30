@@ -257,21 +257,21 @@ class _HomePageState extends State<HomePage>
           child: SliderButtonEnhanced(
             controller: _controller,
             miniButtons: {
-              SliderState.expense: [
+              SliderState.savedMoney: [
                 MiniButtonData(
-                  icon: Icons.fastfood,
-                  label: 'Yiyecek',
+                  icon: Icons.inventory_sharp,
+                  label: 'Birikim',
                   color: Colors.red,
                   onTap: () => print('Yiyecek tıklandı'),
                 ),
-                MiniButtonData(
-                  icon: Icons.directions_car,
-                  label: 'Ulaşım',
-                  color: Colors.orange,
-                  onTap: () => print('Ulaşım tıklandı'),
-                ),
+                // MiniButtonData(
+                //   icon: Icons.directions_car,
+                //   label: 'Ulaşım',
+                //   color: Colors.orange,
+                //   onTap: () => print('Ulaşım tıklandı'),
+                // ),
               ],
-              SliderState.compare: [
+              SliderState.transactions: [
                 MiniButtonData(
                   icon: Icons.remove,
                   label: 'Gider',
@@ -289,7 +289,6 @@ class _HomePageState extends State<HomePage>
                   label: 'Gelir',
                   color: Colors.green,
                   onTap: () {
-                    print("tapped income");
                     TransactionSheetHandler.showIncomeSheet(
                       context,
                       userId,
@@ -298,7 +297,7 @@ class _HomePageState extends State<HomePage>
                   },
                 ),
               ],
-              SliderState.income: [
+              SliderState.debt: [
                 MiniButtonData(
                   icon: Icons.add,
                   label: 'Gelir',
@@ -321,34 +320,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // void _handleSliderAction(
-  //   BuildContext context,
-  //   SliderState value,
-  //   String userId,
-  //   WalletEntity activeWallet,
-  // ) {
-  //   switch (value) {
-  //     // TODO : in here we should replace add new data into it
-  //     case SliderState.compare:
-  //       break;
-  //     case SliderState.expense:
-  //       TransactionSheetHandler.showExpenseSheet(
-  //         context,
-  //         userId,
-  //         activeWallet.id!,
-  //       );
-  //       break;
-  //     case SliderState.income:
-  //       TransactionSheetHandler.showIncomeSheet(
-  //         context,
-  //         userId,
-  //         activeWallet.id!,
-  //       );
-  //       break;
-  //   }
-  // }
-
-  /// ✅ UPDATED: Use shared DateRangePicker
   Future<void> _showDateRangePicker(String userId, String walletId) async {
     await showModernDateRangePicker(
       context: context,

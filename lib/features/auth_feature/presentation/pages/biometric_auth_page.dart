@@ -171,7 +171,8 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                             (state.authStatus == AuthStatus.failure &&
                                 _enteredPin.isEmpty))
                         ? theme.colorScheme.error
-                        : theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                        : theme.textTheme.bodyMedium?.color
+                            ?.withValues(alpha: 0.6),
                     fontWeight:
                         isLockedOut ? FontWeight.bold : FontWeight.normal,
                   ),
@@ -228,12 +229,13 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                   ? Colors.red
                   : (isFilled
                       ? Theme.of(context).primaryColor
-                      : Colors.grey.withOpacity(0.2)),
+                      : Colors.grey.withValues(alpha: 0.2)),
               boxShadow: isFilled && !isError
                   ? [
                       BoxShadow(
-                          color:
-                              Theme.of(context).primaryColor.withOpacity(0.4),
+                          color: Theme.of(context)
+                              .primaryColor
+                              .withValues(alpha: 0.4),
                           blurRadius: 10,
                           spreadRadius: 2)
                     ]
@@ -295,7 +297,7 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Theme.of(context).cardColor,
-          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
         ),
         child: Center(
           child: Text(

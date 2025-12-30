@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
-enum SliderState { expense, compare, income }
+enum SliderState { savedMoney, transactions, debt }
 
 class MiniButtonData {
   final IconData icon;
@@ -60,14 +60,14 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
   }
 
   SliderState _getCurrentState(double value) {
-    if (value < 0.33) return SliderState.expense;
-    if (value > 0.66) return SliderState.income;
-    return SliderState.compare;
+    if (value < 0.33) return SliderState.savedMoney;
+    if (value > 0.66) return SliderState.debt;
+    return SliderState.transactions;
   }
 
   Color _getActiveColor(double value) {
-    if (value < 0.33) return const Color(0xFFE53935);
-    if (value > 0.66) return const Color(0xFF43A047);
+    if (value < 0.33) return const Color(0xFF43A047);
+    if (value > 0.66) return const Color(0xFFE53935);
     return const Color(0xFF1E88E5);
   }
 
@@ -166,12 +166,18 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildBottomLabel("Gider", state == SliderState.expense,
-                          const Color(0xFFE53935), 0.0),
-                      _buildBottomLabel("Kıyasla", state == SliderState.compare,
-                          const Color(0xFF1E88E5), 0.5),
-                      _buildBottomLabel("Gelir", state == SliderState.income,
-                          const Color(0xFF43A047), 1.0),
+                      _buildBottomLabel(
+                          "BİRİKİM",
+                          state == SliderState.savedMoney,
+                          const Color(0xFF43A047),
+                          0.0),
+                      _buildBottomLabel(
+                          "İŞLEMLER",
+                          state == SliderState.transactions,
+                          const Color(0xFF1E88E5),
+                          0.5),
+                      _buildBottomLabel("BORÇ", state == SliderState.debt,
+                          const Color(0xFFE53935), 1.0),
                     ],
                   ),
                 ),
@@ -200,7 +206,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                         duration: const Duration(milliseconds: 500),
                         curve: Curves.easeOutBack,
                       );
-                      HapticFeedback.lightImpact();
+                      HapticFeedback.heavyImpact();
                     },
                     onTap: () {
                       _toggleMiniButtons();
@@ -208,8 +214,8 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      height: 56,
-                      width: 56,
+                      height: 52,
+                      width: 52,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: activeColor,
@@ -222,9 +228,9 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
                         ],
                       ),
                       child: Icon(
-                        state == SliderState.expense
+                        state == SliderState.savedMoney
                             ? Icons.remove
-                            : (state == SliderState.income
+                            : (state == SliderState.debt
                                 ? Icons.add
                                 : Icons.compare_arrows),
                         color: Colors.white,
