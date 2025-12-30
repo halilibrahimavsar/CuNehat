@@ -370,44 +370,47 @@ class _MiniButtonsOverlayState extends State<_MiniButtonsOverlay>
                     opacity: _controller.value,
                     child: GestureDetector(
                       onTap: () => widget.onButtonTap(index),
-                      child: Container(
-                        width: 50,
-                        height: 70,
-                        padding: const EdgeInsets.all(4),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: widget.buttons[index].color
-                                    .withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: widget.buttons[index].color
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ],
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: Container(
+                          width: 50,
+                          height: 70,
+                          padding: const EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: widget.buttons[index].color
+                                      .withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.buttons[index].color
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                                ),
+                                child: Icon(
+                                  widget.buttons[index].icon,
+                                  color: widget.buttons[index].color,
+                                  size: 20,
+                                ),
                               ),
-                              child: Icon(
-                                widget.buttons[index].icon,
-                                color: widget.buttons[index].color,
-                                size: 20,
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.buttons[index].label,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.buttons[index].label,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
