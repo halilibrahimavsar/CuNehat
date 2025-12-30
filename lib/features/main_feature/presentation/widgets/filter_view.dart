@@ -1029,10 +1029,12 @@ class _FilterViewState extends State<FilterView> {
   Color _getViewTypeColor(TransactionViewType type) {
     final name = type.name.toLowerCase();
     if (name.contains('daily') || name.contains('gunluk')) return Colors.blue;
-    if (name.contains('weekly') || name.contains('haftalik'))
+    if (name.contains('weekly') || name.contains('haftalik')) {
       return Colors.orange;
-    if (name.contains('monthly') || name.contains('aylik'))
+    }
+    if (name.contains('monthly') || name.contains('aylik')) {
       return Colors.purple;
+    }
     if (name.contains('yearly') || name.contains('yillik')) return Colors.red;
     return Colors.teal;
   }

@@ -16,7 +16,7 @@ class TransactionsPage extends StatelessWidget {
   final List<TransactionEntity> allTransactions;
   final TransactionViewType viewType;
   final FinanceMode mode;
-  final Widget filter_widget;
+  final Widget filterWidget;
 
   const TransactionsPage({
     super.key,
@@ -25,7 +25,7 @@ class TransactionsPage extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     required this.allTransactions,
-    required this.filter_widget,
+    required this.filterWidget,
     this.mode = FinanceMode.compare,
     this.viewType = TransactionViewType.list,
   });
@@ -35,21 +35,18 @@ class TransactionsPage extends StatelessWidget {
     List<TransactionEntity> sortedTransactions;
 
     if (mode == FinanceMode.expense) {
-      print("expense working");
       final expenseTransactions =
           allTransactions.where((element) => element.isExpense).toList();
 
       sortedTransactions = List<TransactionEntity>.from(expenseTransactions)
         ..sort((a, b) => a.date.compareTo(b.date));
     } else if (mode == FinanceMode.income) {
-      print("income working");
       final expenseTransactions =
           allTransactions.where((element) => !element.isExpense).toList();
 
       sortedTransactions = List<TransactionEntity>.from(expenseTransactions)
         ..sort((a, b) => a.date.compareTo(b.date));
     } else {
-      print("compare working");
       sortedTransactions = List<TransactionEntity>.from(allTransactions)
         ..sort((a, b) => b.date.compareTo(a.date));
     }
@@ -88,7 +85,7 @@ class TransactionsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Column(
           children: [
-            filter_widget,
+            filterWidget,
             // ========== MODERN HEADER ==========
             TransactionHeader(
               startDate: startDate,
@@ -116,10 +113,6 @@ class TransactionsPage extends StatelessWidget {
       ),
     );
   }
-
-  // ========================================
-  // 💰 CALCULATE RUNNING BALANCE
-  // ========================================
 
   // ========================================
   // 🚫 EMPTY STATE

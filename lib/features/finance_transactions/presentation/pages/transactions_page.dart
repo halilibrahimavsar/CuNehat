@@ -33,21 +33,18 @@ class TransactionsPage extends StatelessWidget {
     List<TransactionEntity> sortedTransactions;
 
     if (mode == FinanceMode.expense) {
-      print("expense working");
       final expenseTransactions =
           allTransactions.where((element) => element.isExpense).toList();
 
       sortedTransactions = List<TransactionEntity>.from(expenseTransactions)
         ..sort((a, b) => a.date.compareTo(b.date));
     } else if (mode == FinanceMode.income) {
-      print("income working");
       final expenseTransactions =
           allTransactions.where((element) => !element.isExpense).toList();
 
       sortedTransactions = List<TransactionEntity>.from(expenseTransactions)
         ..sort((a, b) => a.date.compareTo(b.date));
     } else {
-      print("compare working");
       sortedTransactions = List<TransactionEntity>.from(allTransactions)
         ..sort((a, b) => b.date.compareTo(a.date));
     }

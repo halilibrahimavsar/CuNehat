@@ -244,7 +244,7 @@ class _HomePageState extends State<HomePage>
                       allTransactions: filteredTransactions, // ✅ Veriyi geç
                       viewType: _filter.viewType,
                       mode: _filter.financeMode,
-                      filter_widget: FilterView(
+                      filterWidget: FilterView(
                         filter: _filter,
                         onFilterChanged: (newFilter) =>
                             setState(() => _filter = newFilter),
