@@ -1,52 +1,16 @@
+// lib/features/transactions/domain/entities/filter_entity.dart
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
 
-class TransactionFilter {
-  final FinanceMode financeMode;
-  final TransactionViewType viewType;
-  final DateTime startDate;
-  final DateTime endDate;
-  final Set<String> selectedCategories;
-  final PriceRangeFilter? priceRange;
+/// Veri filtreleri için temel sınıf
+abstract base class BaseFilter {
+  const BaseFilter();
 
-  const TransactionFilter({
-    required this.financeMode,
-    required this.viewType,
-    required this.startDate,
-    required this.endDate,
-    this.selectedCategories = const {},
-    this.priceRange,
-  });
-
-  TransactionFilter copyWith({
-    FinanceMode? financeMode,
-    TransactionViewType? viewType,
-    DateTime? startDate,
-    DateTime? endDate,
-    Set<String>? selectedCategories,
-    PriceRangeFilter? priceRange,
-  }) {
-    return TransactionFilter(
-      financeMode: financeMode ?? this.financeMode,
-      viewType: viewType ?? this.viewType,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      selectedCategories: selectedCategories ?? this.selectedCategories,
-      priceRange: priceRange ?? this.priceRange,
-    );
-  }
-
-  bool get hasActiveFilters =>
-      selectedCategories.isNotEmpty || priceRange != null;
-
-  int get activeFilterCount {
-    int count = 0;
-    if (selectedCategories.isNotEmpty) count++;
-    if (priceRange != null) count++;
-    return count;
-  }
+  bool get hasActiveFilters;
+  int get activeFilterCount;
 }
 
+/// Fiyat aralığı filtresi
 class PriceRangeFilter {
   final double? minPrice;
   final double? maxPrice;
@@ -55,6 +19,9 @@ class PriceRangeFilter {
     this.minPrice,
     this.maxPrice,
   });
+
+  bool get isEmpty => minPrice == null && maxPrice == null;
+  bool get isNotEmpty => !isEmpty;
 
   bool isInRange(double price) {
     if (minPrice != null && price < minPrice!) return false;
@@ -72,5 +39,146 @@ class PriceRangeFilter {
       return '${maxPrice!.toStringAsFixed(0)}₺\'ye kadar';
     }
     return '';
+  }
+
+  PriceRangeFilter copyWith({
+    double? minPrice,
+    double? maxPrice,
+  }) {
+    return PriceRangeFilter(
+      minPrice: minPrice ?? this.minPrice,
+      maxPrice: maxPrice ?? this.maxPrice,
+    );
+  }
+}
+
+/// Veri filtreleri (transaction listesini filtrelemek için)
+base class DataFilter extends BaseFilter {
+  final Set<String> selectedCategories;
+  final PriceRangeFilter? priceRange;
+  final String? searchQuery;
+
+  const DataFilter({
+    this.selectedCategories = const {},
+    this.priceRange,
+    this.searchQuery,
+  });
+
+  static const DataFilter empty = DataFilter();
+
+  DataFilter copyWith({
+    Set<String>? selectedCategories,
+    PriceRangeFilter? priceRange,
+    String? searchQuery,
+    bool clearCategories = false,
+    bool clearPriceRange = false,
+    bool clearSearchQuery = false,
+  }) {
+    return DataFilter(
+      selectedCategories: clearCategories
+          ? const {}
+          : (selectedCategories ?? this.selectedCategories),
+      priceRange: clearPriceRange ? null : (priceRange ?? this.priceRange),
+      searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
+    );
+  }
+
+  @override
+  bool get hasActiveFilters =>
+      selectedCategories.isNotEmpty ||
+      priceRange != null ||
+      (searchQuery?.trim().isNotEmpty ?? false);
+
+  @override
+  int get activeFilterCount {
+    int count = 0;
+    if (selectedCategories.isNotEmpty) count++;
+    if (priceRange != null) count++;
+    if (searchQuery?.trim().isNotEmpty ?? false) count++;
+    return count;
+  }
+
+  bool matchesSearch(String text, {List<String>? fields}) {
+    final query = searchQuery?.trim().toLowerCase();
+    if (query == null || query.isEmpty) return true;
+
+    final searchText = text.toLowerCase();
+    return searchText.contains(query);
+  }
+}
+
+/// Görünüm filtreleri (UI durumunu yönetmek için)
+class ViewFilter {
+  final FinanceMode financeMode;
+  final TransactionViewType viewType;
+  final DateTime startDate;
+  final DateTime endDate;
+
+  const ViewFilter({
+    required this.financeMode,
+    required this.viewType,
+    required this.startDate,
+    required this.endDate,
+  });
+
+  ViewFilter copyWith({
+    FinanceMode? financeMode,
+    TransactionViewType? viewType,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return ViewFilter(
+      financeMode: financeMode ?? this.financeMode,
+      viewType: viewType ?? this.viewType,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+    );
+  }
+
+  bool isTodayRange() {
+    final now = DateTime.now();
+    return startDate.year == now.year &&
+        startDate.month == now.month &&
+        startDate.day == now.day &&
+        endDate.year == now.year &&
+        endDate.month == now.month &&
+        endDate.day == now.day;
+  }
+
+  bool isThisWeekRange() {
+    final now = DateTime.now();
+    final diff = endDate.difference(startDate).inDays;
+    return diff < 7 && endDate.difference(now).inDays.abs() < 7;
+  }
+
+  bool isThisMonthRange() {
+    final now = DateTime.now();
+    return startDate.month == now.month && startDate.year == now.year;
+  }
+
+  String get dateRangeText {
+    return '${startDate.day}.${startDate.month}.${startDate.year} - '
+        '${endDate.day}.${endDate.month}.${endDate.year}';
+  }
+}
+
+/// Tam filtre bileşimi
+class CombinedFilter {
+  final ViewFilter viewFilter;
+  final DataFilter dataFilter;
+
+  const CombinedFilter({
+    required this.viewFilter,
+    required this.dataFilter,
+  });
+
+  CombinedFilter copyWith({
+    ViewFilter? viewFilter,
+    DataFilter? dataFilter,
+  }) {
+    return CombinedFilter(
+      viewFilter: viewFilter ?? this.viewFilter,
+      dataFilter: dataFilter ?? this.dataFilter,
+    );
   }
 }

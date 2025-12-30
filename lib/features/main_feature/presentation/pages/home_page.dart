@@ -214,6 +214,22 @@ class _HomePageState extends State<HomePage>
                 );
 
               case TransactionLoaded():
+                var filteredTransactions = transactionState.allTransactions;
+
+                // Kategori Filtresi
+                if (_filter.selectedCategories.isNotEmpty) {
+                  filteredTransactions = filteredTransactions
+                      .where((t) => _filter.selectedCategories.contains(t.tag))
+                      .toList();
+                }
+
+                // Fiyat Filtresi
+                if (_filter.priceRange != null) {
+                  filteredTransactions = filteredTransactions
+                      .where((t) => _filter.priceRange!.isInRange(t.amount))
+                      .toList();
+                }
+
                 return Expanded(
                   child: CubeAnimationView(
                     controller: _controller,
@@ -225,8 +241,7 @@ class _HomePageState extends State<HomePage>
                       wallet: walletState.activeWallet!,
                       startDate: _filter.startDate,
                       endDate: _filter.endDate,
-                      allTransactions:
-                          transactionState.allTransactions, // ✅ Veriyi geç
+                      allTransactions: filteredTransactions, // ✅ Veriyi geç
                       viewType: _filter.viewType,
                       mode: _filter.financeMode,
                       filter_widget: FilterView(

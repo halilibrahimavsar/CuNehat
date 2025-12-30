@@ -125,25 +125,27 @@ class TransactionsPage extends StatelessWidget {
   // 🚫 EMPTY STATE
   // ========================================
   Widget _buildEmptyState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.account_balance_wallet_outlined,
-            size: 64, color: Colors.blue[300]),
-        const SizedBox(height: 16),
-        Text(
-          'Henüz işlem bulunmuyor',
-          style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Gelir veya gider ekleyerek başlayın',
-          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.account_balance_wallet_outlined,
+              size: 64, color: Colors.blue[300]),
+          const SizedBox(height: 16),
+          Text(
+            'işlem bulunmuyor',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'İşlem eklemek için Sürgü buttonuna tıklayın',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+          ),
+        ],
+      ),
     );
   }
 }
