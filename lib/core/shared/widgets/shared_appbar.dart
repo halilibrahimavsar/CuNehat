@@ -191,6 +191,21 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
     Widget centerContent;
 
     if (state is WalletLoadedSt) {
+      double valueListener = 0.0; // Initialize with a default value
+      String valueNameListener = "";
+
+      if (state.activeWallet != null) {
+        if (currentValue < 0.3) {
+          valueListener = state.activeWallet?.save ?? 0.0;
+          valueNameListener = "YATIRIM";
+        } else if (currentValue > 0.7) {
+          valueListener = state.activeWallet?.debt ?? 0.0;
+          valueNameListener = "BORÇ";
+        } else {
+          valueListener = state.activeWallet?.balance ?? 0.0;
+          valueNameListener = "BAKİYE";
+        }
+      }
       centerContent = InfoActionMenu<String>(
         onSelected: (p0) {
           if (p0 == 'detail') {
@@ -223,7 +238,9 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      state.activeWallet?.name.toUpperCase() ?? "CÜZDAN",
+                      valueNameListener == "BAKİYE"
+                          ? (state.activeWallet?.name.toUpperCase() ?? "CÜZDAN")
+                          : "${state.activeWallet?.name.toUpperCase() ?? 'CÜZDAN'} • $valueNameListener",
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.white.withOpacity(0.95),
@@ -237,12 +254,11 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
                 ],
               ),
             ),
-            const SizedBox(height: 2),
             // Balance
             TweenAnimationBuilder<double>(
               tween: Tween(
                 begin: 0,
-                end: state.activeWallet?.balance.toDouble() ?? 0,
+                end: valueListener,
               ),
               duration: const Duration(milliseconds: 1200),
               curve: Curves.easeOutExpo,
