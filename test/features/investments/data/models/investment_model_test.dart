@@ -44,7 +44,7 @@ void main() {
       expect(model.amount, 0.0);
       expect(model.currentValue, 0.0);
       expect(model.type, InvestmentType.stock); // default
-      expect(model.color, const Color(0xFF0000)); // default
+      expect(model.color, const Color(0x00ff0000)); // default
       expect(model.dateAdded, DateTime.parse('2024-02-01T00:00:00.000Z'));
       expect(model.symbol, isNull);
       expect(model.returnRate, 0.0);

@@ -60,7 +60,7 @@ class InvestmentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 5,
             spreadRadius: 1,
           ),
@@ -73,7 +73,8 @@ class InvestmentCard extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: _getInvestmentColor(investment.type).withOpacity(0.1),
+              color:
+                  _getInvestmentColor(investment.type).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(25),
             ),
             child: Icon(

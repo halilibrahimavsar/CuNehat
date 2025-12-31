@@ -56,25 +56,25 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
 
   Color _getAppBarColor(double value) {
     if (value < 0.5) {
-      return Color.lerp(Colors.red[700]!, Colors.blue[700]!, value * 2)!;
+      return Color.lerp(Colors.green[700]!, Colors.blue[700]!, value * 2)!;
     } else {
       return Color.lerp(
-          Colors.blue[700]!, Colors.green[700]!, (value - 0.5) * 2)!;
+          Colors.blue[700]!, Colors.red[700]!, (value - 0.5) * 2)!;
     }
   }
 
   List<Color> _getAppBarGradient(double value) {
     if (value < 0.5) {
       return [
-        Color.lerp(Colors.red[400]!, Colors.blue[400]!, value * 2)!,
-        Color.lerp(Colors.red[700]!, Colors.blue[700]!, value * 2)!,
-        Color.lerp(Colors.red[900]!, Colors.blue[900]!, value * 2)!,
+        Color.lerp(Colors.green[400]!, Colors.blue[400]!, value * 2)!,
+        Color.lerp(Colors.green[700]!, Colors.blue[700]!, value * 2)!,
+        Color.lerp(Colors.green[900]!, Colors.blue[900]!, value * 2)!,
       ];
     } else {
       return [
-        Color.lerp(Colors.blue[400]!, Colors.green[400]!, (value - 0.5) * 2)!,
-        Color.lerp(Colors.blue[700]!, Colors.green[700]!, (value - 0.5) * 2)!,
-        Color.lerp(Colors.blue[900]!, Colors.green[900]!, (value - 0.5) * 2)!,
+        Color.lerp(Colors.blue[400]!, Colors.red[400]!, (value - 0.5) * 2)!,
+        Color.lerp(Colors.blue[700]!, Colors.red[700]!, (value - 0.5) * 2)!,
+        Color.lerp(Colors.blue[900]!, Colors.red[900]!, (value - 0.5) * 2)!,
       ];
     }
   }

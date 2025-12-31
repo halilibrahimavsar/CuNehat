@@ -10,6 +10,8 @@ import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
+import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/slider_button_view.dart';
 import 'package:cunehat/core/shared/widgets/build_drawer.dart';
@@ -100,15 +102,7 @@ class _HomePageState extends State<HomePage>
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              double gradientValue = 0.5;
-              if (_filter.financeMode == FinanceMode.income) {
-                gradientValue = 1;
-              } else if (_filter.financeMode == FinanceMode.expense) {
-                gradientValue = 0;
-              } else if (_filter.financeMode == FinanceMode.compare) {
-                gradientValue = 0.5;
-              }
-              return ModernSharedAppbar(currentSliderValue: gradientValue);
+              return ModernSharedAppbar(currentSliderValue: _controller.value);
             },
           ),
         ),
@@ -236,6 +230,7 @@ class _HomePageState extends State<HomePage>
                     controller: _controller,
                     firstView: SaveMoneyPage(
                       key: const ValueKey('save-view'), // ✅ Unique key
+                      wallet: walletState.activeWallet!,
                     ),
                     secondView: Text(" 2. View "),
                     thirdView: TransactionsPage(
@@ -275,14 +270,19 @@ class _HomePageState extends State<HomePage>
                   icon: Icons.inventory_sharp,
                   label: 'Birikim',
                   color: Colors.red,
-                  onTap: () => print('Yiyecek tıklandı'),
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AddInvestmentDialog(
+                        onAddInvestment: (investment) {
+                          context
+                              .read<InvestmentBloc>()
+                              .add(CreateInvestmentEvent(investment));
+                        },
+                      );
+                    },
+                  ),
                 ),
-                // MiniButtonData(
-                //   icon: Icons.directions_car,
-                //   label: 'Ulaşım',
-                //   color: Colors.orange,
-                //   onTap: () => print('Ulaşım tıklandı'),
-                // ),
               ],
               SliderState.transactions: [
                 MiniButtonData(

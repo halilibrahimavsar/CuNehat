@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
@@ -39,12 +40,7 @@ class _LoginScreenState extends State<LoginScreen>
       body: BlocConsumer<RemoteAuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            SnackbarHelper.showError(context, state.message);
           }
         },
         builder: (context, state) {
