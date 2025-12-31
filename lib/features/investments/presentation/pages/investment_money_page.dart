@@ -8,16 +8,16 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class SaveMoneyPage extends StatefulWidget {
+class InvestmentMoneyPage extends StatefulWidget {
   final WalletEntity wallet;
 
-  const SaveMoneyPage({super.key, required this.wallet});
+  const InvestmentMoneyPage({super.key, required this.wallet});
 
   @override
-  State<SaveMoneyPage> createState() => _SaveMoneyPageState();
+  State<InvestmentMoneyPage> createState() => _InvestmentMoneyPageState();
 }
 
-class _SaveMoneyPageState extends State<SaveMoneyPage> {
+class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   void _deleteInvestment(String id) {
     context.read<InvestmentBloc>().add(DeleteInvestmentEvent(id));
   }

@@ -228,7 +228,7 @@ class _HomePageState extends State<HomePage>
                 return Expanded(
                   child: CubeAnimationView(
                     controller: _controller,
-                    firstView: SaveMoneyPage(
+                    firstView: InvestmentMoneyPage(
                       key: const ValueKey('save-view'), // ✅ Unique key
                       wallet: walletState.activeWallet!,
                     ),
