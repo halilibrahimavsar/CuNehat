@@ -18,6 +18,17 @@ import 'package:cunehat/features/finance_transactions/data/models/transaction_ty
 import 'package:cunehat/features/finance_transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
+import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart';
+import 'package:cunehat/features/investments/data/datasource/investment_route_datasource.dart';
+import 'package:cunehat/features/investments/data/models/investment_model.dart';
+import 'package:cunehat/features/investments/data/models/investment_type_adapter.dart';
+import 'package:cunehat/features/investments/data/repository/investment_repository_impl.dart';
+import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
+import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
+import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart';
+import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
+import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
+import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
@@ -44,6 +55,9 @@ void main() async {
   Hive.registerAdapter(WalletModelAdapter());
   Hive.registerAdapter(TransactionModelAdapter());
   Hive.registerAdapter(TransactionTypeModelAdapter());
+  Hive.registerAdapter(InvestmentModelAdapter());
+  Hive.registerAdapter(InvestmentTypeAdapter());
+  Hive.registerAdapter(ColorAdapter());
 
   runApp(const _GlobalProviders(child: CuNehatEngine()));
 }
@@ -195,6 +209,30 @@ class _AuthenticatedProviders extends StatelessWidget {
             );
           },
         ),
+
+        RepositoryProvider(create: (context) {
+          return InvestmentLocalDatasource();
+        }),
+
+        RepositoryProvider(create: (context) {
+          return InvestmentRouteDatasource();
+        }),
+
+        // Investment Repository
+        RepositoryProvider(
+          create: (context) => SaveRepositoryImpl(
+            dataSource: storageMode == StorageMode.local
+                ? context.read<InvestmentLocalDatasource>()
+                : context.read<InvestmentRouteDatasource>(),
+          ),
+        ),
+
+        // Investment Use Cases
+        // RepositoryProvider(
+        //   create: (context) => GetInvestmentsUseCase(
+        //     context.read<SaveRepositoryImpl>(),
+        //   ),
+        // ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -250,6 +288,24 @@ class _AuthenticatedProviders extends StatelessWidget {
                 context.read<BiometricRepositoryImpl>(),
               ),
             )..add(LoadSecurityEvent()),
+          ),
+
+          // Investment BLoC
+          BlocProvider(
+            create: (context) => InvestmentBloc(
+              getInvestmentsUseCase: GetInvestmentsUseCase(
+                context.read<SaveRepositoryImpl>(),
+              ),
+              addInvestmentUseCase: AddInvestmentUseCase(
+                context.read<SaveRepositoryImpl>(),
+              ),
+              updateInvestmentUseCase: UpdateInvestmentUseCase(
+                context.read<SaveRepositoryImpl>(),
+              ),
+              deleteInvestmentUseCase: DeleteInvestmentUseCase(
+                context.read<SaveRepositoryImpl>(),
+              ),
+            )..add(GetInvestmentsEvent()),
           ),
         ],
         child: child,

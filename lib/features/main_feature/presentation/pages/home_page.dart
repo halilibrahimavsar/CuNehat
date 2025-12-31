@@ -15,6 +15,7 @@ import 'package:cunehat/features/main_feature/presentation/widgets/slider_button
 import 'package:cunehat/core/shared/widgets/build_drawer.dart';
 import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
 import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
+import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -233,7 +234,9 @@ class _HomePageState extends State<HomePage>
                 return Expanded(
                   child: CubeAnimationView(
                     controller: _controller,
-                    firstView: Text(" 1. View "),
+                    firstView: SaveMoneyPage(
+                      key: const ValueKey('save-view'), // ✅ Unique key
+                    ),
                     secondView: Text(" 2. View "),
                     thirdView: TransactionsPage(
                       key: const ValueKey('compare-view'), // ✅ Unique key
