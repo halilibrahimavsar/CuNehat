@@ -49,6 +49,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
     _loadData();
   }
 
+  @override
+  void didUpdateWidget(covariant TransactionsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.wallet.id != widget.wallet.id) {
+      _loadData();
+    }
+  }
+
   void _loadData() {
     context.read<TransactionBloc>().add(GetTransactionsEvent(
           userId: widget.userId,
