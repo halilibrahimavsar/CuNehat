@@ -5,6 +5,7 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_car
 import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,12 +27,21 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         ));
   }
 
+  void _loadInvestments() {
+    context.read<InvestmentBloc>().add(GetInvestmentsEvent(
+          userId: widget.activeWallet.userId,
+          walletId: widget.activeWallet.id!,
+        ));
+    context.read<WalletBloc>().add(GetWalletsEvent(widget.activeWallet.userId));
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
         if (state is InvestmentActionSuccess) {
           SnackbarHelper.showSuccess(context, state.message);
+          _loadInvestments();
         } else if (state is InvestmentError) {
           SnackbarHelper.showError(context, state.message);
         }
