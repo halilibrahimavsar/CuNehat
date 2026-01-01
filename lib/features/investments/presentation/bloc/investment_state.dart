@@ -30,10 +30,10 @@ final class InvestmentError extends InvestmentState {
   List<Object> get props => [message];
 }
 
-final class InvestmentOperationSuccess extends InvestmentState {
+final class InvestmentActionSuccess extends InvestmentState {
   final String message;
 
-  const InvestmentOperationSuccess(this.message);
+  const InvestmentActionSuccess(this.message);
 
   @override
   List<Object> get props => [message];

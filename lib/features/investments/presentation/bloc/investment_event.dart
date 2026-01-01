@@ -7,29 +7,56 @@ sealed class InvestmentEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class GetInvestmentsEvent extends InvestmentEvent {}
+final class GetInvestmentsEvent extends InvestmentEvent {
+  final String userId;
+  final String walletId;
+
+  const GetInvestmentsEvent({
+    required this.userId,
+    required this.walletId,
+  });
+  @override
+  List<Object> get props => [userId, walletId];
+}
 
 final class CreateInvestmentEvent extends InvestmentEvent {
   final String userId;
+  final String walletId;
   final InvestmentEntity investment;
 
-  const CreateInvestmentEvent(this.investment, this.userId);
+  const CreateInvestmentEvent({
+    required this.investment,
+    required this.userId,
+    required this.walletId,
+  });
   @override
-  List<Object> get props => [investment];
+  List<Object> get props => [investment, userId, walletId];
 }
 
 final class UpdateInvestmentEvent extends InvestmentEvent {
+  final String userId;
+  final String walletId;
   final InvestmentEntity investment;
 
-  const UpdateInvestmentEvent(this.investment);
+  const UpdateInvestmentEvent({
+    required this.investment,
+    required this.userId,
+    required this.walletId,
+  });
   @override
-  List<Object> get props => [investment];
+  List<Object> get props => [investment, userId, walletId];
 }
 
 final class DeleteInvestmentEvent extends InvestmentEvent {
+  final String userId;
+  final String walletId;
   final String id;
 
-  const DeleteInvestmentEvent(this.id);
+  const DeleteInvestmentEvent({
+    required this.id,
+    required this.userId,
+    required this.walletId,
+  });
   @override
-  List<Object> get props => [id];
+  List<Object> get props => [id, userId, walletId];
 }

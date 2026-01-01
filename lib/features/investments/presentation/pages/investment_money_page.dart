@@ -9,9 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class InvestmentMoneyPage extends StatefulWidget {
-  final WalletEntity wallet;
+  final WalletEntity activeWallet;
 
-  const InvestmentMoneyPage({super.key, required this.wallet});
+  const InvestmentMoneyPage({super.key, required this.activeWallet});
 
   @override
   State<InvestmentMoneyPage> createState() => _InvestmentMoneyPageState();
@@ -19,14 +19,18 @@ class InvestmentMoneyPage extends StatefulWidget {
 
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   void _deleteInvestment(String id) {
-    context.read<InvestmentBloc>().add(DeleteInvestmentEvent(id));
+    context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
+          id: id,
+          userId: widget.activeWallet.userId,
+          walletId: widget.activeWallet.id!,
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
-        if (state is InvestmentOperationSuccess) {
+        if (state is InvestmentActionSuccess) {
           SnackbarHelper.showSuccess(context, state.message);
         } else if (state is InvestmentError) {
           SnackbarHelper.showError(context, state.message);

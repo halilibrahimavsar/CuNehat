@@ -51,10 +51,11 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
           userId: event.userId,
           amount: event.investment.amount,
         );
-        emit(const InvestmentOperationSuccess('Yatırım başarıyla eklendi'));
+        emit(const InvestmentActionSuccess('Yatırım başarıyla eklendi'));
         // Listeyi güncelle
 
-        add(GetInvestmentsEvent());
+        add(GetInvestmentsEvent(
+            userId: event.userId, walletId: event.walletId));
       } catch (e) {
         emit(InvestmentError(ErrorHandler.handleException(e).message));
       }
@@ -65,9 +66,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await updateInvestmentUseCase.call(event.investment);
-        emit(const InvestmentOperationSuccess('Yatırım güncellendi'));
+        emit(const InvestmentActionSuccess('Yatırım güncellendi'));
         // Listeyi güncelle
-        add(GetInvestmentsEvent());
+        add(GetInvestmentsEvent(
+            userId: event.userId, walletId: event.walletId));
       } catch (e) {
         emit(InvestmentError(ErrorHandler.handleException(e).message));
       }
@@ -78,9 +80,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await deleteInvestmentUseCase.call(event.id);
-        emit(const InvestmentOperationSuccess('Yatırım silindi'));
+        emit(const InvestmentActionSuccess('Yatırım silindi'));
         // Listeyi güncelle
-        add(GetInvestmentsEvent());
+        add(GetInvestmentsEvent(
+            userId: event.userId, walletId: event.walletId));
       } catch (e) {
         emit(InvestmentError(ErrorHandler.handleException(e).message));
       }

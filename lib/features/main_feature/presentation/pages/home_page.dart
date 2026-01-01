@@ -63,6 +63,12 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  void _loadInvestments(String userId, String walletId) {
+    context
+        .read<InvestmentBloc>()
+        .add(GetInvestmentsEvent(userId: userId, walletId: walletId));
+  }
+
   void _loadWallets() {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -156,6 +162,7 @@ class _HomePageState extends State<HomePage>
                     return const NoWalletView(infoText: "Cüzdan oluşturunuz");
                   case true:
                     _loadTransactions(userId, activeWalletId!);
+                    _loadInvestments(userId, activeWalletId);
                     return _buildBody(
                       context: context,
                       userId: userId,
@@ -182,84 +189,115 @@ class _HomePageState extends State<HomePage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // ✅ UPDATED: Use shared DateRangeIndicator
-
-        BlocConsumer<TransactionBloc, TransactionState>(
-          listener: (context, transactionState) {
-            switch (transactionState) {
-              case TransactionActionSuccess():
-                SnackbarHelper.showSuccess(context, transactionState.message);
-                _loadTransactions(userId, walletId);
-                _loadWallets(); // update balance
-                break;
-              case TransactionError():
-                SnackbarHelper.showError(context, transactionState.message);
-                break;
-            }
-          },
-          builder: (context, transactionState) {
-            switch (transactionState) {
-              case TransactionLoading():
-                return const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              case TransactionError():
-                return Expanded(
-                  child: ErrorView(message: transactionState.message),
-                );
-
-              case TransactionLoaded():
-                var filteredTransactions = transactionState.allTransactions;
-
-                // Kategori Filtresi
-                if (_filter.selectedCategories.isNotEmpty) {
-                  filteredTransactions = filteredTransactions
-                      .where((t) => _filter.selectedCategories.contains(t.tag))
-                      .toList();
+        MultiBlocListener(
+          listeners: [
+            BlocListener<InvestmentBloc, InvestmentState>(
+              listener: (context, state) {
+                if (state is InvestmentActionSuccess) {
+                  SnackbarHelper.showSuccess(context, state.message);
+                  _loadInvestments(userId, walletId);
+                  _loadWallets();
+                } else if (state is InvestmentError) {
+                  SnackbarHelper.showError(context, state.message);
                 }
-
-                // Fiyat Filtresi
-                if (_filter.priceRange != null) {
-                  filteredTransactions = filteredTransactions
-                      .where((t) => _filter.priceRange!.isInRange(t.amount))
-                      .toList();
+              },
+            ),
+            BlocListener<TransactionBloc, TransactionState>(
+              listener: (context, transactionState) {
+                if (transactionState is TransactionActionSuccess) {
+                  SnackbarHelper.showSuccess(context, transactionState.message);
+                  _loadTransactions(userId, walletId);
+                  _loadWallets(); // update balance
+                } else if (transactionState is TransactionError) {
+                  SnackbarHelper.showError(context, transactionState.message);
                 }
+              },
+            ),
+          ],
+          child: BlocBuilder<TransactionBloc, TransactionState>(
+            builder: (context, transactionState) {
+              return BlocBuilder<InvestmentBloc, InvestmentState>(
+                builder: (context, investmentState) {
+                  // 1. Loading State (Herhangi biri yükleniyorsa)
+                  if (transactionState is TransactionLoading ||
+                      investmentState is InvestmentLoading) {
+                    return const Expanded(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-                return Expanded(
-                  child: CubeAnimationView(
-                    controller: _controller,
-                    firstView: InvestmentMoneyPage(
-                      key: const ValueKey('save-view'), // ✅ Unique key
-                      wallet: walletState.activeWallet!,
-                    ),
-                    secondView: Text(" 2. View "),
-                    thirdView: TransactionsPage(
-                      key: const ValueKey('compare-view'), // ✅ Unique key
-                      userId: userId,
-                      wallet: walletState.activeWallet!,
-                      startDate: _filter.startDate,
-                      endDate: _filter.endDate,
-                      allTransactions: filteredTransactions, // ✅ Veriyi geç
-                      viewType: _filter.viewType,
-                      mode: _filter.financeMode,
-                      filterWidget: FilterView(
-                        filter: _filter,
-                        onFilterChanged: (newFilter) =>
-                            setState(() => _filter = newFilter),
-                        onDateTap: () => _showDateRangePicker(userId, walletId),
-                        isMenuOpen: _isFilterMenuOpen,
-                        onMenuToggle: () => setState(() {
-                          _isFilterMenuOpen = !_isFilterMenuOpen;
-                        }),
+                  // 2. Error State
+                  if (transactionState is TransactionError) {
+                    return Expanded(
+                        child: ErrorView(message: transactionState.message));
+                  }
+                  if (investmentState is InvestmentError) {
+                    return Expanded(
+                        child: ErrorView(message: investmentState.message));
+                  }
+
+                  // 3. Loaded State (İkisi de yüklendiyse)
+                  if (transactionState is TransactionLoaded &&
+                      investmentState is InvestmentLoaded) {
+                    var filteredTransactions = transactionState.allTransactions;
+
+                    // Kategori Filtresi
+                    if (_filter.selectedCategories.isNotEmpty) {
+                      filteredTransactions = filteredTransactions
+                          .where(
+                              (t) => _filter.selectedCategories.contains(t.tag))
+                          .toList();
+                    }
+
+                    // Fiyat Filtresi
+                    if (_filter.priceRange != null) {
+                      filteredTransactions = filteredTransactions
+                          .where((t) => _filter.priceRange!.isInRange(t.amount))
+                          .toList();
+                    }
+
+                    return Expanded(
+                      child: CubeAnimationView(
+                        controller: _controller,
+                        firstView: InvestmentMoneyPage(
+                          key: const ValueKey('save-view'), // ✅ Unique key
+                          activeWallet: walletState.activeWallet!,
+                          // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
+                        ),
+                        secondView: const Text(" 2. View "),
+                        thirdView: TransactionsPage(
+                          key: const ValueKey('compare-view'), // ✅ Unique key
+                          userId: userId,
+                          wallet: walletState.activeWallet!,
+                          startDate: _filter.startDate,
+                          endDate: _filter.endDate,
+                          allTransactions: filteredTransactions, // ✅ Veriyi geç
+                          viewType: _filter.viewType,
+                          mode: _filter.financeMode,
+                          filterWidget: FilterView(
+                            filter: _filter,
+                            onFilterChanged: (newFilter) =>
+                                setState(() => _filter = newFilter),
+                            onDateTap: () =>
+                                _showDateRangePicker(userId, walletId),
+                            isMenuOpen: _isFilterMenuOpen,
+                            onMenuToggle: () => setState(() {
+                              _isFilterMenuOpen = !_isFilterMenuOpen;
+                            }),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              default:
-                return const SizedBox.shrink();
-            }
-          },
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              );
+            },
+          ),
         ),
+
+        // SLIDER MENU
         Padding(
           padding: const EdgeInsets.all(20.0),
           child: SliderButtonEnhanced(
@@ -277,7 +315,11 @@ class _HomePageState extends State<HomePage>
                         onAddInvestment: (investment) {
                           context
                               .read<InvestmentBloc>()
-                              .add(CreateInvestmentEvent(investment, userId));
+                              .add(CreateInvestmentEvent(
+                                investment: investment,
+                                userId: userId,
+                                walletId: walletId,
+                              ));
                         },
                       );
                     },
