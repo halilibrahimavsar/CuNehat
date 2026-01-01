@@ -155,7 +155,7 @@ class _HomePageState extends State<HomePage>
                                     context: context,
                                     builder: (context) {
                                       return AddInvestmentDialog(
-                                        onAddInvestment: (investment) {
+                                        onSave: (investment) {
                                           context
                                               .read<InvestmentBloc>()
                                               .add(CreateInvestmentEvent(

@@ -1,4 +1,5 @@
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_card.dart';
@@ -6,6 +7,7 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_cha
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -112,10 +114,33 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                         ...investments.map((investment) {
                           return Column(
                             children: [
-                              InvestmentCard(
-                                investment: investment,
-                                onDelete: () =>
-                                    _deleteInvestment(investment.id!),
+                              GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AddInvestmentDialog(
+                                      investmentToEdit:
+                                          InvestmentModel.fromEntity(
+                                              investment),
+                                      onSave: (updatedInvestment) {
+                                        context.read<InvestmentBloc>().add(
+                                              UpdateInvestmentEvent(
+                                                investment: updatedInvestment,
+                                                userId:
+                                                    widget.activeWallet.userId,
+                                                walletId:
+                                                    widget.activeWallet.id!,
+                                              ),
+                                            );
+                                      },
+                                    ),
+                                  );
+                                },
+                                child: InvestmentCard(
+                                  investment: investment,
+                                  onDelete: () =>
+                                      _deleteInvestment(investment.id!),
+                                ),
                               ),
                               const SizedBox(height: 12),
                             ],
