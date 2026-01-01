@@ -253,7 +253,7 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced> {
       onTap: () {
         widget.controller.animateTo(
           targetValue,
-          duration: const Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 700),
           curve: Curves.easeOutBack,
         );
         widget.onValueChanged?.call(targetValue);
@@ -316,7 +316,7 @@ class _MiniButtonsOverlayState extends State<_MiniButtonsOverlay>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
     _controller.forward();
   }

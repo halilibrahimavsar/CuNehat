@@ -1,5 +1,6 @@
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and_receivable_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
@@ -132,7 +133,7 @@ class _HomePageState extends State<HomePage>
                               activeWallet: walletState.activeWallet!,
                               // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
                             ),
-                            secondView: const Text(" 2. View "),
+                            secondView: MainDashboard(),
                             thirdView: TransactionsPage(
                               key: const ValueKey(
                                   'compare-view'), // ✅ Unique key
