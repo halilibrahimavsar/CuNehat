@@ -8,6 +8,8 @@ enum InvestmentType {
 
 class InvestmentEntity {
   final String? id;
+  final String userId;
+  final String walletId;
   final String name;
   final double amount;
   final double currentValue;
@@ -19,6 +21,8 @@ class InvestmentEntity {
 
   const InvestmentEntity({
     required this.id,
+    required this.userId,
+    required this.walletId,
     required this.name,
     required this.amount,
     required this.currentValue,

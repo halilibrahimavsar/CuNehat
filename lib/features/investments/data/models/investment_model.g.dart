@@ -18,38 +18,44 @@ class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
     };
     return InvestmentModel(
       id: fields[0] as String?,
-      name: fields[1] as String,
-      amount: fields[2] as double,
-      currentValue: fields[3] as double,
-      type: fields[4] as InvestmentType,
-      color: fields[5] as Color,
-      dateAdded: fields[6] as DateTime,
-      symbol: fields[7] as String?,
-      returnRate: fields[8] as double?,
+      userId: fields[1] as String,
+      walletId: fields[2] as String,
+      name: fields[3] as String,
+      amount: fields[4] as double,
+      currentValue: fields[5] as double,
+      type: fields[6] as InvestmentType,
+      color: fields[7] as Color,
+      dateAdded: fields[8] as DateTime,
+      symbol: fields[9] as String?,
+      returnRate: fields[10] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, InvestmentModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.name)
+      ..write(obj.userId)
       ..writeByte(2)
-      ..write(obj.amount)
+      ..write(obj.walletId)
       ..writeByte(3)
-      ..write(obj.currentValue)
+      ..write(obj.name)
       ..writeByte(4)
-      ..write(obj.type)
+      ..write(obj.amount)
       ..writeByte(5)
-      ..write(obj.color)
+      ..write(obj.currentValue)
       ..writeByte(6)
-      ..write(obj.dateAdded)
+      ..write(obj.type)
       ..writeByte(7)
-      ..write(obj.symbol)
+      ..write(obj.color)
       ..writeByte(8)
+      ..write(obj.dateAdded)
+      ..writeByte(9)
+      ..write(obj.symbol)
+      ..writeByte(10)
       ..write(obj.returnRate);
   }
 

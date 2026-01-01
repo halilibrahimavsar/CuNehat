@@ -25,9 +25,17 @@ class InvestmentLocalDatasource implements InvestmentDatasourceRepository {
   }
 
   @override
-  Future<List<InvestmentModel>> getInvestments() async {
+  Future<List<InvestmentModel>> getInvestments(
+      {required String userId, required String walletId}) async {
     final box = await _box;
-    return box.values.toList();
+    // Filter by userId and walletId
+    var investments = box.values.where((invest) {
+      if (invest.userId != userId || invest.walletId != walletId) {
+        return false;
+      }
+      return true;
+    }).toList();
+    return investments;
   }
 
   @override

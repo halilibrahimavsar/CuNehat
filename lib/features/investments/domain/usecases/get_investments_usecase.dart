@@ -6,7 +6,13 @@ class GetInvestmentsUseCase {
 
   GetInvestmentsUseCase(this.repository);
 
-  Future<List<InvestmentEntity>> call() async {
-    return await repository.getInvestments();
+  Future<List<InvestmentEntity>> call({
+    required String userId,
+    required String walletId,
+  }) async {
+    return await repository.getInvestments(
+      userId: userId,
+      walletId: walletId,
+    );
   }
 }

@@ -30,7 +30,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
     on<GetInvestmentsEvent>((event, emit) async {
       emit(InvestmentLoading());
       try {
-        final investments = await getInvestmentsUseCase.call();
+        final investments = await getInvestmentsUseCase.call(
+          userId: event.userId,
+          walletId: event.walletId,
+        );
 
         // Toplam tutarı hesapla
         final total =

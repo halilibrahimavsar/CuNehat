@@ -155,6 +155,8 @@ class _HomePageState extends State<HomePage>
                                     context: context,
                                     builder: (context) {
                                       return AddInvestmentDialog(
+                                        userId: userId,
+                                        walletId: walletState.activeWallet!.id!,
                                         onSave: (investment) {
                                           context
                                               .read<InvestmentBloc>()

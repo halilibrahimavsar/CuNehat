@@ -7,5 +7,8 @@ abstract class InvestmentDatasourceRepository {
 
   Future<void> deleteInvestment({required String id});
 
-  Future<List<InvestmentModel>> getInvestments();
+  Future<List<InvestmentModel>> getInvestments({
+    required String userId,
+    required String walletId,
+  });
 }

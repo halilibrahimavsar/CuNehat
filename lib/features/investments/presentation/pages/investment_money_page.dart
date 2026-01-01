@@ -38,6 +38,14 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     _loadInvestments();
   }
 
+  @override
+  void didUpdateWidget(covariant InvestmentMoneyPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.activeWallet.id != oldWidget.activeWallet.id) {
+      _loadInvestments();
+    }
+  }
+
   void _loadInvestments() {
     context.read<InvestmentBloc>().add(GetInvestmentsEvent(
           userId: widget.activeWallet.userId,
@@ -52,7 +60,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
             id: investment.id!,
             userId: widget.activeWallet.userId,
-            walletId: investment.id!,
+            walletId: widget.activeWallet.id!,
             amount: investment.amount,
           ));
       return true;
@@ -147,6 +155,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                   showDialog(
                                     context: context,
                                     builder: (context) => AddInvestmentDialog(
+                                      userId: investment.userId,
+                                      walletId: investment.walletId,
                                       investmentToEdit:
                                           InvestmentModel.fromEntity(item),
                                       onSave: (updatedInvestment) {

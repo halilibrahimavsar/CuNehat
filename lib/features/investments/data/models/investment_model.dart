@@ -7,6 +7,8 @@ part 'investment_model.g.dart';
 class InvestmentModel extends InvestmentEntity {
   const InvestmentModel({
     required super.id,
+    required super.userId,
+    required super.walletId,
     required super.name,
     required super.amount,
     required super.currentValue,
@@ -21,6 +23,8 @@ class InvestmentModel extends InvestmentEntity {
   factory InvestmentModel.fromJson(String id, Map<String, dynamic> json) {
     return InvestmentModel(
       id: id,
+      userId: json['userId'] ?? '',
+      walletId: json['walletId'] ?? '',
       name: json['name'] ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       currentValue: (json['currentValue'] as num?)?.toDouble() ?? 0.0,
@@ -38,6 +42,8 @@ class InvestmentModel extends InvestmentEntity {
   InvestmentModel.fromEntity(InvestmentEntity entity)
       : this(
           id: entity.id ?? '',
+          userId: entity.userId,
+          walletId: entity.walletId,
           name: entity.name,
           amount: entity.amount,
           currentValue: entity.currentValue,
@@ -51,6 +57,8 @@ class InvestmentModel extends InvestmentEntity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
+      'walletId': walletId,
       'name': name,
       'amount': amount,
       'currentValue': currentValue,
@@ -65,6 +73,8 @@ class InvestmentModel extends InvestmentEntity {
   //copy with method for updates
   InvestmentModel copyWith({
     String? id,
+    String? userId,
+    String? walletId,
     String? name,
     double? amount,
     double? currentValue,
@@ -76,6 +86,8 @@ class InvestmentModel extends InvestmentEntity {
   }) {
     return InvestmentModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
+      walletId: walletId ?? this.walletId,
       name: name ?? this.name,
       amount: amount ?? this.amount,
       currentValue: currentValue ?? this.currentValue,
@@ -96,84 +108,32 @@ class InvestmentModel extends InvestmentEntity {
   String? get id => super.id;
   @override
   @HiveField(1)
-  String get name => super.name;
+  String get userId => super.userId;
   @override
   @HiveField(2)
-  double get amount => super.amount;
+  String get walletId => super.walletId;
   @override
   @HiveField(3)
-  double get currentValue => super.currentValue;
+  String get name => super.name;
   @override
   @HiveField(4)
-  InvestmentType get type => super.type;
+  double get amount => super.amount;
   @override
   @HiveField(5)
-  Color get color => super.color;
+  double get currentValue => super.currentValue;
   @override
   @HiveField(6)
-  DateTime get dateAdded => super.dateAdded;
+  InvestmentType get type => super.type;
   @override
   @HiveField(7)
-  String? get symbol => super.symbol;
+  Color get color => super.color;
   @override
   @HiveField(8)
+  DateTime get dateAdded => super.dateAdded;
+  @override
+  @HiveField(9)
+  String? get symbol => super.symbol;
+  @override
+  @HiveField(10)
   double? get returnRate => super.returnRate;
 }
-
-/////////////////////////////////////////////////////////////////
-// Mock data
-List<InvestmentEntity> mockInvestments = [
-  InvestmentModel(
-    id: '1',
-    name: 'Apple Inc.',
-    amount: 50000,
-    currentValue: 55000,
-    type: InvestmentType.stock,
-    color: Colors.green,
-    dateAdded: DateTime.now().subtract(const Duration(days: 30)),
-    symbol: 'AAPL',
-    returnRate: 10.0,
-  ),
-  InvestmentModel(
-    id: '2',
-    name: 'Tesla Inc.',
-    amount: 30000,
-    currentValue: 33000,
-    type: InvestmentType.stock,
-    color: Colors.red,
-    dateAdded: DateTime.now().subtract(const Duration(days: 60)),
-    symbol: 'TSLA',
-    returnRate: 10.0,
-  ),
-  InvestmentModel(
-    id: '3',
-    name: 'Altın',
-    amount: 25000,
-    currentValue: 27000,
-    type: InvestmentType.gold,
-    color: Colors.amber[700]!,
-    dateAdded: DateTime.now().subtract(const Duration(days: 90)),
-    returnRate: 8.0,
-  ),
-  InvestmentModel(
-    id: '4',
-    name: 'Kira Geliri',
-    amount: 100000,
-    currentValue: 100000,
-    type: InvestmentType.custom,
-    color: Colors.green,
-    dateAdded: DateTime.now().subtract(const Duration(days: 120)),
-    returnRate: 0.0,
-  ),
-  InvestmentModel(
-    id: '5',
-    name: 'Microsoft',
-    amount: 40000,
-    currentValue: 44000,
-    type: InvestmentType.stock,
-    color: Colors.blue,
-    dateAdded: DateTime.now().subtract(const Duration(days: 45)),
-    symbol: 'MSFT',
-    returnRate: 10.0,
-  ),
-];

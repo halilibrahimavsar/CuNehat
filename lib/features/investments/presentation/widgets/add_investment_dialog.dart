@@ -5,11 +5,15 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:flutter/material.dart';
 
 class AddInvestmentDialog extends StatefulWidget {
+  final String userId;
+  final String walletId;
   final Function(InvestmentModel) onSave;
   final InvestmentModel? investmentToEdit;
 
   const AddInvestmentDialog({
     super.key,
+    required this.userId,
+    required this.walletId,
     required this.onSave,
     this.investmentToEdit,
   });
@@ -199,6 +203,8 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
       final newInvestment = InvestmentModel(
         id: widget.investmentToEdit?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: widget.userId,
+        walletId: widget.walletId,
         name: _nameController.text,
         amount: double.parse(_amountController.text),
         currentValue: double.parse(_currentValueController.text),

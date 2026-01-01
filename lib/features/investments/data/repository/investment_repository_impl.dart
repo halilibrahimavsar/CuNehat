@@ -24,9 +24,15 @@ class SaveRepositoryImpl implements SaveRepository {
   }
 
   @override
-  Future<List<InvestmentEntity>> getInvestments() async {
+  Future<List<InvestmentEntity>> getInvestments({
+    required String userId,
+    required String walletId,
+  }) async {
     // Önce sunucudan veriyi çekmeyi dene
-    final remoteInvestments = await dataSource.getInvestments();
+    final remoteInvestments = await dataSource.getInvestments(
+      userId: userId,
+      walletId: walletId,
+    );
 
     return remoteInvestments;
   }

@@ -38,10 +38,15 @@ class InvestmentRouteDatasource implements InvestmentDatasourceRepository {
   }
 
   @override
-  Future<List<InvestmentModel>> getInvestments() async {
+  Future<List<InvestmentModel>> getInvestments({
+    required String userId,
+    required String walletId,
+  }) async {
     if (_userId.isEmpty) throw Exception('User not authenticated');
 
-    final snapshot = await _investmentsCollection.get();
+    final snapshot = await _investmentsCollection
+        .where('walletId', isEqualTo: walletId)
+        .get();
     return snapshot.docs
         .map((doc) => InvestmentModel.fromJson(
             doc.id, doc.data() as Map<String, dynamic>))
