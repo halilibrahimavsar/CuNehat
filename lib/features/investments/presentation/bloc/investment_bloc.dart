@@ -5,6 +5,7 @@ import 'package:cunehat/features/investments/domain/usecases/add_investment_usec
 import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_investment_sync_usecase.dart';
 import 'package:equatable/equatable.dart';
 
 part 'investment_event.dart';
@@ -15,12 +16,15 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
   final AddInvestmentUseCase addInvestmentUseCase;
   final UpdateInvestmentUseCase updateInvestmentUseCase;
   final DeleteInvestmentUseCase deleteInvestmentUseCase;
+  final WalletInvestmentSyncUsecase
+      walletSyncUseCase; // this one is for updating wallet feature
 
   InvestmentBloc({
     required this.getInvestmentsUseCase,
     required this.addInvestmentUseCase,
     required this.updateInvestmentUseCase,
     required this.deleteInvestmentUseCase,
+    required this.walletSyncUseCase,
   }) : super(InvestmentInitial()) {
     // Yatırımları Getir
     on<GetInvestmentsEvent>((event, emit) async {
@@ -43,8 +47,13 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await addInvestmentUseCase.call(event.investment);
+        await walletSyncUseCase.addInvestment(
+          userId: event.userId,
+          amount: event.investment.amount,
+        );
         emit(const InvestmentOperationSuccess('Yatırım başarıyla eklendi'));
         // Listeyi güncelle
+
         add(GetInvestmentsEvent());
       } catch (e) {
         emit(InvestmentError(ErrorHandler.handleException(e).message));

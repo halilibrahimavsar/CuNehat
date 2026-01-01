@@ -23,7 +23,7 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       balance: fields[3] as double,
       debt: fields[4] as double,
       credit: fields[5] as double,
-      save: fields[6] as double,
+      investment: fields[6] as double,
       colorHex: fields[7] as String,
       iconName: fields[8] as String,
       createdAt: fields[9] as DateTime,
@@ -49,7 +49,7 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(5)
       ..write(obj.credit)
       ..writeByte(6)
-      ..write(obj.save)
+      ..write(obj.investment)
       ..writeByte(7)
       ..write(obj.colorHex)
       ..writeByte(8)

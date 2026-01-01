@@ -128,7 +128,9 @@ class WalletCardWidget extends StatelessWidget {
               ),
 
               // Stats Row (Debt, Credit, Save)
-              if (wallet.debt > 0 || wallet.credit > 0 || wallet.save > 0) ...[
+              if (wallet.debt > 0 ||
+                  wallet.credit > 0 ||
+                  wallet.investment > 0) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding:
@@ -144,8 +146,8 @@ class WalletCardWidget extends StatelessWidget {
                           Icons.arrow_downward),
                       _buildStatItem('Alacak', wallet.credit, Colors.green,
                           Icons.arrow_upward),
-                      _buildStatItem(
-                          'Birikim', wallet.save, Colors.orange, Icons.savings),
+                      _buildStatItem('Birikim', wallet.investment,
+                          Colors.orange, Icons.savings),
                     ],
                   ),
                 ),

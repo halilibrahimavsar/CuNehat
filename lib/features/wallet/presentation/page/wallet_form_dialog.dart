@@ -91,7 +91,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       text: widget.wallet?.credit.toStringAsFixed(2) ?? '0.00',
     );
     _saveController = TextEditingController(
-      text: widget.wallet?.save.toStringAsFixed(2) ?? '0.00',
+      text: widget.wallet?.investment.toStringAsFixed(2) ?? '0.00',
     );
   }
 
@@ -388,7 +388,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         balance: balance,
         debt: debt,
         credit: credit,
-        save: save,
+        investment: save,
         colorHex: colorHex,
         iconName: iconName,
       );
@@ -401,7 +401,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         balance: balance,
         debt: debt,
         credit: credit,
-        save: save,
+        investment: save,
         colorHex: colorHex,
         iconName: iconName,
         createdAt: createdAt,

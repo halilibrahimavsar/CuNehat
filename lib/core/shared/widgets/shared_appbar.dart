@@ -196,7 +196,7 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
 
       if (state.activeWallet != null) {
         if (currentValue < 0.3) {
-          valueListener = state.activeWallet?.save ?? 0.0;
+          valueListener = state.activeWallet?.investment ?? 0.0;
           valueNameListener = "YATIRIM";
         } else if (currentValue > 0.7) {
           valueListener = state.activeWallet?.debt ?? 0.0;

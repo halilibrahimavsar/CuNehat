@@ -10,9 +10,10 @@ sealed class InvestmentEvent extends Equatable {
 final class GetInvestmentsEvent extends InvestmentEvent {}
 
 final class CreateInvestmentEvent extends InvestmentEvent {
+  final String userId;
   final InvestmentEntity investment;
 
-  const CreateInvestmentEvent(this.investment);
+  const CreateInvestmentEvent(this.investment, this.userId);
   @override
   List<Object> get props => [investment];
 }

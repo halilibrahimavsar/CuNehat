@@ -38,25 +38,6 @@ class SummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Toplam Değer
-          Text(
-            'Toplam Değer',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            currencyFormat.format(totalCurrentValue),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 20),
-
           // Grid View for stats
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,

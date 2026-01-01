@@ -36,6 +36,7 @@ import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_investment_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -210,6 +211,14 @@ class _AuthenticatedProviders extends StatelessWidget {
           },
         ),
 
+        RepositoryProvider(
+          create: (context) {
+            final walletRepo = context.read<WalletRepositoryImpl>();
+            return WalletInvestmentSyncUsecase(
+                walletRepository: walletRepo.dataSource);
+          },
+        ),
+
         RepositoryProvider(create: (context) {
           return InvestmentLocalDatasource();
         }),
@@ -305,6 +314,7 @@ class _AuthenticatedProviders extends StatelessWidget {
               deleteInvestmentUseCase: DeleteInvestmentUseCase(
                 context.read<SaveRepositoryImpl>(),
               ),
+              walletSyncUseCase: context.read<WalletInvestmentSyncUsecase>(),
             )..add(GetInvestmentsEvent()),
           ),
         ],

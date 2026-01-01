@@ -277,7 +277,7 @@ class _HomePageState extends State<HomePage>
                         onAddInvestment: (investment) {
                           context
                               .read<InvestmentBloc>()
-                              .add(CreateInvestmentEvent(investment));
+                              .add(CreateInvestmentEvent(investment, userId));
                         },
                       );
                     },
