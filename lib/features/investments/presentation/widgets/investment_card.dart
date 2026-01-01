@@ -4,12 +4,10 @@ import 'package:intl/intl.dart';
 
 class InvestmentCard extends StatelessWidget {
   final InvestmentEntity investment;
-  final VoidCallback onDelete;
 
   const InvestmentCard({
     super.key,
     required this.investment,
-    required this.onDelete,
   });
 
   IconData _getInvestmentIcon(InvestmentType type) {
@@ -190,15 +188,6 @@ class InvestmentCard extends StatelessWidget {
           ),
 
           const SizedBox(width: 8),
-
-          // Sil butonu
-          IconButton(
-            icon: Icon(
-              Icons.delete_outline,
-              color: Colors.grey[400],
-            ),
-            onPressed: onDelete,
-          ),
         ],
       ),
     );

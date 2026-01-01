@@ -1,7 +1,12 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/dismissable_widget.dart';
+import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionCard extends StatelessWidget {
   final BuildContext context;
@@ -18,8 +23,35 @@ class TransactionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = item.transaction;
-    return DismissableWidget(
+    return DismissableWidget<TransactionWithBalance>(
       item: item,
+      dismissKey: t.id ?? '',
+      // Silme işlemi henüz implemente edilmediği için false dönüyoruz
+      onDelete: (item) async {
+        final confirmed = await ConfirmDeleteDialog.show(
+          context,
+          title: t.title,
+        );
+
+        if (confirmed == true && context.mounted) {
+          if (t.id != null) {
+            context.read<TransactionBloc>().add(
+                  DeleteTransactionEvent(t.id!),
+                );
+            return true;
+          }
+        }
+        return false;
+      },
+      onEdit: (item) {
+        TransactionSheetHandler.showSheet(
+          context: context,
+          userId: t.userId,
+          walletId: t.walletId,
+          type: t.type,
+          initialTransaction: t,
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(

@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 
 class ConfirmDeleteDialog extends StatelessWidget {
   final String title;
+  final String itemType;
   final VoidCallback? onDelete;
 
   const ConfirmDeleteDialog({
     super.key,
     required this.title,
+    this.itemType = 'öğeyi',
     this.onDelete, // opsiyonel
   });
 
   static Future<bool?> show(
     BuildContext context, {
     required String title,
+    String itemType = 'öğeyi',
     VoidCallback? onDelete, // buraya da ekleyelim ki dışarıdan verebilelim
   }) {
     return showDialog<bool>(
@@ -20,6 +23,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
       barrierDismissible: false,
       builder: (ctx) => ConfirmDeleteDialog(
         title: title,
+        itemType: itemType,
         onDelete: onDelete,
       ),
     );
@@ -33,7 +37,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
           color: Colors.orange, size: 48),
       title: const Text('Silme Onayı', textAlign: TextAlign.center),
       content: Text(
-        '"$title" adlı geliri silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
+        '"$title" adlı $itemType silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
         textAlign: TextAlign.center,
       ),
       actionsAlignment: MainAxisAlignment.spaceEvenly,

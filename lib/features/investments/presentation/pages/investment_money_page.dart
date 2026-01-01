@@ -1,3 +1,5 @@
+import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -21,12 +23,13 @@ class InvestmentMoneyPage extends StatefulWidget {
 }
 
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
-  void _deleteInvestment(String id) {
-    context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
-          id: id,
-          userId: widget.activeWallet.userId,
-          walletId: widget.activeWallet.id!,
-        ));
+  Future<bool> _confirmDelete(InvestmentEntity investment) async {
+    return await ConfirmDeleteDialog.show(
+          context,
+          title: investment.name,
+          itemType: 'yatırımı',
+        ) ??
+        false;
   }
 
   void _loadInvestments() {
@@ -114,32 +117,43 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                         ...investments.map((investment) {
                           return Column(
                             children: [
-                              GestureDetector(
-                                onTap: () {
+                              DismissableWidget<InvestmentEntity>(
+                                item: investment,
+                                dismissKey: investment.id!,
+                                onDelete: (item) async {
+                                  final confirmed = await _confirmDelete(item);
+                                  if (confirmed && context.mounted) {
+                                    context
+                                        .read<InvestmentBloc>()
+                                        .add(DeleteInvestmentEvent(
+                                          id: item.id!,
+                                          userId: widget.activeWallet.userId,
+                                          walletId: widget.activeWallet.id!,
+                                        ));
+                                    return true;
+                                  }
+                                  return false;
+                                },
+                                onEdit: (item) {
                                   showDialog(
                                     context: context,
                                     builder: (context) => AddInvestmentDialog(
                                       investmentToEdit:
-                                          InvestmentModel.fromEntity(
-                                              investment),
+                                          InvestmentModel.fromEntity(item),
                                       onSave: (updatedInvestment) {
                                         context.read<InvestmentBloc>().add(
-                                              UpdateInvestmentEvent(
+                                            UpdateInvestmentEvent(
                                                 investment: updatedInvestment,
                                                 userId:
                                                     widget.activeWallet.userId,
                                                 walletId:
-                                                    widget.activeWallet.id!,
-                                              ),
-                                            );
+                                                    widget.activeWallet.id!));
                                       },
                                     ),
                                   );
                                 },
                                 child: InvestmentCard(
                                   investment: investment,
-                                  onDelete: () =>
-                                      _deleteInvestment(investment.id!),
                                 ),
                               ),
                               const SizedBox(height: 12),
