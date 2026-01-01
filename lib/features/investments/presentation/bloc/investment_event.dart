@@ -37,11 +37,15 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
   final String userId;
   final String walletId;
   final InvestmentEntity investment;
+  final double prevAmount;
+  final double newAmount;
 
   const UpdateInvestmentEvent({
     required this.investment,
     required this.userId,
     required this.walletId,
+    required this.prevAmount,
+    required this.newAmount,
   });
   @override
   List<Object> get props => [investment, userId, walletId];
@@ -51,11 +55,13 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
   final String userId;
   final String walletId;
   final String id;
+  final double amount;
 
   const DeleteInvestmentEvent({
     required this.id,
     required this.userId,
     required this.walletId,
+    required this.amount,
   });
   @override
   List<Object> get props => [id, userId, walletId];

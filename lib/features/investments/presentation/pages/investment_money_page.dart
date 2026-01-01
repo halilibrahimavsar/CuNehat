@@ -32,12 +32,32 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         false;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadInvestments();
+  }
+
   void _loadInvestments() {
     context.read<InvestmentBloc>().add(GetInvestmentsEvent(
           userId: widget.activeWallet.userId,
           walletId: widget.activeWallet.id!,
         ));
     context.read<WalletBloc>().add(GetWalletsEvent(widget.activeWallet.userId));
+  }
+
+  Future<bool> _deleteInvestment(InvestmentEntity investment) async {
+    final confirmed = await _confirmDelete(investment);
+    if (confirmed && mounted) {
+      context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
+            id: investment.id!,
+            userId: widget.activeWallet.userId,
+            walletId: investment.id!,
+            amount: investment.amount,
+          ));
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -121,18 +141,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                 item: investment,
                                 dismissKey: investment.id!,
                                 onDelete: (item) async {
-                                  final confirmed = await _confirmDelete(item);
-                                  if (confirmed && context.mounted) {
-                                    context
-                                        .read<InvestmentBloc>()
-                                        .add(DeleteInvestmentEvent(
-                                          id: item.id!,
-                                          userId: widget.activeWallet.userId,
-                                          walletId: widget.activeWallet.id!,
-                                        ));
-                                    return true;
-                                  }
-                                  return false;
+                                  return await _deleteInvestment(investment);
                                 },
                                 onEdit: (item) {
                                   showDialog(
@@ -141,13 +150,17 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                       investmentToEdit:
                                           InvestmentModel.fromEntity(item),
                                       onSave: (updatedInvestment) {
-                                        context.read<InvestmentBloc>().add(
-                                            UpdateInvestmentEvent(
-                                                investment: updatedInvestment,
-                                                userId:
-                                                    widget.activeWallet.userId,
-                                                walletId:
-                                                    widget.activeWallet.id!));
+                                        context
+                                            .read<InvestmentBloc>()
+                                            .add(UpdateInvestmentEvent(
+                                              investment: updatedInvestment,
+                                              userId:
+                                                  widget.activeWallet.userId,
+                                              walletId: widget.activeWallet.id!,
+                                              prevAmount: item.amount,
+                                              newAmount:
+                                                  updatedInvestment.amount,
+                                            ));
                                       },
                                     ),
                                   );

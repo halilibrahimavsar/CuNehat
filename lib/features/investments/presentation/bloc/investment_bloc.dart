@@ -66,6 +66,11 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await updateInvestmentUseCase.call(event.investment);
+        await walletSyncUseCase.updateInvestment(
+          userId: event.userId,
+          prevAmount: event.prevAmount,
+          newAmount: event.newAmount,
+        );
         emit(const InvestmentActionSuccess('Yatırım güncellendi'));
         // Listeyi güncelle
         add(GetInvestmentsEvent(
@@ -80,6 +85,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await deleteInvestmentUseCase.call(event.id);
+        await walletSyncUseCase.deleteInvestment(
+          userId: event.userId,
+          amount: event.amount,
+        );
         emit(const InvestmentActionSuccess('Yatırım silindi'));
         // Listeyi güncelle
         add(GetInvestmentsEvent(
