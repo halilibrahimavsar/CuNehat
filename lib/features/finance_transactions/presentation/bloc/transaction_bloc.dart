@@ -34,7 +34,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     GetTransactionsEvent event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
+    // Mevcut veriyi koruyarak loading durumuna geç
+    emit(TransactionLoading(previousTransactions: state.currentTransactions));
 
     try {
       final transactions = await getTransactionsGroupedUseCase(
@@ -57,6 +58,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     } catch (e) {
       emit(TransactionError(
         'İşlemler yüklenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
+        transactions: state.currentTransactions,
       ));
     }
   }
@@ -65,6 +67,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     AddTransactionEvent event,
     Emitter<TransactionState> emit,
   ) async {
+    final currentData = state.currentTransactions;
     try {
       // ID oluşturma sorumluluğu Usecase'de.
       // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
@@ -76,10 +79,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         isExpense: event.transaction.isExpense,
       );
       emit(TransactionActionSuccess(
-          '${event.transaction.title} başarıyla eklendi'));
+        '${event.transaction.title} başarıyla eklendi',
+        transactions: currentData,
+      ));
     } catch (e) {
       emit(TransactionError(
-          'İşlem eklenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
+        'İşlem eklenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
+        transactions: currentData,
+      ));
     }
   }
 
@@ -87,6 +94,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     UpdateTransactionEvent event,
     Emitter<TransactionState> emit,
   ) async {
+    final currentData = state.currentTransactions;
     try {
       // 2. Update transaction in database
       await updateTransactionUseCase(event.newTransaction);
@@ -98,10 +106,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       );
 
       emit(TransactionActionSuccess(
-          '${event.newTransaction.title} başarıyla güncellendi'));
+        '${event.newTransaction.title} başarıyla güncellendi',
+        transactions: currentData,
+      ));
     } catch (e) {
       emit(TransactionError(
-          'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
+        'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
+        transactions: currentData,
+      ));
     }
   }
 
@@ -109,6 +121,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     DeleteTransactionEvent event,
     Emitter<TransactionState> emit,
   ) async {
+    final currentData = state.currentTransactions;
     try {
       // 1. Get transaction before deleting
       final transaction = await getTransactionByIdUseCase(event.transactionId);
@@ -122,10 +135,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       );
 
       // 3 Başarılı
-      emit(TransactionActionSuccess("${transaction.title} silindi"));
+      emit(TransactionActionSuccess(
+        "${transaction.title} silindi",
+        transactions: currentData,
+      ));
     } catch (e) {
       emit(TransactionError(
-          'İşlem silinirken hata oluştu: ${ErrorHandler.handleException(e).message}'));
+        'İşlem silinirken hata oluştu: ${ErrorHandler.handleException(e).message}',
+        transactions: currentData,
+      ));
     }
   }
 }

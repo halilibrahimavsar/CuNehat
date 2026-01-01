@@ -315,7 +315,7 @@ class _AuthenticatedProviders extends StatelessWidget {
                 context.read<SaveRepositoryImpl>(),
               ),
               walletSyncUseCase: context.read<WalletInvestmentSyncUsecase>(),
-            )..add(GetInvestmentsEvent()),
+            ),
           ),
         ],
         child: child,

@@ -1,6 +1,6 @@
 // lib/features/transactions/domain/entities/filter_entity.dart
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_view_type.dart';
 
 /// Veri filtreleri için temel sınıf
 abstract base class BaseFilter {

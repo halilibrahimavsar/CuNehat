@@ -1,7 +1,7 @@
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/main_feature/presentation/widgets/transaction_view_type.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_view_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
