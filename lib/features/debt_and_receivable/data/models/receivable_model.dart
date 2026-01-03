@@ -6,7 +6,7 @@ part 'receivable_model.g.dart';
 class ReceivableModel extends ReceivableEntity {
   @override
   @HiveField(0)
-  String get id;
+  String? get id;
 
   @override
   @HiveField(1)

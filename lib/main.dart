@@ -49,6 +49,7 @@ import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_debt_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_investment_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -219,11 +220,11 @@ class _AuthenticatedProviders extends StatelessWidget {
         RepositoryProvider(
           create: (context) {
             final walletRepo = context.read<WalletRepositoryImpl>();
-            final transactionRepo = context.read<TransactionRepositoryImpl>();
+            // final transactionRepo = context.read<TransactionRepositoryImpl>();
 
             return WalletBalanceSyncUseCase(
               walletRepository: walletRepo.dataSource,
-              transactionRepository: transactionRepo.dataSource,
+              // transactionRepository: transactionRepo.dataSource,
             );
           },
         ),
@@ -369,6 +370,10 @@ class _AuthenticatedProviders extends StatelessWidget {
                   UpdateDebtUseCase(context.read<DebtRepositoryImpl>()),
               deleteDebtUseCase:
                   DeleteDebtUseCase(context.read<DebtRepositoryImpl>()),
+              walletDebtSyncUsecase: WalletDebtSyncUsecase(
+                walletRepository:
+                    context.read<WalletRepositoryImpl>().dataSource,
+              ),
             ),
           ),
           BlocProvider(

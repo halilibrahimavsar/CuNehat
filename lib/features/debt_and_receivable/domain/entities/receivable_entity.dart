@@ -1,5 +1,5 @@
 class ReceivableEntity {
-  final String id;
+  final String? id;
   final String userId;
   final String walletId;
   final String debtorName; // Borçlu Kişi Adı (UI: Title)
@@ -9,7 +9,7 @@ class ReceivableEntity {
   final String? notes;
 
   ReceivableEntity({
-    required this.id,
+    this.id,
     required this.userId,
     required this.walletId,
     required this.debtorName,

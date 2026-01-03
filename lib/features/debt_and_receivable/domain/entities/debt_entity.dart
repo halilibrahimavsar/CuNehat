@@ -21,7 +21,7 @@ class Payment {
 }
 
 class DebtEntity {
-  final String id;
+  String? id;
   final String userId;
   final String walletId;
   final String title;
@@ -38,7 +38,7 @@ class DebtEntity {
   final String? notes;
 
   DebtEntity({
-    required this.id,
+    this.id,
     required this.userId,
     required this.walletId,
     required this.title,

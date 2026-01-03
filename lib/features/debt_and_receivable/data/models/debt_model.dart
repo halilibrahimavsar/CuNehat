@@ -7,7 +7,7 @@ part 'debt_model.g.dart';
 class DebtModel extends DebtEntity {
   @override
   @HiveField(0)
-  String get id;
+  String? get id;
 
   @override
   @HiveField(1)

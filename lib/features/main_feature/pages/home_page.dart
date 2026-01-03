@@ -136,6 +136,7 @@ class _HomePageState extends State<HomePage>
                             secondView: MainDashboard(
                               key: const ValueKey(
                                   'compare-view'), // ✅ Unique key
+                              userId: userId,
                               walletId: walletState.activeWallet!.id!,
                             ),
                             thirdView: TransactionsPage(

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/receivable_repository.dart';
 
@@ -13,8 +14,12 @@ class AddReceivableUseCase {
   final ReceivableRepository repository;
   AddReceivableUseCase(this.repository);
 
-  Future<void> call(ReceivableEntity receivable) =>
-      repository.addReceivable(receivable);
+  Future<void> call(ReceivableEntity receivable) async {
+    if (receivable.id == null) {
+      receivable = receivable.copyWith(id: UidGenerator.generateV7());
+    }
+    await repository.addReceivable(receivable);
+  }
 }
 
 class UpdateReceivableUseCase {

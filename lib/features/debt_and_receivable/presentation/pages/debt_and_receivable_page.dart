@@ -1,17 +1,18 @@
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
-import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 class MainDashboard extends StatefulWidget {
+  final String userId;
   final String walletId;
-  const MainDashboard({super.key, required this.walletId});
+  const MainDashboard(
+      {super.key, required this.userId, required this.walletId});
 
   @override
   State<MainDashboard> createState() => _MainDashboardState();
@@ -22,8 +23,21 @@ class _MainDashboardState extends State<MainDashboard> {
   void initState() {
     super.initState();
     // Sayfa açıldığında verileri mevcut cüzdan ID'sine göre çekiyoruz
+    _loadDebt();
+  }
+
+  @override
+  void didUpdateWidget(covariant MainDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.walletId != oldWidget.walletId) {
+      _loadDebt();
+    }
+  }
+
+  void _loadDebt() {
     context.read<DebtBloc>().add(GetDebtsEvent(widget.walletId));
     context.read<ReceivableBloc>().add(GetReceivablesEvent(widget.walletId));
+    context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
   }
 
   @override
@@ -225,7 +239,7 @@ class ReceivableListSection extends StatelessWidget {
                   onLongPress: () {
                     // Silme işlemi örneği
                     context.read<ReceivableBloc>().add(DeleteReceivableEvent(
-                        id: receivable.id, walletId: receivable.walletId));
+                        id: receivable.id!, walletId: receivable.walletId));
                   },
                 ),
               );
@@ -252,267 +266,6 @@ class ReceivableListSection extends StatelessWidget {
         }
         return const SizedBox.shrink();
       },
-    );
-  }
-}
-
-// --- GELİŞMİŞ BORÇ EKLEME FORMU ---
-class AddEntrySheet extends StatefulWidget {
-  final String walletId;
-  const AddEntrySheet({super.key, required this.walletId});
-
-  @override
-  State<AddEntrySheet> createState() => _AddEntrySheetState();
-}
-
-class _AddEntrySheetState extends State<AddEntrySheet> {
-  bool isDebt = true; // true: Borç, false: Alacak
-  final _formKey = GlobalKey<FormState>();
-
-  // Ortak Alanlar
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
-
-  // Borç Alanları
-  final TextEditingController _counterpartyController = TextEditingController();
-  final TextEditingController _termController = TextEditingController();
-  final TextEditingController _interestController = TextEditingController();
-  final TextEditingController _overdueController = TextEditingController();
-  DebtType _selectedDebtType = DebtType.bankLoan;
-
-  DateTime _selectedDate = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _dateController.text = DateFormat('dd/MM/yyyy').format(_selectedDate);
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        _dateController.text = DateFormat('dd/MM/yyyy').format(picked);
-      });
-    }
-  }
-
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
-
-    // Auth Bloc'tan mevcut kullanıcı ID'sini al
-    final authState = context.read<RemoteAuthBloc>().state;
-    final userId =
-        authState is Authenticated ? authState.user.uid : 'unknown_user';
-
-    final uuid = const Uuid().v4();
-
-    if (isDebt) {
-      final debt = DebtEntity(
-        id: uuid,
-        userId: userId,
-        walletId: widget.walletId,
-        title: _titleController.text,
-        counterparty: _counterpartyController.text,
-        type: _selectedDebtType,
-        principalAmount: double.parse(_amountController.text),
-        interestRate: double.tryParse(_interestController.text) ?? 0,
-        termMonths: int.tryParse(_termController.text) ?? 1,
-        overdueInterestRate: double.tryParse(_overdueController.text) ?? 0,
-        startDate: _selectedDate,
-        dueDate: _selectedDate.add(
-            Duration(days: 30 * (int.tryParse(_termController.text) ?? 1))),
-      );
-      context.read<DebtBloc>().add(AddDebtEvent(debt));
-    } else {
-      final receivable = ReceivableEntity(
-        id: uuid,
-        userId: userId,
-        walletId: widget.walletId,
-        debtorName: _titleController.text, // Alacakta başlık kişi adı olsun
-        amount: double.parse(_amountController.text),
-        dueDate: _selectedDate,
-      );
-      context.read<ReceivableBloc>().add(AddReceivableEvent(receivable));
-    }
-    Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Başlık ve Tür Seçimi
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Yeni Kayıt Ekle",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: true, label: Text("Borç")),
-                      ButtonSegment(value: false, label: Text("Alacak")),
-                    ],
-                    selected: {isDebt},
-                    onSelectionChanged: (Set<bool> newSelection) {
-                      setState(() {
-                        isDebt = newSelection.first;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // --- BORÇ İÇİN ÖZEL ALANLAR ---
-              if (isDebt) ...[
-                DropdownButtonFormField<DebtType>(
-                  value: _selectedDebtType,
-                  items: const [
-                    DropdownMenuItem(
-                        value: DebtType.bankLoan, child: Text("Banka Kredisi")),
-                    DropdownMenuItem(
-                        value: DebtType.installmentDebt,
-                        child: Text("Taksitli Borç")),
-                    DropdownMenuItem(
-                        value: DebtType.personalDebt,
-                        child: Text("Kişisel Borç")),
-                    DropdownMenuItem(
-                        value: DebtType.otherDebt, child: Text("Diğer")),
-                  ],
-                  onChanged: (val) => setState(() => _selectedDebtType = val!),
-                  decoration: const InputDecoration(
-                      labelText: "Borç Türü", border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                      labelText: "Başlık (Örn: Konut Kredisi)",
-                      border: OutlineInputBorder()),
-                  validator: (v) => v!.isEmpty ? 'Zorunlu alan' : null,
-                ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  controller: _counterpartyController,
-                  decoration: const InputDecoration(
-                      labelText: "Kurum/Kişi (Örn: Ziraat Bankası)",
-                      border: OutlineInputBorder()),
-                  validator: (v) => v!.isEmpty ? 'Zorunlu alan' : null,
-                ),
-              ],
-
-              // --- ALACAK İÇİN ÖZEL ALANLAR ---
-              if (!isDebt) ...[
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                      labelText: "Borçlu Kişi Adı",
-                      border: OutlineInputBorder()),
-                  validator: (v) => v!.isEmpty ? 'Zorunlu alan' : null,
-                ),
-              ],
-
-              const SizedBox(height: 15),
-
-              // --- ORTAK ALANLAR ---
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _amountController,
-                      decoration: const InputDecoration(
-                          labelText: "Tutar", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                      validator: (v) => v!.isEmpty ? 'Zorunlu' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _dateController,
-                      readOnly: true,
-                      onTap: _pickDate,
-                      decoration: InputDecoration(
-                          labelText:
-                              isDebt ? "Başlangıç Tarihi" : "Vade Tarihi",
-                          border: const OutlineInputBorder(),
-                          suffixIcon: const Icon(Icons.calendar_today)),
-                    ),
-                  ),
-                ],
-              ),
-
-              // --- BORÇ DETAYLARI ---
-              if (isDebt) ...[
-                const SizedBox(height: 15),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _termController,
-                        decoration: const InputDecoration(
-                            labelText: "Vade (Ay)",
-                            border: OutlineInputBorder()),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _interestController,
-                        decoration: const InputDecoration(
-                            labelText: "Faiz (%)",
-                            border: OutlineInputBorder()),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  controller: _overdueController,
-                  decoration: const InputDecoration(
-                      labelText: "Gecikme Faizi (%)",
-                      border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.all(15)),
-                  onPressed: _save,
-                  child: const Text("Kaydet"),
-                ),
-              ),
-              const SizedBox(height: 30),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
