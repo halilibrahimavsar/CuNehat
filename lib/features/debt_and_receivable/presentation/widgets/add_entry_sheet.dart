@@ -9,7 +9,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AddEntrySheet extends StatefulWidget {
   final String walletId;
-  const AddEntrySheet({super.key, required this.walletId});
+  final DebtEntity? debtToEdit;
+  final ReceivableEntity? receivableToEdit;
+
+  const AddEntrySheet({
+    super.key,
+    required this.walletId,
+    this.debtToEdit,
+    this.receivableToEdit,
+  });
 
   @override
   State<AddEntrySheet> createState() => _AddEntrySheetState();
@@ -17,6 +25,7 @@ class AddEntrySheet extends StatefulWidget {
 
 class _AddEntrySheetState extends State<AddEntrySheet> {
   bool isDebt = true; // true: Borç, false: Alacak
+  bool isEditing = false;
   final _formKey = GlobalKey<FormState>();
 
   // Ortak Alanlar
@@ -36,6 +45,30 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   @override
   void initState() {
     super.initState();
+    if (widget.debtToEdit != null) {
+      isEditing = true;
+      isDebt = true;
+      final d = widget.debtToEdit!;
+      _titleController.text = d.title;
+      _amountController.text = d.principalAmount.toString();
+      _selectedDate = d.startDate;
+      _counterpartyController.text = d.counterparty;
+      _termController.text = d.termMonths.toString();
+      _interestController.text = d.interestRate.toString();
+      _overdueController.text = d.overdueInterestRate.toString();
+      _selectedDebtType = d.type;
+      // Note: If editing, we might want to show remaining amount or principal.
+      // Usually principal is editable, remaining is calculated or adjusted via payments.
+      // Here we stick to principal for the definition of the debt.
+    } else if (widget.receivableToEdit != null) {
+      isEditing = true;
+      isDebt = false;
+      final r = widget.receivableToEdit!;
+      _titleController.text = r.debtorName;
+      _amountController.text = r.amount.toString();
+      _selectedDate = r.dueDate;
+    }
+
     _dateController.text = AppFormatters.dateShort.format(_selectedDate);
   }
 
@@ -63,30 +96,57 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         authState is Authenticated ? authState.user.uid : 'unknown_user';
 
     if (isDebt) {
-      final debt = DebtEntity(
-        userId: userId,
-        walletId: widget.walletId,
-        title: _titleController.text,
-        counterparty: _counterpartyController.text,
-        type: _selectedDebtType,
-        principalAmount: double.parse(_amountController.text),
-        interestRate: double.tryParse(_interestController.text) ?? 0,
-        termMonths: int.tryParse(_termController.text) ?? 1,
-        overdueInterestRate: double.tryParse(_overdueController.text) ?? 0,
-        startDate: _selectedDate,
-        dueDate: _selectedDate.add(
-            Duration(days: 30 * (int.tryParse(_termController.text) ?? 1))),
-      );
-      context.read<DebtBloc>().add(AddDebtEvent(debt));
+      if (isEditing && widget.debtToEdit != null) {
+        final updatedDebt = widget.debtToEdit!.copyWith(
+          title: _titleController.text,
+          counterparty: _counterpartyController.text,
+          type: _selectedDebtType,
+          principalAmount: double.parse(_amountController.text),
+          interestRate: double.tryParse(_interestController.text) ?? 0,
+          termMonths: int.tryParse(_termController.text) ?? 1,
+          overdueInterestRate: double.tryParse(_overdueController.text) ?? 0,
+          startDate: _selectedDate,
+          dueDate: _selectedDate.add(
+              Duration(days: 30 * (int.tryParse(_termController.text) ?? 1))),
+        );
+        context.read<DebtBloc>().add(UpdateDebtEvent(updatedDebt));
+      } else {
+        final debt = DebtEntity(
+          userId: userId,
+          walletId: widget.walletId,
+          title: _titleController.text,
+          counterparty: _counterpartyController.text,
+          type: _selectedDebtType,
+          principalAmount: double.parse(_amountController.text),
+          interestRate: double.tryParse(_interestController.text) ?? 0,
+          termMonths: int.tryParse(_termController.text) ?? 1,
+          overdueInterestRate: double.tryParse(_overdueController.text) ?? 0,
+          startDate: _selectedDate,
+          dueDate: _selectedDate.add(
+              Duration(days: 30 * (int.tryParse(_termController.text) ?? 1))),
+        );
+        context.read<DebtBloc>().add(AddDebtEvent(debt));
+      }
     } else {
-      final receivable = ReceivableEntity(
-        userId: userId,
-        walletId: widget.walletId,
-        debtorName: _titleController.text, // Alacakta başlık kişi adı olsun
-        amount: double.parse(_amountController.text),
-        dueDate: _selectedDate,
-      );
-      context.read<ReceivableBloc>().add(AddReceivableEvent(receivable));
+      if (isEditing && widget.receivableToEdit != null) {
+        final updatedReceivable = widget.receivableToEdit!.copyWith(
+          debtorName: _titleController.text,
+          amount: double.parse(_amountController.text),
+          dueDate: _selectedDate,
+        );
+        context
+            .read<ReceivableBloc>()
+            .add(UpdateReceivableEvent(updatedReceivable));
+      } else {
+        final receivable = ReceivableEntity(
+          userId: userId,
+          walletId: widget.walletId,
+          debtorName: _titleController.text, // Alacakta başlık kişi adı olsun
+          amount: double.parse(_amountController.text),
+          dueDate: _selectedDate,
+        );
+        context.read<ReceivableBloc>().add(AddReceivableEvent(receivable));
+      }
     }
     Navigator.pop(context);
   }
@@ -110,7 +170,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Yeni Kayıt Ekle",
+                  Text(isEditing ? "Kaydı Düzenle" : "Yeni Kayıt Ekle",
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   SegmentedButton<bool>(
@@ -119,11 +179,13 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       ButtonSegment(value: false, label: Text("Alacak")),
                     ],
                     selected: {isDebt},
-                    onSelectionChanged: (Set<bool> newSelection) {
-                      setState(() {
-                        isDebt = newSelection.first;
-                      });
-                    },
+                    onSelectionChanged: isEditing
+                        ? null
+                        : (Set<bool> newSelection) {
+                            setState(() {
+                              isDebt = newSelection.first;
+                            });
+                          },
                   ),
                 ],
               ),
@@ -251,7 +313,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                   style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(15)),
                   onPressed: _save,
-                  child: const Text("Kaydet"),
+                  child: Text(isEditing ? "Güncelle" : "Kaydet"),
                 ),
               ),
               const SizedBox(height: 30),

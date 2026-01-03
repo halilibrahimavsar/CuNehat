@@ -37,8 +37,11 @@ class DeleteDebtEvent extends DebtEvent {
   final String
       walletId; // Silme işleminden sonra listeyi yenilemek için gerekli
   final double amount;
-  const DeleteDebtEvent(this.userId, this.amount,
-      {required this.id, required this.walletId});
+  const DeleteDebtEvent(
+      {required this.id,
+      required this.userId,
+      required this.walletId,
+      required this.amount});
 
   @override
   List<Object?> get props => [id, walletId];
