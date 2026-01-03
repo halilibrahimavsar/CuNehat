@@ -133,7 +133,11 @@ class _HomePageState extends State<HomePage>
                               activeWallet: walletState.activeWallet!,
                               // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
                             ),
-                            secondView: MainDashboard(),
+                            secondView: MainDashboard(
+                              key: const ValueKey(
+                                  'compare-view'), // ✅ Unique key
+                              walletId: walletState.activeWallet!.id!,
+                            ),
                             thirdView: TransactionsPage(
                               key: const ValueKey(
                                   'compare-view'), // ✅ Unique key

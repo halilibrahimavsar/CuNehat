@@ -1,48 +1,98 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:hive/hive.dart';
 part 'receivable_model.g.dart';
 
 @HiveType(typeId: 7)
-class Receivable {
+class ReceivableModel extends ReceivableEntity {
+  @override
   @HiveField(0)
-  final String id;
+  String get id;
 
+  @override
   @HiveField(1)
-  final String userId;
+  String get userId;
 
+  @override
   @HiveField(2)
-  final String walletId;
+  String get walletId;
 
+  @override
   @HiveField(3)
-  final String title;
+  String get debtorName;
 
+  @override
   @HiveField(4)
-  final String fromPerson;
+  double get amount;
 
+  @override
   @HiveField(5)
-  final double amount;
+  DateTime get dueDate;
 
+  @override
   @HiveField(6)
-  final DateTime expectedDate;
+  bool get isPaid;
 
+  @override
   @HiveField(7)
-  final DateTime? receivedDate;
+  String? get notes;
 
-  @HiveField(8)
-  final bool isReceived;
-
-  @HiveField(9)
-  final String? notes;
-
-  Receivable({
-    required this.id,
-    required this.userId,
-    required this.walletId,
-    required this.title,
-    required this.fromPerson,
-    required this.amount,
-    required this.expectedDate,
-    this.receivedDate,
-    this.isReceived = false,
-    this.notes,
+  ReceivableModel({
+    required super.id,
+    required super.userId,
+    required super.walletId,
+    required super.debtorName,
+    required super.amount,
+    required super.dueDate,
+    super.isPaid,
+    super.notes,
   });
+
+  factory ReceivableModel.fromEntity(ReceivableEntity entity) {
+    return ReceivableModel(
+      id: entity.id,
+      userId: entity.userId,
+      walletId: entity.walletId,
+      debtorName: entity.debtorName,
+      amount: entity.amount,
+      dueDate: entity.dueDate,
+      isPaid: entity.isPaid,
+      notes: entity.notes,
+    );
+  }
+
+  ReceivableEntity toEntity() {
+    return ReceivableEntity(
+      id: id,
+      userId: userId,
+      walletId: walletId,
+      debtorName: debtorName,
+      amount: amount,
+      dueDate: dueDate,
+      isPaid: isPaid,
+      notes: notes,
+    );
+  }
+
+  @override
+  ReceivableModel copyWith({
+    String? id,
+    String? userId,
+    String? walletId,
+    String? debtorName,
+    double? amount,
+    DateTime? dueDate,
+    bool? isPaid,
+    String? notes,
+  }) {
+    return ReceivableModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      walletId: walletId ?? this.walletId,
+      debtorName: debtorName ?? this.debtorName,
+      amount: amount ?? this.amount,
+      dueDate: dueDate ?? this.dueDate,
+      isPaid: isPaid ?? this.isPaid,
+      notes: notes ?? this.notes,
+    );
+  }
 }

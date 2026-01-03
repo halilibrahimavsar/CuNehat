@@ -3,10 +3,10 @@ import 'package:cunehat/features/investments/data/repository/investment_datasour
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 
-class SaveRepositoryImpl implements SaveRepository {
+class InvestmentRepositoryImpl implements SaveRepository {
   final InvestmentDatasourceRepository dataSource;
 
-  SaveRepositoryImpl({
+  InvestmentRepositoryImpl({
     required this.dataSource,
   });
 

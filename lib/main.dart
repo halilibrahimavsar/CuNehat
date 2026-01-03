@@ -11,6 +11,19 @@ import 'package:cunehat/features/auth_feature/domain/usecases/remote_auth_usecas
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/pages/login_page.dart';
+import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart';
+import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_remote_datasource.dart';
+import 'package:cunehat/features/debt_and_receivable/data/datasource/receivable_local_datasource.dart';
+import 'package:cunehat/features/debt_and_receivable/data/datasource/receivable_remote_datasource.dart';
+import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
+import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
+import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
+import 'package:cunehat/features/debt_and_receivable/data/repository/debt_repository_impl.dart';
+import 'package:cunehat/features/debt_and_receivable/data/repository/receivable_repository_impl.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/usecases/receivable_usecases.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_remote_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
@@ -53,12 +66,16 @@ void main() async {
   await Hive.initFlutter();
 
   // Register type adapters
-  Hive.registerAdapter(WalletModelAdapter());
-  Hive.registerAdapter(TransactionModelAdapter());
-  Hive.registerAdapter(TransactionTypeModelAdapter());
-  Hive.registerAdapter(InvestmentModelAdapter());
-  Hive.registerAdapter(InvestmentTypeAdapter());
-  Hive.registerAdapter(ColorAdapter());
+  Hive.registerAdapter(WalletModelAdapter()); // TypeId 0
+  Hive.registerAdapter(TransactionModelAdapter()); // TypeId 1
+  Hive.registerAdapter(TransactionTypeModelAdapter()); // TypeId 2
+  Hive.registerAdapter(InvestmentModelAdapter()); // TypeId 4
+  Hive.registerAdapter(InvestmentTypeAdapter()); // TypeId 5
+  Hive.registerAdapter(DebtModelAdapter()); // TypeId 6
+  Hive.registerAdapter(ReceivableModelAdapter()); // TypeId 7
+  Hive.registerAdapter(PaymentModelAdapter()); // TypeId 8
+  Hive.registerAdapter(DebtTypeAdapter()); // TypeId 10
+  Hive.registerAdapter(ColorAdapter()); // TypeId 200
 
   runApp(const _GlobalProviders(child: CuNehatEngine()));
 }
@@ -219,29 +236,53 @@ class _AuthenticatedProviders extends StatelessWidget {
           },
         ),
 
+        // Investment Repository
         RepositoryProvider(create: (context) {
           return InvestmentLocalDatasource();
         }),
-
         RepositoryProvider(create: (context) {
           return InvestmentRouteDatasource();
         }),
+        RepositoryProvider(create: (context) {
+          return DebtLocalDatasource();
+        }),
+        RepositoryProvider(create: (context) {
+          return DebtRemoteDatasource();
+        }),
 
-        // Investment Repository
         RepositoryProvider(
-          create: (context) => SaveRepositoryImpl(
+          create: (context) => InvestmentRepositoryImpl(
             dataSource: storageMode == StorageMode.local
                 ? context.read<InvestmentLocalDatasource>()
                 : context.read<InvestmentRouteDatasource>(),
           ),
         ),
 
-        // Investment Use Cases
-        // RepositoryProvider(
-        //   create: (context) => GetInvestmentsUseCase(
-        //     context.read<SaveRepositoryImpl>(),
-        //   ),
-        // ),
+        // Debt & Receivable Providers
+        RepositoryProvider(
+          create: (context) => DebtLocalDatasource(),
+        ),
+        RepositoryProvider(
+          create: (context) => DebtRemoteDatasource(),
+        ),
+        RepositoryProvider(
+          create: (context) => ReceivableLocalDatasource(),
+        ),
+        RepositoryProvider(
+          create: (context) => ReceivableRemoteDatasource(),
+        ),
+
+        RepositoryProvider(
+            create: (context) => DebtRepositoryImpl(
+                debtDatasourceRepository: storageMode == StorageMode.local
+                    ? context.read<DebtLocalDatasource>()
+                    : context.read<DebtRemoteDatasource>())),
+
+        RepositoryProvider(
+            create: (context) => ReceivableRepositoryImpl(
+                receivableDatasourceRepository: storageMode == StorageMode.local
+                    ? context.read<ReceivableLocalDatasource>()
+                    : context.read<ReceivableRemoteDatasource>())),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -303,18 +344,43 @@ class _AuthenticatedProviders extends StatelessWidget {
           BlocProvider(
             create: (context) => InvestmentBloc(
               getInvestmentsUseCase: GetInvestmentsUseCase(
-                context.read<SaveRepositoryImpl>(),
+                context.read<InvestmentRepositoryImpl>(),
               ),
               addInvestmentUseCase: AddInvestmentUseCase(
-                context.read<SaveRepositoryImpl>(),
+                context.read<InvestmentRepositoryImpl>(),
               ),
               updateInvestmentUseCase: UpdateInvestmentUseCase(
-                context.read<SaveRepositoryImpl>(),
+                context.read<InvestmentRepositoryImpl>(),
               ),
               deleteInvestmentUseCase: DeleteInvestmentUseCase(
-                context.read<SaveRepositoryImpl>(),
+                context.read<InvestmentRepositoryImpl>(),
               ),
               walletSyncUseCase: context.read<WalletInvestmentSyncUsecase>(),
+            ),
+          ),
+
+          BlocProvider(
+            create: (context) => DebtBloc(
+              getDebtsUseCase:
+                  GetDebtsUseCase(context.read<DebtRepositoryImpl>()),
+              addDebtUseCase:
+                  AddDebtUseCase(context.read<DebtRepositoryImpl>()),
+              updateDebtUseCase:
+                  UpdateDebtUseCase(context.read<DebtRepositoryImpl>()),
+              deleteDebtUseCase:
+                  DeleteDebtUseCase(context.read<DebtRepositoryImpl>()),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => ReceivableBloc(
+              getReceivablesUseCase: GetReceivablesUseCase(
+                  context.read<ReceivableRepositoryImpl>()),
+              addReceivableUseCase: AddReceivableUseCase(
+                  context.read<ReceivableRepositoryImpl>()),
+              updateReceivableUseCase: UpdateReceivableUseCase(
+                  context.read<ReceivableRepositoryImpl>()),
+              deleteReceivableUseCase: DeleteReceivableUseCase(
+                  context.read<ReceivableRepositoryImpl>()),
             ),
           ),
         ],

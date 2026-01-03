@@ -1,134 +1,221 @@
-import 'dart:math';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:hive/hive.dart';
 
 part 'debt_model.g.dart';
 
-@HiveType(typeId: 5)
-enum DebtType {
-  @HiveField(0)
-  bankLoan,
-
-  @HiveField(1)
-  installmentDebt,
-
-  @HiveField(2)
-  personalDebt,
-
-  @HiveField(3)
-  otherDebt
-}
-
 @HiveType(typeId: 6)
-class Debt {
+class DebtModel extends DebtEntity {
+  @override
   @HiveField(0)
-  final String id;
+  String get id;
 
+  @override
   @HiveField(1)
-  final String userId;
+  String get userId;
 
+  @override
   @HiveField(2)
-  final String walletId;
+  String get walletId;
 
+  @override
   @HiveField(3)
-  final String title;
+  String get title;
 
+  @override
+  @HiveField(17) // Yeni alanlar için yeni index
+  String get counterparty;
+
+  @override
   @HiveField(4)
-  final DebtType type;
+  DebtType get type;
 
+  @override
   @HiveField(5)
-  final double principalAmount;
+  double get principalAmount;
 
+  @override
   @HiveField(6)
-  final double interestRate;
+  double get interestRate;
 
+  @override
   @HiveField(7)
-  final int termMonths;
+  int get termMonths;
 
+  @override
   @HiveField(8)
-  final DateTime startDate;
+  DateTime get startDate;
 
+  @override
   @HiveField(9)
-  final DateTime? dueDate;
+  DateTime? get dueDate;
 
-  @HiveField(10)
-  final String? bankName;
-
-  @HiveField(11)
-  final String? personName;
-
-  @HiveField(12)
-  final int latePaymentDays;
-
+  @override
   @HiveField(13)
-  final double latePaymentInterest;
+  double get overdueInterestRate;
 
+  @override
   @HiveField(14)
-  final List<Payment> payments;
+  List<Payment> get payments;
 
+  @override
   @HiveField(15)
-  final bool isPaid;
+  bool get isPaid;
 
+  @override
   @HiveField(16)
-  final String? notes;
+  String? get notes;
 
-  Debt({
-    required this.id,
-    required this.userId,
-    required this.walletId,
-    required this.title,
-    required this.type,
-    required this.principalAmount,
-    required this.interestRate,
-    required this.termMonths,
-    required this.startDate,
-    this.dueDate,
-    this.bankName,
-    this.personName,
-    this.latePaymentDays = 0,
-    this.latePaymentInterest = 0,
-    this.payments = const [],
-    this.isPaid = false,
-    this.notes,
+  DebtModel({
+    required super.id,
+    required super.userId,
+    required super.walletId,
+    required super.title,
+    required super.counterparty,
+    required super.type,
+    required super.principalAmount,
+    required super.interestRate,
+    required super.termMonths,
+    super.overdueInterestRate,
+    required super.startDate,
+    super.dueDate,
+    super.payments = const [],
+    super.isPaid = false,
+    super.notes,
   });
 
-  double get remainingAmount {
-    double paid = payments.fold(0, (sum, payment) => sum + payment.amount);
-    return (principalAmount + totalInterest) - paid;
+  factory DebtModel.fromEntity(DebtEntity entity) {
+    return DebtModel(
+      id: entity.id,
+      userId: entity.userId,
+      walletId: entity.walletId,
+      title: entity.title,
+      counterparty: entity.counterparty,
+      type: entity.type,
+      principalAmount: entity.principalAmount,
+      interestRate: entity.interestRate,
+      termMonths: entity.termMonths,
+      overdueInterestRate: entity.overdueInterestRate,
+      startDate: entity.startDate,
+      dueDate: entity.dueDate,
+      payments: entity.payments.map((e) => PaymentModel.fromEntity(e)).toList(),
+      isPaid: entity.isPaid,
+      notes: entity.notes,
+    );
   }
 
-  double get totalInterest {
-    // Basit faiz hesaplama
-    double monthlyRate = interestRate / 100 / 12;
-    return principalAmount * monthlyRate * termMonths;
+  DebtEntity toEntity() {
+    return DebtEntity(
+      id: id,
+      userId: userId,
+      walletId: walletId,
+      title: title,
+      counterparty: counterparty,
+      type: type,
+      principalAmount: principalAmount,
+      interestRate: interestRate,
+      termMonths: termMonths,
+      overdueInterestRate: overdueInterestRate,
+      startDate: startDate,
+      dueDate: dueDate,
+      payments: payments
+          .map((e) => e is PaymentModel
+              ? e.toEntity()
+              : Payment(date: e.date, amount: e.amount, notes: e.notes))
+          .toList(),
+      isPaid: isPaid,
+      notes: notes,
+    );
   }
 
-  double get monthlyPayment {
-    // Aylık ödeme hesaplama
-    double monthlyRate = interestRate / 100 / 12;
-    if (monthlyRate == 0) {
-      return principalAmount / termMonths;
-    }
-    return principalAmount *
-        monthlyRate *
-        (pow(1 + monthlyRate, termMonths) /
-            (pow(1 + monthlyRate, termMonths) - 1));
+  @override
+  DebtModel copyWith({
+    String? id,
+    String? userId,
+    String? walletId,
+    String? title,
+    String? counterparty,
+    DebtType? type,
+    double? principalAmount,
+    double? interestRate,
+    int? termMonths,
+    double? overdueInterestRate,
+    DateTime? startDate,
+    DateTime? dueDate,
+    List<Payment>? payments,
+    bool? isPaid,
+    String? notes,
+  }) {
+    return DebtModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      walletId: walletId ?? this.walletId,
+      title: title ?? this.title,
+      counterparty: counterparty ?? this.counterparty,
+      type: type ?? this.type,
+      principalAmount: principalAmount ?? this.principalAmount,
+      interestRate: interestRate ?? this.interestRate,
+      termMonths: termMonths ?? this.termMonths,
+      overdueInterestRate: overdueInterestRate ?? this.overdueInterestRate,
+      startDate: startDate ?? this.startDate,
+      dueDate: dueDate ?? this.dueDate,
+      payments: payments ?? this.payments,
+      isPaid: isPaid ?? this.isPaid,
+      notes: notes ?? this.notes,
+    );
   }
 }
 
-@HiveType(typeId: 2)
-class Payment {
+// Payment sınıfı artık Entity dosyasında tanımlı ama Hive için burada Adapter'a ihtiyacı var.
+// Hive Type Adapter'ı generated dosyada (g.dart) oluşturulurken bu sınıfı kullanacak.
+// Eğer Payment sınıfını Entity'de tanımladığımız için burada tekrar tanımlamıyoruz,
+// ancak Hive anotasyonlarını eklemek için bir "Mixin" veya "Extension" kullanamayız.
+// Bu yüzden en temiz yöntem: PaymentModel oluşturup Entity'deki Payment'tan türetmek veya
+// Payment sınıfını direkt Entity'de tutup HiveType anotasyonunu orada kullanmaktır.
+// Ancak Clean Architecture gereği Entity'de Hive olmamalı.
+// Çözüm: PaymentModel oluşturuyoruz.
+
+@HiveType(typeId: 9)
+class PaymentModel extends Payment {
+  @override
   @HiveField(0)
-  final DateTime date;
+  DateTime get date => super.date;
 
+  @override
   @HiveField(1)
-  final double amount;
+  double get amount => super.amount;
 
+  @override
   @HiveField(2)
-  final String? notes;
+  String? get notes => super.notes;
 
-  Payment({
-    required this.date,
-    required this.amount,
-    this.notes,
-  });
+  PaymentModel({required super.date, required super.amount, super.notes});
+
+  // Entity'den Model'e çevirici
+  factory PaymentModel.fromEntity(Payment payment) {
+    return PaymentModel(
+      date: payment.date,
+      amount: payment.amount,
+      notes: payment.notes,
+    );
+  }
+
+  Payment toEntity() {
+    return Payment(
+      date: date,
+      amount: amount,
+      notes: notes,
+    );
+  }
+
+  PaymentModel copyWith({
+    DateTime? date,
+    double? amount,
+    String? notes,
+  }) {
+    return PaymentModel(
+      date: date ?? this.date,
+      amount: amount ?? this.amount,
+      notes: notes ?? this.notes,
+    );
+  }
 }

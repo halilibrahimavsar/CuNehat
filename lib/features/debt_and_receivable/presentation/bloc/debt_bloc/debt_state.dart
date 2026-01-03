@@ -1,10 +1,39 @@
 part of 'debt_bloc.dart';
 
-sealed class DebtState extends Equatable {
+abstract class DebtState extends Equatable {
   const DebtState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-final class DebtInitial extends DebtState {}
+class DebtInitial extends DebtState {}
+
+class DebtLoading extends DebtState {}
+
+class DebtLoaded extends DebtState {
+  final List<DebtEntity> debts;
+
+  const DebtLoaded(this.debts);
+
+  @override
+  List<Object?> get props => [debts];
+}
+
+/// Ekleme, Silme veya Güncelleme işlemi başarılı olduğunda tetiklenir.
+/// UI tarafında SnackBar göstermek için kullanılabilir.
+class DebtOperationSuccess extends DebtState {
+  final String message;
+  const DebtOperationSuccess(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class DebtError extends DebtState {
+  final String message;
+  const DebtError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

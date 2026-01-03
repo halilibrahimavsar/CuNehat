@@ -1,8 +1,42 @@
 part of 'debt_bloc.dart';
 
-sealed class DebtEvent extends Equatable {
+abstract class DebtEvent extends Equatable {
   const DebtEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
+}
+
+class GetDebtsEvent extends DebtEvent {
+  final String walletId;
+  const GetDebtsEvent(this.walletId);
+
+  @override
+  List<Object?> get props => [walletId];
+}
+
+class AddDebtEvent extends DebtEvent {
+  final DebtEntity debt;
+  const AddDebtEvent(this.debt);
+
+  @override
+  List<Object?> get props => [debt];
+}
+
+class UpdateDebtEvent extends DebtEvent {
+  final DebtEntity debt;
+  const UpdateDebtEvent(this.debt);
+
+  @override
+  List<Object?> get props => [debt];
+}
+
+class DeleteDebtEvent extends DebtEvent {
+  final String id;
+  final String
+      walletId; // Silme işleminden sonra listeyi yenilemek için gerekli
+  const DeleteDebtEvent({required this.id, required this.walletId});
+
+  @override
+  List<Object?> get props => [id, walletId];
 }
