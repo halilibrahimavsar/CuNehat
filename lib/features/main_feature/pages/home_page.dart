@@ -78,16 +78,8 @@ class _HomePageState extends State<HomePage>
         child: BlocConsumer<WalletBloc, WalletState>(
           listener: (context, walletState) {
             switch (walletState) {
-              case WalletDeletedSt():
-                SnackbarHelper.showSuccess(context, 'Cüzdan silindi!');
-                _loadWallets();
-                break;
-              case WalletCreatedSt():
-                SnackbarHelper.showSuccess(context, 'Cüzdan oluşturuldu!');
-                _loadWallets();
-                break;
-              case WalletUpdatedSt():
-                SnackbarHelper.showSuccess(context, 'Cüzdan güncellendi!');
+              case WalletOperationSuccesSt():
+                SnackbarHelper.showSuccess(context, walletState.message);
                 _loadWallets();
                 break;
               case WalletErrorSt():
@@ -123,108 +115,7 @@ class _HomePageState extends State<HomePage>
                   case null:
                     return const NoWalletView(infoText: "Cüzdan oluşturunuz");
                   case true:
-                    return Column(
-                      children: [
-                        Expanded(
-                          child: CubeAnimationView(
-                            controller: _controller,
-                            firstView: InvestmentMoneyPage(
-                              key: const ValueKey('save-view'), // ✅ Unique key
-                              activeWallet: walletState.activeWallet!,
-                              // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
-                            ),
-                            secondView: MainDashboard(
-                              key: const ValueKey(
-                                  'compare-view'), // ✅ Unique key
-                              userId: userId,
-                              walletId: walletState.activeWallet!.id!,
-                            ),
-                            thirdView: TransactionsPage(
-                              key: const ValueKey(
-                                  'compare-view'), // ✅ Unique key
-                              userId: userId,
-                              wallet: walletState.activeWallet!,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: SliderButtonEnhanced(
-                            controller: _controller,
-                            miniButtons: {
-                              SliderState.savedMoney: [
-                                MiniButtonData(
-                                  icon: Icons.inventory_sharp,
-                                  label: 'Birikim',
-                                  color: Colors.red,
-                                  onTap: () => showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AddInvestmentDialog(
-                                        userId: userId,
-                                        walletId: walletState.activeWallet!.id!,
-                                        onSave: (investment) {
-                                          context
-                                              .read<InvestmentBloc>()
-                                              .add(CreateInvestmentEvent(
-                                                investment: investment,
-                                                userId: userId,
-                                                walletId: walletState
-                                                    .activeWallet!.id!,
-                                              ));
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                              SliderState.transactions: [
-                                MiniButtonData(
-                                  icon: Icons.remove,
-                                  label: 'Gider',
-                                  color: Colors.red,
-                                  onTap: () {
-                                    TransactionSheetHandler.showExpenseSheet(
-                                      context,
-                                      userId,
-                                      walletState.activeWallet!.id!,
-                                    );
-                                  },
-                                ),
-                                MiniButtonData(
-                                  icon: Icons.add,
-                                  label: 'Gelir',
-                                  color: Colors.green,
-                                  onTap: () {
-                                    TransactionSheetHandler.showIncomeSheet(
-                                      context,
-                                      userId,
-                                      walletState.activeWallet!.id!,
-                                    );
-                                  },
-                                ),
-                              ],
-                              SliderState.debt: [
-                                MiniButtonData(
-                                  icon: Icons.add,
-                                  label: 'Gelir',
-                                  color: Colors.green,
-                                  onTap: () {},
-                                ),
-                                MiniButtonData(
-                                  icon: Icons.abc,
-                                  label: "gid",
-                                  color: Colors.yellow,
-                                  onTap: () {},
-                                )
-                              ],
-                            },
-                            onValueChanged: (action) {},
-                            onTap: (value) {},
-                          ),
-                        ),
-                      ],
-                    );
+                    return _buildBody(walletState, userId, context);
                 }
 
               default:
@@ -232,6 +123,109 @@ class _HomePageState extends State<HomePage>
             }
           },
         ),
+      ),
+    );
+  }
+
+  Column _buildBody(
+      WalletLoadedSt walletState, String userId, BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: CubeAnimationView(
+            controller: _controller,
+            firstView: InvestmentMoneyPage(
+              activeWallet: walletState.activeWallet!,
+              // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
+            ),
+            secondView: MainDashboard(
+              userId: userId,
+              walletId: walletState.activeWallet!.id!,
+            ),
+            thirdView: TransactionsPage(
+              userId: userId,
+              wallet: walletState.activeWallet!,
+            ),
+          ),
+        ),
+        _buildSliderButton(context, userId, walletState),
+      ],
+    );
+  }
+
+  Padding _buildSliderButton(
+      BuildContext context, String userId, WalletLoadedSt walletState) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: SliderButtonEnhanced(
+        controller: _controller,
+        miniButtons: {
+          SliderState.savedMoney: [
+            MiniButtonData(
+              icon: Icons.inventory_sharp,
+              label: 'Birikim',
+              color: Colors.red,
+              onTap: () => showDialog(
+                context: context,
+                builder: (context) {
+                  return AddInvestmentDialog(
+                    userId: userId,
+                    walletId: walletState.activeWallet!.id!,
+                    onSave: (investment) {
+                      context.read<InvestmentBloc>().add(CreateInvestmentEvent(
+                            investment: investment,
+                            userId: userId,
+                            walletId: walletState.activeWallet!.id!,
+                          ));
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+          SliderState.transactions: [
+            MiniButtonData(
+              icon: Icons.remove,
+              label: 'Gider',
+              color: Colors.red,
+              onTap: () {
+                TransactionSheetHandler.showExpenseSheet(
+                  context,
+                  userId,
+                  walletState.activeWallet!.id!,
+                );
+              },
+            ),
+            MiniButtonData(
+              icon: Icons.add,
+              label: 'Gelir',
+              color: Colors.green,
+              onTap: () {
+                TransactionSheetHandler.showIncomeSheet(
+                  context,
+                  userId,
+                  walletState.activeWallet!.id!,
+                );
+              },
+            ),
+          ],
+          SliderState.debt: [
+            MiniButtonData(
+              icon: Icons.add,
+              label: 'Gelir',
+              color: Colors.green,
+              onTap: () {},
+            ),
+            MiniButtonData(
+              icon: Icons.abc,
+              label: "gid",
+              color: Colors.yellow,
+              onTap: () {},
+            )
+          ],
+        },
+        onValueChanged: (action) {},
+        onTap: (value) {},
       ),
     );
   }

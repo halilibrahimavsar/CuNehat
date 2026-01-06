@@ -22,16 +22,9 @@ final class WalletLoadingSt extends WalletState {
   const WalletLoadingSt();
 }
 
-final class WalletCreatedSt extends WalletState {
-  const WalletCreatedSt();
-}
-
-final class WalletDeletedSt extends WalletState {
-  const WalletDeletedSt();
-}
-
-final class WalletUpdatedSt extends WalletState {
-  const WalletUpdatedSt();
+final class WalletOperationSuccesSt extends WalletState {
+  final String message;
+  const WalletOperationSuccesSt(this.message);
 }
 
 final class NoWalletSt extends WalletState {
