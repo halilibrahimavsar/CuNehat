@@ -141,13 +141,13 @@ class _HomePageState extends State<HomePage>
               activeWallet: walletState.activeWallet!,
               // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
             ),
-            secondView: DebtAndReceivablePage(
-              userId: userId,
-              walletId: walletState.activeWallet!.id!,
-            ),
-            thirdView: TransactionsPage(
+            secondView: TransactionsPage(
               userId: userId,
               wallet: walletState.activeWallet!,
+            ),
+            thridView: DebtAndReceivablePage(
+              userId: userId,
+              walletId: walletState.activeWallet!.id!,
             ),
           ),
         ),

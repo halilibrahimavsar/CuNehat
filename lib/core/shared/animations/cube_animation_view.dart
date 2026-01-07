@@ -10,15 +10,15 @@ import 'dart:math' as math;
 class CubeAnimationView extends StatelessWidget {
   final AnimationController controller;
   final Widget firstView; // Expense (value = 0.0)
-  final Widget secondView; // Income (value = 1.0)
-  final Widget thirdView; // Compare (value = 0.5)
+  final Widget secondView; // Compare (value = 0.5)
+  final Widget thridView; // Income (value = 1.0)
 
   const CubeAnimationView({
     super.key,
     required this.controller,
     required this.firstView,
     required this.secondView,
-    required this.thirdView,
+    required this.thridView,
   });
 
   Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.001);
@@ -37,12 +37,12 @@ class CubeAnimationView extends StatelessWidget {
         if (value < 0.5) {
           // PHASE 1: Expense -> Compare (0.0 to 0.5)
           outgoingWidget = firstView;
-          incomingWidget = thirdView;
+          incomingWidget = secondView;
           phaseValue = value * 2;
         } else {
           // PHASE 2: Compare -> Income (0.5 to 1.0)
-          outgoingWidget = thirdView;
-          incomingWidget = secondView;
+          outgoingWidget = secondView;
+          incomingWidget = thridView;
           phaseValue = (value - 0.5) * 2;
         }
 
