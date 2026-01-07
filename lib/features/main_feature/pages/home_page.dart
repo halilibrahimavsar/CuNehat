@@ -165,9 +165,9 @@ class _HomePageState extends State<HomePage>
         miniButtons: {
           SliderState.savedMoney: [
             MiniButtonData(
-              icon: Icons.inventory_sharp,
+              icon: Icons.add,
               label: 'Birikim',
-              color: Colors.red,
+              color: Colors.green,
               onTap: () => showDialog(
                 context: context,
                 builder: (context) {
@@ -215,16 +215,16 @@ class _HomePageState extends State<HomePage>
           SliderState.debt: [
             MiniButtonData(
               icon: Icons.add,
-              label: 'Gelir',
+              label: "Alacak",
               color: Colors.green,
               onTap: () {},
             ),
             MiniButtonData(
-              icon: Icons.abc,
-              label: "gid",
-              color: Colors.yellow,
+              icon: Icons.add,
+              label: 'Borç',
+              color: Colors.red,
               onTap: () {},
-            )
+            ),
           ],
         },
         subMenuItems: {
