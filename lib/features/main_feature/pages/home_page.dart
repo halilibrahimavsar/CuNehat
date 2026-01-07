@@ -10,7 +10,10 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
+import 'package:cunehat/features/main_feature/widgets/mini_button_data.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
+import 'package:cunehat/features/main_feature/widgets/slider_state.dart';
+import 'package:cunehat/features/main_feature/widgets/sub_menu_item.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -224,8 +227,46 @@ class _HomePageState extends State<HomePage>
             )
           ],
         },
+        subMenuItems: {
+          SliderState.debt: [
+            SubMenuItem(
+              icon: Icons.add,
+              label: 'Gelir',
+              onTap: () {},
+            ),
+            SubMenuItem(
+              icon: Icons.abc,
+              label: "gid",
+              onTap: () {},
+            ),
+            SubMenuItem(
+              icon: Icons.add,
+              label: 'Gelr',
+              onTap: () {},
+            ),
+            SubMenuItem(
+              icon: Icons.abc,
+              label: "gidee",
+              onTap: () {},
+            )
+          ],
+          SliderState.transactions: [
+            SubMenuItem(
+              icon: Icons.abc_outlined,
+              label: "label",
+              onTap: () {},
+            )
+          ],
+          SliderState.savedMoney: [
+            SubMenuItem(
+              icon: Icons.abc,
+              label: "label",
+              onTap: () {},
+            )
+          ],
+        },
         onValueChanged: (action) {},
-        onTap: (value) {},
+        // onTap: (value) {},
       ),
     );
   }
