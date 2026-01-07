@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage>
               activeWallet: walletState.activeWallet!,
               // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
             ),
-            secondView: MainDashboard(
+            secondView: DebtAndReceivablePage(
               userId: userId,
               walletId: walletState.activeWallet!.id!,
             ),

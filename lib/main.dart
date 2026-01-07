@@ -51,6 +51,7 @@ import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_debt_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_investment_sync_usecase.dart';
+import 'package:cunehat/features/wallet/domain/usecases/wallet_receivable_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -386,6 +387,10 @@ class _AuthenticatedProviders extends StatelessWidget {
                   context.read<ReceivableRepositoryImpl>()),
               deleteReceivableUseCase: DeleteReceivableUseCase(
                   context.read<ReceivableRepositoryImpl>()),
+              walletReceivableSyncUsecase: WalletReceivableSyncUsecase(
+                walletRepository:
+                    context.read<WalletRepositoryImpl>().dataSource,
+              ),
             ),
           ),
         ],

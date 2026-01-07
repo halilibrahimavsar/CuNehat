@@ -5,38 +5,38 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class MainDashboard extends StatefulWidget {
+class DebtAndReceivablePage extends StatefulWidget {
   final String userId;
   final String walletId;
-  const MainDashboard(
+  const DebtAndReceivablePage(
       {super.key, required this.userId, required this.walletId});
 
   @override
-  State<MainDashboard> createState() => _MainDashboardState();
+  State<DebtAndReceivablePage> createState() => _DebtAndReceivablePageState();
 }
 
-class _MainDashboardState extends State<MainDashboard> {
+class _DebtAndReceivablePageState extends State<DebtAndReceivablePage> {
   @override
   void initState() {
     super.initState();
-    // Sayfa açıldığında verileri mevcut cüzdan ID'sine göre çekiyoruz
-    _loadDebt();
+    _loadData();
   }
 
   @override
-  void didUpdateWidget(covariant MainDashboard oldWidget) {
+  void didUpdateWidget(covariant DebtAndReceivablePage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.walletId != oldWidget.walletId) {
-      _loadDebt();
+      _loadData();
     }
   }
 
-  void _loadDebt() {
+  void _loadData() {
     context.read<DebtBloc>().add(GetDebtsEvent(widget.walletId));
     context.read<ReceivableBloc>().add(GetReceivablesEvent(widget.walletId));
     context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
@@ -59,8 +59,9 @@ class _MainDashboardState extends State<MainDashboard> {
         ),
         body: TabBarView(
           children: [
-            DebtListSection(walletId: widget.walletId),
-            ReceivableListSection(walletId: widget.walletId),
+            DebtListSection(walletId: widget.walletId, userId: widget.userId),
+            ReceivableListSection(
+                walletId: widget.walletId, userId: widget.userId),
           ],
         ),
         floatingActionButton: Builder(
@@ -76,7 +77,6 @@ class _MainDashboardState extends State<MainDashboard> {
     );
   }
 
-  // Ekleme Modalını Açan Fonksiyon
   void _showAddDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -89,7 +89,12 @@ class _MainDashboardState extends State<MainDashboard> {
 // --- BORÇ LİSTESİ BÖLÜMÜ ---
 class DebtListSection extends StatelessWidget {
   final String walletId;
-  const DebtListSection({super.key, required this.walletId});
+  final String userId;
+  const DebtListSection({
+    super.key,
+    required this.walletId,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +107,6 @@ class DebtListSection extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        // Loading veya Success durumunda (Success sonrası reload olacağı için) loading göster
         if (state is DebtLoading || state is DebtOperationSuccess) {
           return const Center(child: CircularProgressIndicator());
         } else if (state is DebtLoaded) {
@@ -146,8 +150,18 @@ class DebtListSection extends StatelessWidget {
         !debt.isPaid;
 
     return InfoActionMenu<String>(
-      items: const [
-        PopupMenuItem(
+      items: [
+        const PopupMenuItem(
+          value: 'payment',
+          child: Row(
+            children: [
+              Icon(Icons.payment, color: Colors.green),
+              SizedBox(width: 8),
+              Text("Ödeme Yap", style: TextStyle(color: Colors.green)),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
@@ -157,7 +171,7 @@ class DebtListSection extends StatelessWidget {
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'delete',
           child: Row(
             children: [
@@ -169,7 +183,9 @@ class DebtListSection extends StatelessWidget {
         ),
       ],
       onSelected: (value) {
-        if (value == 'edit') {
+        if (value == 'payment') {
+          DebtPaymentDialog.show(context, debt);
+        } else if (value == 'edit') {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
@@ -203,29 +219,77 @@ class DebtListSection extends StatelessWidget {
                 ),
                 title: Text(debt.title,
                     style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(debt.counterparty),
-                trailing: Text(
-                    NumberFormat.currency(symbol: '₺')
-                        .format(debt.remainingAmount),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.red)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(debt.counterparty),
+                    if (isOverdue)
+                      Text(
+                        'VADESİ GEÇMİŞ!',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      NumberFormat.currency(symbol: '₺')
+                          .format(debt.remainingAmount),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.red),
+                    ),
+                    if (debt.isPaid)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'ÖDENDİ',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               LinearProgressIndicator(
-                  value: debt.progress, backgroundColor: Colors.grey.shade200),
+                  value: debt.progress,
+                  backgroundColor: Colors.grey.shade200,
+                  color: debt.isPaid ? Colors.green : Colors.blue),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                      "Vade: ${debt.termMonths} Ay | ${debt.payments.length} Taksit",
+                      "Vade: ${debt.termMonths} Ay | ${debt.payments.length} Ödeme",
                       style: TextStyle(
+                          fontSize: 12,
                           color: isOverdue ? Colors.red : Colors.grey)),
-                  TextButton(
-                      onPressed: () => _showPaymentDialog(context, debt),
-                      child: const Text("Ödeme Yap")),
+                  if (!debt.isPaid)
+                    TextButton.icon(
+                      onPressed: () => DebtPaymentDialog.show(context, debt),
+                      icon: const Icon(Icons.payment, size: 16),
+                      label: const Text("Öde"),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                    ),
                 ],
               )
             ],
@@ -234,61 +298,17 @@ class DebtListSection extends StatelessWidget {
       ),
     );
   }
-
-  void _showPaymentDialog(BuildContext context, DebtEntity debt) {
-    final TextEditingController amountController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Ödeme Yap"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Kalan Borç: ${debt.remainingAmount} ₺"),
-              const SizedBox(height: 10),
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Ödenecek Tutar",
-                  border: OutlineInputBorder(),
-                  suffixText: "₺",
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("İptal"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final amount = double.tryParse(amountController.text);
-                if (amount != null && amount > 0) {
-                  final newRemaining = debt.remainingAmount - amount;
-                  // Basitçe kalan tutarı güncelliyoruz.
-                  // İdealde PaymentEntity oluşturup listeye eklenmeli.
-                  final updatedDebt =
-                      debt.copyWith(principalAmount: newRemaining);
-                  context.read<DebtBloc>().add(UpdateDebtEvent(updatedDebt));
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text("Öde"),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 // --- ALACAK LİSTESİ BÖLÜMÜ ---
 class ReceivableListSection extends StatelessWidget {
   final String walletId;
-  const ReceivableListSection({super.key, required this.walletId});
+  final String userId;
+  const ReceivableListSection({
+    super.key,
+    required this.walletId,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -341,9 +361,23 @@ class ReceivableListSection extends StatelessWidget {
 
   Widget _buildReceivableCard(
       BuildContext context, ReceivableEntity receivable) {
+    final isOverdue =
+        receivable.dueDate.isBefore(DateTime.now()) && !receivable.isPaid;
+
     return InfoActionMenu<String>(
-      items: const [
-        PopupMenuItem(
+      items: [
+        if (!receivable.isPaid)
+          const PopupMenuItem(
+            value: 'mark_paid',
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 8),
+                Text("Ödendi İşaretle", style: TextStyle(color: Colors.green)),
+              ],
+            ),
+          ),
+        const PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
@@ -353,7 +387,7 @@ class ReceivableListSection extends StatelessWidget {
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'delete',
           child: Row(
             children: [
@@ -365,7 +399,11 @@ class ReceivableListSection extends StatelessWidget {
         ),
       ],
       onSelected: (value) {
-        if (value == 'edit') {
+        if (value == 'mark_paid') {
+          context
+              .read<ReceivableBloc>()
+              .add(MarkReceivableAsPaidEvent(receivable));
+        } else if (value == 'edit') {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
@@ -376,23 +414,75 @@ class ReceivableListSection extends StatelessWidget {
           );
         } else if (value == 'delete') {
           context.read<ReceivableBloc>().add(DeleteReceivableEvent(
-              id: receivable.id!, walletId: receivable.walletId));
+              id: receivable.id!,
+              userId: receivable.userId,
+              walletId: receivable.walletId,
+              amount: receivable.amount));
         }
       },
       child: Card(
         margin: const EdgeInsets.only(bottom: 12),
-        child: ListTile(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          tileColor: Colors.green.shade50,
-          leading: const Icon(Icons.person, color: Colors.green),
-          title: Text(receivable.debtorName),
-          subtitle: Text(
-              "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}"),
-          trailing: Text(
-              NumberFormat.currency(symbol: '₺').format(receivable.amount),
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.green)),
+        elevation: 2,
+        child: Container(
+          decoration: BoxDecoration(
+            color: receivable.isPaid
+                ? Colors.green.shade50
+                : (isOverdue ? Colors.orange.shade50 : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            leading: CircleAvatar(
+              backgroundColor: receivable.isPaid
+                  ? Colors.green.shade100
+                  : (isOverdue ? Colors.orange.shade100 : Colors.blue.shade100),
+              child: Icon(
+                receivable.isPaid ? Icons.check_circle : Icons.person,
+                color: receivable.isPaid
+                    ? Colors.green
+                    : (isOverdue ? Colors.orange : Colors.blue),
+              ),
+            ),
+            title: Text(
+              receivable.debtorName,
+              style: TextStyle(
+                decoration:
+                    receivable.isPaid ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}"),
+                if (isOverdue)
+                  Text(
+                    'VADESİ GEÇMİŞ!',
+                    style: TextStyle(
+                      color: Colors.orange.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                if (receivable.isPaid)
+                  Text(
+                    'ÖDENDİ',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+            trailing: Text(
+                NumberFormat.currency(symbol: '₺').format(receivable.amount),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: receivable.isPaid ? Colors.grey : Colors.green)),
+          ),
         ),
       ),
     );

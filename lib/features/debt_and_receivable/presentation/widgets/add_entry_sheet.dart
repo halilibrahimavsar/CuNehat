@@ -1,3 +1,5 @@
+// lib/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart
+
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -24,7 +26,7 @@ class AddEntrySheet extends StatefulWidget {
 }
 
 class _AddEntrySheetState extends State<AddEntrySheet> {
-  bool isDebt = true; // true: Borç, false: Alacak
+  bool isDebt = true;
   bool isEditing = false;
   final _formKey = GlobalKey<FormState>();
 
@@ -42,6 +44,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   DateTime _selectedDate = DateTime.now();
 
+  // Düzenleme için eski tutar
+  double? _originalAmount;
+
   @override
   void initState() {
     super.initState();
@@ -57,9 +62,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _interestController.text = d.interestRate.toString();
       _overdueController.text = d.overdueInterestRate.toString();
       _selectedDebtType = d.type;
-      // Note: If editing, we might want to show remaining amount or principal.
-      // Usually principal is editable, remaining is calculated or adjusted via payments.
-      // Here we stick to principal for the definition of the debt.
+      _originalAmount = d.principalAmount; // ✅ Eski tutarı sakla
     } else if (widget.receivableToEdit != null) {
       isEditing = true;
       isDebt = false;
@@ -67,6 +70,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _titleController.text = r.debtorName;
       _amountController.text = r.amount.toString();
       _selectedDate = r.dueDate;
+      _originalAmount = r.amount; // ✅ Eski tutarı sakla
     }
 
     _dateController.text = AppFormatters.dateShort.format(_selectedDate);
@@ -90,7 +94,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    // Auth Bloc'tan mevcut kullanıcı ID'sini al
     final authState = context.read<RemoteAuthBloc>().state;
     final userId =
         authState is Authenticated ? authState.user.uid : 'unknown_user';
@@ -134,14 +137,16 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           amount: double.parse(_amountController.text),
           dueDate: _selectedDate,
         );
-        context
-            .read<ReceivableBloc>()
-            .add(UpdateReceivableEvent(updatedReceivable));
+        // ✅ prevAmount parametresini ekle
+        context.read<ReceivableBloc>().add(UpdateReceivableEvent(
+              receivable: updatedReceivable,
+              prevAmount: _originalAmount ?? 0.0,
+            ));
       } else {
         final receivable = ReceivableEntity(
           userId: userId,
           walletId: widget.walletId,
-          debtorName: _titleController.text, // Alacakta başlık kişi adı olsun
+          debtorName: _titleController.text,
           amount: double.parse(_amountController.text),
           dueDate: _selectedDate,
         );
@@ -171,8 +176,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(isEditing ? "Kaydı Düzenle" : "Yeni Kayıt Ekle",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold)),
                   SegmentedButton<bool>(
                     segments: const [
                       ButtonSegment(value: true, label: Text("Borç")),

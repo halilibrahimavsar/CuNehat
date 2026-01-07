@@ -1,3 +1,5 @@
+// lib/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_event.dart
+
 part of 'receivable_bloc.dart';
 
 abstract class ReceivableEvent extends Equatable {
@@ -25,17 +27,40 @@ class AddReceivableEvent extends ReceivableEvent {
 
 class UpdateReceivableEvent extends ReceivableEvent {
   final ReceivableEntity receivable;
-  const UpdateReceivableEvent(this.receivable);
+  final double prevAmount; // Wallet senkronizasyonu için eski tutar
+
+  const UpdateReceivableEvent({
+    required this.receivable,
+    required this.prevAmount,
+  });
 
   @override
-  List<Object?> get props => [receivable];
+  List<Object?> get props => [receivable, prevAmount];
 }
 
 class DeleteReceivableEvent extends ReceivableEvent {
   final String id;
+  final String userId;
   final String walletId;
-  const DeleteReceivableEvent({required this.id, required this.walletId});
+  final double amount; // Wallet senkronizasyonu için
+
+  const DeleteReceivableEvent({
+    required this.id,
+    required this.userId,
+    required this.walletId,
+    required this.amount,
+  });
 
   @override
-  List<Object?> get props => [id, walletId];
+  List<Object?> get props => [id, userId, walletId, amount];
+}
+
+/// Alacağı "ödendi" olarak işaretle
+class MarkReceivableAsPaidEvent extends ReceivableEvent {
+  final ReceivableEntity receivable;
+
+  const MarkReceivableAsPaidEvent(this.receivable);
+
+  @override
+  List<Object?> get props => [receivable];
 }
