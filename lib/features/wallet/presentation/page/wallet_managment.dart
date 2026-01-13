@@ -44,6 +44,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       },
       builder: (context, state) {
         return Scaffold(
+          backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: false,
           body: Container(
             decoration: BoxDecoration(
