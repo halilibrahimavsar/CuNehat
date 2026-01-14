@@ -1,9 +1,10 @@
 import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
-import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
@@ -17,7 +18,7 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class TransactionsPage extends StatefulWidget {
+class TransactionsPage extends StatelessWidget {
   final String userId;
   final WalletEntity wallet;
 
@@ -28,85 +29,84 @@ class TransactionsPage extends StatefulWidget {
   });
 
   @override
-  State<TransactionsPage> createState() => _TransactionsPageState();
+  Widget build(BuildContext context) {
+    // 1. ADIM: Cubit'i burada oluşturuyoruz (Scope: Sadece bu sayfa)
+    return BlocProvider(
+      create: (context) => TransactionFilterCubit(),
+      child: _TransactionsView(
+        userId: userId,
+        wallet: wallet,
+      ),
+    );
+  }
 }
 
-class _TransactionsPageState extends State<TransactionsPage> {
-  late TransactionFilter _filter;
+class _TransactionsView extends StatefulWidget {
+  final String userId;
+  final WalletEntity wallet;
+
+  const _TransactionsView({
+    required this.userId,
+    required this.wallet,
+  });
+
+  @override
+  State<_TransactionsView> createState() => _TransactionsViewState();
+}
+
+class _TransactionsViewState extends State<_TransactionsView> {
   bool _isMenuOpen = false;
 
   @override
   void initState() {
     super.initState();
-    // DateRangeHelper ile bu ayın tam aralığını alıyoruz (Başlangıç 00:00, Bitiş 23:59)
-    final monthRange = DateRangeHelper.getMonthRange(DateTime.now());
-    // Default filter: Current month, Compare mode, Daily view
-    _filter = TransactionFilter(
-      financeMode: FinanceMode.compare,
-      viewType: TransactionViewType.timeline,
-      startDate: monthRange.start,
-      endDate: monthRange.end,
-    );
-
-    // Initial Data Load
-    _loadData();
+    // 2. ADIM: Artık context.read çalışır çünkü Provider bir üst widget'ta (TransactionsPage)
+    final filterCubit = context.read<TransactionFilterCubit>();
+    _loadData(filterCubit.state.viewFilter);
   }
 
   @override
-  void didUpdateWidget(covariant TransactionsPage oldWidget) {
+  void didUpdateWidget(covariant _TransactionsView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wallet.id != widget.wallet.id) {
-      _loadData();
+      _loadData(context.read<TransactionFilterCubit>().state.viewFilter);
     }
   }
 
-  void _loadData() {
+  void _loadData(ViewFilter viewFilter) {
     context.read<TransactionBloc>().add(GetTransactionsEvent(
           userId: widget.userId,
           walletId: widget.wallet.id ?? '',
-          startDate: _filter.startDate,
-          endDate: _filter.endDate,
+          startDate: viewFilter.startDate,
+          endDate: viewFilter.endDate,
         ));
     // update wallet realtime
     context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
   }
 
-  void _onFilterChanged(TransactionFilter newFilter) {
-    final dateChanged = newFilter.startDate != _filter.startDate ||
-        newFilter.endDate != _filter.endDate;
-
-    setState(() {
-      _filter = newFilter;
-    });
-
-    if (dateChanged) {
-      _loadData();
-    }
-  }
-
   List<TransactionWithBalance> _getFilteredData(
-      List<TransactionEntity> allTransactions) {
+      List<TransactionEntity> allTransactions, CombinedFilter filter) {
     // ✅ Sort transactions by date (newest first)
     List<TransactionEntity> filtered = List.from(allTransactions);
 
     // 1. Filter by FinanceMode
-    if (_filter.financeMode == FinanceMode.expense) {
+    if (filter.viewFilter.financeMode == FinanceMode.expense) {
       filtered = filtered.where((element) => element.isExpense).toList();
-    } else if (_filter.financeMode == FinanceMode.income) {
+    } else if (filter.viewFilter.financeMode == FinanceMode.income) {
       filtered = filtered.where((element) => !element.isExpense).toList();
     }
 
     // 2. Filter by Categories
-    if (_filter.selectedCategories.isNotEmpty) {
+    if (filter.dataFilter.selectedCategories.isNotEmpty) {
       filtered = filtered
-          .where((t) => _filter.selectedCategories.contains(t.tag))
+          .where((t) => filter.dataFilter.selectedCategories.contains(t.tag))
           .toList();
     }
 
     // 3. Filter by PriceRange
-    if (_filter.priceRange != null) {
+    if (filter.dataFilter.priceRange != null) {
       filtered = filtered
-          .where((t) => _filter.priceRange!.isInRange(t.amount))
+          .where((t) => filter.dataFilter.priceRange!.isInRange(t.amount))
           .toList();
     }
 
@@ -122,101 +122,124 @@ class _TransactionsPageState extends State<TransactionsPage> {
     return transactionsWithBalance;
   }
 
-  Future<void> _pickDateRange() async {
+  Future<void> _pickDateRange(
+      BuildContext context, CombinedFilter currentFilter) async {
     await showModernDateRangePicker(
       context: context,
-      start: _filter.startDate,
-      end: _filter.endDate,
+      start: currentFilter.viewFilter.startDate,
+      end: currentFilter.viewFilter.endDate,
       onApply: (start, end) {
-        _onFilterChanged(_filter.copyWith(
-          startDate: start,
-          endDate: end,
-        ));
+        context.read<TransactionFilterCubit>().updateFilter(
+              currentFilter.copyWith(
+                viewFilter: currentFilter.viewFilter.copyWith(
+                  startDate: start,
+                  endDate: end,
+                ),
+              ),
+            );
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<TransactionBloc, TransactionState>(
-      listener: (context, state) {
-        if (state is TransactionError) {
-          SnackbarHelper.showError(context, state.message);
-        } else if (state is TransactionActionSuccess) {
-          SnackbarHelper.showSuccess(context, state.message);
-          // İşlem başarılı olduğunda listeyi güncelle
-          _loadData();
-        }
+    // 3. ADIM: Doğrudan BlocConsumer kullanabiliriz
+    return BlocConsumer<TransactionFilterCubit, CombinedFilter>(
+      listenWhen: (previous, current) {
+        // Sadece tarih değiştiğinde veri çekme işlemini tetikle
+        return previous.viewFilter.startDate != current.viewFilter.startDate ||
+            previous.viewFilter.endDate != current.viewFilter.endDate;
       },
-      builder: (context, state) {
-        // Her durumda mevcut veriyi kullan (Loading, Error, Success dahil)
-        final List<TransactionEntity> allTransactions =
-            state.currentTransactions;
-        final isLoading = state is TransactionLoading;
-        final isEmpty = allTransactions.isEmpty;
+      listener: (context, filterState) {
+        _loadData(filterState.viewFilter);
+      },
+      builder: (context, filterState) {
+        return BlocConsumer<TransactionBloc, TransactionState>(
+          listener: (context, state) {
+            if (state is TransactionError) {
+              SnackbarHelper.showError(context, state.message);
+            } else if (state is TransactionActionSuccess) {
+              SnackbarHelper.showSuccess(context, state.message);
+              // İşlem başarılı olduğunda listeyi güncelle
+              _loadData(filterState.viewFilter);
+            }
+          },
+          builder: (context, state) {
+            // Her durumda mevcut veriyi kullan (Loading, Error, Success dahil)
+            final List<TransactionEntity> allTransactions =
+                state.currentTransactions;
+            final isLoading = state is TransactionLoading;
+            final isEmpty = allTransactions.isEmpty;
 
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.blue[50]!.withValues(alpha: 0.3),
-                Colors.purple[50]!.withValues(alpha: 0.2),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+            final filteredData = _getFilteredData(allTransactions, filterState);
+
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.blue[50]!.withValues(alpha: 0.3),
+                    Colors.purple[50]!.withValues(alpha: 0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Column(
-              children: [
-                // ========== FILTER VIEW ==========
-                FilterView(
-                  filter: _filter,
-                  isMenuOpen: _isMenuOpen,
-                  onMenuToggle: () =>
-                      setState(() => _isMenuOpen = !_isMenuOpen),
-                  onDateTap: _pickDateRange,
-                  onFilterChanged: _onFilterChanged,
-                ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Column(
+                  children: [
+                    // ========== FILTER VIEW ==========
+                    FilterView(
+                      filter: filterState,
+                      isMenuOpen: _isMenuOpen,
+                      onMenuToggle: () =>
+                          setState(() => _isMenuOpen = !_isMenuOpen),
+                      onDateTap: () => _pickDateRange(context, filterState),
+                      onFilterChanged: (newFilter) {
+                        context
+                            .read<TransactionFilterCubit>()
+                            .updateFilter(newFilter);
+                      },
+                    ),
 
-                // ========== MODERN HEADER ==========
-                TransactionHeader(
-                  startDate: _filter.startDate,
-                  endDate: _filter.endDate,
-                  allTransactions: allTransactions,
-                  mode: _filter.financeMode,
-                ),
+                    // ========== MODERN HEADER ==========
+                    TransactionHeader(
+                      startDate: filterState.viewFilter.startDate,
+                      endDate: filterState.viewFilter.endDate,
+                      allTransactions: allTransactions,
+                      mode: filterState.viewFilter.financeMode,
+                    ),
 
-                // ========== TRANSACTION LIST ==========
-                Expanded(
-                  child: isLoading && isEmpty
-                      ? const Center(child: CircularProgressIndicator())
-                      : _getFilteredData(allTransactions).isEmpty
-                          ? _buildEmptyState()
-                          : _filter.viewType == TransactionViewType.list
-                              ? DetailedListView(
-                                  transactions:
-                                      _getFilteredData(allTransactions),
-                                  mode: _filter.financeMode,
-                                )
-                              : TimelineView(
-                                  transactions:
-                                      _getFilteredData(allTransactions),
-                                  mode: _filter.financeMode,
-                                ),
+                    // ========== TRANSACTION LIST ==========
+                    Expanded(
+                      child: isLoading && isEmpty
+                          ? const Center(child: CircularProgressIndicator())
+                          : filteredData.isEmpty
+                              ? _buildEmptyState()
+                              : filterState.viewFilter.viewType ==
+                                      TransactionViewType.list
+                                  ? DetailedListView(
+                                      transactions: filteredData,
+                                      mode: filterState.viewFilter.financeMode,
+                                    )
+                                  : TimelineView(
+                                      transactions: filteredData,
+                                      mode: filterState.viewFilter.financeMode,
+                                    ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );

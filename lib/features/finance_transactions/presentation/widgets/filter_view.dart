@@ -1,93 +1,16 @@
 import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_view_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class TransactionFilter {
-  final FinanceMode financeMode;
-  final TransactionViewType viewType;
-  final DateTime startDate;
-  final DateTime endDate;
-  final Set<String> selectedCategories;
-  final PriceRangeFilter? priceRange;
-
-  const TransactionFilter({
-    required this.financeMode,
-    required this.viewType,
-    required this.startDate,
-    required this.endDate,
-    this.selectedCategories = const {},
-    this.priceRange,
-  });
-
-  TransactionFilter copyWith({
-    FinanceMode? financeMode,
-    TransactionViewType? viewType,
-    DateTime? startDate,
-    DateTime? endDate,
-    Set<String>? selectedCategories,
-    PriceRangeFilter? priceRange,
-    bool clearCategories = false,
-    bool clearPriceRange = false,
-  }) {
-    return TransactionFilter(
-      financeMode: financeMode ?? this.financeMode,
-      viewType: viewType ?? this.viewType,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      selectedCategories: clearCategories
-          ? const {}
-          : (selectedCategories ?? this.selectedCategories),
-      priceRange: clearPriceRange ? null : (priceRange ?? this.priceRange),
-    );
-  }
-
-  bool get hasActiveFilters =>
-      selectedCategories.isNotEmpty || priceRange != null;
-
-  int get activeFilterCount {
-    int count = 0;
-    if (selectedCategories.isNotEmpty) count++;
-    if (priceRange != null) count++;
-    return count;
-  }
-}
-
-class PriceRangeFilter {
-  final double? minPrice;
-  final double? maxPrice;
-
-  const PriceRangeFilter({
-    this.minPrice,
-    this.maxPrice,
-  });
-
-  bool isInRange(double price) {
-    if (minPrice != null && price < minPrice!) return false;
-    if (maxPrice != null && price > maxPrice!) return false;
-    return true;
-  }
-
-  @override
-  String toString() {
-    if (minPrice != null && maxPrice != null) {
-      return '${minPrice!.toStringAsFixed(0)}₺ - ${maxPrice!.toStringAsFixed(0)}₺';
-    } else if (minPrice != null) {
-      return '${minPrice!.toStringAsFixed(0)}₺+';
-    } else if (maxPrice != null) {
-      return '${maxPrice!.toStringAsFixed(0)}₺\'ye kadar';
-    }
-    return '';
-  }
-}
-
 class FilterView extends StatefulWidget {
-  final TransactionFilter filter;
+  final CombinedFilter filter;
   final VoidCallback onDateTap;
-  final ValueChanged<TransactionFilter> onFilterChanged;
+  final ValueChanged<CombinedFilter> onFilterChanged;
   final bool isMenuOpen;
   final VoidCallback onMenuToggle;
 
@@ -117,10 +40,12 @@ class _FilterViewState extends State<FilterView> {
     super.initState();
     _loadCategories();
     _minPriceController = TextEditingController(
-      text: widget.filter.priceRange?.minPrice?.toStringAsFixed(0) ?? '',
+      text: widget.filter.dataFilter.priceRange?.minPrice?.toStringAsFixed(0) ??
+          '',
     );
     _maxPriceController = TextEditingController(
-      text: widget.filter.priceRange?.maxPrice?.toStringAsFixed(0) ?? '',
+      text: widget.filter.dataFilter.priceRange?.maxPrice?.toStringAsFixed(0) ??
+          '',
     );
   }
 
@@ -135,20 +60,24 @@ class _FilterViewState extends State<FilterView> {
   @override
   void didUpdateWidget(covariant FilterView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.filter.financeMode != oldWidget.filter.financeMode) {
+    if (widget.filter.viewFilter.financeMode !=
+        oldWidget.filter.viewFilter.financeMode) {
       _loadCategories();
     }
 
     // Fiyat filtrelerini senkronize et (Dışarıdan değişim veya temizleme durumları için)
     // Sadece filtre nesnesi değiştiyse güncelle (kullanıcı yazarken ezmemek için)
-    if (widget.filter.priceRange != oldWidget.filter.priceRange) {
+    if (widget.filter.dataFilter.priceRange !=
+        oldWidget.filter.dataFilter.priceRange) {
       final newMin =
-          widget.filter.priceRange?.minPrice?.toStringAsFixed(0) ?? '';
+          widget.filter.dataFilter.priceRange?.minPrice?.toStringAsFixed(0) ??
+              '';
       if (_minPriceController.text != newMin) {
         _minPriceController.text = newMin;
       }
       final newMax =
-          widget.filter.priceRange?.maxPrice?.toStringAsFixed(0) ?? '';
+          widget.filter.dataFilter.priceRange?.maxPrice?.toStringAsFixed(0) ??
+              '';
       if (_maxPriceController.text != newMax) {
         _maxPriceController.text = newMax;
       }
@@ -158,7 +87,8 @@ class _FilterViewState extends State<FilterView> {
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
     try {
-      final isExpense = widget.filter.financeMode == FinanceMode.expense;
+      final isExpense =
+          widget.filter.viewFilter.financeMode == FinanceMode.expense;
       final categories = await _categoryService.getCategories(isExpense);
       setState(() {
         _categories = categories;
@@ -172,35 +102,43 @@ class _FilterViewState extends State<FilterView> {
   void _onFinanceModeChanged(FinanceMode mode) {
     widget.onFilterChanged(
       widget.filter.copyWith(
-        financeMode: mode,
-        clearCategories: true, // Mod değişince kategorileri temizle
+        viewFilter: widget.filter.viewFilter.copyWith(financeMode: mode),
+        dataFilter: widget.filter.dataFilter.copyWith(clearCategories: true),
       ),
     );
   }
 
   void _onCategoryToggle(String categoryId) {
-    final categories = Set<String>.from(widget.filter.selectedCategories);
+    final categories =
+        Set<String>.from(widget.filter.dataFilter.selectedCategories);
     if (categories.contains(categoryId)) {
       categories.remove(categoryId);
     } else {
       categories.add(categoryId);
     }
     widget.onFilterChanged(
-      widget.filter.copyWith(selectedCategories: categories),
+      widget.filter.copyWith(
+        dataFilter:
+            widget.filter.dataFilter.copyWith(selectedCategories: categories),
+      ),
     );
   }
 
   void _onPriceRangeChanged(PriceRangeFilter? priceRange) {
     widget.onFilterChanged(
-      widget.filter.copyWith(priceRange: priceRange),
+      widget.filter.copyWith(
+        dataFilter: widget.filter.dataFilter.copyWith(priceRange: priceRange),
+      ),
     );
   }
 
   void _clearAllFilters() {
     widget.onFilterChanged(
       widget.filter.copyWith(
-        clearCategories: true,
-        clearPriceRange: true,
+        dataFilter: widget.filter.dataFilter.copyWith(
+          clearCategories: true,
+          clearPriceRange: true,
+        ),
       ),
     );
   }
@@ -285,11 +223,11 @@ class _FilterViewState extends State<FilterView> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: _getViewTypeColor(widget.filter.viewType)
+                  color: _getViewTypeColor(widget.filter.viewFilter.viewType)
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: _getViewTypeColor(widget.filter.viewType)
+                    color: _getViewTypeColor(widget.filter.viewFilter.viewType)
                         .withValues(alpha: 0.3),
                     width: 1.5,
                   ),
@@ -298,17 +236,19 @@ class _FilterViewState extends State<FilterView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      widget.filter.viewType.icon,
+                      widget.filter.viewFilter.viewType.icon,
                       size: 15,
-                      color: _getViewTypeColor(widget.filter.viewType),
+                      color:
+                          _getViewTypeColor(widget.filter.viewFilter.viewType),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      widget.filter.viewType.name.toUpperCase(),
+                      widget.filter.viewFilter.viewType.name.toUpperCase(),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: _getViewTypeColor(widget.filter.viewType),
+                        color: _getViewTypeColor(
+                            widget.filter.viewFilter.viewType),
                       ),
                     ),
                   ],
@@ -375,7 +315,7 @@ class _FilterViewState extends State<FilterView> {
             ),
 
             // Active Filter Indicator
-            if (widget.filter.hasActiveFilters) ...[
+            if (widget.filter.dataFilter.hasActiveFilters) ...[
               const SizedBox(width: 10),
               Container(
                 padding:
@@ -398,7 +338,7 @@ class _FilterViewState extends State<FilterView> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '+${widget.filter.activeFilterCount}',
+                      '+${widget.filter.dataFilter.activeFilterCount}',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -416,6 +356,7 @@ class _FilterViewState extends State<FilterView> {
   }
 
   Widget _buildFinanceModeBadge() {
+    final mode = widget.filter.viewFilter.financeMode;
     return GestureDetector(
       onTap: () {
         if (!widget.isMenuOpen) {
@@ -425,11 +366,10 @@ class _FilterViewState extends State<FilterView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: widget.filter.financeMode.primaryColor.withValues(alpha: 0.1),
+          color: mode.primaryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color:
-                widget.filter.financeMode.primaryColor.withValues(alpha: 0.3),
+            color: mode.primaryColor.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -437,17 +377,17 @@ class _FilterViewState extends State<FilterView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              widget.filter.financeMode.icon,
+              mode.icon,
               size: 15,
-              color: widget.filter.financeMode.primaryColor,
+              color: mode.primaryColor,
             ),
             const SizedBox(width: 6),
             Text(
-              widget.filter.financeMode.title.toUpperCase(),
+              mode.title.toUpperCase(),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: widget.filter.financeMode.primaryColor,
+                color: mode.primaryColor,
               ),
             ),
           ],
@@ -527,7 +467,7 @@ class _FilterViewState extends State<FilterView> {
                   ),
                 ),
                 const Spacer(),
-                if (widget.filter.hasActiveFilters)
+                if (widget.filter.dataFilter.hasActiveFilters)
                   TextButton.icon(
                     onPressed: _clearAllFilters,
                     icon: const Icon(Icons.clear_all, size: 16),
@@ -581,7 +521,7 @@ class _FilterViewState extends State<FilterView> {
 
   Widget _buildFinanceModeSlider() {
     final modes = FinanceMode.values;
-    final currentIndex = modes.indexOf(widget.filter.financeMode);
+    final currentIndex = modes.indexOf(widget.filter.viewFilter.financeMode);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,11 +625,14 @@ class _FilterViewState extends State<FilterView> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: TransactionViewType.values.map((viewType) {
-              final isSelected = widget.filter.viewType == viewType;
+              final isSelected = widget.filter.viewFilter.viewType == viewType;
               return GestureDetector(
                 onTap: () {
                   widget.onFilterChanged(
-                    widget.filter.copyWith(viewType: viewType),
+                    widget.filter.copyWith(
+                      viewFilter:
+                          widget.filter.viewFilter.copyWith(viewType: viewType),
+                    ),
                   );
                 },
                 child: Container(
@@ -775,8 +718,8 @@ class _FilterViewState extends State<FilterView> {
             spacing: 8,
             runSpacing: 8,
             children: _categories.map((category) {
-              final isSelected =
-                  widget.filter.selectedCategories.contains(category.id);
+              final isSelected = widget.filter.dataFilter.selectedCategories
+                  .contains(category.id);
               return FilterChip(
                 label: Text(category.id),
                 selected: isSelected,
@@ -786,7 +729,8 @@ class _FilterViewState extends State<FilterView> {
                   size: 18,
                   color: isSelected ? Colors.white : Colors.grey,
                 ),
-                selectedColor: widget.filter.financeMode.primaryColor,
+                selectedColor:
+                    widget.filter.viewFilter.financeMode.primaryColor,
                 checkmarkColor: Colors.white,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : Colors.black87,
@@ -891,7 +835,7 @@ class _FilterViewState extends State<FilterView> {
             ),
           ],
         ),
-        if (widget.filter.priceRange != null) ...[
+        if (widget.filter.dataFilter.priceRange != null) ...[
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(8),
@@ -906,7 +850,7 @@ class _FilterViewState extends State<FilterView> {
                     color: Colors.green.shade700, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  widget.filter.priceRange.toString(),
+                  widget.filter.dataFilter.priceRange.toString(),
                   style: TextStyle(
                     color: Colors.green.shade900,
                     fontWeight: FontWeight.w600,
@@ -982,8 +926,8 @@ class _FilterViewState extends State<FilterView> {
   }
 
   String _getDateRangeText() {
-    final start = widget.filter.startDate;
-    final end = widget.filter.endDate;
+    final start = widget.filter.viewFilter.startDate;
+    final end = widget.filter.viewFilter.endDate;
     return '${start.day}.${start.month}.${start.year} - ${end.day}.${end.month}.${end.year}';
   }
 
@@ -992,8 +936,8 @@ class _FilterViewState extends State<FilterView> {
   }
 
   bool _isRangeMatch(DateTimeRange target) {
-    final start = widget.filter.startDate;
-    final end = widget.filter.endDate;
+    final start = widget.filter.viewFilter.startDate;
+    final end = widget.filter.viewFilter.endDate;
     final now = DateTime.now();
 
     // Başlangıç tarihi kesinlikle eşleşmeli
@@ -1081,7 +1025,11 @@ class _FilterViewState extends State<FilterView> {
         children: TransactionViewType.values.map((type) {
           return SimpleDialogOption(
             onPressed: () {
-              widget.onFilterChanged(widget.filter.copyWith(viewType: type));
+              widget.onFilterChanged(
+                widget.filter.copyWith(
+                  viewFilter: widget.filter.viewFilter.copyWith(viewType: type),
+                ),
+              );
               Navigator.pop(context);
             },
             child: Row(
