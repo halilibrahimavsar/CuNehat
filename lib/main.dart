@@ -30,7 +30,7 @@ import 'package:cunehat/features/finance_transactions/data/models/transaction_mo
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_route_datasource.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';

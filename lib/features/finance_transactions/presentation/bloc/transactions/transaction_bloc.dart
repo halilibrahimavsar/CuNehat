@@ -2,8 +2,8 @@ import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

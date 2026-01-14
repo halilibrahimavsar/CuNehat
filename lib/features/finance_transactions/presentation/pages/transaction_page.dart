@@ -2,17 +2,15 @@ import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_event.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_filter_cubit.dart';
-import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/transaction_header.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/detailed_list_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/timeline_view.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_view_type.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -224,16 +222,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
                           ? const Center(child: CircularProgressIndicator())
                           : filteredData.isEmpty
                               ? _buildEmptyState()
-                              : filterState.viewFilter.viewType ==
-                                      TransactionViewType.list
-                                  ? DetailedListView(
-                                      transactions: filteredData,
-                                      mode: filterState.viewFilter.financeMode,
-                                    )
-                                  : TimelineView(
-                                      transactions: filteredData,
-                                      mode: filterState.viewFilter.financeMode,
-                                    ),
+                              : DetailedListView(
+                                  transactions: filteredData,
+                                  mode: filterState.viewFilter.financeMode,
+                                ),
                     ),
                   ],
                 ),

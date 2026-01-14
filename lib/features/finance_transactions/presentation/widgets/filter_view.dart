@@ -3,7 +3,7 @@ import 'package:cunehat/features/finance_transactions/data/datasources/category_
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_view_type.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -147,6 +147,12 @@ class _FilterViewState extends State<FilterView> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // 1. Finance Mode Selector (Yeni Eklenen Kısım)
+        FinanceModeSelector(
+          currentMode: widget.filter.viewFilter.financeMode,
+          onModeChanged: _onFinanceModeChanged,
+        ),
+
         // Kompakt Filtre Çubuğu
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -212,51 +218,6 @@ class _FilterViewState extends State<FilterView> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            // Finance Mode Badge
-            _buildFinanceModeBadge(),
-            const SizedBox(width: 10),
-
-            // View Type Badge
-            GestureDetector(
-              onTap: () => _showViewTypeDialog(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: _getViewTypeColor(widget.filter.viewFilter.viewType)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: _getViewTypeColor(widget.filter.viewFilter.viewType)
-                        .withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      widget.filter.viewFilter.viewType.icon,
-                      size: 15,
-                      color:
-                          _getViewTypeColor(widget.filter.viewFilter.viewType),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      widget.filter.viewFilter.viewType.name.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: _getViewTypeColor(
-                            widget.filter.viewFilter.viewType),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-
             // Date Range Badge
             GestureDetector(
               onTap: widget.onDateTap,
@@ -349,47 +310,6 @@ class _FilterViewState extends State<FilterView> {
                 ),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFinanceModeBadge() {
-    final mode = widget.filter.viewFilter.financeMode;
-    return GestureDetector(
-      onTap: () {
-        if (!widget.isMenuOpen) {
-          widget.onMenuToggle();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: mode.primaryColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: mode.primaryColor.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              mode.icon,
-              size: 15,
-              color: mode.primaryColor,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              mode.title.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: mode.primaryColor,
-              ),
-            ),
           ],
         ),
       ),
@@ -502,12 +422,6 @@ class _FilterViewState extends State<FilterView> {
 
             // Tarih Aralığı
             _buildDateRangeSection(),
-            // Finance Mode Slider
-            _buildFinanceModeSlider(),
-            const SizedBox(height: 24),
-
-            // View Type Seçimi
-            _buildViewTypeSection(),
             const SizedBox(height: 24),
 
             // Kategori Filtresi
@@ -516,172 +430,6 @@ class _FilterViewState extends State<FilterView> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildFinanceModeSlider() {
-    final modes = FinanceMode.values;
-    final currentIndex = modes.indexOf(widget.filter.viewFilter.financeMode);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'FİNANS MODU',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Colors.grey.shade600,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 80,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.grey.shade200,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: modes.asMap().entries.map((entry) {
-              final index = entry.key;
-              final mode = entry.value;
-              final isSelected = index == currentIndex;
-
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => _onFinanceModeChanged(mode),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected ? mode.primaryColor : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: mode.primaryColor.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          mode.icon,
-                          size: 18,
-                          color: isSelected ? Colors.white : mode.primaryColor,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          mode.title,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                isSelected ? Colors.white : mode.primaryColor,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildViewTypeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'GÖRÜNÜM TİPİ',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Colors.grey.shade600,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: TransactionViewType.values.map((viewType) {
-              final isSelected = widget.filter.viewFilter.viewType == viewType;
-              return GestureDetector(
-                onTap: () {
-                  widget.onFilterChanged(
-                    widget.filter.copyWith(
-                      viewFilter:
-                          widget.filter.viewFilter.copyWith(viewType: viewType),
-                    ),
-                  );
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? _getViewTypeColor(viewType).withValues(alpha: 0.15)
-                        : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? _getViewTypeColor(viewType).withValues(alpha: 0.4)
-                          : Colors.grey.shade200,
-                      width: isSelected ? 2 : 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        viewType.icon,
-                        size: 16,
-                        color: isSelected
-                            ? _getViewTypeColor(viewType)
-                            : Colors.grey.shade700,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        viewType.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected
-                              ? _getViewTypeColor(viewType)
-                              : Colors.grey.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
     );
   }
 
@@ -976,19 +724,6 @@ class _FilterViewState extends State<FilterView> {
     return '';
   }
 
-  Color _getViewTypeColor(TransactionViewType type) {
-    final name = type.name.toLowerCase();
-    if (name.contains('daily') || name.contains('gunluk')) return Colors.blue;
-    if (name.contains('weekly') || name.contains('haftalik')) {
-      return Colors.orange;
-    }
-    if (name.contains('monthly') || name.contains('aylik')) {
-      return Colors.purple;
-    }
-    if (name.contains('yearly') || name.contains('yillik')) return Colors.red;
-    return Colors.teal;
-  }
-
   IconData _getIcon(String iconName) {
     switch (iconName.toLowerCase()) {
       case 'food':
@@ -1015,33 +750,5 @@ class _FilterViewState extends State<FilterView> {
       default:
         return Icons.category;
     }
-  }
-
-  void _showViewTypeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Görünüm Tipi'),
-        children: TransactionViewType.values.map((type) {
-          return SimpleDialogOption(
-            onPressed: () {
-              widget.onFilterChanged(
-                widget.filter.copyWith(
-                  viewFilter: widget.filter.viewFilter.copyWith(viewType: type),
-                ),
-              );
-              Navigator.pop(context);
-            },
-            child: Row(
-              children: [
-                Icon(type.icon, color: _getViewTypeColor(type)),
-                const SizedBox(width: 12),
-                Text(type.name),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
   }
 }

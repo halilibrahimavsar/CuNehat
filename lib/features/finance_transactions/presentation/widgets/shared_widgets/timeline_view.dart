@@ -4,12 +4,12 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/finan
 import 'package:cunehat/features/finance_transactions/presentation/widgets/shared_widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 
-class TimelineView extends StatefulWidget {
+class DetailedListView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final FinanceMode mode;
   final bool showBalanceAfter;
 
-  const TimelineView({
+  const DetailedListView({
     super.key,
     required this.transactions,
     this.mode = FinanceMode.compare,
@@ -17,10 +17,10 @@ class TimelineView extends StatefulWidget {
   });
 
   @override
-  State<TimelineView> createState() => _TimelineViewState();
+  State<DetailedListView> createState() => _DetailedListViewState();
 }
 
-class _TimelineViewState extends State<TimelineView> {
+class _DetailedListViewState extends State<DetailedListView> {
   final Map<DateTime, bool> _expandedStates = {};
 
   @override
