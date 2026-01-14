@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -986,30 +987,35 @@ class _FilterViewState extends State<FilterView> {
     return '${start.day}.${start.month}.${start.year} - ${end.day}.${end.month}.${end.year}';
   }
 
-  bool _isTodayRange() {
-    final now = DateTime.now();
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  bool _isRangeMatch(DateTimeRange target) {
     final start = widget.filter.startDate;
     final end = widget.filter.endDate;
-    return start.year == now.year &&
-        start.month == now.month &&
-        start.day == now.day &&
-        end.year == now.year &&
-        end.month == now.month &&
-        end.day == now.day;
+    final now = DateTime.now();
+
+    // Başlangıç tarihi kesinlikle eşleşmeli
+    if (!_isSameDay(start, target.start)) return false;
+
+    // Bitiş tarihi eşleşmeli VEYA hedef bitiş gelecekteyse ve şu anki bitiş 'Bugün' ise kabul et (Clamping durumu)
+    if (_isSameDay(end, target.end)) return true;
+    if (target.end.isAfter(now) && _isSameDay(end, now)) return true;
+
+    return false;
+  }
+
+  bool _isTodayRange() {
+    return _isRangeMatch(DateRangeHelper.getTodayRange());
   }
 
   bool _isThisWeekRange() {
-    final now = DateTime.now();
-    final start = widget.filter.startDate;
-    final end = widget.filter.endDate;
-    final diff = end.difference(start).inDays;
-    return diff < 7 && end.difference(now).inDays.abs() < 7;
+    return _isRangeMatch(DateRangeHelper.getWeekRange(DateTime.now()));
   }
 
   bool _isThisMonthRange() {
-    final now = DateTime.now();
-    final start = widget.filter.startDate;
-    return start.month == now.month && start.year == now.year;
+    return _isRangeMatch(DateRangeHelper.getMonthRange(DateTime.now()));
   }
 
   Color _getRangeBadgeColor() {

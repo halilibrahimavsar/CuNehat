@@ -24,7 +24,8 @@ class DateRangeHelper {
   }
 
   static DateTimeRange getWeekRange(DateTime date) {
-    final firstDayOfWeek = date.subtract(Duration(days: date.weekday - 1));
+    final d = DateTime(date.year, date.month, date.day);
+    final firstDayOfWeek = d.subtract(Duration(days: d.weekday - 1));
     final lastDayOfWeek = firstDayOfWeek
         .add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
     return DateTimeRange(start: firstDayOfWeek, end: lastDayOfWeek);

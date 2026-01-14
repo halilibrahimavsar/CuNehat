@@ -1,3 +1,5 @@
+import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
+import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transaction_bloc.dart';
@@ -36,13 +38,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    // DateRangeHelper ile bu ayın tam aralığını alıyoruz (Başlangıç 00:00, Bitiş 23:59)
+    final monthRange = DateRangeHelper.getMonthRange(DateTime.now());
     // Default filter: Current month, Compare mode, Daily view
     _filter = TransactionFilter(
       financeMode: FinanceMode.compare,
       viewType: TransactionViewType.timeline,
-      startDate: DateTime(now.year, now.month, 1),
-      endDate: DateTime(now.year, now.month + 1, 0),
+      startDate: monthRange.start,
+      endDate: monthRange.end,
     );
 
     // Initial Data Load
@@ -120,35 +123,17 @@ class _TransactionsPageState extends State<TransactionsPage> {
   }
 
   Future<void> _pickDateRange() async {
-    final picked = await showDateRangePicker(
+    await showModernDateRangePicker(
       context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: DateTimeRange(
-        start: _filter.startDate,
-        end: _filter.endDate,
-      ),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue.shade800,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
+      start: _filter.startDate,
+      end: _filter.endDate,
+      onApply: (start, end) {
+        _onFilterChanged(_filter.copyWith(
+          startDate: start,
+          endDate: end,
+        ));
       },
     );
-
-    if (picked != null) {
-      _onFilterChanged(_filter.copyWith(
-        startDate: picked.start,
-        endDate: picked.end,
-      ));
-    }
   }
 
   @override

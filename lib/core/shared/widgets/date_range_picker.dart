@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/core/utilities/date_range_helper.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NASIL KULLANILIR?
@@ -76,44 +77,17 @@ class _ModernDateRangePickerState extends State<ModernDateRangePicker> {
   // Hızlı Seçenek Listesi (DateRangeHelper yerine burada tanımladık)
   List<_QuickOption> _buildQuickOptions() {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    // Yardımcı fonksiyonlar
-    DateTime startOfWeek(DateTime date) =>
-        date.subtract(Duration(days: date.weekday - 1));
-    DateTime startOfMonth(DateTime date) => DateTime(date.year, date.month, 1);
-    DateTime endOfMonth(DateTime date) =>
-        DateTime(date.year, date.month + 1, 0);
 
     return [
-      _QuickOption('Bugün', DateTimeRange(start: today, end: today)),
-      _QuickOption(
-        'Dün',
-        DateTimeRange(
-          start: today.subtract(const Duration(days: 1)),
-          end: today.subtract(const Duration(days: 1)),
-        ),
-      ),
-      _QuickOption(
-        'Bu Hafta',
-        DateTimeRange(start: startOfWeek(today), end: today),
-      ),
-      _QuickOption(
-        'Geçen Hafta',
-        DateTimeRange(
-          start: startOfWeek(today.subtract(const Duration(days: 7))),
-          end: startOfWeek(today).subtract(const Duration(days: 1)),
-        ),
-      ),
-      _QuickOption(
-        'Bu Ay',
-        DateTimeRange(start: startOfMonth(today), end: today),
-      ),
+      _QuickOption('Bugün', DateRangeHelper.getTodayRange()),
+      _QuickOption('Dün', DateRangeHelper.getYesterdayRange()),
+      _QuickOption('Bu Hafta', DateRangeHelper.getWeekRange(now)),
+      _QuickOption('Geçen Hafta', DateRangeHelper.getLastWeekRange(now)),
+      _QuickOption('Bu Ay', DateRangeHelper.getMonthRange(now)),
       _QuickOption(
         'Geçen Ay',
-        DateTimeRange(
-          start: startOfMonth(DateTime(today.year, today.month - 1)),
-          end: endOfMonth(DateTime(today.year, today.month - 1)),
+        DateRangeHelper.getMonthRange(
+          DateTime(now.year, now.month - 1),
         ),
       ),
     ];
