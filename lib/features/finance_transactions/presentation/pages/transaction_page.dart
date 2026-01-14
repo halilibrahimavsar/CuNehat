@@ -10,8 +10,8 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_selector.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +29,6 @@ class TransactionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. ADIM: Cubit'i burada oluşturuyoruz (Scope: Sadece bu sayfa)
     return BlocProvider(
       create: (context) => TransactionFilterCubit(),
       child: _TransactionsView(
@@ -57,7 +56,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
   @override
   void initState() {
     super.initState();
-    // 2. ADIM: Artık context.read çalışır çünkü Provider bir üst widget'ta (TransactionsPage)
     final filterCubit = context.read<TransactionFilterCubit>();
     _loadData(filterCubit.state.viewFilter);
   }
@@ -77,13 +75,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
           startDate: viewFilter.startDate,
           endDate: viewFilter.endDate,
         ));
-    // update wallet realtime
     context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
   }
 
   List<TransactionWithBalance> _getFilteredData(
       List<TransactionEntity> allTransactions, CombinedFilter filter) {
-    // ✅ Sort transactions by date (newest first)
     List<TransactionEntity> filtered = List.from(allTransactions);
 
     // 1. Filter by FinanceMode
@@ -110,7 +106,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
     // 4. Sort (Newest first)
     filtered.sort((a, b) => b.date.compareTo(a.date));
 
-    // ✅ Calculate running balance for each transaction
     final transactionsWithBalance = calculateRunningBalance(
       filtered,
       widget.wallet.balance,
@@ -121,7 +116,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   Future<void> _pickDateRange(
       BuildContext context, CombinedFilter currentFilter) async {
-    // 1. Cubit'i işlem başlamadan önce yakalıyoruz (Context güvenliği için)
     final cubit = context.read<TransactionFilterCubit>();
 
     await showModernDateRangePicker(
@@ -129,7 +123,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
       start: currentFilter.viewFilter.startDate,
       end: currentFilter.viewFilter.endDate,
       onApply: (start, end) {
-        // 2. Callback içinde captured 'cubit' kullanıyoruz
         cubit.updateFilter(
           currentFilter.copyWith(
             viewFilter: currentFilter.viewFilter.copyWith(
@@ -149,7 +142,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        // BottomSheet yeni bir context oluşturduğu için Cubit'i buraya taşıyoruz
         return BlocProvider.value(
           value: cubit,
           child: BlocBuilder<TransactionFilterCubit, CombinedFilter>(
@@ -162,17 +154,15 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 ),
                 child: FilterView(
                   filter: state,
-                  isMenuOpen: true, // BottomSheet'te menü her zaman açık olsun
-                  onMenuToggle: () => Navigator.pop(
-                      sheetBuilderContext), // Kapatma butonu işlevi
+                  isMenuOpen: true,
+                  onMenuToggle: () => Navigator.pop(sheetBuilderContext),
                   onDateTap: () {
-                    // Tarih seçiciyi mevcut sheet'in üzerine açıyoruz
                     _pickDateRange(sheetBuilderContext, state);
                   },
                   onFilterChanged: (newFilter) {
                     cubit.updateFilter(newFilter);
                   },
-                  useFixedMenuHeight: false, // Tam yükseklik kullan
+                  useFixedMenuHeight: false,
                 ),
               );
             },
@@ -184,10 +174,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   @override
   Widget build(BuildContext context) {
-    // 3. ADIM: Doğrudan BlocConsumer kullanabiliriz
     return BlocConsumer<TransactionFilterCubit, CombinedFilter>(
       listenWhen: (previous, current) {
-        // Sadece tarih değiştiğinde veri çekme işlemini tetikle
         return previous.viewFilter.startDate != current.viewFilter.startDate ||
             previous.viewFilter.endDate != current.viewFilter.endDate;
       },
@@ -201,12 +189,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
               SnackbarHelper.showError(context, state.message);
             } else if (state is TransactionActionSuccess) {
               SnackbarHelper.showSuccess(context, state.message);
-              // İşlem başarılı olduğunda listeyi güncelle
               _loadData(filterState.viewFilter);
             }
           },
           builder: (context, state) {
-            // Her durumda mevcut veriyi kullan (Loading, Error, Success dahil)
             final List<TransactionEntity> allTransactions =
                 state.currentTransactions;
             final isLoading = state is TransactionLoading;
@@ -214,7 +200,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
             final filteredData = _getFilteredData(allTransactions, filterState);
 
-            // Scaffold ve AppBar kaldırıldı, sadece Container döndürülüyor
             return Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -238,65 +223,39 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 borderRadius: BorderRadius.circular(24),
                 child: Column(
                   children: [
-                    // 1. Finance Mode Selector ve Filtre Butonu
+                    // 1. Finance Mode Selector (Sadece bu kaldı)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FinanceModeSelector(
-                              currentMode: filterState.viewFilter.financeMode,
-                              onModeChanged: (mode) {
-                                context
-                                    .read<TransactionFilterCubit>()
-                                    .updateFilter(
-                                      filterState.copyWith(
-                                        viewFilter: filterState.viewFilter
-                                            .copyWith(financeMode: mode),
-                                        dataFilter: filterState.dataFilter
-                                            .copyWith(clearCategories: true),
-                                      ),
-                                    );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Filtre Butonu (Üstteki AppBar butonu çalışmadığı için buraya eklendi)
-                          GestureDetector(
-                            onTap: () => _showFilterSheet(context,
-                                context.read<TransactionFilterCubit>()),
-                            child: Container(
-                              height: 60,
-                              width: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.grey.shade100),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.tune_rounded,
-                                  color: Colors.blueGrey),
-                            ),
-                          ),
-                        ],
+                      child: FinanceModeSelector(
+                        currentMode: filterState.viewFilter.financeMode,
+                        onModeChanged: (mode) {
+                          context.read<TransactionFilterCubit>().updateFilter(
+                                filterState.copyWith(
+                                  viewFilter: filterState.viewFilter
+                                      .copyWith(financeMode: mode),
+                                  dataFilter: filterState.dataFilter
+                                      .copyWith(clearCategories: true),
+                                ),
+                              );
+                        },
                       ),
                     ),
 
-                    // ========== MODERN HEADER ==========
+                    // 2. Modern Header (Filtre butonu ve aktif filtreler burada)
                     TransactionHeader(
                       startDate: filterState.viewFilter.startDate,
                       endDate: filterState.viewFilter.endDate,
                       allTransactions: allTransactions,
                       mode: filterState.viewFilter.financeMode,
+                      currentFilter: filterState,
+                      onFilterTap: () => _showFilterSheet(
+                        context,
+                        context.read<TransactionFilterCubit>(),
+                      ),
+                      onDateTap: () => _pickDateRange(context, filterState),
                     ),
 
-                    // ========== TRANSACTION LIST ==========
+                    // 3. Transaction List
                     Expanded(
                       child: isLoading && isEmpty
                           ? const Center(child: CircularProgressIndicator())
@@ -326,7 +285,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
               size: 64, color: Colors.blue[300]),
           const SizedBox(height: 16),
           Text(
-            'işlem bulunmuyor',
+            'İşlem bulunmuyor',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

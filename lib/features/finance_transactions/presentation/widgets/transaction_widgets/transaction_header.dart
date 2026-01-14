@@ -1,6 +1,8 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
 import 'package:flutter/material.dart';
 
 class TransactionHeader extends StatelessWidget {
@@ -8,6 +10,9 @@ class TransactionHeader extends StatelessWidget {
   final DateTime endDate;
   final List<TransactionEntity> allTransactions;
   final FinanceMode mode;
+  final CombinedFilter? currentFilter;
+  final VoidCallback? onFilterTap;
+  final VoidCallback? onDateTap;
 
   const TransactionHeader({
     super.key,
@@ -15,6 +20,9 @@ class TransactionHeader extends StatelessWidget {
     required this.endDate,
     required this.allTransactions,
     this.mode = FinanceMode.compare,
+    this.currentFilter,
+    this.onFilterTap,
+    this.onDateTap,
   });
 
   @override
@@ -58,63 +66,103 @@ class TransactionHeader extends StatelessWidget {
         children: [
           // Header with mode indicator
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(mode.icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      mode.title,
+              // Sol Taraf: Mod İkonu, Başlık ve İşlem Sayısı
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3)),
+                    ),
+                    child: Icon(mode.icon, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    mode.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // İşlem Sayısı (Buraya taşındı)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      '( ${filteredTransactions.length} işlem )',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Row(
+                  ),
+                ],
+              ),
+
+              // Sağ Taraf: Filtre Butonu
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onFilterTap,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Stack(
                       children: [
-                        Icon(Icons.calendar_month,
-                            color: Colors.white70, size: 14),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${AppFormatters.dateShort.format(startDate)} - ${AppFormatters.dateShort.format(endDate)}',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
+                        const Icon(Icons.tune_rounded,
+                            color: Colors.white, size: 22),
+                        if (currentFilter?.dataFilter.hasActiveFilters ?? false)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.orangeAccent,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${filteredTransactions.length} işlem',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Bilgi Çubukları (Tarih, İşlem Sayısı, Aktif Filtreler)
+          CompactFilterInfo(
+            startDate: startDate,
+            endDate: endDate,
+            dataFilter: currentFilter?.dataFilter,
+            onDateTap: onDateTap,
+            isLightMode: true, // Header için beyaz tema
           ),
 
           const SizedBox(height: 20),

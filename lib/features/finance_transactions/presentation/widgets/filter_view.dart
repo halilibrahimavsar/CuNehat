@@ -1,8 +1,8 @@
-import 'package:cunehat/core/utilities/date_range_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -176,7 +176,15 @@ class _FilterViewState extends State<FilterView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildActiveFilters(),
+                Expanded(
+                  child: CompactFilterInfo(
+                    startDate: widget.filter.viewFilter.startDate,
+                    endDate: widget.filter.viewFilter.endDate,
+                    dataFilter: widget.filter.dataFilter,
+                    onDateTap: widget.onDateTap,
+                    isLightMode: false, // BottomSheet için koyu tema
+                  ),
+                ),
                 Row(
                   children: [
                     if (!widget.isMenuOpen) _buildFilterToggleButton(),
@@ -229,114 +237,6 @@ class _FilterViewState extends State<FilterView> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActiveFilters() {
-    final isToday = _isTodayRange();
-    final isThisWeek = _isThisWeekRange();
-    final isThisMonth = _isThisMonthRange();
-
-    return Expanded(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // Date Range Badge
-            GestureDetector(
-              onTap: widget.onDateTap,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.blue.shade300,
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: Colors.blue.shade800,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getDateRangeText(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.blue.shade800,
-                      ),
-                    ),
-                    if (isToday || isThisWeek || isThisMonth) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getRangeBadgeColor(),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          _getRangeBadgeText(isToday, isThisWeek, isThisMonth),
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-
-            // Active Filter Indicator
-            if (widget.filter.dataFilter.hasActiveFilters) ...[
-              const SizedBox(width: 10),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.orange.shade300,
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.filter_alt,
-                      size: 13,
-                      color: Colors.orange.shade700,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '+${widget.filter.dataFilter.activeFilterCount}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.orange.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
@@ -805,51 +705,6 @@ class _FilterViewState extends State<FilterView> {
     final start = widget.filter.viewFilter.startDate;
     final end = widget.filter.viewFilter.endDate;
     return '${start.day}.${start.month}.${start.year} - ${end.day}.${end.month}.${end.year}';
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  bool _isRangeMatch(DateTimeRange target) {
-    final start = widget.filter.viewFilter.startDate;
-    final end = widget.filter.viewFilter.endDate;
-    final now = DateTime.now();
-
-    // Başlangıç tarihi kesinlikle eşleşmeli
-    if (!_isSameDay(start, target.start)) return false;
-
-    // Bitiş tarihi eşleşmeli VEYA hedef bitiş gelecekteyse ve şu anki bitiş 'Bugün' ise kabul et (Clamping durumu)
-    if (_isSameDay(end, target.end)) return true;
-    if (target.end.isAfter(now) && _isSameDay(end, now)) return true;
-
-    return false;
-  }
-
-  bool _isTodayRange() {
-    return _isRangeMatch(DateRangeHelper.getTodayRange());
-  }
-
-  bool _isThisWeekRange() {
-    return _isRangeMatch(DateRangeHelper.getWeekRange(DateTime.now()));
-  }
-
-  bool _isThisMonthRange() {
-    return _isRangeMatch(DateRangeHelper.getMonthRange(DateTime.now()));
-  }
-
-  Color _getRangeBadgeColor() {
-    if (_isTodayRange()) return Colors.green;
-    if (_isThisWeekRange()) return Colors.orange;
-    if (_isThisMonthRange()) return Colors.purple;
-    return Colors.blue;
-  }
-
-  String _getRangeBadgeText(bool isToday, bool isWeek, bool isMonth) {
-    if (isToday) return 'BUGÜN';
-    if (isWeek) return 'BU HAFTA';
-    if (isMonth) return 'BU AY';
-    return '';
   }
 
   IconData _getIcon(String iconName) {
