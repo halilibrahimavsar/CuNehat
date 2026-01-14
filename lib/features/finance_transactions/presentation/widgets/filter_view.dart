@@ -3,7 +3,6 @@ import 'package:cunehat/features/finance_transactions/data/datasources/category_
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,6 +12,7 @@ class FilterView extends StatefulWidget {
   final ValueChanged<CombinedFilter> onFilterChanged;
   final bool isMenuOpen;
   final VoidCallback onMenuToggle;
+  final bool useFixedMenuHeight;
 
   const FilterView({
     super.key,
@@ -21,6 +21,7 @@ class FilterView extends StatefulWidget {
     required this.onFilterChanged,
     required this.isMenuOpen,
     required this.onMenuToggle,
+    this.useFixedMenuHeight = true,
   });
 
   @override
@@ -29,7 +30,8 @@ class FilterView extends StatefulWidget {
 
 class _FilterViewState extends State<FilterView> {
   final CategoryService _categoryService = CategoryService();
-  List<CategoryModel> _categories = [];
+  List<CategoryModel> _incomeCategories = [];
+  List<CategoryModel> _expenseCategories = [];
   bool _isLoadingCategories = true;
   final ScrollController _scrollController = ScrollController();
   late TextEditingController _minPriceController;
@@ -87,25 +89,26 @@ class _FilterViewState extends State<FilterView> {
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
     try {
-      final isExpense =
-          widget.filter.viewFilter.financeMode == FinanceMode.expense;
-      final categories = await _categoryService.getCategories(isExpense);
+      if (widget.filter.viewFilter.financeMode == FinanceMode.compare) {
+        _incomeCategories = await _categoryService.getCategories(false);
+        _expenseCategories = await _categoryService.getCategories(true);
+      } else {
+        final isExpense =
+            widget.filter.viewFilter.financeMode == FinanceMode.expense;
+        if (isExpense) {
+          _expenseCategories = await _categoryService.getCategories(true);
+          _incomeCategories = [];
+        } else {
+          _incomeCategories = await _categoryService.getCategories(false);
+          _expenseCategories = [];
+        }
+      }
       setState(() {
-        _categories = categories;
         _isLoadingCategories = false;
       });
     } catch (e) {
       setState(() => _isLoadingCategories = false);
     }
-  }
-
-  void _onFinanceModeChanged(FinanceMode mode) {
-    widget.onFilterChanged(
-      widget.filter.copyWith(
-        viewFilter: widget.filter.viewFilter.copyWith(financeMode: mode),
-        dataFilter: widget.filter.dataFilter.copyWith(clearCategories: true),
-      ),
-    );
   }
 
   void _onCategoryToggle(String categoryId) {
@@ -145,66 +148,88 @@ class _FilterViewState extends State<FilterView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // 1. Finance Mode Selector (Yeni Eklenen Kısım)
-        FinanceModeSelector(
-          currentMode: widget.filter.viewFilter.financeMode,
-          onModeChanged: _onFinanceModeChanged,
-        ),
+    return SafeArea(
+      child: Column(
+        children: [
+          // Drag Handle (Sürükleme İpucu)
+          if (widget.isMenuOpen) _buildDragHandle(),
 
-        // Kompakt Filtre Çubuğu
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey.shade100,
-                width: 1,
+          // Kompakt Filtre Çubuğu
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey.shade100,
+                  width: 1,
+                ),
               ),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildActiveFilters(),
-              _buildFilterToggleButton(),
-            ],
-          ),
-        ),
-
-        // Açılır Filtre Menüsü
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          height: widget.isMenuOpen ? 300 : 0,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey.shade100,
-                width: 1,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildActiveFilters(),
+                Row(
+                  children: [
+                    if (!widget.isMenuOpen) _buildFilterToggleButton(),
+                    if (widget.isMenuOpen) _buildCloseButton(),
+                  ],
+                ),
+              ],
             ),
           ),
-          child: widget.isMenuOpen ? _buildFilterMenu() : null,
-        ),
-      ],
+
+          // Açılır Filtre Menüsü
+          if (widget.useFixedMenuHeight)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              height: widget.isMenuOpen ? 300 : 0,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.shade100,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: widget.isMenuOpen ? _buildFilterMenu() : null,
+            )
+          else if (widget.isMenuOpen)
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                  // Border removed for full screen sheet look
+                ),
+                child: _buildFilterMenu(),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -354,81 +379,134 @@ class _FilterViewState extends State<FilterView> {
     );
   }
 
+  Widget _buildDragHandle() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCloseButton() {
+    return GestureDetector(
+      onTap: widget.onMenuToggle,
+      child: Container(
+        padding: const EdgeInsets.all(11),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.grey.shade300,
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          Icons.close_rounded,
+          size: 22,
+          color: Colors.grey.shade700,
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilterMenu() {
     return Padding(
       padding: const EdgeInsets.all(20.0),
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Menü Başlığı
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.filter_alt_rounded,
-                    size: 20,
-                    color: Colors.blue.shade800,
+      child: Column(
+        children: [
+          // Menü Başlığı (Sabit)
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.filter_alt_rounded,
+                  size: 20,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Filtreler',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
+              ),
+              const Spacer(),
+              if (widget.filter.dataFilter.hasActiveFilters)
+                TextButton.icon(
+                  onPressed: _clearAllFilters,
+                  icon: const Icon(Icons.clear_all, size: 16),
+                  label: const Text('Temizle'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Filtreler',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                  ),
-                ),
-                const Spacer(),
-                if (widget.filter.dataFilter.hasActiveFilters)
-                  TextButton.icon(
-                    onPressed: _clearAllFilters,
-                    icon: const Icon(Icons.clear_all, size: 16),
-                    label: const Text('Temizle'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                GestureDetector(
-                  onTap: widget.onMenuToggle,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 20,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ),
-              ],
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Kaydırılabilir İçerik (Expanded ile kalan alanı kaplar)
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Fiyat Aralığı Filtresi
+                  _buildPriceRangeFilter(),
+                  const SizedBox(height: 24),
+
+                  // Tarih Aralığı
+                  _buildDateRangeSection(),
+                  const SizedBox(height: 24),
+
+                  // Kategori Filtresi
+                  _buildCategoryFilter(),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
+          ),
 
-            // Fiyat Aralığı Filtresi
-            _buildPriceRangeFilter(),
-            const SizedBox(height: 24),
-
-            // Tarih Aralığı
-            _buildDateRangeSection(),
-            const SizedBox(height: 24),
-
-            // Kategori Filtresi
-            _buildCategoryFilter(),
-            const SizedBox(height: 24),
-          ],
-        ),
+          // Uygula Butonu (Sabit Alt)
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: widget.onMenuToggle,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    widget.filter.viewFilter.financeMode.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Uygula',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          // Alt boşluk
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }
@@ -449,7 +527,7 @@ class _FilterViewState extends State<FilterView> {
         const SizedBox(height: 10),
         if (_isLoadingCategories)
           const Center(child: CircularProgressIndicator())
-        else if (_categories.isEmpty)
+        else if (_incomeCategories.isEmpty && _expenseCategories.isEmpty)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -461,32 +539,82 @@ class _FilterViewState extends State<FilterView> {
               style: TextStyle(color: Colors.grey),
             ),
           )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _categories.map((category) {
-              final isSelected = widget.filter.dataFilter.selectedCategories
-                  .contains(category.id);
-              return FilterChip(
-                label: Text(category.id),
-                selected: isSelected,
-                onSelected: (_) => _onCategoryToggle(category.id),
-                avatar: Icon(
-                  _getIcon(category.iconName),
-                  size: 18,
-                  color: isSelected ? Colors.white : Colors.grey,
+        else ...[
+          if (_incomeCategories.isNotEmpty)
+            _buildCategoryGroup('GELİRLER', _incomeCategories, Colors.green),
+          if (_incomeCategories.isNotEmpty && _expenseCategories.isNotEmpty)
+            const SizedBox(height: 16),
+          if (_expenseCategories.isNotEmpty)
+            _buildCategoryGroup('GİDERLER', _expenseCategories, Colors.red),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCategoryGroup(
+      String title, List<CategoryModel> categories, Color groupColor) {
+    final isCompareMode =
+        widget.filter.viewFilter.financeMode == FinanceMode.compare;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isCompareMode) ...[
+          Row(
+            children: [
+              Icon(
+                title == 'GELİRLER'
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_down_rounded,
+                size: 16,
+                color: groupColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: groupColor,
                 ),
-                selectedColor:
-                    widget.filter.viewFilter.financeMode.primaryColor,
-                checkmarkColor: Colors.white,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black87,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              );
-            }).toList(),
+              ),
+            ],
           ),
+          const SizedBox(height: 8),
+        ],
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: categories.map((category) {
+            final isSelected = widget.filter.dataFilter.selectedCategories
+                .contains(category.id);
+            return FilterChip(
+              label: Text(category.id),
+              selected: isSelected,
+              onSelected: (_) => _onCategoryToggle(category.id),
+              avatar: Icon(
+                _getIcon(category.iconName),
+                size: 18,
+                color: isSelected
+                    ? Colors.white
+                    : (isCompareMode ? groupColor : Colors.grey),
+              ),
+              selectedColor: isCompareMode
+                  ? groupColor
+                  : widget.filter.viewFilter.financeMode.primaryColor,
+              checkmarkColor: Colors.white,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              side: isCompareMode && !isSelected
+                  ? BorderSide(color: groupColor.withValues(alpha: 0.3))
+                  : null,
+              backgroundColor:
+                  isCompareMode ? groupColor.withValues(alpha: 0.05) : null,
+            );
+          }).toList(),
+        ),
       ],
     );
   }

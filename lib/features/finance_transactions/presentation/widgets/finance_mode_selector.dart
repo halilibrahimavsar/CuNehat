@@ -23,7 +23,7 @@ class FinanceModeSelector extends StatelessWidget {
 
     return Container(
       height: 60,
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      // Margin kaldırıldı, parent widget yönetecek
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
