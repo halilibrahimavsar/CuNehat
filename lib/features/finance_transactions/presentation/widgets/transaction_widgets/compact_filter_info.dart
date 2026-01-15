@@ -23,27 +23,48 @@ class CompactFilterInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     // Tarih Badge Mantığı
     String? dateBadgeText;
-    Color dateBadgeColor = isLightMode ? Colors.white : Colors.blue;
+    Color dateBadgeColor = isLightMode ? Colors.amberAccent : Colors.deepPurple;
 
     final now = DateTime.now();
-    final isToday = startDate.year == now.year &&
-        startDate.month == now.month &&
-        startDate.day == now.day &&
-        endDate.year == now.year &&
-        endDate.month == now.month &&
-        endDate.day == now.day;
-    final isThisMonth = !isToday &&
-        startDate.year == now.year &&
-        startDate.month == now.month &&
-        endDate.year == now.year &&
-        endDate.month == now.month;
+    final today = DateTime(now.year, now.month, now.day);
 
-    if (isToday) {
+    // Yardımcı fonksiyon: Sadece gün/ay/yıl kontrolü yapar
+    bool isSameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+
+    // Referans Tarihler ve Aralıklar
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    // Hafta Hesaplamaları (Pazartesi başlangıçlı)
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    final startOfLastWeek = startOfWeek.subtract(const Duration(days: 7));
+    final endOfLastWeek = endOfWeek.subtract(const Duration(days: 7));
+
+    // Ay Hesaplamaları
+    final startOfMonth = DateTime(today.year, today.month, 1);
+    final endOfMonth = DateTime(today.year, today.month + 1, 0);
+    final startOfLastMonth = DateTime(today.year, today.month - 1, 1);
+    final endOfLastMonth = DateTime(today.year, today.month, 0);
+
+    // Kontroller (Öncelik sırasına göre)
+    if (isSameDay(startDate, today) && isSameDay(endDate, today)) {
       dateBadgeText = 'BUGÜN';
-      dateBadgeColor = isLightMode ? Colors.greenAccent : Colors.green;
-    } else if (isThisMonth) {
+    } else if (isSameDay(startDate, yesterday) &&
+        isSameDay(endDate, yesterday)) {
+      dateBadgeText = 'DÜN';
+    } else if (isSameDay(startDate, startOfWeek) &&
+        (isSameDay(endDate, endOfWeek) || isSameDay(endDate, today))) {
+      dateBadgeText = 'BU HAFTA';
+    } else if (isSameDay(startDate, startOfLastWeek) &&
+        isSameDay(endDate, endOfLastWeek)) {
+      dateBadgeText = 'GEÇEN HAFTA';
+    } else if (isSameDay(startDate, startOfMonth) &&
+        (isSameDay(endDate, endOfMonth) || isSameDay(endDate, today))) {
       dateBadgeText = 'BU AY';
-      dateBadgeColor = isLightMode ? Colors.amberAccent : Colors.orange;
+    } else if (isSameDay(startDate, startOfLastMonth) &&
+        isSameDay(endDate, endOfLastMonth)) {
+      dateBadgeText = 'GEÇEN AY';
     }
 
     return SingleChildScrollView(
