@@ -1,4 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/amount_display.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
@@ -202,17 +203,20 @@ class _DetailedListViewState extends State<DetailedListView> {
               color: Colors.grey.shade600,
             ),
           ),
-          Text(AppFormatters.currency.format(income),
+          AmountDisplay(
+              amount: income,
               style: const TextStyle(
                   fontSize: 11,
                   color: Colors.green,
                   fontWeight: FontWeight.w600)),
-          Text(AppFormatters.currency.format(expense),
+          AmountDisplay(
+              amount: expense,
               style: const TextStyle(
                   fontSize: 11,
                   color: Colors.red,
                   fontWeight: FontWeight.w600)),
-          Text(AppFormatters.currency.format(net),
+          AmountDisplay(
+              amount: net,
               style: TextStyle(
                   fontSize: 11,
                   color: net >= 0 ? Colors.blue : Colors.orange,

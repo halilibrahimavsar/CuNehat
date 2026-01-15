@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
+import 'package:cunehat/core/shared/widgets/amount_display.dart';
+import 'package:cunehat/features/settings/presentation/bloc/amount_visibility_cubit.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -124,6 +126,8 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
     );
   }
 
+  // lib/core/shared/widgets/shared_appbar.dart - _buildAppBarContent metodunu güncelleyin
+
   Widget _buildAppBarContent(
       BuildContext context, WalletState state, double currentValue) {
     // 1. Menu Button (Always visible)
@@ -146,7 +150,8 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
       ),
     );
 
-    final walletButton = TweenAnimationBuilder<double>(
+    // 2. Visibility Button - YENİ!
+    final visibilityButton = TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 1500),
       curve: Curves.elasticOut,
@@ -162,14 +167,7 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
                 width: 1.5,
               ),
             ),
-            child: IconButton(
-              onPressed: () {},
-              icon: const Icon(
-                Icons.remove_red_eye_outlined, // Filtre ikonu
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
+            child: const AmountVisibilityButton(),
           ),
         );
       },
@@ -179,7 +177,7 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
     Widget centerContent;
 
     if (state is WalletLoadedSt) {
-      double valueListener = 0.0; // Initialize with a default value
+      double valueListener = 0.0;
       String valueNameListener = "";
 
       if (state.activeWallet != null) {
@@ -195,7 +193,6 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
         }
       }
 
-      // Bakiye alanını tıklanabilir yapıyoruz (Cüzdan açmak için)
       centerContent = GestureDetector(
         onTap: () {
           final scaffoldState =
@@ -208,7 +205,7 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
           );
         },
         child: Container(
-          color: Colors.transparent, // Tıklama alanını genişletmek için
+          color: Colors.transparent,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -247,30 +244,31 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
                   ],
                 ),
               ),
-              // Balance
-              TweenAnimationBuilder<double>(
-                tween: Tween(
-                  begin: 0,
-                  end: valueListener,
-                ),
-                duration: const Duration(milliseconds: 1200),
-                curve: Curves.easeOutExpo,
-                builder: (context, value, child) {
-                  return Text(
-                    '${value.toStringAsFixed(2)} ₺',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      shadows: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
+              // Balance - AmountDisplay ile değiştirildi
+              BlocBuilder<AmountVisibilityCubit, bool>(
+                builder: (context, isVisible) {
+                  return TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: valueListener),
+                    duration: const Duration(milliseconds: 1200),
+                    curve: Curves.easeOutExpo,
+                    builder: (context, value, child) {
+                      return Text(
+                        isVisible ? '${value.toStringAsFixed(2)} ₺' : '**** ₺',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          shadows: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -290,7 +288,6 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
         ),
       );
     } else {
-      // NoWalletSt or Error
       centerContent = Center(
         child: Text(
           state is NoWalletSt ? "Cüzdan Oluştur" : "Cüzdan Seçin",
@@ -309,7 +306,7 @@ class _ModernSharedAppbarState extends State<ModernSharedAppbar>
         children: [
           menuButton,
           Expanded(child: centerContent),
-          walletButton,
+          visibilityButton, // Göz butonu eklendi
         ],
       ),
     );

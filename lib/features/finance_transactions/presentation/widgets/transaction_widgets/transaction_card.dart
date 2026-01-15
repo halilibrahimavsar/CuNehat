@@ -1,5 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
+import 'package:cunehat/core/shared/widgets/amount_display.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
@@ -128,14 +129,16 @@ class TransactionCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
-                              '${t.isIncome ? '+' : '-'}${t.amount.toStringAsFixed(0)} ₺',
+                            SignedAmountDisplay(
+                              amount: t.amount,
+                              isExpense: t.isExpense,
                               style: TextStyle(
                                 color: t.isIncome ? Colors.green : Colors.red,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 15,
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
                                 Text(
@@ -145,9 +148,8 @@ class TransactionCard extends StatelessWidget {
                                     color: Colors.grey.shade800,
                                   ),
                                 ),
-                                Text(
-                                  AppFormatters.currency
-                                      .format(item.balanceAfter),
+                                AmountDisplay(
+                                  amount: item.balanceAfter,
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,

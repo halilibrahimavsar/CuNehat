@@ -1,4 +1,4 @@
-import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/amount_display.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -244,8 +244,8 @@ class TransactionHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            AppFormatters.currency.format(amount),
+          AmountDisplay(
+            amount: amount,
             style: TextStyle(
               color: color,
               fontSize: 18,
@@ -297,8 +297,8 @@ class TransactionHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  AppFormatters.currency.format(amount),
+                AmountDisplay(
+                  amount: amount,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,

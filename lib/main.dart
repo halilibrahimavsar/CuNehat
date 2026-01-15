@@ -43,6 +43,7 @@ import 'package:cunehat/features/investments/domain/usecases/update_investment_u
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
+import 'package:cunehat/features/settings/presentation/bloc/amount_visibility_cubit.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
@@ -160,6 +161,10 @@ class _GlobalProviders extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
+          // _GlobalProviders içinde, MultiBlocProvider'a ekleyin:
+          BlocProvider(
+            create: (context) => AmountVisibilityCubit(),
+          ),
           BlocProvider(
             create: (context) => SettingsBloc(
               context.read<SettingsRepositoryImpl>(),

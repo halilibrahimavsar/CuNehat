@@ -1,4 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/amount_display.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
@@ -70,8 +71,8 @@ class WalletCardWidget extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '${wallet.balance.toStringAsFixed(2)} ₺',
+                        AmountDisplay(
+                          amount: wallet.balance,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -215,8 +216,8 @@ class WalletCardWidget extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 2),
-        Text(
-          '${amount.toStringAsFixed(2)} ₺',
+        AmountDisplay(
+          amount: amount,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
