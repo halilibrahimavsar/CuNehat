@@ -221,52 +221,56 @@ class _TransactionsViewState extends State<_TransactionsView> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
-                child: Column(
-                  children: [
-                    // 1. Finance Mode Selector (Sadece bu kaldı)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: FinanceModeSelector(
-                        currentMode: filterState.viewFilter.financeMode,
-                        onModeChanged: (mode) {
-                          context.read<TransactionFilterCubit>().updateFilter(
-                                filterState.copyWith(
-                                  viewFilter: filterState.viewFilter
-                                      .copyWith(financeMode: mode),
-                                  dataFilter: filterState.dataFilter
-                                      .copyWith(clearCategories: true),
-                                ),
-                              );
-                        },
+                child: NestedScrollView(
+                  headerSliverBuilder: (context, innerBoxIsScrolled) {
+                    return [
+                      // 1. Finance Mode Selector (Kaydırılabilir Alan)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          child: FinanceModeSelector(
+                            currentMode: filterState.viewFilter.financeMode,
+                            onModeChanged: (mode) {
+                              context
+                                  .read<TransactionFilterCubit>()
+                                  .updateFilter(
+                                    filterState.copyWith(
+                                      viewFilter: filterState.viewFilter
+                                          .copyWith(financeMode: mode),
+                                      dataFilter: filterState.dataFilter
+                                          .copyWith(clearCategories: true),
+                                    ),
+                                  );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-
-                    // 2. Modern Header (Filtre butonu ve aktif filtreler burada)
-                    TransactionHeader(
-                      startDate: filterState.viewFilter.startDate,
-                      endDate: filterState.viewFilter.endDate,
-                      allTransactions: allTransactions,
-                      mode: filterState.viewFilter.financeMode,
-                      currentFilter: filterState,
-                      onFilterTap: () => _showFilterSheet(
-                        context,
-                        context.read<TransactionFilterCubit>(),
+                      // 2. Modern Header (Kaydırılabilir Alan)
+                      SliverToBoxAdapter(
+                        child: TransactionHeader(
+                          startDate: filterState.viewFilter.startDate,
+                          endDate: filterState.viewFilter.endDate,
+                          allTransactions: allTransactions,
+                          mode: filterState.viewFilter.financeMode,
+                          currentFilter: filterState,
+                          onFilterTap: () => _showFilterSheet(
+                            context,
+                            context.read<TransactionFilterCubit>(),
+                          ),
+                          onDateTap: () => _pickDateRange(context, filterState),
+                        ),
                       ),
-                      onDateTap: () => _pickDateRange(context, filterState),
-                    ),
-
-                    // 3. Transaction List
-                    Expanded(
-                      child: isLoading && isEmpty
-                          ? const Center(child: CircularProgressIndicator())
-                          : filteredData.isEmpty
-                              ? _buildEmptyState()
-                              : DetailedListView(
-                                  transactions: filteredData,
-                                  mode: filterState.viewFilter.financeMode,
-                                ),
-                    ),
-                  ],
+                    ];
+                  },
+                  // 3. Transaction List (Ana Gövde)
+                  body: isLoading && isEmpty
+                      ? const Center(child: CircularProgressIndicator())
+                      : filteredData.isEmpty
+                          ? _buildEmptyState()
+                          : DetailedListView(
+                              transactions: filteredData,
+                              mode: filterState.viewFilter.financeMode,
+                            ),
                 ),
               ),
             );
