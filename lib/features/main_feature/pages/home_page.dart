@@ -11,6 +11,7 @@ import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.d
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
 import 'package:cunehat/features/main_feature/widgets/mini_button_data.dart';
+import 'package:cunehat/features/main_feature/widgets/network/network_status_bar.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_state.dart';
 import 'package:cunehat/features/main_feature/widgets/sub_menu_item.dart';
@@ -134,6 +135,7 @@ class _HomePageState extends State<HomePage>
       WalletLoadedSt walletState, String userId, BuildContext context) {
     return Column(
       children: [
+        const NetworkStatusBar(),
         Expanded(
           child: CubeAnimationView(
             controller: _controller,

@@ -60,6 +60,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cunehat/features/main_feature/blocs/network_cubit.dart';
+import 'package:cunehat/features/main_feature/widgets/network/network_info.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -290,6 +293,11 @@ class _AuthenticatedProviders extends StatelessWidget {
                 receivableDatasourceRepository: storageMode == StorageMode.local
                     ? context.read<ReceivableLocalDatasource>()
                     : context.read<ReceivableRemoteDatasource>())),
+
+        // Network Info Repository
+        RepositoryProvider(
+          create: (context) => NetworkInfoImpl(Connectivity()),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -396,6 +404,13 @@ class _AuthenticatedProviders extends StatelessWidget {
                 walletRepository:
                     context.read<WalletRepositoryImpl>().dataSource,
               ),
+            ),
+          ),
+
+          // Network Cubit
+          BlocProvider(
+            create: (context) => NetworkCubit(
+              context.read<NetworkInfoImpl>(),
             ),
           ),
         ],
