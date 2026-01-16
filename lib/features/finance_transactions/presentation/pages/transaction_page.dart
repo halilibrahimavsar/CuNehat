@@ -1,4 +1,4 @@
-import 'package:cunehat/core/shared/widgets/date_range_picker.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/date_range_picker.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';

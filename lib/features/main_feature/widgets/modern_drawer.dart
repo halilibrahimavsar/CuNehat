@@ -6,14 +6,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class ModernSharedDrawer extends StatefulWidget {
-  const ModernSharedDrawer({super.key});
+class ModernDrawer extends StatefulWidget {
+  const ModernDrawer({super.key});
 
   @override
-  State<ModernSharedDrawer> createState() => _ModernSharedDrawerState();
+  State<ModernDrawer> createState() => _ModernDrawerState();
 }
 
-class _ModernSharedDrawerState extends State<ModernSharedDrawer>
+class _ModernDrawerState extends State<ModernDrawer>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;

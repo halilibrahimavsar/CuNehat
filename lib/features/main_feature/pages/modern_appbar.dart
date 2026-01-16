@@ -1,30 +1,30 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
-import 'package:cunehat/core/shared/widgets/amount_display.dart';
-import 'package:cunehat/features/settings/presentation/bloc/amount_visibility_cubit.dart';
+import 'package:cunehat/features/main_feature/pages/amount_display.dart';
+import 'package:cunehat/features/main_feature/blocs/amount_visibility_cubit.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ModernSharedAppbar extends StatefulWidget implements PreferredSizeWidget {
+class ModernAppbar extends StatefulWidget implements PreferredSizeWidget {
   final double currentSliderValue;
 
-  const ModernSharedAppbar({
+  const ModernAppbar({
     super.key,
     required this.currentSliderValue,
   });
 
   @override
-  State<ModernSharedAppbar> createState() => _ModernSharedAppbarState();
+  State<ModernAppbar> createState() => _ModernAppbarState();
 
   @override
   Size get preferredSize => const Size(double.maxFinite, 70);
 }
 
-class _ModernSharedAppbarState extends State<ModernSharedAppbar>
+class _ModernAppbarState extends State<ModernAppbar>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;

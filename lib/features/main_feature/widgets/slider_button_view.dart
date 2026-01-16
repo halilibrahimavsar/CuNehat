@@ -52,8 +52,6 @@ class _SliderButtonEnhancedState extends State<SliderButtonEnhanced>
         _lastState = currentState;
         _selectedSubMenuIndex = null;
       }
-
-      setState(() {});
     });
   }
 

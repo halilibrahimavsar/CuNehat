@@ -2,8 +2,6 @@
 // CORE/ERROR - EXCEPTIONS
 // ==========================================
 
-// lib/core/error/exceptions.dart
-
 /// Base exception class for all exceptions in the app
 abstract class AppException implements Exception {
   final String message;

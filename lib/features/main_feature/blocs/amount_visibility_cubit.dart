@@ -1,5 +1,3 @@
-// lib/features/settings/presentation/bloc/amount_visibility/amount_visibility_cubit.dart
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

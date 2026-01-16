@@ -1,6 +1,6 @@
 // lib/core/shared/widgets/amount_display.dart
 
-import 'package:cunehat/features/settings/presentation/bloc/amount_visibility_cubit.dart';
+import 'package:cunehat/features/main_feature/blocs/amount_visibility_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

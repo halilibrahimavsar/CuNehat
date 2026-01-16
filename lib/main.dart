@@ -1,5 +1,5 @@
-import 'package:cunehat/core/config/routes/gorouting.dart';
-import 'package:cunehat/core/config/theme/bloc/theme_bloc.dart';
+import 'package:cunehat/config/routes/gorouting.dart';
+import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/privacy_guard.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart';
@@ -43,7 +43,7 @@ import 'package:cunehat/features/investments/domain/usecases/update_investment_u
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/data/repository/settings_repository_impl.dart';
-import 'package:cunehat/features/settings/presentation/bloc/amount_visibility_cubit.dart';
+import 'package:cunehat/features/main_feature/blocs/amount_visibility_cubit.dart';
 import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';

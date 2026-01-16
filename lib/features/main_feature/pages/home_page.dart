@@ -4,8 +4,8 @@ import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
-import 'package:cunehat/core/shared/widgets/build_drawer.dart';
-import 'package:cunehat/core/shared/widgets/shared_appbar.dart';
+import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
+import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
@@ -68,13 +68,13 @@ class _HomePageState extends State<HomePage>
       top: false,
       child: AnimatedScaffoldWrapper(
         key: scaffoldKey,
-        drawer: const ModernSharedDrawer(),
+        drawer: const ModernDrawer(),
         appBar: PreferredSize(
           preferredSize: const Size(double.maxFinite, 50),
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              return ModernSharedAppbar(currentSliderValue: _controller.value);
+              return ModernAppbar(currentSliderValue: _controller.value);
             },
           ),
         ),
