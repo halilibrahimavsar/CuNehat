@@ -22,7 +22,9 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     required this.setActiveWalletUseCase,
   }) : super(const NoWalletSt()) {
     on<GetWalletsEvent>((event, emit) async {
-      emit(const WalletLoadingSt());
+      if (state is! WalletLoadedSt) {
+        emit(const WalletLoadingSt());
+      }
 
       try {
         await getWalletsUseCase.call(event.userId).then(
