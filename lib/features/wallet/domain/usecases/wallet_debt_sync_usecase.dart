@@ -43,11 +43,11 @@ class WalletDebtSyncUsecase {
 
   Future<double> _getActiveDebt(String userId) async {
     final activeWallet = await walletRepository.getActiveWallet(userId);
-    double currentBalance = 0.0;
+    double currentDebt = 0.0;
 
     if (activeWallet == null) {
-      return currentBalance;
+      return currentDebt;
     }
-    return activeWallet.balance;
+    return activeWallet.debt;
   }
 }
