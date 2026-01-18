@@ -1,9 +1,9 @@
+import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
+import 'package:cunehat/features/wallet/data/datasource/wallet_remote_datasource.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
-import 'package:cunehat/features/wallet/data/datasource/wallet_firestore.dart';
-import 'package:cunehat/features/wallet/data/datasource/wallet_hive.dart';
 import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_investment_sync_usecase.dart';
@@ -60,8 +60,8 @@ class AuthenticatedProviders extends StatelessWidget {
         RepositoryProvider(
           create: (context) => WalletRepositoryImpl(
             dataSource: storageMode == StorageMode.local
-                ? WalletHiveDataSource()
-                : WalletFirestoreDataSource(),
+                ? WalletLocalDataSource()
+                : WalletRemoteDataSource(),
           ),
         ),
 
