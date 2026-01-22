@@ -1,10 +1,12 @@
+import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
-import 'package:cunehat/features/investments/data/repository/investment_datasource_repository.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@LazySingleton(as: SaveRepository)
 class InvestmentRepositoryImpl implements SaveRepository {
-  final InvestmentDatasourceRepository dataSource;
+  final InvestmentLocalDatasource dataSource;
 
   InvestmentRepositoryImpl({
     required this.dataSource,

@@ -1,7 +1,10 @@
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/domain/repository/biometric_repository.dart';
+import 'package:injectable/injectable.dart';
 import 'package:local_auth/local_auth.dart';
 
+@LazySingleton(
+    as: BiometricRepository) // ← interface'i register et, impl'yi kullan
 class BiometricRepositoryImpl extends BiometricRepository {
   final BiometricDataSource _dataSource;
 

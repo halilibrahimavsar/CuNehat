@@ -1,7 +1,9 @@
 // lib/features/auth_feature/domain/usecases/local_auth_usecases/manage_local_auth_usecase.dart
 
 import 'package:cunehat/features/auth_feature/domain/repository/biometric_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class ManageLocalAuthUseCase {
   final BiometricRepository _repository;
 

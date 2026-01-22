@@ -1,6 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:injectable/injectable.dart';
 import 'package:local_auth/local_auth.dart';
 
+@singleton
 class BiometricDataSource {
   static final BiometricDataSource _instance = BiometricDataSource._internal();
   factory BiometricDataSource() => _instance;

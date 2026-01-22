@@ -3,7 +3,9 @@ import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class AddTransactionUseCase {
   final TransactionsRepository repository;
 
@@ -17,6 +19,7 @@ class AddTransactionUseCase {
   }
 }
 
+@injectable
 class DeleteTransactionUseCase {
   final TransactionsRepository repository;
 
@@ -27,6 +30,7 @@ class DeleteTransactionUseCase {
   }
 }
 
+@injectable
 class GetTransactionsGroupedUseCase {
   final TransactionsRepository repository;
 
@@ -45,6 +49,7 @@ class GetTransactionsGroupedUseCase {
   }
 }
 
+@injectable
 class GetTransactionsUseCase {
   final TransactionsRepository repository;
 
@@ -63,6 +68,7 @@ class GetTransactionsUseCase {
   }
 }
 
+@injectable
 class UpdateTransactionUseCase {
   final TransactionsRepository repository;
 
@@ -77,6 +83,7 @@ class UpdateTransactionUseCase {
   }
 }
 
+@injectable
 class GetTransactionByIdUseCase {
   final TransactionsRepository repository;
 

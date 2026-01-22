@@ -1,9 +1,11 @@
 import 'package:cunehat/core/error/auth_exceptions.dart';
 import 'package:cunehat/features/auth_feature/domain/repository/auth_repository.dart';
+import 'package:injectable/injectable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../datasources/auth_remote_data_source.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+@LazySingleton(as: AuthRepository) // ← interface'i register et, impl'yi kullan
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
 

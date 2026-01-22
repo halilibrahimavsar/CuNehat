@@ -1,10 +1,11 @@
-import 'package:cunehat/features/finance_transactions/data/datasources/transaction_data_repository.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
+import 'package:injectable/injectable.dart';
 
-class TransactionHiveDataSource implements TransactionDataRepository {
+@singleton
+class TransactionHiveDataSource {
   static const String _boxName = 'transactions';
 
   Future<Box<TransactionModel>> _getBox() async {
@@ -14,7 +15,6 @@ class TransactionHiveDataSource implements TransactionDataRepository {
     return Hive.box<TransactionModel>(_boxName);
   }
 
-  @override
   Future<List<TransactionModel>> getTransactions({
     required String userId,
     required String walletId,
@@ -55,7 +55,6 @@ class TransactionHiveDataSource implements TransactionDataRepository {
     }
   }
 
-  @override
   Future<TransactionModel> getTransactionById(String id) async {
     try {
       final box = await _getBox();
@@ -73,7 +72,6 @@ class TransactionHiveDataSource implements TransactionDataRepository {
     }
   }
 
-  @override
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
@@ -93,7 +91,6 @@ class TransactionHiveDataSource implements TransactionDataRepository {
     }
   }
 
-  @override
   Future<void> updateTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();
@@ -110,7 +107,6 @@ class TransactionHiveDataSource implements TransactionDataRepository {
     }
   }
 
-  @override
   Future<void> deleteTransaction(String id) async {
     try {
       final box = await _getBox();
@@ -127,7 +123,6 @@ class TransactionHiveDataSource implements TransactionDataRepository {
     }
   }
 
-  @override
   Future<Map<DateTime, List<TransactionModel>>> getTransactionsGroupedByDate(
       {required String userId,
       required String walletId,

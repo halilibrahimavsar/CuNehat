@@ -1,11 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'theme_event.dart';
 part 'theme_state.dart';
 
+@injectable
 class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
   static const String _themeKey = 'selected_theme';
 

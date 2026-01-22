@@ -4,17 +4,16 @@ import 'package:cunehat/features/finance_transactions/domain/usecases/transactio
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
-import 'package:cunehat/features/wallet/domain/usecases/wallet_balance_sync_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final GetTransactionsGroupedUseCase getTransactionsGroupedUseCase;
   final AddTransactionUseCase addTransactionUseCase;
   final UpdateTransactionUseCase updateTransactionUseCase;
   final DeleteTransactionUseCase deleteTransactionUseCase;
   final GetTransactionByIdUseCase getTransactionByIdUseCase;
-  final WalletBalanceSyncUseCase
-      walletSyncUseCase; // this one is for updating wallet feature
 
   TransactionBloc({
     required this.getTransactionsGroupedUseCase,
@@ -22,7 +21,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     required this.updateTransactionUseCase,
     required this.deleteTransactionUseCase,
     required this.getTransactionByIdUseCase,
-    required this.walletSyncUseCase,
   }) : super(TransactionLoading()) {
     on<GetTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
@@ -73,11 +71,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
       // Örnek: final entityWithId = event.transaction.copyWith(id: UidGenerator.generateWithUserId(event.transaction.userId));
       await addTransactionUseCase(event.transaction); // Usecase ID'yi halleder.
-      await walletSyncUseCase.addBalance(
-        userId: event.transaction.userId,
-        amount: event.transaction.amount,
-        isExpense: event.transaction.isExpense,
-      );
+
       emit(TransactionActionSuccess(
         '${event.transaction.title} başarıyla eklendi',
         transactions: currentData,
@@ -98,12 +92,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       // 2. Update transaction in database
       await updateTransactionUseCase(event.newTransaction);
-      await walletSyncUseCase.updateBalance(
-        userId: event.newTransaction.userId,
-        isExpense: event.newTransaction.isExpense,
-        prevAmount: event.previousTransaction.amount,
-        newAmount: event.newTransaction.amount,
-      );
 
       emit(TransactionActionSuccess(
         '${event.newTransaction.title} başarıyla güncellendi',
@@ -128,11 +116,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       // 2. Delete from database
       await deleteTransactionUseCase(event.transactionId);
-      await walletSyncUseCase.deleteBalance(
-        userId: transaction.userId,
-        amount: transaction.amount,
-        isExpense: transaction.isExpense,
-      );
 
       // 3 Başarılı
       emit(TransactionActionSuccess(

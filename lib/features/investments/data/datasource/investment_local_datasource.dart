@@ -1,8 +1,9 @@
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
-import 'package:cunehat/features/investments/data/repository/investment_datasource_repository.dart';
 import 'package:hive/hive.dart';
+import 'package:injectable/injectable.dart';
 
-class InvestmentLocalDatasource implements InvestmentDatasourceRepository {
+@singleton
+class InvestmentLocalDatasource {
   static const String _boxName = 'investments_box';
 
   Future<Box<InvestmentModel>> get _box async {
@@ -12,19 +13,16 @@ class InvestmentLocalDatasource implements InvestmentDatasourceRepository {
     return await Hive.openBox<InvestmentModel>(_boxName);
   }
 
-  @override
   Future<void> addInvestment(InvestmentModel investment) async {
     final box = await _box;
     await box.put(investment.id, investment);
   }
 
-  @override
   Future<void> deleteInvestment({required String id}) async {
     final box = await _box;
     await box.delete(id);
   }
 
-  @override
   Future<List<InvestmentModel>> getInvestments(
       {required String userId, required String walletId}) async {
     final box = await _box;
@@ -38,7 +36,6 @@ class InvestmentLocalDatasource implements InvestmentDatasourceRepository {
     return investments;
   }
 
-  @override
   Future<void> updateInvestment(InvestmentModel investment) async {
     final box = await _box;
     await box.put(investment.id, investment);

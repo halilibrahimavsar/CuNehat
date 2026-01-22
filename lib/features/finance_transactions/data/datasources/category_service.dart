@@ -2,9 +2,11 @@
 
 import 'dart:convert';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Category Service - Manages categories using SharedPreferences
+@singleton
 class CategoryService {
   static const String _expenseCategoriesKey = 'expense_categories';
   static const String _incomeCategoriesKey = 'income_categories';

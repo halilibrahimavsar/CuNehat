@@ -3,10 +3,12 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/features/auth_feature/domain/usecases/local_auth_usecases/manage_local_auth_usecase.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 part 'local_auth_event.dart';
 part 'local_auth_state.dart';
 
+@injectable
 class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   final ManageLocalAuthUseCase _manageLocalAuthUseCase;
 

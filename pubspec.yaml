@@ -46,6 +46,10 @@ dependencies:
   fl_chart: ^0.66.0
   http: ^1.6.0
 
+  #DI
+  get_it: ^8.3.0
+  injectable: ^2.5.0
+
   # FOR BIOMETRIC AUTHENTICATION AND PIN
   local_auth: ^2.1.7
   flutter_secure_storage: ^9.0.0
@@ -108,10 +112,13 @@ dev_dependencies:
   # HIVE KOD ÜRETİMİ İÇİN EKLENDİ
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
+  # injactable kod üretimi için eklendi
+  injectable_generator: ^2.6.2
 
-flutter_native_splash:
-  background_image: assets/images/splashScreen.png
-  # color: "#ffffff"
+
+# flutter_native_splash:
+#   background_image: assets/images/splashScreen.png
+#   # color: "#ffffff"
 
 
 # For information on the generic Dart part of this file, see the

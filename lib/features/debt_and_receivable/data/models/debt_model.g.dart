@@ -17,7 +17,7 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return DebtModel(
-      id: fields[0] as String,
+      id: fields[0] as String?,
       userId: fields[1] as String,
       walletId: fields[2] as String,
       title: fields[3] as String,

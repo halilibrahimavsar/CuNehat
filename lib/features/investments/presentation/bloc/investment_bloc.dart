@@ -5,26 +5,24 @@ import 'package:cunehat/features/investments/domain/usecases/add_investment_usec
 import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
-import 'package:cunehat/features/wallet/domain/usecases/wallet_investment_sync_usecase.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 part 'investment_event.dart';
 part 'investment_state.dart';
 
+@injectable
 class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
   final GetInvestmentsUseCase getInvestmentsUseCase;
   final AddInvestmentUseCase addInvestmentUseCase;
   final UpdateInvestmentUseCase updateInvestmentUseCase;
   final DeleteInvestmentUseCase deleteInvestmentUseCase;
-  final WalletInvestmentSyncUsecase
-      walletSyncUseCase; // this one is for updating wallet feature
 
   InvestmentBloc({
     required this.getInvestmentsUseCase,
     required this.addInvestmentUseCase,
     required this.updateInvestmentUseCase,
     required this.deleteInvestmentUseCase,
-    required this.walletSyncUseCase,
   }) : super(InvestmentInitial()) {
     // Yatırımları Getir
     on<GetInvestmentsEvent>((event, emit) async {
@@ -50,10 +48,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await addInvestmentUseCase.call(event.investment);
-        await walletSyncUseCase.addInvestment(
-          userId: event.userId,
-          amount: event.investment.amount,
-        );
+
         emit(const InvestmentActionSuccess('Yatırım başarıyla eklendi'));
         // Listeyi güncelle
 
@@ -69,11 +64,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await updateInvestmentUseCase.call(event.investment);
-        await walletSyncUseCase.updateInvestment(
-          userId: event.userId,
-          prevAmount: event.prevAmount,
-          newAmount: event.newAmount,
-        );
+
         emit(const InvestmentActionSuccess('Yatırım güncellendi'));
         // Listeyi güncelle
         add(GetInvestmentsEvent(
@@ -88,10 +79,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       emit(InvestmentLoading());
       try {
         await deleteInvestmentUseCase.call(event.id);
-        await walletSyncUseCase.deleteInvestment(
-          userId: event.userId,
-          amount: event.amount,
-        );
+
         emit(const InvestmentActionSuccess('Yatırım silindi'));
         // Listeyi güncelle
         add(GetInvestmentsEvent(

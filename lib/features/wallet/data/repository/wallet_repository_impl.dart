@@ -1,10 +1,12 @@
-import 'package:cunehat/features/wallet/data/repository/wallet_data_repository.dart';
+import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@LazySingleton(as: WalletRepository)
 class WalletRepositoryImpl implements WalletRepository {
-  WalletDataRepository dataSource;
+  WalletLocalDataSource dataSource;
   WalletRepositoryImpl({required this.dataSource});
 
   @override

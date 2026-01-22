@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../widgets/network/network_info.dart';
 
+@injectable
 class NetworkCubit extends Cubit<NetworkState> {
   final NetworkInfo _networkInfo;
 

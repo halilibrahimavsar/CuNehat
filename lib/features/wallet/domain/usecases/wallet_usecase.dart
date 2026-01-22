@@ -2,8 +2,10 @@ import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:injectable/injectable.dart';
 
 /// ========== CÜZDAN OLUŞTUR ==========
+@injectable
 class WalletCreateUseCase {
   final WalletRepository repository;
   WalletCreateUseCase(this.repository);
@@ -16,6 +18,7 @@ class WalletCreateUseCase {
 }
 
 /// ========== CÜZDAN SİL ==========
+@injectable
 class WalletDeleteUseCase {
   final WalletRepository repository;
   WalletDeleteUseCase(this.repository);
@@ -26,6 +29,7 @@ class WalletDeleteUseCase {
 }
 
 /// ========== CÜZDANLARI GETİR (STREAM) ==========
+@injectable
 class WalletGetUseCase {
   final WalletRepository repository;
   WalletGetUseCase(this.repository);
@@ -37,6 +41,7 @@ class WalletGetUseCase {
 }
 
 /// ========== CÜZDAN GÜNCELLE ==========
+@injectable
 class WalletUpdateUseCase {
   final WalletRepository repository;
   WalletUpdateUseCase(this.repository);
@@ -51,6 +56,7 @@ class WalletUpdateUseCase {
 }
 
 /// ========== AKTİF CÜZDANI DEĞİŞTİR ==========
+@injectable
 class WalletSetActiveUseCase {
   final WalletRepository repository;
   WalletSetActiveUseCase(this.repository);

@@ -17,7 +17,7 @@ class ReceivableModelAdapter extends TypeAdapter<ReceivableModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ReceivableModel(
-      id: fields[0] as String,
+      id: fields[0] as String?,
       userId: fields[1] as String,
       walletId: fields[2] as String,
       debtorName: fields[3] as String,

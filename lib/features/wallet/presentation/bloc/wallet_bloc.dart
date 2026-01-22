@@ -2,11 +2,13 @@ import 'package:bloc/bloc.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 part 'wallet_event.dart';
 part 'wallet_state.dart';
 
 // ✅ DOĞRU - UseCase'leri inject et
+@injectable
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletGetUseCase getWalletsUseCase;
   final WalletCreateUseCase createWalletUseCase;

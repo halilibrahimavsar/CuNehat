@@ -1,10 +1,12 @@
+import 'package:cunehat/features/debt_and_receivable/data/datasource/receivable_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
-import 'package:cunehat/features/debt_and_receivable/data/repository/receivable_datasource_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/receivable_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@LazySingleton(as: ReceivableRepository)
 class ReceivableRepositoryImpl implements ReceivableRepository {
-  final ReceivableDatasourceRepository receivableDatasourceRepository;
+  final ReceivableLocalDatasource receivableDatasourceRepository;
 
   ReceivableRepositoryImpl({required this.receivableDatasourceRepository});
 

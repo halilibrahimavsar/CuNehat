@@ -1,5 +1,5 @@
 // YENİ WIDGET: Tema Seçimi Dropdown'ı
-import 'package:cunehat/config/theme/bloc/theme_bloc.dart';
+import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

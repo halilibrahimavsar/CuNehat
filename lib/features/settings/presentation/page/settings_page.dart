@@ -1,13 +1,9 @@
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart';
-import 'package:cunehat/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:cunehat/features/settings/presentation/widgets/migration_dialog.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -264,79 +260,60 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       },
       builder: (context, localAuthState) {
-        return BlocBuilder<SettingsBloc, SettingsState>(
-          builder: (context, settingsState) {
-            StorageMode currentMode = StorageMode.local;
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Ayarlar'),
+            elevation: 0,
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              // 1. KULLANICI KARTI (Eski Profil Sayfasından)
+              _buildUserCard(theme),
+              const SizedBox(height: 24),
 
-            if (settingsState is StorageModeLoadedSt) {
-              currentMode = settingsState.mode;
-            } else if (settingsState is MigrationCompletedSt) {
-              currentMode = settingsState.newMode;
-            }
+              // 2. TEMA
+              const SettingsHeader(title: 'GÖRÜNÜM'),
+              const ThemeSelectorDropdown(),
+              const SizedBox(height: 24),
 
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Ayarlar'),
-                elevation: 0,
-              ),
-              body: ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  // 1. KULLANICI KARTI (Eski Profil Sayfasından)
-                  _buildUserCard(theme),
-                  const SizedBox(height: 24),
+              // 3. GÜVENLİK (Yeni Entegre Edilen Kısım)
+              const SettingsHeader(title: 'GÜVENLİK'),
+              _buildSecuritySection(theme, localAuthState),
+              const SizedBox(height: 24),
 
-                  // 2. TEMA
-                  const SettingsHeader(title: 'GÖRÜNÜM'),
-                  const ThemeSelectorDropdown(),
-                  const SizedBox(height: 24),
-
-                  // 3. GÜVENLİK (Yeni Entegre Edilen Kısım)
-                  const SettingsHeader(title: 'GÜVENLİK'),
-                  _buildSecuritySection(theme, localAuthState),
-                  const SizedBox(height: 24),
-
-                  // 4. VERİ DEPOLAMA
-                  const SettingsHeader(title: 'VERİ & YEDEKLEME'),
-                  _buildStorageModeCard(context, currentMode),
-                  const SizedBox(height: 24),
-
-                  // 5. UYGULAMA BİLGİSİ
-                  const SettingsHeader(title: 'HAKKINDA'),
-                  Card(
-                    elevation: 1,
-                    child: Column(
-                      children: [
-                        const ListTile(
-                          leading: Icon(Icons.info_outline),
-                          title: Text('Versiyon'),
-                          trailing: Text('1.0.0'),
-                        ),
-                        const Divider(height: 1),
-                        const ListTile(
-                          leading: Icon(Icons.code),
-                          title: Text('Geliştirici'),
-                          trailing: Text('İbo'),
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.logout, color: Colors.red),
-                          title: const Text('Çıkış Yap',
-                              style: TextStyle(color: Colors.red)),
-                          onTap: () {
-                            context
-                                .read<RemoteAuthBloc>()
-                                .add(SignOutRequested());
-                          },
-                        ),
-                      ],
+              // 5. UYGULAMA BİLGİSİ
+              const SettingsHeader(title: 'HAKKINDA'),
+              Card(
+                elevation: 1,
+                child: Column(
+                  children: [
+                    const ListTile(
+                      leading: Icon(Icons.info_outline),
+                      title: Text('Versiyon'),
+                      trailing: Text('1.0.0'),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    const Divider(height: 1),
+                    const ListTile(
+                      leading: Icon(Icons.code),
+                      title: Text('Geliştirici'),
+                      trailing: Text('İbo'),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.logout, color: Colors.red),
+                      title: const Text('Çıkış Yap',
+                          style: TextStyle(color: Colors.red)),
+                      onTap: () {
+                        context.read<RemoteAuthBloc>().add(SignOutRequested());
+                      },
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+              const SizedBox(height: 40),
+            ],
+          ),
         );
       },
     );
@@ -444,40 +421,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStorageModeCard(BuildContext context, StorageMode currentMode) {
-    final settingsBloc = context.read<SettingsBloc>();
-
-    return Card(
-      elevation: 2,
-      child: ListTile(
-        leading: Icon(
-          currentMode == StorageMode.cloud ? Icons.cloud : Icons.phone_android,
-          color: Theme.of(context).colorScheme.primary,
-          size: 28,
-        ),
-        title: const Text(
-          'Depolama Modu',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          currentMode == StorageMode.cloud
-              ? 'Veriler bulutta saklanıyor'
-              : 'Veriler cihazda saklanıyor',
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          showMigrationDialog(
-            context: context,
-            userId: FirebaseAuth.instance.currentUser!.uid,
-            currentMode: currentMode,
-            settingsBloc: settingsBloc, // ✅ Bloc'u parametre olarak geçiyoruz
-          );
-        },
       ),
     );
   }

@@ -1,11 +1,13 @@
-import 'package:cunehat/features/finance_transactions/data/datasources/transaction_data_repository.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@LazySingleton(as: TransactionsRepository)
 class TransactionRepositoryImpl implements TransactionsRepository {
-  final TransactionDataRepository dataSource;
+  final TransactionHiveDataSource dataSource;
 
   TransactionRepositoryImpl({required this.dataSource});
 

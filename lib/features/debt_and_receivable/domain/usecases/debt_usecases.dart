@@ -1,7 +1,9 @@
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/debt_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class GetDebtsUseCase {
   final DebtRepository repository;
   GetDebtsUseCase(this.repository);
@@ -10,6 +12,7 @@ class GetDebtsUseCase {
       repository.getDebtsByWalletId(walletId);
 }
 
+@injectable
 class AddDebtUseCase {
   final DebtRepository repository;
   AddDebtUseCase(this.repository);
@@ -22,6 +25,7 @@ class AddDebtUseCase {
   }
 }
 
+@injectable
 class UpdateDebtUseCase {
   final DebtRepository repository;
   UpdateDebtUseCase(this.repository);
@@ -29,6 +33,7 @@ class UpdateDebtUseCase {
   Future<void> call(DebtEntity debt) => repository.updateDebt(debt);
 }
 
+@injectable
 class DeleteDebtUseCase {
   final DebtRepository repository;
   DeleteDebtUseCase(this.repository);

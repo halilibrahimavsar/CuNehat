@@ -1,9 +1,6 @@
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
-import 'package:cunehat/features/transfer/domain/usecases/transfer_money_usecase.dart';
-import 'package:cunehat/features/transfer/presentation/widgets/transfer_dialog.dart';
-import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
@@ -150,7 +147,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
           if (state is WalletLoadedSt && state.wallets.length >= 2)
             IconButton(
               icon: const Icon(Icons.swap_horiz),
-              onPressed: () => _showTransferDialog(context, state.wallets),
+              onPressed: () {},
               tooltip: 'Para Transferi',
               style: IconButton.styleFrom(
                 backgroundColor: Colors.blue.shade50,
@@ -323,25 +320,25 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     );
   }
 
-  Future<void> _showTransferDialog(
-    BuildContext context,
-    List<WalletEntity> wallets,
-  ) async {
-    final transferUseCase = TransferMoneyUseCase(
-      context.read<WalletRepositoryImpl>().dataSource,
-    );
+  // Future<void> _showTransferDialog(
+  //   BuildContext context,
+  //   List<WalletEntity> wallets,
+  // ) async {
+  //   final transferUseCase = TransferMoneyUseCase(
+  //     context.read<WalletRepositoryImpl>().dataSource,
+  //   );
 
-    final bool? transferSuccessful = await showTransferDialog(
-      context: context,
-      userId: widget.userId,
-      wallets: wallets,
-      transferUseCase: transferUseCase,
-    );
+  //   final bool? transferSuccessful = await showTransferDialog(
+  //     context: context,
+  //     userId: widget.userId,
+  //     wallets: wallets,
+  //     transferUseCase: transferUseCase,
+  //   );
 
-    if (transferSuccessful == true && context.mounted) {
-      SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
-      // Refresh wallets
-      context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
-    }
-  }
+  //   if (transferSuccessful == true && context.mounted) {
+  //     SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
+  //     // Refresh wallets
+  //     context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
+  //   }
+  // }
 }

@@ -1,5 +1,7 @@
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class DeleteInvestmentUseCase {
   final SaveRepository repository;
 

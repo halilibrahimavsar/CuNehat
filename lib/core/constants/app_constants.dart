@@ -2,29 +2,6 @@ import 'package:cunehat/config/theme/custome_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// ============ ENUMS ============
-
-enum StorageMode { local, cloud }
-
-// ============ ROUTES ============
-
-// class AppRoutes {
-//   static const String wallet = '/wallet';
-//   static const String profile = '/profile';
-//   static const String settings = '/settings';
-//   static const String investment = '/investment';
-//   static const String walletManagement = '/wallet-management'; // ⚠️ NEW
-// }
-
-// ============ STORAGE KEYS ============
-
-class StorageKeys {
-  static const String storageMode = 'storage_mode';
-  static const String activeWalletId = 'active_wallet_id'; // ⚠️ NEW
-  static const String isMultiWalletMigrated =
-      'is_multi_wallet_migrated'; // ⚠️ NEW
-}
-
 // ============ HIVE BOX NAMES ============
 
 class HiveBoxes {
@@ -42,21 +19,6 @@ class WalletDefaults {
   static const String defaultColorHex = '0xFF2196F3';
   static const String defaultIconName = 'wallet';
 }
-
-// ============ FORMATTERS ============
-
-// class AppFormatters {
-//   static final NumberFormat currency = NumberFormat.currency(
-//     symbol: "₺",
-//     decimalDigits: 2,
-//   );
-
-//   static final DateFormat dateShort = DateFormat.yMd('tr_TR');
-//   static final DateFormat dateLong = DateFormat.yMMMEd('tr_TR');
-//   static final DateFormat time = DateFormat.Hm('tr_TR');
-// }
-
-// ============ THEME NAMES ============
 
 class ThemeNames {
   static const String sysLight = "Sistem [Açık]";

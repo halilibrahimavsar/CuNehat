@@ -1,8 +1,9 @@
-import 'package:cunehat/features/wallet/data/repository/wallet_data_repository.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:injectable/injectable.dart';
 
-class WalletLocalDataSource implements WalletDataRepository {
+@singleton
+class WalletLocalDataSource {
   static const String _boxName = 'wallets';
   static const String _usersBoxName = 'users';
 
@@ -20,7 +21,6 @@ class WalletLocalDataSource implements WalletDataRepository {
     return Hive.box<Map>(_usersBoxName);
   }
 
-  @override
   Future<String> createWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
 
@@ -29,13 +29,11 @@ class WalletLocalDataSource implements WalletDataRepository {
     return wallet.id!;
   }
 
-  @override
   Future<void> deleteWallet(String walletId) async {
     final box = await _getWalletBox();
     await box.delete(walletId);
   }
 
-  @override
   Future<List<WalletModel>> getWallets(String userId) async {
     final box = await _getWalletBox();
     return _filterWalletsByUser(box, userId);
@@ -46,7 +44,6 @@ class WalletLocalDataSource implements WalletDataRepository {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
-  @override
   Future<void> setActiveWallet({
     required String userId,
     required String newActiveWalletId,
@@ -66,13 +63,11 @@ class WalletLocalDataSource implements WalletDataRepository {
     }
   }
 
-  @override
   Future<void> updateWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
     await box.put(wallet.id, wallet);
   }
 
-  @override
   Future<WalletModel?> getActiveWallet(String userId) async {
     final usersBox = await _getUserBox();
     final userData = usersBox.get(userId, defaultValue: {}) as Map;
@@ -84,7 +79,6 @@ class WalletLocalDataSource implements WalletDataRepository {
     return null;
   }
 
-  @override
   Future<void> updateBalance(String userId, double balance) async {
     final activeWallet = await getActiveWallet(userId);
     if (activeWallet != null) {
@@ -93,7 +87,6 @@ class WalletLocalDataSource implements WalletDataRepository {
     }
   }
 
-  @override
   Future<void> updateDebt(String userId, double debt) async {
     final activeWallet = await getActiveWallet(userId);
     if (activeWallet != null) {
@@ -102,7 +95,6 @@ class WalletLocalDataSource implements WalletDataRepository {
     }
   }
 
-  @override
   Future<void> updateCredit(String userId, double credit) async {
     final activeWallet = await getActiveWallet(userId);
     if (activeWallet != null) {
@@ -111,7 +103,6 @@ class WalletLocalDataSource implements WalletDataRepository {
     }
   }
 
-  @override
   Future<void> updateInvestment(String userId, double save) async {
     final activeWallet = await getActiveWallet(userId);
     if (activeWallet != null) {
