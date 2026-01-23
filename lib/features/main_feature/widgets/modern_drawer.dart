@@ -100,7 +100,8 @@ class _ModernDrawerState extends State<ModernDrawer>
                   title: 'Yatırım Takip',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push(AppRoutes.investment);
+                    // TODO: investment route needs to be implemented in GoRouter
+                    // context.push(AppRoutes.investment);
                   },
                   delay: 200,
                 ),

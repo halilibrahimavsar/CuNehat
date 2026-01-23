@@ -1,6 +1,5 @@
 // lib/features/transactions/domain/entities/filter_entity.dart
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_view_type.dart';
 
 /// Veri filtreleri için temel sınıf
 abstract base class BaseFilter {
@@ -110,26 +109,22 @@ base class DataFilter extends BaseFilter {
 /// Görünüm filtreleri (UI durumunu yönetmek için)
 class ViewFilter {
   final FinanceMode financeMode;
-  final TransactionViewType viewType;
   final DateTime startDate;
   final DateTime endDate;
 
   const ViewFilter({
     required this.financeMode,
-    required this.viewType,
     required this.startDate,
     required this.endDate,
   });
 
   ViewFilter copyWith({
     FinanceMode? financeMode,
-    TransactionViewType? viewType,
     DateTime? startDate,
     DateTime? endDate,
   }) {
     return ViewFilter(
       financeMode: financeMode ?? this.financeMode,
-      viewType: viewType ?? this.viewType,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
     );

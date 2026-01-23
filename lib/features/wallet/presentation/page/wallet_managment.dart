@@ -144,17 +144,6 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
           ),
 
           // Actions
-          if (state is WalletLoadedSt && state.wallets.length >= 2)
-            IconButton(
-              icon: const Icon(Icons.swap_horiz),
-              onPressed: () {},
-              tooltip: 'Para Transferi',
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.blue.shade50,
-                foregroundColor: Colors.blue.shade700,
-              ),
-            ),
-          const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => WalletInfoDialog.show(context),
@@ -319,26 +308,4 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       },
     );
   }
-
-  // Future<void> _showTransferDialog(
-  //   BuildContext context,
-  //   List<WalletEntity> wallets,
-  // ) async {
-  //   final transferUseCase = TransferMoneyUseCase(
-  //     context.read<WalletRepositoryImpl>().dataSource,
-  //   );
-
-  //   final bool? transferSuccessful = await showTransferDialog(
-  //     context: context,
-  //     userId: widget.userId,
-  //     wallets: wallets,
-  //     transferUseCase: transferUseCase,
-  //   );
-
-  //   if (transferSuccessful == true && context.mounted) {
-  //     SnackbarHelper.showSuccess(context, '✅ Transfer başarılı!');
-  //     // Refresh wallets
-  //     context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
-  //   }
-  // }
 }

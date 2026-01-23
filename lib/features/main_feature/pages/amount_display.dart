@@ -115,35 +115,3 @@ class AmountVisibilityButton extends StatelessWidget {
     );
   }
 }
-
-/// Compact Visibility Toggle (daha küçük, basit)
-class CompactVisibilityToggle extends StatelessWidget {
-  final Color? color;
-  final double size;
-
-  const CompactVisibilityToggle({
-    super.key,
-    this.color,
-    this.size = 20,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AmountVisibilityCubit, bool>(
-      builder: (context, isVisible) {
-        return GestureDetector(
-          onTap: () {
-            context.read<AmountVisibilityCubit>().toggleVisibility();
-          },
-          child: Icon(
-            isVisible
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-            size: size,
-            color: color ?? Colors.grey.shade600,
-          ),
-        );
-      },
-    );
-  }
-}

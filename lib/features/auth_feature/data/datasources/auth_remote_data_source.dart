@@ -5,17 +5,6 @@ import 'package:injectable/injectable.dart';
 
 @singleton
 class AuthRemoteDataSource {
-  /// Google Sign In v7+ için sessiz giriş (oturum yenileme) metodu
-  Future<void> signInSilently() async {
-    final GoogleSignIn googleSignn = GoogleSignIn.instance;
-    try {
-      // v7+ sürümü için başlatma zorunludur
-      await googleSignn.initialize();
-    } catch (e) {
-      // Sessiz giriş başarısız olursa (örn: kullanıcı daha önce giriş yapmamışsa) yoksay
-    }
-  }
-
   Future<void> logOut() async {
     await FirebaseAuth.instance.signOut();
     await GoogleSignIn.instance.signOut().catchError(
@@ -66,10 +55,6 @@ class AuthRemoteDataSource {
           throw UserNotFoundAuthException();
         } else if (error.code == 'wrong-password') {
           throw WrongPasswordAuthException();
-        } else if (error.code == 'invalid-verification-code') {
-          throw InvalidVerificationCodeException();
-        } else if (error.code == 'invalid-verification-id') {
-          throw InvalidVerificationIdException();
         } else if (error.code == 'account-exists-with-different-credential') {
           throw AccExistWithDifferentCredentialException();
         } else if (error.code == 'operation-not-allowed') {

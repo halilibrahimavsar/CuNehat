@@ -1,9 +1,6 @@
-import 'package:local_auth/local_auth.dart';
-
 abstract class BiometricRepository {
   Future<bool> canCheckBiometrics();
   Future<bool> isBiometricAvailable();
-  Future<List<BiometricType>> getAvailableBiometrics();
   Future<bool> authenticateWithBiometrics();
   Future<bool> isBiometricEnabled();
   Future<void> enableBiometric();

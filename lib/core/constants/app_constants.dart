@@ -118,5 +118,4 @@ class AppRoutes {
   static const String home = '/';
   static const String settings = '/settings';
   static const String investment = '/investment';
-  static const String wallet = '/wallet';
 }

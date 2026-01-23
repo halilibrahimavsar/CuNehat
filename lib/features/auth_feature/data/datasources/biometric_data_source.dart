@@ -4,10 +4,6 @@ import 'package:local_auth/local_auth.dart';
 
 @singleton
 class BiometricDataSource {
-  static final BiometricDataSource _instance = BiometricDataSource._internal();
-  factory BiometricDataSource() => _instance;
-  BiometricDataSource._internal();
-
   final LocalAuthentication _localAuth = LocalAuthentication();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -33,15 +29,6 @@ class BiometricDataSource {
       return canCheck && isDeviceSupported;
     } catch (e) {
       return false;
-    }
-  }
-
-  /// Get available biometric types
-  Future<List<BiometricType>> getAvailableBiometrics() async {
-    try {
-      return await _localAuth.getAvailableBiometrics();
-    } catch (e) {
-      return [];
     }
   }
 

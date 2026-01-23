@@ -141,7 +141,6 @@ class _HomePageState extends State<HomePage>
             controller: _controller,
             firstView: InvestmentMoneyPage(
               activeWallet: walletState.activeWallet!,
-              // investments: investmentState.investments, // Eğer sayfa destekliyorsa buraya ekleyebilirsiniz
             ),
             secondView: TransactionsPage(
               userId: userId,
@@ -268,7 +267,6 @@ class _HomePageState extends State<HomePage>
           ],
         },
         onValueChanged: (action) {},
-        // onTap: (value) {},
       ),
     );
   }
