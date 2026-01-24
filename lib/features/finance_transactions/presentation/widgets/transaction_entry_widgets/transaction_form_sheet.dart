@@ -1,4 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart';
@@ -269,33 +270,7 @@ class _TransactionCategorySelectorState
   }
 
   IconData _getIcon(String iconName) {
-    final iconMap = {
-      'restaurant': Icons.restaurant,
-      'local_cafe': Icons.local_cafe,
-      'directions_bus': Icons.directions_bus,
-      'local_gas_station': Icons.local_gas_station,
-      'shopping_bag': Icons.shopping_bag,
-      'receipt_long': Icons.receipt_long,
-      'movie': Icons.movie,
-      'sports_esports': Icons.sports_esports,
-      'health_and_safety': Icons.health_and_safety,
-      'fitness_center': Icons.fitness_center,
-      'school': Icons.school,
-      'home': Icons.home,
-      'pets': Icons.pets,
-      'beach_access': Icons.beach_access,
-      'phone_android': Icons.phone_android,
-      'computer': Icons.computer,
-      'checkroom': Icons.checkroom,
-      'child_care': Icons.child_care,
-      'payments': Icons.payments,
-      'trending_up': Icons.trending_up,
-      'work': Icons.work,
-      'card_giftcard': Icons.card_giftcard,
-      'attach_money': Icons.attach_money,
-      'category': Icons.category,
-    };
-    return iconMap[iconName] ?? Icons.category;
+    return AppIcons.getIconData(iconName);
   }
 }
 

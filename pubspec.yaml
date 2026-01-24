@@ -78,6 +78,7 @@ dependencies:
   
   # KULLANICI TERCİHLERİ İÇİN EKLENDİ (Yerel mi? Bulut mu?)
   shared_preferences: ^2.2.3
+  flutter_colorpicker: ^1.1.0
 
   
   # chips_choice: ^3.0.0

@@ -1,10 +1,11 @@
+import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_dialog.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
 import 'package:flutter/material.dart';
 
-/// Show Category Manager Bottom Sheet
 Future<bool?> showCategoryManager({
   required BuildContext context,
   required bool isExpense,
@@ -13,38 +14,25 @@ Future<bool?> showCategoryManager({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) {
-      return DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) {
-          return CategoryManagerSheet(
-            isExpense: isExpense,
-            scrollController: scrollController,
-          );
-        },
-      );
-    },
+    builder: (context) => CategoryManagerSheet(isExpense: isExpense),
   );
 }
 
-/// Category Manager Sheet Content
 class CategoryManagerSheet extends StatefulWidget {
   final bool isExpense;
-  final ScrollController scrollController;
 
   const CategoryManagerSheet({
     super.key,
     required this.isExpense,
-    required this.scrollController,
   });
 
   @override
   State<CategoryManagerSheet> createState() => _CategoryManagerSheetState();
 }
 
-class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
+class _CategoryManagerSheetState extends State<CategoryManagerSheet>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final CategoryService _categoryService = CategoryService();
   List<CategoryModel> _categories = [];
   bool _isLoading = true;
@@ -52,7 +40,14 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCategories() async {
@@ -75,219 +70,215 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
   Widget build(BuildContext context) {
     final color = widget.isExpense ? Colors.red : Colors.green;
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _buildDragHandle(),
-            _buildHeader(context, color),
-            const Divider(height: 1),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildCategoryList(),
-            ),
-            _buildAddButton(context, color),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDragHandle() {
     return Container(
-      margin: const EdgeInsets.only(top: 12, bottom: 8),
-      width: 40,
-      height: 4,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(2),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, Color color) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 16, 16),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              widget.isExpense ? Icons.trending_down : Icons.trending_up,
-              color: color,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
+          _buildHeader(color),
+          _buildTabs(color),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: TabBarView(
+              controller: _tabController,
               children: [
-                Text(
-                  widget.isExpense
-                      ? 'Gider Kategorileri'
-                      : 'Gelir Kategorileri',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Kategorilerinizi yönetin',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
+                _buildCategoryList(false),
+                _buildCategoryList(true),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.grey.shade100,
+          _buildAddButton(color),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(Color color) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
             ),
+          ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  widget.isExpense ? Icons.trending_down : Icons.trending_up,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.isExpense
+                          ? 'Gider Kategorileri'
+                          : 'Gelir Kategorileri',
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${_categories.where((c) => !c.isDefault).length} özel, ${_categories.where((c) => c.isDefault).length} varsayılan',
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryList() {
-    if (_categories.isEmpty) {
+  Widget _buildTabs(Color color) {
+    return TabBar(
+      controller: _tabController,
+      labelColor: color,
+      unselectedLabelColor: Colors.grey,
+      indicatorColor: color,
+      tabs: const [
+        Tab(text: 'Özel Kategoriler'),
+        Tab(text: 'Varsayılan Kategoriler'),
+      ],
+    );
+  }
+
+  Widget _buildCategoryList(bool showDefaults) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final filteredCategories =
+        _categories.where((c) => c.isDefault == showDefaults).toList();
+
+    if (filteredCategories.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.category_outlined,
-                size: 64, color: Colors.grey.shade400),
+            Icon(
+              showDefaults ? Icons.lock_outline : Icons.category_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: 16),
             Text(
-              'Henüz kategori yok',
+              showDefaults
+                  ? 'Varsayılan kategori yok'
+                  : 'Henüz özel kategori yok',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
+            if (!showDefaults) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Aşağıdaki butondan ekleyebilirsiniz',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              ),
+            ],
           ],
         ),
       );
     }
 
-    // Group categories: defaults first, then custom
-    final defaultCategories = _categories.where((c) => c.isDefault).toList();
-    final customCategories = _categories.where((c) => !c.isDefault).toList();
-
-    return ListView(
-      controller: widget.scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      children: [
-        if (defaultCategories.isNotEmpty) ...[
-          _buildSectionHeader('Varsayılan Kategoriler', Icons.lock_outline),
-          ...defaultCategories.map((category) => _buildCategoryCard(category)),
-          const SizedBox(height: 16),
-        ],
-        if (customCategories.isNotEmpty) ...[
-          _buildSectionHeader('Özel Kategoriler', Icons.edit_outlined),
-          ...customCategories.map((category) => _buildCategoryCard(category)),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey.shade600),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
+    return RefreshIndicator(
+      onRefresh: _loadCategories,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: filteredCategories.length,
+        itemBuilder: (context, index) {
+          final category = filteredCategories[index];
+          if (!category.isDefault) {
+            return DismissableWidget<CategoryModel>(
+              item: category,
+              dismissKey: category.id,
+              onDelete: (item) => _confirmDelete(item),
+              onEdit: (item) => _editCategory(item),
+              child: _buildCategoryCard(category),
+            );
+          }
+          return _buildCategoryCard(category);
+        },
       ),
     );
   }
 
   Widget _buildCategoryCard(CategoryModel category) {
     final color = widget.isExpense ? Colors.red : Colors.green;
+    final isDefaultTab = _tabController.index == 1;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: category.isDefault ? 1 : 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: category.isDefault
               ? Colors.grey.shade200
               : color.withValues(alpha: 0.2),
-          width: 1,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _getIcon(category.iconName),
-                color: color,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                category.id,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            if (category.isDefault)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            AppIcons.getIconData(category.iconName),
+            color: color,
+            size: 24,
+          ),
+        ),
+        title: Text(
+          category.id,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        trailing: category.isDefault && !isDefaultTab
+            ? Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lock, size: 12, color: Colors.grey.shade600),
+                    Icon(Icons.lock, size: 14, color: Colors.grey.shade600),
                     const SizedBox(width: 4),
                     Text(
                       'Varsayılan',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         color: Colors.grey.shade600,
                         fontWeight: FontWeight.w500,
                       ),
@@ -295,93 +286,61 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
                   ],
                 ),
               )
-            else
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
+            : category.isDefault && isDefaultTab
+                ? IconButton(
+                    icon:
+                        Icon(Icons.edit, size: 20, color: Colors.blue.shade700),
                     onPressed: () => _editCategory(category),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.blue.shade50,
-                      foregroundColor: Colors.blue.shade700,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.delete, size: 20),
-                    onPressed: () => _deleteCategory(category),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.red.shade50,
-                      foregroundColor: Colors.red.shade700,
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
+                  )
+                : const Icon(Icons.more_horiz),
       ),
     );
   }
 
-  Widget _buildAddButton(BuildContext context, Color color) {
+  Widget _buildAddButton(Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
           width: double.infinity,
-          height: 54,
           child: ElevatedButton.icon(
             onPressed: _addCategory,
             style: ElevatedButton.styleFrom(
               backgroundColor: color,
               foregroundColor: Colors.white,
-              elevation: 2,
+              padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            icon: const Icon(Icons.add, size: 22),
-            label: const Text(
-              'Yeni Kategori Ekle',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+            icon: const Icon(Icons.add),
+            label: const Text('Yeni Kategori Ekle'),
           ),
         ),
       ),
     );
   }
 
-  // ========== ACTIONS ==========
-
   Future<void> _addCategory() async {
-    final result = await showCategoryFormDialog(
+    final result = await showCategoryForm(
       context: context,
       isExpense: widget.isExpense,
     );
 
     if (result == true) {
       _loadCategories();
-      if (mounted) {
-        SnackbarHelper.showSuccess(context, '✅ Kategori eklendi');
-      }
     }
   }
 
   Future<void> _editCategory(CategoryModel category) async {
-    final result = await showCategoryFormDialog(
+    final result = await showCategoryForm(
       context: context,
       isExpense: widget.isExpense,
       category: category,
@@ -389,13 +348,10 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
 
     if (result == true) {
       _loadCategories();
-      if (mounted) {
-        SnackbarHelper.showSuccess(context, '✅ Kategori güncellendi');
-      }
     }
   }
 
-  Future<void> _deleteCategory(CategoryModel category) async {
+  Future<bool> _confirmDelete(CategoryModel category) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -427,33 +383,14 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet> {
         if (mounted) {
           SnackbarHelper.showSuccess(context, '🗑️ Kategori silindi');
         }
+        return true;
       } catch (e) {
         if (mounted) {
           SnackbarHelper.showError(context, 'Hata: $e');
         }
+        return false;
       }
     }
-  }
-
-  IconData _getIcon(String iconName) {
-    final iconMap = {
-      'restaurant': Icons.restaurant,
-      'directions_bus': Icons.directions_bus,
-      'shopping_bag': Icons.shopping_bag,
-      'receipt_long': Icons.receipt_long,
-      'movie': Icons.movie,
-      'health_and_safety': Icons.health_and_safety,
-      'school': Icons.school,
-      'payments': Icons.payments,
-      'trending_up': Icons.trending_up,
-      'work': Icons.work,
-      'home': Icons.home,
-      'sports_esports': Icons.sports_esports,
-      'local_cafe': Icons.local_cafe,
-      'fitness_center': Icons.fitness_center,
-      'pets': Icons.pets,
-      'beach_access': Icons.beach_access,
-    };
-    return iconMap[iconName] ?? Icons.category;
+    return false;
   }
 }

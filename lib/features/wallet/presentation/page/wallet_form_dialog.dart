@@ -1,10 +1,12 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 /// **Cüzdan Oluşturma/Düzenleme Dialog'unu Göster**
 ///
@@ -258,42 +260,85 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: WalletColors.presetColors.map((color) {
-            final hex = WalletColors.colorToHex(color);
-            final isSelected = _selectedColorHex == hex;
+          children: [
+            ...WalletColors.presetColors.map((color) {
+              final hex = WalletColors.colorToHex(color);
+              final isSelected = _selectedColorHex == hex;
 
-            return GestureDetector(
-              onTap: () => setState(() => _selectedColorHex = hex),
+              return GestureDetector(
+                onTap: () => setState(() => _selectedColorHex = hex),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? Colors.black : Colors.grey.shade300,
+                      width: isSelected ? 3 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: color.withOpacity(0.4),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            )
+                          ]
+                        : null,
+                  ),
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 20,
+                        )
+                      : null,
+                ),
+              );
+            }).toList(),
+            // Özel renk seçici
+            GestureDetector(
+              onTap: _showCustomColorPicker,
               child: Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: WalletColors.hexToColor(_selectedColorHex),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? Colors.black : Colors.grey.shade300,
-                    width: isSelected ? 3 : 1,
+                    color: !WalletColors.presetColors.any(
+                      (c) => WalletColors.colorToHex(c) == _selectedColorHex,
+                    )
+                        ? Colors.black
+                        : Colors.grey.shade300,
+                    width: !WalletColors.presetColors.any(
+                      (c) => WalletColors.colorToHex(c) == _selectedColorHex,
+                    )
+                        ? 3
+                        : 1,
                   ),
-                  boxShadow: isSelected
+                  boxShadow: !WalletColors.presetColors.any(
+                    (c) => WalletColors.colorToHex(c) == _selectedColorHex,
+                  )
                       ? [
                           BoxShadow(
-                            color: color.withOpacity(0.4),
+                            color: WalletColors.hexToColor(_selectedColorHex)
+                                .withOpacity(0.4),
                             blurRadius: 8,
                             spreadRadius: 2,
                           )
                         ]
                       : null,
                 ),
-                child: isSelected
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 20,
-                      )
-                    : null,
+                child: const Icon(
+                  Icons.palette,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-            );
-          }).toList(),
+            ),
+          ],
         ),
       ],
     );
@@ -309,36 +354,44 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: WalletIcons.icons.entries.map((entry) {
-            final isSelected = _selectedIconName == entry.key;
-            final color = WalletColors.hexToColor(_selectedColorHex);
-
-            return GestureDetector(
-              onTap: () => setState(() => _selectedIconName = entry.key),
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? color.withOpacity(0.15)
-                      : Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? color : Colors.grey.shade300,
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: Icon(
-                  entry.value,
-                  color: isSelected ? color : Colors.grey,
-                  size: 28,
+        Container(
+          width: double.infinity,
+          height: 56,
+          decoration: BoxDecoration(
+            color: WalletColors.hexToColor(_selectedColorHex).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: WalletColors.hexToColor(_selectedColorHex),
+              width: 2,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: _showIconPickerDialog,
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      AppIcons.getIconData(_selectedIconName),
+                      color: WalletColors.hexToColor(_selectedColorHex),
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'İkon Değiştir',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          }).toList(),
+            ),
+          ),
         ),
       ],
     );
@@ -410,6 +463,60 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       );
       context.read<WalletBloc>().add(CreateWalletEvent(wallet));
     }
+  }
+
+  /// İkon seçici dialog'unu göster
+  void _showIconPickerDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => IconPicker(
+        selectedIcon: _selectedIconName,
+        iconColor: WalletColors.hexToColor(_selectedColorHex),
+        onIconSelected: (iconName) {
+          setState(() => _selectedIconName = iconName);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
+  /// Özel renk seçici dialog'unu göster
+  void _showCustomColorPicker() {
+    Color selectedColor = WalletColors.hexToColor(_selectedColorHex);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Özel Renk Seçin'),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: selectedColor,
+            onColorChanged: (color) {
+              selectedColor = color;
+            },
+            enableAlpha: false,
+            displayThumbColor: true,
+            showLabel: true,
+            pickerAreaHeightPercent: 0.8,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() =>
+                  _selectedColorHex = WalletColors.colorToHex(selectedColor));
+              Navigator.pop(context);
+            },
+            child: const Text('Tamam'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// BLoC state değişikliklerini dinle
