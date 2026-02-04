@@ -1,9 +1,9 @@
-import 'package:cunehat/features/main_feature/widgets/amount_display.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
 class TransactionHeader extends StatelessWidget {
   final DateTime startDate;

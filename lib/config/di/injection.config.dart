@@ -9,7 +9,6 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
-import 'package:connectivity_plus/connectivity_plus.dart' as _i895;
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/config/di/firebase_module.dart' as _i808;
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart'
@@ -82,12 +81,6 @@ import 'package:cunehat/features/investments/domain/usecases/update_investment_u
     as _i420;
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart'
     as _i726;
-import 'package:cunehat/features/main_feature/blocs/amount_visibility_cubit.dart'
-    as _i289;
-import 'package:cunehat/features/main_feature/blocs/network_cubit.dart'
-    as _i785;
-import 'package:cunehat/features/main_feature/widgets/network/network_info.dart'
-    as _i70;
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart'
     as _i460;
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart'
@@ -103,6 +96,10 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart'
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart'
+    as _i163;
+import 'package:unified_flutter_features/features/connection_monitor/connection_cubit.dart'
+    as _i855;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -115,18 +112,14 @@ extension GetItInjectableX on _i174.GetIt {
       environment,
       environmentFilter,
     );
-    final firebaseModule = _$FirebaseModule();
     final appModule = _$AppModule();
+    final firebaseModule = _$FirebaseModule();
     gh.factory<_i528.TransactionFilterCubit>(
         () => _i528.TransactionFilterCubit());
-    gh.factory<_i289.AmountVisibilityCubit>(
-        () => _i289.AmountVisibilityCubit());
     gh.factory<_i460.ThemeBloc>(() => _i460.ThemeBloc());
+    gh.singleton<_i1002.CategoryService>(() => _i1002.CategoryService());
     gh.singleton<_i934.TransactionHiveDataSource>(
         () => _i934.TransactionHiveDataSource());
-    gh.singleton<_i1002.CategoryService>(() => _i1002.CategoryService());
-    gh.singleton<_i175.WalletLocalDataSource>(
-        () => _i175.WalletLocalDataSource());
     gh.singleton<_i633.AuthRemoteDataSource>(
         () => _i633.AuthRemoteDataSource());
     gh.singleton<_i490.BiometricDataSource>(() => _i490.BiometricDataSource());
@@ -135,11 +128,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i19.DebtLocalDatasource>(() => _i19.DebtLocalDatasource());
     gh.singleton<_i366.ReceivableLocalDatasource>(
         () => _i366.ReceivableLocalDatasource());
+    gh.singleton<_i175.WalletLocalDataSource>(
+        () => _i175.WalletLocalDataSource());
+    gh.lazySingleton<_i163.AmountVisibilityCubit>(
+        () => appModule.amountVisibilityCubit);
+    gh.lazySingleton<_i855.ConnectionCubit>(() => appModule.connectionCubit);
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
-    gh.lazySingleton<_i895.Connectivity>(() => appModule.connectivity);
-    gh.lazySingleton<_i70.NetworkInfo>(
-        () => _i70.NetworkInfoImpl(gh<_i895.Connectivity>()));
     gh.lazySingleton<_i329.ReceivableRepository>(() =>
         _i183.ReceivableRepositoryImpl(
             receivableDatasourceRepository:
@@ -204,8 +199,6 @@ extension GetItInjectableX on _i174.GetIt {
         dataSource: gh<_i648.InvestmentLocalDatasource>()));
     gh.factory<_i926.SignInWithGoogle>(
         () => _i926.SignInWithGoogle(gh<_i276.AuthRepository>()));
-    gh.factory<_i785.NetworkCubit>(
-        () => _i785.NetworkCubit(gh<_i70.NetworkInfo>()));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(
           getTransactionsGroupedUseCase:
               gh<_i257.GetTransactionsGroupedUseCase>(),
@@ -233,12 +226,12 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i818.AddInvestmentUseCase>(
         () => _i818.AddInvestmentUseCase(gh<_i589.SaveRepository>()));
-    gh.factory<_i420.UpdateInvestmentUseCase>(
-        () => _i420.UpdateInvestmentUseCase(gh<_i589.SaveRepository>()));
     gh.factory<_i318.DeleteInvestmentUseCase>(
         () => _i318.DeleteInvestmentUseCase(gh<_i589.SaveRepository>()));
     gh.factory<_i864.GetInvestmentsUseCase>(
         () => _i864.GetInvestmentsUseCase(gh<_i589.SaveRepository>()));
+    gh.factory<_i420.UpdateInvestmentUseCase>(
+        () => _i420.UpdateInvestmentUseCase(gh<_i589.SaveRepository>()));
     gh.factory<_i532.RemoteAuthBloc>(() => _i532.RemoteAuthBloc(
           signInWithGoogle: gh<_i926.SignInWithGoogle>(),
           authRepository: gh<_i276.AuthRepository>(),
@@ -254,6 +247,6 @@ extension GetItInjectableX on _i174.GetIt {
   }
 }
 
-class _$FirebaseModule extends _i808.FirebaseModule {}
-
 class _$AppModule extends _i621.AppModule {}
+
+class _$FirebaseModule extends _i808.FirebaseModule {}

@@ -7,7 +7,6 @@ import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
-import 'package:cunehat/features/main_feature/widgets/network/network_status_bar.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -130,7 +129,6 @@ class _HomePageState extends State<HomePage>
       WalletLoadedSt walletState, String userId, BuildContext context) {
     return Column(
       children: [
-        const NetworkStatusBar(),
         Expanded(
           child: CubeAnimationView(
             controller: _controller,

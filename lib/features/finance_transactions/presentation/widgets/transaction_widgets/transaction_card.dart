@@ -1,6 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
-import 'package:cunehat/features/main_feature/widgets/amount_display.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
@@ -8,6 +7,7 @@ import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
 class TransactionCard extends StatelessWidget {
   final BuildContext context;

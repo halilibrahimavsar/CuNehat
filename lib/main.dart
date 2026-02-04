@@ -12,10 +12,9 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivabl
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
-import 'package:cunehat/features/main_feature/blocs/amount_visibility_cubit.dart';
-import 'package:cunehat/features/main_feature/blocs/network_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:unified_flutter_features/shared_features/shared_features.dart';
 
 Future<void> main() async {
   final result = await AppInitialization.initialize();
@@ -46,41 +45,52 @@ class CuNehatApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<TransactionBloc>()),
         BlocProvider(create: (_) => getIt<InvestmentBloc>()),
         BlocProvider(create: (_) => getIt<AmountVisibilityCubit>()),
-        BlocProvider(create: (_) => getIt<NetworkCubit>()),
         BlocProvider(create: (_) => getIt<WalletBloc>()),
+        BlocProvider(create: (_) => getIt<ConnectionCubit>()),
       ],
-      child: BlocBuilder<ThemeBloc, ThemeState>(
-        builder: (context, themeState) {
-          return BlocBuilder<RemoteAuthBloc, AuthState>(
-            builder: (context, authState) {
-              if (authState is Authenticated || authState is AuthLocked) {
-                return MaterialApp.router(
-                  routerConfig: router,
-                  themeMode: ThemeMode.light,
-                  theme: themeState.name,
-                  title: "CuNehat",
+      child: Builder(builder: (context) {
+        return BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, themeState) {
+            return BlocBuilder<RemoteAuthBloc, AuthState>(
+              builder: (context, authState) {
+                if (authState is Authenticated || authState is AuthLocked) {
+                  return MaterialApp.router(
+                    routerConfig: router,
+                    themeMode: ThemeMode.light,
+                    theme: themeState.name,
+                    title: "CuNehat",
+                    debugShowCheckedModeBanner: false,
+                    builder: (context, child) {
+                      return BlocBuilder<LocalAuthBloc, LocalAuthState>(
+                        builder: (context, localAuthState) {
+                          final isSecurityEnabled = localAuthState.isPinSet ||
+                              localAuthState.isBiometricEnabled;
+                          return ConnectionSnackbarHandler(
+                            child: PrivacyGuard(
+                              enabled: isSecurityEnabled,
+                              child: child!,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                }
+                return MaterialApp(
                   debugShowCheckedModeBanner: false,
+                  theme: themeState.name,
+                  home: const LoginScreen(),
                   builder: (context, child) {
-                    return BlocBuilder<LocalAuthBloc, LocalAuthState>(
-                      builder: (context, localAuthState) {
-                        final isSecurityEnabled = localAuthState.isPinSet ||
-                            localAuthState.isBiometricEnabled;
-                        return PrivacyGuard(
-                            enabled: isSecurityEnabled, child: child!);
-                      },
+                    return ConnectionSnackbarHandler(
+                      child: child ?? const SizedBox.shrink(),
                     );
                   },
                 );
-              }
-              return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                theme: themeState.name,
-                home: const LoginScreen(),
-              );
-            },
-          );
-        },
-      ),
+              },
+            );
+          },
+        );
+      }),
     );
   }
 }

@@ -94,17 +94,6 @@ class _ModernDrawerState extends State<ModernDrawer>
                   },
                   delay: 100,
                 ),
-                _buildAnimatedMenuItem(
-                  index: 1,
-                  icon: Icons.trending_up_rounded,
-                  title: 'Yatırım Takip',
-                  onTap: () {
-                    Navigator.pop(context);
-                    // TODO: investment route needs to be implemented in GoRouter
-                    // context.push(AppRoutes.investment);
-                  },
-                  delay: 200,
-                ),
 
                 const SizedBox(height: 20),
                 const Padding(

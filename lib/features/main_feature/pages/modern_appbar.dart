@@ -1,13 +1,11 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
-import 'package:cunehat/features/main_feature/widgets/amount_display.dart';
-import 'package:cunehat/features/main_feature/blocs/amount_visibility_cubit.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
+import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
 class ModernAppbar extends StatefulWidget implements PreferredSizeWidget {
   final double currentSliderValue;
@@ -86,7 +84,7 @@ class _ModernAppbarState extends State<ModernAppbar>
     return AppBar(
       automaticallyImplyLeading: false,
       elevation: 8,
-      shadowColor: _getAppBarColor(currentValue).withOpacity(0.3),
+      shadowColor: _getAppBarColor(currentValue).withValues(alpha: 0.3),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
@@ -108,7 +106,7 @@ class _ModernAppbarState extends State<ModernAppbar>
           ),
           boxShadow: [
             BoxShadow(
-              color: _getAppBarColor(currentValue).withOpacity(0.4),
+              color: _getAppBarColor(currentValue).withValues(alpha: 0.4),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -135,7 +133,7 @@ class _ModernAppbarState extends State<ModernAppbar>
       scale: _scaleAnimation,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(14),
         ),
         child: IconButton(
@@ -160,10 +158,10 @@ class _ModernAppbarState extends State<ModernAppbar>
           scale: value,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -172,6 +170,27 @@ class _ModernAppbarState extends State<ModernAppbar>
         );
       },
     );
+
+    // final connectionBadge = BlocBuilder<ConnectionCubit, MyConnectionState>(
+    //   builder: (context, connectionState) {
+    //     return Container(
+    //       margin: const EdgeInsets.symmetric(horizontal: 8),
+    //       padding: const EdgeInsets.all(8),
+    //       decoration: BoxDecoration(
+    //         color: Colors.white.withOpacity(0.2),
+    //         borderRadius: BorderRadius.circular(14),
+    //         border: Border.all(
+    //           color: Colors.white.withOpacity(0.3),
+    //           width: 1.5,
+    //         ),
+    //       ),
+    //       child: ConnectionStatusBadge(
+    //         connectionState: connectionState,
+    //         size: 10,
+    //       ),
+    //     );
+    //   },
+    // );
 
     // 3. Center Content (Depends on state)
     Widget centerContent;
@@ -214,16 +233,16 @@ class _ModernAppbarState extends State<ModernAppbar>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: Colors.white.withOpacity(0.1), width: 1),
+                      color: Colors.white.withValues(alpha: 0.1), width: 1),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.wallet,
-                        size: 12, color: Colors.white.withOpacity(0.9)),
+                        size: 12, color: Colors.white.withValues(alpha: 0.9)),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
@@ -233,7 +252,7 @@ class _ModernAppbarState extends State<ModernAppbar>
                             : "${state.activeWallet?.name.toUpperCase() ?? 'CÜZDAN'} • $valueNameListener",
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.95),
+                          color: Colors.white.withValues(alpha: 0.95),
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),
@@ -247,28 +266,25 @@ class _ModernAppbarState extends State<ModernAppbar>
               // Balance - AmountDisplay ile değiştirildi
               BlocBuilder<AmountVisibilityCubit, bool>(
                 builder: (context, isVisible) {
-                  return TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: valueListener),
-                    duration: const Duration(milliseconds: 1200),
-                    curve: Curves.easeOutExpo,
-                    builder: (context, value, child) {
-                      return Text(
-                        isVisible ? '${value.toStringAsFixed(2)} ₺' : '**** ₺',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                          shadows: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
+                  return AmountDisplay(
+                    amount: valueListener,
+                    animationCurve: Curves.decelerate,
+                    obscureMode: AmountObscureMode.blur,
+                    alignment: Alignment.center,
+                    // animationDuration: const Duration(milliseconds: 1000),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   );
                 },
               ),
@@ -306,6 +322,7 @@ class _ModernAppbarState extends State<ModernAppbar>
         children: [
           menuButton,
           Expanded(child: centerContent),
+          // connectionBadge,
           visibilityButton, // Göz butonu eklendi
         ],
       ),
