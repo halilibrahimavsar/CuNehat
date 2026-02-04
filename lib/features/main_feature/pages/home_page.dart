@@ -6,15 +6,10 @@ import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/shared/animations/cube_animation_view.dart';
 import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
-import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
-import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
-import 'package:cunehat/features/main_feature/widgets/mini_button_data.dart';
 import 'package:cunehat/features/main_feature/widgets/network/network_status_bar.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
-import 'package:cunehat/features/main_feature/widgets/slider_state.dart';
-import 'package:cunehat/features/main_feature/widgets/sub_menu_item.dart';
+
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -152,122 +147,13 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         ),
-        _buildSliderButton(context, userId, walletState),
+        SliderButtonView(
+          controller: _controller,
+          context: context,
+          userId: userId,
+          walletState: walletState,
+        ),
       ],
-    );
-  }
-
-  Padding _buildSliderButton(
-      BuildContext context, String userId, WalletLoadedSt walletState) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: SliderButtonEnhanced(
-        controller: _controller,
-        miniButtons: {
-          SliderState.savedMoney: [
-            MiniButtonData(
-              icon: Icons.add,
-              label: 'Birikim',
-              color: Colors.green,
-              onTap: () => showDialog(
-                context: context,
-                builder: (context) {
-                  return AddInvestmentDialog(
-                    userId: userId,
-                    walletId: walletState.activeWallet!.id!,
-                    onSave: (investment) {
-                      context.read<InvestmentBloc>().add(CreateInvestmentEvent(
-                            investment: investment,
-                            userId: userId,
-                            walletId: walletState.activeWallet!.id!,
-                          ));
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-          SliderState.transactions: [
-            MiniButtonData(
-              icon: Icons.remove,
-              label: 'Gider',
-              color: Colors.red,
-              onTap: () {
-                TransactionSheetHandler.showExpenseSheet(
-                  context,
-                  userId,
-                  walletState.activeWallet!.id!,
-                );
-              },
-            ),
-            MiniButtonData(
-              icon: Icons.add,
-              label: 'Gelir',
-              color: Colors.green,
-              onTap: () {
-                TransactionSheetHandler.showIncomeSheet(
-                  context,
-                  userId,
-                  walletState.activeWallet!.id!,
-                );
-              },
-            ),
-          ],
-          SliderState.debt: [
-            MiniButtonData(
-              icon: Icons.add,
-              label: "Alacak",
-              color: Colors.green,
-              onTap: () {},
-            ),
-            MiniButtonData(
-              icon: Icons.add,
-              label: 'Borç',
-              color: Colors.red,
-              onTap: () {},
-            ),
-          ],
-        },
-        subMenuItems: {
-          SliderState.debt: [
-            SubMenuItem(
-              icon: Icons.add,
-              label: 'Gelir',
-              onTap: () {},
-            ),
-            SubMenuItem(
-              icon: Icons.abc,
-              label: "gid",
-              onTap: () {},
-            ),
-            SubMenuItem(
-              icon: Icons.add,
-              label: 'Gelr',
-              onTap: () {},
-            ),
-            SubMenuItem(
-              icon: Icons.abc,
-              label: "gidee",
-              onTap: () {},
-            )
-          ],
-          SliderState.transactions: [
-            SubMenuItem(
-              icon: Icons.abc_outlined,
-              label: "label",
-              onTap: () {},
-            )
-          ],
-          SliderState.savedMoney: [
-            SubMenuItem(
-              icon: Icons.abc,
-              label: "label",
-              onTap: () {},
-            )
-          ],
-        },
-        onValueChanged: (action) {},
-      ),
     );
   }
 }

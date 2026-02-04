@@ -1,4 +1,4 @@
-import 'package:cunehat/features/main_feature/pages/amount_display.dart';
+import 'package:cunehat/features/main_feature/widgets/amount_display.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';

@@ -1,5 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/main_feature/pages/amount_display.dart';
+import 'package:cunehat/features/main_feature/widgets/amount_display.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 
