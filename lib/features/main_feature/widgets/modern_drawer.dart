@@ -1,7 +1,7 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:ui';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/features/main_feature/utils/app_constants.dart'
+    as local_constants;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -23,8 +23,13 @@ class _ModernDrawerState extends State<ModernDrawer>
   @override
   void initState() {
     super.initState();
+    _initAnimations();
+    _controller.forward();
+  }
+
+  void _initAnimations() {
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: local_constants.AppDurations.medium,
       vsync: this,
     );
     _slideAnimation = Tween<Offset>(
@@ -38,7 +43,6 @@ class _ModernDrawerState extends State<ModernDrawer>
       parent: _controller,
       curve: Curves.easeIn,
     );
-    _controller.forward();
   }
 
   @override
@@ -72,18 +76,8 @@ class _ModernDrawerState extends State<ModernDrawer>
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // ============ ANIMATED HEADER ============
-                SlideTransition(
-                  position: _slideAnimation,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: _buildModernHeader(user, theme),
-                  ),
-                ),
-
+                _buildAnimatedHeader(user),
                 const SizedBox(height: 20),
-
-                // ============ NAVIGATION ITEMS ============
                 _buildAnimatedMenuItem(
                   index: 0,
                   icon: Icons.settings_rounded,
@@ -94,7 +88,6 @@ class _ModernDrawerState extends State<ModernDrawer>
                   },
                   delay: 100,
                 ),
-
                 const SizedBox(height: 20),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
@@ -108,87 +101,103 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildModernHeader(User? user, ThemeData theme) {
-    return Container(
-      height: 220,
-      padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.transparent,
-          ],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
+  Widget _buildAnimatedHeader(User? user) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          height: local_constants.AppSizes.headerHeight,
+          padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withOpacity(0.1),
+                Colors.transparent,
+              ],
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft:
+                  Radius.circular(local_constants.AppBorderRadius.drawerBottom),
+              bottomRight:
+                  Radius.circular(local_constants.AppBorderRadius.drawerBottom),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildAvatar(user),
+              const SizedBox(height: 15),
+              _buildUserInfo(user),
+            ],
+          ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Avatar with Glow Effect
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.elasticOut,
-            builder: (context, value, child) {
-              return Transform.scale(
-                scale: value,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage(
-                      user?.providerData[0].photoURL ?? "",
-                    ),
-                  ),
+    );
+  }
+
+  Widget _buildAvatar(User? user) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: local_constants.AppDurations.long,
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 15),
-
-          // User Name with Fade-in
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: Text(
-              user?.displayName ?? "Anonymous",
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.5,
+              ],
+            ),
+            child: CircleAvatar(
+              radius: local_constants.AppSizes.avatarRadius,
+              backgroundColor: Colors.white,
+              backgroundImage: NetworkImage(
+                user?.providerData[0].photoURL ?? "",
               ),
             ),
           ),
-          const SizedBox(height: 5),
+        );
+      },
+    );
+  }
 
-          // Email with Shimmer
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: Text(
-              user?.email ?? "No email",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.8),
-              ),
+  Widget _buildUserInfo(User? user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FadeTransition(
+          opacity: _fadeAnimation,
+          child: Text(
+            user?.displayName ?? "Anonymous",
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.5,
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 5),
+        FadeTransition(
+          opacity: _fadeAnimation,
+          child: Text(
+            user?.email ?? "No email",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -223,7 +232,7 @@ class _ModernDrawerState extends State<ModernDrawer>
             },
             borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: local_constants.AppDurations.short,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: _selectedIndex == index
@@ -239,29 +248,19 @@ class _ModernDrawerState extends State<ModernDrawer>
               ),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
+                  _buildMenuIcon(icon),
                   const SizedBox(width: 15),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      letterSpacing: 0.3,
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
                     ),
                   ),
-                  const Spacer(),
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     color: Colors.white.withOpacity(0.5),
@@ -272,6 +271,22 @@ class _ModernDrawerState extends State<ModernDrawer>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMenuIcon(IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius:
+            BorderRadius.circular(local_constants.AppBorderRadius.small),
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 22,
       ),
     );
   }

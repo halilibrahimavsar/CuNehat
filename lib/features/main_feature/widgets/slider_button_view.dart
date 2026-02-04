@@ -24,33 +24,27 @@ class SliderButtonView extends StatelessWidget {
       child: DynamicSlider(
         controller: _controller,
         onValueChanged: (value) {},
-        onStateTap: (state) => {},
-        miniButtons: _getMiniButtons(),
-        subMenuItems: _getSubMenuItems(),
+        onStateTap: (state) {},
+        miniButtons: _buildMiniButtons(),
+        subMenuItems: _buildSubMenuItems(),
       ),
     );
   }
 
-  Map<SliderState, List<MiniButtonData>> _getMiniButtons() {
+  Map<SliderState, List<MiniButtonData>> _buildMiniButtons() {
     return {
       SliderState.savedMoney: [
         MiniButtonData(
           icon: Icons.add,
           label: 'Ekle',
           color: Colors.green,
-          onTap: () => print('Birikim eklendi'),
+          onTap: () {},
         ),
         MiniButtonData(
           icon: Icons.remove,
           label: 'Çıkar',
           color: Colors.red,
-          onTap: () => print('Birikim çıkarıldı'),
-        ),
-        MiniButtonData(
-          icon: Icons.abc_outlined,
-          label: 'Güncelle',
-          color: Colors.red,
-          onTap: () => print('Birikim güncellendi'),
+          onTap: () {},
         ),
       ],
       SliderState.transactions: [
@@ -58,13 +52,13 @@ class SliderButtonView extends StatelessWidget {
           icon: Icons.send,
           label: 'Gönder',
           color: Colors.blue,
-          onTap: () => print('İşlem gönderildi'),
+          onTap: () {},
         ),
         MiniButtonData(
           icon: Icons.download,
           label: 'Al',
           color: Colors.purple,
-          onTap: () => print('İşlem alındı'),
+          onTap: () {},
         ),
       ],
       SliderState.debt: [
@@ -72,72 +66,66 @@ class SliderButtonView extends StatelessWidget {
           icon: Icons.add,
           label: 'Borç Ekle',
           color: Colors.orange,
-          onTap: () => print('Borç eklendi'),
+          onTap: () {},
         ),
       ],
     };
   }
 
-  Map<SliderState, List<SubMenuItem>> _getSubMenuItems() {
+  Map<SliderState, List<SubMenuItem>> _buildSubMenuItems() {
     return {
       SliderState.savedMoney: [
         SubMenuItem(
           icon: Icons.account_balance,
-          label: 'Header',
-          onTap: () => print('header seçildi'),
+          label: 'Kategoriler',
+          onTap: () {},
           isMainTitle: true,
         ),
         SubMenuItem(
           icon: Icons.account_balance,
           label: 'Banka',
-          onTap: () => print('Banka seçildi'),
-          isDefault: true,
+          onTap: () {},
         ),
         SubMenuItem(
           icon: Icons.home,
           label: 'Ev',
-          onTap: () => print('Ev seçildi'),
-          isDefault: true,
+          onTap: () {},
         ),
       ],
       SliderState.transactions: [
         SubMenuItem(
-          icon: Icons.account_balance,
-          label: 'Header',
-          onTap: () => print('header seçildi'),
+          icon: Icons.history,
+          label: 'İşlemler',
+          onTap: () {},
           isMainTitle: true,
         ),
         SubMenuItem(
           icon: Icons.history,
           label: 'Geçmiş',
-          onTap: () => print('Geçmiş seçildi'),
-          isDefault: true,
+          onTap: () {},
         ),
         SubMenuItem(
           icon: Icons.pending,
           label: 'Bekleyen',
-          onTap: () => print('Bekleyen seçildi'),
-          isDefault: true,
+          onTap: () {},
         ),
       ],
       SliderState.debt: [
         SubMenuItem(
           icon: Icons.account_balance,
-          label: 'Header',
-          onTap: () => print('header seçildi'),
+          label: 'Borç Türleri',
+          onTap: () {},
           isMainTitle: true,
         ),
         SubMenuItem(
           icon: Icons.person,
           label: 'Kişisel',
-          onTap: () => print('Kişisel borç'),
-          isDefault: true,
+          onTap: () {},
         ),
         SubMenuItem(
           icon: Icons.business,
           label: 'Kurumsal',
-          onTap: () => print('Kurumsal borç'),
-          isDefault: true,
+          onTap: () {},
         ),
       ],
     };
