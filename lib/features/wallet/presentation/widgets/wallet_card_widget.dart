@@ -1,7 +1,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
-import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class WalletCardWidget extends StatelessWidget {
   final WalletEntity wallet;
@@ -159,28 +159,40 @@ class WalletCardWidget extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: IboGlassButton(
+                      text: 'Düzenle',
                       onPressed: onEdit,
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Düzenle'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.blue,
-                        side: BorderSide(
-                            color: Colors.blue.withValues(alpha: 0.3)),
+                      backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                      foregroundColor: Colors.blue,
+                      borderColor: Colors.blue.withValues(alpha: 0.3),
+                      borderWidth: 1,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.edit, size: 18),
+                          const SizedBox(width: 6),
+                          const Text('Düzenle'),
+                        ],
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   if (!wallet.isActive)
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: IboGlassButton(
+                        text: 'Sil',
                         onPressed: onDelete,
-                        icon: const Icon(Icons.delete, size: 18),
-                        label: const Text('Sil'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: BorderSide(
-                              color: Colors.red.withValues(alpha: 0.3)),
+                        backgroundColor: Colors.red.withValues(alpha: 0.1),
+                        foregroundColor: Colors.red,
+                        borderColor: Colors.red.withValues(alpha: 0.3),
+                        borderWidth: 1,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.delete, size: 18),
+                            const SizedBox(width: 6),
+                            const Text('Sil'),
+                          ],
                         ),
                       ),
                     ),

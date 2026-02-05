@@ -1,6 +1,5 @@
-import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
@@ -24,10 +23,10 @@ class InvestmentMoneyPage extends StatefulWidget {
 
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   Future<bool> _confirmDelete(InvestmentEntity investment) async {
-    return await ConfirmDeleteDialog.show(
+    return await IboDialog.showConfirmation(
           context,
-          title: investment.name,
-          itemType: 'yatırımı',
+          'Başlık Sil',
+          '${investment.name} ögesini silmek istediğinizden emin misiniz?',
         ) ??
         false;
   }
@@ -73,10 +72,10 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
         if (state is InvestmentActionSuccess) {
-          SnackbarHelper.showSuccess(context, state.message);
+          IboSnackbar.showSuccess(context, state.message);
           _loadInvestments();
         } else if (state is InvestmentError) {
-          SnackbarHelper.showError(context, state.message);
+          IboSnackbar.showError(context, state.message);
         }
       },
       builder: (context, investmentState) {

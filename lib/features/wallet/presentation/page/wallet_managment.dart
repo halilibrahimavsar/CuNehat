@@ -1,6 +1,4 @@
-import 'package:cunehat/core/shared/dialogs/confirmation_delete_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
@@ -9,6 +7,7 @@ import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class WalletSheetContent extends StatefulWidget {
   final String userId;
@@ -276,10 +275,10 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       userId: widget.userId,
       wallet: null,
       onSuccess: () {
-        SnackbarHelper.showSuccess(context, '✅ Cüzdan oluşturuldu!');
+        IboSnackbar.showSuccess(context, '✅ Cüzdan oluşturuldu!');
       },
       onError: (error) {
-        SnackbarHelper.showError(context, '❌ $error');
+        IboSnackbar.showError(context, '❌ $error');
       },
     );
   }
@@ -290,22 +289,24 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       userId: widget.userId,
       wallet: wallet,
       onSuccess: () {
-        SnackbarHelper.showSuccess(context, '✅ Cüzdan güncellendi!');
+        IboSnackbar.showSuccess(context, '✅ Cüzdan güncellendi!');
       },
       onError: (error) {
-        SnackbarHelper.showError(context, '❌ $error');
+        IboSnackbar.showError(context, '❌ $error');
       },
     );
   }
 
-  void _deleteWallet(BuildContext context, WalletEntity wallet) {
-    ConfirmDeleteDialog.show(
+  void _deleteWallet(BuildContext context, WalletEntity wallet) async {
+    final confirmed = await IboDialog.showConfirmation(
       context,
-      title: wallet.name,
-      onDelete: () {
-        context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
-        SnackbarHelper.showSuccess(context, '🗑️ Cüzdan silindi');
-      },
+      'Cüzdan Sil',
+      '${wallet.name} cüzdanını silmek istediğinizden emin misiniz?',
     );
+
+    if (confirmed == true) {
+      context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
+      IboSnackbar.showSuccess(context, '🗑️ Cüzdan silindi');
+    }
   }
 }

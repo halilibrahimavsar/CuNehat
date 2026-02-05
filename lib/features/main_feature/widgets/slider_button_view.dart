@@ -38,13 +38,13 @@ class SliderButtonView extends StatelessWidget {
           icon: Icons.add,
           label: 'Ekle',
           color: Colors.green,
-          onTap: () {},
+          onTap: () => _handleAddSavings(),
         ),
         MiniButtonData(
           icon: Icons.remove,
           label: 'Çıkar',
           color: Colors.red,
-          onTap: () {},
+          onTap: () => _handleRemoveSavings(),
         ),
       ],
       SliderState.transactions: [
@@ -52,13 +52,13 @@ class SliderButtonView extends StatelessWidget {
           icon: Icons.send,
           label: 'Gönder',
           color: Colors.blue,
-          onTap: () {},
+          onTap: () => _handleSendTransaction(),
         ),
         MiniButtonData(
           icon: Icons.download,
           label: 'Al',
           color: Colors.purple,
-          onTap: () {},
+          onTap: () => _handleReceiveTransaction(),
         ),
       ],
       SliderState.debt: [
@@ -66,7 +66,7 @@ class SliderButtonView extends StatelessWidget {
           icon: Icons.add,
           label: 'Borç Ekle',
           color: Colors.orange,
-          onTap: () {},
+          onTap: () => _handleAddDebt(),
         ),
       ],
     };
@@ -78,56 +78,122 @@ class SliderButtonView extends StatelessWidget {
         SubMenuItem(
           icon: Icons.account_balance,
           label: 'Kategoriler',
-          onTap: () {},
+          onTap: () => _handleSavingsCategories(),
           isMainTitle: true,
         ),
         SubMenuItem(
           icon: Icons.account_balance,
           label: 'Banka',
-          onTap: () {},
+          onTap: () => _handleBankSavings(),
         ),
         SubMenuItem(
           icon: Icons.home,
           label: 'Ev',
-          onTap: () {},
+          onTap: () => _handleHomeSavings(),
         ),
       ],
       SliderState.transactions: [
         SubMenuItem(
           icon: Icons.history,
           label: 'İşlemler',
-          onTap: () {},
+          onTap: () => _handleTransactionHistory(),
           isMainTitle: true,
         ),
         SubMenuItem(
           icon: Icons.history,
           label: 'Geçmiş',
-          onTap: () {},
+          onTap: () => _handleTransactionHistory(),
         ),
         SubMenuItem(
           icon: Icons.pending,
           label: 'Bekleyen',
-          onTap: () {},
+          onTap: () => _handlePendingTransactions(),
         ),
       ],
       SliderState.debt: [
         SubMenuItem(
           icon: Icons.account_balance,
           label: 'Borç Türleri',
-          onTap: () {},
+          onTap: () => _handleDebtCategories(),
           isMainTitle: true,
         ),
         SubMenuItem(
           icon: Icons.person,
           label: 'Kişisel',
-          onTap: () {},
+          onTap: () => _handlePersonalDebt(),
         ),
         SubMenuItem(
           icon: Icons.business,
           label: 'Kurumsal',
-          onTap: () {},
+          onTap: () => _handleBusinessDebt(),
         ),
       ],
     };
+  }
+
+  // Placeholder methods for functionality - TODO: Implement actual business logic
+  void _handleAddSavings() {
+    // TODO: Navigate to add savings screen or show dialog
+    debugPrint('Add savings functionality not implemented yet');
+  }
+
+  void _handleRemoveSavings() {
+    // TODO: Navigate to remove savings screen or show dialog
+    debugPrint('Remove savings functionality not implemented yet');
+  }
+
+  void _handleSendTransaction() {
+    // TODO: Navigate to send transaction screen
+    debugPrint('Send transaction functionality not implemented yet');
+  }
+
+  void _handleReceiveTransaction() {
+    // TODO: Navigate to receive transaction screen
+    debugPrint('Receive transaction functionality not implemented yet');
+  }
+
+  void _handleAddDebt() {
+    // TODO: Navigate to add debt screen
+    debugPrint('Add debt functionality not implemented yet');
+  }
+
+  void _handleSavingsCategories() {
+    // TODO: Show savings categories
+    debugPrint('Savings categories functionality not implemented yet');
+  }
+
+  void _handleBankSavings() {
+    // TODO: Filter savings by bank
+    debugPrint('Bank savings functionality not implemented yet');
+  }
+
+  void _handleHomeSavings() {
+    // TODO: Filter savings by home category
+    debugPrint('Home savings functionality not implemented yet');
+  }
+
+  void _handleTransactionHistory() {
+    // TODO: Navigate to transaction history
+    debugPrint('Transaction history functionality not implemented yet');
+  }
+
+  void _handlePendingTransactions() {
+    // TODO: Show pending transactions
+    debugPrint('Pending transactions functionality not implemented yet');
+  }
+
+  void _handleDebtCategories() {
+    // TODO: Show debt categories
+    debugPrint('Debt categories functionality not implemented yet');
+  }
+
+  void _handlePersonalDebt() {
+    // TODO: Show personal debt
+    debugPrint('Personal debt functionality not implemented yet');
+  }
+
+  void _handleBusinessDebt() {
+    // TODO: Show business debt
+    debugPrint('Business debt functionality not implemented yet');
   }
 }

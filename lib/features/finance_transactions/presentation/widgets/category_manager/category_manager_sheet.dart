@@ -1,6 +1,6 @@
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
@@ -61,7 +61,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        SnackbarHelper.showError(context, 'Kategoriler yüklenemedi: $e');
+        IboSnackbar.showError(context, 'Kategoriler yüklenemedi: $e');
       }
     }
   }
@@ -381,12 +381,12 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
         await _categoryService.deleteCategory(category.id, widget.isExpense);
         _loadCategories();
         if (mounted) {
-          SnackbarHelper.showSuccess(context, '🗑️ Kategori silindi');
+          IboSnackbar.showSuccess(context, '🗑️ Kategori silindi');
         }
         return true;
       } catch (e) {
         if (mounted) {
-          SnackbarHelper.showError(context, 'Hata: $e');
+          IboSnackbar.showError(context, 'Hata: $e');
         }
         return false;
       }

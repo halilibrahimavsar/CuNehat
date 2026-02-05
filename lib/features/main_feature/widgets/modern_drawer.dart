@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart'
-    as local_constants;
+    as constants;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -29,7 +29,7 @@ class _ModernDrawerState extends State<ModernDrawer>
 
   void _initAnimations() {
     _controller = AnimationController(
-      duration: local_constants.AppDurations.medium,
+      duration: constants.AppDurations.medium,
       vsync: this,
     );
     _slideAnimation = Tween<Offset>(
@@ -68,8 +68,8 @@ class _ModernDrawerState extends State<ModernDrawer>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  theme.colorScheme.primary.withOpacity(0.9),
-                  theme.colorScheme.secondary.withOpacity(0.8),
+                  theme.colorScheme.primary.withValues(alpha: 0.9),
+                  theme.colorScheme.secondary.withValues(alpha: 0.8),
                 ],
               ),
             ),
@@ -107,22 +107,22 @@ class _ModernDrawerState extends State<ModernDrawer>
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: Container(
-          height: local_constants.AppSizes.headerHeight,
+          height: constants.AppSizes.headerHeight,
           padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.white.withOpacity(0.1),
+                Colors.white.withValues(alpha: 0.1),
                 Colors.transparent,
               ],
             ),
             borderRadius: const BorderRadius.only(
               bottomLeft:
-                  Radius.circular(local_constants.AppBorderRadius.drawerBottom),
+                  Radius.circular(constants.AppBorderRadius.drawerBottom),
               bottomRight:
-                  Radius.circular(local_constants.AppBorderRadius.drawerBottom),
+                  Radius.circular(constants.AppBorderRadius.drawerBottom),
             ),
           ),
           child: Column(
@@ -141,7 +141,7 @@ class _ModernDrawerState extends State<ModernDrawer>
   Widget _buildAvatar(User? user) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: local_constants.AppDurations.long,
+      duration: constants.AppDurations.long,
       curve: Curves.elasticOut,
       builder: (context, value, child) {
         return Transform.scale(
@@ -151,14 +151,14 @@ class _ModernDrawerState extends State<ModernDrawer>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
               ],
             ),
             child: CircleAvatar(
-              radius: local_constants.AppSizes.avatarRadius,
+              radius: constants.AppSizes.avatarRadius,
               backgroundColor: Colors.white,
               backgroundImage: NetworkImage(
                 user?.providerData[0].photoURL ?? "",
@@ -193,7 +193,7 @@ class _ModernDrawerState extends State<ModernDrawer>
             user?.email ?? "No email",
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -232,16 +232,16 @@ class _ModernDrawerState extends State<ModernDrawer>
             },
             borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
-              duration: local_constants.AppDurations.short,
+              duration: constants.AppDurations.short,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: _selectedIndex == index
-                    ? Colors.white.withOpacity(0.2)
+                    ? Colors.white.withValues(alpha: 0.2)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: _selectedIndex == index
-                      ? Colors.white.withOpacity(0.3)
+                      ? Colors.white.withValues(alpha: 0.3)
                       : Colors.transparent,
                   width: 2,
                 ),
@@ -263,7 +263,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                   ),
                   Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     size: 16,
                   ),
                 ],
@@ -279,9 +279,8 @@ class _ModernDrawerState extends State<ModernDrawer>
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius:
-            BorderRadius.circular(local_constants.AppBorderRadius.small),
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(constants.AppBorderRadius.small),
       ),
       child: Icon(
         icon,

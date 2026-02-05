@@ -1,7 +1,7 @@
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen>
       body: BlocConsumer<RemoteAuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            SnackbarHelper.showError(context, state.message);
+            IboSnackbar.showError(context, state.message);
           }
         },
         builder: (context, state) {

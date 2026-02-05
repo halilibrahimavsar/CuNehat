@@ -1,5 +1,3 @@
-import 'package:cunehat/features/finance_transactions/presentation/widgets/date_range_picker.dart';
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
@@ -16,6 +14,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class TransactionsPage extends StatelessWidget {
   final String userId;
@@ -118,21 +117,57 @@ class _TransactionsViewState extends State<_TransactionsView> {
       BuildContext context, CombinedFilter currentFilter) async {
     final cubit = context.read<TransactionFilterCubit>();
 
-    await showModernDateRangePicker(
-      context: context,
-      start: currentFilter.viewFilter.startDate,
-      end: currentFilter.viewFilter.endDate,
-      onApply: (start, end) {
-        cubit.updateFilter(
-          currentFilter.copyWith(
-            viewFilter: currentFilter.viewFilter.copyWith(
-              startDate: start,
-              endDate: end,
-            ),
-          ),
-        );
-      },
+    final dateRange = await IboDateRangePicker.pickDateRange(
+      context,
+      initialDateRange: DateTimeRange(
+        start: currentFilter.viewFilter.startDate,
+        end: currentFilter.viewFilter.endDate,
+      ),
+      quickOptions: _buildDateRangeQuickOptions(),
     );
+
+    if (dateRange != null) {
+      cubit.updateFilter(
+        currentFilter.copyWith(
+          viewFilter: currentFilter.viewFilter.copyWith(
+            startDate: dateRange.start,
+            endDate: dateRange.end,
+          ),
+        ),
+      );
+    }
+  }
+
+  List<IboDateRangeQuickOption> _buildDateRangeQuickOptions() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final startOfNextMonth = (now.month == 12)
+        ? DateTime(now.year + 1, 1, 1)
+        : DateTime(now.year, now.month + 1, 1);
+    final endOfMonth = startOfNextMonth.subtract(const Duration(days: 1));
+    final startOfLastMonth = (now.month == 1)
+        ? DateTime(now.year - 1, 12, 1)
+        : DateTime(now.year, now.month - 1, 1);
+    final endOfLastMonth = startOfMonth.subtract(const Duration(days: 1));
+
+    return [
+      IboDateRangeQuickOption(
+        label: 'Son 7 Gün',
+        range: DateTimeRange(
+          start: today.subtract(const Duration(days: 6)),
+          end: today,
+        ),
+      ),
+      IboDateRangeQuickOption(
+        label: 'Bu Ay',
+        range: DateTimeRange(start: startOfMonth, end: endOfMonth),
+      ),
+      IboDateRangeQuickOption(
+        label: 'Geçen Ay',
+        range: DateTimeRange(start: startOfLastMonth, end: endOfLastMonth),
+      ),
+    ];
   }
 
   void _showFilterSheet(
@@ -186,9 +221,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
         return BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, state) {
             if (state is TransactionError) {
-              SnackbarHelper.showError(context, state.message);
+              IboSnackbar.showError(context, state.message);
             } else if (state is TransactionActionSuccess) {
-              SnackbarHelper.showSuccess(context, state.message);
+              IboSnackbar.showSuccess(context, state.message);
               _loadData(filterState.viewFilter);
             }
           },

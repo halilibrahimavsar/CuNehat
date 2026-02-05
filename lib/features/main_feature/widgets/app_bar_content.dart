@@ -154,7 +154,7 @@ class AppBarContent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildWalletNameBadge(state.activeWallet, valueName),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             _buildAmountDisplay(value),
           ],
         ),

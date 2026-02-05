@@ -1,4 +1,4 @@
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
 import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart';
@@ -20,15 +20,14 @@ class _SettingsPageState extends State<SettingsPage> {
     if (value) {
       // Eğer PIN yoksa, direkt PIN oluşturmaya yönlendir
       if (!state.isPinSet) {
-        SnackbarHelper.showInfo(
+        IboSnackbar.showInfo(
             context, '⚠️ Biyometrik için önce PIN oluşturmalısınız');
         _showPinSetupDialog(); // Otomatik yönlendirme
         return;
       }
 
       if (!state.isBiometricAvailable) {
-        SnackbarHelper.showError(
-            context, '❌ Cihazınız biyometrik desteklemiyor');
+        IboSnackbar.showError(context, '❌ Cihazınız biyometrik desteklemiyor');
         return;
       }
     }
@@ -253,9 +252,9 @@ class _SettingsPageState extends State<SettingsPage> {
       listener: (context, state) {
         if (state.message != null) {
           if (state.status == SecurityStatus.error) {
-            SnackbarHelper.showError(context, state.message!);
+            IboSnackbar.showError(context, state.message!);
           } else if (state.status == SecurityStatus.success) {
-            SnackbarHelper.showSuccess(context, state.message!);
+            IboSnackbar.showSuccess(context, state.message!);
           }
         }
       },

@@ -1,5 +1,5 @@
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -101,9 +101,9 @@ class DebtListSection extends StatelessWidget {
     return BlocConsumer<DebtBloc, DebtState>(
       listener: (context, state) {
         if (state is DebtOperationSuccess) {
-          SnackbarHelper.showSuccess(context, state.message);
+          IboSnackbar.showSuccess(context, state.message);
         } else if (state is DebtError) {
-          SnackbarHelper.showError(context, state.message);
+          IboSnackbar.showError(context, state.message);
         }
       },
       builder: (context, state) {
@@ -315,9 +315,9 @@ class ReceivableListSection extends StatelessWidget {
     return BlocConsumer<ReceivableBloc, ReceivableState>(
       listener: (context, state) {
         if (state is ReceivableOperationSuccess) {
-          SnackbarHelper.showSuccess(context, state.message);
+          IboSnackbar.showSuccess(context, state.message);
         } else if (state is ReceivableError) {
-          SnackbarHelper.showError(context, state.message);
+          IboSnackbar.showError(context, state.message);
         }
       },
       builder: (context, state) {

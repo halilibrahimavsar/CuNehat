@@ -1,5 +1,5 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
-import 'package:cunehat/core/utilities/snackbar_helper.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:flutter/material.dart';
@@ -295,13 +295,13 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
         // Bir sonraki frame'de göstermek için Future.microtask kullan
         Future.microtask(() {
           if (mounted) {
-            SnackbarHelper.showSuccess(context, message);
+            IboSnackbar.showSuccess(context, message);
           }
         });
       }
     } catch (e) {
       if (mounted) {
-        SnackbarHelper.showError(context, 'Hata: ${e.toString()}');
+        IboSnackbar.showError(context, 'Hata: ${e.toString()}');
       }
     } finally {
       setState(() => _isLoading = false);
