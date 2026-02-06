@@ -1,0 +1,52 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:unified_flutter_features/shared_features/shared_features.dart';
+import 'package:cunehat/config/di/injection.dart';
+
+/// Main application widget for authenticated users.
+///
+/// This widget wraps the MaterialApp with security features:
+/// - LocalAuthSecurityLayer: Handles privacy guard and background lock
+/// - ConnectionSnackbarHandler: Shows connection status
+class AuthenticatedApp extends StatelessWidget {
+  final GoRouter router;
+  final ThemeData theme;
+
+  const AuthenticatedApp({
+    super.key,
+    required this.router,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Wrap with Directionality and Localizations for Material widgets
+    // Security layer wraps MaterialApp to cover entire screen
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Localizations(
+        locale: const Locale('tr', 'TR'),
+        delegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        child: LocalAuthSecurityLayer(
+          repository: getIt<LocalAuthRepository>(),
+          child: MaterialApp.router(
+            routerConfig: router,
+            themeMode: ThemeMode.light,
+            theme: theme,
+            title: "CuNehat",
+            debugShowCheckedModeBanner: false,
+            builder: (context, child) {
+              return ConnectionSnackbarHandler(
+                child: child!,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}

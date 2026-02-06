@@ -304,7 +304,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       '${wallet.name} cüzdanını silmek istediğinizden emin misiniz?',
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && context.mounted) {
       context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
       IboSnackbar.showSuccess(context, '🗑️ Cüzdan silindi');
     }

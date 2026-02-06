@@ -403,7 +403,7 @@ class _IconPickerState extends State<IconPicker>
           child: Container(
             decoration: BoxDecoration(
               color: isSelected
-                  ? widget.iconColor.withOpacity(0.15)
+                  ? widget.iconColor.withValues(alpha: 0.15)
                   : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(

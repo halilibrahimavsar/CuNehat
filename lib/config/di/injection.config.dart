@@ -13,22 +13,12 @@ import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/config/di/firebase_module.dart' as _i808;
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart'
     as _i633;
-import 'package:cunehat/features/auth_feature/data/datasources/biometric_data_source.dart'
-    as _i490;
 import 'package:cunehat/features/auth_feature/data/repository/auth_repository_impl.dart'
     as _i540;
-import 'package:cunehat/features/auth_feature/data/repository/biometric_repository_impl.dart'
-    as _i227;
 import 'package:cunehat/features/auth_feature/domain/repository/auth_repository.dart'
     as _i276;
-import 'package:cunehat/features/auth_feature/domain/repository/biometric_repository.dart'
-    as _i817;
-import 'package:cunehat/features/auth_feature/domain/usecases/local_auth_usecases/manage_local_auth_usecase.dart'
-    as _i1024;
 import 'package:cunehat/features/auth_feature/domain/usecases/remote_auth_usecases/sign_in_with_google.dart'
     as _i926;
-import 'package:cunehat/features/auth_feature/presentation/bloc/local_auth/local_auth_bloc.dart'
-    as _i552;
 import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart'
     as _i532;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart'
@@ -96,17 +86,18 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart'
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
-import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart'
-    as _i163;
-import 'package:unified_flutter_features/features/connection_monitor/connection_cubit.dart'
-    as _i855;
+import 'package:shared_preferences/shared_preferences.dart' as _i460;
+import 'package:unified_flutter_features/features/local_auth/local_auth.dart'
+    as _i1061;
+import 'package:unified_flutter_features/unified_flutter_features.dart'
+    as _i698;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
-  _i174.GetIt init({
+  Future<_i174.GetIt> init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
-  }) {
+  }) async {
     final gh = _i526.GetItHelper(
       this,
       environment,
@@ -117,12 +108,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i528.TransactionFilterCubit>(
         () => _i528.TransactionFilterCubit());
     gh.factory<_i460.ThemeBloc>(() => _i460.ThemeBloc());
+    await gh.factoryAsync<_i460.SharedPreferences>(
+      () => appModule.prefs,
+      preResolve: true,
+    );
     gh.singleton<_i1002.CategoryService>(() => _i1002.CategoryService());
     gh.singleton<_i934.TransactionHiveDataSource>(
         () => _i934.TransactionHiveDataSource());
     gh.singleton<_i633.AuthRemoteDataSource>(
         () => _i633.AuthRemoteDataSource());
-    gh.singleton<_i490.BiometricDataSource>(() => _i490.BiometricDataSource());
     gh.singleton<_i648.InvestmentLocalDatasource>(
         () => _i648.InvestmentLocalDatasource());
     gh.singleton<_i19.DebtLocalDatasource>(() => _i19.DebtLocalDatasource());
@@ -130,11 +124,13 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i366.ReceivableLocalDatasource());
     gh.singleton<_i175.WalletLocalDataSource>(
         () => _i175.WalletLocalDataSource());
-    gh.lazySingleton<_i163.AmountVisibilityCubit>(
+    gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
-    gh.lazySingleton<_i855.ConnectionCubit>(() => appModule.connectionCubit);
+    gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
+    gh.lazySingleton<_i698.LocalAuthRepository>(
+        () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i329.ReceivableRepository>(() =>
         _i183.ReceivableRepositoryImpl(
             receivableDatasourceRepository:
@@ -154,6 +150,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i866.UpdateReceivableUseCase(gh<_i329.ReceivableRepository>()));
     gh.factory<_i866.DeleteReceivableUseCase>(
         () => _i866.DeleteReceivableUseCase(gh<_i329.ReceivableRepository>()));
+    gh.factory<_i698.LocalAuthLoginBloc>(
+        () => appModule.localAuthLoginBloc(gh<_i698.LocalAuthRepository>()));
+    gh.factory<_i698.LocalAuthSettingsBloc>(
+        () => appModule.localAuthSettingsBloc(gh<_i698.LocalAuthRepository>()));
     gh.factory<_i257.AddTransactionUseCase>(
         () => _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.DeleteTransactionUseCase>(() =>
@@ -175,8 +175,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i855.UpdateDebtUseCase(gh<_i889.DebtRepository>()));
     gh.factory<_i855.DeleteDebtUseCase>(
         () => _i855.DeleteDebtUseCase(gh<_i889.DebtRepository>()));
-    gh.lazySingleton<_i817.BiometricRepository>(
-        () => _i227.BiometricRepositoryImpl(gh<_i490.BiometricDataSource>()));
     gh.factory<_i207.WalletCreateUseCase>(
         () => _i207.WalletCreateUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletDeleteUseCase>(
@@ -207,16 +205,12 @@ extension GetItInjectableX on _i174.GetIt {
           deleteTransactionUseCase: gh<_i257.DeleteTransactionUseCase>(),
           getTransactionByIdUseCase: gh<_i257.GetTransactionByIdUseCase>(),
         ));
-    gh.factory<_i1024.ManageLocalAuthUseCase>(
-        () => _i1024.ManageLocalAuthUseCase(gh<_i817.BiometricRepository>()));
     gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
           getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
           addDebtUseCase: gh<_i855.AddDebtUseCase>(),
           updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
           deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
         ));
-    gh.factory<_i552.LocalAuthBloc>(() => _i552.LocalAuthBloc(
-        manageLocalAuthUseCase: gh<_i1024.ManageLocalAuthUseCase>()));
     gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
           getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
           createWalletUseCase: gh<_i207.WalletCreateUseCase>(),
@@ -235,7 +229,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i532.RemoteAuthBloc>(() => _i532.RemoteAuthBloc(
           signInWithGoogle: gh<_i926.SignInWithGoogle>(),
           authRepository: gh<_i276.AuthRepository>(),
-          manageLocalAuthUseCase: gh<_i1024.ManageLocalAuthUseCase>(),
+          localAuthRepository: gh<_i1061.LocalAuthRepository>(),
         ));
     gh.factory<_i726.InvestmentBloc>(() => _i726.InvestmentBloc(
           getInvestmentsUseCase: gh<_i864.GetInvestmentsUseCase>(),

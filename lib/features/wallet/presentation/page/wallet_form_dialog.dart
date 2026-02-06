@@ -296,7 +296,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
                       : null,
                 ),
               );
-            }).toList(),
+            }),
             // Özel renk seçici
             GestureDetector(
               onTap: _showCustomColorPicker,

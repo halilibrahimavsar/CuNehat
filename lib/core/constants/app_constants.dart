@@ -117,5 +117,6 @@ class AppRoutes {
   static const String lockScreen = '/lock-screen';
   static const String home = '/';
   static const String settings = '/settings';
+  static const String localAuthSettings = '/settings/local-auth';
   static const String investment = '/investment';
 }
