@@ -106,15 +106,13 @@ class _HomePageState extends State<HomePage>
 
               case WalletLoadedSt():
                 final userId = walletState.wallets.first.userId;
+                final activeWallet = walletState.activeWallet;
 
-                switch (walletState.activeWallet?.isActive) {
-                  case false:
-                    return const NoWalletView(infoText: "Cüzdan seçiniz");
-                  case null:
-                    return const NoWalletView(infoText: "Cüzdan oluşturunuz");
-                  case true:
-                    return _buildBody(walletState, userId, context);
+                if (activeWallet == null) {
+                  return const NoWalletView(infoText: "Cüzdan seçiniz");
                 }
+
+                return _buildBody(walletState, userId, context);
 
               default:
                 return const NoWalletView(infoText: "Cüzdan oluşturunuz");

@@ -36,6 +36,12 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
+  Future<WalletEntity?> getActiveWallet(String userId) async {
+    final model = await dataSource.getActiveWallet(userId);
+    return model;
+  }
+
+  @override
   Future<void> updateWallet(WalletEntity wallet) async {
     final model = WalletModel.fromEntity(wallet);
     await dataSource.updateWallet(model);

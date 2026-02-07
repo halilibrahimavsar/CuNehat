@@ -7,4 +7,5 @@ abstract class WalletRepository {
   Future<void> deleteWallet(String walletId);
   Future<void> setActiveWallet(
       {required String userId, required String newActiveWalletId});
+  Future<WalletEntity?> getActiveWallet(String userId);
 }

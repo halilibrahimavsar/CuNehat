@@ -21,32 +21,29 @@ class AuthenticatedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Wrap with Directionality and Localizations for Material widgets
-    // Security layer wraps MaterialApp to cover entire screen
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Localizations(
-        locale: const Locale('tr', 'TR'),
-        delegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
-        child: LocalAuthSecurityLayer(
+    return MaterialApp.router(
+      routerConfig: router,
+      themeMode: ThemeMode.light,
+      theme: theme,
+      title: "CuNehat",
+      debugShowCheckedModeBanner: false,
+      locale: const Locale('tr', 'TR'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('tr', 'TR'),
+      ],
+      builder: (context, child) {
+        return LocalAuthSecurityLayer(
           repository: getIt<LocalAuthRepository>(),
-          child: MaterialApp.router(
-            routerConfig: router,
-            themeMode: ThemeMode.light,
-            theme: theme,
-            title: "CuNehat",
-            debugShowCheckedModeBanner: false,
-            builder: (context, child) {
-              return ConnectionSnackbarHandler(
-                child: child!,
-              );
-            },
+          child: ConnectionSnackbarHandler(
+            child: child!,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

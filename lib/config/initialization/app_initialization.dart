@@ -21,20 +21,25 @@ class AppInitialization {
   static Future<AppInitializationResult> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    await ConnectionNotificationService().requestPermission();
+    try {
+      await ConnectionNotificationService().requestPermission();
 
-    await _initializeFirebase();
-    await _initializeHive();
-    await _initializeDateFormatting();
-    await configureDependencies();
+      await _initializeFirebase();
+      await _initializeHive();
+      await _initializeDateFormatting();
+      await configureDependencies();
 
-    final authBloc = getIt<RemoteAuthBloc>();
-    final router = createAppRouter(authBloc);
+      final authBloc = getIt<RemoteAuthBloc>();
+      final router = createAppRouter(authBloc);
 
-    return AppInitializationResult(
-      authBloc: authBloc,
-      router: router,
-    );
+      return AppInitializationResult(
+        authBloc: authBloc,
+        router: router,
+      );
+    } catch (e) {
+      debugPrint('Initialization error: $e');
+      rethrow;
+    }
   }
 
   static Future<void> _initializeFirebase() async {

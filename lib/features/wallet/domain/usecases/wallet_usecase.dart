@@ -71,3 +71,14 @@ class WalletSetActiveUseCase {
     );
   }
 }
+
+/// ========== AKTİF CÜZDANI GETİR ==========
+@injectable
+class WalletGetActiveUseCase {
+  final WalletRepository repository;
+  WalletGetActiveUseCase(this.repository);
+
+  Future<WalletEntity?> call(String userId) async {
+    return await repository.getActiveWallet(userId);
+  }
+}

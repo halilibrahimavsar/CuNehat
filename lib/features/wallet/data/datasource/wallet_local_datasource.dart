@@ -31,18 +31,37 @@ class WalletLocalDataSource {
 
   Future<void> deleteWallet(String walletId) async {
     final box = await _getWalletBox();
-    await box.delete(walletId);
+    final wallet = box.get(walletId);
+    if (wallet != null) {
+      final userId = wallet.userId;
+      final usersBox = await _getUserBox();
+      final userData = usersBox.get(userId, defaultValue: {}) as Map;
+      final activeWalletId = userData['activeWalletId'] as String?;
+
+      if (activeWalletId == walletId) {
+        userData.remove('activeWalletId');
+        await usersBox.put(userId, userData);
+      }
+
+      await box.delete(walletId);
+    }
   }
 
   Future<List<WalletModel>> getWallets(String userId) async {
     final box = await _getWalletBox();
-    return _filterWalletsByUser(box, userId);
-  }
+    final usersBox = await _getUserBox();
+    final userData = usersBox.get(userId, defaultValue: {}) as Map;
+    final activeWalletId = userData['activeWalletId'] as String?;
 
-  List<WalletModel> _filterWalletsByUser(Box<WalletModel> box, String userId) {
-    return box.values.where((wallet) => wallet.userId == userId).toList()
+    return box.values
+        .where((wallet) => wallet.userId == userId)
+        .map((wallet) => wallet.copyWith(
+              isActive: wallet.id == activeWalletId,
+            ))
+        .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
+
 
   Future<void> setActiveWallet({
     required String userId,
@@ -53,14 +72,9 @@ class WalletLocalDataSource {
     userData['activeWalletId'] = newActiveWalletId;
     await usersBox.put(userId, userData);
 
-    // Tüm cüzdanların isActive durumunu güncelle
-    final walletsBox = await _getWalletBox();
-    for (var wallet in walletsBox.values.where((w) => w.userId == userId)) {
-      final updatedWallet = wallet.copyWith(
-        isActive: wallet.id == newActiveWalletId,
-      );
-      await walletsBox.put(wallet.id, updatedWallet);
-    }
+    // isActive field in WalletModel is now primarily for UI/convenience
+    // but we can still update it in the box if we want persistent field.
+    // However, getWallets now populates it dynamically.
   }
 
   Future<void> updateWallet(WalletModel wallet) async {

@@ -29,26 +29,29 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       }
 
       try {
-        await getWalletsUseCase.call(event.userId).then(
-          (wallets) {
-            if (wallets.isEmpty) {
-              emit(const NoWalletSt());
-            } else {
-              final activeWallet = wallets.firstWhere(
-                (wallet) {
-                  return wallet.isActive == true;
-                },
-                orElse: () {
-                  return wallets.first;
-                },
-              );
-              emit(WalletLoadedSt(wallets, activeWallet));
-            }
-          },
-          onError: (error) {
-            emit(WalletErrorSt(error.toString()));
-          },
-        );
+        final wallets = await getWalletsUseCase.call(event.userId);
+        if (wallets.isEmpty) {
+          emit(const NoWalletSt());
+        } else {
+          // Find the active wallet from the list
+          WalletEntity? activeWallet = wallets.where((w) => w.isActive).firstOrNull;
+
+          // Fallback: If no wallet is marked as active in the retrieved list,
+          // it means either no active wallet is set or it was deleted.
+          // In this case, we pick the first one and set it as active.
+          if (activeWallet == null && wallets.isNotEmpty) {
+            activeWallet = wallets.first;
+            add(SetActiveWalletEvent(
+              userId: event.userId,
+              walletId: activeWallet.id!,
+            ));
+            // SetActiveWalletEvent will trigger another GetWalletsEvent,
+            // so we can return here to avoid double emit.
+            return;
+          }
+
+          emit(WalletLoadedSt(wallets, activeWallet));
+        }
       } catch (e) {
         emit(WalletErrorSt(e.toString()));
       }
@@ -105,6 +108,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         );
         // Aktif cüzdan değiştikten sonra listeyi yeniden yükle
         add(GetWalletsEvent(event.userId));
+        emit(const WalletOperationSuccessSt("Cüzdan seçildi"));
       } catch (e) {
         emit(WalletErrorSt('Aktif cüzdan değiştirilemedi: ${e.toString()}'));
       }
