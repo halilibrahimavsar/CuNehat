@@ -63,7 +63,7 @@ class InvestmentModel extends InvestmentEntity {
       'amount': amount,
       'currentValue': currentValue,
       'type': type.toString(),
-      'color': color.value,
+      'color': color.toARGB32(),
       'dateAdded': dateAdded.toIso8601String(),
       'symbol': symbol,
       'returnRate': returnRate,
@@ -98,10 +98,6 @@ class InvestmentModel extends InvestmentEntity {
       returnRate: returnRate ?? this.returnRate,
     );
   }
-
-  // double get profit => currentValue - amount;
-  // double get profitPercentage => amount > 0 ? (profit / amount) * 100 : 0;
-  // bool get isProfitable => profit >= 0;
 
   @override
   @HiveField(0)

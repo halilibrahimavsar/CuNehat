@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage>
         child: BlocConsumer<WalletBloc, WalletState>(
           listener: (context, walletState) {
             switch (walletState) {
-              case WalletOperationSuccesSt():
+              case WalletOperationSuccessSt():
                 IboSnackbar.showSuccess(context, walletState.message);
                 _loadWallets();
                 break;
@@ -139,7 +139,7 @@ class _HomePageState extends State<HomePage>
               userId: userId,
               wallet: walletState.activeWallet!,
             ),
-            thridView: DebtAndReceivablePage(
+            thirdView: DebtAndReceivablePage(
               userId: userId,
               walletId: walletState.activeWallet!.id!,
             ),

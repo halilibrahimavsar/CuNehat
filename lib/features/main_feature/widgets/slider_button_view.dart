@@ -72,6 +72,7 @@ class SliderButtonView extends StatelessWidget {
     };
   }
 
+// TODO: Below codes are dummy codes, not real implementation will be make in here. We will change those code to input user data and change all names below. Like i said below codes for just example of how widget looks. We will change all data inside of it.
   Map<SliderState, List<SubMenuItem>> _buildSubMenuItems() {
     return {
       SliderState.savedMoney: [

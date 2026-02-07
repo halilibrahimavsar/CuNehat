@@ -521,7 +521,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
   /// BLoC state değişikliklerini dinle
   void _handleBlocState(BuildContext context, WalletState state) {
-    if (state is WalletOperationSuccesSt) {
+    if (state is WalletOperationSuccessSt) {
       setState(() => _isLoading = false);
       Navigator.pop(context);
       widget.onSuccess();

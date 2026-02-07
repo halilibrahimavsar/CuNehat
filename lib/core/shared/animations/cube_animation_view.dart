@@ -11,14 +11,14 @@ class CubeAnimationView extends StatelessWidget {
   final AnimationController controller;
   final Widget firstView; // Expense (value = 0.0)
   final Widget secondView; // Compare (value = 0.5)
-  final Widget thridView; // Income (value = 1.0)
+  final Widget thirdView; // Income (value = 1.0)
 
   const CubeAnimationView({
     super.key,
     required this.controller,
     required this.firstView,
     required this.secondView,
-    required this.thridView,
+    required this.thirdView,
   });
 
   Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.001);
@@ -42,7 +42,7 @@ class CubeAnimationView extends StatelessWidget {
         } else {
           // PHASE 2: Compare -> Income (0.5 to 1.0)
           outgoingWidget = secondView;
-          incomingWidget = thridView;
+          incomingWidget = thirdView;
           phaseValue = (value - 0.5) * 2;
         }
 

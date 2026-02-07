@@ -1,4 +1,4 @@
-import 'package:cunehat/config/theme/custome_theme.dart';
+import 'package:cunehat/config/theme/custom_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

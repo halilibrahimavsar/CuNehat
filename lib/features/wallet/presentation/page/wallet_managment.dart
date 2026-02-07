@@ -34,7 +34,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   Widget build(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
       listener: (context, state) {
-        if (state is WalletOperationSuccesSt) {
+        if (state is WalletOperationSuccessSt) {
           context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
         }
       },

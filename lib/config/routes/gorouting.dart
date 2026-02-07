@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/core/shared/animations/page_transations_views.dart';
+import 'package:cunehat/core/shared/animations/page_transitions_views.dart';
 import 'package:cunehat/features/main_feature/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/local_auth_settings_page.dart';

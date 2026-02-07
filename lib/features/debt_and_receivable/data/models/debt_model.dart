@@ -207,6 +207,7 @@ class PaymentModel extends Payment {
     );
   }
 
+  @override
   PaymentModel copyWith({
     DateTime? date,
     double? amount,

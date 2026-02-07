@@ -70,7 +70,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         } catch (e) {
           emit(WalletErrorSt('Aktif cüzdan ayarlanamadı: ${e.toString()}'));
         }
-        emit(const WalletOperationSuccesSt("Cüzdan oluşturuldu!"));
+        emit(const WalletOperationSuccessSt("Cüzdan oluşturuldu!"));
       } catch (e) {
         emit(WalletErrorSt('Cüzdan oluşturulamadı: ${e.toString()}'));
       }
@@ -80,7 +80,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<UpdateWalletEvent>((event, emit) async {
       try {
         await updateWalletUseCase.call(event.wallet);
-        emit(const WalletOperationSuccesSt("Cüzdan güncellendi!"));
+        emit(const WalletOperationSuccessSt("Cüzdan güncellendi!"));
       } catch (e) {
         emit(WalletErrorSt('Cüzdan güncellenemedi: ${e.toString()}'));
       }
@@ -90,7 +90,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<DeleteWalletEvent>((event, emit) async {
       try {
         await deleteWalletUseCase.call(event.walletId);
-        emit(const WalletOperationSuccesSt("Cüzdan silindi!"));
+        emit(const WalletOperationSuccessSt("Cüzdan silindi!"));
       } catch (e) {
         emit(WalletErrorSt('Cüzdan silinemedi: ${e.toString()}'));
       }
