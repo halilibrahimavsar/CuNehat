@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:injectable/injectable.dart';
@@ -80,6 +82,40 @@ class WalletLocalDataSource {
   Future<void> updateWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
     await box.put(wallet.id, wallet);
+  }
+
+  Future<WalletModel?> getWalletById(String walletId) async {
+    final box = await _getWalletBox();
+    return box.get(walletId);
+  }
+
+  Stream<List<WalletModel>> watchWallets(String userId) async* {
+    final walletBox = await _getWalletBox();
+    final userBox = await _getUserBox();
+
+    yield await getWallets(userId);
+
+    final controller = StreamController<List<WalletModel>>();
+
+    Future<void> emitWallets() async {
+      if (controller.isClosed) return;
+      try {
+        controller.add(await getWallets(userId));
+      } catch (e, st) {
+        controller.addError(e, st);
+      }
+    }
+
+    final walletSub = walletBox.watch().listen((_) => emitWallets());
+    final userSub = userBox.watch(key: userId).listen((_) => emitWallets());
+
+    controller.onCancel = () async {
+      await walletSub.cancel();
+      await userSub.cancel();
+      await controller.close();
+    };
+
+    yield* controller.stream;
   }
 
   Future<WalletModel?> getActiveWallet(String userId) async {

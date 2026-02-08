@@ -11,7 +11,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/finan
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -74,7 +73,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
           startDate: viewFilter.startDate,
           endDate: viewFilter.endDate,
         ));
-    context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
   }
 
   List<TransactionWithBalance> _getFilteredData(

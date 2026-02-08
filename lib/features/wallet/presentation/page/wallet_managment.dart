@@ -27,16 +27,16 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   @override
   void initState() {
     super.initState();
-    context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
+    context.read<WalletBloc>().add(WatchWalletsEvent(widget.userId));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
+      buildWhen: (previous, current) =>
+          current is! WalletOperationSuccessSt,
       listener: (context, state) {
-        if (state is WalletOperationSuccessSt) {
-          context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
-        }
+        if (state is WalletOperationSuccessSt) {}
       },
       builder: (context, state) {
         return Scaffold(

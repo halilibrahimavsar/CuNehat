@@ -7,7 +7,6 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_car
 import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,7 +49,6 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           userId: widget.activeWallet.userId,
           walletId: widget.activeWallet.id!,
         ));
-    context.read<WalletBloc>().add(GetWalletsEvent(widget.activeWallet.userId));
   }
 
   Future<bool> _deleteInvestment(InvestmentEntity investment) async {

@@ -206,8 +206,9 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
         userId: widget.userId,
         walletId: widget.walletId,
         name: _nameController.text,
-        amount: double.parse(_amountController.text),
-        currentValue: double.parse(_currentValueController.text),
+        amount: double.parse(_amountController.text.replaceAll(',', '.')),
+        currentValue:
+            double.parse(_currentValueController.text.replaceAll(',', '.')),
         type: _selectedType,
         color: _selectedColor,
         dateAdded: widget.investmentToEdit?.dateAdded ?? DateTime.now(),
@@ -456,7 +457,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     if (value == null || value.isEmpty) {
                       return 'Lütfen miktar girin';
                     }
-                    if (double.tryParse(value) == null) {
+                    if (double.tryParse(value.replaceAll(',', '.')) == null) {
                       return 'Lütfen geçerli bir sayı girin';
                     }
                     return null;
@@ -477,7 +478,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     if (value == null || value.isEmpty) {
                       return 'Lütfen mevcut değeri girin';
                     }
-                    if (double.tryParse(value) == null) {
+                    if (double.tryParse(value.replaceAll(',', '.')) == null) {
                       return 'Lütfen geçerli bir sayı girin';
                     }
                     return null;

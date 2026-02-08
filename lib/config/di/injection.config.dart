@@ -11,6 +11,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/config/di/firebase_module.dart' as _i808;
+import 'package:cunehat/core/services/wallet_metrics_service.dart' as _i1100;
 import 'package:cunehat/features/auth_feature/data/datasources/auth_remote_data_source.dart'
     as _i633;
 import 'package:cunehat/features/auth_feature/data/repository/auth_repository_impl.dart'
@@ -181,15 +182,25 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i207.WalletDeleteUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletGetUseCase>(
         () => _i207.WalletGetUseCase(gh<_i254.WalletRepository>()));
+    gh.factory<_i207.WalletWatchUseCase>(
+        () => _i207.WalletWatchUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletUpdateUseCase>(
         () => _i207.WalletUpdateUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletSetActiveUseCase>(
         () => _i207.WalletSetActiveUseCase(gh<_i254.WalletRepository>()));
+    gh.lazySingleton<_i1100.WalletMetricsService>(() =>
+        _i1100.WalletMetricsService(
+          walletRepository: gh<_i254.WalletRepository>(),
+          debtRepository: gh<_i889.DebtRepository>(),
+          receivableRepository: gh<_i329.ReceivableRepository>(),
+          investmentRepository: gh<_i589.SaveRepository>(),
+        ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
           addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
           updateReceivableUseCase: gh<_i866.UpdateReceivableUseCase>(),
           deleteReceivableUseCase: gh<_i866.DeleteReceivableUseCase>(),
+          walletMetricsService: gh<_i1100.WalletMetricsService>(),
         ));
     gh.lazySingleton<_i276.AuthRepository>(() => _i540.AuthRepositoryImpl(
         remoteDataSource: gh<_i633.AuthRemoteDataSource>()));
@@ -204,15 +215,18 @@ extension GetItInjectableX on _i174.GetIt {
           updateTransactionUseCase: gh<_i257.UpdateTransactionUseCase>(),
           deleteTransactionUseCase: gh<_i257.DeleteTransactionUseCase>(),
           getTransactionByIdUseCase: gh<_i257.GetTransactionByIdUseCase>(),
+          walletMetricsService: gh<_i1100.WalletMetricsService>(),
         ));
     gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
           getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
           addDebtUseCase: gh<_i855.AddDebtUseCase>(),
           updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
           deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
+          walletMetricsService: gh<_i1100.WalletMetricsService>(),
         ));
     gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
           getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
+          watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
           createWalletUseCase: gh<_i207.WalletCreateUseCase>(),
           updateWalletUseCase: gh<_i207.WalletUpdateUseCase>(),
           deleteWalletUseCase: gh<_i207.WalletDeleteUseCase>(),
@@ -236,6 +250,7 @@ extension GetItInjectableX on _i174.GetIt {
           addInvestmentUseCase: gh<_i818.AddInvestmentUseCase>(),
           updateInvestmentUseCase: gh<_i420.UpdateInvestmentUseCase>(),
           deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
+          walletMetricsService: gh<_i1100.WalletMetricsService>(),
         ));
     return this;
   }

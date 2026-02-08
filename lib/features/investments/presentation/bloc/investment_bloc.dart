@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
@@ -7,6 +8,7 @@ import 'package:cunehat/features/investments/domain/usecases/get_investments_use
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
 
 part 'investment_event.dart';
 part 'investment_state.dart';
@@ -17,12 +19,14 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
   final AddInvestmentUseCase addInvestmentUseCase;
   final UpdateInvestmentUseCase updateInvestmentUseCase;
   final DeleteInvestmentUseCase deleteInvestmentUseCase;
+  final WalletMetricsService walletMetricsService;
 
   InvestmentBloc({
     required this.getInvestmentsUseCase,
     required this.addInvestmentUseCase,
     required this.updateInvestmentUseCase,
     required this.deleteInvestmentUseCase,
+    required this.walletMetricsService,
   }) : super(InvestmentInitial()) {
     // Yatırımları Getir
     on<GetInvestmentsEvent>((event, emit) async {
@@ -47,9 +51,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
     on<CreateInvestmentEvent>((event, emit) async {
       emit(InvestmentLoading());
       try {
-        await addInvestmentUseCase.call(event.investment);
+      await addInvestmentUseCase.call(event.investment);
+      await _safeSyncInvestment(event.walletId);
 
-        emit(const InvestmentActionSuccess('Yatırım başarıyla eklendi'));
+      emit(const InvestmentActionSuccess('Yatırım başarıyla eklendi'));
         // Listeyi güncelle
 
         add(GetInvestmentsEvent(
@@ -63,7 +68,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
     on<UpdateInvestmentEvent>((event, emit) async {
       emit(InvestmentLoading());
       try {
-        await updateInvestmentUseCase.call(event.investment);
+      await updateInvestmentUseCase.call(event.investment);
+      await _safeSyncInvestment(event.walletId);
 
         emit(const InvestmentActionSuccess('Yatırım güncellendi'));
         // Listeyi güncelle
@@ -78,7 +84,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
     on<DeleteInvestmentEvent>((event, emit) async {
       emit(InvestmentLoading());
       try {
-        await deleteInvestmentUseCase.call(event.id);
+      await deleteInvestmentUseCase.call(event.id);
+      await _safeSyncInvestment(event.walletId);
 
         emit(const InvestmentActionSuccess('Yatırım silindi'));
         // Listeyi güncelle
@@ -88,5 +95,13 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
         emit(InvestmentError(ErrorHandler.handleException(e).message));
       }
     });
+  }
+
+  Future<void> _safeSyncInvestment(String walletId) async {
+    try {
+      await walletMetricsService.syncInvestment(walletId);
+    } catch (e) {
+      debugPrint('Wallet investment sync failed: $e');
+    }
   }
 }

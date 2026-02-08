@@ -1,3 +1,4 @@
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
@@ -6,6 +7,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
 
 @injectable
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
@@ -14,6 +16,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final UpdateTransactionUseCase updateTransactionUseCase;
   final DeleteTransactionUseCase deleteTransactionUseCase;
   final GetTransactionByIdUseCase getTransactionByIdUseCase;
+  final WalletMetricsService walletMetricsService;
 
   TransactionBloc({
     required this.getTransactionsGroupedUseCase,
@@ -21,6 +24,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     required this.updateTransactionUseCase,
     required this.deleteTransactionUseCase,
     required this.getTransactionByIdUseCase,
+    required this.walletMetricsService,
   }) : super(TransactionLoading()) {
     on<GetTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
@@ -71,6 +75,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
       // Örnek: final entityWithId = event.transaction.copyWith(id: UidGenerator.generateWithUserId(event.transaction.userId));
       await addTransactionUseCase(event.transaction); // Usecase ID'yi halleder.
+      await _safeApplyBalanceDelta(
+        walletId: event.transaction.walletId,
+        delta: _signedAmount(event.transaction),
+      );
 
       emit(TransactionActionSuccess(
         '${event.transaction.title} başarıyla eklendi',
@@ -92,6 +100,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       // 2. Update transaction in database
       await updateTransactionUseCase(event.newTransaction);
+      await _safeApplyBalanceDelta(
+        walletId: event.newTransaction.walletId,
+        delta: _signedAmount(event.newTransaction) -
+            _signedAmount(event.previousTransaction),
+      );
 
       emit(TransactionActionSuccess(
         '${event.newTransaction.title} başarıyla güncellendi',
@@ -116,6 +129,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
       // 2. Delete from database
       await deleteTransactionUseCase(event.transactionId);
+      await _safeApplyBalanceDelta(
+        walletId: transaction.walletId,
+        delta: -_signedAmount(transaction),
+      );
 
       // 3 Başarılı
       emit(TransactionActionSuccess(
@@ -127,6 +144,24 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         'İşlem silinirken hata oluştu: ${ErrorHandler.handleException(e).message}',
         transactions: currentData,
       ));
+    }
+  }
+
+  double _signedAmount(TransactionEntity transaction) {
+    return transaction.isIncome ? transaction.amount : -transaction.amount;
+  }
+
+  Future<void> _safeApplyBalanceDelta({
+    required String walletId,
+    required double delta,
+  }) async {
+    try {
+      await walletMetricsService.applyBalanceDelta(
+        walletId: walletId,
+        delta: delta,
+      );
+    } catch (e) {
+      debugPrint('Wallet balance sync failed: $e');
     }
   }
 }

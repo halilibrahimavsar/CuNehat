@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
-class AppBarContent extends StatelessWidget {
+class AppBarContent extends StatefulWidget {
   final double currentSliderValue;
   final Animation<double> scaleAnimation;
   final Animation<double> fadeAnimation;
@@ -20,6 +20,13 @@ class AppBarContent extends StatelessWidget {
     required this.scaleAnimation,
     required this.fadeAnimation,
   });
+
+  @override
+  State<AppBarContent> createState() => _AppBarContentState();
+}
+
+class _AppBarContentState extends State<AppBarContent> {
+  WalletLoadedSt? _cachedLoadedState;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +44,7 @@ class AppBarContent extends StatelessWidget {
 
   Widget _buildMenuButton(BuildContext context) {
     return ScaleTransition(
-      scale: scaleAnimation,
+      scale: widget.scaleAnimation,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.white.withValues(alpha: 0.2),
@@ -82,10 +89,26 @@ class AppBarContent extends StatelessWidget {
 
   Widget _buildCenterContent(BuildContext context) {
     return BlocBuilder<WalletBloc, WalletState>(
+      buildWhen: (previous, current) => current is! WalletOperationSuccessSt,
       builder: (context, state) {
+        if (state is WalletLoadedSt) {
+          _cachedLoadedState = state;
+        } else if (state is NoWalletSt) {
+          _cachedLoadedState = null;
+        }
+
+        final effectiveState =
+            state is WalletLoadedSt ? state : _cachedLoadedState;
+
         return FadeTransition(
-          opacity: fadeAnimation,
-          child: _buildContentByState(context, state),
+          opacity: widget.fadeAnimation,
+          child: effectiveState != null
+              ? _buildWalletContent(
+                  context,
+                  effectiveState,
+                  widget.currentSliderValue,
+                )
+              : _buildContentByState(context, state),
         );
       },
     );
@@ -93,7 +116,7 @@ class AppBarContent extends StatelessWidget {
 
   Widget _buildContentByState(BuildContext context, WalletState state) {
     if (state is WalletLoadedSt) {
-      return _buildWalletContent(context, state, currentSliderValue);
+      return _buildWalletContent(context, state, widget.currentSliderValue);
     } else if (state is WalletLoadingSt) {
       return const Center(
         child: SizedBox(

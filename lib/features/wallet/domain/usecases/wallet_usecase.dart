@@ -40,6 +40,17 @@ class WalletGetUseCase {
   }
 }
 
+/// ========== CÜZDANLARI DİNLE (STREAM) ==========
+@injectable
+class WalletWatchUseCase {
+  final WalletRepository repository;
+  WalletWatchUseCase(this.repository);
+
+  Stream<List<WalletEntity>> call(String userId) {
+    return repository.watchWallets(userId);
+  }
+}
+
 /// ========== CÜZDAN GÜNCELLE ==========
 @injectable
 class WalletUpdateUseCase {
@@ -80,5 +91,16 @@ class WalletGetActiveUseCase {
 
   Future<WalletEntity?> call(String userId) async {
     return await repository.getActiveWallet(userId);
+  }
+}
+
+/// ========== ID İLE CÜZDAN GETİR ==========
+@injectable
+class WalletGetByIdUseCase {
+  final WalletRepository repository;
+  WalletGetByIdUseCase(this.repository);
+
+  Future<WalletEntity?> call(String walletId) async {
+    return await repository.getWalletById(walletId);
   }
 }

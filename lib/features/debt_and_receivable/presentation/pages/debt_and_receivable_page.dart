@@ -6,7 +6,6 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart';
-import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -39,7 +38,6 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage> {
   void _loadData() {
     context.read<DebtBloc>().add(GetDebtsEvent(widget.walletId));
     context.read<ReceivableBloc>().add(GetReceivablesEvent(widget.walletId));
-    context.read<WalletBloc>().add(GetWalletsEvent(widget.userId));
   }
 
   @override
@@ -110,14 +108,18 @@ class DebtListSection extends StatelessWidget {
         if (state is DebtLoading || state is DebtOperationSuccess) {
           return const Center(child: CircularProgressIndicator());
         } else if (state is DebtLoaded) {
-          if (state.debts.isEmpty) {
+          final activeDebts = state.debts
+              .where((debt) => !debt.isPaid && debt.remainingAmount > 0)
+              .toList();
+
+          if (activeDebts.isEmpty) {
             return const Center(child: Text("Henüz borç kaydı yok."));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: state.debts.length,
+            itemCount: activeDebts.length,
             itemBuilder: (context, index) {
-              final debt = state.debts[index];
+              final debt = activeDebts[index];
               return _buildDebtCard(context, debt);
             },
           );

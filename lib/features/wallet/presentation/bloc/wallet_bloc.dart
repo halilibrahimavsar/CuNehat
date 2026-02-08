@@ -11,6 +11,7 @@ part 'wallet_state.dart';
 @injectable
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletGetUseCase getWalletsUseCase;
+  final WalletWatchUseCase watchWalletsUseCase;
   final WalletCreateUseCase createWalletUseCase;
   final WalletUpdateUseCase updateWalletUseCase;
   final WalletDeleteUseCase deleteWalletUseCase;
@@ -18,6 +19,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   WalletBloc({
     required this.getWalletsUseCase,
+    required this.watchWalletsUseCase,
     required this.createWalletUseCase,
     required this.updateWalletUseCase,
     required this.deleteWalletUseCase,
@@ -34,19 +36,18 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           emit(const NoWalletSt());
         } else {
           // Find the active wallet from the list
-          WalletEntity? activeWallet = wallets.where((w) => w.isActive).firstOrNull;
+          var activeWallet = _findActiveWallet(wallets);
 
           // Fallback: If no wallet is marked as active in the retrieved list,
           // it means either no active wallet is set or it was deleted.
           // In this case, we pick the first one and set it as active.
           if (activeWallet == null && wallets.isNotEmpty) {
-            activeWallet = wallets.first;
+            final fallbackWallet = wallets.first;
             add(SetActiveWalletEvent(
               userId: event.userId,
-              walletId: activeWallet.id!,
+              walletId: fallbackWallet.id!,
             ));
-            // SetActiveWalletEvent will trigger another GetWalletsEvent,
-            // so we can return here to avoid double emit.
+            emit(WalletLoadedSt(wallets, fallbackWallet));
             return;
           }
 
@@ -55,6 +56,32 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       } catch (e) {
         emit(WalletErrorSt(e.toString()));
       }
+    });
+
+    on<WatchWalletsEvent>((event, emit) async {
+      emit(const WalletLoadingSt());
+      await emit.forEach<List<WalletEntity>>(
+        watchWalletsUseCase(event.userId),
+        onData: (wallets) {
+          if (wallets.isEmpty) {
+            return const NoWalletSt();
+          }
+
+          final activeWallet = _findActiveWallet(wallets);
+
+          if (activeWallet == null && wallets.isNotEmpty) {
+            final fallbackWallet = wallets.first;
+            add(SetActiveWalletEvent(
+              userId: event.userId,
+              walletId: fallbackWallet.id!,
+            ));
+            return WalletLoadedSt(wallets, fallbackWallet);
+          }
+
+          return WalletLoadedSt(wallets, activeWallet);
+        },
+        onError: (error, _) => WalletErrorSt(error.toString()),
+      );
     });
 
     // ========== CÜZDAN OLUŞTUR ==========
@@ -106,12 +133,17 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           userId: event.userId,
           walletId: event.walletId,
         );
-        // Aktif cüzdan değiştikten sonra listeyi yeniden yükle
-        add(GetWalletsEvent(event.userId));
         emit(const WalletOperationSuccessSt("Cüzdan seçildi"));
       } catch (e) {
         emit(WalletErrorSt('Aktif cüzdan değiştirilemedi: ${e.toString()}'));
       }
     });
+  }
+
+  WalletEntity? _findActiveWallet(List<WalletEntity> wallets) {
+    for (final wallet in wallets) {
+      if (wallet.isActive) return wallet;
+    }
+    return null;
   }
 }

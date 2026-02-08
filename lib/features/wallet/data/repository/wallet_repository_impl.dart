@@ -29,6 +29,13 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
+  Stream<List<WalletEntity>> watchWallets(String userId) {
+    return dataSource
+        .watchWallets(userId)
+        .map((models) => models.map((m) => m as WalletEntity).toList());
+  }
+
+  @override
   Future<void> setActiveWallet(
       {required String userId, required String newActiveWalletId}) async {
     await dataSource.setActiveWallet(
@@ -38,6 +45,12 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<WalletEntity?> getActiveWallet(String userId) async {
     final model = await dataSource.getActiveWallet(userId);
+    return model;
+  }
+
+  @override
+  Future<WalletEntity?> getWalletById(String walletId) async {
+    final model = await dataSource.getWalletById(walletId);
     return model;
   }
 

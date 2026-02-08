@@ -18,6 +18,16 @@ final class GetWalletsEvent extends WalletEvent {
   List<Object> get props => [userId];
 }
 
+/// Cüzdanları dinle
+final class WatchWalletsEvent extends WalletEvent {
+  final String userId;
+
+  const WatchWalletsEvent(this.userId);
+
+  @override
+  List<Object> get props => [userId];
+}
+
 /// Yeni cüzdan oluştur
 final class CreateWalletEvent extends WalletEvent {
   final WalletEntity wallet;

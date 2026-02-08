@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// 3 Aşamalı 3D Kart Çevirme Animasyonu.
-class CubeAnimationView extends StatelessWidget {
+class HorizontalCubeAnimationView extends StatelessWidget {
   final AnimationController controller;
   final Widget firstView; // Expense (value = 0.0)
   final Widget secondView; // Compare (value = 0.5)
   final Widget thirdView; // Income (value = 1.0)
 
-  const CubeAnimationView({
+  const HorizontalCubeAnimationView({
     super.key,
     required this.controller,
     required this.firstView,
