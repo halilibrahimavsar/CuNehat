@@ -92,6 +92,9 @@ dependencies:
   unified_flutter_features:
     path: /home/garuda/Masaüstü/unified_flutter_features
 
+  remote_auth_module:
+    path: /home/garuda/Masaüstü/remote_auth_module
+
   # firebase_bloc_auth:
   #   path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth
   # firebase_analytics: ^10.1.5

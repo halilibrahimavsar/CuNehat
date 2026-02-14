@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cunehat/config/initialization/app_initialization.dart';
 import 'package:cunehat/core/widgets/app_providers.dart';
-import 'package:cunehat/core/widgets/authenticated_app.dart';
+import 'package:cunehat/core/widgets/cunehat_app.dart';
 import 'package:cunehat/core/widgets/themed_app.dart';
-import 'package:cunehat/core/widgets/unauthenticated_app.dart';
 
 /// Application entry point.
 ///
@@ -15,11 +14,8 @@ Future<void> main() async {
     AppProviders(
       authBloc: result.authBloc,
       child: ThemedApp(
-        authenticatedBuilder: (theme) => AuthenticatedApp(
+        builder: (theme) => CuNehatApp(
           router: result.router,
-          theme: theme,
-        ),
-        unauthenticatedBuilder: (theme) => UnauthenticatedApp(
           theme: theme,
         ),
       ),

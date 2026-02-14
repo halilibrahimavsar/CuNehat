@@ -4,16 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/shared_features/shared_features.dart';
 import 'package:cunehat/config/di/injection.dart';
 
-/// Main application widget for authenticated users.
+/// Main application widget.
 ///
 /// This widget wraps the MaterialApp with security features:
 /// - LocalAuthSecurityLayer: Handles privacy guard and background lock
 /// - ConnectionSnackbarHandler: Shows connection status
-class AuthenticatedApp extends StatelessWidget {
+class CuNehatApp extends StatelessWidget {
   final GoRouter router;
   final ThemeData theme;
 
-  const AuthenticatedApp({
+  const CuNehatApp({
     super.key,
     required this.router,
     required this.theme,

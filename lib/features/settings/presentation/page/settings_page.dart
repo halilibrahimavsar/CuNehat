@@ -17,25 +17,78 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ayarlar'),
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: const [
-          UserProfileCard(),
-          SizedBox(height: 24),
-          SettingsHeader(title: 'GÖRÜNÜM'),
-          ThemeSelectorDropdown(),
-          SizedBox(height: 24),
-          SettingsHeader(title: 'GÜVENLİK'),
-          SecuritySettingsCard(),
-          SizedBox(height: 24),
-          SettingsHeader(title: 'HAKKINDA'),
-          AboutCard(),
-          SizedBox(height: 40),
+      backgroundColor: colorScheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            pinned: true,
+            backgroundColor: colorScheme.primary,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'Ayarlar',
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.secondary,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(16.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  const UserProfileCard(),
+                  const SizedBox(height: 24),
+                  const SettingsHeader(title: 'GÖRÜNÜM'),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                         BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                         )
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const ThemeSelectorDropdown(),
+                  ),
+                  const SizedBox(height: 24),
+                  const SettingsHeader(title: 'GÜVENLİK'),
+                  const SizedBox(height: 8),
+                  const SecuritySettingsCard(), // Assuming this card has its own decoration
+                  const SizedBox(height: 24),
+                  const SettingsHeader(title: 'HAKKINDA'),
+                  const SizedBox(height: 8),
+                  const AboutCard(), // Assuming this card has its own decoration
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

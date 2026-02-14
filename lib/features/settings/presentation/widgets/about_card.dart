@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 
 /// Card displaying app information and logout option.
 class AboutCard extends StatelessWidget {
@@ -38,6 +38,6 @@ class AboutCard extends StatelessWidget {
   }
 
   void _handleLogout(BuildContext context) {
-    context.read<RemoteAuthBloc>().add(SignOutRequested());
+    context.read<AppAuthBloc>().add(const AppSignOutRequested());
   }
 }

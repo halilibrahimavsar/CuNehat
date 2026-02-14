@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
@@ -29,7 +29,7 @@ class AppInitialization {
       await _initializeDateFormatting();
       await configureDependencies();
 
-      final authBloc = getIt<RemoteAuthBloc>();
+      final authBloc = getIt<AppAuthBloc>();
       final router = createAppRouter(authBloc);
 
       return AppInitializationResult(
@@ -70,7 +70,7 @@ class AppInitialization {
 }
 
 class AppInitializationResult {
-  final RemoteAuthBloc authBloc;
+  final AppAuthBloc authBloc;
   final GoRouter router;
 
   const AppInitializationResult({

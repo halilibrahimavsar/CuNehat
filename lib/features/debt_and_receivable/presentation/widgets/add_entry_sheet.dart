@@ -1,7 +1,7 @@
 // lib/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -94,9 +94,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    final authState = context.read<RemoteAuthBloc>().state;
+    final authState = context.read<AppAuthBloc>().state;
     final userId =
-        authState is Authenticated ? authState.user.uid : 'unknown_user';
+        authState is AppAuthenticated ? authState.user.id : 'unknown_user';
 
     if (isDebt) {
       if (isEditing && widget.debtToEdit != null) {

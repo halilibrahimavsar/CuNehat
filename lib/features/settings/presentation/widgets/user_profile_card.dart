@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:go_router/go_router.dart';
 
 /// Displays the current user's information in a card.
 class UserProfileCard extends StatelessWidget {
@@ -10,7 +12,7 @@ class UserProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocBuilder<RemoteAuthBloc, AuthState>(
+    return BlocBuilder<AppAuthBloc, AppAuthState>(
       builder: (context, state) {
         final user = _extractUser(state);
         final email = user?.email ?? 'Kullanıcı';
@@ -18,17 +20,25 @@ class UserProfileCard extends StatelessWidget {
 
         return Card(
           elevation: 2,
+          clipBehavior: Clip.antiAlias, // Ensure ripple effect breaks at corners
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                _buildAvatar(theme, initial),
-                const SizedBox(width: 16),
-                _buildUserInfo(theme, email),
-              ],
+          child: InkWell(
+            onTap: () {
+               context.push(AppRoutes.profile);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  _buildAvatar(theme, initial),
+                  const SizedBox(width: 16),
+                  _buildUserInfo(theme, email),
+                  const Spacer(),
+                  Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                ],
+              ),
             ),
           ),
         );
@@ -36,9 +46,9 @@ class UserProfileCard extends StatelessWidget {
     );
   }
 
-  dynamic _extractUser(AuthState state) {
-    if (state is Authenticated) return state.user;
-    if (state is AuthLocked) return state.user;
+  dynamic _extractUser(AppAuthState state) {
+    if (state is AppAuthenticated) return state.user;
+    if (state is AppAuthLocked) return state.user;
     return null;
   }
 

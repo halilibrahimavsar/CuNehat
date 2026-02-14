@@ -5,26 +5,45 @@ import 'package:cunehat/core/shared/animations/page_transitions_views.dart';
 import 'package:cunehat/features/main_feature/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/local_auth_settings_page.dart';
-import 'package:cunehat/features/auth_feature/presentation/bloc/remote_auth/remote_auth_bloc.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
-GoRouter createAppRouter(RemoteAuthBloc authBloc) {
+import 'package:cunehat/core/pages/login_page.dart';
+import 'package:cunehat/core/pages/register_page_wrapper.dart';
+import 'package:cunehat/core/pages/forgot_password_page_wrapper.dart'; // Import wrappers
+import 'package:cunehat/features/settings/presentation/page/user_management_page.dart';
+
+GoRouter createAppRouter(AppAuthBloc authBloc) {
   return GoRouter(
     initialLocation: AppRoutes.home,
     redirect: (context, state) {
       final authState = authBloc.state;
 
       // Eğer kullanıcı kilitli ise lock screen'e yönlendir
-      if (authState is AuthLocked &&
+      if (authState is AppAuthLocked &&
           state.matchedLocation != AppRoutes.lockScreen) {
         return AppRoutes.lockScreen;
       }
 
       // Eğer authenticated ise ve lock screen'deyse home'a yönlendir
-      if (authState is Authenticated &&
+      if (authState is AppAuthenticated &&
           state.matchedLocation == AppRoutes.lockScreen) {
+        return AppRoutes.home;
+      }
+
+      final bool isLoggedIn = authState is AppAuthenticated;
+      final bool isPublicRoute = 
+          state.matchedLocation == AppRoutes.login ||
+          state.matchedLocation == AppRoutes.register ||
+          state.matchedLocation == AppRoutes.forgotPassword;
+
+      if (!isLoggedIn && !isPublicRoute) {
+        return AppRoutes.login;
+      }
+
+      if (isLoggedIn && isPublicRoute) {
         return AppRoutes.home;
       }
 
@@ -42,6 +61,42 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
         },
       ),
       GoRoute(
+        path: AppRoutes.login,
+        pageBuilder: (context, state) {
+          return CubeInTransition(   // Or NoTransitionPage if preferred
+            key: state.pageKey,
+            child: const LoginScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        pageBuilder: (context, state) {
+          return CubeInTransition(
+            key: state.pageKey,
+            child: const RegisterPageWrapper(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        pageBuilder: (context, state) {
+          return CubeInTransition(
+            key: state.pageKey,
+            child: const ForgotPasswordPageWrapper(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        pageBuilder: (context, state) {
+          return CubeInTransition(
+            key: state.pageKey,
+            child: const UserManagementPage(),
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoutes.settings,
         pageBuilder: (context, state) {
           return CubeInTransition(
@@ -54,18 +109,20 @@ GoRouter createAppRouter(RemoteAuthBloc authBloc) {
         path: AppRoutes.lockScreen,
         pageBuilder: (context, state) {
           final authState = authBloc.state;
-          final user = authState is AuthLocked
+          final user = authState is AppAuthLocked
               ? authState.user
-              : (authState is Authenticated ? authState.user : null);
+              : (authState is AppAuthenticated ? authState.user : null);
 
           return NoTransitionPage(
             key: state.pageKey,
             child: BiometricAuthPage(
               onSuccess: () {
-                authBloc.add(AuthUnlockRequested(user!));
+                if (user != null) {
+                  authBloc.add(AppAuthUnlockRequested(user));
+                }
               },
               onLogout: () {
-                authBloc.add(SignOutRequested());
+                authBloc.add(const AppSignOutRequested());
               },
             ),
           );
