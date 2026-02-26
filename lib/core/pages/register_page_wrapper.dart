@@ -10,7 +10,7 @@ class RegisterPageWrapper extends StatelessWidget {
     return RegisterPage(
       title: 'Create Account',
       onLoginTap: () => context.pop(), // Go back to login
-      onRegistered: (user) {
+      onAuthenticated: (user) {
         // AuthBloc state change will likely trigger redirection in router,
         // but we can also pop or go home explicitly if needed.
         // For now, let the router's redirect logic handle 'Authenticated' state.

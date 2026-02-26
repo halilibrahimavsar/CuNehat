@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:equatable/equatable.dart';
 
 enum InvestmentType {
   stock,
@@ -6,7 +7,7 @@ enum InvestmentType {
   custom,
 }
 
-class InvestmentEntity {
+class InvestmentEntity extends Equatable {
   final String? id;
   final String userId;
   final String walletId;
@@ -33,7 +34,50 @@ class InvestmentEntity {
     this.returnRate,
   });
 
+  InvestmentEntity copyWith({
+    String? id,
+    String? userId,
+    String? walletId,
+    String? name,
+    double? amount,
+    double? currentValue,
+    InvestmentType? type,
+    Color? color,
+    DateTime? dateAdded,
+    String? symbol,
+    double? returnRate,
+  }) {
+    return InvestmentEntity(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      walletId: walletId ?? this.walletId,
+      name: name ?? this.name,
+      amount: amount ?? this.amount,
+      currentValue: currentValue ?? this.currentValue,
+      type: type ?? this.type,
+      color: color ?? this.color,
+      dateAdded: dateAdded ?? this.dateAdded,
+      symbol: symbol ?? this.symbol,
+      returnRate: returnRate ?? this.returnRate,
+    );
+  }
+
   double get profit => currentValue - amount;
   double get profitPercentage => amount > 0 ? (profit / amount) * 100 : 0;
   bool get isProfitable => profit >= 0;
+
+  @override
+  List<Object?> get props => [
+        id,
+        userId,
+        walletId,
+        name,
+        amount,
+        currentValue,
+        type,
+        color,
+        dateAdded,
+        symbol,
+        returnRate,
+      ];
 }

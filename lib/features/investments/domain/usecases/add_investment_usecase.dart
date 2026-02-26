@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
@@ -5,26 +7,15 @@ import 'package:injectable/injectable.dart';
 
 @injectable
 class AddInvestmentUseCase {
-  final SaveRepository repository;
+  final InvestmentRepository repository;
 
   AddInvestmentUseCase(this.repository);
 
-  Future<void> call(InvestmentEntity investment) async {
+  Future<Either<Failure, void>> call(InvestmentEntity investment) async {
+    InvestmentEntity finalInvestment = investment;
     if (investment.id == null || investment.id!.isEmpty) {
-      investment = InvestmentEntity(
-        id: UidGenerator.generateV7(),
-        userId: investment.userId,
-        walletId: investment.walletId,
-        name: investment.name,
-        amount: investment.amount,
-        currentValue: investment.currentValue,
-        type: investment.type,
-        color: investment.color,
-        dateAdded: investment.dateAdded,
-        symbol: investment.symbol,
-        returnRate: investment.returnRate,
-      );
+      finalInvestment = investment.copyWith(id: UidGenerator.generateV7());
     }
-    return await repository.addInvestment(investment);
+    return await repository.addInvestment(finalInvestment);
   }
 }

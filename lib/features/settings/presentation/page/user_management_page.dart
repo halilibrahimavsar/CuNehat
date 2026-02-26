@@ -304,7 +304,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
                                           }
                                           context.read<AuthBloc>().add(
                                                 UpdatePasswordEvent(
-                                                  password:
+                                                  currentPassword:
+                                                      '', // TODO: Get current password if required by module
+                                                  newPassword:
                                                       _passwordController.text,
                                                 ),
                                               );

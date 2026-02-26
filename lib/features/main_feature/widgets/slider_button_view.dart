@@ -9,8 +9,8 @@ import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/dynamic_slider.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
-import 'package:unified_flutter_features/features/slider_2d_navigation/widgets/dynamic_slider_button.dart';
 
 /// Slider button view with vertical stack navigation
 ///

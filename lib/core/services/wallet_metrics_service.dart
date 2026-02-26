@@ -9,7 +9,7 @@ class WalletMetricsService {
   final WalletRepository walletRepository;
   final DebtRepository debtRepository;
   final ReceivableRepository receivableRepository;
-  final SaveRepository investmentRepository;
+  final InvestmentRepository investmentRepository;
 
   WalletMetricsService({
     required this.walletRepository,
@@ -62,13 +62,17 @@ class WalletMetricsService {
     final wallet = await walletRepository.getWalletById(walletId);
     if (wallet == null) return;
 
-    final investments = await investmentRepository.getInvestments(
+    final result = await investmentRepository.getInvestments(
       userId: wallet.userId,
       walletId: walletId,
     );
-    final totalInvestment = investments.fold<double>(
-      0.0,
-      (sum, item) => sum + item.currentValue,
+
+    final totalInvestment = result.fold(
+      (failure) => 0.0,
+      (investments) => investments.fold<double>(
+        0.0,
+        (sum, item) => sum + item.currentValue,
+      ),
     );
 
     if (wallet.investment != totalInvestment) {

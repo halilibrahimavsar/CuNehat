@@ -49,6 +49,8 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
     as _i344;
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart'
     as _i648;
+import 'package:cunehat/features/investments/data/datasource/investment_remote_datasource.dart'
+    as _i29;
 import 'package:cunehat/features/investments/data/repository/investment_repository_impl.dart'
     as _i497;
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart'
@@ -77,6 +79,7 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart'
     as _i827;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
+import 'package:http/http.dart' as _i519;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:remote_auth_module/remote_auth_module.dart' as _i1041;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
@@ -116,6 +119,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
+    gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i698.LocalAuthRepository>(
@@ -139,10 +143,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i866.UpdateReceivableUseCase(gh<_i329.ReceivableRepository>()));
     gh.factory<_i866.DeleteReceivableUseCase>(
         () => _i866.DeleteReceivableUseCase(gh<_i329.ReceivableRepository>()));
-    gh.factory<_i698.LocalAuthLoginBloc>(
-        () => appModule.localAuthLoginBloc(gh<_i698.LocalAuthRepository>()));
-    gh.factory<_i698.LocalAuthSettingsBloc>(
-        () => appModule.localAuthSettingsBloc(gh<_i698.LocalAuthRepository>()));
     gh.factory<_i257.AddTransactionUseCase>(
         () => _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.DeleteTransactionUseCase>(() =>
@@ -164,6 +164,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i855.UpdateDebtUseCase(gh<_i889.DebtRepository>()));
     gh.factory<_i855.DeleteDebtUseCase>(
         () => _i855.DeleteDebtUseCase(gh<_i889.DebtRepository>()));
+    gh.factory<_i698.LocalAuthLoginBloc>(
+        () => appModule.localAuthLoginBloc(gh<_i698.LocalAuthRepository>()));
+    gh.factory<_i698.LocalAuthSettingsBloc>(
+        () => appModule.localAuthSettingsBloc(gh<_i698.LocalAuthRepository>()));
     gh.factory<_i207.WalletCreateUseCase>(
         () => _i207.WalletCreateUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletDeleteUseCase>(
@@ -184,8 +188,8 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i59.FirebaseAuth>(),
           gh<_i974.FirebaseFirestore>(),
         ));
-    gh.lazySingleton<_i589.SaveRepository>(() => _i497.InvestmentRepositoryImpl(
-        dataSource: gh<_i648.InvestmentLocalDatasource>()));
+    gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
+        () => _i29.InvestmentRemoteDataSourceImpl(client: gh<_i519.Client>()));
     gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
           getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
           watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
@@ -196,25 +200,37 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.lazySingleton<_i1041.AuthBloc>(
         () => appModule.authBloc(gh<_i1041.AuthRepository>()));
-    gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
-          gh<_i1041.AuthBloc>(),
-          gh<_i698.LocalAuthRepository>(),
-        ));
+    gh.lazySingleton<_i589.InvestmentRepository>(
+        () => _i497.InvestmentRepositoryImpl(
+              localDataSource: gh<_i648.InvestmentLocalDatasource>(),
+              remoteDataSource: gh<_i29.InvestmentRemoteDataSource>(),
+            ));
+    gh.factory<_i818.AddInvestmentUseCase>(
+        () => _i818.AddInvestmentUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i318.DeleteInvestmentUseCase>(
+        () => _i318.DeleteInvestmentUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i864.GetInvestmentsUseCase>(
+        () => _i864.GetInvestmentsUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i420.UpdateInvestmentUseCase>(
+        () => _i420.UpdateInvestmentUseCase(gh<_i589.InvestmentRepository>()));
     gh.lazySingleton<_i239.WalletMetricsService>(
         () => _i239.WalletMetricsService(
               walletRepository: gh<_i254.WalletRepository>(),
               debtRepository: gh<_i889.DebtRepository>(),
               receivableRepository: gh<_i329.ReceivableRepository>(),
-              investmentRepository: gh<_i589.SaveRepository>(),
+              investmentRepository: gh<_i589.InvestmentRepository>(),
             ));
-    gh.factory<_i818.AddInvestmentUseCase>(
-        () => _i818.AddInvestmentUseCase(gh<_i589.SaveRepository>()));
-    gh.factory<_i318.DeleteInvestmentUseCase>(
-        () => _i318.DeleteInvestmentUseCase(gh<_i589.SaveRepository>()));
-    gh.factory<_i864.GetInvestmentsUseCase>(
-        () => _i864.GetInvestmentsUseCase(gh<_i589.SaveRepository>()));
-    gh.factory<_i420.UpdateInvestmentUseCase>(
-        () => _i420.UpdateInvestmentUseCase(gh<_i589.SaveRepository>()));
+    gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
+          getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
+          addDebtUseCase: gh<_i855.AddDebtUseCase>(),
+          updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
+          deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+        ));
+    gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
+          gh<_i1041.AuthBloc>(),
+          gh<_i698.LocalAuthRepository>(),
+        ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
           addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
@@ -236,13 +252,6 @@ extension GetItInjectableX on _i174.GetIt {
           addInvestmentUseCase: gh<_i818.AddInvestmentUseCase>(),
           updateInvestmentUseCase: gh<_i420.UpdateInvestmentUseCase>(),
           deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-        ));
-    gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
-          getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
-          addDebtUseCase: gh<_i855.AddDebtUseCase>(),
-          updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
-          deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
     return this;

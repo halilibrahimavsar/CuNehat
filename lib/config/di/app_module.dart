@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:remote_auth_module/remote_auth_module.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 
@@ -21,7 +22,7 @@ abstract class AppModule {
   // Local Auth Repository
   @lazySingleton
   LocalAuthRepository localAuthRepository(SharedPreferences prefs) {
-    return SharedPrefsLocalAuthRepository(prefs: prefs);
+    return SecureLocalAuthRepository(prefs: prefs);
   }
 
   // Local Auth Login Bloc
@@ -66,4 +67,7 @@ abstract class AppModule {
       localAuthRepository: localAuthRepository,
     );
   }
+
+  @lazySingleton
+  http.Client get httpClient => http.Client();
 }

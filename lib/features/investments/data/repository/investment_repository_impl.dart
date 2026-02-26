@@ -1,48 +1,86 @@
+import 'package:dartz/dartz.dart';
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 import 'package:injectable/injectable.dart';
 
-@LazySingleton(as: SaveRepository)
-class InvestmentRepositoryImpl implements SaveRepository {
-  final InvestmentLocalDatasource dataSource;
+import 'package:cunehat/features/investments/data/datasource/investment_remote_datasource.dart';
+
+@LazySingleton(as: InvestmentRepository)
+class InvestmentRepositoryImpl implements InvestmentRepository {
+  final InvestmentLocalDatasource localDataSource;
+  final InvestmentRemoteDataSource remoteDataSource;
 
   InvestmentRepositoryImpl({
-    required this.dataSource,
+    required this.localDataSource,
+    required this.remoteDataSource,
   });
 
   @override
-  Future<void> addInvestment(InvestmentEntity investment) async {
-    final model = InvestmentModel.fromEntity(investment);
-
-    // Önce sunucuya, sonra yerele kaydet
-    await dataSource.addInvestment(model);
+  Future<Either<Failure, void>> addInvestment(
+      InvestmentEntity investment) async {
+    try {
+      final model = InvestmentModel.fromEntity(investment);
+      await localDataSource.addInvestment(model);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> deleteInvestment(String id) async {
-    await dataSource.deleteInvestment(id: id);
+  Future<Either<Failure, void>> deleteInvestment(String id) async {
+    try {
+      await localDataSource.deleteInvestment(id: id);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
   }
 
   @override
-  Future<List<InvestmentEntity>> getInvestments({
+  Future<Either<Failure, List<InvestmentEntity>>> getInvestments({
     required String userId,
     required String walletId,
   }) async {
-    // Önce sunucudan veriyi çekmeyi dene
-    final remoteInvestments = await dataSource.getInvestments(
-      userId: userId,
-      walletId: walletId,
-    );
-
-    return remoteInvestments;
+    try {
+      final investments = await localDataSource.getInvestments(
+        userId: userId,
+        walletId: walletId,
+      );
+      return Right(investments);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> updateInvestment(InvestmentEntity investment) async {
-    final model = InvestmentModel.fromEntity(investment);
+  Future<Either<Failure, void>> updateInvestment(
+      InvestmentEntity investment) async {
+    try {
+      final model = InvestmentModel.fromEntity(investment);
+      await localDataSource.updateInvestment(model);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
 
-    await dataSource.updateInvestment(model);
+  @override
+  Future<Either<Failure, double>> getLivePrice({
+    required String symbol,
+    required InvestmentType type,
+  }) async {
+    try {
+      final price = await remoteDataSource.getLivePrice(
+        symbol: symbol,
+        type: type,
+      );
+      return Right(price);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }
