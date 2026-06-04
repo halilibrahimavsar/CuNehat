@@ -20,35 +20,42 @@ class FakeWalletRepository implements WalletRepository {
   final Map<String, WalletEntity> store = {};
 
   @override
-  Future<WalletEntity?> getWalletById(String walletId) async => store[walletId];
+  Future<Either<Failure, WalletEntity?>> getWalletById(String walletId) async =>
+      Right(store[walletId]);
 
   @override
-  Future<void> updateWallet(WalletEntity wallet) async {
+  Future<Either<Failure, void>> updateWallet(WalletEntity wallet) async {
     store[wallet.id!] = wallet;
+    return const Right(null);
   }
 
   @override
-  Future<String> createWallet(WalletEntity wallet) async {
+  Future<Either<Failure, String>> createWallet(WalletEntity wallet) async {
     store[wallet.id!] = wallet;
-    return wallet.id!;
+    return Right(wallet.id!);
   }
 
   @override
-  Future<void> deleteWallet(String walletId) async => store.remove(walletId);
+  Future<Either<Failure, void>> deleteWallet(String walletId) async {
+    store.remove(walletId);
+    return const Right(null);
+  }
 
   @override
-  Future<List<WalletEntity>> getWallets(String userId) async =>
-      store.values.where((w) => w.userId == userId).toList();
+  Future<Either<Failure, List<WalletEntity>>> getWallets(String userId) async =>
+      Right(store.values.where((w) => w.userId == userId).toList());
 
   @override
-  Future<WalletEntity?> getActiveWallet(String userId) async => null;
+  Future<Either<Failure, WalletEntity?>> getActiveWallet(String userId) async =>
+      const Right(null);
 
   @override
-  Future<void> setActiveWallet(
-      {required String userId, required String newActiveWalletId}) async {}
+  Future<Either<Failure, void>> setActiveWallet(
+          {required String userId, required String newActiveWalletId}) async =>
+      const Right(null);
 
   @override
-  Stream<List<WalletEntity>> watchWallets(String userId) =>
+  Stream<Either<Failure, List<WalletEntity>>> watchWallets(String userId) =>
       const Stream.empty();
 }
 

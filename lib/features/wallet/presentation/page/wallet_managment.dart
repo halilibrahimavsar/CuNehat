@@ -27,15 +27,33 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   @override
   void initState() {
     super.initState();
-    context.read<WalletBloc>().add(WatchWalletsEvent(widget.userId));
+    final bloc = context.read<WalletBloc>();
+    if (bloc.state is WalletInitialSt || bloc.state is WalletErrorSt) {
+      bloc.add(WatchWalletsEvent(widget.userId));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
-      buildWhen: (previous, current) => current is! WalletOperationSuccessSt,
       listener: (context, state) {
-        if (state is WalletOperationSuccessSt) {}
+        if (state is WalletLoadedSt) {
+          if (state.message != null) {
+            IboSnackbar.showSuccess(context, state.message!);
+          }
+          if (state.error != null) {
+            IboSnackbar.showError(context, state.error!);
+          }
+        } else if (state is NoWalletSt) {
+          if (state.message != null) {
+            IboSnackbar.showSuccess(context, state.message!);
+          }
+          if (state.error != null) {
+            IboSnackbar.showError(context, state.error!);
+          }
+        } else if (state is WalletErrorSt) {
+          IboSnackbar.showError(context, state.err);
+        }
       },
       builder: (context, state) {
         return Scaffold(
@@ -273,12 +291,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       context: context,
       userId: widget.userId,
       wallet: null,
-      onSuccess: () {
-        IboSnackbar.showSuccess(context, '✅ Cüzdan oluşturuldu!');
-      },
-      onError: (error) {
-        IboSnackbar.showError(context, '❌ $error');
-      },
+      onSuccess: () {},
+      onError: (error) {},
     );
   }
 
@@ -287,12 +301,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       context: context,
       userId: widget.userId,
       wallet: wallet,
-      onSuccess: () {
-        IboSnackbar.showSuccess(context, '✅ Cüzdan güncellendi!');
-      },
-      onError: (error) {
-        IboSnackbar.showError(context, '❌ $error');
-      },
+      onSuccess: () {},
+      onError: (error) {},
     );
   }
 
@@ -305,7 +315,6 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
     if (confirmed == true && context.mounted) {
       context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
-      IboSnackbar.showSuccess(context, '🗑️ Cüzdan silindi');
     }
   }
 }

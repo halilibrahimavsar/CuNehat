@@ -6,21 +6,48 @@ import 'package:hive/hive.dart';
 part 'wallet_model.g.dart';
 
 @HiveType(typeId: 0)
-class WalletModel extends WalletEntity {
+class WalletModel {
+  @HiveField(0)
+  final String? id;
+  @HiveField(1)
+  final String userId;
+  @HiveField(2)
+  final String name;
+  @HiveField(3)
+  final double balance;
+  @HiveField(4)
+  final double debt;
+  @HiveField(5)
+  final double credit;
+  @HiveField(6)
+  final double investment;
+  @HiveField(7)
+  final String colorHex;
+  @HiveField(8)
+  final String iconName;
+  @HiveField(9)
+  final DateTime createdAt;
+  @HiveField(10)
+  final bool isActive;
+  @HiveField(11)
+  final int sortOrder;
+  @HiveField(12)
+  final double? openingBalance;
+
   const WalletModel({
-    required super.id,
-    required super.userId,
-    required super.name,
-    required super.balance,
-    required super.debt,
-    required super.credit,
-    required super.investment,
-    required super.colorHex,
-    required super.iconName,
-    required super.createdAt,
-    super.isActive = false,
-    super.sortOrder = 0,
-    super.openingBalance,
+    required this.id,
+    required this.userId,
+    required this.name,
+    required this.balance,
+    required this.debt,
+    required this.credit,
+    required this.investment,
+    required this.colorHex,
+    required this.iconName,
+    required this.createdAt,
+    this.isActive = false,
+    this.sortOrder = 0,
+    this.openingBalance,
   });
 
   /// Creates Wallet from Firestore document
@@ -42,22 +69,41 @@ class WalletModel extends WalletEntity {
     );
   }
 
-  WalletModel.fromEntity(WalletEntity entity)
-      : this(
-          id: entity.id,
-          userId: entity.userId,
-          name: entity.name,
-          balance: entity.balance,
-          debt: entity.debt,
-          credit: entity.credit,
-          investment: entity.investment,
-          colorHex: entity.colorHex,
-          iconName: entity.iconName,
-          createdAt: entity.createdAt,
-          isActive: entity.isActive,
-          sortOrder: entity.sortOrder,
-          openingBalance: entity.openingBalance,
-        );
+  factory WalletModel.fromEntity(WalletEntity entity) {
+    return WalletModel(
+      id: entity.id,
+      userId: entity.userId,
+      name: entity.name,
+      balance: entity.balance,
+      debt: entity.debt,
+      credit: entity.credit,
+      investment: entity.investment,
+      colorHex: entity.colorHex,
+      iconName: entity.iconName,
+      createdAt: entity.createdAt,
+      isActive: entity.isActive,
+      sortOrder: entity.sortOrder,
+      openingBalance: entity.openingBalance,
+    );
+  }
+
+  WalletEntity toEntity() {
+    return WalletEntity(
+      id: id,
+      userId: userId,
+      name: name,
+      balance: balance,
+      debt: debt,
+      credit: credit,
+      investment: investment,
+      colorHex: colorHex,
+      iconName: iconName,
+      createdAt: createdAt,
+      isActive: isActive,
+      sortOrder: sortOrder,
+      openingBalance: openingBalance,
+    );
+  }
 
   /// Converts Wallet to Firestore-compatible map
   Map<String, dynamic> toJson() {
@@ -79,7 +125,6 @@ class WalletModel extends WalletEntity {
   }
 
   /// Copy with method for updates
-  @override
   WalletModel copyWith({
     String? id,
     String? userId,
@@ -96,7 +141,7 @@ class WalletModel extends WalletEntity {
     double? openingBalance,
   }) {
     return WalletModel(
-      id: id ?? this.id, // preserve id to not change
+      id: id ?? this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
       balance: balance ?? this.balance,
@@ -114,46 +159,7 @@ class WalletModel extends WalletEntity {
 
   @override
   String toString() {
-    return 'Wallet(id: $id, name: $name, balance: $balance)';
+    return 'WalletModel(id: $id, name: $name, balance: $balance)';
   }
-
-  @override
-  @HiveField(0)
-  String? get id => super.id;
-  @override
-  @HiveField(1)
-  String get userId => super.userId;
-  @override
-  @HiveField(2)
-  String get name => super.name;
-  @override
-  @HiveField(3)
-  double get balance => super.balance;
-  @override
-  @HiveField(4)
-  double get debt => super.debt;
-  @override
-  @HiveField(5)
-  double get credit => super.credit;
-  @override
-  @HiveField(6)
-  double get investment => super.investment;
-  @override
-  @HiveField(7)
-  String get colorHex => super.colorHex;
-  @override
-  @HiveField(8)
-  String get iconName => super.iconName;
-  @override
-  @HiveField(9)
-  DateTime get createdAt => super.createdAt;
-  @override
-  @HiveField(10)
-  bool get isActive => super.isActive;
-  @override
-  @HiveField(11)
-  int get sortOrder => super.sortOrder;
-  @override
-  @HiveField(12)
-  double? get openingBalance => super.openingBalance;
 }
+

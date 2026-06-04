@@ -74,8 +74,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
         child: BlocConsumer<WalletBloc, WalletState>(
-          buildWhen: (previous, current) =>
-              current is! WalletOperationSuccessSt,
           listener: _handleWalletStateChanges,
           builder: (context, walletState) => _buildContent(walletState),
         ),
@@ -84,13 +82,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _handleWalletStateChanges(BuildContext context, WalletState state) {
-    switch (state) {
-      case WalletOperationSuccessSt():
-        IboSnackbar.showSuccess(context, state.message);
-      case WalletErrorSt():
-        IboSnackbar.showError(context, state.err);
-      default:
-        break;
+    if (state is WalletLoadedSt) {
+      if (state.message != null) {
+        IboSnackbar.showSuccess(context, state.message!);
+      }
+      if (state.error != null) {
+        IboSnackbar.showError(context, state.error!);
+      }
+    } else if (state is NoWalletSt) {
+      if (state.message != null) {
+        IboSnackbar.showSuccess(context, state.message!);
+      }
+      if (state.error != null) {
+        IboSnackbar.showError(context, state.error!);
+      }
+    } else if (state is WalletErrorSt) {
+      IboSnackbar.showError(context, state.err);
     }
   }
 

@@ -89,7 +89,6 @@ class _AppBarContentState extends State<AppBarContent> {
 
   Widget _buildCenterContent(BuildContext context) {
     return BlocBuilder<WalletBloc, WalletState>(
-      buildWhen: (previous, current) => current is! WalletOperationSuccessSt,
       builder: (context, state) {
         if (state is WalletLoadedSt) {
           _cachedLoadedState = state;

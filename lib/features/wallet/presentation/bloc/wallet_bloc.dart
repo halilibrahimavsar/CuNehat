@@ -1,14 +1,15 @@
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
 part 'wallet_event.dart';
 part 'wallet_state.dart';
 
-// ✅ DOĞRU - UseCase'leri inject et
 @injectable
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletGetUseCase getWalletsUseCase;
@@ -27,65 +28,70 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     required this.deleteWalletUseCase,
     required this.setActiveWalletUseCase,
     required this.walletMetricsService,
-  }) : super(const NoWalletSt()) {
+  }) : super(const WalletInitialSt()) {
     on<GetWalletsEvent>((event, emit) async {
       if (state is! WalletLoadedSt) {
         emit(const WalletLoadingSt());
       }
 
-      try {
-        final wallets = await getWalletsUseCase.call(event.userId);
-        if (wallets.isEmpty) {
-          emit(const NoWalletSt());
-        } else {
-          // Find the active wallet from the list
-          var activeWallet = _findActiveWallet(wallets);
+      final result = await getWalletsUseCase.call(event.userId);
+      result.fold(
+        (failure) => emit(WalletErrorSt(failure.message)),
+        (wallets) {
+          if (wallets.isEmpty) {
+            emit(const NoWalletSt());
+          } else {
+            var activeWallet = _findActiveWallet(wallets);
 
-          // Fallback: If no wallet is marked as active in the retrieved list,
-          // it means either no active wallet is set or it was deleted.
-          // In this case, we pick the first one and set it as active.
-          if (activeWallet == null && wallets.isNotEmpty) {
-            final fallbackWallet = wallets.first;
-            add(SetActiveWalletEvent(
-              userId: event.userId,
-              walletId: fallbackWallet.id!,
-            ));
-            _safeSyncBalance(fallbackWallet.id!);
-            emit(WalletLoadedSt(wallets, fallbackWallet));
-            return;
+            if (activeWallet == null && wallets.isNotEmpty) {
+              final fallbackWallet = wallets.first;
+              add(SetActiveWalletEvent(
+                userId: event.userId,
+                walletId: fallbackWallet.id!,
+              ));
+              _safeSyncBalance(fallbackWallet.id!);
+              emit(WalletLoadedSt(wallets, fallbackWallet));
+              return;
+            }
+
+            if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
+            emit(WalletLoadedSt(wallets, activeWallet));
           }
-
-          if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
-          emit(WalletLoadedSt(wallets, activeWallet));
-        }
-      } catch (e) {
-        emit(WalletErrorSt(e.toString()));
-      }
+        },
+      );
     });
 
     on<WatchWalletsEvent>((event, emit) async {
-      emit(const WalletLoadingSt());
-      await emit.forEach<List<WalletEntity>>(
+      if (state is! WalletLoadedSt) {
+        emit(const WalletLoadingSt());
+      }
+      
+      await emit.forEach<Either<Failure, List<WalletEntity>>>(
         watchWalletsUseCase(event.userId),
-        onData: (wallets) {
-          if (wallets.isEmpty) {
-            return const NoWalletSt();
-          }
+        onData: (result) {
+          return result.fold(
+            (failure) => WalletErrorSt(failure.message),
+            (wallets) {
+              if (wallets.isEmpty) {
+                return const NoWalletSt();
+              }
 
-          final activeWallet = _findActiveWallet(wallets);
+              final activeWallet = _findActiveWallet(wallets);
 
-          if (activeWallet == null && wallets.isNotEmpty) {
-            final fallbackWallet = wallets.first;
-            add(SetActiveWalletEvent(
-              userId: event.userId,
-              walletId: fallbackWallet.id!,
-            ));
-            _safeSyncBalance(fallbackWallet.id!);
-            return WalletLoadedSt(wallets, fallbackWallet);
-          }
+              if (activeWallet == null && wallets.isNotEmpty) {
+                final fallbackWallet = wallets.first;
+                add(SetActiveWalletEvent(
+                  userId: event.userId,
+                  walletId: fallbackWallet.id!,
+                ));
+                _safeSyncBalance(fallbackWallet.id!);
+                return WalletLoadedSt(wallets, fallbackWallet);
+              }
 
-          if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
-          return WalletLoadedSt(wallets, activeWallet);
+              if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
+              return WalletLoadedSt(wallets, activeWallet);
+            },
+          );
         },
         onError: (error, _) => WalletErrorSt(error.toString()),
       );
@@ -93,70 +99,78 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
     // ========== CÜZDAN OLUŞTUR ==========
     on<CreateWalletEvent>((event, emit) async {
-      try {
-        // 1. UseCase'i çağır ve oluşturulan yeni ID'yi al.
-        final newWalletId = await createWalletUseCase.call(event.wallet);
-
-        // after creation, set it as active
-        try {
-          // 2. Dönen yeni ID'yi kullanarak cüzdanı aktif yap.
-          await setActiveWalletUseCase.call(
+      final result = await createWalletUseCase.call(event.wallet);
+      await result.fold(
+        (failure) async => _emitError(emit, 'Cüzdan oluşturulamadı: ${failure.message}'),
+        (newWalletId) async {
+          final activeResult = await setActiveWalletUseCase.call(
             userId: event.wallet.userId,
             walletId: newWalletId,
           );
-        } catch (e) {
-          emit(WalletErrorSt('Aktif cüzdan ayarlanamadı: ${e.toString()}'));
-        }
-        emit(const WalletOperationSuccessSt("Cüzdan oluşturuldu!"));
-      } catch (e) {
-        emit(WalletErrorSt('Cüzdan oluşturulamadı: ${e.toString()}'));
-      }
+          activeResult.fold(
+            (f) => _emitError(emit, 'Aktif cüzdan ayarlanamadı: ${f.message}'),
+            (_) => _emitSuccess(emit, "Cüzdan oluşturuldu!"),
+          );
+        },
+      );
     });
 
     // ========== CÜZDAN GÜNCELLE ==========
     on<UpdateWalletEvent>((event, emit) async {
-      try {
-        await updateWalletUseCase.call(event.wallet);
-        emit(const WalletOperationSuccessSt("Cüzdan güncellendi!"));
-      } catch (e) {
-        emit(WalletErrorSt('Cüzdan güncellenemedi: ${e.toString()}'));
-      }
+      final result = await updateWalletUseCase.call(event.wallet);
+      result.fold(
+        (failure) => _emitError(emit, 'Cüzdan güncellenemedi: ${failure.message}'),
+        (_) => _emitSuccess(emit, "Cüzdan güncellendi!"),
+      );
     });
 
     // ========== CÜZDAN SİL ==========
     on<DeleteWalletEvent>((event, emit) async {
-      try {
-        // Cüzdana bağlı verileri (işlem/borç/alacak/yatırım) temizle ki
-        // yetim kayıt kalmasın.
-        final current = state;
-        if (current is WalletLoadedSt) {
-          for (final w in current.wallets) {
-            if (w.id == event.walletId) {
-              await walletMetricsService.purgeWalletData(
-                  event.walletId, w.userId);
-              break;
-            }
+      final current = state;
+      if (current is WalletLoadedSt) {
+        for (final w in current.wallets) {
+          if (w.id == event.walletId) {
+            await walletMetricsService.purgeWalletData(event.walletId, w.userId);
+            break;
           }
         }
-        await deleteWalletUseCase.call(event.walletId);
-        emit(const WalletOperationSuccessSt("Cüzdan silindi!"));
-      } catch (e) {
-        emit(WalletErrorSt('Cüzdan silinemedi: ${e.toString()}'));
       }
+      final result = await deleteWalletUseCase.call(event.walletId);
+      result.fold(
+        (failure) => _emitError(emit, 'Cüzdan silinemedi: ${failure.message}'),
+        (_) => _emitSuccess(emit, "Cüzdan silindi!"),
+      );
     });
 
     // ========== AKTİF CÜZDANI DEĞİŞTİR ==========
     on<SetActiveWalletEvent>((event, emit) async {
-      try {
-        await setActiveWalletUseCase.call(
-          userId: event.userId,
-          walletId: event.walletId,
-        );
-        emit(const WalletOperationSuccessSt("Cüzdan seçildi"));
-      } catch (e) {
-        emit(WalletErrorSt('Aktif cüzdan değiştirilemedi: ${e.toString()}'));
-      }
+      final result = await setActiveWalletUseCase.call(
+        userId: event.userId,
+        walletId: event.walletId,
+      );
+      result.fold(
+        (failure) => _emitError(emit, 'Aktif cüzdan değiştirilemedi: ${failure.message}'),
+        (_) => _emitSuccess(emit, "Cüzdan seçildi"),
+      );
     });
+  }
+
+  void _emitSuccess(Emitter<WalletState> emit, String message) {
+    if (state is WalletLoadedSt) {
+      emit((state as WalletLoadedSt).copyWith(message: message, clearError: true));
+    } else if (state is NoWalletSt) {
+      emit(NoWalletSt(message: message));
+    }
+  }
+
+  void _emitError(Emitter<WalletState> emit, String error) {
+    if (state is WalletLoadedSt) {
+      emit((state as WalletLoadedSt).copyWith(error: error, clearMessage: true));
+    } else if (state is NoWalletSt) {
+      emit(NoWalletSt(error: error));
+    } else {
+      emit(WalletErrorSt(error));
+    }
   }
 
   WalletEntity? _findActiveWallet(List<WalletEntity> wallets) {
@@ -166,8 +180,6 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     return null;
   }
 
-  /// Aktif cüzdan yüklenince bakiyeyi işlemlerden onarır / openingBalance'ı
-  /// geri doldurur (fire-and-forget; tutarlıysa yazma yapmaz).
   void _safeSyncBalance(String walletId) {
     walletMetricsService.syncBalance(walletId).catchError((_) {});
   }
