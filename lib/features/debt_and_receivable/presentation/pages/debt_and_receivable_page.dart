@@ -1,3 +1,5 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -205,9 +207,10 @@ class DebtListSection extends StatelessWidget {
               totalPaidAmount: debt.totalPaidAmount));
         }
       },
-      child: Card(
-        elevation: 2,
+      child: AppCard(
+        section: AppSection.debt,
         margin: const EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -424,14 +427,17 @@ class ReceivableListSection extends StatelessWidget {
               isPaid: receivable.isPaid));
         }
       },
-      child: Card(
+      child: AppCard(
+        section: AppSection.savings,
         margin: const EdgeInsets.only(bottom: 12),
-        elevation: 2,
+        padding: EdgeInsets.zero,
         child: Container(
           decoration: BoxDecoration(
             color: receivable.isPaid
-                ? Colors.green.shade50
-                : (isOverdue ? Colors.orange.shade50 : Colors.white),
+                ? Colors.green.withValues(alpha: 0.12)
+                : (isOverdue
+                    ? Colors.orange.withValues(alpha: 0.12)
+                    : Colors.transparent),
             borderRadius: BorderRadius.circular(12),
           ),
           child: ListTile(

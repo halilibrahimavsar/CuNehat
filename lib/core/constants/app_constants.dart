@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/custom_theme.dart';
+import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -27,8 +28,14 @@ class ThemeNames {
   static const String neoMorphism = "Neo Morphism";
 
   static Map<String, ThemeData> get all => {
-        sysLight: ThemeData.light(),
-        sysDark: ThemeData.dark(),
+        sysLight: ThemeData.light()
+            .copyWith(extensions: const <ThemeExtension<dynamic>>[
+          AppSurface.light,
+        ]),
+        sysDark: ThemeData.dark()
+            .copyWith(extensions: const <ThemeExtension<dynamic>>[
+          AppSurface.dark,
+        ]),
         glassmorphism: CustomeAppThemes.glassTheme,
         neoMorphism: CustomeAppThemes.neoTheme,
       };

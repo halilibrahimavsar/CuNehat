@@ -1,3 +1,5 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -22,102 +24,60 @@ class SummaryCard extends StatelessWidget {
       symbol: '₺',
       decimalDigits: 0,
     );
+    final scheme = Theme.of(context).colorScheme;
 
-    return Container(
+    return AppCard(
+      section: AppSection.savings,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // Grid View for stats
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // Maliyet (yatırılan anapara)
-              Column(
-                children: [
-                  Text(
-                    'Maliyet',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currencyFormat.format(totalInvestment),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Güncel Değer (cüzdan "Birikim" ile aynı temel)
-              Column(
-                children: [
-                  Text(
-                    'Güncel Değer',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currencyFormat.format(totalCurrentValue),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Kar/Zarar
-              Column(
-                children: [
-                  Text(
-                    'Kar/Zarar',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currencyFormat.format(totalProfit),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: totalProfit >= 0 ? Colors.green : Colors.red,
-                    ),
-                  ),
-                  Text(
-                    '${totalProfitPercentage.toStringAsFixed(2)}%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: totalProfitPercentage >= 0
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          _stat('Maliyet', currencyFormat.format(totalInvestment), scheme),
+          _stat('Güncel Değer', currencyFormat.format(totalCurrentValue),
+              scheme),
+          _stat(
+            'Kar/Zarar',
+            currencyFormat.format(totalProfit),
+            scheme,
+            valueColor: totalProfit >= 0 ? Colors.green : Colors.red,
+            sub: '${totalProfitPercentage.toStringAsFixed(2)}%',
+            subColor: totalProfitPercentage >= 0 ? Colors.green : Colors.red,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _stat(
+    String label,
+    String value,
+    ColorScheme scheme, {
+    Color? valueColor,
+    String? sub,
+    Color? subColor,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: valueColor ?? scheme.onSurface,
+          ),
+        ),
+        if (sub != null)
+          Text(
+            sub,
+            style: TextStyle(fontSize: 12, color: subColor),
+          ),
+      ],
     );
   }
 }

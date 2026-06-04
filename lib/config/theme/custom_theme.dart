@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:cunehat/config/theme/app_surface_theme.dart';
 
 /// A collection of complete Flutter themes.
 /// Includes GlassMorphism and NeoMorphism aesthetics.
@@ -11,6 +12,7 @@ class CustomeAppThemes {
   // ---------------------------------------------------------------
   static ThemeData glassTheme = ThemeData(
     brightness: Brightness.dark,
+    extensions: const <ThemeExtension<dynamic>>[AppSurface.glass],
     scaffoldBackgroundColor: const Color(0xFF0F111A),
     primaryColor: const Color(0xFF00E5FF),
     colorScheme: const ColorScheme.dark(
@@ -70,6 +72,7 @@ class CustomeAppThemes {
   // ---------------------------------------------------------------
   static final ThemeData neoTheme = ThemeData(
     brightness: Brightness.light,
+    extensions: const <ThemeExtension<dynamic>>[AppSurface.neo],
     scaffoldBackgroundColor: const Color(0xFFE0E0E0),
     primaryColor: const Color(0xFF3A86FF),
     colorScheme: const ColorScheme.light(

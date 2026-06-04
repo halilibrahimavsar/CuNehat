@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -21,17 +22,6 @@ class InvestmentCard extends StatelessWidget {
     }
   }
 
-  Color _getInvestmentColor(InvestmentType type) {
-    switch (type) {
-      case InvestmentType.stock:
-        return Colors.blue;
-      case InvestmentType.gold:
-        return Colors.amber;
-      case InvestmentType.custom:
-        return Colors.green;
-    }
-  }
-
   String _getInvestmentTypeText(InvestmentType type) {
     switch (type) {
       case InvestmentType.stock:
@@ -50,40 +40,29 @@ class InvestmentCard extends StatelessWidget {
       symbol: '₺',
       decimalDigits: 0,
     );
+    final scheme = Theme.of(context).colorScheme;
+    final accent = investment.color;
+    final profitColor = investment.isProfitable ? Colors.green : Colors.red;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 5,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
+    return AppCard(
+      accent: accent,
       child: Row(
         children: [
           // İkon
           Container(
-            width: 50,
-            height: 50,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color:
-                  _getInvestmentColor(investment.type).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(25),
+              color: accent.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
               _getInvestmentIcon(investment.type),
-              color: _getInvestmentColor(investment.type),
-              size: 24,
+              color: accent,
+              size: 26,
             ),
           ),
-
           const SizedBox(width: 16),
-
           // Bilgiler
           Expanded(
             child: Column(
@@ -92,11 +71,16 @@ class InvestmentCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      investment.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        investment.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onSurface,
+                        ),
                       ),
                     ),
                     if (investment.symbol != null)
@@ -106,14 +90,15 @@ class InvestmentCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(4),
+                          color: accent.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           investment.symbol!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            color: accent,
                           ),
                         ),
                       ),
@@ -124,10 +109,10 @@ class InvestmentCard extends StatelessWidget {
                   _getInvestmentTypeText(investment.type),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -138,14 +123,15 @@ class InvestmentCard extends StatelessWidget {
                           'Mevcut Değer',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[600],
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                         Text(
                           currencyFormat.format(investment.currentValue),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
+                            color: scheme.onSurface,
                           ),
                         ),
                       ],
@@ -157,7 +143,7 @@ class InvestmentCard extends StatelessWidget {
                           'Kar/Zarar',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[600],
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                         Text(
@@ -165,18 +151,14 @@ class InvestmentCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: investment.isProfitable
-                                ? Colors.green
-                                : Colors.red,
+                            color: profitColor,
                           ),
                         ),
                         Text(
                           '${investment.profitPercentage.toStringAsFixed(2)}%',
                           style: TextStyle(
                             fontSize: 11,
-                            color: investment.isProfitable
-                                ? Colors.green
-                                : Colors.red,
+                            color: profitColor,
                           ),
                         ),
                       ],
@@ -186,8 +168,6 @@ class InvestmentCard extends StatelessWidget {
               ],
             ),
           ),
-
-          const SizedBox(width: 8),
         ],
       ),
     );

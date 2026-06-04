@@ -1,4 +1,5 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
@@ -23,13 +24,14 @@ class TransactionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = item.transaction;
+    final scheme = Theme.of(context).colorScheme;
+    final accent = t.isIncome ? Colors.green : Colors.redAccent;
+
     return DismissableWidget<TransactionWithBalance>(
       item: item,
       dismissKey: t.id ?? '',
-      // Silme işlemi henüz implemente edilmediği için false dönüyoruz
       onDelete: (item) async {
-        // Oto-işlemler (borç/yatırım/alacak kuplajı) manuel silinemez;
-        // defterle desync olmasın diye ilgili kayıttan yönetilir.
+        // Oto-işlemler (borç/yatırım/alacak kuplajı) manuel silinemez.
         if (t.isSystem) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -73,122 +75,107 @@ class TransactionCard extends StatelessWidget {
           initialTransaction: t,
         );
       },
-      child: Container(
+      child: AppCard(
+        accent: accent,
         margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Kategori ikonu
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                t.isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                color: accent,
+                size: 20,
+              ),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // Sol Renk Şeridi
-                Container(
-                  width: 5,
-                  color: t.isIncome ? Colors.green : Colors.redAccent,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        // Kategori İkonu
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: (t.isIncome ? Colors.green : Colors.red)
-                                .withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            t.isIncome
-                                ? Icons.add_rounded
-                                : Icons.remove_rounded,
-                            color: t.isIncome ? Colors.green : Colors.red,
-                            size: 20,
+            const SizedBox(width: 12),
+            // Detaylar
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          t.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: scheme.onSurface,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Detaylar
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                t.title,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
-                              Text(
-                                t.tag,
-                                style: TextStyle(
-                                    color: Colors.grey.shade600, fontSize: 12),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                AppFormatters.time.format(t.date),
-                                style: TextStyle(
-                                    color: Colors.grey.shade600, fontSize: 12),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              )
-                            ],
-                          ),
-                        ),
-                        // Tutar
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            SignedAmountDisplay(
-                              amount: t.amount,
-                              isExpense: t.isExpense,
-                              style: TextStyle(
-                                color: t.isIncome ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Text(
-                                  'Kalan bakiye : ',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade800,
-                                  ),
-                                ),
-                                AmountDisplay(
-                                  amount: item.balanceAfter,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: item.balanceAfter >= 0
-                                        ? Colors.blue
-                                        : Colors.orange,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
+                      ),
+                      if (t.isSystem) ...[
+                        const SizedBox(width: 6),
+                        Icon(Icons.lock_outline,
+                            size: 13, color: scheme.onSurfaceVariant),
                       ],
-                    ),
+                    ],
                   ),
+                  Text(
+                    t.tag,
+                    style: TextStyle(
+                        color: scheme.onSurfaceVariant, fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    AppFormatters.time.format(t.date),
+                    style: TextStyle(
+                        color: scheme.onSurfaceVariant, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            // Tutar
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SignedAmountDisplay(
+                  amount: t.amount,
+                  isExpense: t.isExpense,
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      'Kalan bakiye : ',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    AmountDisplay(
+                      amount: item.balanceAfter,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: item.balanceAfter >= 0
+                            ? Colors.blue
+                            : Colors.orange,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
