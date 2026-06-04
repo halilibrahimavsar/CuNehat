@@ -28,6 +28,17 @@ class TransactionCard extends StatelessWidget {
       dismissKey: t.id ?? '',
       // Silme işlemi henüz implemente edilmediği için false dönüyoruz
       onDelete: (item) async {
+        // Oto-işlemler (borç/yatırım/alacak kuplajı) manuel silinemez;
+        // defterle desync olmasın diye ilgili kayıttan yönetilir.
+        if (t.isSystem) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından silin.'),
+            ),
+          );
+          return false;
+        }
         final confirmed = await IboDialog.showConfirmation(
           context,
           'İşlem Sil',
@@ -45,6 +56,15 @@ class TransactionCard extends StatelessWidget {
         return false;
       },
       onEdit: (item) {
+        if (t.isSystem) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Otomatik işlem düzenlenemez. İlgili borç/yatırım/alacak kaydından değiştirin.'),
+            ),
+          );
+          return;
+        }
         TransactionSheetHandler.showSheet(
           context: context,
           userId: t.userId,

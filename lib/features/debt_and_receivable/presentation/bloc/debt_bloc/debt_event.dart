@@ -25,10 +25,11 @@ class AddDebtEvent extends DebtEvent {
 
 class UpdateDebtEvent extends DebtEvent {
   final DebtEntity debt;
-  const UpdateDebtEvent(this.debt);
+  final double prevPrincipal; // mutabakat için düzenleme öncesi anapara
+  const UpdateDebtEvent(this.debt, {required this.prevPrincipal});
 
   @override
-  List<Object?> get props => [debt];
+  List<Object?> get props => [debt, prevPrincipal];
 }
 
 /// Borca ödeme yapıldığında: güncel borcu (yeni payment eklenmiş) kaydeder ve
@@ -47,12 +48,15 @@ class DeleteDebtEvent extends DebtEvent {
   final String userId;
   final String
       walletId; // Silme işleminden sonra listeyi yenilemek için gerekli
-  final double amount;
+  // Mutabakat için: net nakit etkisi = principal - totalPaid (geri alınır).
+  final double principalAmount;
+  final double totalPaidAmount;
   const DeleteDebtEvent(
       {required this.id,
       required this.userId,
       required this.walletId,
-      required this.amount});
+      required this.principalAmount,
+      required this.totalPaidAmount});
 
   @override
   List<Object?> get props => [id, walletId];

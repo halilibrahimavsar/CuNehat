@@ -201,7 +201,8 @@ class DebtListSection extends StatelessWidget {
               id: debt.id!,
               userId: debt.userId,
               walletId: debt.walletId,
-              amount: debt.totalDebtAmount));
+              principalAmount: debt.principalAmount,
+              totalPaidAmount: debt.totalPaidAmount));
         }
       },
       child: Card(
@@ -419,7 +420,8 @@ class ReceivableListSection extends StatelessWidget {
               id: receivable.id!,
               userId: receivable.userId,
               walletId: receivable.walletId,
-              amount: receivable.amount));
+              amount: receivable.amount,
+              isPaid: receivable.isPaid));
         }
       },
       child: Card(

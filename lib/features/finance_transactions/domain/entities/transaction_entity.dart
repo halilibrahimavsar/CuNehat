@@ -11,6 +11,11 @@ class TransactionEntity extends Equatable {
   final DateTime date;
   final TransactionTypeModel type;
 
+  /// Borç/yatırım/alacak kuplajı tarafından otomatik oluşturulan işlemler için
+  /// true. Bu işlemler listede manuel silinemez/düzenlenemez (defterle desync
+  /// olmasın); ilgili kayıttan yönetilir.
+  final bool isSystem;
+
   const TransactionEntity({
     required this.id,
     required this.userId,
@@ -20,6 +25,7 @@ class TransactionEntity extends Equatable {
     required this.amount,
     required this.date,
     required this.type,
+    this.isSystem = false,
   });
 
   TransactionEntity copyWith({
@@ -31,6 +37,7 @@ class TransactionEntity extends Equatable {
     double? amount,
     DateTime? date,
     TransactionTypeModel? type,
+    bool? isSystem,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -41,6 +48,7 @@ class TransactionEntity extends Equatable {
       amount: amount ?? this.amount,
       date: date ?? this.date,
       type: type ?? this.type,
+      isSystem: isSystem ?? this.isSystem,
     );
   }
 
@@ -57,6 +65,7 @@ class TransactionEntity extends Equatable {
       'amount': amount,
       'date': date.toIso8601String(),
       'type': type.name,
+      'isSystem': isSystem,
     };
   }
 
@@ -70,5 +79,6 @@ class TransactionEntity extends Equatable {
         amount,
         date,
         type,
+        isSystem,
       ];
 }

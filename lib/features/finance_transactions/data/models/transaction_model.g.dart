@@ -25,13 +25,14 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       amount: fields[5] as double,
       date: fields[6] as DateTime,
       type: fields[7] as TransactionTypeModel,
+      isSystem: fields[8] == null ? false : fields[8] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransactionModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       ..writeByte(6)
       ..write(obj.date)
       ..writeByte(7)
-      ..write(obj.type);
+      ..write(obj.type)
+      ..writeByte(8)
+      ..write(obj.isSystem);
   }
 
   @override

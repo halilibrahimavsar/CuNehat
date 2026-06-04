@@ -92,6 +92,18 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     emit(DebtLoading());
     try {
       await updateDebtUseCase(event.debt);
+      // Mutabakat: anapara değişimi kadar nakit (borç arttıysa gelir).
+      final diff = event.debt.principalAmount - event.prevPrincipal;
+      if (diff != 0) {
+        await walletMetricsService.recordCashMovement(
+          walletId: event.debt.walletId,
+          userId: event.debt.userId,
+          amount: diff.abs(),
+          isIncome: diff > 0,
+          title: 'Borç güncellendi: ${event.debt.title}',
+          tag: CashMovementTags.debt,
+        );
+      }
       await _safeSyncDebt(event.debt.walletId);
 
       emit(const DebtOperationSuccess("Borç güncellendi."));
@@ -106,6 +118,19 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     emit(DebtLoading());
     try {
       await deleteDebtUseCase(event.id);
+      // Mutabakat: borcun net nakit etkisini geri al.
+      // net = +principal (alındı) − Σödeme → geri alma = Σödeme − principal.
+      final reversal = event.totalPaidAmount - event.principalAmount;
+      if (reversal != 0) {
+        await walletMetricsService.recordCashMovement(
+          walletId: event.walletId,
+          userId: event.userId,
+          amount: reversal.abs(),
+          isIncome: reversal > 0,
+          title: 'Borç silindi',
+          tag: CashMovementTags.debt,
+        );
+      }
       await _safeSyncDebt(event.walletId);
 
       emit(const DebtOperationSuccess("Borç silindi."));

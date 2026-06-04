@@ -68,6 +68,7 @@ class WalletMetricsService {
       date: date ?? DateTime.now(),
       type:
           isIncome ? TransactionTypeModel.income : TransactionTypeModel.expense,
+      isSystem: true,
     );
     await transactionsRepository.addTransaction(tx);
     await applyBalanceDelta(

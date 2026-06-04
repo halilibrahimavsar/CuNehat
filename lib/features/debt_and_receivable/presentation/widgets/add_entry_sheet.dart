@@ -112,7 +112,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           dueDate: _selectedDate.add(
               Duration(days: 30 * (int.tryParse(_termController.text) ?? 1))),
         );
-        context.read<DebtBloc>().add(UpdateDebtEvent(updatedDebt));
+        context.read<DebtBloc>().add(UpdateDebtEvent(updatedDebt,
+            prevPrincipal: _originalAmount ?? updatedDebt.principalAmount));
       } else {
         final debt = DebtEntity(
           userId: userId,

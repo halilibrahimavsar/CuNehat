@@ -43,16 +43,18 @@ class DeleteReceivableEvent extends ReceivableEvent {
   final String userId;
   final String walletId;
   final double amount; // Wallet senkronizasyonu için
+  final bool isPaid; // Mutabakat: tahsil edilmemişse silmede para geri döner
 
   const DeleteReceivableEvent({
     required this.id,
     required this.userId,
     required this.walletId,
     required this.amount,
+    required this.isPaid,
   });
 
   @override
-  List<Object?> get props => [id, userId, walletId, amount];
+  List<Object?> get props => [id, userId, walletId, amount, isPaid];
 }
 
 /// Alacağı "ödendi" olarak işaretle

@@ -78,6 +78,20 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       await result.fold(
         (failure) async => emit(InvestmentError(failure.message)),
         (_) async {
+          // Mutabakat: maliyet (anapara) değişimi kadar nakit.
+          // Maliyet arttı → gider; azaldı → gelir. (currentValue değişimi
+          // gerçekleşmemiş kâr/zarar olduğundan nakdi etkilemez.)
+          final costDiff = event.newAmount - event.prevAmount;
+          if (costDiff != 0) {
+            await walletMetricsService.recordCashMovement(
+              walletId: event.walletId,
+              userId: event.userId,
+              amount: costDiff.abs(),
+              isIncome: costDiff < 0,
+              title: 'Yatırım güncellendi: ${event.investment.name}',
+              tag: CashMovementTags.investmentBuy,
+            );
+          }
           await _safeSyncInvestment(event.walletId);
           emit(const InvestmentActionSuccess('Yatırım güncellendi'));
           add(GetInvestmentsEvent(

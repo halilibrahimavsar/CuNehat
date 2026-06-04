@@ -16,6 +16,7 @@ class TransactionModel extends TransactionEntity {
     required super.amount,
     required super.date,
     required super.type,
+    super.isSystem = false,
   });
 
   /// ✅ FIXED: Handle both Timestamp (Firestore) and String (Hive/old data)
@@ -43,6 +44,7 @@ class TransactionModel extends TransactionEntity {
       amount: (json['amount'] as num).toDouble(),
       date: parsedDate,
       type: _parseTransactionType(json['type'] as String),
+      isSystem: json['isSystem'] as bool? ?? false,
     );
   }
 
@@ -57,6 +59,7 @@ class TransactionModel extends TransactionEntity {
       'amount': amount,
       'date': Timestamp.fromDate(date), // ✅ Use Timestamp like WalletModel
       'type': type == TransactionTypeModel.income ? 'income' : 'expense',
+      'isSystem': isSystem,
     };
   }
 
@@ -70,6 +73,7 @@ class TransactionModel extends TransactionEntity {
       amount: entity.amount,
       date: entity.date,
       type: entity.type,
+      isSystem: entity.isSystem,
     );
   }
 
@@ -83,6 +87,7 @@ class TransactionModel extends TransactionEntity {
       amount: amount,
       date: date,
       type: type,
+      isSystem: isSystem,
     );
   }
 
@@ -102,16 +107,18 @@ class TransactionModel extends TransactionEntity {
     double? amount,
     DateTime? date,
     TransactionTypeModel? type,
+    bool? isSystem,
   }) {
     return TransactionModel(
-      id: id,
+      id: id ?? this.id, // preserve id (önceden id düşüyordu — düzeltildi)
       userId: userId ?? this.userId,
-      walletId: walletId ?? this.walletId, // preserve id
+      walletId: walletId ?? this.walletId,
       title: title ?? this.title,
       tag: tag ?? this.tag,
       amount: amount ?? this.amount,
       date: date ?? this.date,
       type: type ?? this.type,
+      isSystem: isSystem ?? this.isSystem,
     );
   }
 
@@ -146,4 +153,8 @@ class TransactionModel extends TransactionEntity {
   @override
   @HiveField(7)
   TransactionTypeModel get type => super.type;
+
+  @override
+  @HiveField(8, defaultValue: false)
+  bool get isSystem => super.isSystem;
 }

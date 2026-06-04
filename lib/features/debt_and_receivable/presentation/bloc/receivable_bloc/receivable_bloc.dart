@@ -72,6 +72,20 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
     emit(ReceivableLoading());
     try {
       await updateReceivableUseCase(event.receivable);
+      // Mutabakat: yalnız tahsil edilmemiş alacakta tutar değişimi nakde yansır.
+      if (!event.receivable.isPaid) {
+        final diff = event.receivable.amount - event.prevAmount;
+        if (diff != 0) {
+          await walletMetricsService.recordCashMovement(
+            walletId: event.receivable.walletId,
+            userId: event.receivable.userId,
+            amount: diff.abs(),
+            isIncome: diff < 0, // daha çok verildi → gider; azaldı → gelir
+            title: 'Alacak güncellendi: ${event.receivable.debtorName}',
+            tag: CashMovementTags.receivable,
+          );
+        }
+      }
       await _safeSyncCredit(event.receivable.walletId);
 
       emit(const ReceivableOperationSuccess("Alacak güncellendi."));
@@ -86,6 +100,17 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
     emit(ReceivableLoading());
     try {
       await deleteReceivableUseCase(event.id);
+      // Mutabakat: tahsil edilmemiş alacak silinince verilen para geri döner (gelir).
+      if (!event.isPaid && event.amount != 0) {
+        await walletMetricsService.recordCashMovement(
+          walletId: event.walletId,
+          userId: event.userId,
+          amount: event.amount,
+          isIncome: true,
+          title: 'Alacak silindi',
+          tag: CashMovementTags.receivable,
+        );
+      }
       await _safeSyncCredit(event.walletId);
 
       emit(const ReceivableOperationSuccess("Alacak silindi."));
