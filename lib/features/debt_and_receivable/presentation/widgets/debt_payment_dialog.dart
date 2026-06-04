@@ -98,6 +98,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     final totalDebt = widget.debt.totalDebtAmount;
     final totalPaid = widget.debt.totalPaidAmount;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
@@ -105,10 +106,15 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.shade100,
+              color: isDark
+                  ? Colors.green.withValues(alpha: 0.2)
+                  : Colors.green.shade100,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.payment, color: Colors.green.shade700),
+            child: Icon(
+              Icons.payment,
+              color: isDark ? Colors.greenAccent : Colors.green.shade700,
+            ),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -130,9 +136,27 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: isDark
+                      ? Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.15)
+                      : Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(
+                    color: isDark
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.35)
+                        : Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,6 +339,22 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
 
   Widget _buildInfoRow(String label, String value,
       {Color? color, bool isBold = false}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    Color resolvedColor;
+    if (color != null) {
+      if (color == Colors.green) {
+        resolvedColor = isDark ? Colors.greenAccent : Colors.green.shade700;
+      } else if (color == Colors.red) {
+        resolvedColor = isDark ? Colors.redAccent : Colors.red.shade700;
+      } else {
+        resolvedColor = color;
+      }
+    } else {
+      resolvedColor = isDark ? theme.colorScheme.onSurface : Colors.black87;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -324,7 +364,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
             label,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey.shade700,
+              color: isDark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade700,
             ),
           ),
           Text(
@@ -332,7 +374,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
             style: TextStyle(
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-              color: color ?? Colors.black87,
+              color: resolvedColor,
             ),
           ),
         ],

@@ -187,29 +187,31 @@ class _AppBarContentState extends State<AppBarContent> {
 
   Widget _buildWalletNameBadge(activeWallet, String valueName) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppBorderRadius.large),
-        border:
-            Border.all(color: AppColors.white.withValues(alpha: 0.1), width: 1),
+        color: AppColors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.wallet,
-              size: 12, color: AppColors.white.withValues(alpha: 0.9)),
-          const SizedBox(width: 6),
+              size: 14, color: AppColors.white.withValues(alpha: 0.9)),
+          const SizedBox(width: 8),
           Flexible(
             child: Text(
               valueName == "BAKİYE"
                   ? (activeWallet?.name.toUpperCase() ?? "CÜZDAN")
                   : "${activeWallet?.name.toUpperCase() ?? 'CÜZDAN'} • $valueName",
               style: TextStyle(
-                fontSize: 11,
-                color: AppColors.white.withValues(alpha: 0.95),
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+                fontSize: 12,
+                color: AppColors.white,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -229,15 +231,15 @@ class _AppBarContentState extends State<AppBarContent> {
           obscureMode: AmountObscureMode.blur,
           alignment: Alignment.center,
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 34,
             color: AppColors.white,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1.0,
             shadows: [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, 4),
+                color: Colors.black26,
+                blurRadius: 16,
+                offset: Offset(0, 8),
               ),
             ],
           ),

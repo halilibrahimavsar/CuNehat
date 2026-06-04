@@ -134,7 +134,8 @@ class FakeReceivableRepository implements ReceivableRepository {
 
 class FakeInvestmentRepository implements InvestmentRepository {
   @override
-  Future<Either<Failure, void>> addInvestment(InvestmentEntity investment) async =>
+  Future<Either<Failure, void>> addInvestment(
+          InvestmentEntity investment) async =>
       Right<Failure, void>(null);
 
   @override
@@ -212,8 +213,9 @@ DebtEntity _debt(
       interestRate: 0,
       termMonths: 12,
       startDate: DateTime(2026, 1, 1),
-      payments:
-          paid > 0 ? [Payment(date: DateTime(2026, 1, 2), amount: paid)] : const [],
+      payments: paid > 0
+          ? [Payment(date: DateTime(2026, 1, 2), amount: paid)]
+          : const [],
       isPaid: isPaid,
     );
 

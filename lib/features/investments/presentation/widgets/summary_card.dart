@@ -3,12 +3,8 @@ import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+/// A dashboard-style premium summary card for investment metrics.
 class SummaryCard extends StatelessWidget {
-  final double totalInvestment;
-  final double totalCurrentValue;
-  final double totalProfit;
-  final double totalProfitPercentage;
-
   const SummaryCard({
     super.key,
     required this.totalInvestment,
@@ -17,6 +13,11 @@ class SummaryCard extends StatelessWidget {
     required this.totalProfitPercentage,
   });
 
+  final double totalInvestment;
+  final double totalCurrentValue;
+  final double totalProfit;
+  final double totalProfitPercentage;
+
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(
@@ -24,60 +25,149 @@ class SummaryCard extends StatelessWidget {
       symbol: '₺',
       decimalDigits: 0,
     );
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isProfit = totalProfit >= 0;
+    final profitColor = isProfit ? Colors.green : Colors.red;
 
     return AppCard(
       section: AppSection.savings,
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _stat('Maliyet', currencyFormat.format(totalInvestment), scheme),
-          _stat('Güncel Değer', currencyFormat.format(totalCurrentValue),
-              scheme),
-          _stat(
-            'Kar/Zarar',
-            currencyFormat.format(totalProfit),
-            scheme,
-            valueColor: totalProfit >= 0 ? Colors.green : Colors.red,
-            sub: '${totalProfitPercentage.toStringAsFixed(2)}%',
-            subColor: totalProfitPercentage >= 0 ? Colors.green : Colors.red,
+          // Row containing title and trend icon
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'TOPLAM PORTFÖY DEĞERİ',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: profitColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isProfit ? Icons.trending_up : Icons.trending_down,
+                  color: profitColor,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Massive main balance display
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              currencyFormat.format(totalCurrentValue),
+              style: theme.textTheme.displayMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                fontSize: 48,
+                letterSpacing: -1.5,
+                color: scheme.onSurface,
+                height: 1.1,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Container(
+            height: 1,
+            color: scheme.onSurface.withValues(alpha: 0.1),
+          ),
+          const SizedBox(height: 24),
+
+          // Bottom details row (Maliyet & Kar/Zarar) with bold contrast
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Cost column
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TOPLAM MALİYET',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    currencyFormat.format(totalInvestment),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Profit/Loss column
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'KAZANÇ / ZARAR',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Percentage Capsule
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: profitColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: profitColor.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          '${isProfit ? "+" : ""}${totalProfitPercentage.toStringAsFixed(1)}%',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: profitColor,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        currencyFormat.format(totalProfit),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: profitColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _stat(
-    String label,
-    String value,
-    ColorScheme scheme, {
-    Color? valueColor,
-    String? sub,
-    Color? subColor,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: valueColor ?? scheme.onSurface,
-          ),
-        ),
-        if (sub != null)
-          Text(
-            sub,
-            style: TextStyle(fontSize: 12, color: subColor),
-          ),
-      ],
     );
   }
 }

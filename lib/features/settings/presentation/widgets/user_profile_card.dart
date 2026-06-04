@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:go_router/go_router.dart';
 
-/// Displays the current user's information in a card.
+/// Displays the current user's information in a premium, theme-aware card.
 class UserProfileCard extends StatelessWidget {
   const UserProfileCard({super.key});
 
@@ -18,28 +19,18 @@ class UserProfileCard extends StatelessWidget {
         final email = user?.email ?? 'Kullanıcı';
         final initial = email.isNotEmpty ? email[0].toUpperCase() : 'K';
 
-        return Card(
-          elevation: 2,
-          clipBehavior: Clip.antiAlias, // Ensure ripple effect breaks at corners
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: InkWell(
-            onTap: () {
-               context.push(AppRoutes.profile);
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  _buildAvatar(theme, initial),
-                  const SizedBox(width: 16),
-                  _buildUserInfo(theme, email),
-                  const Spacer(),
-                  Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
-                ],
-              ),
-            ),
+        return AppCard(
+          onTap: () {
+            context.push(AppRoutes.profile);
+          },
+          child: Row(
+            children: [
+              _buildAvatar(theme, initial),
+              const SizedBox(width: 16),
+              _buildUserInfo(theme, email),
+              Icon(Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant),
+            ],
           ),
         );
       },
@@ -54,12 +45,12 @@ class UserProfileCard extends StatelessWidget {
 
   Widget _buildAvatar(ThemeData theme, String initial) {
     return CircleAvatar(
-      radius: 30,
-      backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
+      radius: 28,
+      backgroundColor: theme.primaryColor.withValues(alpha: 0.12),
       child: Text(
         initial,
         style: TextStyle(
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
           color: theme.primaryColor,
         ),
@@ -74,12 +65,16 @@ class UserProfileCard extends StatelessWidget {
         children: [
           Text(
             'Hoşgeldiniz',
-            style: theme.textTheme.bodySmall,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+            ),
           ),
+          const SizedBox(height: 2),
           Text(
             email,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
             ),
             overflow: TextOverflow.ellipsis,
           ),

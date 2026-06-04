@@ -1,51 +1,49 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+/// A theme-aware premium investment pie chart component.
 class InvestmentChart extends StatelessWidget {
-  final List<InvestmentEntity> investments;
-
   const InvestmentChart({
     super.key,
     required this.investments,
   });
 
+  final List<InvestmentEntity> investments;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (investments.isEmpty) {
-      return Container(
+      return AppCard(
+        section: AppSection.savings,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: Text('Grafik için yatırım bulunmuyor'),
+        child: Center(
+          child: Text(
+            'Grafik için yatırım bulunmuyor',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
         ),
       );
     }
 
-    return Container(
+    return AppCard(
+      section: AppSection.savings,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Dağılım',
-            style: TextStyle(
-              fontSize: 16,
+          Text(
+            'Portföy Dağılımı',
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              color: scheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -54,13 +52,14 @@ class InvestmentChart extends StatelessWidget {
             child: PieChart(
               PieChartData(
                 sections: _buildSections(),
-                centerSpaceRadius: 40,
-                sectionsSpace: 4,
+                centerSpaceRadius: 44,
+                sectionsSpace: 3,
+                borderData: FlBorderData(show: false),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          ..._buildLegend(),
+          const SizedBox(height: 20),
+          ..._buildLegend(theme),
         ],
       ),
     );
@@ -80,50 +79,60 @@ class InvestmentChart extends StatelessWidget {
         color: investment.color,
         value: investment.currentValue,
         title: '${percentage.toStringAsFixed(1)}%',
-        radius: 60,
+        radius: 56,
         titleStyle: const TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.bold,
           color: Colors.white,
+          shadows: [
+            BoxShadow(
+              color: Colors.black38,
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
       );
     }).toList();
   }
 
-  List<Widget> _buildLegend() {
+  List<Widget> _buildLegend(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final totalValue = investments.fold(0.0, (sum, i) => sum + i.currentValue);
+
     return investments.map((investment) {
-      final percentage =
-          investments.fold(0.0, (sum, i) => sum + i.currentValue) > 0
-              ? (investment.currentValue /
-                      investments.fold(0.0, (sum, i) => sum + i.currentValue) *
-                      100)
-                  .toStringAsFixed(1)
-              : '0.0';
+      final percentage = totalValue > 0
+          ? (investment.currentValue / totalValue * 100).toStringAsFixed(1)
+          : '0.0';
 
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
                 color: investment.color,
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 investment.name,
-                style: const TextStyle(fontSize: 12),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withValues(alpha: 0.9),
+                  fontSize: 13,
+                ),
               ),
             ),
             Text(
               '%$percentage',
-              style: const TextStyle(
-                fontSize: 12,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
+                color: scheme.onSurface,
               ),
             ),
           ],

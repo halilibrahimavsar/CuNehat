@@ -26,17 +26,10 @@ class FinanceModeSelector extends StatelessWidget {
       // Margin kaldırıldı, parent widget yönetecek
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
         border: Border.all(
-          color: Colors.grey.shade100,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -89,7 +82,10 @@ class FinanceModeSelector extends StatelessWidget {
                               size: 20,
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.grey.shade400,
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.4),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -100,7 +96,10 @@ class FinanceModeSelector extends StatelessWidget {
                               fontWeight: FontWeight.w700,
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.grey.shade500,
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.6),
                             ),
                             child: Text(
                               mode.title,

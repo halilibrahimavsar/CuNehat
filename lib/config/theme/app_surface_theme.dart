@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Tema-duyarlı yüzey token'ları. Her ThemeData'ya bir varyant eklenir
-/// (light/dark/glass/neo); [AppCard] bunu okuyup accent ile harmanlar.
-/// Böylece kartlar artık temayı yok saymaz (eski "hardcode beyaz" sorununu çözer).
+/// (light/dark/aurora); [AppCard] bunu okuyup accent ile harmanlar.
 @immutable
 class AppSurface extends ThemeExtension<AppSurface> {
   final Brightness brightness;
@@ -11,8 +10,7 @@ class AppSurface extends ThemeExtension<AppSurface> {
   final double radius;
   final double accentFill; // accent gradyan opaklığı
   final double glow; // accent glow gölge gücü (0..1)
-  final bool gradientFill; // true: opak accent gradyan; false: cam/saydam
-  final bool isNeo; // neumorphism çift gölge
+  final bool gradientFill; // true: opak accent gradyan
   final List<BoxShadow> ambientShadow;
 
   const AppSurface({
@@ -23,7 +21,6 @@ class AppSurface extends ThemeExtension<AppSurface> {
     required this.accentFill,
     required this.glow,
     required this.gradientFill,
-    required this.isNeo,
     required this.ambientShadow,
   });
 
@@ -31,55 +28,43 @@ class AppSurface extends ThemeExtension<AppSurface> {
     brightness: Brightness.light,
     baseColor: Colors.white,
     borderColor: Color(0x14000000),
-    radius: 20,
-    accentFill: 0.16,
-    glow: 0.22,
+    radius: 32, // Bold radius
+    accentFill: 0.18,
+    glow: 0.35,
     gradientFill: true,
-    isNeo: false,
     ambientShadow: [
-      BoxShadow(color: Color(0x0F000000), blurRadius: 18, offset: Offset(0, 8)),
+      BoxShadow(
+          color: Color(0x15000000), blurRadius: 30, offset: Offset(0, 15)),
     ],
   );
 
   static const AppSurface dark = AppSurface(
     brightness: Brightness.dark,
-    baseColor: Color(0xFF1A1D2B),
+    baseColor: Color(0xFF13151D), // Deeper dark
     borderColor: Color(0x1FFFFFFF),
-    radius: 20,
-    accentFill: 0.30,
-    glow: 0.28,
+    radius: 32,
+    accentFill: 0.35,
+    glow: 0.40,
     gradientFill: true,
-    isNeo: false,
     ambientShadow: [
-      BoxShadow(color: Color(0x40000000), blurRadius: 18, offset: Offset(0, 8)),
+      BoxShadow(
+          color: Color(0x60000000), blurRadius: 40, offset: Offset(0, 20)),
     ],
   );
 
-  // Cam tema: saydamlık korunur, accent kenarda; liste içinde gerçek blur YOK.
-  static const AppSurface glass = AppSurface(
+  // Aurora tema: Premium, zengin arka plan (gradientMesh benzeri)
+  static const AppSurface aurora = AppSurface(
     brightness: Brightness.dark,
-    baseColor: Color(0x1AFFFFFF),
+    baseColor: Color(0xFF0F0C29), // Deep rich violet base
     borderColor: Color(0x33FFFFFF),
-    radius: 20,
-    accentFill: 0.0,
-    glow: 0.30,
-    gradientFill: false,
-    isNeo: false,
+    radius: 36,
+    accentFill: 0.45,
+    glow: 0.60, // Strong glow
+    gradientFill: true,
     ambientShadow: [
-      BoxShadow(color: Color(0x33000000), blurRadius: 20, offset: Offset(0, 10)),
+      BoxShadow(
+          color: Color(0x80000000), blurRadius: 50, offset: Offset(0, 25)),
     ],
-  );
-
-  static const AppSurface neo = AppSurface(
-    brightness: Brightness.light,
-    baseColor: Color(0xFFE0E0E0),
-    borderColor: Color(0x00000000),
-    radius: 18,
-    accentFill: 0.10,
-    glow: 0.0,
-    gradientFill: false,
-    isNeo: true,
-    ambientShadow: [],
   );
 
   @override
@@ -91,7 +76,6 @@ class AppSurface extends ThemeExtension<AppSurface> {
     double? accentFill,
     double? glow,
     bool? gradientFill,
-    bool? isNeo,
     List<BoxShadow>? ambientShadow,
   }) {
     return AppSurface(
@@ -102,7 +86,6 @@ class AppSurface extends ThemeExtension<AppSurface> {
       accentFill: accentFill ?? this.accentFill,
       glow: glow ?? this.glow,
       gradientFill: gradientFill ?? this.gradientFill,
-      isNeo: isNeo ?? this.isNeo,
       ambientShadow: ambientShadow ?? this.ambientShadow,
     );
   }
@@ -110,7 +93,6 @@ class AppSurface extends ThemeExtension<AppSurface> {
   @override
   AppSurface lerp(ThemeExtension<AppSurface>? other, double t) {
     if (other is! AppSurface) return this;
-    // Yüzey tipleri yapısal olduğundan ortada anlık geçiş (snap) yeterli.
     return t < 0.5 ? this : other;
   }
 }

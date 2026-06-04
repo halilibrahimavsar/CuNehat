@@ -33,8 +33,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
-      buildWhen: (previous, current) =>
-          current is! WalletOperationSuccessSt,
+      buildWhen: (previous, current) => current is! WalletOperationSuccessSt,
       listener: (context, state) {
         if (state is WalletOperationSuccessSt) {}
       },

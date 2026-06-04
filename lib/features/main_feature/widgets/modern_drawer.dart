@@ -1,11 +1,16 @@
 import 'dart:ui';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart'
     as constants;
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// A premium animated drawer featuring user profile, active wallet metrics,
+/// and navigation links to settings, profile, and sign-out actions.
 class ModernDrawer extends StatefulWidget {
   const ModernDrawer({super.key});
 
@@ -55,44 +60,86 @@ class _ModernDrawerState extends State<ModernDrawer>
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final secondary = theme.colorScheme.secondary;
+    final surface = theme.colorScheme.surface;
 
     return Drawer(
       elevation: 0,
       backgroundColor: Colors.transparent,
+      width: MediaQuery.of(context).size.width * 0.85,
       child: ClipRRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.9),
-                  theme.colorScheme.secondary.withValues(alpha: 0.8),
-                ],
+              color: isDark ? Colors.black.withValues(alpha: 0.4) : null,
+              gradient: isDark
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color.alphaBlend(
+                            primary.withValues(alpha: 0.18), surface),
+                        Color.alphaBlend(
+                            secondary.withValues(alpha: 0.12), surface),
+                        surface,
+                      ],
+                    ),
+              border: Border(
+                right: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : primary.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               ),
             ),
-            child: ListView(
-              padding: EdgeInsets.zero,
+            child: Column(
               children: [
-                _buildAnimatedHeader(user),
-                const SizedBox(height: 20),
-                _buildAnimatedMenuItem(
-                  index: 0,
-                  icon: Icons.settings_rounded,
-                  title: 'Ayarlar',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push(AppRoutes.settings);
-                  },
-                  delay: 100,
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      _buildAnimatedHeader(user, isDark, theme),
+                      const SizedBox(height: 12),
+
+                      // Active Wallet Metrics Section
+                      _buildWalletMetricsSection(theme),
+                      const SizedBox(height: 16),
+
+                      _buildAnimatedMenuItem(
+                        index: 0,
+                        icon: Icons.person_outline_rounded,
+                        title: 'Profilim',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(AppRoutes.profile);
+                        },
+                        delay: 50,
+                        isDark: isDark,
+                        theme: theme,
+                      ),
+                      _buildAnimatedMenuItem(
+                        index: 1,
+                        icon: Icons.settings_rounded,
+                        title: 'Ayarlar',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(AppRoutes.settings);
+                        },
+                        delay: 100,
+                        isDark: isDark,
+                        theme: theme,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Divider(color: Colors.white24, thickness: 1),
-                ),
+
+                // Footer Sign Out Option
+                _buildSignOutFooter(theme),
               ],
             ),
           ),
@@ -101,7 +148,8 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildAnimatedHeader(User? user) {
+  Widget _buildAnimatedHeader(User? user, bool isDark, ThemeData theme) {
+    final primary = theme.colorScheme.primary;
     return SlideTransition(
       position: _slideAnimation,
       child: FadeTransition(
@@ -114,11 +162,13 @@ class _ModernDrawerState extends State<ModernDrawer>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.white.withValues(alpha: 0.1),
+                isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : primary.withValues(alpha: 0.08),
                 Colors.transparent,
               ],
             ),
-            borderRadius: const BorderRadius.only(
+            borderRadius: BorderRadius.only(
               bottomLeft:
                   Radius.circular(constants.AppBorderRadius.drawerBottom),
               bottomRight:
@@ -128,9 +178,9 @@ class _ModernDrawerState extends State<ModernDrawer>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildAvatar(user),
+              _buildAvatar(user, isDark, primary),
               const SizedBox(height: 15),
-              _buildUserInfo(user),
+              _buildUserInfo(user, isDark, theme),
             ],
           ),
         ),
@@ -138,7 +188,9 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildAvatar(User? user) {
+  Widget _buildAvatar(User? user, bool isDark, Color primary) {
+    final photoUrl = user?.photoURL ?? user?.providerData.firstOrNull?.photoURL;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: constants.AppDurations.long,
@@ -151,7 +203,9 @@ class _ModernDrawerState extends State<ModernDrawer>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.3)
+                      : primary.withValues(alpha: 0.25),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -160,9 +214,10 @@ class _ModernDrawerState extends State<ModernDrawer>
             child: CircleAvatar(
               radius: constants.AppSizes.avatarRadius,
               backgroundColor: Colors.white,
-              backgroundImage: NetworkImage(
-                user?.providerData[0].photoURL ?? "",
-              ),
+              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
+                  ? const Icon(Icons.person, size: 28, color: Colors.blueGrey)
+                  : null,
             ),
           ),
         );
@@ -170,31 +225,153 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildUserInfo(User? user) {
+  Widget _buildUserInfo(User? user, bool isDark, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FadeTransition(
           opacity: _fadeAnimation,
           child: Text(
-            user?.displayName ?? "Anonymous",
-            style: const TextStyle(
-              fontSize: 24,
+            user?.displayName ?? "Kullanıcı",
+            style: TextStyle(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: isDark ? Colors.white : theme.colorScheme.onSurface,
               letterSpacing: 0.5,
             ),
           ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 3),
         FadeTransition(
           opacity: _fadeAnimation,
           child: Text(
-            user?.email ?? "No email",
+            user?.email ?? "E-posta adresi yok",
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 13,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.75)
+                  : theme.colorScheme.onSurfaceVariant,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWalletMetricsSection(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return BlocBuilder<WalletBloc, WalletState>(
+      builder: (context, state) {
+        if (state is! WalletLoadedSt || state.activeWallet == null) {
+          return const SizedBox.shrink();
+        }
+
+        final wallet = state.activeWallet!;
+        final walletColor = WalletColors.hexToColor(wallet.colorHex);
+
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: walletColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        WalletIcons.getIcon(wallet.iconName),
+                        color: walletColor,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        wallet.name,
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white
+                              : theme.colorScheme.onSurface,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Divider(
+                    color: isDark ? Colors.white12 : theme.dividerColor,
+                    height: 1),
+                const SizedBox(height: 12),
+                _buildDrawerMetricRow(
+                    'Bakiye', wallet.balance, Colors.white, theme),
+                const SizedBox(height: 8),
+                _buildDrawerMetricRow(
+                    'Yatırım', wallet.investment, Colors.greenAccent, theme),
+                const SizedBox(height: 8),
+                _buildDrawerMetricRow(
+                    'Borç', wallet.debt, Colors.redAccent, theme),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawerMetricRow(
+      String label, double amount, Color amountColor, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.7)
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          AppFormatters.currency.format(amount),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? amountColor
+                : (amountColor == Colors.white
+                    ? theme.colorScheme.onSurface
+                    : (amountColor == Colors.greenAccent
+                        ? Colors.green.shade700
+                        : (amountColor == Colors.redAccent
+                            ? Colors.red.shade700
+                            : amountColor))),
           ),
         ),
       ],
@@ -207,14 +384,16 @@ class _ModernDrawerState extends State<ModernDrawer>
     required String title,
     required VoidCallback onTap,
     required int delay,
+    required bool isDark,
+    required ThemeData theme,
   }) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 400 + delay),
+      duration: Duration(milliseconds: 300 + delay),
       curve: Curves.easeOutCubic,
       builder: (context, value, child) {
         return Transform.translate(
-          offset: Offset(-50 * (1 - value), 0),
+          offset: Offset(-40 * (1 - value), 0),
           child: Opacity(
             opacity: value,
             child: child,
@@ -230,41 +409,49 @@ class _ModernDrawerState extends State<ModernDrawer>
               setState(() => _selectedIndex = index);
               onTap();
             },
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             child: AnimatedContainer(
               duration: constants.AppDurations.short,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: _selectedIndex == index
-                    ? Colors.white.withValues(alpha: 0.2)
+                    ? (isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : theme.colorScheme.primary.withValues(alpha: 0.12))
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _selectedIndex == index
-                      ? Colors.white.withValues(alpha: 0.3)
+                      ? (isDark
+                          ? Colors.white.withValues(alpha: 0.25)
+                          : theme.colorScheme.primary.withValues(alpha: 0.25))
                       : Colors.transparent,
-                  width: 2,
+                  width: 1.5,
                 ),
               ),
               child: Row(
                 children: [
-                  _buildMenuIcon(icon),
-                  const SizedBox(width: 15),
+                  _buildMenuIcon(icon, isDark, theme),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color:
+                            isDark ? Colors.white : theme.colorScheme.onSurface,
                         letterSpacing: 0.3,
                       ),
                     ),
                   ),
                   Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withValues(alpha: 0.5),
-                    size: 16,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.4)
+                        : theme.colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.6),
+                    size: 14,
                   ),
                 ],
               ),
@@ -275,17 +462,85 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildMenuIcon(IconData icon) {
+  Widget _buildMenuIcon(IconData icon, bool isDark, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(constants.AppBorderRadius.small),
+        gradient: LinearGradient(
+          colors: isDark
+              ? [
+                  Colors.white.withValues(alpha: 0.25),
+                  Colors.white.withValues(alpha: 0.05),
+                ]
+              : [
+                  theme.colorScheme.primary.withValues(alpha: 0.15),
+                  theme.colorScheme.primary.withValues(alpha: 0.02),
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.3)
+              : theme.colorScheme.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Icon(
         icon,
-        color: Colors.white,
-        size: 22,
+        color: isDark ? Colors.white : theme.colorScheme.primary,
+        size: 20,
+      ),
+    );
+  }
+
+  Widget _buildSignOutFooter(ThemeData theme) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+            context.read<AppAuthBloc>().add(const AppSignOutRequested());
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.redAccent.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+                SizedBox(width: 10),
+                Text(
+                  'Çıkış Yap',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

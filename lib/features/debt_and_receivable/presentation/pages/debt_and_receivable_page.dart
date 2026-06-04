@@ -48,9 +48,18 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Finansal Takip"),
+          toolbarHeight: 70,
+          title: Text(
+            "Finansal Takip",
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+          ),
           centerTitle: true,
           bottom: const TabBar(
+            indicatorWeight: 4,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             tabs: [
               Tab(icon: Icon(Icons.outbound), text: "Borçlarım"),
               Tab(icon: Icon(Icons.call_received), text: "Alacaklarım"),
@@ -68,7 +77,10 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage> {
           builder: (context) {
             return FloatingActionButton.extended(
               onPressed: () => _showAddDialog(context),
-              label: const Text("Yeni Ekle"),
+              label: const Text(
+                "Yeni Ekle",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               icon: const Icon(Icons.add),
             );
           },
@@ -209,97 +221,159 @@ class DebtListSection extends StatelessWidget {
       },
       child: AppCard(
         section: AppSection.debt,
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor:
-                      isOverdue ? Colors.red.shade100 : Colors.blue.shade100,
-                  child: Icon(Icons.account_balance_wallet,
-                      color: isOverdue ? Colors.red : Colors.blue),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isOverdue
+                        ? Colors.red.withValues(alpha: 0.15)
+                        : Colors.blue.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet,
+                    color: isOverdue ? Colors.red : Colors.blue,
+                    size: 24,
+                  ),
                 ),
-                title: Text(debt.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(debt.counterparty),
-                    if (isOverdue)
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'VADESİ GEÇMİŞ!',
-                        style: TextStyle(
-                          color: Colors.red.shade700,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        debt.title,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                ),
                       ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        debt.counterparty,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      if (isOverdue) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: Colors.red.withValues(alpha: 0.3)),
+                          ),
+                          child: const Text(
+                            'VADESİ GEÇMİŞ',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 10,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       NumberFormat.currency(symbol: '₺')
                           .format(debt.remainingAmount),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.red),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.redAccent,
+                            fontSize: 20,
+                          ),
                     ),
-                    if (debt.isPaid)
+                    if (debt.isPaid) ...[
+                      const SizedBox(height: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.green.shade100,
+                          color: Colors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.green.withValues(alpha: 0.3)),
                         ),
-                        child: Text(
+                        child: const Text(
                           'ÖDENDİ',
                           style: TextStyle(
-                            color: Colors.green.shade700,
+                            color: Colors.green,
                             fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: debt.progress,
+                minHeight: 8,
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.05),
+                color: debt.isPaid ? Colors.green : Colors.blueAccent,
               ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                  value: debt.progress,
-                  backgroundColor: Colors.grey.shade200,
-                  color: debt.isPaid ? Colors.green : Colors.blue),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                      "Vade: ${debt.termMonths} Ay | ${debt.payments.length} Ödeme",
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: isOverdue ? Colors.red : Colors.grey)),
-                  if (!debt.isPaid)
-                    TextButton.icon(
-                      onPressed: () => DebtPaymentDialog.show(context, debt),
-                      icon: const Icon(Icons.payment, size: 16),
-                      label: const Text("Öde"),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Vade: ${debt.termMonths} Ay | ${debt.payments.length} Ödeme",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isOverdue
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (!debt.isPaid)
+                  FilledButton.icon(
+                    onPressed: () => DebtPaymentDialog.show(context, debt),
+                    icon: const Icon(Icons.payment, size: 16),
+                    label: const Text("Öde"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.green.withValues(alpha: 0.15),
+                      foregroundColor: Colors.green,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                ],
-              )
-            ],
-          ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -429,70 +503,113 @@ class ReceivableListSection extends StatelessWidget {
       },
       child: AppCard(
         section: AppSection.savings,
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.zero,
-        child: Container(
-          decoration: BoxDecoration(
-            color: receivable.isPaid
-                ? Colors.green.withValues(alpha: 0.12)
-                : (isOverdue
-                    ? Colors.orange.withValues(alpha: 0.12)
-                    : Colors.transparent),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            leading: CircleAvatar(
-              backgroundColor: receivable.isPaid
-                  ? Colors.green.shade100
-                  : (isOverdue ? Colors.orange.shade100 : Colors.blue.shade100),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: receivable.isPaid
+                    ? Colors.green.withValues(alpha: 0.15)
+                    : (isOverdue
+                        ? Colors.orange.withValues(alpha: 0.15)
+                        : Colors.blue.withValues(alpha: 0.15)),
+                shape: BoxShape.circle,
+              ),
               child: Icon(
                 receivable.isPaid ? Icons.check_circle : Icons.person,
                 color: receivable.isPaid
                     ? Colors.green
                     : (isOverdue ? Colors.orange : Colors.blue),
+                size: 24,
               ),
             ),
-            title: Text(
-              receivable.debtorName,
-              style: TextStyle(
-                decoration:
-                    receivable.isPaid ? TextDecoration.lineThrough : null,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    receivable.debtorName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          decoration: receivable.isPaid
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}",
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  if (isOverdue && !receivable.isPaid) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3)),
+                      ),
+                      child: const Text(
+                        'VADESİ GEÇMİŞ',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                    "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}"),
-                if (isOverdue)
-                  Text(
-                    'VADESİ GEÇMİŞ!',
-                    style: TextStyle(
-                      color: Colors.orange.shade700,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                  NumberFormat.currency(symbol: '₺').format(receivable.amount),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
+                        color: receivable.isPaid ? Colors.grey : Colors.green,
+                      ),
+                ),
+                if (receivable.isPaid) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.3)),
+                    ),
+                    child: const Text(
+                      'ÖDENDİ',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                if (receivable.isPaid)
-                  Text(
-                    'ÖDENDİ',
-                    style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
+                ],
               ],
             ),
-            trailing: Text(
-                NumberFormat.currency(symbol: '₺').format(receivable.amount),
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: receivable.isPaid ? Colors.grey : Colors.green)),
-          ),
+          ],
         ),
       ),
     );

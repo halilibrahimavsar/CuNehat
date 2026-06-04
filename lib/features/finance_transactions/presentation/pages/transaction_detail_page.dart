@@ -1,4 +1,6 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -37,6 +39,8 @@ class _TransactionDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
@@ -53,7 +57,7 @@ class _TransactionDetailView extends StatelessWidget {
           }
 
           if (transactions.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(context);
           }
 
           final totals = _calculateTotals(transactions);
@@ -64,22 +68,24 @@ class _TransactionDetailView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'İşlem Detayı',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildSummaryCards(totals),
                 const SizedBox(height: 24),
                 Text(
                   'Nakit Akışı',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _buildLineChart(chartPoints),
+                _buildLineChart(context, chartPoints),
               ],
             ),
           );
@@ -112,16 +118,23 @@ class _TransactionDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildLineChart(List<_ChartPoint> points) {
+  Widget _buildLineChart(BuildContext context, List<_ChartPoint> points) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (points.length < 2) {
-      return Container(
-        height: 220,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(16),
+      return AppCard(
+        section: AppSection.transactions,
+        child: Container(
+          height: 220,
+          alignment: Alignment.center,
+          child: Text(
+            'Grafik için yeterli veri yok',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
         ),
-        child: const Text('Grafik için yeterli veri yok'),
       );
     }
 
@@ -130,69 +143,95 @@ class _TransactionDetailView extends StatelessWidget {
       spots.add(FlSpot(i.toDouble(), points[i].value));
     }
 
-    return Container(
-      height: 240,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
+    return AppCard(
+      section: AppSection.transactions,
+      padding: const EdgeInsets.fromLTRB(12, 16, 20, 12),
+      child: SizedBox(
+        height: 240,
+        child: LineChart(
+          LineChartData(
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              getDrawingHorizontalLine: (value) => FlLine(
+                color: scheme.onSurface.withValues(alpha: 0.1),
+                strokeWidth: 1,
+              ),
+            ),
+            titlesData: FlTitlesData(
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 44,
+                  interval: _calculateInterval(points),
+                  getTitlesWidget: (value, meta) {
+                    return Text(
+                      value.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  interval: 2,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.toInt();
+                    if (index < 0 || index >= points.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final label =
+                        DateFormat('dd.MM').format(points[index].date);
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            borderData: FlBorderData(show: false),
+            lineBarsData: [
+              LineChartBarData(
+                isCurved: true,
+                spots: spots,
+                color: scheme.primary,
+                barWidth: 3.5,
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: scheme.primary.withValues(alpha: 0.15),
+                ),
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) =>
+                      FlDotCirclePainter(
+                    radius: 3,
+                    color: scheme.primary,
+                    strokeWidth: 1,
+                    strokeColor: scheme.surface,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: true),
-          titlesData: FlTitlesData(
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                interval: _calculateInterval(points),
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 2,
-                getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
-                  if (index < 0 || index >= points.length) {
-                    return const SizedBox.shrink();
-                  }
-                  final label = DateFormat('dd.MM').format(points[index].date);
-                  return SideTitleWidget(
-                    axisSide: meta.axisSide,
-                    child: Text(label, style: const TextStyle(fontSize: 10)),
-                  );
-                },
-              ),
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              isCurved: true,
-              spots: spots,
-              color: Colors.blue,
-              barWidth: 3,
-              belowBarData: BarAreaData(
-                show: true,
-                color: Colors.blue.withValues(alpha: 0.15),
-              ),
-              dotData: FlDotData(show: false),
-            ),
-          ],
         ),
       ),
     );
@@ -226,8 +265,7 @@ class _TransactionDetailView extends StatelessWidget {
     );
   }
 
-  List<_ChartPoint> _buildDailyNetPoints(
-      List<TransactionEntity> transactions) {
+  List<_ChartPoint> _buildDailyNetPoints(List<TransactionEntity> transactions) {
     final Map<DateTime, double> dailyNet = {};
 
     for (final t in transactions) {
@@ -244,19 +282,48 @@ class _TransactionDetailView extends StatelessWidget {
         .toList();
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.receipt_long,
-              size: 64, color: Colors.blueGrey.shade200),
-          const SizedBox(height: 12),
-          const Text(
-            'Detay gösterilecek işlem yok',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: AppCard(
+          section: AppSection.transactions,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.receipt_long_outlined,
+                    size: 48, color: scheme.primary),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Detay Gösterilecek İşlem Yok',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -275,31 +342,31 @@ class _SummaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Expanded(
-      child: Container(
+      child: AppCard(
+        accent: color,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-        ),
+        elevated: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '${amount.toStringAsFixed(2)} ₺',
-              style: TextStyle(
-                fontSize: 16,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,
+                fontSize: 15,
               ),
             ),
           ],

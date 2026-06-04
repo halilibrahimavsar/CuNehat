@@ -158,17 +158,23 @@ class _FilterViewState extends State<FilterView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.05),
                   blurRadius: 12,
                   offset: const Offset(0, 3),
                 ),
               ],
               border: Border(
                 bottom: BorderSide(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.05),
                   width: 1,
                 ),
               ),
@@ -202,17 +208,23 @@ class _FilterViewState extends State<FilterView> {
               curve: Curves.easeInOut,
               height: widget.isMenuOpen ? 300 : 0,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 3),
                   ),
                 ],
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.shade100,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.05),
                     width: 1,
                   ),
                 ),
@@ -223,10 +235,13 @@ class _FilterViewState extends State<FilterView> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.05),
                       blurRadius: 12,
                       offset: const Offset(0, 3),
                     ),
@@ -248,17 +263,25 @@ class _FilterViewState extends State<FilterView> {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: widget.isMenuOpen ? Colors.blue.shade50 : Colors.white,
+          color: widget.isMenuOpen
+              ? widget.filter.viewFilter.financeMode.primaryColor
+                  .withValues(alpha: 0.12)
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color:
-                widget.isMenuOpen ? Colors.blue.shade300 : Colors.grey.shade300,
+            color: widget.isMenuOpen
+                ? widget.filter.viewFilter.financeMode.primaryColor
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.15),
             width: 2,
           ),
           boxShadow: widget.isMenuOpen
               ? [
                   BoxShadow(
-                    color: Colors.blue.shade100,
+                    color: widget.filter.viewFilter.financeMode.primaryColor
+                        .withValues(alpha: 0.15),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -286,7 +309,7 @@ class _FilterViewState extends State<FilterView> {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -299,17 +322,19 @@ class _FilterViewState extends State<FilterView> {
       child: Container(
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Colors.grey.shade300,
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
             width: 2,
           ),
         ),
         child: Icon(
           Icons.close_rounded,
           size: 22,
-          color: Colors.grey.shade700,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -336,12 +361,12 @@ class _FilterViewState extends State<FilterView> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Filtreler',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const Spacer(),
@@ -420,7 +445,10 @@ class _FilterViewState extends State<FilterView> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
-            color: Colors.grey.shade600,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withValues(alpha: 0.8),
             letterSpacing: 0.5,
           ),
         ),
@@ -504,7 +532,9 @@ class _FilterViewState extends State<FilterView> {
                   : widget.filter.viewFilter.financeMode.primaryColor,
               checkmarkColor: Colors.white,
               labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black87,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               side: isCompareMode && !isSelected
@@ -528,7 +558,10 @@ class _FilterViewState extends State<FilterView> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
-            color: Colors.grey.shade600,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withValues(alpha: 0.8),
             letterSpacing: 0.5,
           ),
         ),
@@ -540,6 +573,8 @@ class _FilterViewState extends State<FilterView> {
                 controller: _minPriceController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Min',
                   hintText: '0',
@@ -548,7 +583,10 @@ class _FilterViewState extends State<FilterView> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.03),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 ),
@@ -569,6 +607,8 @@ class _FilterViewState extends State<FilterView> {
                 controller: _maxPriceController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Max',
                   hintText: '∞',
@@ -577,7 +617,10 @@ class _FilterViewState extends State<FilterView> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.03),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 ),
@@ -598,13 +641,16 @@ class _FilterViewState extends State<FilterView> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: widget.filter.viewFilter.financeMode.primaryColor
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(
+                      color: widget.filter.viewFilter.financeMode.primaryColor
+                          .withValues(alpha: 0.3)),
                 ),
                 child: Icon(
                   Icons.check_rounded,
-                  color: Colors.blue.shade700,
+                  color: widget.filter.viewFilter.financeMode.primaryColor,
                   size: 24,
                 ),
               ),
@@ -650,7 +696,10 @@ class _FilterViewState extends State<FilterView> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
-            color: Colors.grey.shade600,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withValues(alpha: 0.8),
             letterSpacing: 0.5,
           ),
         ),
@@ -660,13 +709,17 @@ class _FilterViewState extends State<FilterView> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: widget.filter.viewFilter.financeMode.primaryColor
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
+              border: Border.all(
+                  color: widget.filter.viewFilter.financeMode.primaryColor
+                      .withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, color: Colors.blue.shade700),
+                Icon(Icons.calendar_today,
+                    color: widget.filter.viewFilter.financeMode.primaryColor),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -676,7 +729,8 @@ class _FilterViewState extends State<FilterView> {
                         'Seçili Aralık',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.blue.shade700,
+                          color:
+                              widget.filter.viewFilter.financeMode.primaryColor,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -685,14 +739,16 @@ class _FilterViewState extends State<FilterView> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade900,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Icon(Icons.arrow_forward_ios,
-                    size: 16, color: Colors.blue.shade400),
+                    size: 16,
+                    color: widget.filter.viewFilter.financeMode.primaryColor
+                        .withValues(alpha: 0.6)),
               ],
             ),
           ),

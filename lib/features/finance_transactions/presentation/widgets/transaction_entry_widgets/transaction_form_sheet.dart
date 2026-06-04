@@ -30,8 +30,10 @@ class TransactionTitleField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor:
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
       ),
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       textCapitalization: TextCapitalization.sentences,
       maxLength: 50,
       validator: (_) => validator?.call(),
@@ -66,8 +68,10 @@ class TransactionAmountField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor:
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
       ),
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (_) => validator?.call(),
     );
@@ -138,7 +142,7 @@ class _TransactionCategorySelectorState
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             TextButton.icon(
@@ -181,17 +185,25 @@ class _TransactionCategorySelectorState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
-          Icon(Icons.category_outlined, size: 48, color: Colors.grey.shade400),
+          Icon(Icons.category_outlined,
+              size: 48,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withValues(alpha: 0.5)),
           const SizedBox(height: 8),
           Text(
             'Henüz kategori yok',
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           TextButton(
@@ -222,10 +234,18 @@ class _TransactionCategorySelectorState
             decoration: BoxDecoration(
               color: isSelected
                   ? widget.primaryColor.withValues(alpha: 0.1)
-                  : Colors.grey.shade50,
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? widget.primaryColor : Colors.grey.shade300,
+                color: isSelected
+                    ? widget.primaryColor
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.15),
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -235,15 +255,17 @@ class _TransactionCategorySelectorState
                 Icon(
                   _getIcon(category.iconName),
                   size: 20,
-                  color:
-                      isSelected ? widget.primaryColor : Colors.grey.shade600,
+                  color: isSelected
+                      ? widget.primaryColor
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   category.id,
                   style: TextStyle(
-                    color:
-                        isSelected ? widget.primaryColor : Colors.grey.shade700,
+                    color: isSelected
+                        ? widget.primaryColor
+                        : Theme.of(context).colorScheme.onSurface,
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.normal,
                     fontSize: 14,
@@ -400,8 +422,10 @@ class TransactionNoteField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor:
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
       ),
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       maxLines: 2,
       maxLength: 100,
     );

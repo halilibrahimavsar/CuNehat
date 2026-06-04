@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/features/settings/presentation/widgets/about_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security_settings_card.dart';
@@ -5,13 +6,7 @@ import 'package:cunehat/features/settings/presentation/widgets/settings_header.d
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
 import 'package:cunehat/features/settings/presentation/widgets/user_profile_card.dart';
 
-/// Main settings page.
-///
-/// Organized into sections:
-/// - User Profile
-/// - Appearance (Theme)
-/// - Security
-/// - About
+/// Main settings page, styled with premium, theme-aware AppCards.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -28,16 +23,20 @@ class SettingsPage extends StatelessWidget {
             expandedHeight: 120,
             pinned: true,
             backgroundColor: colorScheme.primary,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
+              title: const Text(
                 'Ayarlar',
                 style: TextStyle(
-                  color: colorScheme.onPrimary,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               centerTitle: false,
-              titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
+              titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -61,29 +60,18 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   const SettingsHeader(title: 'GÖRÜNÜM'),
                   const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                         BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                         )
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: const ThemeSelectorDropdown(),
+                  const AppCard(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: ThemeSelectorDropdown(),
                   ),
                   const SizedBox(height: 24),
                   const SettingsHeader(title: 'GÜVENLİK'),
                   const SizedBox(height: 8),
-                  const SecuritySettingsCard(), // Assuming this card has its own decoration
+                  const SecuritySettingsCard(),
                   const SizedBox(height: 24),
                   const SettingsHeader(title: 'HAKKINDA'),
                   const SizedBox(height: 8),
-                  const AboutCard(), // Assuming this card has its own decoration
+                  const AboutCard(),
                   const SizedBox(height: 40),
                 ],
               ),

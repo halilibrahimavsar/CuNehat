@@ -3,7 +3,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
-import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
 class DetailedListView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
@@ -26,7 +25,7 @@ class _DetailedListViewState extends State<DetailedListView> {
 
   @override
   Widget build(BuildContext context) {
-    // Veri İşleme (Mevcut mantık korundu)
+    // Filter transactions based on current mode
     final filteredTransactions = widget.mode == FinanceMode.compare
         ? widget.transactions
         : widget.transactions
@@ -35,6 +34,7 @@ class _DetailedListViewState extends State<DetailedListView> {
                 : item.transaction.isExpense)
             .toList();
 
+    // Group transactions by date
     final grouped = <DateTime, List<TransactionWithBalance>>{};
     for (var item in filteredTransactions) {
       final date = DateTime(
@@ -44,15 +44,16 @@ class _DetailedListViewState extends State<DetailedListView> {
       );
       grouped.putIfAbsent(date, () => []).add(item);
     }
-    // Başlangıçta hepsi kapalı olsun
+
+    // Default to expanded
     for (var date in grouped.keys) {
-      _expandedStates.putIfAbsent(date, () => false);
+      _expandedStates.putIfAbsent(date, () => true);
     }
 
     final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       itemCount: sortedDates.length,
       itemBuilder: (context, index) {
         final date = sortedDates[index];
@@ -61,33 +62,33 @@ class _DetailedListViewState extends State<DetailedListView> {
 
         return Stack(
           children: [
-            // 1. ADIM: Dinamik Sol Çizgi (Overflow yapmaz çünkü Stack içinde)
+            // Vertical timeline line connecting dates
             Positioned(
               left: 15,
               top: 40,
               bottom: 0,
               child: Container(
-                width: 2,
+                width: 1.5,
                 color: index == sortedDates.length - 1
-                    ? Colors.transparent // Son elemanın alt çizgisi yok
-                    : widget.mode.primaryColor.withValues(alpha: 0.2),
+                    ? Colors.transparent
+                    : widget.mode.primaryColor.withValues(alpha: 0.15),
               ),
             ),
 
-            // 2. ADIM: Ana İçerik
+            // Main Content
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tarih ve Node Satırı
-                _buildDateHeaderRow(date, items, isExpanded),
+                // Date and summary row
+                _buildDateHeaderRow(context, date, items, isExpanded),
 
-                // İşlemler Listesi
+                // Transactions List
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 250),
                   transitionBuilder: (child, animation) {
                     return SizeTransition(
                       sizeFactor: animation,
-                      axisAlignment: -1, // Yukarıdan aşağıya pürüzsüz açılış
+                      axisAlignment: -1,
                       child: FadeTransition(opacity: animation, child: child),
                     );
                   },
@@ -95,20 +96,23 @@ class _DetailedListViewState extends State<DetailedListView> {
                       ? Padding(
                           key: ValueKey('list_$date'),
                           padding: const EdgeInsets.only(
-                              left: 42, top: 4, bottom: 20),
+                            left: 36,
+                            top: 4,
+                            bottom: 16,
+                          ),
                           child: Column(
                             children: items
                                 .map(
                                   (item) => TransactionCard(
                                     context: context,
                                     item: item,
-                                    isListView: false,
+                                    isListView: true,
                                   ),
                                 )
                                 .toList(),
                           ),
                         )
-                      : const SizedBox(key: ValueKey('empty'), height: 16),
+                      : const SizedBox(key: ValueKey('empty'), height: 12),
                 ),
               ],
             ),
@@ -118,9 +122,15 @@ class _DetailedListViewState extends State<DetailedListView> {
     );
   }
 
-  // Tarih Başlığı ve Yuvarlak Node (Düğüm) bir arada
   Widget _buildDateHeaderRow(
-      DateTime date, List<TransactionWithBalance> items, bool isExpanded) {
+    BuildContext context,
+    DateTime date,
+    List<TransactionWithBalance> items,
+    bool isExpanded,
+  ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     final dailyIncome = items
         .where((e) => e.transaction.isIncome)
         .fold(0.0, (sum, e) => sum + e.transaction.amount);
@@ -133,21 +143,25 @@ class _DetailedListViewState extends State<DetailedListView> {
       onTap: () => setState(() => _expandedStates[date] = !isExpanded),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            // Timeline Node (Yuvarlak)
+            // Timeline node circle (respecting the theme background color)
             Container(
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: scheme.surface,
                 shape: BoxShape.circle,
-                border: Border.all(color: widget.mode.primaryColor, width: 3),
+                border: Border.all(
+                  color: widget.mode.primaryColor.withValues(alpha: 0.8),
+                  width: 2.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.mode.primaryColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
+                    color: widget.mode.primaryColor.withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   )
                 ],
               ),
@@ -163,23 +177,29 @@ class _DetailedListViewState extends State<DetailedListView> {
               ),
             ),
             const SizedBox(width: 12),
-            // Başlık ve Özet
+            // Title and daily summary
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     AppFormatters.dateLong.format(date),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: scheme.onSurface,
+                    ),
                   ),
-                  _buildDailySummary(dailyIncome, dailyExpense, dailyNet),
+                  const SizedBox(height: 2),
+                  _buildDailySummaryRow(
+                      context, dailyIncome, dailyExpense, dailyNet),
                 ],
               ),
             ),
             Icon(
               isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              color: Colors.grey,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+              size: 20,
             ),
           ],
         ),
@@ -187,42 +207,73 @@ class _DetailedListViewState extends State<DetailedListView> {
     );
   }
 
-  Widget _buildDailySummary(double income, double expense, double net) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(25)),
-        color: Colors.blueGrey.shade50,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+  Widget _buildDailySummaryRow(
+    BuildContext context,
+    double income,
+    double expense,
+    double net,
+  ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final netColor = net >= 0 ? Colors.green : Colors.redAccent;
+
+    return Row(
+      children: [
+        if (income > 0) ...[
+          Icon(
+            Icons.arrow_upward_rounded,
+            size: 11,
+            color: Colors.green.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 2),
           Text(
-            "Günün raporu :",
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
+            AppFormatters.currency.format(income),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          AmountDisplay(
-              amount: income,
-              style: const TextStyle(
-                  fontSize: 11,
-                  color: Colors.green,
-                  fontWeight: FontWeight.w600)),
-          AmountDisplay(
-              amount: expense,
-              style: const TextStyle(
-                  fontSize: 11,
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600)),
-          AmountDisplay(
-              amount: net,
-              style: TextStyle(
-                  fontSize: 11,
-                  color: net >= 0 ? Colors.blue : Colors.orange,
-                  fontWeight: FontWeight.w600)),
+          const SizedBox(width: 8),
         ],
-      ),
+        if (expense > 0) ...[
+          Icon(
+            Icons.arrow_downward_rounded,
+            size: 11,
+            color: Colors.redAccent.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            AppFormatters.currency.format(expense),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        // Net Change badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+          decoration: BoxDecoration(
+            color: netColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: netColor.withValues(alpha: 0.15),
+              width: 0.5,
+            ),
+          ),
+          child: Text(
+            'Net: ${net >= 0 ? "+" : ""}${AppFormatters.currency.format(net)}',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.bold,
+              color: netColor,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -183,9 +183,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
             builder: (sheetBuilderContext, state) {
               return Container(
                 height: MediaQuery.of(sheetBuilderContext).size.height * 0.85,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                decoration: BoxDecoration(
+                  color: Theme.of(sheetBuilderContext).colorScheme.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(32)),
                 ),
                 child: FilterView(
                   filter: state,
@@ -235,53 +236,35 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
             final filteredData = _getFilteredData(allTransactions, filterState);
 
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.blue[50]!.withValues(alpha: 0.3),
-                    Colors.purple[50]!.withValues(alpha: 0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: NestedScrollView(
-                  headerSliverBuilder: (context, innerBoxIsScrolled) {
-                    return [
-                      // 1. Finance Mode Selector (Kaydırılabilir Alan)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                          child: FinanceModeSelector(
-                            currentMode: filterState.viewFilter.financeMode,
-                            onModeChanged: (mode) {
-                              context
-                                  .read<TransactionFilterCubit>()
-                                  .updateFilter(
-                                    filterState.copyWith(
-                                      viewFilter: filterState.viewFilter
-                                          .copyWith(financeMode: mode),
-                                      dataFilter: filterState.dataFilter
-                                          .copyWith(clearCategories: true),
-                                    ),
-                                  );
-                            },
-                          ),
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) {
+                  return [
+                    // 1. Finance Mode Selector (Kaydırılabilir Alan)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        child: FinanceModeSelector(
+                          currentMode: filterState.viewFilter.financeMode,
+                          onModeChanged: (mode) {
+                            context.read<TransactionFilterCubit>().updateFilter(
+                                  filterState.copyWith(
+                                    viewFilter: filterState.viewFilter
+                                        .copyWith(financeMode: mode),
+                                    dataFilter: filterState.dataFilter
+                                        .copyWith(clearCategories: true),
+                                  ),
+                                );
+                          },
                         ),
                       ),
-                      // 2. Modern Header (Kaydırılabilir Alan)
-                      SliverToBoxAdapter(
+                    ),
+                    // 2. Modern Header (Kaydırılabilir Alan)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         child: TransactionHeader(
                           startDate: filterState.viewFilter.startDate,
                           endDate: filterState.viewFilter.endDate,
@@ -295,18 +278,18 @@ class _TransactionsViewState extends State<_TransactionsView> {
                           onDateTap: () => _pickDateRange(context, filterState),
                         ),
                       ),
-                    ];
-                  },
-                  // 3. Transaction List (Ana Gövde)
-                  body: isLoading && isEmpty
-                      ? const Center(child: CircularProgressIndicator())
-                      : filteredData.isEmpty
-                          ? _buildEmptyState()
-                          : DetailedListView(
-                              transactions: filteredData,
-                              mode: filterState.viewFilter.financeMode,
-                            ),
-                ),
+                    ),
+                  ];
+                },
+                // 3. Transaction List (Ana Gövde)
+                body: isLoading && isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredData.isEmpty
+                        ? _buildEmptyState()
+                        : DetailedListView(
+                            transactions: filteredData,
+                            mode: filterState.viewFilter.financeMode,
+                          ),
               ),
             );
           },

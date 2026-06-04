@@ -34,8 +34,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       }
 
       final bool isLoggedIn = authState is AppAuthenticated;
-      final bool isPublicRoute = 
-          state.matchedLocation == AppRoutes.login ||
+      final bool isPublicRoute = state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.register ||
           state.matchedLocation == AppRoutes.forgotPassword;
 
@@ -63,7 +62,8 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.login,
         pageBuilder: (context, state) {
-          return CubeInTransition(   // Or NoTransitionPage if preferred
+          return CubeInTransition(
+            // Or NoTransitionPage if preferred
             key: state.pageKey,
             child: const LoginScreen(),
           );

@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 /// ========================================
 /// 🎨 ANIMATED SCAFFOLD WRAPPER
@@ -56,45 +57,45 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
 
     _drawerScaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 0.85, // %85'e küçült
+      end: 0.75, // Daha derin (daha küçük)
     ).animate(CurvedAnimation(
       parent: _drawerController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeInOutBack, // Bounce efekti için
     ));
 
     _drawerSlideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(0.6, 0.0), // Sağa kaydır
+      end: const Offset(0.7, 0.0), // Sağa daha fazla kaydır
     ).animate(CurvedAnimation(
       parent: _drawerController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeInOutCubic,
     ));
 
     _drawerRotationAnimation = Tween<double>(
       begin: 0.0,
-      end: -0.05, // Hafif sola döndür
+      end: -0.08, // Daha belirgin sola döndür
     ).animate(CurvedAnimation(
       parent: _drawerController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeInOutCubic,
     ));
 
     // ========== WALLET ANIMATIONS ==========
     _walletController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 400),
     );
 
     _walletScaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 0.88, // %88'e küçült
+      end: 0.80, // Daha derin
     ).animate(CurvedAnimation(
       parent: _walletController,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOutBack,
     ));
 
     _walletSlideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(0.0, -0.15), // Yukarı kaydır
+      end: const Offset(0.0, -0.2), // Yukarı daha fazla kaydır
     ).animate(CurvedAnimation(
       parent: _walletController,
       curve: Curves.easeOutCubic,
@@ -102,7 +103,7 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
 
     _walletRotationAnimation = Tween<double>(
       begin: 0.0,
-      end: -0.02, // Hafif geriye döndür (3D efekti)
+      end: -0.04, // Daha belirgin geriye döndür
     ).animate(CurvedAnimation(
       parent: _walletController,
       curve: Curves.easeOutCubic,
@@ -162,10 +163,23 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
           AnimatedBuilder(
             animation: _drawerController,
             builder: (context, child) {
-              return Container(
-                color: Colors.grey.shade900.withOpacity(
-                  _drawerController.value * 0.3,
-                ),
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    color: Colors.black.withOpacity(
+                      _drawerController.value * 0.5,
+                    ),
+                  ),
+                  if (_drawerController.value > 0.0)
+                    BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: _drawerController.value * 12.0,
+                        sigmaY: _drawerController.value * 12.0,
+                      ),
+                      child: Container(color: Colors.transparent),
+                    ),
+                ],
               );
             },
           ),

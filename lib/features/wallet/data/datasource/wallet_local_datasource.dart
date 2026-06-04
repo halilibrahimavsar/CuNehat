@@ -68,7 +68,6 @@ class WalletLocalDataSource {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
-
   Future<void> setActiveWallet({
     required String userId,
     required String newActiveWalletId,
@@ -132,5 +131,4 @@ class WalletLocalDataSource {
     }
     return null;
   }
-
 }

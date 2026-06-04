@@ -54,18 +54,6 @@ class AppCard extends StatelessWidget {
   }
 
   BoxDecoration _decoration(AppSurface s, Color? acc, BorderRadius radius) {
-    if (s.isNeo) {
-      return BoxDecoration(
-        color: s.baseColor,
-        borderRadius: radius,
-        boxShadow: const [
-          BoxShadow(color: Colors.white, offset: Offset(-5, -5), blurRadius: 12),
-          BoxShadow(
-              color: Color(0xFFBEBEBE), offset: Offset(5, 5), blurRadius: 12),
-        ],
-      );
-    }
-
     final useGradient = s.gradientFill && acc != null;
     final borderColor = acc != null
         ? acc.withValues(alpha: s.gradientFill ? 0.22 : 0.45)

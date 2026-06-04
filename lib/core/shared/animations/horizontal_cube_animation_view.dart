@@ -1,5 +1,5 @@
 // ==========================================
-// UPDATED CUBE ANIMATION VIEW (No changes needed, but included for reference)
+// UPDATED CUBE ANIMATION VIEW (Enhanced 3D effect)
 // ==========================================
 
 // lib/features/main_feature/presentation/animations/cube_animation_view.dart
@@ -21,7 +21,8 @@ class HorizontalCubeAnimationView extends StatelessWidget {
     required this.thirdView,
   });
 
-  Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.001);
+  // Deeper perspective for a more dramatic 3D effect
+  Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.0015);
 
   @override
   Widget build(BuildContext context) {
@@ -47,18 +48,30 @@ class HorizontalCubeAnimationView extends StatelessWidget {
         }
 
         final outgoingRotation =
-            Tween(begin: 0.0, end: math.pi / 2.2).transform(phaseValue);
+            Tween(begin: 0.0, end: math.pi / 2.0).transform(phaseValue);
         final outgoingOffset = Tween<Offset>(
           begin: Offset.zero,
           end: const Offset(-1.0, 0.0),
         ).transform(phaseValue);
 
+        // Add subtle scale and opacity for depth
+        final outgoingScale =
+            Tween(begin: 1.0, end: 0.85).transform(phaseValue);
+        final outgoingOpacity =
+            Tween(begin: 1.0, end: 0.0).transform(phaseValue);
+
         final incomingRotation =
-            Tween(begin: -math.pi / 2.2, end: 0.0).transform(phaseValue);
+            Tween(begin: -math.pi / 2.0, end: 0.0).transform(phaseValue);
         final incomingOffset = Tween<Offset>(
           begin: const Offset(1.0, 0.0),
           end: Offset.zero,
         ).transform(phaseValue);
+
+        // Add subtle scale and opacity for depth
+        final incomingScale =
+            Tween(begin: 0.85, end: 1.0).transform(phaseValue);
+        final incomingOpacity =
+            Tween(begin: 0.0, end: 1.0).transform(phaseValue);
 
         return Stack(
           alignment: Alignment.center,
@@ -69,8 +82,13 @@ class HorizontalCubeAnimationView extends StatelessWidget {
                 translation: outgoingOffset,
                 child: Transform(
                   alignment: Alignment.centerRight,
-                  transform: _perspective()..rotateY(outgoingRotation),
-                  child: outgoingWidget,
+                  transform: _perspective()
+                    ..rotateY(outgoingRotation)
+                    ..scale(outgoingScale),
+                  child: Opacity(
+                    opacity: outgoingOpacity.clamp(0.0, 1.0),
+                    child: outgoingWidget,
+                  ),
                 ),
               ),
             ),
@@ -80,8 +98,13 @@ class HorizontalCubeAnimationView extends StatelessWidget {
                 translation: incomingOffset,
                 child: Transform(
                   alignment: Alignment.centerLeft,
-                  transform: _perspective()..rotateY(incomingRotation),
-                  child: incomingWidget,
+                  transform: _perspective()
+                    ..rotateY(incomingRotation)
+                    ..scale(incomingScale),
+                  child: Opacity(
+                    opacity: incomingOpacity.clamp(0.0, 1.0),
+                    child: incomingWidget,
+                  ),
                 ),
               ),
             ),

@@ -1,4 +1,3 @@
-import 'package:cunehat/config/theme/custom_theme.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -24,18 +23,14 @@ class WalletDefaults {
 class ThemeNames {
   static const String sysLight = "Sistem [Açık]";
   static const String sysDark = "Sistem [Kapalı]";
-  static const String glassmorphism = "Glass Morphism";
-  static const String neoMorphism = "Neo Morphism";
 
   // Tek sefer kurulur (cached). Dropdown value/item eşleşmesi örnek kimliğine
   // dayandığı için her erişimde yeni ThemeData üretilmemeli.
   static final Map<String, ThemeData> all = {
-    sysLight: ThemeData.light()
-        .copyWith(extensions: const <ThemeExtension<dynamic>>[AppSurface.light]),
+    sysLight: ThemeData.light().copyWith(
+        extensions: const <ThemeExtension<dynamic>>[AppSurface.light]),
     sysDark: ThemeData.dark()
         .copyWith(extensions: const <ThemeExtension<dynamic>>[AppSurface.dark]),
-    glassmorphism: CustomeAppThemes.glassTheme,
-    neoMorphism: CustomeAppThemes.neoTheme,
   };
 }
 

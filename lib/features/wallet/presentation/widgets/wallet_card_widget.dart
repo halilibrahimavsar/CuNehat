@@ -113,7 +113,9 @@ class WalletCardWidget extends StatelessWidget {
           ),
 
           // Stat satırı (Birikim, Alacak, Borç)
-          if (wallet.debt > 0 || wallet.credit > 0 || wallet.investment > 0) ...[
+          if (wallet.debt > 0 ||
+              wallet.credit > 0 ||
+              wallet.investment > 0) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -128,9 +130,8 @@ class WalletCardWidget extends StatelessWidget {
                       Icons.savings, scheme),
                   _buildStatItem('Alacak', wallet.credit, Colors.teal,
                       Icons.arrow_upward, scheme),
-                  _buildStatItem(
-                      'Borç', wallet.debt, Colors.red, Icons.arrow_downward,
-                      scheme),
+                  _buildStatItem('Borç', wallet.debt, Colors.red,
+                      Icons.arrow_downward, scheme),
                 ],
               ),
             ),

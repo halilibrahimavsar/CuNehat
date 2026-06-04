@@ -1,4 +1,6 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -66,6 +68,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: widget.showAppBar
           ? AppBar(
@@ -88,14 +92,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           }
 
           if (transactions.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(context);
           }
 
-          final filteredTransactions =
-              _filterTransactionsByRange(transactions);
+          final filteredTransactions = _filterTransactionsByRange(transactions);
 
           if (filteredTransactions.isEmpty) {
             return _buildEmptyState(
+              context,
               message: 'Seçilen tarih aralığında işlem yok',
             );
           }
@@ -112,39 +116,42 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'İşlem Raporu',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _buildRangeHeader(),
+                _buildRangeHeader(theme),
                 const SizedBox(height: 16),
                 _buildSummaryCards(totals),
                 const SizedBox(height: 24),
                 Text(
                   'Haftalık Net Akış',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _buildBarChartCard(weeklyNet),
+                _buildBarChartCard(context, weeklyNet),
                 const SizedBox(height: 24),
                 Text(
                   'Kategori Dağılımı',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildChartCard(
+                  context: context,
                   title: 'Giderler',
                   sections: _buildSections(expenseData, true),
                 ),
                 const SizedBox(height: 16),
                 _buildChartCard(
+                  context: context,
                   title: 'Gelirler',
                   sections: _buildSections(incomeData, false),
                 ),
@@ -157,65 +164,65 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   Widget _buildChartCard({
+    required BuildContext context,
     required String title,
     required List<PieChartSectionData> sections,
   }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (sections.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-            Text('$title için veri yok',
-                style: TextStyle(color: Colors.grey.shade600)),
-          ],
+      return AppCard(
+        section: AppSection.transactions,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Text(
+                '$title için veri yok',
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return AppCard(
+      section: AppSection.transactions,
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
           SizedBox(
             height: 200,
             child: PieChart(
               PieChartData(
                 sections: sections,
-                sectionsSpace: 2,
-                centerSpaceRadius: 32,
+                sectionsSpace: 3,
+                centerSpaceRadius: 40,
+                borderData: FlBorderData(show: false),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          _buildLegend(sections),
+          const SizedBox(height: 16),
+          _buildLegend(theme, sections),
         ],
       ),
     );
   }
 
-  Widget _buildLegend(List<PieChartSectionData> sections) {
+  Widget _buildLegend(ThemeData theme, List<PieChartSectionData> sections) {
+    final scheme = theme.colorScheme;
     return Wrap(
       spacing: 12,
       runSpacing: 8,
@@ -233,8 +240,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             ),
             const SizedBox(width: 6),
             Text(
-              section.title,
-              style: const TextStyle(fontSize: 12),
+              section.title.split(' ').first,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 12,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ],
         );
@@ -242,21 +252,25 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildBarChartCard(List<_ChartPoint> points) {
+  Widget _buildBarChartCard(BuildContext context, List<_ChartPoint> points) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (points.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-            Text('Grafik için yeterli veri yok',
-                style: TextStyle(color: Colors.grey.shade600)),
-          ],
+      return AppCard(
+        section: AppSection.transactions,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Text(
+                'Grafik için yeterli veri yok',
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -266,19 +280,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         .fold<double>(0.0, (prev, v) => v > prev ? v : prev);
     final maxY = maxAbs == 0 ? 1.0 : maxAbs * 1.2;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return AppCard(
+      section: AppSection.transactions,
+      padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
       child: SizedBox(
         height: 220,
         child: BarChart(
@@ -307,8 +311,18 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  reservedSize: 40,
+                  reservedSize: 44,
                   interval: maxY / 2,
+                  getTitlesWidget: (value, meta) {
+                    return Text(
+                      value.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
                 ),
               ),
               bottomTitles: AxisTitles(
@@ -324,13 +338,27 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         DateFormat('dd MMM').format(points[index].date);
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
-                      child: Text(label, style: const TextStyle(fontSize: 10)),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     );
                   },
                 ),
               ),
             ),
-            gridData: FlGridData(show: true),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              getDrawingHorizontalLine: (value) => FlLine(
+                color: scheme.onSurface.withValues(alpha: 0.1),
+                strokeWidth: 1,
+              ),
+            ),
             borderData: FlBorderData(show: false),
           ),
         ),
@@ -360,34 +388,40 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           title: 'Net',
           amount: totals.net,
           color: totals.net >= 0 ? Colors.blue : Colors.orange,
-          subtitle: '%${savingsRate.toStringAsFixed(0)}',
+          subtitle: '%${savingsRate.toStringAsFixed(0)} Birikim',
         ),
       ],
     );
   }
 
-  Widget _buildRangeHeader() {
+  Widget _buildRangeHeader(ThemeData theme) {
+    final scheme = theme.colorScheme;
     final rangeLabel =
         '${DateFormat('dd MMM yyyy').format(_range.start)} - ${DateFormat('dd MMM yyyy').format(_range.end)}';
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey.shade50,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return AppCard(
+      section: AppSection.neutral,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevated: false,
       child: Row(
         children: [
-          const Icon(Icons.calendar_today, size: 18),
-          const SizedBox(width: 8),
+          Icon(Icons.calendar_today_rounded, size: 18, color: scheme.primary),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               rangeLabel,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurface,
+              ),
             ),
           ),
           TextButton(
             onPressed: _pickDateRange,
+            style: TextButton.styleFrom(
+              foregroundColor: scheme.primary,
+              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             child: const Text('Değiştir'),
           ),
         ],
@@ -473,8 +507,18 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     if (data.isEmpty) return [];
 
     final colors = isExpense
-        ? [Colors.red, Colors.orange, Colors.deepOrange, Colors.amber]
-        : [Colors.green, Colors.teal, Colors.blue, Colors.indigo];
+        ? [
+            Colors.redAccent,
+            Colors.orangeAccent,
+            Colors.deepOrangeAccent,
+            Colors.amberAccent
+          ]
+        : [
+            Colors.greenAccent,
+            Colors.tealAccent,
+            Colors.blueAccent,
+            Colors.indigoAccent
+          ];
 
     final entries = data.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -484,8 +528,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final topEntries = entries.take(4).toList();
     final remaining = entries.skip(4);
     if (remaining.isNotEmpty) {
-      final otherTotal =
-          remaining.fold<double>(0.0, (sum, e) => sum + e.value);
+      final otherTotal = remaining.fold<double>(0.0, (sum, e) => sum + e.value);
       topEntries.add(MapEntry('Diğer', otherTotal));
     }
 
@@ -495,25 +538,64 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       return PieChartSectionData(
         value: entry.value,
         title: '${entry.key} %${percent.toStringAsFixed(0)}',
-        radius: 70,
+        radius: 66,
         color: colors[index % colors.length],
-        titleStyle: const TextStyle(fontSize: 11, color: Colors.white),
+        titleStyle: const TextStyle(
+          fontSize: 10,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          shadows: [
+            BoxShadow(
+                color: Colors.black45, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
       );
     });
   }
 
-  Widget _buildEmptyState({String? message}) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.pie_chart, size: 64, color: Colors.blueGrey.shade200),
-          const SizedBox(height: 12),
-          Text(
-            message ?? 'Rapor oluşturmak için veri yok',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  Widget _buildEmptyState(BuildContext context, {String? message}) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: AppCard(
+          section: AppSection.transactions,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.pie_chart_outline_rounded,
+                    size: 48, color: scheme.primary),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                message ?? 'Rapor Oluşturmak İçin Veri Yok',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -534,40 +616,40 @@ class _SummaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Expanded(
-      child: Container(
+      child: AppCard(
+        accent: color,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-        ),
+        elevated: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '${amount.toStringAsFixed(2)} ₺',
-              style: TextStyle(
-                fontSize: 16,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,
+                fontSize: 15,
               ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
               Text(
                 subtitle!,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade600,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ),
             ],
