@@ -27,18 +27,16 @@ class ThemeNames {
   static const String glassmorphism = "Glass Morphism";
   static const String neoMorphism = "Neo Morphism";
 
-  static Map<String, ThemeData> get all => {
-        sysLight: ThemeData.light()
-            .copyWith(extensions: const <ThemeExtension<dynamic>>[
-          AppSurface.light,
-        ]),
-        sysDark: ThemeData.dark()
-            .copyWith(extensions: const <ThemeExtension<dynamic>>[
-          AppSurface.dark,
-        ]),
-        glassmorphism: CustomeAppThemes.glassTheme,
-        neoMorphism: CustomeAppThemes.neoTheme,
-      };
+  // Tek sefer kurulur (cached). Dropdown value/item eşleşmesi örnek kimliğine
+  // dayandığı için her erişimde yeni ThemeData üretilmemeli.
+  static final Map<String, ThemeData> all = {
+    sysLight: ThemeData.light()
+        .copyWith(extensions: const <ThemeExtension<dynamic>>[AppSurface.light]),
+    sysDark: ThemeData.dark()
+        .copyWith(extensions: const <ThemeExtension<dynamic>>[AppSurface.dark]),
+    glassmorphism: CustomeAppThemes.glassTheme,
+    neoMorphism: CustomeAppThemes.neoTheme,
+  };
 }
 
 // ============ WALLET ICONS ============

@@ -7,7 +7,9 @@ sealed class ThemeState {
 }
 
 final class ThemeStateLight extends ThemeState {
-  ThemeStateLight() : super(ThemeData.light());
+  // Dropdown eşleşmesi için cache'lenmiş sysLight örneğini kullan (yeni bir
+  // ThemeData.light() örneği item'larla eşleşmez ve dropdown çöker).
+  ThemeStateLight() : super(ThemeNames.all[ThemeNames.sysLight]!);
 }
 
 final class ThemeSt extends ThemeState {
