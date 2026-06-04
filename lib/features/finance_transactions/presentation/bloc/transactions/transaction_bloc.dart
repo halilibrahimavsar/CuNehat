@@ -1,5 +1,4 @@
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
-import 'package:cunehat/core/utils/error_handler.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
@@ -39,30 +38,31 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     // Mevcut veriyi koruyarak loading durumuna geç
     emit(TransactionLoading(previousTransactions: state.currentTransactions));
 
-    try {
-      final transactions = await getTransactionsGroupedUseCase(
-        GetTransactionsGroupedParams(
-          userId: event.userId,
-          walletId: event.walletId,
-          startDate: event.startDate,
-          endDate: event.endDate,
-          type: event.type,
-        ),
-      );
+    final result = await getTransactionsGroupedUseCase(
+      GetTransactionsGroupedParams(
+        userId: event.userId,
+        walletId: event.walletId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        type: event.type,
+      ),
+    );
 
-      final List<TransactionEntity> allTransactions =
-          transactions.values.expand((group) => group).toList();
-
-      emit(TransactionLoaded(
-        groupedTransactions: transactions,
-        allTransactions: allTransactions,
-      ));
-    } catch (e) {
-      emit(TransactionError(
-        'İşlemler yüklenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
+    result.fold(
+      (failure) => emit(TransactionError(
+        'İşlemler yüklenirken hata oluştu: ${failure.message}',
         transactions: state.currentTransactions,
-      ));
-    }
+      )),
+      (transactions) {
+        final List<TransactionEntity> allTransactions =
+            transactions.values.expand((group) => group).toList();
+
+        emit(TransactionLoaded(
+          groupedTransactions: transactions,
+          allTransactions: allTransactions,
+        ));
+      },
+    );
   }
 
   Future<void> _onAddTransaction(
@@ -70,26 +70,26 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     final currentData = state.currentTransactions;
-    try {
-      // ID oluşturma sorumluluğu Usecase'de.
-      // Usecase, ID'yi oluşturup entity'ye ekledikten sonra repoya gönderir.
-      // Örnek: final entityWithId = event.transaction.copyWith(id: UidGenerator.generateWithUserId(event.transaction.userId));
-      await addTransactionUseCase(event.transaction); // Usecase ID'yi halleder.
-      await _safeApplyBalanceDelta(
-        walletId: event.transaction.walletId,
-        delta: _signedAmount(event.transaction),
-      );
+    final result = await addTransactionUseCase(
+        event.transaction); // Usecase ID'yi halleder.
 
-      emit(TransactionActionSuccess(
-        '${event.transaction.title} başarıyla eklendi',
+    await result.fold(
+      (failure) async => emit(TransactionError(
+        'İşlem eklenirken hata oluştu: ${failure.message}',
         transactions: currentData,
-      ));
-    } catch (e) {
-      emit(TransactionError(
-        'İşlem eklenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
-        transactions: currentData,
-      ));
-    }
+      )),
+      (_) async {
+        await _safeApplyBalanceDelta(
+          walletId: event.transaction.walletId,
+          delta: _signedAmount(event.transaction),
+        );
+
+        emit(TransactionActionSuccess(
+          '${event.transaction.title} başarıyla eklendi',
+          transactions: currentData,
+        ));
+      },
+    );
   }
 
   Future<void> _onUpdateTransaction(
@@ -97,25 +97,26 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     final currentData = state.currentTransactions;
-    try {
-      // 2. Update transaction in database
-      await updateTransactionUseCase(event.newTransaction);
-      await _safeApplyBalanceDelta(
-        walletId: event.newTransaction.walletId,
-        delta: _signedAmount(event.newTransaction) -
-            _signedAmount(event.previousTransaction),
-      );
+    final result = await updateTransactionUseCase(event.newTransaction);
 
-      emit(TransactionActionSuccess(
-        '${event.newTransaction.title} başarıyla güncellendi',
+    await result.fold(
+      (failure) async => emit(TransactionError(
+        'İşlem güncellenirken hata oluştu: ${failure.message}',
         transactions: currentData,
-      ));
-    } catch (e) {
-      emit(TransactionError(
-        'İşlem güncellenirken hata oluştu: ${ErrorHandler.handleException(e).message}',
-        transactions: currentData,
-      ));
-    }
+      )),
+      (_) async {
+        await _safeApplyBalanceDelta(
+          walletId: event.newTransaction.walletId,
+          delta: _signedAmount(event.newTransaction) -
+              _signedAmount(event.previousTransaction),
+        );
+
+        emit(TransactionActionSuccess(
+          '${event.newTransaction.title} başarıyla güncellendi',
+          transactions: currentData,
+        ));
+      },
+    );
   }
 
   Future<void> _onDeleteTransaction(
@@ -123,28 +124,40 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     final currentData = state.currentTransactions;
-    try {
-      // 1. Get transaction before deleting
-      final transaction = await getTransactionByIdUseCase(event.transactionId);
 
-      // 2. Delete from database
-      await deleteTransactionUseCase(event.transactionId);
-      await _safeApplyBalanceDelta(
-        walletId: transaction.walletId,
-        delta: -_signedAmount(transaction),
-      );
+    // 1. Get transaction before deleting
+    final getResult = await getTransactionByIdUseCase(event.transactionId);
 
-      // 3 Başarılı
-      emit(TransactionActionSuccess(
-        "${transaction.title} silindi",
+    await getResult.fold(
+      (failure) async => emit(TransactionError(
+        'İşlem bulunamadı: ${failure.message}',
         transactions: currentData,
-      ));
-    } catch (e) {
-      emit(TransactionError(
-        'İşlem silinirken hata oluştu: ${ErrorHandler.handleException(e).message}',
-        transactions: currentData,
-      ));
-    }
+      )),
+      (transaction) async {
+        // 2. Delete from database
+        final deleteResult =
+            await deleteTransactionUseCase(event.transactionId);
+
+        await deleteResult.fold(
+          (failure) async => emit(TransactionError(
+            'İşlem silinirken hata oluştu: ${failure.message}',
+            transactions: currentData,
+          )),
+          (_) async {
+            await _safeApplyBalanceDelta(
+              walletId: transaction.walletId,
+              delta: -_signedAmount(transaction),
+            );
+
+            // 3 Başarılı
+            emit(TransactionActionSuccess(
+              "${transaction.title} silindi",
+              transactions: currentData,
+            ));
+          },
+        );
+      },
+    );
   }
 
   double _signedAmount(TransactionEntity transaction) {

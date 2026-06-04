@@ -12,7 +12,9 @@ class WalletCreateUseCase {
   WalletCreateUseCase(this.repository);
 
   Future<Either<Failure, String>> call(WalletEntity wallet) async {
-    final walletWithId = wallet.copyWith(id: UidGenerator.generateV7());
+    final walletWithId = wallet.id == null || wallet.id!.isEmpty
+        ? wallet.copyWith(id: UidGenerator.generateV7())
+        : wallet;
     return await repository.createWallet(walletWithId);
   }
 }
@@ -58,7 +60,8 @@ class WalletUpdateUseCase {
 
   Future<Either<Failure, void>> call(WalletEntity wallet) async {
     if (wallet.id == null) {
-      return Left(ValidationFailure('Wallet ID cannot be null for update operation'));
+      return Left(
+          ValidationFailure('Wallet ID cannot be null for update operation'));
     }
     return await repository.updateWallet(wallet);
   }

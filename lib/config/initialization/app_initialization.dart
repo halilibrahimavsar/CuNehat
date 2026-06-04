@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -23,13 +24,24 @@ class AppInitialization {
     WidgetsFlutterBinding.ensureInitialized();
 
     try {
-      await ConnectionNotificationService().requestPermission();
+      // Başlangıç açılış sürecini kilitlememesi için izin talebini asenkron olarak arka planda tetikliyoruz.
+      unawaited(() async {
+        try {
+          await ConnectionNotificationService().requestPermission();
+        } catch (e) {
+          debugPrint('ConnectionNotificationService permission error: $e');
+        }
+      }());
 
-      await _initializeFirebase();
-      await _initializeHive();
-      await _initializeDateFormatting();
-      // Açılış tema flicker'ını önlemek için kayıtlı temayı runApp öncesi yükle.
-      await ThemeBloc.preloadTheme();
+      // Bağımsız servis başlatma adımlarını paralel olarak yürütüyoruz.
+      await Future.wait([
+        _initializeFirebase(),
+        _initializeHive(),
+        _initializeDateFormatting(),
+        ThemeBloc.preloadTheme(),
+      ]);
+
+      // Diğer tüm servisler ve modüller hazır olduktan sonra bağımlılık enjeksiyonunu yapılandırıyoruz.
       await configureDependencies();
 
       final authBloc = getIt<AppAuthBloc>();

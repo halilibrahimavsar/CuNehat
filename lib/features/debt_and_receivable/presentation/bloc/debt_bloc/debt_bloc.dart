@@ -33,111 +33,117 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
 
   Future<void> _onGetDebts(GetDebtsEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    try {
-      final debts = await getDebtsUseCase(event.walletId);
-
-      emit(DebtLoaded(debts));
-    } catch (e) {
-      emit(DebtError(e.toString()));
-    }
+    final result = await getDebtsUseCase(event.walletId);
+    result.fold(
+      (failure) => emit(DebtError(failure.message)),
+      (debts) => emit(DebtLoaded(debts)),
+    );
   }
 
   Future<void> _onAddDebt(AddDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    try {
-      await addDebtUseCase(event.debt);
-      // Nakit kuplajı: borç alındı → anapara kadar gelir.
-      await walletMetricsService.recordCashMovement(
-        walletId: event.debt.walletId,
-        userId: event.debt.userId,
-        amount: event.debt.principalAmount,
-        isIncome: true,
-        title: event.debt.title,
-        tag: CashMovementTags.debt,
-      );
-      await _safeSyncDebt(event.debt.walletId);
+    final result = await addDebtUseCase(event.debt);
 
-      emit(const DebtOperationSuccess("Borç başarıyla eklendi."));
-      // Listeyi güncellemek için tekrar çekiyoruz
-      add(GetDebtsEvent(event.debt.walletId));
-    } catch (e) {
-      emit(DebtError(e.toString()));
-    }
+    await result.fold(
+      (failure) async => emit(DebtError(failure.message)),
+      (_) async {
+        // Nakit kuplajı: borç alındı → anapara kadar gelir.
+        await walletMetricsService.recordCashMovement(
+          walletId: event.debt.walletId,
+          userId: event.debt.userId,
+          amount: event.debt.principalAmount,
+          isIncome: true,
+          title: event.debt.title,
+          tag: CashMovementTags.debt,
+        );
+        await _safeSyncDebt(event.debt.walletId);
+
+        emit(const DebtOperationSuccess("Borç başarıyla eklendi."));
+        // Listeyi güncellemek için tekrar çekiyoruz
+        add(GetDebtsEvent(event.debt.walletId));
+      },
+    );
   }
 
   Future<void> _onPayDebt(PayDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    try {
-      await updateDebtUseCase(event.debt);
-      // Nakit kuplajı: borç ödendi → ödeme kadar gider.
-      await walletMetricsService.recordCashMovement(
-        walletId: event.debt.walletId,
-        userId: event.debt.userId,
-        amount: event.paymentAmount,
-        isIncome: false,
-        title: 'Ödeme: ${event.debt.title}',
-        tag: CashMovementTags.debtPayment,
-      );
-      await _safeSyncDebt(event.debt.walletId);
+    final result = await updateDebtUseCase(event.debt);
 
-      emit(const DebtOperationSuccess("Ödeme kaydedildi."));
-      add(GetDebtsEvent(event.debt.walletId));
-    } catch (e) {
-      emit(DebtError(e.toString()));
-    }
+    await result.fold(
+      (failure) async => emit(DebtError(failure.message)),
+      (_) async {
+        // Nakit kuplajı: borç ödendi → ödeme kadar gider.
+        await walletMetricsService.recordCashMovement(
+          walletId: event.debt.walletId,
+          userId: event.debt.userId,
+          amount: event.paymentAmount,
+          isIncome: false,
+          title: 'Ödeme: ${event.debt.title}',
+          tag: CashMovementTags.debtPayment,
+        );
+        await _safeSyncDebt(event.debt.walletId);
+
+        emit(const DebtOperationSuccess("Ödeme kaydedildi."));
+        add(GetDebtsEvent(event.debt.walletId));
+      },
+    );
   }
 
   Future<void> _onUpdateDebt(
       UpdateDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    try {
-      await updateDebtUseCase(event.debt);
-      // Mutabakat: anapara değişimi kadar nakit (borç arttıysa gelir).
-      final diff = event.debt.principalAmount - event.prevPrincipal;
-      if (diff != 0) {
-        await walletMetricsService.recordCashMovement(
-          walletId: event.debt.walletId,
-          userId: event.debt.userId,
-          amount: diff.abs(),
-          isIncome: diff > 0,
-          title: 'Borç güncellendi: ${event.debt.title}',
-          tag: CashMovementTags.debt,
-        );
-      }
-      await _safeSyncDebt(event.debt.walletId);
+    final result = await updateDebtUseCase(event.debt);
 
-      emit(const DebtOperationSuccess("Borç güncellendi."));
-      add(GetDebtsEvent(event.debt.walletId));
-    } catch (e) {
-      emit(DebtError(e.toString()));
-    }
+    await result.fold(
+      (failure) async => emit(DebtError(failure.message)),
+      (_) async {
+        // Mutabakat: anapara değişimi kadar nakit (borç arttıysa gelir).
+        final diff = event.debt.principalAmount - event.prevPrincipal;
+        if (diff != 0) {
+          await walletMetricsService.recordCashMovement(
+            walletId: event.debt.walletId,
+            userId: event.debt.userId,
+            amount: diff.abs(),
+            isIncome: diff > 0,
+            title: 'Borç güncellendi: ${event.debt.title}',
+            tag: CashMovementTags.debt,
+          );
+        }
+        await _safeSyncDebt(event.debt.walletId);
+
+        emit(const DebtOperationSuccess("Borç güncellendi."));
+        add(GetDebtsEvent(event.debt.walletId));
+      },
+    );
   }
 
   Future<void> _onDeleteDebt(
       DeleteDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    try {
-      await deleteDebtUseCase(event.id);
-      // Mutabakat: borcun net nakit etkisini geri al.
-      // net = +principal (alındı) − Σödeme → geri alma = Σödeme − principal.
-      final reversal = event.totalPaidAmount - event.principalAmount;
-      if (reversal != 0) {
-        await walletMetricsService.recordCashMovement(
-          walletId: event.walletId,
-          userId: event.userId,
-          amount: reversal.abs(),
-          isIncome: reversal > 0,
-          title: 'Borç silindi',
-          tag: CashMovementTags.debt,
-        );
-      }
-      await _safeSyncDebt(event.walletId);
+    final result = await deleteDebtUseCase(event.id);
 
-      emit(const DebtOperationSuccess("Borç silindi."));
-      add(GetDebtsEvent(event.walletId));
-    } catch (e) {
-      emit(DebtError(e.toString()));
-    }
+    await result.fold(
+      (failure) async => emit(DebtError(failure.message)),
+      (_) async {
+        // Mutabakat: borcun net nakit etkisini geri al.
+        // net = +principal (alındı) − Σödeme → geri alma = Σödeme − principal.
+        final reversal = event.totalPaidAmount - event.principalAmount;
+        if (reversal != 0) {
+          await walletMetricsService.recordCashMovement(
+            walletId: event.walletId,
+            userId: event.userId,
+            amount: reversal.abs(),
+            isIncome: reversal > 0,
+            title: 'Borç silindi',
+            tag: CashMovementTags.debt,
+          );
+        }
+        await _safeSyncDebt(event.walletId);
+
+        emit(const DebtOperationSuccess("Borç silindi."));
+        add(GetDebtsEvent(event.walletId));
+      },
+    );
   }
 
   Future<void> _safeSyncDebt(String walletId) async {

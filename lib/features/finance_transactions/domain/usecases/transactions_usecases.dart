@@ -1,8 +1,9 @@
-import 'package:cunehat/core/error/exceptions.dart';
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/usecase_params.dart';
+import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
@@ -11,8 +12,8 @@ class AddTransactionUseCase {
 
   AddTransactionUseCase(this.repository);
 
-  Future<String> call(TransactionEntity params) async {
-    if (params.id == null) {
+  Future<Either<Failure, String>> call(TransactionEntity params) async {
+    if (params.id == null || params.id!.isEmpty) {
       params = params.copyWith(id: UidGenerator.generateV7());
     }
     return await repository.addTransaction(params);
@@ -25,7 +26,7 @@ class DeleteTransactionUseCase {
 
   DeleteTransactionUseCase(this.repository);
 
-  Future<void> call(String params) async {
+  Future<Either<Failure, void>> call(String params) async {
     return await repository.deleteTransaction(params);
   }
 }
@@ -36,7 +37,7 @@ class GetTransactionsGroupedUseCase {
 
   GetTransactionsGroupedUseCase(this.repository);
 
-  Future<Map<DateTime, List<TransactionEntity>>> call(
+  Future<Either<Failure, Map<DateTime, List<TransactionEntity>>>> call(
     GetTransactionsGroupedParams params,
   ) async {
     return await repository.getTransactionsGroupedByDate(
@@ -55,7 +56,7 @@ class GetTransactionsUseCase {
 
   GetTransactionsUseCase(this.repository);
 
-  Future<List<TransactionEntity>> call(
+  Future<Either<Failure, List<TransactionEntity>>> call(
     GetTransactionsParams params,
   ) async {
     return await repository.getTransactions(
@@ -74,10 +75,10 @@ class UpdateTransactionUseCase {
 
   UpdateTransactionUseCase(this.repository);
 
-  Future<void> call(TransactionEntity params) async {
-    if (params.id == null) {
-      throw ValidationException(
-          'Transaction ID cannot be null for update operation');
+  Future<Either<Failure, void>> call(TransactionEntity params) async {
+    if (params.id == null || params.id!.isEmpty) {
+      return Left(ValidationFailure(
+          'Transaction ID cannot be null for update operation'));
     }
     return await repository.updateTransaction(params);
   }
@@ -89,7 +90,7 @@ class GetTransactionByIdUseCase {
 
   GetTransactionByIdUseCase(this.repository);
 
-  Future<TransactionEntity> call(String transactionId) async {
+  Future<Either<Failure, TransactionEntity>> call(String transactionId) async {
     return await repository.getTransactionById(transactionId);
   }
 }

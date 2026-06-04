@@ -128,9 +128,6 @@ extension GetItInjectableX on _i174.GetIt {
         _i183.ReceivableRepositoryImpl(
             receivableDatasourceRepository:
                 gh<_i366.ReceivableLocalDatasource>()));
-    gh.lazySingleton<_i543.TransactionsRepository>(() =>
-        _i510.TransactionRepositoryImpl(
-            dataSource: gh<_i934.TransactionHiveDataSource>()));
     gh.lazySingleton<_i254.WalletRepository>(() => _i861.WalletRepositoryImpl(
         dataSource: gh<_i175.WalletLocalDataSource>()));
     gh.lazySingleton<_i889.DebtRepository>(() => _i80.DebtRepositoryImpl(
@@ -143,6 +140,9 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i866.UpdateReceivableUseCase(gh<_i329.ReceivableRepository>()));
     gh.factory<_i866.DeleteReceivableUseCase>(
         () => _i866.DeleteReceivableUseCase(gh<_i329.ReceivableRepository>()));
+    gh.lazySingleton<_i543.TransactionsRepository>(() =>
+        _i510.TransactionRepositoryImpl(
+            localDatasource: gh<_i934.TransactionHiveDataSource>()));
     gh.factory<_i257.AddTransactionUseCase>(
         () => _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.DeleteTransactionUseCase>(() =>

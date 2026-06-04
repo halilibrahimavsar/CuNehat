@@ -1,6 +1,8 @@
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/receivable_repository.dart';
+import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
@@ -8,7 +10,7 @@ class GetReceivablesUseCase {
   final ReceivableRepository repository;
   GetReceivablesUseCase(this.repository);
 
-  Future<List<ReceivableEntity>> call(String walletId) =>
+  Future<Either<Failure, List<ReceivableEntity>>> call(String walletId) =>
       repository.getReceivablesByWalletId(walletId);
 }
 
@@ -17,11 +19,11 @@ class AddReceivableUseCase {
   final ReceivableRepository repository;
   AddReceivableUseCase(this.repository);
 
-  Future<void> call(ReceivableEntity receivable) async {
-    if (receivable.id == null) {
+  Future<Either<Failure, void>> call(ReceivableEntity receivable) async {
+    if (receivable.id == null || receivable.id!.isEmpty) {
       receivable = receivable.copyWith(id: UidGenerator.generateV7());
     }
-    await repository.addReceivable(receivable);
+    return await repository.addReceivable(receivable);
   }
 }
 
@@ -30,8 +32,13 @@ class UpdateReceivableUseCase {
   final ReceivableRepository repository;
   UpdateReceivableUseCase(this.repository);
 
-  Future<void> call(ReceivableEntity receivable) =>
-      repository.updateReceivable(receivable);
+  Future<Either<Failure, void>> call(ReceivableEntity receivable) {
+    if (receivable.id == null || receivable.id!.isEmpty) {
+      return Future.value(Left(ValidationFailure(
+          'Receivable ID cannot be null for update operation')));
+    }
+    return repository.updateReceivable(receivable);
+  }
 }
 
 @injectable
@@ -39,5 +46,6 @@ class DeleteReceivableUseCase {
   final ReceivableRepository repository;
   DeleteReceivableUseCase(this.repository);
 
-  Future<void> call(String id) => repository.deleteReceivable(id);
+  Future<Either<Failure, void>> call(String id) =>
+      repository.deleteReceivable(id);
 }

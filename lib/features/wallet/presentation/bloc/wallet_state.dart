@@ -51,7 +51,7 @@ final class WalletLoadedSt extends WalletState {
 final class NoWalletSt extends WalletState {
   final String? message;
   final String? error;
-  
+
   const NoWalletSt({this.message, this.error});
 
   @override

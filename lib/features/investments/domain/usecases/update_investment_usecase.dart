@@ -11,6 +11,10 @@ class UpdateInvestmentUseCase {
   UpdateInvestmentUseCase(this.repository);
 
   Future<Either<Failure, void>> call(InvestmentEntity investment) async {
+    if (investment.id == null || investment.id!.isEmpty) {
+      return Left(ValidationFailure(
+          'Investment ID cannot be null for update operation'));
+    }
     return await repository.updateInvestment(investment);
   }
 }

@@ -92,31 +92,39 @@ class WalletMetricsService {
       (wallet) async {
         if (wallet == null) return;
 
-        final txs = await transactionsRepository.getTransactions(
+        final txsResult = await transactionsRepository.getTransactions(
           userId: wallet.userId,
           walletId: walletId,
         );
-        final txSum = txs.fold<double>(
-          0.0,
-          (sum, t) => sum + (t.isIncome ? t.amount : -t.amount),
-        );
 
-        final opening = wallet.openingBalance ?? (wallet.balance - txSum);
-        final newBalance = opening + txSum;
-
-        // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
-        if (wallet.openingBalance != null && wallet.balance == newBalance) return;
-
-        // Eşzamanlı metrik güncellemelerini (debt/credit/investment) ezmemek için
-        // yazmadan hemen önce güncel cüzdanı tekrar oku ve yalnız bakiye alanlarını
-        // taze kayda uygula.
-        final freshResult = await walletRepository.getWalletById(walletId);
-        await freshResult.fold(
+        await txsResult.fold(
           (failure) async {},
-          (fresh) async {
-            final target = fresh ?? wallet;
-            await walletRepository.updateWallet(
-              target.copyWith(openingBalance: opening, balance: newBalance),
+          (txs) async {
+            final txSum = txs.fold<double>(
+              0.0,
+              (sum, t) => sum + (t.isIncome ? t.amount : -t.amount),
+            );
+
+            final opening = wallet.openingBalance ?? (wallet.balance - txSum);
+            final newBalance = opening + txSum;
+
+            // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
+            if (wallet.openingBalance != null && wallet.balance == newBalance) {
+              return;
+            }
+
+            // Eşzamanlı metrik güncellemelerini (debt/credit/investment) ezmemek için
+            // yazmadan hemen önce güncel cüzdanı tekrar oku ve yalnız bakiye alanlarını
+            // taze kayda uygula.
+            final freshResult = await walletRepository.getWalletById(walletId);
+            await freshResult.fold(
+              (failure) async {},
+              (fresh) async {
+                final target = fresh ?? wallet;
+                await walletRepository.updateWallet(
+                  target.copyWith(openingBalance: opening, balance: newBalance),
+                );
+              },
             );
           },
         );
@@ -131,14 +139,20 @@ class WalletMetricsService {
       (wallet) async {
         if (wallet == null) return;
 
-        final debts = await debtRepository.getDebtsByWalletId(walletId);
-        final totalDebt = debts
-            .where((debt) => !debt.isPaid)
-            .fold<double>(0.0, (sum, debt) => sum + debt.remainingAmount);
+        final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
+        await debtsResult.fold(
+          (failure) async {},
+          (debts) async {
+            final totalDebt = debts
+                .where((debt) => !debt.isPaid)
+                .fold<double>(0.0, (sum, debt) => sum + debt.remainingAmount);
 
-        if (wallet.debt != totalDebt) {
-          await walletRepository.updateWallet(wallet.copyWith(debt: totalDebt));
-        }
+            if (wallet.debt != totalDebt) {
+              await walletRepository
+                  .updateWallet(wallet.copyWith(debt: totalDebt));
+            }
+          },
+        );
       },
     );
   }
@@ -150,15 +164,22 @@ class WalletMetricsService {
       (wallet) async {
         if (wallet == null) return;
 
-        final receivables =
+        final receivablesResult =
             await receivableRepository.getReceivablesByWalletId(walletId);
-        final totalCredit = receivables
-            .where((r) => !r.isPaid)
-            .fold<double>(0.0, (sum, r) => sum + r.amount);
 
-        if (wallet.credit != totalCredit) {
-          await walletRepository.updateWallet(wallet.copyWith(credit: totalCredit));
-        }
+        await receivablesResult.fold(
+          (failure) async {},
+          (receivables) async {
+            final totalCredit = receivables
+                .where((r) => !r.isPaid)
+                .fold<double>(0.0, (sum, r) => sum + r.amount);
+
+            if (wallet.credit != totalCredit) {
+              await walletRepository
+                  .updateWallet(wallet.copyWith(credit: totalCredit));
+            }
+          },
+        );
       },
     );
   }
@@ -194,24 +215,41 @@ class WalletMetricsService {
   /// Cüzdan silinirken o cüzdana bağlı tüm kayıtları (işlem/borç/alacak/yatırım)
   /// temizler; yetim veri kalmasını önler.
   Future<void> purgeWalletData(String walletId, String userId) async {
-    final txs = await transactionsRepository.getTransactions(
+    final txsResult = await transactionsRepository.getTransactions(
       userId: userId,
       walletId: walletId,
     );
-    for (final t in txs) {
-      if (t.id != null) await transactionsRepository.deleteTransaction(t.id!);
-    }
+    await txsResult.fold(
+      (failure) async {},
+      (txs) async {
+        for (final t in txs) {
+          if (t.id != null) {
+            await transactionsRepository.deleteTransaction(t.id!);
+          }
+        }
+      },
+    );
 
-    final debts = await debtRepository.getDebtsByWalletId(walletId);
-    for (final d in debts) {
-      if (d.id != null) await debtRepository.deleteDebt(d.id!);
-    }
+    final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
+    await debtsResult.fold(
+      (failure) async {},
+      (debts) async {
+        for (final d in debts) {
+          if (d.id != null) await debtRepository.deleteDebt(d.id!);
+        }
+      },
+    );
 
-    final receivables =
+    final receivablesResult =
         await receivableRepository.getReceivablesByWalletId(walletId);
-    for (final r in receivables) {
-      if (r.id != null) await receivableRepository.deleteReceivable(r.id!);
-    }
+    await receivablesResult.fold(
+      (failure) async {},
+      (receivables) async {
+        for (final r in receivables) {
+          if (r.id != null) await receivableRepository.deleteReceivable(r.id!);
+        }
+      },
+    );
 
     final invResult = await investmentRepository.getInvestments(
       userId: userId,

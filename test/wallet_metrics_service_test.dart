@@ -63,80 +63,99 @@ class FakeTransactionsRepository implements TransactionsRepository {
   final List<TransactionEntity> store = [];
 
   @override
-  Future<String> addTransaction(TransactionEntity t) async {
+  Future<Either<Failure, String>> addTransaction(TransactionEntity t) async {
     store.add(t);
-    return t.id!;
+    return Right(t.id!);
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactions({
+  Future<Either<Failure, List<TransactionEntity>>> getTransactions({
     required String userId,
     required String walletId,
     DateTime? startDate,
     DateTime? endDate,
     TransactionTypeModel? type,
   }) async =>
-      store.where((t) => t.userId == userId && t.walletId == walletId).toList();
+      Right(store
+          .where((t) => t.userId == userId && t.walletId == walletId)
+          .toList());
 
   @override
-  Future<void> deleteTransaction(String id) async =>
-      store.removeWhere((t) => t.id == id);
+  Future<Either<Failure, void>> deleteTransaction(String id) async {
+    store.removeWhere((t) => t.id == id);
+    return const Right(null);
+  }
 
   @override
-  Future<TransactionEntity> getTransactionById(String id) async =>
-      store.firstWhere((t) => t.id == id);
+  Future<Either<Failure, TransactionEntity>> getTransactionById(
+          String id) async =>
+      Right(store.firstWhere((t) => t.id == id));
 
   @override
-  Future<void> updateTransaction(TransactionEntity t) async {
+  Future<Either<Failure, void>> updateTransaction(TransactionEntity t) async {
     final i = store.indexWhere((e) => e.id == t.id);
     if (i >= 0) store[i] = t;
+    return const Right(null);
   }
 
   @override
-  Future<Map<DateTime, List<TransactionEntity>>> getTransactionsGroupedByDate({
+  Future<Either<Failure, Map<DateTime, List<TransactionEntity>>>>
+      getTransactionsGroupedByDate({
     required String userId,
     required String walletId,
     TransactionTypeModel? type,
     DateTime? startDate,
     DateTime? endDate,
   }) async =>
-      {};
+          const Right({});
 }
 
 class FakeDebtRepository implements DebtRepository {
   final List<DebtEntity> store = [];
 
   @override
-  Future<void> addDebt(DebtEntity debt) async => store.add(debt);
+  Future<Either<Failure, void>> addDebt(DebtEntity debt) async {
+    store.add(debt);
+    return const Right(null);
+  }
 
   @override
-  Future<void> updateDebt(DebtEntity debt) async {}
+  Future<Either<Failure, void>> updateDebt(DebtEntity debt) async =>
+      const Right(null);
 
   @override
-  Future<void> deleteDebt(String id) async =>
-      store.removeWhere((d) => d.id == id);
+  Future<Either<Failure, void>> deleteDebt(String id) async {
+    store.removeWhere((d) => d.id == id);
+    return const Right(null);
+  }
 
   @override
-  Future<List<DebtEntity>> getDebtsByWalletId(String walletId) async =>
-      store.where((d) => d.walletId == walletId).toList();
+  Future<Either<Failure, List<DebtEntity>>> getDebtsByWalletId(
+          String walletId) async =>
+      Right(store.where((d) => d.walletId == walletId).toList());
 }
 
 class FakeReceivableRepository implements ReceivableRepository {
   final List<ReceivableEntity> store = [];
 
   @override
-  Future<void> addReceivable(ReceivableEntity r) async => store.add(r);
+  Future<Either<Failure, void>> addReceivable(ReceivableEntity r) async {
+    store.add(r);
+    return const Right(null);
+  }
 
   @override
-  Future<void> updateReceivable(ReceivableEntity r) async {}
+  Future<Either<Failure, void>> updateReceivable(ReceivableEntity r) async =>
+      const Right(null);
 
   @override
-  Future<void> deleteReceivable(String id) async {}
+  Future<Either<Failure, void>> deleteReceivable(String id) async =>
+      const Right(null);
 
   @override
-  Future<List<ReceivableEntity>> getReceivablesByWalletId(
+  Future<Either<Failure, List<ReceivableEntity>>> getReceivablesByWalletId(
           String walletId) async =>
-      store.where((r) => r.walletId == walletId).toList();
+      Right(store.where((r) => r.walletId == walletId).toList());
 }
 
 class FakeInvestmentRepository implements InvestmentRepository {

@@ -92,7 +92,8 @@ class WalletRepositoryImpl implements WalletRepository {
       if (oldEntity == null) throw Exception("Wallet not found");
 
       final balanceDiff = wallet.balance - oldEntity.balance;
-      final newOpeningBalance = (oldEntity.openingBalance ?? oldEntity.balance) + balanceDiff;
+      final newOpeningBalance =
+          (oldEntity.openingBalance ?? oldEntity.balance) + balanceDiff;
 
       final updatedWallet = wallet.copyWith(
         openingBalance: newOpeningBalance,

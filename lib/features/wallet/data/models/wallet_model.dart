@@ -162,4 +162,3 @@ class WalletModel {
     return 'WalletModel(id: $id, name: $name, balance: $balance)';
   }
 }
-

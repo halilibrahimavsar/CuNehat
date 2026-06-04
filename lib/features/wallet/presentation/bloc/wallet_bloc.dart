@@ -65,7 +65,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       if (state is! WalletLoadedSt) {
         emit(const WalletLoadingSt());
       }
-      
+
       await emit.forEach<Either<Failure, List<WalletEntity>>>(
         watchWalletsUseCase(event.userId),
         onData: (result) {
@@ -101,7 +101,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<CreateWalletEvent>((event, emit) async {
       final result = await createWalletUseCase.call(event.wallet);
       await result.fold(
-        (failure) async => _emitError(emit, 'Cüzdan oluşturulamadı: ${failure.message}'),
+        (failure) async =>
+            _emitError(emit, 'Cüzdan oluşturulamadı: ${failure.message}'),
         (newWalletId) async {
           final activeResult = await setActiveWalletUseCase.call(
             userId: event.wallet.userId,
@@ -119,7 +120,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<UpdateWalletEvent>((event, emit) async {
       final result = await updateWalletUseCase.call(event.wallet);
       result.fold(
-        (failure) => _emitError(emit, 'Cüzdan güncellenemedi: ${failure.message}'),
+        (failure) =>
+            _emitError(emit, 'Cüzdan güncellenemedi: ${failure.message}'),
         (_) => _emitSuccess(emit, "Cüzdan güncellendi!"),
       );
     });
@@ -130,7 +132,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       if (current is WalletLoadedSt) {
         for (final w in current.wallets) {
           if (w.id == event.walletId) {
-            await walletMetricsService.purgeWalletData(event.walletId, w.userId);
+            await walletMetricsService.purgeWalletData(
+                event.walletId, w.userId);
             break;
           }
         }
@@ -149,7 +152,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         walletId: event.walletId,
       );
       result.fold(
-        (failure) => _emitError(emit, 'Aktif cüzdan değiştirilemedi: ${failure.message}'),
+        (failure) => _emitError(
+            emit, 'Aktif cüzdan değiştirilemedi: ${failure.message}'),
         (_) => _emitSuccess(emit, "Cüzdan seçildi"),
       );
     });
@@ -157,7 +161,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   void _emitSuccess(Emitter<WalletState> emit, String message) {
     if (state is WalletLoadedSt) {
-      emit((state as WalletLoadedSt).copyWith(message: message, clearError: true));
+      emit((state as WalletLoadedSt)
+          .copyWith(message: message, clearError: true));
     } else if (state is NoWalletSt) {
       emit(NoWalletSt(message: message));
     }
@@ -165,7 +170,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   void _emitError(Emitter<WalletState> emit, String error) {
     if (state is WalletLoadedSt) {
-      emit((state as WalletLoadedSt).copyWith(error: error, clearMessage: true));
+      emit(
+          (state as WalletLoadedSt).copyWith(error: error, clearMessage: true));
     } else if (state is NoWalletSt) {
       emit(NoWalletSt(error: error));
     } else {
