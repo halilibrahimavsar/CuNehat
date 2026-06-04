@@ -42,11 +42,11 @@ class SummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // Yatırım
+              // Maliyet (yatırılan anapara)
               Column(
                 children: [
                   Text(
-                    'Yatırım',
+                    'Maliyet',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -55,6 +55,27 @@ class SummaryCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     currencyFormat.format(totalInvestment),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Güncel Değer (cüzdan "Birikim" ile aynı temel)
+              Column(
+                children: [
+                  Text(
+                    'Güncel Değer',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currencyFormat.format(totalCurrentValue),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

@@ -27,6 +27,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     on<GetDebtsEvent>(_onGetDebts);
     on<AddDebtEvent>(_onAddDebt);
     on<UpdateDebtEvent>(_onUpdateDebt);
+    on<PayDebtEvent>(_onPayDebt);
     on<DeleteDebtEvent>(_onDeleteDebt);
   }
 
@@ -45,10 +46,41 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
     emit(DebtLoading());
     try {
       await addDebtUseCase(event.debt);
+      // Nakit kuplajı: borç alındı → anapara kadar gelir.
+      await walletMetricsService.recordCashMovement(
+        walletId: event.debt.walletId,
+        userId: event.debt.userId,
+        amount: event.debt.principalAmount,
+        isIncome: true,
+        title: event.debt.title,
+        tag: CashMovementTags.debt,
+      );
       await _safeSyncDebt(event.debt.walletId);
 
       emit(const DebtOperationSuccess("Borç başarıyla eklendi."));
       // Listeyi güncellemek için tekrar çekiyoruz
+      add(GetDebtsEvent(event.debt.walletId));
+    } catch (e) {
+      emit(DebtError(e.toString()));
+    }
+  }
+
+  Future<void> _onPayDebt(PayDebtEvent event, Emitter<DebtState> emit) async {
+    emit(DebtLoading());
+    try {
+      await updateDebtUseCase(event.debt);
+      // Nakit kuplajı: borç ödendi → ödeme kadar gider.
+      await walletMetricsService.recordCashMovement(
+        walletId: event.debt.walletId,
+        userId: event.debt.userId,
+        amount: event.paymentAmount,
+        isIncome: false,
+        title: 'Ödeme: ${event.debt.title}',
+        tag: CashMovementTags.debtPayment,
+      );
+      await _safeSyncDebt(event.debt.walletId);
+
+      emit(const DebtOperationSuccess("Ödeme kaydedildi."));
       add(GetDebtsEvent(event.debt.walletId));
     } catch (e) {
       emit(DebtError(e.toString()));

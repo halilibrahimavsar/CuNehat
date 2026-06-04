@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:equatable/equatable.dart';
@@ -16,6 +17,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletUpdateUseCase updateWalletUseCase;
   final WalletDeleteUseCase deleteWalletUseCase;
   final WalletSetActiveUseCase setActiveWalletUseCase;
+  final WalletMetricsService walletMetricsService;
 
   WalletBloc({
     required this.getWalletsUseCase,
@@ -24,6 +26,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     required this.updateWalletUseCase,
     required this.deleteWalletUseCase,
     required this.setActiveWalletUseCase,
+    required this.walletMetricsService,
   }) : super(const NoWalletSt()) {
     on<GetWalletsEvent>((event, emit) async {
       if (state is! WalletLoadedSt) {
@@ -47,10 +50,12 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
               userId: event.userId,
               walletId: fallbackWallet.id!,
             ));
+            _safeSyncBalance(fallbackWallet.id!);
             emit(WalletLoadedSt(wallets, fallbackWallet));
             return;
           }
 
+          if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
           emit(WalletLoadedSt(wallets, activeWallet));
         }
       } catch (e) {
@@ -75,9 +80,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
               userId: event.userId,
               walletId: fallbackWallet.id!,
             ));
+            _safeSyncBalance(fallbackWallet.id!);
             return WalletLoadedSt(wallets, fallbackWallet);
           }
 
+          if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
           return WalletLoadedSt(wallets, activeWallet);
         },
         onError: (error, _) => WalletErrorSt(error.toString()),
@@ -119,6 +126,18 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     // ========== CÜZDAN SİL ==========
     on<DeleteWalletEvent>((event, emit) async {
       try {
+        // Cüzdana bağlı verileri (işlem/borç/alacak/yatırım) temizle ki
+        // yetim kayıt kalmasın.
+        final current = state;
+        if (current is WalletLoadedSt) {
+          for (final w in current.wallets) {
+            if (w.id == event.walletId) {
+              await walletMetricsService.purgeWalletData(
+                  event.walletId, w.userId);
+              break;
+            }
+          }
+        }
         await deleteWalletUseCase.call(event.walletId);
         emit(const WalletOperationSuccessSt("Cüzdan silindi!"));
       } catch (e) {
@@ -145,5 +164,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       if (wallet.isActive) return wallet;
     }
     return null;
+  }
+
+  /// Aktif cüzdan yüklenince bakiyeyi işlemlerden onarır / openingBalance'ı
+  /// geri doldurur (fire-and-forget; tutarlıysa yazma yapmaz).
+  void _safeSyncBalance(String walletId) {
+    walletMetricsService.syncBalance(walletId).catchError((_) {});
   }
 }

@@ -14,6 +14,12 @@ class WalletEntity extends Equatable {
   final bool isActive;
   final int sortOrder;
 
+  /// Cüzdanın açılış (başlangıç) bakiyesi. `balance` artımlı delta'larla
+  /// güncellendiği için sapma onarımında referans olarak kullanılır:
+  /// `balance = openingBalance + Σ signed(işlemler)`. Eski kayıtlarda null
+  /// olabilir (lazy geri-doldurulur).
+  final double? openingBalance;
+
   const WalletEntity({
     required this.id,
     required this.userId,
@@ -27,6 +33,7 @@ class WalletEntity extends Equatable {
     required this.createdAt,
     this.isActive = false,
     this.sortOrder = 0,
+    this.openingBalance,
   });
 
   WalletEntity copyWith({
@@ -42,6 +49,7 @@ class WalletEntity extends Equatable {
     DateTime? createdAt,
     bool? isActive,
     int? sortOrder,
+    double? openingBalance,
   }) {
     return WalletEntity(
       id: id ?? this.id,
@@ -56,6 +64,7 @@ class WalletEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
+      openingBalance: openingBalance ?? this.openingBalance,
     );
   }
 
@@ -73,5 +82,6 @@ class WalletEntity extends Equatable {
         createdAt,
         isActive,
         sortOrder,
+        openingBalance,
       ];
 }

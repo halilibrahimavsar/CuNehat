@@ -53,6 +53,15 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       await result.fold(
         (failure) async => emit(InvestmentError(failure.message)),
         (_) async {
+          // Nakit kuplajı: yatırım alımı → maliyet kadar gider.
+          await walletMetricsService.recordCashMovement(
+            walletId: event.walletId,
+            userId: event.userId,
+            amount: event.investment.amount,
+            isIncome: false,
+            title: event.investment.name,
+            tag: CashMovementTags.investmentBuy,
+          );
           await _safeSyncInvestment(event.walletId);
           emit(const InvestmentActionSuccess('Yatırım başarıyla eklendi'));
           add(GetInvestmentsEvent(
@@ -85,6 +94,15 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       await result.fold(
         (failure) async => emit(InvestmentError(failure.message)),
         (_) async {
+          // Nakit kuplajı: yatırım satışı/silme → güncel değer kadar gelir.
+          await walletMetricsService.recordCashMovement(
+            walletId: event.walletId,
+            userId: event.userId,
+            amount: event.currentValue,
+            isIncome: true,
+            title: 'Yatırım Satışı',
+            tag: CashMovementTags.investmentSell,
+          );
           await _safeSyncInvestment(event.walletId);
           emit(const InvestmentActionSuccess('Yatırım silindi'));
           add(GetInvestmentsEvent(

@@ -20,6 +20,7 @@ class WalletModel extends WalletEntity {
     required super.createdAt,
     super.isActive = false,
     super.sortOrder = 0,
+    super.openingBalance,
   });
 
   /// Creates Wallet from Firestore document
@@ -37,6 +38,7 @@ class WalletModel extends WalletEntity {
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isActive: json['isActive'] ?? false,
       sortOrder: json['sortOrder'] ?? 0,
+      openingBalance: (json['openingBalance'] as num?)?.toDouble(),
     );
   }
 
@@ -54,6 +56,7 @@ class WalletModel extends WalletEntity {
           createdAt: entity.createdAt,
           isActive: entity.isActive,
           sortOrder: entity.sortOrder,
+          openingBalance: entity.openingBalance,
         );
 
   /// Converts Wallet to Firestore-compatible map
@@ -71,6 +74,7 @@ class WalletModel extends WalletEntity {
       'createdAt': Timestamp.fromDate(createdAt),
       'isActive': isActive,
       'sortOrder': sortOrder,
+      'openingBalance': openingBalance,
     };
   }
 
@@ -89,6 +93,7 @@ class WalletModel extends WalletEntity {
     bool? isActive,
     DateTime? createdAt,
     int? sortOrder,
+    double? openingBalance,
   }) {
     return WalletModel(
       id: id ?? this.id, // preserve id to not change
@@ -103,6 +108,7 @@ class WalletModel extends WalletEntity {
       createdAt: createdAt ?? this.createdAt,
       isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
+      openingBalance: openingBalance ?? this.openingBalance,
     );
   }
 
@@ -147,4 +153,7 @@ class WalletModel extends WalletEntity {
   @override
   @HiveField(11)
   int get sortOrder => super.sortOrder;
+  @override
+  @HiveField(12)
+  double? get openingBalance => super.openingBalance;
 }

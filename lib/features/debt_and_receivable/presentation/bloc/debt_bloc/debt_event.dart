@@ -31,6 +31,17 @@ class UpdateDebtEvent extends DebtEvent {
   List<Object?> get props => [debt];
 }
 
+/// Borca ödeme yapıldığında: güncel borcu (yeni payment eklenmiş) kaydeder ve
+/// [paymentAmount] kadar nakit gider işlemi oluşturur (nakit kuplajı).
+class PayDebtEvent extends DebtEvent {
+  final DebtEntity debt;
+  final double paymentAmount;
+  const PayDebtEvent(this.debt, this.paymentAmount);
+
+  @override
+  List<Object?> get props => [debt, paymentAmount];
+}
+
 class DeleteDebtEvent extends DebtEvent {
   final String id;
   final String userId;

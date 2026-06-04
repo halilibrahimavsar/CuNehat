@@ -57,11 +57,15 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
   final String id;
   final double amount;
 
+  /// Silme = satış kabul edilir; güncel değer kadar nakit gelir oluşturulur.
+  final double currentValue;
+
   const DeleteInvestmentEvent({
     required this.id,
     required this.userId,
     required this.walletId,
     required this.amount,
+    required this.currentValue,
   });
   @override
   List<Object> get props => [id, userId, walletId];

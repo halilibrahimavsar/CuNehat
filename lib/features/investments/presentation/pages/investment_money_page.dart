@@ -59,6 +59,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
             userId: widget.activeWallet.userId,
             walletId: widget.activeWallet.id!,
             amount: investment.amount,
+            currentValue: investment.currentValue,
           ));
       return true;
     }

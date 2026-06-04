@@ -49,6 +49,15 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
     emit(ReceivableLoading());
     try {
       await addReceivableUseCase(event.receivable);
+      // Nakit kuplajı: alacak verildi (para çıktı) → tutar kadar gider.
+      await walletMetricsService.recordCashMovement(
+        walletId: event.receivable.walletId,
+        userId: event.receivable.userId,
+        amount: event.receivable.amount,
+        isIncome: false,
+        title: event.receivable.debtorName,
+        tag: CashMovementTags.receivable,
+      );
       await _safeSyncCredit(event.receivable.walletId);
 
       emit(const ReceivableOperationSuccess("Alacak başarıyla eklendi."));
@@ -93,6 +102,15 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
     try {
       final updatedReceivable = event.receivable.copyWith(isPaid: true);
       await updateReceivableUseCase(updatedReceivable);
+      // Nakit kuplajı: alacak tahsil edildi (para girdi) → tutar kadar gelir.
+      await walletMetricsService.recordCashMovement(
+        walletId: event.receivable.walletId,
+        userId: event.receivable.userId,
+        amount: event.receivable.amount,
+        isIncome: true,
+        title: 'Tahsilat: ${event.receivable.debtorName}',
+        tag: CashMovementTags.receivableCollection,
+      );
       await _safeSyncCredit(event.receivable.walletId);
 
       emit(const ReceivableOperationSuccess(

@@ -73,8 +73,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       isPaid: isPaid,
     );
 
-    // Bloc'a gönder
-    context.read<DebtBloc>().add(UpdateDebtEvent(updatedDebt));
+    // Bloc'a gönder: ödeme tutarı kadar nakit gider de oluşturulur.
+    context.read<DebtBloc>().add(PayDebtEvent(updatedDebt, amount));
 
     Navigator.of(context).pop(true);
   }

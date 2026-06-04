@@ -29,13 +29,14 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       createdAt: fields[9] as DateTime,
       isActive: fields[10] as bool,
       sortOrder: fields[11] as int,
+      openingBalance: fields[12] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletModel obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(10)
       ..write(obj.isActive)
       ..writeByte(11)
-      ..write(obj.sortOrder);
+      ..write(obj.sortOrder)
+      ..writeByte(12)
+      ..write(obj.openingBalance);
   }
 
   @override

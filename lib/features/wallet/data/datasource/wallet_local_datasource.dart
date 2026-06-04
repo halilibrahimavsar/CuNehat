@@ -26,9 +26,13 @@ class WalletLocalDataSource {
   Future<String> createWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
 
+    // Açılış bakiyesini sakla (sapma onarımı / syncBalance için referans).
+    final toSave = wallet.openingBalance == null
+        ? wallet.copyWith(openingBalance: wallet.balance)
+        : wallet;
     await box.put(
-        wallet.id, wallet); // Firestore'daki kaydedilen document ID gibi
-    return wallet.id!;
+        toSave.id, toSave); // Firestore'daki kaydedilen document ID gibi
+    return toSave.id!;
   }
 
   Future<void> deleteWallet(String walletId) async {
@@ -129,35 +133,4 @@ class WalletLocalDataSource {
     return null;
   }
 
-  Future<void> updateBalance(String userId, double balance) async {
-    final activeWallet = await getActiveWallet(userId);
-    if (activeWallet != null) {
-      final updatedWallet = activeWallet.copyWith(balance: balance);
-      await updateWallet(updatedWallet);
-    }
-  }
-
-  Future<void> updateDebt(String userId, double debt) async {
-    final activeWallet = await getActiveWallet(userId);
-    if (activeWallet != null) {
-      final updatedWallet = activeWallet.copyWith(debt: debt);
-      await updateWallet(updatedWallet);
-    }
-  }
-
-  Future<void> updateCredit(String userId, double credit) async {
-    final activeWallet = await getActiveWallet(userId);
-    if (activeWallet != null) {
-      final updatedWallet = activeWallet.copyWith(credit: credit);
-      await updateWallet(updatedWallet);
-    }
-  }
-
-  Future<void> updateInvestment(String userId, double save) async {
-    final activeWallet = await getActiveWallet(userId);
-    if (activeWallet != null) {
-      final updatedWallet = activeWallet.copyWith(investment: save);
-      await updateWallet(updatedWallet);
-    }
-  }
 }
