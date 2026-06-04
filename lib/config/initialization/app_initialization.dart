@@ -15,6 +15,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
+import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:unified_flutter_features/features/connection_monitor/services/connection_notification_service.dart';
 
 class AppInitialization {
@@ -27,6 +28,8 @@ class AppInitialization {
       await _initializeFirebase();
       await _initializeHive();
       await _initializeDateFormatting();
+      // Açılış tema flicker'ını önlemek için kayıtlı temayı runApp öncesi yükle.
+      await ThemeBloc.preloadTheme();
       await configureDependencies();
 
       final authBloc = getIt<AppAuthBloc>();

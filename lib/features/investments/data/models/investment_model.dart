@@ -71,6 +71,7 @@ class InvestmentModel extends InvestmentEntity {
   }
 
   //copy with method for updates
+  @override
   InvestmentModel copyWith({
     String? id,
     String? userId,

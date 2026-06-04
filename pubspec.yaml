@@ -69,7 +69,7 @@ dependencies:
   # get_it: ^9.2.0
   
   # Functional Programming
-  # dartz: ^0.10.1
+  dartz: ^0.10.1
 
     # YEREL DEPOLAMA İÇİN EKLENDİ
   hive: ^2.2.3

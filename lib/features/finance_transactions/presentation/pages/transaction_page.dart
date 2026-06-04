@@ -77,38 +77,40 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   List<TransactionWithBalance> _getFilteredData(
       List<TransactionEntity> allTransactions, CombinedFilter filter) {
-    List<TransactionEntity> filtered = List.from(allTransactions);
+    // 1. Önce TAM liste üzerinde (yeni→eski) running balance hesapla.
+    //    Böylece "işlem sonrası bakiye" gerçek geçmişe göre doğru kalır;
+    //    filtreler yalnızca hangi satırların görüneceğini belirler.
+    final allSorted = List<TransactionEntity>.from(allTransactions)
+      ..sort((a, b) => b.date.compareTo(a.date));
 
-    // 1. Filter by FinanceMode
-    if (filter.viewFilter.financeMode == FinanceMode.expense) {
-      filtered = filtered.where((element) => element.isExpense).toList();
-    } else if (filter.viewFilter.financeMode == FinanceMode.income) {
-      filtered = filtered.where((element) => !element.isExpense).toList();
-    }
-
-    // 2. Filter by Categories
-    if (filter.dataFilter.selectedCategories.isNotEmpty) {
-      filtered = filtered
-          .where((t) => filter.dataFilter.selectedCategories.contains(t.tag))
-          .toList();
-    }
-
-    // 3. Filter by PriceRange
-    if (filter.dataFilter.priceRange != null) {
-      filtered = filtered
-          .where((t) => filter.dataFilter.priceRange!.isInRange(t.amount))
-          .toList();
-    }
-
-    // 4. Sort (Newest first)
-    filtered.sort((a, b) => b.date.compareTo(a.date));
-
-    final transactionsWithBalance = calculateRunningBalance(
-      filtered,
+    final withBalance = calculateRunningBalance(
+      allSorted,
       widget.wallet.balance,
     );
 
-    return transactionsWithBalance;
+    // 2. Görüntü filtrelerini TransactionWithBalance listesine uygula.
+    Iterable<TransactionWithBalance> filtered = withBalance;
+
+    // FinanceMode
+    if (filter.viewFilter.financeMode == FinanceMode.expense) {
+      filtered = filtered.where((e) => e.transaction.isExpense);
+    } else if (filter.viewFilter.financeMode == FinanceMode.income) {
+      filtered = filtered.where((e) => !e.transaction.isExpense);
+    }
+
+    // Kategoriler
+    if (filter.dataFilter.selectedCategories.isNotEmpty) {
+      filtered = filtered.where((e) =>
+          filter.dataFilter.selectedCategories.contains(e.transaction.tag));
+    }
+
+    // Fiyat aralığı
+    if (filter.dataFilter.priceRange != null) {
+      filtered = filtered.where(
+          (e) => filter.dataFilter.priceRange!.isInRange(e.transaction.amount));
+    }
+
+    return filtered.toList();
   }
 
   Future<void> _pickDateRange(

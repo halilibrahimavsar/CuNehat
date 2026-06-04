@@ -11,10 +11,26 @@ part 'theme_state.dart';
 class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
   static const String _themeKey = 'selected_theme';
 
-  ThemeBloc() : super(ThemeStateLight()) {
-    // Uygulama açıldığında kaydedilmiş temayı yükle
-    _loadSavedTheme();
+  /// Kaydedilmiş tema, açılış titremesini önlemek için `runApp` öncesinde
+  /// [preloadTheme] ile buraya yüklenir; bloc oluşturulduğunda ilk state olarak
+  /// kullanılır.
+  static ThemeData? _preloadedTheme;
 
+  /// `runApp` öncesi (app_initialization) çağrılır. SharedPreferences async
+  /// olduğundan temayı önceden okuyup statik alana yazar; böylece ilk frame
+  /// doğru temayla çizilir (light → dark flaşı olmaz).
+  static Future<void> preloadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedThemeName = prefs.getString(_themeKey);
+    if (savedThemeName != null && ThemeNames.all.containsKey(savedThemeName)) {
+      _preloadedTheme = ThemeNames.all[savedThemeName];
+    }
+  }
+
+  ThemeBloc()
+      : super(_preloadedTheme != null
+            ? ThemeSt(_preloadedTheme!)
+            : ThemeStateLight()) {
     on<ThemeChangeEvent>((event, emit) async {
       // Temayı kaydet
       await _saveTheme(event.themeName);
@@ -24,15 +40,6 @@ class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
     on<ThemeLoadEvent>((event, emit) {
       emit(ThemeSt(event.themeName));
     });
-  }
-
-  Future<void> _loadSavedTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedThemeName = prefs.getString(_themeKey);
-
-    if (savedThemeName != null && ThemeNames.all.containsKey(savedThemeName)) {
-      add(ThemeLoadEvent(themeName: ThemeNames.all[savedThemeName]!));
-    }
   }
 
   Future<void> _saveTheme(ThemeData theme) async {

@@ -48,8 +48,9 @@ class _DebtHistoryView extends StatelessWidget {
           }
 
           final debts = state is DebtLoaded ? state.debts : <DebtEntity>[];
-          final paidDebts =
-              debts.where((d) => d.isPaid || d.remainingAmount <= 0).toList();
+          // "Ödenmiş" tek kural: borç açıkça ödendi olarak işaretlenmiş.
+          // (Ödeme tamamlanınca DebtPaymentDialog isPaid=true yapıyor.)
+          final paidDebts = debts.where((d) => d.isPaid).toList();
 
           if (paidDebts.isEmpty) {
             return _buildEmptyState();
@@ -127,7 +128,7 @@ class _DebtHistoryView extends StatelessWidget {
           children: [
             Text(
               NumberFormat.currency(symbol: '₺')
-                  .format(debt.totalDebtAmount),
+                  .format(debt.totalPaidAmount),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
