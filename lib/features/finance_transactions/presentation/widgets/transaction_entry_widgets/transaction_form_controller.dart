@@ -1,121 +1,89 @@
+import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
+import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 
-class TransactionFormController extends ChangeNotifier {
-  // Controllers
+/// İşlem formunun durum yöneticisi.
+///
+/// Performans için tek bir [ChangeNotifier] yerine alanlara ayrılmış
+/// [ValueNotifier]'lar kullanılır; böylece tutar yazılırken kategori ızgarası,
+/// kategori seçilirken tarih satırı yeniden çizilmez. Metin alanları kendi
+/// [TextEditingController]'larıyla yönetilir (rebuild gerektirmez).
+class TransactionFormController {
+  TransactionFormController({required this.isExpense});
+
+  final bool isExpense;
+  final CategoryService _categoryService = CategoryService();
+
   final TextEditingController titleController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
-  final TextEditingController noteController = TextEditingController();
 
-  // State
-  DateTime selectedDate = DateTime.now();
-  TimeOfDay selectedTime = TimeOfDay.now();
-  String? selectedCategoryId;
-  bool isSubmitting = false;
-  String? errorMessage;
+  final ValueNotifier<List<CategoryModel>> categories =
+      ValueNotifier(const []);
+  final ValueNotifier<bool> categoriesLoading = ValueNotifier(true);
+  final ValueNotifier<String?> categoryId = ValueNotifier(null);
+  final ValueNotifier<DateTime> dateTime = ValueNotifier(DateTime.now());
+  final ValueNotifier<bool> submitting = ValueNotifier(false);
+  final ValueNotifier<String?> error = ValueNotifier(null);
 
-  // Getters
-  bool get hasTitle => titleController.text.trim().isNotEmpty;
-  bool get hasAmount => amountController.text.trim().isNotEmpty;
-  bool get hasValidAmount {
-    final amount = double.tryParse(amountController.text.trim());
-    return amount != null && amount > 0;
+  bool _disposed = false;
+
+  void initialize(TransactionEntity t) {
+    titleController.text = t.title;
+    amountController.text = _formatAmount(t.amount);
+    categoryId.value = t.tag;
+    dateTime.value = t.date;
   }
 
-  bool get canSubmit =>
-      hasTitle && hasValidAmount && selectedCategoryId != null && !isSubmitting;
+  Future<void> loadCategories() async {
+    categoriesLoading.value = true;
+    try {
+      final list = await _categoryService.getCategories(isExpense);
+      if (_disposed) return;
+      categories.value = list;
 
-  // Initialize with existing transaction
-  void initialize({
-    String? title,
-    double? amount,
-    String? categoryId,
-    DateTime? date,
-    TimeOfDay? time,
-    String? note,
-  }) {
-    if (title != null) titleController.text = title;
-    if (amount != null) amountController.text = amount.toStringAsFixed(2);
-    if (categoryId != null) selectedCategoryId = categoryId;
-    if (date != null) selectedDate = date;
-    if (time != null) selectedTime = time;
-    if (note != null) noteController.text = note;
-    notifyListeners();
-  }
-
-  // Update methods
-  void setCategory(String categoryId) {
-    selectedCategoryId = categoryId;
-    errorMessage = null;
-    notifyListeners();
-  }
-
-  void setDate(DateTime date) {
-    selectedDate = date;
-    notifyListeners();
-  }
-
-  void setTime(TimeOfDay time) {
-    selectedTime = time;
-    notifyListeners();
-  }
-
-  void setSubmitting(bool value) {
-    isSubmitting = value;
-    notifyListeners();
-  }
-
-  void setError(String? error) {
-    errorMessage = error;
-    notifyListeners();
-  }
-
-  // Validation
-  String? validateTitle() {
-    if (!hasTitle) return 'Başlık boş olamaz';
-    if (titleController.text.trim().length < 2) {
-      return 'Başlık en az 2 karakter olmalı';
+      // Seçim yoksa ya da artık geçersizse ilk kategoriye düş.
+      final current = categoryId.value;
+      final stillValid = current != null && list.any((c) => c.id == current);
+      if (!stillValid && list.isNotEmpty) {
+        categoryId.value = list.first.id;
+      }
+    } catch (e) {
+      debugPrint('Kategori yükleme hatası: $e');
+    } finally {
+      if (!_disposed) categoriesLoading.value = false;
     }
+  }
+
+  double? get parsedAmount {
+    final raw = amountController.text.trim().replaceAll(',', '.');
+    if (raw.isEmpty) return null;
+    return double.tryParse(raw);
+  }
+
+  /// Geçerliyse `null`, değilse hata mesajını döndürür.
+  String? validate() {
+    if (titleController.text.trim().isEmpty) return 'Başlık girin';
+    final amount = parsedAmount;
+    if (amount == null || amount <= 0) return 'Geçerli bir tutar girin';
+    if (categoryId.value == null) return 'Bir kategori seçin';
     return null;
   }
 
-  String? validateAmount() {
-    if (!hasAmount) return 'Tutar boş olamaz';
-    if (!hasValidAmount) return 'Geçerli bir tutar girin';
-    return null;
-  }
-
-  String? validateCategory() {
-    if (selectedCategoryId == null) return 'Kategori seçin';
-    return null;
-  }
-
-  bool validate() {
-    final titleError = validateTitle();
-    final amountError = validateAmount();
-    final categoryError = validateCategory();
-
-    if (titleError != null) {
-      setError(titleError);
-      return false;
-    }
-    if (amountError != null) {
-      setError(amountError);
-      return false;
-    }
-    if (categoryError != null) {
-      setError(categoryError);
-      return false;
-    }
-
-    setError(null);
-    return true;
-  }
-
-  @override
   void dispose() {
+    _disposed = true;
     titleController.dispose();
     amountController.dispose();
-    noteController.dispose();
-    super.dispose();
+    categories.dispose();
+    categoriesLoading.dispose();
+    categoryId.dispose();
+    dateTime.dispose();
+    submitting.dispose();
+    error.dispose();
+  }
+
+  String _formatAmount(double v) {
+    if (v == v.roundToDouble()) return v.toStringAsFixed(0);
+    return v.toString().replaceAll('.', ',');
   }
 }
