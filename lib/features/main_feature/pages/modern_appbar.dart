@@ -58,6 +58,8 @@ class _ModernAppbarState extends State<ModernAppbar>
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
+      toolbarHeight: AppSizes.appBarHeight,
+      titleSpacing: 0,
       elevation: 8,
       shadowColor: AppBarStyleHelper.getAppBarColor(widget.currentSliderValue)
           .withValues(alpha: 0.3),

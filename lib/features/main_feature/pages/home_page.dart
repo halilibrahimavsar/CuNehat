@@ -7,6 +7,7 @@ import 'package:cunehat/features/investments/presentation/pages/investment_money
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
+import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         key: scaffoldKey,
         drawer: const ModernDrawer(),
         appBar: PreferredSize(
-          preferredSize: const Size(double.maxFinite, 50),
+          preferredSize: const Size(double.maxFinite, AppSizes.appBarHeight),
           child: AnimatedBuilder(
             animation: _navController.horizontalController,
             builder: (context, child) {

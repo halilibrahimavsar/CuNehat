@@ -179,6 +179,7 @@ class _AppBarContentState extends State<AppBarContent> {
         color: AppColors.transparent,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             _buildWalletNameBadge(state.activeWallet, valueName),
             const SizedBox(height: 2),
