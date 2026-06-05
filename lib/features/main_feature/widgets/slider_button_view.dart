@@ -87,7 +87,8 @@ class SliderButtonView extends StatelessWidget {
     return switch (actionType) {
       'add_income' => Colors.green,
       'add_expense' => Colors.red,
-      'add_debt' => Colors.orange,
+      'add_debt' => Colors.red,
+      'add_receivable' => Colors.green,
       _ => Colors.green,
     };
   }
@@ -140,7 +141,10 @@ class SliderButtonView extends StatelessWidget {
             context, activeWallet, TransactionTypeModel.expense);
         break;
       case 'add_debt':
-        _showAddDebtSheet(context, activeWallet);
+        _showDebtEntrySheet(context, activeWallet, isDebt: true);
+        break;
+      case 'add_receivable':
+        _showDebtEntrySheet(context, activeWallet, isDebt: false);
         break;
     }
   }
@@ -175,13 +179,15 @@ class SliderButtonView extends StatelessWidget {
     );
   }
 
-  void _showAddDebtSheet(BuildContext context, dynamic activeWallet) {
+  void _showDebtEntrySheet(BuildContext context, dynamic activeWallet,
+      {required bool isDebt}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => AddEntrySheet(
         walletId: activeWallet.id!,
+        initialIsDebt: isDebt,
       ),
     );
   }

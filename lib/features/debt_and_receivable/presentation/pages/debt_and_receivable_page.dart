@@ -25,19 +25,11 @@ class DebtAndReceivablePage extends StatefulWidget {
 class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  int _currentIndex = 0;
-
-  bool get _isDebtTab => _currentIndex == 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      if (_tabController.index != _currentIndex) {
-        setState(() => _currentIndex = _tabController.index);
-      }
-    });
     _loadData();
   }
 
@@ -62,9 +54,6 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
 
   @override
   Widget build(BuildContext context) {
-    final accent =
-        _isDebtTab ? AppGradients.debt : AppGradients.savings;
-
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
@@ -94,28 +83,6 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
           ReceivableListSection(
               walletId: widget.walletId, userId: widget.userId),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: accent,
-        foregroundColor: Colors.white,
-        onPressed: () => _showAddSheet(isDebt: _isDebtTab),
-        icon: const Icon(Icons.add),
-        label: Text(
-          _isDebtTab ? "Borç Ekle" : "Alacak Ekle",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  void _showAddSheet({required bool isDebt}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddEntrySheet(
-        walletId: widget.walletId,
-        initialIsDebt: isDebt,
       ),
     );
   }

@@ -81,7 +81,7 @@ class MenuConfigs {
       miniButtons: [
         MiniButtonConfig(
           label: 'Yatırım',
-          icon: MenuIconData(0xe145), // Icons.add
+          icon: MenuIconData(0xe553), // Icons.savings
           actionType: 'add_investment',
         ),
       ],
@@ -98,12 +98,12 @@ class MenuConfigs {
       miniButtons: [
         MiniButtonConfig(
           label: 'Gelir',
-          icon: MenuIconData(0xe5d8), // Icons.arrow_upward
+          icon: MenuIconData(0xe096), // Icons.arrow_circle_up
           actionType: 'add_income',
         ),
         MiniButtonConfig(
           label: 'Gider',
-          icon: MenuIconData(0xe5db), // Icons.arrow_downward
+          icon: MenuIconData(0xe095), // Icons.arrow_circle_down
           actionType: 'add_expense',
         ),
       ],
@@ -129,9 +129,14 @@ class MenuConfigs {
       sliderState: SliderState.debt,
       miniButtons: [
         MiniButtonConfig(
-          label: 'Borç/Alacak',
-          icon: MenuIconData(0xe145), // Icons.add
+          label: 'Borç',
+          icon: MenuIconData(0xe67d), // Icons.trending_down
           actionType: 'add_debt',
+        ),
+        MiniButtonConfig(
+          label: 'Alacak',
+          icon: MenuIconData(0xe67f), // Icons.trending_up
+          actionType: 'add_receivable',
         ),
       ],
       subMenus: [
