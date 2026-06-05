@@ -22,11 +22,29 @@ class DebtAndReceivablePage extends StatefulWidget {
   State<DebtAndReceivablePage> createState() => _DebtAndReceivablePageState();
 }
 
-class _DebtAndReceivablePageState extends State<DebtAndReceivablePage> {
+class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  int _currentIndex = 0;
+
+  bool get _isDebtTab => _currentIndex == 0;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index != _currentIndex) {
+        setState(() => _currentIndex = _tabController.index);
+      }
+    });
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,56 +62,61 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 70,
-          title: Text(
-            "Finansal Takip",
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                ),
-          ),
-          centerTitle: true,
-          bottom: const TabBar(
-            indicatorWeight: 4,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            tabs: [
-              Tab(icon: Icon(Icons.outbound), text: "Borçlarım"),
-              Tab(icon: Icon(Icons.call_received), text: "Alacaklarım"),
-            ],
-          ),
+    final accent =
+        _isDebtTab ? AppGradients.debt : AppGradients.savings;
+
+    return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 70,
+        title: Text(
+          "Finansal Takip",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
         ),
-        body: TabBarView(
-          children: [
-            DebtListSection(walletId: widget.walletId, userId: widget.userId),
-            ReceivableListSection(
-                walletId: widget.walletId, userId: widget.userId),
+        centerTitle: true,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorWeight: 4,
+          labelStyle:
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          tabs: const [
+            Tab(icon: Icon(Icons.outbound), text: "Borçlarım"),
+            Tab(icon: Icon(Icons.call_received), text: "Alacaklarım"),
           ],
         ),
-        floatingActionButton: Builder(
-          builder: (context) {
-            return FloatingActionButton.extended(
-              onPressed: () => _showAddDialog(context),
-              label: const Text(
-                "Yeni Ekle",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              icon: const Icon(Icons.add),
-            );
-          },
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          DebtListSection(walletId: widget.walletId, userId: widget.userId),
+          ReceivableListSection(
+              walletId: widget.walletId, userId: widget.userId),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: accent,
+        foregroundColor: Colors.white,
+        onPressed: () => _showAddSheet(isDebt: _isDebtTab),
+        icon: const Icon(Icons.add),
+        label: Text(
+          _isDebtTab ? "Borç Ekle" : "Alacak Ekle",
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  void _showAddDialog(BuildContext context) {
+  void _showAddSheet({required bool isDebt}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => AddEntrySheet(walletId: widget.walletId),
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddEntrySheet(
+        walletId: widget.walletId,
+        initialIsDebt: isDebt,
+      ),
     );
   }
 }
@@ -205,6 +228,7 @@ class DebtListSection extends StatelessWidget {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            backgroundColor: Colors.transparent,
             builder: (context) => AddEntrySheet(
               walletId: walletId,
               debtToEdit: debt,
@@ -487,6 +511,7 @@ class ReceivableListSection extends StatelessWidget {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
+            backgroundColor: Colors.transparent,
             builder: (context) => AddEntrySheet(
               walletId: walletId,
               receivableToEdit: receivable,

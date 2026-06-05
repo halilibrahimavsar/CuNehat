@@ -179,6 +179,7 @@ class SliderButtonView extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) => AddEntrySheet(
         walletId: activeWallet.id!,
       ),
