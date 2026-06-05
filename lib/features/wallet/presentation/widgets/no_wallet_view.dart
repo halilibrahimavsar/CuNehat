@@ -1,7 +1,8 @@
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/widgets/pressable_scale.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 
 /// A premium, theme-aware empty state view when no wallet is selected or created.
@@ -92,15 +93,19 @@ class NoWalletView extends StatelessWidget {
                   onTap: () {
                     final scaffoldState = context.findAncestorStateOfType<
                         AnimatedScaffoldWrapperState>();
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      scaffoldState?.openWalletDialog(
-                        WalletSheetContent(
-                          scrollController: ScrollController(),
-                          userId: user.uid,
-                        ),
-                      );
-                    }
+                    final authState = context.read<AppAuthBloc>().state;
+                    final userId = authState is AppAuthenticated
+                        ? authState.user.uid
+                        : (authState is AppAuthLocked
+                            ? authState.user.uid
+                            : 'local_user');
+
+                    scaffoldState?.openWalletDialog(
+                      WalletSheetContent(
+                        scrollController: ScrollController(),
+                        userId: userId,
+                      ),
+                    );
                   },
                   child: Container(
                     height: 56,

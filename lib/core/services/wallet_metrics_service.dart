@@ -109,7 +109,7 @@ class WalletMetricsService {
             final newBalance = opening + txSum;
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
-            if (wallet.openingBalance != null && wallet.balance == newBalance) {
+            if (wallet.openingBalance != null && (wallet.balance - newBalance).abs() < 0.001) {
               return;
             }
 
@@ -147,7 +147,7 @@ class WalletMetricsService {
                 .where((debt) => !debt.isPaid)
                 .fold<double>(0.0, (sum, debt) => sum + debt.remainingAmount);
 
-            if (wallet.debt != totalDebt) {
+            if ((wallet.debt - totalDebt).abs() >= 0.001) {
               await walletRepository
                   .updateWallet(wallet.copyWith(debt: totalDebt));
             }
@@ -174,7 +174,7 @@ class WalletMetricsService {
                 .where((r) => !r.isPaid)
                 .fold<double>(0.0, (sum, r) => sum + r.amount);
 
-            if (wallet.credit != totalCredit) {
+            if ((wallet.credit - totalCredit).abs() >= 0.001) {
               await walletRepository
                   .updateWallet(wallet.copyWith(credit: totalCredit));
             }
@@ -204,7 +204,7 @@ class WalletMetricsService {
           ),
         );
 
-        if (wallet.investment != totalInvestment) {
+        if ((wallet.investment - totalInvestment).abs() >= 0.001) {
           await walletRepository
               .updateWallet(wallet.copyWith(investment: totalInvestment));
         }

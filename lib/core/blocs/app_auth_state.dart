@@ -1,6 +1,6 @@
-import 'package:remote_auth_module/remote_auth_module.dart';
+import 'package:cunehat/core/models/local_user.dart';
 
-/// App-level auth state that wraps module's AuthState and adds lock support.
+/// App-level auth state that wraps local authentication and adds lock support.
 abstract class AppAuthState {
   const AppAuthState();
 }
@@ -17,13 +17,8 @@ class AppAuthLoading extends AppAuthState {
 
 /// User is authenticated and app is unlocked.
 class AppAuthenticated extends AppAuthState {
-  final AuthUser user;
+  final LocalUser user;
   const AppAuthenticated(this.user);
-}
-
-/// User is not authenticated.
-class AppUnauthenticated extends AppAuthState {
-  const AppUnauthenticated();
 }
 
 /// An error occurred during authentication.
@@ -34,6 +29,6 @@ class AppAuthError extends AppAuthState {
 
 /// User is authenticated but app is locked (PIN/biometric required).
 class AppAuthLocked extends AppAuthState {
-  final AuthUser user;
+  final LocalUser user;
   const AppAuthLocked(this.user);
 }

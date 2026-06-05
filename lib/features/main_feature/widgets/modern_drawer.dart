@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/models/local_user.dart';
+import 'package:cunehat/core/services/google_drive_backup_service.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart'
     as constants;
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +60,10 @@ class _ModernDrawerState extends State<ModernDrawer>
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final authState = context.watch<AppAuthBloc>().state;
+    final localUser = authState is AppAuthenticated
+        ? authState.user
+        : (authState is AppAuthLocked ? authState.user : null);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
@@ -103,7 +108,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      _buildAnimatedHeader(user, isDark, theme),
+                      _buildAnimatedHeader(localUser, isDark, theme),
                       const SizedBox(height: 12),
 
                       // Active Wallet Metrics Section
@@ -137,9 +142,6 @@ class _ModernDrawerState extends State<ModernDrawer>
                     ],
                   ),
                 ),
-
-                // Footer Sign Out Option
-                _buildSignOutFooter(theme),
               ],
             ),
           ),
@@ -148,7 +150,7 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildAnimatedHeader(User? user, bool isDark, ThemeData theme) {
+  Widget _buildAnimatedHeader(LocalUser? user, bool isDark, ThemeData theme) {
     final primary = theme.colorScheme.primary;
     return SlideTransition(
       position: _slideAnimation,
@@ -188,8 +190,9 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildAvatar(User? user, bool isDark, Color primary) {
-    final photoUrl = user?.photoURL ?? user?.providerData.firstOrNull?.photoURL;
+  Widget _buildAvatar(LocalUser? user, bool isDark, Color primary) {
+    final driveUser = getIt<GoogleDriveBackupService>().currentUser;
+    final photoUrl = driveUser?.photoUrl;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -225,14 +228,19 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildUserInfo(User? user, bool isDark, ThemeData theme) {
+  Widget _buildUserInfo(LocalUser? user, bool isDark, ThemeData theme) {
+    final driveUser = getIt<GoogleDriveBackupService>().currentUser;
+    final displayName =
+        driveUser?.displayName ?? user?.displayName ?? "Kullanıcı";
+    final email = driveUser?.email ?? user?.email ?? "Yerel Mod";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FadeTransition(
           opacity: _fadeAnimation,
           child: Text(
-            user?.displayName ?? "Kullanıcı",
+            displayName,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -245,7 +253,7 @@ class _ModernDrawerState extends State<ModernDrawer>
         FadeTransition(
           opacity: _fadeAnimation,
           child: Text(
-            user?.email ?? "E-posta adresi yok",
+            email,
             style: TextStyle(
               fontSize: 13,
               color: isDark
@@ -499,48 +507,6 @@ class _ModernDrawerState extends State<ModernDrawer>
         icon,
         color: isDark ? Colors.white : theme.colorScheme.primary,
         size: 20,
-      ),
-    );
-  }
-
-  Widget _buildSignOutFooter(ThemeData theme) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-            context.read<AppAuthBloc>().add(const AppSignOutRequested());
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.redAccent.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
-                SizedBox(width: 10),
-                Text(
-                  'Çıkış Yap',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

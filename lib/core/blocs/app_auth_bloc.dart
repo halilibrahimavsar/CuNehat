@@ -2,65 +2,58 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:remote_auth_module/remote_auth_module.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
+import '../models/local_user.dart';
 import 'app_auth_event.dart';
 import 'app_auth_state.dart';
 
 export 'app_auth_event.dart';
 export 'app_auth_state.dart';
 
-/// Private event for inner auth state changes — defined here because
-/// Dart private symbols can't cross file boundaries.
-class _InnerAuthStateChanged extends AppAuthEvent {
-  final AuthState innerState;
-  const _InnerAuthStateChanged(this.innerState);
-}
-
-/// Bridge BLoC that wraps the module's [AuthBloc] and adds local-auth
-/// lock-screen behavior ([AppAuthLocked] state).
-///
-/// This BLoC:
-/// 1. Listens to the inner [AuthBloc] state stream
-/// 2. On [AuthenticatedState], checks if PIN/biometric is enabled → emits [AppAuthLocked]
-/// 3. Handles background lock timeout via [WidgetsBindingObserver]
-/// 4. Forwards sign-in/sign-out to the inner [AuthBloc]
+/// BLoC that manages local authentication state and handles PIN/biometric
+/// lock-screen behavior.
 class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
     with WidgetsBindingObserver {
-  final AuthBloc _authBloc;
   final LocalAuthRepository _localAuthRepository;
-  StreamSubscription<AuthState>? _innerSubscription;
+  final SharedPreferences _prefs;
   DateTime? _lastUnlockTime;
   DateTime? _lastPausedTime;
   static const int _backgroundLockTimeoutSeconds = 30;
+  static const String _displayNameKey = 'local_user_display_name';
 
   AppAuthBloc({
-    required AuthBloc authBloc,
     required LocalAuthRepository localAuthRepository,
-  })  : _authBloc = authBloc,
-        _localAuthRepository = localAuthRepository,
+    required SharedPreferences sharedPreferences,
+  })  : _localAuthRepository = localAuthRepository,
+        _prefs = sharedPreferences,
         super(const AppAuthInitial()) {
-    on<_InnerAuthStateChanged>(_onInnerStateChanged);
+    on<AppAuthInitializeRequested>(_onInitialize);
     on<AppAuthUnlockRequested>(_onUnlockRequested);
     on<AppAuthAppResumed>(_onAppResumed);
-    on<AppSignInWithGoogleRequested>(_onSignInWithGoogle);
-    on<AppSignOutRequested>(_onSignOut);
+    on<AppAuthLockRequested>(_onLockRequested);
 
-    // Listen to inner AuthBloc and forward state changes
-    _innerSubscription = _authBloc.stream.listen((innerState) {
-      add(_InnerAuthStateChanged(innerState));
-    });
-
-    // Process the current inner state immediately
-    add(_InnerAuthStateChanged(_authBloc.state));
+    // Trigger initialization immediately
+    add(const AppAuthInitializeRequested());
 
     WidgetsBinding.instance.addObserver(this);
   }
 
-  /// Expose the inner AuthBloc for widgets that need direct access
-  /// (e.g., email/password login forms from the module).
-  AuthBloc get innerAuthBloc => _authBloc;
+  /// Get the current local user details, reading display name from preferences
+  LocalUser _getLocalUser() {
+    final guest = LocalUser.guest();
+    final displayName = _prefs.getString(_displayNameKey);
+    return displayName == null
+        ? guest
+        : guest.copyWith(displayName: displayName);
+  }
+
+  /// Update the local user's display name
+  Future<void> updateDisplayName(String name) async {
+    await _prefs.setString(_displayNameKey, name);
+    add(const AppAuthInitializeRequested());
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -77,29 +70,23 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
     }
   }
 
-  Future<void> _onInnerStateChanged(
-    _InnerAuthStateChanged event,
+  Future<void> _onInitialize(
+    AppAuthInitializeRequested event,
     Emitter<AppAuthState> emit,
   ) async {
-    final innerState = event.innerState;
-
-    if (innerState is AuthenticatedState) {
+    emit(const AppAuthLoading());
+    try {
       final isBioEnabled = await _localAuthRepository.isBiometricEnabled();
       final isPinSet = await _localAuthRepository.isPinSet();
+      final user = _getLocalUser();
 
       if (isBioEnabled || isPinSet) {
-        emit(AppAuthLocked(innerState.user));
+        emit(AppAuthLocked(user));
       } else {
-        emit(AppAuthenticated(innerState.user));
+        emit(AppAuthenticated(user));
       }
-    } else if (innerState is UnauthenticatedState) {
-      emit(const AppUnauthenticated());
-    } else if (innerState is AuthLoadingState) {
-      emit(const AppAuthLoading());
-    } else if (innerState is AuthErrorState) {
-      emit(AppAuthError(innerState.message));
-    } else if (innerState is AuthInitialState) {
-      emit(const AppAuthInitial());
+    } catch (e) {
+      emit(AppAuthError(e.toString()));
     }
   }
 
@@ -109,6 +96,13 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
   ) async {
     _lastUnlockTime = DateTime.now();
     emit(AppAuthenticated(event.user));
+  }
+
+  Future<void> _onLockRequested(
+    AppAuthLockRequested event,
+    Emitter<AppAuthState> emit,
+  ) async {
+    emit(AppAuthLocked(_getLocalUser()));
   }
 
   Future<void> _onAppResumed(
@@ -121,34 +115,18 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
         return;
       }
 
-      final currentUser = (state as AppAuthenticated).user;
       final isBioEnabled = await _localAuthRepository.isBiometricEnabled();
       final isPinSet = await _localAuthRepository.isPinSet();
 
       if (isBioEnabled || isPinSet) {
-        emit(AppAuthLocked(currentUser));
+        emit(AppAuthLocked(_getLocalUser()));
       }
     }
-  }
-
-  void _onSignInWithGoogle(
-    AppSignInWithGoogleRequested event,
-    Emitter<AppAuthState> emit,
-  ) {
-    _authBloc.add(const SignInWithGoogleEvent());
-  }
-
-  void _onSignOut(
-    AppSignOutRequested event,
-    Emitter<AppAuthState> emit,
-  ) {
-    _authBloc.add(const SignOutEvent());
   }
 
   @override
   Future<void> close() {
     WidgetsBinding.instance.removeObserver(this);
-    _innerSubscription?.cancel();
     return super.close();
   }
 }

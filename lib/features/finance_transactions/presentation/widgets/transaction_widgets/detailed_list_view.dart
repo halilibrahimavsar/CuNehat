@@ -52,70 +52,90 @@ class _DetailedListViewState extends State<DetailedListView> {
 
     final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
+    // Flatten the list for efficient lazy rendering
+    final flatList = <dynamic>[];
+    for (var i = 0; i < sortedDates.length; i++) {
+      final date = sortedDates[i];
+      final items = grouped[date]!;
+      final isExpanded = _expandedStates[date] ?? true;
+      final isLastDate = i == sortedDates.length - 1;
+
+      flatList.add({
+        'type': 'header',
+        'date': date,
+        'items': items,
+        'isExpanded': isExpanded,
+        'isLastDate': isLastDate,
+      });
+
+      if (isExpanded) {
+        for (var j = 0; j < items.length; j++) {
+          flatList.add({
+            'type': 'item',
+            'item': items[j],
+            'isLastDate': isLastDate,
+            'isLastItem': j == items.length - 1,
+          });
+        }
+      } else {
+        flatList.add({
+          'type': 'spacer',
+          'isLastDate': isLastDate,
+        });
+      }
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      itemCount: sortedDates.length,
+      itemCount: flatList.length,
       itemBuilder: (context, index) {
-        final date = sortedDates[index];
-        final items = grouped[date]!;
-        final isExpanded = _expandedStates[date] ?? true;
+        final element = flatList[index];
+        final isLastDate = element['isLastDate'] as bool;
 
         return Stack(
+          clipBehavior: Clip.none,
           children: [
             // Vertical timeline line connecting dates
             Positioned(
               left: 15,
-              top: 40,
+              top: element['type'] == 'header' ? 40 : 0,
               bottom: 0,
               child: Container(
                 width: 1.5,
-                color: index == sortedDates.length - 1
+                color: isLastDate
                     ? Colors.transparent
                     : widget.mode.primaryColor.withValues(alpha: 0.15),
               ),
             ),
 
             // Main Content
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Date and summary row
-                _buildDateHeaderRow(context, date, items, isExpanded),
-
-                // Transactions List
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  transitionBuilder: (child, animation) {
-                    return SizeTransition(
-                      sizeFactor: animation,
-                      axisAlignment: -1,
-                      child: FadeTransition(opacity: animation, child: child),
-                    );
-                  },
-                  child: isExpanded
-                      ? Padding(
-                          key: ValueKey('list_$date'),
-                          padding: const EdgeInsets.only(
-                            left: 36,
-                            top: 4,
-                            bottom: 16,
-                          ),
-                          child: Column(
-                            children: items
-                                .map(
-                                  (item) => TransactionCard(
-                                    context: context,
-                                    item: item,
-                                    isListView: true,
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        )
-                      : const SizedBox(key: ValueKey('empty'), height: 12),
+            if (element['type'] == 'header')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDateHeaderRow(
+                    context,
+                    element['date'] as DateTime,
+                    element['items'] as List<TransactionWithBalance>,
+                    element['isExpanded'] as bool,
+                  ),
+                ],
+              )
+            else if (element['type'] == 'item')
+              Padding(
+                padding: EdgeInsets.only(
+                  left: 36,
+                  top: 4,
+                  bottom: element['isLastItem'] as bool ? 16 : 4,
                 ),
-              ],
-            ),
+                child: TransactionCard(
+                  context: context,
+                  item: element['item'] as TransactionWithBalance,
+                  isListView: true,
+                ),
+              )
+            else if (element['type'] == 'spacer')
+              const SizedBox(height: 12),
           ],
         );
       },

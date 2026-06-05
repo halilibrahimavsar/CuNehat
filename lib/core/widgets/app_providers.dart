@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:remote_auth_module/remote_auth_module.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -32,8 +31,6 @@ class AppProviders extends StatelessWidget {
       providers: [
         // Auth BLoC is provided from outside (already initialized)
         BlocProvider.value(value: authBloc),
-        // Underlying AuthBloc from remote_auth_module
-        BlocProvider(create: (_) => getIt<AuthBloc>()),
 
         // Feature BLoCs
         BlocProvider(create: (_) => getIt<ThemeBloc>()),

@@ -3,7 +3,7 @@ import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
@@ -163,10 +163,15 @@ class _AppBarContentState extends State<AppBarContent> {
       onTap: () {
         final scaffoldState =
             context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+        final authState = context.read<AppAuthBloc>().state;
+        final userId = authState is AppAuthenticated
+            ? authState.user.uid
+            : (authState is AppAuthLocked ? authState.user.uid : 'local_user');
+
         scaffoldState?.openWalletDialog(
           WalletSheetContent(
             scrollController: ScrollController(),
-            userId: FirebaseAuth.instance.currentUser!.uid,
+            userId: userId,
           ),
         );
       },

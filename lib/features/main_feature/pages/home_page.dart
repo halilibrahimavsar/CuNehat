@@ -11,7 +11,7 @@ import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -41,10 +41,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _loadWallets() {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      context.read<WalletBloc>().add(WatchWalletsEvent(userId));
-    }
+    final authState = context.read<AppAuthBloc>().state;
+    final userId = authState is AppAuthenticated
+        ? authState.user.uid
+        : (authState is AppAuthLocked ? authState.user.uid : 'local_user');
+    context.read<WalletBloc>().add(WatchWalletsEvent(userId));
   }
 
   @override
@@ -151,15 +152,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildAnimatedContent(String userId, dynamic activeWallet) {
+    // Setup view stack based on current slider state, outside of the AnimatedBuilder
+    // to avoid calling notifyListeners() during the build phase.
+    _setupViewStack(userId, activeWallet);
+
     return AnimatedBuilder(
       animation: Listenable.merge([
         _navController,
         _navController.viewStack,
       ]),
       builder: (context, child) {
-        // Setup view stack based on current slider
-        _setupViewStack(userId, activeWallet);
-
         // Build transition
         return _navController.viewStack.buildTransition();
       },

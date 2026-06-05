@@ -10,10 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
-import 'package:cunehat/core/pages/login_page.dart';
-import 'package:cunehat/core/pages/register_page_wrapper.dart';
-import 'package:cunehat/core/pages/forgot_password_page_wrapper.dart'; // Import wrappers
-import 'package:cunehat/features/settings/presentation/page/user_management_page.dart';
+import 'package:cunehat/features/settings/presentation/page/profile_settings_page.dart';
 
 GoRouter createAppRouter(AppAuthBloc authBloc) {
   return GoRouter(
@@ -33,19 +30,6 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
         return AppRoutes.home;
       }
 
-      final bool isLoggedIn = authState is AppAuthenticated;
-      final bool isPublicRoute = state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register ||
-          state.matchedLocation == AppRoutes.forgotPassword;
-
-      if (!isLoggedIn && !isPublicRoute) {
-        return AppRoutes.login;
-      }
-
-      if (isLoggedIn && isPublicRoute) {
-        return AppRoutes.home;
-      }
-
       return null;
     },
     refreshListenable: GoRouterRefreshStream(authBloc.stream),
@@ -60,39 +44,11 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
         },
       ),
       GoRoute(
-        path: AppRoutes.login,
-        pageBuilder: (context, state) {
-          return CubeInTransition(
-            // Or NoTransitionPage if preferred
-            key: state.pageKey,
-            child: const LoginScreen(),
-          );
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.register,
-        pageBuilder: (context, state) {
-          return CubeInTransition(
-            key: state.pageKey,
-            child: const RegisterPageWrapper(),
-          );
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.forgotPassword,
-        pageBuilder: (context, state) {
-          return CubeInTransition(
-            key: state.pageKey,
-            child: const ForgotPasswordPageWrapper(),
-          );
-        },
-      ),
-      GoRoute(
         path: AppRoutes.profile,
         pageBuilder: (context, state) {
           return CubeInTransition(
             key: state.pageKey,
-            child: const UserManagementPage(),
+            child: const ProfileSettingsPage(),
           );
         },
       ),
@@ -122,7 +78,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
                 }
               },
               onLogout: () {
-                authBloc.add(const AppSignOutRequested());
+                // Local only auth: no remote sign out.
               },
             ),
           );

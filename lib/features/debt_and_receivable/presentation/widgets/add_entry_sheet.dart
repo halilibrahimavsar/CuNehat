@@ -96,7 +96,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
     final authState = context.read<AppAuthBloc>().state;
     final userId =
-        authState is AppAuthenticated ? authState.user.id : 'unknown_user';
+        authState is AppAuthenticated ? authState.user.uid : 'unknown_user';
 
     if (isDebt) {
       if (isEditing && widget.debtToEdit != null) {

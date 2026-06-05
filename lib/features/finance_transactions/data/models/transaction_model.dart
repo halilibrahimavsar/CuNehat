@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
 import 'package:hive/hive.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -19,17 +18,12 @@ class TransactionModel extends TransactionEntity {
     super.isSystem = false,
   });
 
-  /// ✅ FIXED: Handle both Timestamp (Firestore) and String (Hive/old data)
+  /// ✅ FIXED: Handle date as ISO 8601 String
   factory TransactionModel.fromJson(String id, Map<String, dynamic> json) {
-    // Parse date - support both Timestamp and String
     DateTime parsedDate;
     final dateField = json['date'];
 
-    if (dateField is Timestamp) {
-      // From Firestore
-      parsedDate = dateField.toDate();
-    } else if (dateField is String) {
-      // From old data or Hive
+    if (dateField is String) {
       parsedDate = DateTime.parse(dateField);
     } else {
       throw Exception('Invalid date format in transaction data');
@@ -57,7 +51,7 @@ class TransactionModel extends TransactionEntity {
       'title': title,
       'tag': tag,
       'amount': amount,
-      'date': Timestamp.fromDate(date), // ✅ Use Timestamp like WalletModel
+      'date': date.toIso8601String(),
       'type': type == TransactionTypeModel.income ? 'income' : 'expense',
       'isSystem': isSystem,
     };

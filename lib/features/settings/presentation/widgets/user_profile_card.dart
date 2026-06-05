@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/models/local_user.dart';
 import 'package:go_router/go_router.dart';
 
 /// Displays the current user's information in a premium, theme-aware card.
@@ -16,8 +17,8 @@ class UserProfileCard extends StatelessWidget {
     return BlocBuilder<AppAuthBloc, AppAuthState>(
       builder: (context, state) {
         final user = _extractUser(state);
-        final email = user?.email ?? 'Kullanıcı';
-        final initial = email.isNotEmpty ? email[0].toUpperCase() : 'K';
+        final name = user?.displayName ?? 'Kullanıcı';
+        final initial = name.isNotEmpty ? name[0].toUpperCase() : 'K';
 
         return AppCard(
           onTap: () {
@@ -27,7 +28,7 @@ class UserProfileCard extends StatelessWidget {
             children: [
               _buildAvatar(theme, initial),
               const SizedBox(width: 16),
-              _buildUserInfo(theme, email),
+              _buildUserInfo(theme, name),
               Icon(Icons.chevron_right,
                   color: theme.colorScheme.onSurfaceVariant),
             ],
@@ -37,7 +38,7 @@ class UserProfileCard extends StatelessWidget {
     );
   }
 
-  dynamic _extractUser(AppAuthState state) {
+  LocalUser? _extractUser(AppAuthState state) {
     if (state is AppAuthenticated) return state.user;
     if (state is AppAuthLocked) return state.user;
     return null;

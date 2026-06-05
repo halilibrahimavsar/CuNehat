@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
@@ -17,25 +16,14 @@ import 'package:cunehat/features/debt_and_receivable/data/models/receivable_mode
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
-import 'package:unified_flutter_features/features/connection_monitor/services/connection_notification_service.dart';
 
 class AppInitialization {
   static Future<AppInitializationResult> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
 
     try {
-      // Başlangıç açılış sürecini kilitlememesi için izin talebini asenkron olarak arka planda tetikliyoruz.
-      unawaited(() async {
-        try {
-          await ConnectionNotificationService().requestPermission();
-        } catch (e) {
-          debugPrint('ConnectionNotificationService permission error: $e');
-        }
-      }());
-
       // Bağımsız servis başlatma adımlarını paralel olarak yürütüyoruz.
       await Future.wait([
-        _initializeFirebase(),
         _initializeHive(),
         _initializeDateFormatting(),
         ThemeBloc.preloadTheme(),
@@ -57,13 +45,20 @@ class AppInitialization {
     }
   }
 
-  static Future<void> _initializeFirebase() async {
-    await Firebase.initializeApp();
-  }
-
   static Future<void> _initializeHive() async {
     await Hive.initFlutter();
     _registerTypeAdapters();
+
+    // Açılışta oluşabilecek race condition ve deadlock'ları önlemek için
+    // Hive kutularını en baştan açıyoruz.
+    await Future.wait([
+      Hive.openBox<WalletModel>('wallets'),
+      Hive.openBox<Map>('users'),
+      Hive.openBox<TransactionModel>('transactions'),
+      Hive.openBox<InvestmentModel>('investments_box'),
+      Hive.openBox<DebtModel>('debts'),
+      Hive.openBox<ReceivableModel>('receivables'),
+    ]);
   }
 
   static Future<void> _initializeDateFormatting() async {

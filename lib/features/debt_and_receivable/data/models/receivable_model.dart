@@ -95,4 +95,30 @@ class ReceivableModel extends ReceivableEntity {
       notes: notes ?? this.notes,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'walletId': walletId,
+      'debtorName': debtorName,
+      'amount': amount,
+      'dueDate': dueDate.toIso8601String(),
+      'isPaid': isPaid,
+      'notes': notes,
+    };
+  }
+
+  factory ReceivableModel.fromJson(Map<String, dynamic> json) {
+    return ReceivableModel(
+      id: json['id'] as String?,
+      userId: json['userId'] as String? ?? 'local_user',
+      walletId: json['walletId'] as String,
+      debtorName: json['debtorName'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      dueDate: DateTime.parse(json['dueDate'] as String),
+      isPaid: json['isPaid'] as bool? ?? false,
+      notes: json['notes'] as String?,
+    );
+  }
 }

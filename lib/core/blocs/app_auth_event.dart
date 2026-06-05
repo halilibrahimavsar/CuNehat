@@ -1,4 +1,4 @@
-import 'package:remote_auth_module/remote_auth_module.dart';
+import 'package:cunehat/core/models/local_user.dart';
 
 /// App-level auth events for lock/unlock functionality.
 abstract class AppAuthEvent {
@@ -7,7 +7,7 @@ abstract class AppAuthEvent {
 
 /// User successfully unlocked (PIN/biometric).
 class AppAuthUnlockRequested extends AppAuthEvent {
-  final AuthUser user;
+  final LocalUser user;
   const AppAuthUnlockRequested(this.user);
 }
 
@@ -16,12 +16,12 @@ class AppAuthAppResumed extends AppAuthEvent {
   const AppAuthAppResumed();
 }
 
-/// Forward a sign-in event to the inner AuthBloc.
-class AppSignInWithGoogleRequested extends AppAuthEvent {
-  const AppSignInWithGoogleRequested();
+/// Request app lock manually.
+class AppAuthLockRequested extends AppAuthEvent {
+  const AppAuthLockRequested();
 }
 
-/// Forward a sign-out event to the inner AuthBloc.
-class AppSignOutRequested extends AppAuthEvent {
-  const AppSignOutRequested();
+/// Check and initialize local auth state on startup.
+class AppAuthInitializeRequested extends AppAuthEvent {
+  const AppAuthInitializeRequested();
 }

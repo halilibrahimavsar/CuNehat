@@ -163,6 +163,52 @@ class DebtModel extends DebtEntity {
       notes: notes ?? this.notes,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'walletId': walletId,
+      'title': title,
+      'counterparty': counterparty,
+      'type': type.name,
+      'principalAmount': principalAmount,
+      'interestRate': interestRate,
+      'termMonths': termMonths,
+      'overdueInterestRate': overdueInterestRate,
+      'startDate': startDate.toIso8601String(),
+      'dueDate': dueDate?.toIso8601String(),
+      'payments':
+          payments.map((e) => PaymentModel.fromEntity(e).toJson()).toList(),
+      'isPaid': isPaid,
+      'notes': notes,
+    };
+  }
+
+  factory DebtModel.fromJson(Map<String, dynamic> json) {
+    return DebtModel(
+      id: json['id'] as String?,
+      userId: json['userId'] as String? ?? 'local_user',
+      walletId: json['walletId'] as String,
+      title: json['title'] as String,
+      counterparty: json['counterparty'] as String? ?? '',
+      type: DebtType.values.byName(json['type'] as String? ?? 'otherDebt'),
+      principalAmount: (json['principalAmount'] as num).toDouble(),
+      interestRate: (json['interestRate'] as num).toDouble(),
+      termMonths: json['termMonths'] as int,
+      overdueInterestRate:
+          (json['overdueInterestRate'] as num? ?? 0.0).toDouble(),
+      startDate: DateTime.parse(json['startDate'] as String),
+      dueDate: json['dueDate'] != null
+          ? DateTime.parse(json['dueDate'] as String)
+          : null,
+      payments: (json['payments'] as List<dynamic>? ?? [])
+          .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      isPaid: json['isPaid'] as bool? ?? false,
+      notes: json['notes'] as String?,
+    );
+  }
 }
 
 // Payment sınıfı artık Entity dosyasında tanımlı ama Hive için burada Adapter'a ihtiyacı var.
@@ -217,6 +263,22 @@ class PaymentModel extends Payment {
       date: date ?? this.date,
       amount: amount ?? this.amount,
       notes: notes ?? this.notes,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date.toIso8601String(),
+      'amount': amount,
+      'notes': notes,
+    };
+  }
+
+  factory PaymentModel.fromJson(Map<String, dynamic> json) {
+    return PaymentModel(
+      date: DateTime.parse(json['date'] as String),
+      amount: (json['amount'] as num).toDouble(),
+      notes: json['notes'] as String?,
     );
   }
 }

@@ -99,20 +99,28 @@ class WalletLocalDataSource {
     yield await getWallets(userId);
 
     final controller = StreamController<List<WalletModel>>();
+    Timer? debounce;
 
     Future<void> emitWallets() async {
       if (controller.isClosed) return;
-      try {
-        controller.add(await getWallets(userId));
-      } catch (e, st) {
-        controller.addError(e, st);
-      }
+      // Debounce: art arda gelen birden fazla Hive yazma işlemini
+      // (ör. updateWallet + applyBalanceDelta) tek bir stream olayına sıkıştırır.
+      debounce?.cancel();
+      debounce = Timer(const Duration(milliseconds: 150), () async {
+        if (controller.isClosed) return;
+        try {
+          controller.add(await getWallets(userId));
+        } catch (e, st) {
+          controller.addError(e, st);
+        }
+      });
     }
 
     final walletSub = walletBox.watch().listen((_) => emitWallets());
     final userSub = userBox.watch(key: userId).listen((_) => emitWallets());
 
     controller.onCancel = () async {
+      debounce?.cancel();
       await walletSub.cancel();
       await userSub.cancel();
       await controller.close();

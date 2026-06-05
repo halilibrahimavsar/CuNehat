@@ -8,10 +8,10 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:cunehat/config/di/app_module.dart' as _i621;
-import 'package:cunehat/config/di/firebase_module.dart' as _i808;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
+import 'package:cunehat/core/services/google_drive_backup_service.dart'
+    as _i186;
 import 'package:cunehat/core/services/wallet_metrics_service.dart' as _i239;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart'
     as _i19;
@@ -77,11 +77,9 @@ import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart'
     as _i207;
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart'
     as _i827;
-import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:http/http.dart' as _i519;
 import 'package:injectable/injectable.dart' as _i526;
-import 'package:remote_auth_module/remote_auth_module.dart' as _i1041;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 import 'package:unified_flutter_features/unified_flutter_features.dart'
     as _i698;
@@ -98,7 +96,6 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final appModule = _$AppModule();
-    final firebaseModule = _$FirebaseModule();
     gh.factory<_i528.TransactionFilterCubit>(
         () => _i528.TransactionFilterCubit());
     gh.factory<_i460.ThemeBloc>(() => _i460.ThemeBloc());
@@ -116,12 +113,12 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i366.ReceivableLocalDatasource());
     gh.singleton<_i175.WalletLocalDataSource>(
         () => _i175.WalletLocalDataSource());
+    gh.lazySingleton<_i186.GoogleDriveBackupService>(
+        () => _i186.GoogleDriveBackupService());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
-    gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
-    gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i329.ReceivableRepository>(() =>
@@ -184,14 +181,12 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i207.WalletGetActiveUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletGetByIdUseCase>(
         () => _i207.WalletGetByIdUseCase(gh<_i254.WalletRepository>()));
-    gh.lazySingleton<_i1041.AuthRepository>(() => appModule.authRepository(
-          gh<_i59.FirebaseAuth>(),
-          gh<_i974.FirebaseFirestore>(),
-        ));
     gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
         () => _i29.InvestmentRemoteDataSourceImpl(client: gh<_i519.Client>()));
-    gh.lazySingleton<_i1041.AuthBloc>(
-        () => appModule.authBloc(gh<_i1041.AuthRepository>()));
+    gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
+          gh<_i698.LocalAuthRepository>(),
+          gh<_i460.SharedPreferences>(),
+        ));
     gh.lazySingleton<_i589.InvestmentRepository>(
         () => _i497.InvestmentRepositoryImpl(
               localDataSource: gh<_i648.InvestmentLocalDatasource>(),
@@ -205,10 +200,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i864.GetInvestmentsUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i420.UpdateInvestmentUseCase>(
         () => _i420.UpdateInvestmentUseCase(gh<_i589.InvestmentRepository>()));
-    gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
-          gh<_i1041.AuthBloc>(),
-          gh<_i698.LocalAuthRepository>(),
-        ));
     gh.lazySingleton<_i239.WalletMetricsService>(
         () => _i239.WalletMetricsService(
               walletRepository: gh<_i254.WalletRepository>(),
@@ -261,5 +252,3 @@ extension GetItInjectableX on _i174.GetIt {
 }
 
 class _$AppModule extends _i621.AppModule {}
-
-class _$FirebaseModule extends _i808.FirebaseModule {}

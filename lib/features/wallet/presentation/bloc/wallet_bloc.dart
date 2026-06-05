@@ -80,15 +80,19 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
               if (activeWallet == null && wallets.isNotEmpty) {
                 final fallbackWallet = wallets.first;
+                // SetActiveWalletEvent users box'a yazar; bu da userSub'ı tetikler.
+                // Ancak wallet box'unu DEĞİŞTİRMEZ, bu yüzden walletSub döngüsüne girmez.
                 add(SetActiveWalletEvent(
                   userId: event.userId,
                   walletId: fallbackWallet.id!,
                 ));
-                _safeSyncBalance(fallbackWallet.id!);
                 return WalletLoadedSt(wallets, fallbackWallet);
               }
 
-              if (activeWallet != null) _safeSyncBalance(activeWallet.id!);
+              // NOT: _safeSyncBalance burada KASTEN ÇAĞRILMIYOR.
+              // syncBalance() → walletRepository.updateWallet() → walletBox'a yazar
+              // → walletBox.watch() tetiklenir → onData tekrar çağrılır → sonsuz döngü.
+              // Bakiye güncellemeleri TransactionBloc._safeApplyBalanceDelta ile yapılıyor.
               return WalletLoadedSt(wallets, activeWallet);
             },
           );

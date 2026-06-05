@@ -180,7 +180,8 @@ class VerticalListTransitionManager extends ChangeNotifier {
   void setViews(List<Widget> views) {
     _views.clear();
     _views.addAll(views);
-    notifyListeners();
+    // Removed notifyListeners() to prevent 'markNeedsBuild() called during build' exception.
+    // The widget calling this is already rebuilding, so the UI will update naturally.
   }
 
   void _onStatusChanged(AnimationStatus status) {
