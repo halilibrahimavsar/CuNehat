@@ -32,22 +32,12 @@ class TransactionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Theme-aware colors
     final contentColor = isDark ? Colors.white : theme.colorScheme.onSurface;
-    final badgeBgColor = isDark
-        ? Colors.white.withValues(alpha: 0.2)
-        : theme.colorScheme.primary.withValues(alpha: 0.1);
-    final badgeBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.3)
-        : theme.colorScheme.primary.withValues(alpha: 0.2);
-    final iconColor = isDark ? Colors.white : theme.colorScheme.primary;
+    final mutedColor = isDark ? Colors.white54 : theme.colorScheme.onSurfaceVariant;
+    
+    final expenseColor = isDark ? Colors.redAccent.shade100 : Colors.red.shade600;
+    final incomeColor = isDark ? Colors.greenAccent.shade400 : Colors.green.shade700;
 
-    final expenseAmountColor =
-        isDark ? Colors.red.shade100 : Colors.red.shade700;
-    final incomeAmountColor =
-        isDark ? Colors.greenAccent : Colors.green.shade700;
-
-    // Filtreleme: Moda göre işlemleri filtrele
     final filteredTransactions = mode == FinanceMode.compare
         ? allTransactions
         : allTransactions
@@ -62,280 +52,322 @@ class TransactionHeader extends StatelessWidget {
         .where((t) => t.isExpense)
         .fold(0.0, (sum, t) => sum + t.amount);
 
+    final netBalance = totalIncome - totalExpense;
+
+    final hasActiveFilters = currentFilter?.dataFilter.hasActiveFilters ?? false;
+    final String netStatusLabel = hasActiveFilters ? 'FİLTRELENEN NET DURUM' : 'NET DURUM';
+    final String singleModeLabel = hasActiveFilters 
+       ? (mode == FinanceMode.income ? 'FİLTRELENEN GELİR' : 'FİLTRELENEN GİDER')
+       : (mode == FinanceMode.income ? 'TOPLAM GELİR' : 'TOPLAM GİDER');
+    final String transactionCountLabel = hasActiveFilters ? 'Filtrelenen İşlem' : 'İşlem';
+    final Color labelColor = hasActiveFilters ? Colors.orangeAccent.shade200 : mutedColor;
+
     return AppCard(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       section: AppSection.transactions,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header with mode indicator
+          // Top Navigation & Actions
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Sol Taraf: Mod İkonu, Başlık ve İşlem Sayısı
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: badgeBgColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: badgeBorderColor),
-                    ),
-                    child: Icon(mode.icon, color: iconColor, size: 20),
-                  ),
-                  const SizedBox(width: 12),
+                  Icon(mode.icon, color: contentColor, size: 20),
+                  const SizedBox(width: 8),
                   Text(
-                    mode.title,
+                    mode.title.toUpperCase(),
                     style: TextStyle(
                       color: contentColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // İşlem Sayısı (Buraya taşındı)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: badgeBgColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: badgeBorderColor),
-                    ),
-                    child: Text(
-                      '( ${filteredTransactions.length} işlem )',
-                      style: TextStyle(
-                        color: iconColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
                     ),
                   ),
                 ],
               ),
-
-              // Sağ Taraf: Filtre Butonu
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onFilterTap,
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: badgeBgColor,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: badgeBorderColor),
-                    ),
-                    child: Stack(
-                      children: [
-                        Icon(Icons.tune_rounded, color: iconColor, size: 22),
-                        if (currentFilter?.dataFilter.hasActiveFilters ?? false)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Colors.orangeAccent,
-                                shape: BoxShape.circle,
+              GestureDetector(
+                onTap: onFilterTap,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: contentColor.withValues(alpha: 0.05),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(Icons.tune_rounded, color: contentColor, size: 20),
+                      if (hasActiveFilters)
+                        Positioned(
+                          right: -2,
+                          top: -2,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.orangeAccent,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                                width: 2,
                               ),
                             ),
                           ),
-                      ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+          
+          Align(
+            alignment: Alignment.centerLeft,
+            child: CompactFilterInfo(
+              startDate: startDate,
+              endDate: endDate,
+              dataFilter: currentFilter?.dataFilter,
+              onDateTap: onDateTap,
+              isLightMode: isDark, 
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Central Typography & Stats
+          if (mode == FinanceMode.compare) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (hasActiveFilters) ...[
+                            Icon(Icons.filter_alt_rounded, size: 12, color: labelColor),
+                            const SizedBox(width: 4),
+                          ],
+                          Flexible(
+                            child: Text(
+                              netStatusLabel,
+                              style: TextStyle(
+                                color: labelColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      AmountDisplay(
+                        amount: netBalance,
+                        style: TextStyle(
+                          color: contentColor,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          height: 1.1,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    '${filteredTransactions.length} $transactionCountLabel',
+                    style: TextStyle(
+                      color: mutedColor.withValues(alpha: 0.7),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            
+            const SizedBox(height: 20),
 
-          const SizedBox(height: 16),
+            // Premium Sleek Ratio Bar
+            _buildPremiumRatioBar(totalIncome, totalExpense, incomeColor, expenseColor),
+            
+            const SizedBox(height: 12),
 
-          // Bilgi Çubukları (Tarih, İşlem Sayısı, Aktif Filtreler)
-          CompactFilterInfo(
-            startDate: startDate,
-            endDate: endDate,
-            dataFilter: currentFilter?.dataFilter,
-            onDateTap: onDateTap,
-            isLightMode: isDark, // Header için
-          ),
-
-          const SizedBox(height: 20),
-
-          // Stats Row - Moda göre farklı gösterim
-          if (mode == FinanceMode.compare)
+            // Minimalist Split Stats
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildCompactStat(
+                  title: 'GELİR',
+                  amount: totalIncome,
+                  color: incomeColor,
+                  icon: Icons.arrow_upward_rounded,
+                  isRight: false,
+                ),
+                _buildCompactStat(
+                  title: 'GİDER',
+                  amount: totalExpense,
+                  color: expenseColor,
+                  icon: Icons.arrow_downward_rounded,
+                  isRight: true,
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: _buildStatCard(
-                    context: context,
-                    isDark: isDark,
-                    icon: Icons.arrow_downward,
-                    label: 'Toplam Gider',
-                    amount: totalExpense,
-                    color: expenseAmountColor,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (hasActiveFilters) ...[
+                            Icon(Icons.filter_alt_rounded, size: 12, color: labelColor),
+                            const SizedBox(width: 4),
+                          ],
+                          Flexible(
+                            child: Text(
+                              singleModeLabel,
+                              style: TextStyle(
+                                color: labelColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      AmountDisplay(
+                        amount: mode == FinanceMode.income ? totalIncome : totalExpense,
+                        style: TextStyle(
+                          color: mode == FinanceMode.income ? incomeColor : expenseColor,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          height: 1.1,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context: context,
-                    isDark: isDark,
-                    icon: Icons.arrow_upward,
-                    label: 'Toplam Gelir',
-                    amount: totalIncome,
-                    color: incomeAmountColor,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                     '${filteredTransactions.length} $transactionCountLabel',
+                     style: TextStyle(
+                       color: mutedColor.withValues(alpha: 0.7),
+                       fontSize: 11,
+                       fontWeight: FontWeight.w600,
+                     ),
                   ),
                 ),
               ],
-            )
-          else
-            _buildSingleStatCard(
-              context: context,
-              isDark: isDark,
-              icon: mode.icon,
-              label:
-                  mode == FinanceMode.income ? 'Toplam Gelir' : 'Toplam Gider',
-              amount: mode == FinanceMode.income ? totalIncome : totalExpense,
-              color: mode.primaryColor,
+
             ),
+          ]
         ],
       ),
     );
   }
 
-  Widget _buildStatCard({
-    required BuildContext context,
-    required bool isDark,
-    required IconData icon,
-    required String label,
+  Widget _buildPremiumRatioBar(
+    double income, 
+    double expense, 
+    Color incomeColor, 
+    Color expenseColor,
+  ) {
+    final total = income + expense;
+    if (total == 0) return const SizedBox.shrink();
+    
+    final incomePercent = income / total;
+    
+    return Container(
+      height: 6,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: expenseColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Stack(
+        children: [
+          FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: incomePercent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: incomeColor,
+                borderRadius: BorderRadius.circular(3),
+                boxShadow: [
+                  BoxShadow(
+                    color: incomeColor.withValues(alpha: 0.6),
+                    blurRadius: 8,
+                    offset: const Offset(0, 0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStat({
+    required String title,
     required double amount,
     required Color color,
+    required IconData icon,
+    required bool isRight,
   }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.15)
-            : theme.colorScheme.onSurface.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.3)
-              : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isDark
-                      ? Colors.white70
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+    return Column(
+      crossAxisAlignment: isRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isRight) ...[
+              Icon(icon, color: color, size: 12),
+              const SizedBox(width: 4),
             ],
-          ),
-          const SizedBox(height: 10),
-          AmountDisplay(
-            amount: amount,
-            style: TextStyle(
-              color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            Text(
+              title,
+              style: TextStyle(
+                color: color.withValues(alpha: 0.8),
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSingleStatCard({
-    required BuildContext context,
-    required bool isDark,
-    required IconData icon,
-    required String label,
-    required double amount,
-    required Color color,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.15)
-            : theme.colorScheme.onSurface.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.3)
-              : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-          width: 1,
+            if (isRight) ...[
+              const SizedBox(width: 4),
+              Icon(icon, color: color, size: 12),
+            ],
+          ],
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: isDark ? Colors.white : color, size: 24),
+        const SizedBox(height: 2),
+        AmountDisplay(
+          amount: amount,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isDark
-                        ? Colors.white70
-                        : theme.colorScheme.onSurfaceVariant,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                AmountDisplay(
-                  amount: amount,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : color,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
