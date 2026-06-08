@@ -7,8 +7,8 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_selector.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_filter_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
@@ -241,12 +241,15 @@ class _TransactionsViewState extends State<_TransactionsView> {
               body: NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
-                    // 1. Finance Mode Selector (Kaydırılabilir Alan)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                        child: FinanceModeSelector(
+                    // 1. İnce sticky kontrol çubuğu (mod + tarih + filtre)
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _FilterBarDelegate(
+                        child: TransactionFilterBar(
                           currentMode: filterState.viewFilter.financeMode,
+                          startDate: filterState.viewFilter.startDate,
+                          endDate: filterState.viewFilter.endDate,
+                          dataFilter: filterState.dataFilter,
                           onModeChanged: (mode) {
                             context.read<TransactionFilterCubit>().updateFilter(
                                   filterState.copyWith(
@@ -257,25 +260,23 @@ class _TransactionsViewState extends State<_TransactionsView> {
                                   ),
                                 );
                           },
+                          onDateTap: () => _pickDateRange(context, filterState),
+                          onFilterTap: () => _showFilterSheet(
+                            context,
+                            context.read<TransactionFilterCubit>(),
+                          ),
                         ),
                       ),
                     ),
-                    // 2. Modern Header (Kaydırılabilir Alan)
+                    // 2. Salt-veri özet kartı (kaydırılabilir)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         child: TransactionHeader(
-                          startDate: filterState.viewFilter.startDate,
-                          endDate: filterState.viewFilter.endDate,
                           allTransactions: allTransactions,
                           mode: filterState.viewFilter.financeMode,
                           currentFilter: filterState,
-                          onFilterTap: () => _showFilterSheet(
-                            context,
-                            context.read<TransactionFilterCubit>(),
-                          ),
-                          onDateTap: () => _pickDateRange(context, filterState),
                         ),
                       ),
                     ),
@@ -322,4 +323,34 @@ class _TransactionsViewState extends State<_TransactionsView> {
       ),
     );
   }
+}
+
+/// Sticky filtre çubuğunu sabit yükseklikte pinned tutan delegate.
+class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _FilterBarDelegate({required this.child});
+
+  static const double _height = 56;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      height: _height,
+      color: Theme.of(context).colorScheme.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _FilterBarDelegate oldDelegate) =>
+      oldDelegate.child != child;
 }
