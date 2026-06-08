@@ -274,7 +274,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         child: TransactionHeader(
-                          allTransactions: allTransactions,
+                          // Liste ile aynı süzülmüş veriden besle: kategori/fiyat
+                          // filtreleri de kart toplamlarına yansısın.
+                          allTransactions:
+                              filteredData.map((e) => e.transaction).toList(),
                           mode: filterState.viewFilter.financeMode,
                           currentFilter: filterState,
                         ),
