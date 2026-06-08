@@ -19,29 +19,6 @@ class SubViewFactory {
     required this.walletId,
   });
 
-  factory SubViewFactory.empty() =>
-      const SubViewFactory(userId: '', walletId: '');
-
-  void update({required String userId, required String walletId}) {
-    // This factory is immutable, create new instance instead
-  }
-
-  /// Create view by index
-  ///
-  /// Index mapping for transactions slider:
-  /// 0: MainView (not used here)
-  /// 1: TransactionDetailPage
-  /// 2: TransactionReportPage
-  /// 3: TransactionPendingPage
-  Widget createViewByIndex(int index) {
-    return switch (index) {
-      1 => TransactionDetailPage(userId: userId, walletId: walletId),
-      2 => TransactionReportPage(userId: userId, walletId: walletId),
-      3 => TransactionPendingPage(userId: userId, walletId: walletId),
-      _ => const SizedBox.shrink(),
-    };
-  }
-
   /// Create all subviews for a slider state
   List<Widget> createSubViewsForState(String stateType) {
     return switch (stateType) {

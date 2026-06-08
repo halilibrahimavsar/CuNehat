@@ -1,5 +1,6 @@
 import 'package:cunehat/core/shared/animations/unified_cube_transition.dart';
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/slider_state_helper.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 /// Simplified navigation controller using vertical list paradigm
@@ -52,24 +53,15 @@ class HomeNavigationController extends ChangeNotifier {
   bool get isAnimating =>
       _horizontalController.isAnimating || _viewStack.isTransitioning;
 
-  SliderState get currentSliderState {
-    final value = _horizontalController.value;
-    if (value < 0.3) return SliderState.savedMoney;
-    if (value < 0.7) return SliderState.transactions;
-    return SliderState.debt;
-  }
+  /// Single source of truth for the current state: delegates to the package
+  /// helper so the controller, the navbar and the appbar all use the same
+  /// (0.25/0.75) boundaries.
+  SliderState get currentSliderState => SliderStateHelper.getStateFromValue(
+        _horizontalController.value,
+        SliderState.values.length,
+      );
 
   // ==================== NAVIGATION ====================
-
-  /// Navigate horizontally between main menus
-  Future<void> navigateToSlider(SliderState state) async {
-    final targetValue = _getSliderTargetValue(state);
-    await _horizontalController.animateTo(
-      targetValue,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-    );
-  }
 
   /// Navigate to a specific view in the stack
   ///
@@ -121,14 +113,6 @@ class HomeNavigationController extends ChangeNotifier {
     if (!isAtMainView && !isAnimating) {
       closeToMain();
     }
-  }
-
-  double _getSliderTargetValue(SliderState state) {
-    return switch (state) {
-      SliderState.savedMoney => 0.15,
-      SliderState.transactions => 0.5,
-      SliderState.debt => 0.85,
-    };
   }
 
   @override

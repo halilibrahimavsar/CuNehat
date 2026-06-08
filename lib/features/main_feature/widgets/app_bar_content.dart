@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/slider_state_helper.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 class AppBarContent extends StatefulWidget {
   final double currentSliderValue;
@@ -147,15 +149,21 @@ class _AppBarContentState extends State<AppBarContent> {
     String valueName = "";
 
     if (state.activeWallet != null) {
-      if (sliderValue < 0.3) {
-        value = state.activeWallet?.investment ?? 0.0;
-        valueName = "YATIRIM";
-      } else if (sliderValue > 0.7) {
-        value = state.activeWallet?.debt ?? 0.0;
-        valueName = "BORÇ";
-      } else {
-        value = state.activeWallet?.balance ?? 0.0;
-        valueName = "BAKİYE";
+      // Same source of truth as the navbar/controller (0.25/0.75 boundaries).
+      final st = SliderStateHelper.getStateFromValue(
+        sliderValue,
+        SliderState.values.length,
+      );
+      switch (st) {
+        case SliderState.savedMoney:
+          value = state.activeWallet?.investment ?? 0.0;
+          valueName = "YATIRIM";
+        case SliderState.transactions:
+          value = state.activeWallet?.balance ?? 0.0;
+          valueName = "BAKİYE";
+        case SliderState.debt:
+          value = state.activeWallet?.debt ?? 0.0;
+          valueName = "BORÇ";
       }
     }
 
