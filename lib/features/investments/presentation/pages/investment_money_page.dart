@@ -100,20 +100,14 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         }
       },
       builder: (context, investmentState) {
-        // Verileri hazırla
-        List<InvestmentEntity> investments = [];
-        if (investmentState is InvestmentLoaded) {
-          investments = investmentState.investments;
-        }
-
-        // Hesaplamalar
-        final totalInvestment =
-            investments.fold(0.0, (sum, item) => sum + item.amount);
-        final totalCurrentValue =
-            investments.fold(0.0, (sum, item) => sum + item.currentValue);
-        final totalProfit = totalCurrentValue - totalInvestment;
-        final totalProfitPercentage =
-            totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0.0;
+        // Özet metrikler state üzerinde hazır (InvestmentLoaded getters).
+        final loaded =
+            investmentState is InvestmentLoaded ? investmentState : null;
+        final investments = loaded?.investments ?? const <InvestmentEntity>[];
+        final totalInvestment = loaded?.totalAmount ?? 0.0;
+        final totalCurrentValue = loaded?.totalCurrentValue ?? 0.0;
+        final totalProfit = loaded?.totalProfit ?? 0.0;
+        final totalProfitPercentage = loaded?.totalProfitPercentage ?? 0.0;
 
         return Scaffold(
           body: investmentState is InvestmentLoading

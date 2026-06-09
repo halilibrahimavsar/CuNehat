@@ -17,6 +17,15 @@ final class InvestmentLoaded extends InvestmentState {
 
   const InvestmentLoaded(this.investments, {this.totalAmount = 0.0});
 
+  /// Portföy özet metrikleri — UI build içinde hesap yapmasın diye state'te.
+  double get totalCurrentValue =>
+      investments.fold(0.0, (sum, item) => sum + item.currentValue);
+
+  double get totalProfit => totalCurrentValue - totalAmount;
+
+  double get totalProfitPercentage =>
+      totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0.0;
+
   @override
   List<Object> get props => [investments, totalAmount];
 }

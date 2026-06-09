@@ -436,9 +436,13 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         final interest = parseAmount(_interestController.text) ?? 0;
         final term = int.tryParse(_termController.text.trim()) ?? 0;
 
-        // DebtEntity.totalDebtAmount ile aynı basit faiz formülü.
-        final totalInterest = principal * interest * term / 1200;
-        final total = principal + totalInterest;
+        // Önizleme, kaydedilen borçla aynı domain formülünü kullanır.
+        final total = DebtEntity.calculateTotalDebt(
+          principal: principal,
+          interestRate: interest,
+          termMonths: term,
+        );
+        final totalInterest = total - principal;
         final monthly = term > 0 ? total / term : 0.0;
         final hasData = principal > 0;
 

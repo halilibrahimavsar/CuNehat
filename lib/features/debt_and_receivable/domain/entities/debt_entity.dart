@@ -96,9 +96,21 @@ class DebtEntity {
   /// Toplam Ödenen Tutar
   double get totalPaidAmount => payments.fold(0, (sum, p) => sum + p.amount);
 
+  /// Basit faiz formülü — kaydedilmiş borç (totalDebtAmount) ve form
+  /// önizlemesi AYNI hesabı kullansın diye tek yerde.
+  static double calculateTotalDebt({
+    required double principal,
+    required double interestRate,
+    required int termMonths,
+  }) =>
+      principal + (principal * interestRate * termMonths / 1200);
+
   /// Toplam Borç Tutarı (Basit Faiz Hesabı: Ana Para + (Ana Para * Yıllık Faiz * Ay / 1200))
-  double get totalDebtAmount =>
-      principalAmount + (principalAmount * interestRate * termMonths / 1200);
+  double get totalDebtAmount => calculateTotalDebt(
+        principal: principalAmount,
+        interestRate: interestRate,
+        termMonths: termMonths,
+      );
 
   /// Kalan Borç
   double get remainingAmount => totalDebtAmount - totalPaidAmount;
