@@ -1,5 +1,5 @@
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:injectable/injectable.dart';

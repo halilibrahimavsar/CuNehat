@@ -1,7 +1,7 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:dartz/dartz.dart';

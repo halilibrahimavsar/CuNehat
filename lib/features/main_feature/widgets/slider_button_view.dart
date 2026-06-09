@@ -1,5 +1,5 @@
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';

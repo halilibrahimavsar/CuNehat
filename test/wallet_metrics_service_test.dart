@@ -4,7 +4,7 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/receivable_repository.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';

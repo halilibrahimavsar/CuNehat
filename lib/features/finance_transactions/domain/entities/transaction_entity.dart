@@ -1,4 +1,4 @@
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:equatable/equatable.dart';
 
 class TransactionEntity extends Equatable {

@@ -8,7 +8,7 @@ import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
-import 'package:cunehat/features/finance_transactions/data/models/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_type_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
