@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:cunehat/config/initialization/app_initialization.dart';
-import 'package:cunehat/core/widgets/app_providers.dart';
+import 'package:cunehat/config/app/app_providers.dart';
 import 'package:cunehat/core/widgets/cunehat_app.dart';
-import 'package:cunehat/core/widgets/themed_app.dart';
+import 'package:cunehat/config/app/themed_app.dart';
 
 /// Application entry point.
 ///

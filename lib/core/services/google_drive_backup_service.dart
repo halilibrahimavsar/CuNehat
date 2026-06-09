@@ -10,6 +10,9 @@ import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 
+/// Kasıtlı cross-feature servis: yedekleme tüm feature'ların Hive
+/// modellerini serileştirmek zorunda; somut model bağımlılıkları v1 için
+/// bilinçli kabul (soyut arayüz post-1.0 notu).
 @lazySingleton
 class GoogleDriveBackupService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(

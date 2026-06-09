@@ -19,6 +19,9 @@ class CashMovementTags {
   static const String investmentSell = 'Yatırım Satışı';
 }
 
+/// Kasıtlı cross-feature orkestratör: cüzdan defteri (balance/debt/credit/
+/// investment) birden çok feature'ın repolarından beslenir; bu yüzden core'da
+/// yaşar ve feature repolarına bağımlılığı mimari bir kabul olarak belgelidir.
 @lazySingleton
 class WalletMetricsService {
   final WalletRepository walletRepository;
