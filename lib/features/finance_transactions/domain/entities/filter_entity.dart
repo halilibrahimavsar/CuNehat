@@ -63,8 +63,6 @@ base class DataFilter extends BaseFilter {
     this.searchQuery,
   });
 
-  static const DataFilter empty = DataFilter();
-
   DataFilter copyWith({
     Set<String>? selectedCategories,
     PriceRangeFilter? priceRange,
@@ -96,14 +94,6 @@ base class DataFilter extends BaseFilter {
     if (searchQuery?.trim().isNotEmpty ?? false) count++;
     return count;
   }
-
-  bool matchesSearch(String text, {List<String>? fields}) {
-    final query = searchQuery?.trim().toLowerCase();
-    if (query == null || query.isEmpty) return true;
-
-    final searchText = text.toLowerCase();
-    return searchText.contains(query);
-  }
 }
 
 /// Görünüm filtreleri (UI durumunu yönetmek için)
@@ -128,32 +118,6 @@ class ViewFilter {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
     );
-  }
-
-  bool isTodayRange() {
-    final now = DateTime.now();
-    return startDate.year == now.year &&
-        startDate.month == now.month &&
-        startDate.day == now.day &&
-        endDate.year == now.year &&
-        endDate.month == now.month &&
-        endDate.day == now.day;
-  }
-
-  bool isThisWeekRange() {
-    final now = DateTime.now();
-    final diff = endDate.difference(startDate).inDays;
-    return diff < 7 && endDate.difference(now).inDays.abs() < 7;
-  }
-
-  bool isThisMonthRange() {
-    final now = DateTime.now();
-    return startDate.month == now.month && startDate.year == now.year;
-  }
-
-  String get dateRangeText {
-    return '${startDate.day}.${startDate.month}.${startDate.year} - '
-        '${endDate.day}.${endDate.month}.${endDate.year}';
   }
 }
 

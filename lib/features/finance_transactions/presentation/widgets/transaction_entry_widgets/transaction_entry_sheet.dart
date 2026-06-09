@@ -47,34 +47,4 @@ class TransactionSheetHandler {
       },
     );
   }
-
-  static void showExpenseSheet(
-    BuildContext context,
-    String userId,
-    String walletId, {
-    TransactionEntity? initialTransaction,
-  }) {
-    showSheet(
-      context: context,
-      userId: userId,
-      walletId: walletId,
-      type: TransactionTypeModel.expense,
-      initialTransaction: initialTransaction,
-    );
-  }
-
-  static void showIncomeSheet(
-    BuildContext context,
-    String userId,
-    String walletId, {
-    TransactionEntity? initialTransaction,
-  }) {
-    showSheet(
-      context: context,
-      userId: userId,
-      walletId: walletId,
-      type: TransactionTypeModel.income,
-      initialTransaction: initialTransaction,
-    );
-  }
 }

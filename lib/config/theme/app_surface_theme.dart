@@ -52,21 +52,6 @@ class AppSurface extends ThemeExtension<AppSurface> {
     ],
   );
 
-  // Aurora tema: Premium, zengin arka plan (gradientMesh benzeri)
-  static const AppSurface aurora = AppSurface(
-    brightness: Brightness.dark,
-    baseColor: Color(0xFF0F0C29), // Deep rich violet base
-    borderColor: Color(0x33FFFFFF),
-    radius: 36,
-    accentFill: 0.45,
-    glow: 0.60, // Strong glow
-    gradientFill: true,
-    ambientShadow: [
-      BoxShadow(
-          color: Color(0x80000000), blurRadius: 50, offset: Offset(0, 25)),
-    ],
-  );
-
   @override
   AppSurface copyWith({
     Brightness? brightness,

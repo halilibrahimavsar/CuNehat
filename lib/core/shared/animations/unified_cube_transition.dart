@@ -172,7 +172,6 @@ class VerticalListTransitionManager extends ChangeNotifier {
   }
 
   AnimationController get controller => _controller;
-  int get currentIndex => _currentIndex;
   bool get isTransitioning => _isTransitioning;
   bool get isAtMainView => _currentIndex == 0;
 
@@ -205,19 +204,6 @@ class VerticalListTransitionManager extends ChangeNotifier {
     await _controller.forward(from: 0.0);
   }
 
-  /// Go to next view (down)
-  Future<void> next() async {
-    if (_currentIndex < _views.length - 1) {
-      await navigateTo(_currentIndex + 1);
-    }
-  }
-
-  /// Go to previous view (up)
-  Future<void> previous() async {
-    if (_currentIndex > 0) {
-      await navigateTo(_currentIndex - 1);
-    }
-  }
 
   /// Build the current transition
   Widget buildTransition({bool useFade = true}) {

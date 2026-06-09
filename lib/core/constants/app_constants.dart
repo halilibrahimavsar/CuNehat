@@ -2,24 +2,6 @@ import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// ============ HIVE BOX NAMES ============
-
-class HiveBoxes {
-  static const String expenses = 'expenses_box';
-  static const String incomes = 'incomes_box';
-  static const String pendingOperations = 'pending_operations_box';
-  static const String wallets = 'wallets_box'; // ⚠️ NEW
-}
-
-// ============ WALLET DEFAULTS ============
-
-class WalletDefaults {
-  static const String defaultWalletId = 'default_wallet';
-  static const String defaultWalletName = 'Ana Cüzdan';
-  static const String defaultColorHex = '0xFF2196F3';
-  static const String defaultIconName = 'wallet';
-}
-
 class ThemeNames {
   static const String sysLight = "Sistem [Açık]";
   static const String sysDark = "Sistem [Kapalı]";
@@ -81,21 +63,7 @@ class WalletColors {
 }
 
 class AppConstants {
-  // App Info
-  static const String appName = 'CuNehat';
-  static const String appVersion = '1.0.0';
-
-  // Timeouts
-  static const Duration apiTimeout = Duration(seconds: 30);
-  static const Duration cacheTimeout = Duration(hours: 24);
-
-  // Limits
-  static const int maxTransactionsPerPage = 50;
-  static const double maxTransactionAmount = 999999999.99;
-
-  // Currency
   static const String currency = '₺';
-  static const String currencyCode = 'TRY';
 }
 
 class AppFormatters {
@@ -109,8 +77,6 @@ class AppFormatters {
     symbol: AppConstants.currency,
     decimalDigits: 2,
   );
-
-  static final NumberFormat number = NumberFormat('#,##0.00', 'tr_TR');
 }
 
 class AppRoutes {
@@ -121,6 +87,5 @@ class AppRoutes {
   static const String investment = '/investment';
   static const String login = '/login';
   static const String register = '/register';
-  static const String forgotPassword = '/forgot-password';
   static const String profile = '/profile';
 }

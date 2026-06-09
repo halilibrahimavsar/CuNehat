@@ -43,9 +43,7 @@ class HomeNavigationController extends ChangeNotifier {
   AnimationController get horizontalController => _horizontalController;
   VerticalListTransitionManager get viewStack => _viewStack;
 
-  int get currentStackIndex => _viewStack.currentIndex;
   bool get isAtMainView => _viewStack.isAtMainView;
-  bool get isSubViewOpen => !_viewStack.isAtMainView;
 
   Map<SliderState, int> get selectedSubIndices =>
       Map.unmodifiable(_selectedSubIndices);
@@ -76,15 +74,6 @@ class HomeNavigationController extends ChangeNotifier {
     await _viewStack.navigateTo(viewIndex);
   }
 
-  /// Go to next view (down)
-  Future<void> nextView() async {
-    await _viewStack.next();
-  }
-
-  /// Go to previous view (up)
-  Future<void> previousView() async {
-    await _viewStack.previous();
-  }
 
   /// Close all subviews and return to main
   Future<void> closeToMain() async {

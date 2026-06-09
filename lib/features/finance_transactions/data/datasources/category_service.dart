@@ -183,15 +183,6 @@ class CategoryService {
     await _saveCustomCategories(customCategories, isExpense);
   }
 
-  // ========== RESET CATEGORIES ==========
-
-  /// Reset to default categories (remove all custom)
-  Future<void> resetCategories(bool isExpense) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = isExpense ? _expenseCategoriesKey : _incomeCategoriesKey;
-    await prefs.remove(key);
-  }
-
   // ========== PRIVATE HELPERS ==========
 
   /// Save custom categories to SharedPreferences

@@ -31,8 +31,4 @@ class TransactionFilterCubit extends Cubit<CombinedFilter> {
   void updateFilter(CombinedFilter newFilter) {
     emit(newFilter);
   }
-
-  void resetFilters() {
-    emit(_createDefaultFilter());
-  }
 }

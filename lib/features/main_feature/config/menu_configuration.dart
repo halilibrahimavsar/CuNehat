@@ -149,15 +149,6 @@ class MenuConfigs {
     ),
   };
 
-  static MenuConfiguration? getConfig(SliderState state) => _configs[state];
-
-  static List<SubMenuConfig> getSubMenus(SliderState state) {
-    return _configs[state]?.subMenus ?? const [];
-  }
-
-  static List<MiniButtonConfig> getMiniButtons(SliderState state) {
-    return _configs[state]?.miniButtons ?? const [];
-  }
 
   static Map<SliderState, MenuConfiguration> get allConfigs =>
       Map.unmodifiable(_configs);
