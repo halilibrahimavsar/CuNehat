@@ -1,0 +1,28 @@
+name: unified_flutter_features
+description: A comprehensive collection of reusable Flutter components and features following Clean Architecture principles.
+version: 2.0.0
+homepage: https://github.com/unified-flutter-features/unified_flutter_features
+
+environment:
+  sdk: '>=2.19.0 <4.0.0'
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.0
+  connectivity_plus: ^7.0.0
+  cupertino_icons: ^1.0.8
+  flutter_local_notifications: ^17.2.3
+  local_auth: ^2.1.6
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ">=9.2.4 <11.0.0"
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+
+flutter:
+  uses-material-design: true

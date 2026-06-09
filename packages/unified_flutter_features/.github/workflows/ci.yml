@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get (package)
+        run: flutter pub get
+
+      - name: Analyze (package)
+        run: flutter analyze
+
+      - name: Test (package)
+        run: flutter test
+
+      - name: Pub get (example)
+        run: |
+          cd example
+          flutter pub get
+
+      - name: Analyze (example)
+        run: |
+          cd example
+          flutter analyze
+
+      - name: Test (example)
+        run: |
+          cd example
+          flutter test

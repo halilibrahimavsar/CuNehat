@@ -1098,8 +1098,8 @@ packages:
   unified_flutter_features:
     dependency: "direct main"
     description:
-      path: "/home/garuda/Masaüstü/unified_flutter_features"
-      relative: false
+      path: "packages/unified_flutter_features"
+      relative: true
     source: path
     version: "2.0.0"
   universal_io:

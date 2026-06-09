@@ -1,0 +1,27 @@
+flutter:
+  plugin:
+    platforms:
+      android:
+        pluginClass: ConnectionMonitorPlugin
+        dartPluginClass: ConnectionMonitorPlugin
+        fileName: connection_monitor_plugin.dart
+      ios:
+        pluginClass: ConnectionMonitorPlugin
+        dartPluginClass: ConnectionMonitorPlugin
+        fileName: connection_monitor_plugin.dart
+      web:
+        pluginClass: ConnectionMonitorPlugin
+        dartPluginClass: ConnectionMonitorPlugin
+        fileName: connection_monitor_plugin.dart
+      macos:
+        pluginClass: ConnectionMonitorPlugin
+        dartPluginClass: ConnectionMonitorPlugin
+        fileName: connection_monitor_plugin.dart
+      windows:
+        pluginClass: ConnectionMonitorPlugin
+        dartPluginClass: ConnectionMonitorPlugin
+        fileName: connection_monitor_plugin.dart
+      linux:
+        pluginClass: ConnectionMonitorPlugin
+        dartPluginClass: ConnectionMonitorPlugin
+        fileName: connection_monitor_plugin.dart
