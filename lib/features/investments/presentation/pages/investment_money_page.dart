@@ -1,6 +1,5 @@
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
-import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_card.dart';
@@ -171,8 +170,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                     builder: (context) => AddInvestmentDialog(
                                       userId: investment.userId,
                                       walletId: investment.walletId,
-                                      investmentToEdit:
-                                          InvestmentModel.fromEntity(item),
+                                      investmentToEdit: item,
                                       onSave: (updatedInvestment) {
                                         context
                                             .read<InvestmentBloc>()

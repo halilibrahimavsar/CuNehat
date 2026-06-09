@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
 
 class AddInvestmentDialog extends StatefulWidget {
   final String userId;
   final String walletId;
-  final Function(InvestmentModel) onSave;
-  final InvestmentModel? investmentToEdit;
+  final Function(InvestmentEntity) onSave;
+  final InvestmentEntity? investmentToEdit;
 
   const AddInvestmentDialog({
     super.key,
@@ -199,7 +198,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      final newInvestment = InvestmentModel(
+      final newInvestment = InvestmentEntity(
         id: widget.investmentToEdit?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
         userId: widget.userId,
