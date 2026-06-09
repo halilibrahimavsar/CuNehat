@@ -1,3 +1,6 @@
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
@@ -9,6 +12,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/filte
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_filter_bar.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
@@ -51,11 +55,31 @@ class _TransactionsView extends StatefulWidget {
 }
 
 class _TransactionsViewState extends State<_TransactionsView> {
+  /// Kategori adı (tag) → ikon. İşlem kartlarında gerçek kategori glyph'i için.
+  Map<String, IconData> _categoryIcons = {};
+
   @override
   void initState() {
     super.initState();
     final filterCubit = context.read<TransactionFilterCubit>();
     _loadData(filterCubit.state.viewFilter);
+    _loadCategoryIcons();
+  }
+
+  Future<void> _loadCategoryIcons() async {
+    final service = getIt<CategoryService>();
+    final results = await Future.wait([
+      service.getExpenseCategories(),
+      service.getIncomeCategories(),
+    ]);
+    if (!mounted) return;
+    final map = <String, IconData>{};
+    for (final list in results) {
+      for (final c in list) {
+        map[c.id] = AppIcons.getIconData(c.iconName);
+      }
+    }
+    setState(() => _categoryIcons = map);
   }
 
   @override
@@ -226,6 +250,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
             } else if (state is TransactionActionSuccess) {
               IboSnackbar.showSuccess(context, state.message);
               _loadData(filterState.viewFilter);
+              _loadCategoryIcons();
             }
           },
           builder: (context, state) {
@@ -287,12 +312,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 },
                 // 3. Transaction List (Ana Gövde)
                 body: isLoading && isEmpty
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const TransactionListSkeleton()
                     : filteredData.isEmpty
-                        ? _buildEmptyState()
+                        ? _buildEmptyState(filterState.viewFilter.financeMode)
                         : DetailedListView(
                             transactions: filteredData,
                             mode: filterState.viewFilter.financeMode,
+                            categoryIcons: _categoryIcons,
                           ),
               ),
             );
@@ -302,28 +328,62 @@ class _TransactionsViewState extends State<_TransactionsView> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.account_balance_wallet_outlined,
-              size: 64, color: Colors.blue[300]),
-          const SizedBox(height: 16),
-          Text(
-            'İşlem bulunmuyor',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600]),
+  Widget _buildEmptyState(FinanceMode mode) {
+    final accent = mode.primaryColor;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scheme = Theme.of(context).colorScheme;
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        accent.withValues(alpha: 0.18),
+                        accent.withValues(alpha: 0.04),
+                      ],
+                    ),
+                    border:
+                        Border.all(color: accent.withValues(alpha: 0.25), width: 1),
+                  ),
+                  child: Icon(Icons.receipt_long_rounded,
+                      size: 42, color: accent),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Henüz işlem yok',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'İşlem eklemek için Sürgü buttonuna tıklayın',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
