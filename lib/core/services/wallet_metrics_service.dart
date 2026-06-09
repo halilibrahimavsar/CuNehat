@@ -6,6 +6,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 /// Kuplaj ile otomatik oluşturulan nakit işlemlerinin sabit etiketleri (tag).
@@ -34,26 +35,11 @@ class WalletMetricsService {
     required this.transactionsRepository,
   });
 
-  Future<void> applyBalanceDelta({
-    required String walletId,
-    required double delta,
-  }) async {
-    if (delta == 0) return;
-    final result = await walletRepository.getWalletById(walletId);
-    await result.fold(
-      (failure) async {},
-      (wallet) async {
-        if (wallet == null) return;
-        final updated = wallet.copyWith(balance: wallet.balance + delta);
-        await walletRepository.updateWallet(updated);
-      },
-    );
-  }
-
-  /// Nakit kuplajı: gerçek bir işlem (transaction) kaydeder VE cüzdan
-  /// bakiyesini günceller. Borç/yatırım/alacak operasyonları bunu çağırır ki
-  /// nakit hareketleri işlem geçmişinde görünür ve `balance` ile tutarlı kalsın.
-  Future<void> recordCashMovement({
+  /// Nakit kuplajı: gerçek bir işlem (transaction) kaydeder VE bakiyeyi
+  /// defterden yeniden hesaplar. Borç/yatırım/alacak operasyonları bunu
+  /// çağırır ki nakit hareketleri işlem geçmişinde görünür ve `balance`
+  /// ile tutarlı kalsın. Başarısızlıkta `false` döner, fırlatmaz.
+  Future<bool> recordCashMovement({
     required String walletId,
     required String userId,
     required double amount,
@@ -74,31 +60,53 @@ class WalletMetricsService {
           isIncome ? TransactionTypeModel.income : TransactionTypeModel.expense,
       isSystem: true,
     );
-    await transactionsRepository.addTransaction(tx);
-    await applyBalanceDelta(
-      walletId: walletId,
-      delta: isIncome ? amount : -amount,
-    );
+    try {
+      // openingBalance null olan eski cüzdanı YENİ işlemi eklemeden önce
+      // geri doldur; yoksa sonraki sync yeni hareketi opening'e yutar
+      // (bakiye değişmez görünür).
+      await syncBalance(walletId);
+
+      final addResult = await transactionsRepository.addTransaction(tx);
+      final added = addResult.fold(
+        (failure) {
+          debugPrint('recordCashMovement: işlem yazılamadı: ${failure.message}');
+          return false;
+        },
+        (_) => true,
+      );
+      if (!added) return false;
+      return await syncBalance(walletId);
+    } catch (e) {
+      debugPrint('recordCashMovement başarısız: $e');
+      return false;
+    }
   }
 
-  /// Bakiyeyi işlemlerden yeniden hesaplar (drift onarımı).
+  /// Bakiyeyi işlemlerden yeniden hesaplar; cüzdan bakiyesinin TEK yazım yolu.
   /// `balance = openingBalance + Σ signed(tüm işlemler)`.
   /// Eski cüzdanlarda `openingBalance` null ise mevcut bakiyeyi koruyacak
   /// şekilde (balance - Σtx) geri doldurulur.
-  Future<void> syncBalance(String walletId) async {
+  /// Başarı ya da no-op'ta `true`, herhangi bir hata bacağında `false` döner.
+  Future<bool> syncBalance(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
-    await result.fold(
-      (failure) async {},
+    return result.fold(
+      (failure) async {
+        debugPrint('syncBalance: cüzdan okunamadı: ${failure.message}');
+        return false;
+      },
       (wallet) async {
-        if (wallet == null) return;
+        if (wallet == null) return false;
 
         final txsResult = await transactionsRepository.getTransactions(
           userId: wallet.userId,
           walletId: walletId,
         );
 
-        await txsResult.fold(
-          (failure) async {},
+        return txsResult.fold(
+          (failure) async {
+            debugPrint('syncBalance: işlemler okunamadı: ${failure.message}');
+            return false;
+          },
           (txs) async {
             final txSum = txs.fold<double>(
               0.0,
@@ -110,19 +118,31 @@ class WalletMetricsService {
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
             if (wallet.openingBalance != null && (wallet.balance - newBalance).abs() < 0.001) {
-              return;
+              return true;
             }
 
             // Eşzamanlı metrik güncellemelerini (debt/credit/investment) ezmemek için
             // yazmadan hemen önce güncel cüzdanı tekrar oku ve yalnız bakiye alanlarını
             // taze kayda uygula.
             final freshResult = await walletRepository.getWalletById(walletId);
-            await freshResult.fold(
-              (failure) async {},
+            return freshResult.fold(
+              (failure) async {
+                debugPrint(
+                    'syncBalance: taze cüzdan okunamadı: ${failure.message}');
+                return false;
+              },
               (fresh) async {
                 final target = fresh ?? wallet;
-                await walletRepository.updateWallet(
+                final writeResult = await walletRepository.updateWallet(
                   target.copyWith(openingBalance: opening, balance: newBalance),
+                );
+                return writeResult.fold(
+                  (failure) {
+                    debugPrint(
+                        'syncBalance: bakiye yazılamadı: ${failure.message}');
+                    return false;
+                  },
+                  (_) => true,
                 );
               },
             );
@@ -135,13 +155,15 @@ class WalletMetricsService {
   Future<void> syncDebt(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
     await result.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (wallet) async {
         if (wallet == null) return;
 
         final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
         await debtsResult.fold(
-          (failure) async {},
+          (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
           (debts) async {
             final totalDebt = debts
                 .where((debt) => !debt.isPaid)
@@ -160,7 +182,8 @@ class WalletMetricsService {
   Future<void> syncCredit(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
     await result.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (wallet) async {
         if (wallet == null) return;
 
@@ -168,7 +191,8 @@ class WalletMetricsService {
             await receivableRepository.getReceivablesByWalletId(walletId);
 
         await receivablesResult.fold(
-          (failure) async {},
+          (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
           (receivables) async {
             final totalCredit = receivables
                 .where((r) => !r.isPaid)
@@ -187,7 +211,8 @@ class WalletMetricsService {
   Future<void> syncInvestment(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
     await result.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (wallet) async {
         if (wallet == null) return;
 
@@ -220,7 +245,8 @@ class WalletMetricsService {
       walletId: walletId,
     );
     await txsResult.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (txs) async {
         for (final t in txs) {
           if (t.id != null) {
@@ -232,7 +258,8 @@ class WalletMetricsService {
 
     final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
     await debtsResult.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (debts) async {
         for (final d in debts) {
           if (d.id != null) await debtRepository.deleteDebt(d.id!);
@@ -243,7 +270,8 @@ class WalletMetricsService {
     final receivablesResult =
         await receivableRepository.getReceivablesByWalletId(walletId);
     await receivablesResult.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (receivables) async {
         for (final r in receivables) {
           if (r.id != null) await receivableRepository.deleteReceivable(r.id!);
@@ -256,7 +284,8 @@ class WalletMetricsService {
       walletId: walletId,
     );
     await invResult.fold(
-      (failure) async {},
+      (failure) async =>
+          debugPrint('WalletMetricsService: ${failure.message}'),
       (investments) async {
         for (final inv in investments) {
           if (inv.id != null) {

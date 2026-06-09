@@ -5,6 +5,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 part 'wallet_event.dart';
@@ -92,7 +93,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
               // NOT: _safeSyncBalance burada KASTEN ÇAĞRILMIYOR.
               // syncBalance() → walletRepository.updateWallet() → walletBox'a yazar
               // → walletBox.watch() tetiklenir → onData tekrar çağrılır → sonsuz döngü.
-              // Bakiye güncellemeleri TransactionBloc._safeApplyBalanceDelta ile yapılıyor.
+              // Bakiye, her para mutasyonundan sonra (işlem CRUD ve
+              // recordCashMovement) WalletMetricsService.syncBalance ile defterden
+              // yeniden hesaplanıyor; onData hiç yazmadığı ve syncBalance tutarlıyken
+              // no-op olduğu için döngü oluşmaz.
               return WalletLoadedSt(wallets, activeWallet);
             },
           );
@@ -191,6 +195,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   }
 
   void _safeSyncBalance(String walletId) {
-    walletMetricsService.syncBalance(walletId).catchError((_) {});
+    walletMetricsService
+        .syncBalance(walletId)
+        .catchError((Object e) {
+      debugPrint('Açılış bakiye senkronizasyonu başarısız: $e');
+      return false;
+    });
   }
 }

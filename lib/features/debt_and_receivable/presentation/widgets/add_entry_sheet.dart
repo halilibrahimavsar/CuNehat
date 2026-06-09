@@ -3,6 +3,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -97,11 +98,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   String _fmt(double v) =>
       v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
-  double? get _parsedAmount {
-    final raw = _amountController.text.trim().replaceAll(',', '.');
-    if (raw.isEmpty) return null;
-    return double.tryParse(raw);
-  }
+  double? get _parsedAmount => parseAmount(_amountController.text);
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -120,8 +117,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     if (_isDebt && _counterpartyController.text.trim().isEmpty) {
       return 'Kurum/kişi girin';
     }
-    final amount = _parsedAmount;
-    if (amount == null || amount <= 0) return 'Geçerli bir tutar girin';
+    final amountError = validateAmount(_amountController.text);
+    if (amountError != null) return amountError;
     return null;
   }
 
@@ -140,12 +137,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
     if (_isDebt) {
       final term = int.tryParse(_termController.text.trim()) ?? 1;
-      final interest = double.tryParse(
-              _interestController.text.trim().replaceAll(',', '.')) ??
-          0;
-      final overdue = double.tryParse(
-              _overdueController.text.trim().replaceAll(',', '.')) ??
-          0;
+      final interest = parseAmount(_interestController.text) ?? 0;
+      final overdue = parseAmount(_overdueController.text) ?? 0;
       final dueDate = _selectedDate.add(Duration(days: 30 * term));
 
       if (_isEditing && widget.debtToEdit != null) {
@@ -440,9 +433,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           [_amountController, _interestController, _termController]),
       builder: (context, _) {
         final principal = _parsedAmount ?? 0;
-        final interest = double.tryParse(
-                _interestController.text.trim().replaceAll(',', '.')) ??
-            0;
+        final interest = parseAmount(_interestController.text) ?? 0;
         final term = int.tryParse(_termController.text.trim()) ?? 0;
 
         // DebtEntity.totalDebtAmount ile aynı basit faiz formülü.

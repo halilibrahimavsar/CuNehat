@@ -54,7 +54,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
         (failure) async => emit(InvestmentError(failure.message)),
         (_) async {
           // Nakit kuplajı: yatırım alımı → maliyet kadar gider.
-          await walletMetricsService.recordCashMovement(
+          final cashOk = await walletMetricsService.recordCashMovement(
             walletId: event.walletId,
             userId: event.userId,
             amount: event.investment.amount,
@@ -63,7 +63,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
             tag: CashMovementTags.investmentBuy,
           );
           await _safeSyncInvestment(event.walletId);
-          emit(const InvestmentActionSuccess('Yatırım başarıyla eklendi'));
+          emit(InvestmentActionSuccess(
+              'Yatırım başarıyla eklendi${cashOk ? '' : _cashWarning}'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -82,8 +83,9 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
           // Maliyet arttı → gider; azaldı → gelir. (currentValue değişimi
           // gerçekleşmemiş kâr/zarar olduğundan nakdi etkilemez.)
           final costDiff = event.newAmount - event.prevAmount;
+          var cashOk = true;
           if (costDiff != 0) {
-            await walletMetricsService.recordCashMovement(
+            cashOk = await walletMetricsService.recordCashMovement(
               walletId: event.walletId,
               userId: event.userId,
               amount: costDiff.abs(),
@@ -93,7 +95,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
             );
           }
           await _safeSyncInvestment(event.walletId);
-          emit(const InvestmentActionSuccess('Yatırım güncellendi'));
+          emit(InvestmentActionSuccess(
+              'Yatırım güncellendi${cashOk ? '' : _cashWarning}'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -108,23 +111,33 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
       await result.fold(
         (failure) async => emit(InvestmentError(failure.message)),
         (_) async {
-          // Nakit kuplajı: yatırım satışı/silme → güncel değer kadar gelir.
-          await walletMetricsService.recordCashMovement(
-            walletId: event.walletId,
-            userId: event.userId,
-            amount: event.currentValue,
-            isIncome: true,
-            title: 'Yatırım Satışı',
-            tag: CashMovementTags.investmentSell,
-          );
+          // Nakit kuplajı yalnız SATIŞTA: güncel değer kadar gelir.
+          // recordSale=false → hatalı girilen kayıt nakit etkisi olmadan silinir.
+          var cashOk = true;
+          if (event.recordSale) {
+            cashOk = await walletMetricsService.recordCashMovement(
+              walletId: event.walletId,
+              userId: event.userId,
+              amount: event.currentValue,
+              isIncome: true,
+              title: 'Yatırım Satışı',
+              tag: CashMovementTags.investmentSell,
+            );
+          }
           await _safeSyncInvestment(event.walletId);
-          emit(const InvestmentActionSuccess('Yatırım silindi'));
+          emit(InvestmentActionSuccess(event.recordSale
+              ? 'Yatırım satıldı${cashOk ? '' : _cashWarning}'
+              : 'Kayıt silindi (nakit etkisi yok)'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
       );
     });
   }
+
+  /// Nakit hareketi yazılamadığında kullanıcıya eklenen uyarı kuyruğu.
+  static const _cashWarning =
+      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
 
   Future<void> _safeSyncInvestment(String walletId) async {
     try {

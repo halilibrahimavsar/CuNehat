@@ -4,12 +4,12 @@ Proje: `/home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat`  �
 
 ## Özet
 
-- `lib/` Dart dosyası: **152**
-- `main.dart` import ağacından erişilebilir: **148** (%97)
+- `lib/` Dart dosyası: **154**
+- `main.dart` import ağacından erişilebilir: **150** (%97)
 - **Orphan dosya** (hiç import edilmiyor): **4**
-- Bildirim (düğüm): **2150**  ·  canlı: **2023**
-- **🟢 Güvenli silme adayı** (her metinsel geçişi statik açıklandı): **53**
-- 🟡 Korundu — belirsiz (dynamic/string/constructor/benzersiz-değil): **74**
+- Bildirim (düğüm): **2249**  ·  canlı: **2125**
+- **🟢 Güvenli silme adayı** (her metinsel geçişi statik açıklandı): **51**
+- 🟡 Korundu — belirsiz (dynamic/string/constructor/benzersiz-değil): **73**
 - 🔢 Kullanılmayan enum sabiti (elle incele): **0**
 - Sadece testlerce kullanılan üye: **0**
 
@@ -20,7 +20,7 @@ Proje: `/home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat`  �
 | `config` | 7 / 8  ⚠️ |
 | `core` | 23 / 26  ⚠️ |
 | `features/debt_and_receivable` | 25 / 25 |
-| `features/finance_transactions` | 34 / 34 |
+| `features/finance_transactions` | 36 / 36 |
 | `features/investments` | 22 / 22 |
 | `features/main_feature` | 10 / 10 |
 | `features/settings` | 12 / 12 |
@@ -102,14 +102,6 @@ Mark-and-sweep ile erişilemeyen VE adının kod tabanındaki her metinsel geçi
 | METHOD | `VerticalListTransitionManager.next` | 209 | yalnızca ölü kod tarafından kullanılıyor (ör. nextView) |
 | METHOD | `VerticalListTransitionManager.previous` | 216 | yalnızca ölü kod tarafından kullanılıyor (ör. previousView) |
 
-### `lib/features/finance_transactions/data/datasources/category_service.dart` — 3 öğe
-
-| Tür | Üye | Satır | Neden |
-|-----|-----|-------|-------|
-| METHOD | `CategoryService.getExpenseCategories` | 19 | hiç referans yok |
-| METHOD | `CategoryService.getIncomeCategories` | 24 | hiç referans yok |
-| METHOD | `CategoryService.resetCategories` | 189 | hiç referans yok |
-
 ### `lib/features/main_feature/config/menu_configuration.dart` — 3 öğe
 
 | Tür | Üye | Satır | Neden |
@@ -118,7 +110,7 @@ Mark-and-sweep ile erişilemeyen VE adının kod tabanındaki her metinsel geçi
 | METHOD | `MenuConfigs.getSubMenus` | 154 | hiç referans yok |
 | METHOD | `MenuConfigs.getMiniButtons` | 158 | hiç referans yok |
 
-### Diğer — 10 öğe (6 dosya)
+### Diğer — 11 öğe (7 dosya)
 
 | Tür | Üye | Dosya:Satır | Neden |
 |-----|-----|-------------|-------|
@@ -127,6 +119,7 @@ Mark-and-sweep ile erişilemeyen VE adının kod tabanındaki her metinsel geçi
 | FIELD | `CustomeAppThemes.auroraTheme` | `lib/config/theme/custom_theme.dart`:12 | hiç referans yok |
 | CLASS | `ErrorHandler` | `lib/core/utils/error_handler.dart`:5 | hiç referans yok |
 | METHOD | `ErrorHandler.handleException` | `lib/core/utils/error_handler.dart`:7 | hiç referans yok |
+| METHOD | `CategoryService.resetCategories` | `lib/features/finance_transactions/data/datasources/category_service.dart`:189 | hiç referans yok |
 | METHOD | `TransactionFilterCubit.resetFilters` | `lib/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart`:35 | hiç referans yok |
 | METHOD | `TransactionSheetHandler.showExpenseSheet` | `lib/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart`:51 | hiç referans yok |
 | METHOD | `TransactionSheetHandler.showIncomeSheet` | `lib/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart`:66 | hiç referans yok |
@@ -140,10 +133,10 @@ Mark-and-sweep ölü dedi ama güvenlik filtresi eledi. Gerçekten ölü olabili
 | Eleme nedeni | Adet |
 |--------------|------|
 | constructor | 43 |
-| ad benzersiz değil | 29 |
+| ad benzersiz değil | 28 |
 | açıklanamayan metinsel geçiş (dynamic/string) | 2 |
 
-Toplam **74**. Tam liste `dead_symbols.cache.json` → `kept_uncertain`.
+Toplam **73**. Tam liste `dead_symbols.cache.json` → `kept_uncertain`.
 
 ## 🔢 Kullanılmayan Enum Sabitleri (elle incele)
 

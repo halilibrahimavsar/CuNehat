@@ -56,11 +56,19 @@ class TransactionActionSuccess extends TransactionState {
   final String message;
   final List<TransactionEntity> transactions;
 
-  const TransactionActionSuccess(this.message, {this.transactions = const []});
+  /// İşlem kaydedildi ama bakiye senkronizasyonu başarısız olduysa dolu;
+  /// kullanıcıya para tutarlılığı uyarısı göstermek için.
+  final String? warning;
+
+  const TransactionActionSuccess(
+    this.message, {
+    this.transactions = const [],
+    this.warning,
+  });
 
   @override
   List<TransactionEntity> get currentTransactions => transactions;
 
   @override
-  List<Object> get props => [message, transactions];
+  List<Object?> get props => [message, transactions, warning];
 }

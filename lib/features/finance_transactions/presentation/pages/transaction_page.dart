@@ -61,8 +61,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   @override
   void initState() {
     super.initState();
-    final filterCubit = context.read<TransactionFilterCubit>();
-    _loadData(filterCubit.state.viewFilter);
+    _loadData();
     _loadCategoryIcons();
   }
 
@@ -86,30 +85,28 @@ class _TransactionsViewState extends State<_TransactionsView> {
   void didUpdateWidget(covariant _TransactionsView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wallet.id != widget.wallet.id) {
-      _loadData(context.read<TransactionFilterCubit>().state.viewFilter);
+      _loadData();
     }
   }
 
-  void _loadData(ViewFilter viewFilter) {
+  /// Her zaman cüzdanın TAM geçmişini çeker; tarih aralığı dahil tüm
+  /// filtreler bellekte uygulanır. Böylece running balance çapası
+  /// (güncel bakiye) hiçbir aralıkta yanlış düşmez.
+  void _loadData() {
     context.read<TransactionBloc>().add(GetTransactionsEvent(
           userId: widget.userId,
           walletId: widget.wallet.id ?? '',
-          startDate: viewFilter.startDate,
-          endDate: viewFilter.endDate,
         ));
   }
 
   List<TransactionWithBalance> _getFilteredData(
       List<TransactionEntity> allTransactions, CombinedFilter filter) {
-    // 1. Önce TAM liste üzerinde (yeni→eski) running balance hesapla.
-    //    Böylece "işlem sonrası bakiye" gerçek geçmişe göre doğru kalır;
-    //    filtreler yalnızca hangi satırların görüneceğini belirler.
-    final allSorted = List<TransactionEntity>.from(allTransactions)
-      ..sort((a, b) => b.date.compareTo(a.date));
-
-    final withBalance = calculateRunningBalance(
-      allSorted,
-      widget.wallet.balance,
+    // 1. Tam geçmiş üzerinde running balance + tarih penceresi.
+    final withBalance = buildLedgerView(
+      allTransactions: allTransactions,
+      currentBalance: widget.wallet.balance,
+      start: filter.viewFilter.startDate,
+      end: filter.viewFilter.endDate,
     );
 
     // 2. Görüntü filtrelerini TransactionWithBalance listesine uygula.
@@ -234,22 +231,21 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<TransactionFilterCubit, CombinedFilter>(
-      listenWhen: (previous, current) {
-        return previous.viewFilter.startDate != current.viewFilter.startDate ||
-            previous.viewFilter.endDate != current.viewFilter.endDate;
-      },
-      listener: (context, filterState) {
-        _loadData(filterState.viewFilter);
-      },
+    // Tarih aralığı bellekte filtrelendiği için tarih değişiminde yeniden
+    // veri çekmeye gerek yok; rebuild yeterli.
+    return BlocBuilder<TransactionFilterCubit, CombinedFilter>(
       builder: (context, filterState) {
         return BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, state) {
             if (state is TransactionError) {
               IboSnackbar.showError(context, state.message);
             } else if (state is TransactionActionSuccess) {
-              IboSnackbar.showSuccess(context, state.message);
-              _loadData(filterState.viewFilter);
+              if (state.warning != null) {
+                IboSnackbar.showError(context, state.warning!);
+              } else {
+                IboSnackbar.showSuccess(context, state.message);
+              }
+              _loadData();
               _loadCategoryIcons();
             }
           },

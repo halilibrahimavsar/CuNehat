@@ -21,13 +21,34 @@ class InvestmentMoneyPage extends StatefulWidget {
 }
 
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
-  Future<bool> _confirmDelete(InvestmentEntity investment) async {
-    return await IboDialog.showConfirmation(
-          context,
-          'Başlık Sil',
-          '${investment.name} ögesini silmek istediğinizden emin misiniz?',
-        ) ??
-        false;
+  /// true → sat (nakit gelir işlenir), false → yalnız kaydı sil, null → vazgeç.
+  Future<bool?> _askDeleteMode(InvestmentEntity investment) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('${investment.name} kaldırılsın mı?'),
+        content: Text(
+          'Sat: Güncel değer (${investment.currentValue.toStringAsFixed(2)} ₺) '
+          'cüzdana gelir olarak işlenir.\n\n'
+          'Kaydı Sil: Nakit etkisi olmaz; geçmiş alım işlemleri korunur '
+          '(hatalı girişler için).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Kaydı Sil'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Sat'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -52,14 +73,15 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   }
 
   Future<bool> _deleteInvestment(InvestmentEntity investment) async {
-    final confirmed = await _confirmDelete(investment);
-    if (confirmed && mounted) {
+    final sell = await _askDeleteMode(investment);
+    if (sell != null && mounted) {
       context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
             id: investment.id!,
             userId: widget.activeWallet.userId,
             walletId: widget.activeWallet.id!,
             amount: investment.amount,
             currentValue: investment.currentValue,
+            recordSale: sell,
           ));
       return true;
     }

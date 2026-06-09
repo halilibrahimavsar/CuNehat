@@ -70,6 +70,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     final currentData = state.currentTransactions;
+
+    // openingBalance null olan eski cüzdanı işlem yazılmadan ÖNCE geri doldur;
+    // yoksa sonraki sync yeni işlemi opening'e yutar (bakiye değişmez görünür).
+    await _safeSyncBalance(event.transaction.walletId);
+
     final result = await addTransactionUseCase(
         event.transaction); // Usecase ID'yi halleder.
 
@@ -79,14 +84,12 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         transactions: currentData,
       )),
       (_) async {
-        await _safeApplyBalanceDelta(
-          walletId: event.transaction.walletId,
-          delta: _signedAmount(event.transaction),
-        );
+        final synced = await _safeSyncBalance(event.transaction.walletId);
 
         emit(TransactionActionSuccess(
           '${event.transaction.title} başarıyla eklendi',
           transactions: currentData,
+          warning: synced ? null : _syncWarning,
         ));
       },
     );
@@ -97,6 +100,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     final currentData = state.currentTransactions;
+
+    // Bkz. _onAddTransaction: mutasyon öncesi opening geri doldurma.
+    await _safeSyncBalance(event.newTransaction.walletId);
+
     final result = await updateTransactionUseCase(event.newTransaction);
 
     await result.fold(
@@ -105,15 +112,12 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         transactions: currentData,
       )),
       (_) async {
-        await _safeApplyBalanceDelta(
-          walletId: event.newTransaction.walletId,
-          delta: _signedAmount(event.newTransaction) -
-              _signedAmount(event.previousTransaction),
-        );
+        final synced = await _safeSyncBalance(event.newTransaction.walletId);
 
         emit(TransactionActionSuccess(
           '${event.newTransaction.title} başarıyla güncellendi',
           transactions: currentData,
+          warning: synced ? null : _syncWarning,
         ));
       },
     );
@@ -134,6 +138,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         transactions: currentData,
       )),
       (transaction) async {
+        // Bkz. _onAddTransaction: mutasyon öncesi opening geri doldurma.
+        await _safeSyncBalance(transaction.walletId);
+
         // 2. Delete from database
         final deleteResult =
             await deleteTransactionUseCase(event.transactionId);
@@ -144,15 +151,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             transactions: currentData,
           )),
           (_) async {
-            await _safeApplyBalanceDelta(
-              walletId: transaction.walletId,
-              delta: -_signedAmount(transaction),
-            );
+            final synced = await _safeSyncBalance(transaction.walletId);
 
             // 3 Başarılı
             emit(TransactionActionSuccess(
               "${transaction.title} silindi",
               transactions: currentData,
+              warning: synced ? null : _syncWarning,
             ));
           },
         );
@@ -160,21 +165,17 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     );
   }
 
-  double _signedAmount(TransactionEntity transaction) {
-    return transaction.isIncome ? transaction.amount : -transaction.amount;
-  }
+  static const _syncWarning =
+      'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.';
 
-  Future<void> _safeApplyBalanceDelta({
-    required String walletId,
-    required double delta,
-  }) async {
+  /// Bakiyeyi defterden yeniden hesaplar; asla fırlatmaz.
+  /// `false` → işlem kaydedildi ama bakiye güncellenemedi (kullanıcı uyarılmalı).
+  Future<bool> _safeSyncBalance(String walletId) async {
     try {
-      await walletMetricsService.applyBalanceDelta(
-        walletId: walletId,
-        delta: delta,
-      );
+      return await walletMetricsService.syncBalance(walletId);
     } catch (e) {
       debugPrint('Wallet balance sync failed: $e');
+      return false;
     }
   }
 }

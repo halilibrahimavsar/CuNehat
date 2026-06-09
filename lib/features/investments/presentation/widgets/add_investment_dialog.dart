@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
@@ -167,9 +168,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
       }
 
       if (price > 0) {
-        final qty =
-            double.tryParse(_quantityController.text.replaceAll(',', '.')) ??
-                0.0;
+        final qty = parseAmount(_quantityController.text) ?? 0.0;
         if (qty > 0) {
           final total = price * qty;
           _currentValueController.text = total.toStringAsFixed(2);
@@ -206,9 +205,8 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
         userId: widget.userId,
         walletId: widget.walletId,
         name: _nameController.text,
-        amount: double.parse(_amountController.text.replaceAll(',', '.')),
-        currentValue:
-            double.parse(_currentValueController.text.replaceAll(',', '.')),
+        amount: parseAmount(_amountController.text) ?? 0.0,
+        currentValue: parseAmount(_currentValueController.text) ?? 0.0,
         type: _selectedType,
         color: _selectedColor,
         dateAdded: widget.investmentToEdit?.dateAdded ?? DateTime.now(),
@@ -457,10 +455,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     if (value == null || value.isEmpty) {
                       return 'Lütfen miktar girin';
                     }
-                    if (double.tryParse(value.replaceAll(',', '.')) == null) {
-                      return 'Lütfen geçerli bir sayı girin';
-                    }
-                    return null;
+                    return validateAmount(value);
                   },
                 ),
 
@@ -478,10 +473,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
                     if (value == null || value.isEmpty) {
                       return 'Lütfen mevcut değeri girin';
                     }
-                    if (double.tryParse(value.replaceAll(',', '.')) == null) {
-                      return 'Lütfen geçerli bir sayı girin';
-                    }
-                    return null;
+                    return validateAmount(value, allowZero: true);
                   },
                 ),
 

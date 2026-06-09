@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -188,9 +189,13 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         if (value == null || value.trim().isEmpty) {
           return 'Bakiye boş olamaz';
         }
-        final amount = double.tryParse(value.trim());
+        final amount = parseAmount(value);
         if (amount == null) {
           return 'Geçerli bir sayı girin';
+        }
+        // Bakiye negatif olabilir (eksiye düşmüş hesap); yalnız büyüklüğü sınırla.
+        if (amount.abs() > kMaxAmount) {
+          return 'Tutar çok büyük';
         }
         return null;
       },
@@ -426,10 +431,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     setState(() => _isLoading = true);
 
     final name = _nameController.text.trim();
-    final balance = double.parse(_balanceController.text.trim());
-    final debt = double.tryParse(_debtController.text.trim()) ?? 0.0;
-    final credit = double.tryParse(_creditController.text.trim()) ?? 0.0;
-    final save = double.tryParse(_saveController.text.trim()) ?? 0.0;
+    final balance = parseAmount(_balanceController.text) ?? 0.0;
+    final debt = parseAmount(_debtController.text) ?? 0.0;
+    final credit = parseAmount(_creditController.text) ?? 0.0;
+    final save = parseAmount(_saveController.text) ?? 0.0;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
     final createdAt = DateTime.now();

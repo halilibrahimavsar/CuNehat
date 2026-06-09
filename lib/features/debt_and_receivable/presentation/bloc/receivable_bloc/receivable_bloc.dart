@@ -52,7 +52,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
       (failure) async => emit(ReceivableError(failure.message)),
       (_) async {
         // Nakit kuplajı: alacak verildi (para çıktı) → tutar kadar gider.
-        await walletMetricsService.recordCashMovement(
+        final cashOk = await walletMetricsService.recordCashMovement(
           walletId: event.receivable.walletId,
           userId: event.receivable.userId,
           amount: event.receivable.amount,
@@ -62,7 +62,8 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         );
         await _safeSyncCredit(event.receivable.walletId);
 
-        emit(const ReceivableOperationSuccess("Alacak başarıyla eklendi."));
+        emit(ReceivableOperationSuccess(
+            'Alacak başarıyla eklendi.${cashOk ? '' : _cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
@@ -77,10 +78,11 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
       (failure) async => emit(ReceivableError(failure.message)),
       (_) async {
         // Mutabakat: yalnız tahsil edilmemiş alacakta tutar değişimi nakde yansır.
+        var cashOk = true;
         if (!event.receivable.isPaid) {
           final diff = event.receivable.amount - event.prevAmount;
           if (diff != 0) {
-            await walletMetricsService.recordCashMovement(
+            cashOk = await walletMetricsService.recordCashMovement(
               walletId: event.receivable.walletId,
               userId: event.receivable.userId,
               amount: diff.abs(),
@@ -92,7 +94,8 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         }
         await _safeSyncCredit(event.receivable.walletId);
 
-        emit(const ReceivableOperationSuccess("Alacak güncellendi."));
+        emit(ReceivableOperationSuccess(
+            'Alacak güncellendi.${cashOk ? '' : _cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
@@ -107,8 +110,9 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
       (failure) async => emit(ReceivableError(failure.message)),
       (_) async {
         // Mutabakat: tahsil edilmemiş alacak silinince verilen para geri döner (gelir).
+        var cashOk = true;
         if (!event.isPaid && event.amount != 0) {
-          await walletMetricsService.recordCashMovement(
+          cashOk = await walletMetricsService.recordCashMovement(
             walletId: event.walletId,
             userId: event.userId,
             amount: event.amount,
@@ -119,7 +123,8 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         }
         await _safeSyncCredit(event.walletId);
 
-        emit(const ReceivableOperationSuccess("Alacak silindi."));
+        emit(ReceivableOperationSuccess(
+            'Alacak silindi.${cashOk ? '' : _cashWarning}'));
         add(GetReceivablesEvent(event.walletId));
       },
     );
@@ -136,7 +141,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
       (failure) async => emit(ReceivableError(failure.message)),
       (_) async {
         // Nakit kuplajı: alacak tahsil edildi (para girdi) → tutar kadar gelir.
-        await walletMetricsService.recordCashMovement(
+        final cashOk = await walletMetricsService.recordCashMovement(
           walletId: event.receivable.walletId,
           userId: event.receivable.userId,
           amount: event.receivable.amount,
@@ -146,12 +151,16 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         );
         await _safeSyncCredit(event.receivable.walletId);
 
-        emit(const ReceivableOperationSuccess(
-            "Alacak ödendi olarak işaretlendi."));
+        emit(ReceivableOperationSuccess(
+            'Alacak ödendi olarak işaretlendi.${cashOk ? '' : _cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
   }
+
+  /// Nakit hareketi yazılamadığında kullanıcıya eklenen uyarı kuyruğu.
+  static const _cashWarning =
+      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
 
   Future<void> _safeSyncCredit(String walletId) async {
     try {

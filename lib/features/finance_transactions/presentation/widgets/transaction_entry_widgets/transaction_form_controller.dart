@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -55,17 +56,13 @@ class TransactionFormController {
     }
   }
 
-  double? get parsedAmount {
-    final raw = amountController.text.trim().replaceAll(',', '.');
-    if (raw.isEmpty) return null;
-    return double.tryParse(raw);
-  }
+  double? get parsedAmount => parseAmount(amountController.text);
 
   /// Geçerliyse `null`, değilse hata mesajını döndürür.
   String? validate() {
     if (titleController.text.trim().isEmpty) return 'Başlık girin';
-    final amount = parsedAmount;
-    if (amount == null || amount <= 0) return 'Geçerli bir tutar girin';
+    final amountError = validateAmount(amountController.text);
+    if (amountError != null) return amountError;
     if (categoryId.value == null) return 'Bir kategori seçin';
     return null;
   }

@@ -8,6 +8,8 @@ import 'package:injectable/injectable.dart';
 class TransactionHiveDataSource {
   static const String _boxName = 'transactions';
 
+  static DateTime _dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
+
   Future<Box<TransactionModel>> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
       return await Hive.openBox<TransactionModel>(_boxName);
@@ -35,19 +37,25 @@ class TransactionHiveDataSource {
           return false;
         }
 
-        // Filter by date range
-        if (startDate != null && t.date.isBefore(startDate)) {
+        // Tarih aralığı gün hassasiyetli ve uçları DAHİL: endDate günün
+        // hangi saatiyle gelirse gelsin (00:00 dahil) o günün işlemleri kalır.
+        final day = _dayOf(t.date);
+        if (startDate != null && day.isBefore(_dayOf(startDate))) {
           return false;
         }
-        if (endDate != null && t.date.isAfter(endDate)) {
+        if (endDate != null && day.isAfter(_dayOf(endDate))) {
           return false;
         }
 
         return true;
       }).toList();
 
-      // Sort by date descending
-      transactions.sort((a, b) => b.date.compareTo(a.date));
+      // Tarih desc; eş tarihte UUIDv7 id (kronolojik) ile kararlı sıralama.
+      transactions.sort((a, b) {
+        final c = b.date.compareTo(a.date);
+        if (c != 0) return c;
+        return (b.id ?? '').compareTo(a.id ?? '');
+      });
 
       return transactions;
     } catch (e) {

@@ -48,7 +48,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
         // Nakit kuplajı: borç alındı → anapara kadar gelir.
-        await walletMetricsService.recordCashMovement(
+        final cashOk = await walletMetricsService.recordCashMovement(
           walletId: event.debt.walletId,
           userId: event.debt.userId,
           amount: event.debt.principalAmount,
@@ -58,7 +58,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         );
         await _safeSyncDebt(event.debt.walletId);
 
-        emit(const DebtOperationSuccess("Borç başarıyla eklendi."));
+        emit(DebtOperationSuccess(
+            'Borç başarıyla eklendi.${cashOk ? '' : _cashWarning}'));
         // Listeyi güncellemek için tekrar çekiyoruz
         add(GetDebtsEvent(event.debt.walletId));
       },
@@ -73,7 +74,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
         // Nakit kuplajı: borç ödendi → ödeme kadar gider.
-        await walletMetricsService.recordCashMovement(
+        final cashOk = await walletMetricsService.recordCashMovement(
           walletId: event.debt.walletId,
           userId: event.debt.userId,
           amount: event.paymentAmount,
@@ -83,7 +84,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         );
         await _safeSyncDebt(event.debt.walletId);
 
-        emit(const DebtOperationSuccess("Ödeme kaydedildi."));
+        emit(DebtOperationSuccess(
+            'Ödeme kaydedildi.${cashOk ? '' : _cashWarning}'));
         add(GetDebtsEvent(event.debt.walletId));
       },
     );
@@ -99,8 +101,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
       (_) async {
         // Mutabakat: anapara değişimi kadar nakit (borç arttıysa gelir).
         final diff = event.debt.principalAmount - event.prevPrincipal;
+        var cashOk = true;
         if (diff != 0) {
-          await walletMetricsService.recordCashMovement(
+          cashOk = await walletMetricsService.recordCashMovement(
             walletId: event.debt.walletId,
             userId: event.debt.userId,
             amount: diff.abs(),
@@ -111,7 +114,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         }
         await _safeSyncDebt(event.debt.walletId);
 
-        emit(const DebtOperationSuccess("Borç güncellendi."));
+        emit(DebtOperationSuccess(
+            'Borç güncellendi.${cashOk ? '' : _cashWarning}'));
         add(GetDebtsEvent(event.debt.walletId));
       },
     );
@@ -128,8 +132,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         // Mutabakat: borcun net nakit etkisini geri al.
         // net = +principal (alındı) − Σödeme → geri alma = Σödeme − principal.
         final reversal = event.totalPaidAmount - event.principalAmount;
+        var cashOk = true;
         if (reversal != 0) {
-          await walletMetricsService.recordCashMovement(
+          cashOk = await walletMetricsService.recordCashMovement(
             walletId: event.walletId,
             userId: event.userId,
             amount: reversal.abs(),
@@ -140,11 +145,16 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         }
         await _safeSyncDebt(event.walletId);
 
-        emit(const DebtOperationSuccess("Borç silindi."));
+        emit(DebtOperationSuccess(
+            'Borç silindi.${cashOk ? '' : _cashWarning}'));
         add(GetDebtsEvent(event.walletId));
       },
     );
   }
+
+  /// Nakit hareketi yazılamadığında kullanıcıya eklenen uyarı kuyruğu.
+  static const _cashWarning =
+      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
 
   Future<void> _safeSyncDebt(String walletId) async {
     try {

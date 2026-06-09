@@ -188,6 +188,13 @@ class FakeInvestmentRepository implements InvestmentRepository {
       Right<Failure, double>(0);
 }
 
+/// addTransaction'ı her zaman başarısız kılan varyant (hata yolu testi).
+class FailingTransactionsRepository extends FakeTransactionsRepository {
+  @override
+  Future<Either<Failure, String>> addTransaction(TransactionEntity t) async =>
+      const Left(CacheFailure('yazılamadı'));
+}
+
 // ---- Test helpers ----
 
 WalletEntity _wallet({
@@ -299,6 +306,62 @@ void main() {
       expect(wallets.store['w']!.balance, 70);
       expect(txs.store.single.type, TransactionTypeModel.expense);
     });
+
+    test('başarıda true döner', () async {
+      wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
+
+      final ok = await service.recordCashMovement(
+        walletId: 'w',
+        userId: 'u',
+        amount: 10,
+        isIncome: true,
+        title: 'x',
+        tag: 'y',
+      );
+
+      expect(ok, true);
+    });
+
+    test('işlem yazılamazsa false döner ve bakiye değişmez', () async {
+      wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
+      final failingService = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: FailingTransactionsRepository(),
+      );
+
+      final ok = await failingService.recordCashMovement(
+        walletId: 'w',
+        userId: 'u',
+        amount: 50,
+        isIncome: true,
+        title: 'x',
+        tag: 'y',
+      );
+
+      expect(ok, false);
+      expect(wallets.store['w']!.balance, 100);
+    });
+
+    test('ardışık ekle/sil dizisi sonrası bakiye = opening + Σ signed',
+        () async {
+      wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
+
+      await service.recordCashMovement(
+          walletId: 'w', userId: 'u', amount: 40, isIncome: true,
+          title: 'a', tag: 't');
+      await service.recordCashMovement(
+          walletId: 'w', userId: 'u', amount: 15, isIncome: false,
+          title: 'b', tag: 't');
+
+      expect(wallets.store['w']!.balance, 125); // 100 + 40 - 15
+      // İşlem silinince yeniden hesap silmeyi de yansıtır.
+      txs.store.removeWhere((t) => t.amount == 40);
+      await service.syncBalance('w');
+      expect(wallets.store['w']!.balance, 85); // 100 - 15
+    });
   });
 
   group('syncBalance', () {
@@ -323,14 +386,33 @@ void main() {
       expect(wallets.store['w']!.balance, 120); // 100 + 20
     });
 
-    test('tutarlıyken yazma yapmaz', () async {
+    test('tutarlıyken yazma yapmaz ve true döner', () async {
       wallets.store['w'] = _wallet(id: 'w', balance: 120, openingBalance: 100);
       txs.store.add(_income('w', 20));
       final before = wallets.store['w'];
 
-      await service.syncBalance('w');
+      final ok = await service.syncBalance('w');
 
+      expect(ok, true);
       expect(identical(wallets.store['w'], before), true);
+    });
+
+    test('cüzdan yoksa false döner', () async {
+      expect(await service.syncBalance('yok'), false);
+    });
+
+    test('manuel bakiye düzenleme sonrası idempotent (opening ayarlanmışsa)',
+        () async {
+      // Repository impl manuel düzenlemede opening'i balance−Σtx koruyacak
+      // şekilde ayarlar; sync bu durumda hiçbir şeyi değiştirmemeli.
+      txs.store.add(_income('w', 20));
+      wallets.store['w'] = _wallet(id: 'w', balance: 500, openingBalance: 480);
+
+      final ok = await service.syncBalance('w');
+
+      expect(ok, true);
+      expect(wallets.store['w']!.balance, 500);
+      expect(wallets.store['w']!.openingBalance, 480);
     });
   });
 

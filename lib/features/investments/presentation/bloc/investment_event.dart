@@ -57,8 +57,12 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
   final String id;
   final double amount;
 
-  /// Silme = satış kabul edilir; güncel değer kadar nakit gelir oluşturulur.
+  /// Satışta nakit gelire dönüşen güncel değer.
   final double currentValue;
+
+  /// true → satış: güncel değer kadar nakit gelir oluşturulur.
+  /// false → yalnız kayıt silinir; nakit etkisi olmaz (hatalı giriş düzeltme).
+  final bool recordSale;
 
   const DeleteInvestmentEvent({
     required this.id,
@@ -66,7 +70,8 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
     required this.walletId,
     required this.amount,
     required this.currentValue,
+    this.recordSale = true,
   });
   @override
-  List<Object> get props => [id, userId, walletId];
+  List<Object> get props => [id, userId, walletId, recordSale];
 }
