@@ -37,8 +37,12 @@ import 'package:cunehat/features/finance_transactions/data/datasources/category_
     as _i1002;
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart'
     as _i934;
+import 'package:cunehat/features/finance_transactions/data/repositories/category_repository_impl.dart'
+    as _i20;
 import 'package:cunehat/features/finance_transactions/data/repositories/transaction_repository_impl.dart'
     as _i510;
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart'
+    as _i896;
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart'
     as _i543;
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart'
@@ -127,6 +131,8 @@ extension GetItInjectableX on _i174.GetIt {
                 gh<_i366.ReceivableLocalDatasource>()));
     gh.lazySingleton<_i254.WalletRepository>(() => _i861.WalletRepositoryImpl(
         dataSource: gh<_i175.WalletLocalDataSource>()));
+    gh.singleton<_i896.CategoryRepository>(
+        () => _i20.CategoryRepositoryImpl(gh<_i1002.CategoryService>()));
     gh.lazySingleton<_i889.DebtRepository>(() => _i80.DebtRepositoryImpl(
         debtDatasourceRepository: gh<_i19.DebtLocalDatasource>()));
     gh.factory<_i866.GetReceivablesUseCase>(

@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+
 /// Transaction Category Model
 ///
 /// Represents a category for income or expense transactions
@@ -15,6 +17,24 @@ class CategoryModel {
     this.isDefault = false,
     this.sortOrder = 0,
   });
+
+  // ========== ENTITY MAPPING ==========
+
+  CategoryEntity toEntity() => CategoryEntity(
+        id: id,
+        iconName: iconName,
+        isExpense: isExpense,
+        isDefault: isDefault,
+        sortOrder: sortOrder,
+      );
+
+  factory CategoryModel.fromEntity(CategoryEntity e) => CategoryModel(
+        id: e.id,
+        iconName: e.iconName,
+        isExpense: e.isExpense,
+        isDefault: e.isDefault,
+        sortOrder: e.sortOrder,
+      );
 
   // ========== JSON SERIALIZATION ==========
 

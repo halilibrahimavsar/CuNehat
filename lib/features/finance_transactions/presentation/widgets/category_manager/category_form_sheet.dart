@@ -1,13 +1,14 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
-import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
 
 Future<bool?> showCategoryForm({
   required BuildContext context,
   required bool isExpense,
-  CategoryModel? category,
+  CategoryEntity? category,
 }) async {
   return await showModalBottomSheet<bool>(
     context: context,
@@ -22,7 +23,7 @@ Future<bool?> showCategoryForm({
 
 class CategoryFormSheet extends StatefulWidget {
   final bool isExpense;
-  final CategoryModel? category;
+  final CategoryEntity? category;
 
   const CategoryFormSheet({
     super.key,
@@ -37,7 +38,7 @@ class CategoryFormSheet extends StatefulWidget {
 class _CategoryFormSheetState extends State<CategoryFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final CategoryService _categoryService = CategoryService();
+  final CategoryRepository _categoryService = getIt<CategoryRepository>();
 
   String _selectedIcon = 'category';
   bool _isLoading = false;
@@ -278,7 +279,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
         );
         await _categoryService.updateCategory(updatedCategory);
       } else {
-        final newCategory = CategoryModel(
+        final newCategory = CategoryEntity(
           id: name,
           iconName: _selectedIcon,
           isExpense: widget.isExpense,

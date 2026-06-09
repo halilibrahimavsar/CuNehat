@@ -2,7 +2,7 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
-import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart';
@@ -430,7 +430,7 @@ class _CategoryPicker extends StatelessWidget {
         ValueListenableBuilder<bool>(
           valueListenable: controller.categoriesLoading,
           builder: (context, loading, _) {
-            return ValueListenableBuilder<List<CategoryModel>>(
+            return ValueListenableBuilder<List<CategoryEntity>>(
               valueListenable: controller.categories,
               builder: (context, categories, __) {
                 if (loading && categories.isEmpty) {
@@ -479,7 +479,7 @@ class _CategoryPicker extends StatelessWidget {
 }
 
 class _CategoryTile extends StatelessWidget {
-  final CategoryModel category;
+  final CategoryEntity category;
   final bool selected;
   final Color accent;
   final VoidCallback onTap;

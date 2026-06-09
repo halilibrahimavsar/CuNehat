@@ -1,6 +1,6 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
@@ -66,7 +66,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   }
 
   Future<void> _loadCategoryIcons() async {
-    final service = getIt<CategoryService>();
+    final service = getIt<CategoryRepository>();
     final results = await Future.wait([
       service.getExpenseCategories(),
       service.getIncomeCategories(),

@@ -1,8 +1,9 @@
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
-import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -33,8 +34,8 @@ class CategoryManagerSheet extends StatefulWidget {
 class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final CategoryService _categoryService = CategoryService();
-  List<CategoryModel> _categories = [];
+  final CategoryRepository _categoryService = getIt<CategoryRepository>();
+  List<CategoryEntity> _categories = [];
   bool _isLoading = true;
 
   @override
@@ -214,7 +215,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
         itemBuilder: (context, index) {
           final category = filteredCategories[index];
           if (!category.isDefault) {
-            return DismissableWidget<CategoryModel>(
+            return DismissableWidget<CategoryEntity>(
               item: category,
               dismissKey: category.id,
               onDelete: (item) => _confirmDelete(item),
@@ -228,7 +229,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     );
   }
 
-  Widget _buildCategoryCard(CategoryModel category) {
+  Widget _buildCategoryCard(CategoryEntity category) {
     final color = widget.isExpense ? Colors.red : Colors.green;
     final isDefaultTab = _tabController.index == 1;
 
@@ -339,7 +340,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     }
   }
 
-  Future<void> _editCategory(CategoryModel category) async {
+  Future<void> _editCategory(CategoryEntity category) async {
     final result = await showCategoryForm(
       context: context,
       isExpense: widget.isExpense,
@@ -351,7 +352,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     }
   }
 
-  Future<bool> _confirmDelete(CategoryModel category) async {
+  Future<bool> _confirmDelete(CategoryEntity category) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

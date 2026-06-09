@@ -1,6 +1,7 @@
 import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
-import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 
@@ -14,12 +15,12 @@ class TransactionFormController {
   TransactionFormController({required this.isExpense});
 
   final bool isExpense;
-  final CategoryService _categoryService = CategoryService();
+  final CategoryRepository _categoryService = getIt<CategoryRepository>();
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
 
-  final ValueNotifier<List<CategoryModel>> categories =
+  final ValueNotifier<List<CategoryEntity>> categories =
       ValueNotifier(const []);
   final ValueNotifier<bool> categoriesLoading = ValueNotifier(true);
   final ValueNotifier<String?> categoryId = ValueNotifier(null);

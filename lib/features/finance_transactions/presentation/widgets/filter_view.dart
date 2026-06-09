@@ -1,5 +1,6 @@
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
-import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
@@ -29,9 +30,9 @@ class FilterView extends StatefulWidget {
 }
 
 class _FilterViewState extends State<FilterView> {
-  final CategoryService _categoryService = CategoryService();
-  List<CategoryModel> _incomeCategories = [];
-  List<CategoryModel> _expenseCategories = [];
+  final CategoryRepository _categoryService = getIt<CategoryRepository>();
+  List<CategoryEntity> _incomeCategories = [];
+  List<CategoryEntity> _expenseCategories = [];
   bool _isLoadingCategories = true;
   final ScrollController _scrollController = ScrollController();
   late TextEditingController _minPriceController;
@@ -480,7 +481,7 @@ class _FilterViewState extends State<FilterView> {
   }
 
   Widget _buildCategoryGroup(
-      String title, List<CategoryModel> categories, Color groupColor) {
+      String title, List<CategoryEntity> categories, Color groupColor) {
     final isCompareMode =
         widget.filter.viewFilter.financeMode == FinanceMode.compare;
 
