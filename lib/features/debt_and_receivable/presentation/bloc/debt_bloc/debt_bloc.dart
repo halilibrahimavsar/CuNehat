@@ -1,16 +1,16 @@
+import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
 import 'package:injectable/injectable.dart';
-import 'package:flutter/foundation.dart';
 
 part 'debt_event.dart';
 part 'debt_state.dart';
 
 @injectable
-class DebtBloc extends Bloc<DebtEvent, DebtState> {
+class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
   final GetDebtsUseCase getDebtsUseCase;
   final AddDebtUseCase addDebtUseCase;
   final UpdateDebtUseCase updateDebtUseCase;
@@ -59,7 +59,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         await _safeSyncDebt(event.debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Borç başarıyla eklendi.${cashOk ? '' : _cashWarning}'));
+            'Borç başarıyla eklendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         // Listeyi güncellemek için tekrar çekiyoruz
         add(GetDebtsEvent(event.debt.walletId));
       },
@@ -85,7 +85,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         await _safeSyncDebt(event.debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Ödeme kaydedildi.${cashOk ? '' : _cashWarning}'));
+            'Ödeme kaydedildi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(event.debt.walletId));
       },
     );
@@ -115,7 +115,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         await _safeSyncDebt(event.debt.walletId);
 
         emit(DebtOperationSuccess(
-            'Borç güncellendi.${cashOk ? '' : _cashWarning}'));
+            'Borç güncellendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(event.debt.walletId));
       },
     );
@@ -146,21 +146,12 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> {
         await _safeSyncDebt(event.walletId);
 
         emit(DebtOperationSuccess(
-            'Borç silindi.${cashOk ? '' : _cashWarning}'));
+            'Borç silindi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetDebtsEvent(event.walletId));
       },
     );
   }
 
-  /// Nakit hareketi yazılamadığında kullanıcıya eklenen uyarı kuyruğu.
-  static const _cashWarning =
-      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
-
-  Future<void> _safeSyncDebt(String walletId) async {
-    try {
-      await walletMetricsService.syncDebt(walletId);
-    } catch (e) {
-      debugPrint('Wallet debt sync failed: $e');
-    }
-  }
+  Future<void> _safeSyncDebt(String walletId) =>
+      safeSyncMetric(() => walletMetricsService.syncDebt(walletId), 'debt');
 }

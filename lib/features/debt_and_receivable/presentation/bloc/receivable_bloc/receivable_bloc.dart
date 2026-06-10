@@ -1,18 +1,19 @@
 // lib/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart
 
+import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/receivable_usecases.dart';
 import 'package:injectable/injectable.dart';
-import 'package:flutter/foundation.dart';
 
 part 'receivable_event.dart';
 part 'receivable_state.dart';
 
 @injectable
-class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
+class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
+    with CashCouplingMixin {
   final GetReceivablesUseCase getReceivablesUseCase;
   final AddReceivableUseCase addReceivableUseCase;
   final UpdateReceivableUseCase updateReceivableUseCase;
@@ -63,7 +64,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         await _safeSyncCredit(event.receivable.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak başarıyla eklendi.${cashOk ? '' : _cashWarning}'));
+            'Alacak başarıyla eklendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
@@ -95,7 +96,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         await _safeSyncCredit(event.receivable.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak güncellendi.${cashOk ? '' : _cashWarning}'));
+            'Alacak güncellendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
@@ -124,7 +125,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         await _safeSyncCredit(event.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak silindi.${cashOk ? '' : _cashWarning}'));
+            'Alacak silindi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.walletId));
       },
     );
@@ -152,21 +153,12 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState> {
         await _safeSyncCredit(event.receivable.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak ödendi olarak işaretlendi.${cashOk ? '' : _cashWarning}'));
+            'Alacak ödendi olarak işaretlendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
         add(GetReceivablesEvent(event.receivable.walletId));
       },
     );
   }
 
-  /// Nakit hareketi yazılamadığında kullanıcıya eklenen uyarı kuyruğu.
-  static const _cashWarning =
-      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
-
-  Future<void> _safeSyncCredit(String walletId) async {
-    try {
-      await walletMetricsService.syncCredit(walletId);
-    } catch (e) {
-      debugPrint('Wallet credit sync failed: $e');
-    }
-  }
+  Future<void> _safeSyncCredit(String walletId) =>
+      safeSyncMetric(() => walletMetricsService.syncCredit(walletId), 'credit');
 }

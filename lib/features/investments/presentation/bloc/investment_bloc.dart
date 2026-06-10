@@ -1,3 +1,4 @@
+import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -7,13 +8,13 @@ import 'package:cunehat/features/investments/domain/usecases/get_investments_use
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:flutter/foundation.dart';
 
 part 'investment_event.dart';
 part 'investment_state.dart';
 
 @injectable
-class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
+class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
+    with CashCouplingMixin {
   final GetInvestmentsUseCase getInvestmentsUseCase;
   final AddInvestmentUseCase addInvestmentUseCase;
   final UpdateInvestmentUseCase updateInvestmentUseCase;
@@ -64,7 +65,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
           );
           await _safeSyncInvestment(event.walletId);
           emit(InvestmentActionSuccess(
-              'Yatırım başarıyla eklendi${cashOk ? '' : _cashWarning}'));
+              'Yatırım başarıyla eklendi${cashOk ? '' : CashCouplingMixin.cashWarning}'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -96,7 +97,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
           }
           await _safeSyncInvestment(event.walletId);
           emit(InvestmentActionSuccess(
-              'Yatırım güncellendi${cashOk ? '' : _cashWarning}'));
+              'Yatırım güncellendi${cashOk ? '' : CashCouplingMixin.cashWarning}'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -126,7 +127,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
           }
           await _safeSyncInvestment(event.walletId);
           emit(InvestmentActionSuccess(event.recordSale
-              ? 'Yatırım satıldı${cashOk ? '' : _cashWarning}'
+              ? 'Yatırım satıldı${cashOk ? '' : CashCouplingMixin.cashWarning}'
               : 'Kayıt silindi (nakit etkisi yok)'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
@@ -135,15 +136,6 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState> {
     });
   }
 
-  /// Nakit hareketi yazılamadığında kullanıcıya eklenen uyarı kuyruğu.
-  static const _cashWarning =
-      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
-
-  Future<void> _safeSyncInvestment(String walletId) async {
-    try {
-      await walletMetricsService.syncInvestment(walletId);
-    } catch (e) {
-      debugPrint('Wallet investment sync failed: $e');
-    }
-  }
+  Future<void> _safeSyncInvestment(String walletId) => safeSyncMetric(
+      () => walletMetricsService.syncInvestment(walletId), 'investment');
 }
