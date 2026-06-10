@@ -9,6 +9,8 @@ import 'package:cunehat/features/finance_transactions/data/models/transaction_mo
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Kasıtlı cross-feature servis: yedekleme tüm feature'ların Hive
 /// modellerini serileştirmek zorunda; somut model bağımlılıkları v1 için
@@ -118,8 +120,15 @@ class GoogleDriveBackupService {
       }
     }
 
+    // v2: özel kategoriler (SharedPreferences) de yedeğe girer.
+    final prefs = await SharedPreferences.getInstance();
+    final categories = <String, String>{
+      for (final key in CategoryService.backupKeys)
+        if (prefs.getString(key) != null) key: prefs.getString(key)!,
+    };
+
     final backupMap = {
-      'version': 1,
+      'version': 2,
       'timestamp': DateTime.now().toIso8601String(),
       'wallets': wallets,
       'transactions': transactions,
@@ -127,6 +136,7 @@ class GoogleDriveBackupService {
       'debts': debts,
       'receivables': receivables,
       'users': users,
+      'categories': categories,
     };
 
     return jsonEncode(backupMap);
@@ -184,6 +194,7 @@ class GoogleDriveBackupService {
     final List<DebtModel> debts;
     final List<ReceivableModel> receivables;
     final Map<String, Map> users;
+    final Map<String, String> categories;
     try {
       final headers = await _currentUser!.authHeaders;
       final fileId = await _findBackupFileId(headers);
@@ -228,6 +239,14 @@ class GoogleDriveBackupService {
       for (final entry in usersMap.entries) {
         users[entry.key] = Map<dynamic, dynamic>.from(entry.value as Map);
       }
+
+      // v1 yedeklerinde 'categories' yok — boş kalır, atlanır.
+      categories = <String, String>{};
+      final categoriesMap =
+          backupData['categories'] as Map<String, dynamic>? ?? {};
+      for (final entry in categoriesMap.entries) {
+        categories[entry.key] = entry.value as String;
+      }
     } catch (e, st) {
       debugPrint('GoogleDriveBackupService.restore download/parse error: $e\n$st');
       return false;
@@ -241,6 +260,11 @@ class GoogleDriveBackupService {
     final debtBox = await Hive.openBox<DebtModel>('debts');
     final receivableBox = await Hive.openBox<ReceivableModel>('receivables');
     final userBox = await Hive.openBox<Map>('users');
+
+    final prefs = await SharedPreferences.getInstance();
+    final categorySnapshot = <String, String?>{
+      for (final key in CategoryService.backupKeys) key: prefs.getString(key),
+    };
 
     final walletSnapshot = Map.of(walletBox.toMap());
     final transactionSnapshot = Map.of(transactionBox.toMap());
@@ -276,6 +300,18 @@ class GoogleDriveBackupService {
         await userBox.put(entry.key, entry.value);
       }
 
+      // Kategoriler: yedekte olan anahtar yazılır; olmayan (v1 yedeği ya da
+      // hiç özel kategori yok) anahtar temizlenir ki eski cihazın
+      // kategorileri yeni veriyle karışmasın.
+      for (final key in CategoryService.backupKeys) {
+        final value = categories[key];
+        if (value != null) {
+          await prefs.setString(key, value);
+        } else {
+          await prefs.remove(key);
+        }
+      }
+
       return true;
     } catch (e, st) {
       debugPrint('GoogleDriveBackupService.restore write error: $e\n$st');
@@ -287,6 +323,13 @@ class GoogleDriveBackupService {
         await _rollback(debtBox, debtSnapshot);
         await _rollback(receivableBox, receivableSnapshot);
         await _rollback(userBox, userSnapshot);
+        for (final entry in categorySnapshot.entries) {
+          if (entry.value != null) {
+            await prefs.setString(entry.key, entry.value!);
+          } else {
+            await prefs.remove(entry.key);
+          }
+        }
       } catch (rollbackError, rollbackSt) {
         debugPrint(
             'GoogleDriveBackupService.restore rollback FAILED: $rollbackError\n$rollbackSt');

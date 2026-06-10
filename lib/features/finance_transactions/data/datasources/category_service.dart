@@ -13,6 +13,15 @@ class CategoryService {
   static const String _updatedExpenseDefaultsKey = 'updated_expense_defaults';
   static const String _updatedIncomeDefaultsKey = 'updated_income_defaults';
 
+  /// Drive yedeğine girecek SharedPreferences anahtarları (özel kategoriler
+  /// + güncellenmiş varsayılanlar). GoogleDriveBackupService kullanır.
+  static const List<String> backupKeys = [
+    _expenseCategoriesKey,
+    _incomeCategoriesKey,
+    _updatedExpenseDefaultsKey,
+    _updatedIncomeDefaultsKey,
+  ];
+
   // ========== GET CATEGORIES ==========
 
   /// Get all expense categories (default + custom)

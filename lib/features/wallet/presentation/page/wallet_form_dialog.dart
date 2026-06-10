@@ -59,9 +59,6 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   // ========== CONTROLLERS ==========
   late final TextEditingController _nameController;
   late final TextEditingController _balanceController;
-  late final TextEditingController _debtController;
-  late final TextEditingController _creditController;
-  late final TextEditingController _saveController;
   final _formKey = GlobalKey<FormState>();
 
   // ========== STATE ==========
@@ -87,15 +84,6 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     _balanceController = TextEditingController(
       text: widget.wallet?.balance.toStringAsFixed(2) ?? '0.00',
     );
-    _debtController = TextEditingController(
-      text: widget.wallet?.debt.toStringAsFixed(2) ?? '0.00',
-    );
-    _creditController = TextEditingController(
-      text: widget.wallet?.credit.toStringAsFixed(2) ?? '0.00',
-    );
-    _saveController = TextEditingController(
-      text: widget.wallet?.investment.toStringAsFixed(2) ?? '0.00',
-    );
   }
 
   /// State değerlerini başlat
@@ -108,9 +96,6 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   void dispose() {
     _nameController.dispose();
     _balanceController.dispose();
-    _debtController.dispose();
-    _creditController.dispose();
-    _saveController.dispose();
     super.dispose();
   }
 
@@ -139,8 +124,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             _buildNameField(),
             const SizedBox(height: 16),
             _buildBalanceField(),
-            const SizedBox(height: 16),
-            _buildAdditionalInfoFields(),
+            if (isEditMode) ...[
+              const SizedBox(height: 16),
+              _buildDerivedMetricsSummary(),
+            ],
             const SizedBox(height: 16),
             _buildColorPicker(),
             const SizedBox(height: 16),
@@ -202,53 +189,46 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     );
   }
 
-  /// Ek Bilgiler (Borç, Alacak, Birikim)
-  Widget _buildAdditionalInfoFields() {
+  /// Türetilmiş metrikler — kayıtlardan OTOMATİK hesaplanır, düzenlenemez.
+  /// (Eskiden elle girilebiliyordu; sonraki sync değerleri ezip kafa
+  /// karıştırıyordu.)
+  Widget _buildDerivedMetricsSummary() {
+    final w = widget.wallet!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Ek Bilgiler:',
+          'Otomatik hesaplanan değerler:',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildMoneyField(
-                  _debtController, 'Borç', Icons.arrow_downward, Colors.red),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildMoneyField(_creditController, 'Alacak',
-                  Icons.arrow_upward, Colors.green),
-            ),
-          ],
+        const SizedBox(height: 4),
+        const Text(
+          'Borç/alacak/yatırım kayıtlarından türetilir; buradan düzenlenemez.',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
         const SizedBox(height: 12),
-        _buildMoneyField(
-            _saveController, 'Birikim', Icons.savings, Colors.orange),
+        _derivedRow('Borç', w.debt, Icons.arrow_downward, Colors.red),
+        _derivedRow('Alacak', w.credit, Icons.arrow_upward, Colors.green),
+        _derivedRow('Birikim', w.investment, Icons.savings, Colors.orange),
       ],
     );
   }
 
-  Widget _buildMoneyField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-    Color color,
-  ) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: color, size: 20),
-        suffixText: '₺',
-        border: const OutlineInputBorder(),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+  Widget _derivedRow(String label, double value, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontSize: 14)),
+          const Spacer(),
+          Text(
+            AppFormatters.currency.format(value),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
   }
 
@@ -432,21 +412,17 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
     final name = _nameController.text.trim();
     final balance = parseAmount(_balanceController.text) ?? 0.0;
-    final debt = parseAmount(_debtController.text) ?? 0.0;
-    final credit = parseAmount(_creditController.text) ?? 0.0;
-    final save = parseAmount(_saveController.text) ?? 0.0;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
     final createdAt = DateTime.now();
     final sortOrder = DateTime.now().millisecondsSinceEpoch;
 
     if (isEditMode) {
+      // Türetilmiş metrikler (debt/credit/investment) bilinçli olarak
+      // yazılmıyor — sync* servisleri kayıtlardan hesaplar.
       final WalletEntity wallet = widget.wallet!.copyWith(
         name: name,
         balance: balance,
-        debt: debt,
-        credit: credit,
-        investment: save,
         colorHex: colorHex,
         iconName: iconName,
       );
@@ -457,9 +433,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         userId: widget.userId,
         name: name,
         balance: balance,
-        debt: debt,
-        credit: credit,
-        investment: save,
+        debt: 0,
+        credit: 0,
+        investment: 0,
         colorHex: colorHex,
         iconName: iconName,
         createdAt: createdAt,
