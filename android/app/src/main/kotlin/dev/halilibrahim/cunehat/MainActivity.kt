@@ -1,4 +1,4 @@
-package com.example.cunehat
+package dev.halilibrahim.cunehat
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

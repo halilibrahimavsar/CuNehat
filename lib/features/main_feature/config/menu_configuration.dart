@@ -24,7 +24,7 @@ class MenuConfiguration {
 /// [viewIndex] is 1-based (0 is main view, so submenu starts from 1)
 class SubMenuConfig {
   final String label;
-  final MenuIconData icon;
+  final IconData icon;
   final int viewIndex;
 
   const SubMenuConfig({
@@ -37,7 +37,7 @@ class SubMenuConfig {
 /// Configuration for a mini button
 class MiniButtonConfig {
   final String label;
-  final MenuIconData icon;
+  final IconData icon;
   final String actionType;
 
   const MiniButtonConfig({
@@ -45,30 +45,6 @@ class MiniButtonConfig {
     required this.icon,
     required this.actionType,
   });
-}
-
-/// Icon data for configuration
-class MenuIconData {
-  final int codePoint;
-  final String fontFamily;
-
-  const MenuIconData(
-    this.codePoint, {
-    this.fontFamily = 'MaterialIcons',
-  });
-
-  IconData toFlutterIcon() => IconData(codePoint, fontFamily: fontFamily);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MenuIconData &&
-          runtimeType == other.runtimeType &&
-          codePoint == other.codePoint &&
-          fontFamily == other.fontFamily;
-
-  @override
-  int get hashCode => codePoint.hashCode ^ fontFamily.hashCode;
 }
 
 /// Predefined menu configurations
@@ -81,14 +57,14 @@ class MenuConfigs {
       miniButtons: [
         MiniButtonConfig(
           label: 'Yatırım',
-          icon: MenuIconData(0xe553), // Icons.savings
+          icon: Icons.savings,
           actionType: 'add_investment',
         ),
       ],
       subMenus: [
         SubMenuConfig(
           label: 'Detay',
-          icon: MenuIconData(0xe6c4), // Icons.pie_chart
+          icon: Icons.pie_chart,
           viewIndex: 1, // First subview
         ),
       ],
@@ -98,29 +74,29 @@ class MenuConfigs {
       miniButtons: [
         MiniButtonConfig(
           label: 'Gelir',
-          icon: MenuIconData(0xe096), // Icons.arrow_circle_up
+          icon: Icons.arrow_circle_up,
           actionType: 'add_income',
         ),
         MiniButtonConfig(
           label: 'Gider',
-          icon: MenuIconData(0xe095), // Icons.arrow_circle_down
+          icon: Icons.arrow_circle_down,
           actionType: 'add_expense',
         ),
       ],
       subMenus: [
         SubMenuConfig(
           label: 'Detay',
-          icon: MenuIconData(0xe6e6), // Icons.insights
+          icon: Icons.insights,
           viewIndex: 1,
         ),
         SubMenuConfig(
           label: 'Rapor',
-          icon: MenuIconData(0xe6e1), // Icons.analytics
+          icon: Icons.analytics,
           viewIndex: 2,
         ),
         SubMenuConfig(
           label: 'Bekleyen',
-          icon: MenuIconData(0xe8df), // Icons.pending_actions
+          icon: Icons.pending_actions,
           viewIndex: 3,
         ),
       ],
@@ -130,19 +106,19 @@ class MenuConfigs {
       miniButtons: [
         MiniButtonConfig(
           label: 'Borç',
-          icon: MenuIconData(0xe67d), // Icons.trending_down
+          icon: Icons.trending_down,
           actionType: 'add_debt',
         ),
         MiniButtonConfig(
           label: 'Alacak',
-          icon: MenuIconData(0xe67f), // Icons.trending_up
+          icon: Icons.trending_up,
           actionType: 'add_receivable',
         ),
       ],
       subMenus: [
         SubMenuConfig(
           label: 'Geçmiş',
-          icon: MenuIconData(0xe889), // Icons.history
+          icon: Icons.history,
           viewIndex: 1,
         ),
       ],

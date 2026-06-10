@@ -76,7 +76,7 @@ class SliderButtonView extends StatelessWidget {
     final color = _getActionColor(config.actionType);
 
     return MiniButtonData(
-      icon: config.icon.toFlutterIcon(),
+      icon: config.icon,
       label: config.label,
       color: color,
       onTap: () => _handleAction(config.actionType, context, activeWallet),
@@ -108,7 +108,7 @@ class SliderButtonView extends StatelessWidget {
     SubMenuConfig config,
   ) {
     return SubMenuItem(
-      icon: config.icon.toFlutterIcon(),
+      icon: config.icon,
       label: config.label,
       onTap: () => _handleSubMenuTap(config.viewIndex, sliderState),
     );
