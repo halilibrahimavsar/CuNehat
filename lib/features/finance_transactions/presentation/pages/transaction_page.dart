@@ -101,9 +101,16 @@ class _TransactionsViewState extends State<_TransactionsView> {
 
   List<TransactionWithBalance> _getFilteredData(
       List<TransactionEntity> allTransactions, CombinedFilter filter) {
+    // 0. Guard: cüzdan geçişi sırasında bloc state'i kısa süre ESKİ cüzdanın
+    //    listesini taşıyabilir (TransactionLoading.previousTransactions).
+    //    Yabancı cüzdan satırları yeni bakiyeye çapalanmasın.
+    final walletTransactions = allTransactions
+        .where((t) => t.walletId == widget.wallet.id)
+        .toList();
+
     // 1. Tam geçmiş üzerinde running balance + tarih penceresi.
     final withBalance = buildLedgerView(
-      allTransactions: allTransactions,
+      allTransactions: walletTransactions,
       currentBalance: widget.wallet.balance,
       start: filter.viewFilter.startDate,
       end: filter.viewFilter.endDate,

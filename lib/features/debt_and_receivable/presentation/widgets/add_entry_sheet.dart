@@ -4,7 +4,6 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -19,6 +18,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// alanlar, gradyan kaydet butonu. Borç = rose, Alacak = emerald.
 class AddEntrySheet extends StatefulWidget {
   final String walletId;
+
+  /// Kayıt sahibi kimliği — her zaman bağlı cüzdanın userId'si geçilir;
+  /// auth state'inden okumak kilit anında 'unknown_user' yazdırıyordu.
+  final String userId;
   final DebtEntity? debtToEdit;
   final ReceivableEntity? receivableToEdit;
 
@@ -29,6 +32,7 @@ class AddEntrySheet extends StatefulWidget {
   const AddEntrySheet({
     super.key,
     required this.walletId,
+    required this.userId,
     this.debtToEdit,
     this.receivableToEdit,
     this.initialIsDebt = true,
@@ -130,9 +134,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     }
     FocusScope.of(context).unfocus();
 
-    final authState = context.read<AppAuthBloc>().state;
-    final userId =
-        authState is AppAuthenticated ? authState.user.uid : 'unknown_user';
+    final userId = widget.userId;
     final amount = _parsedAmount!;
 
     if (_isDebt) {

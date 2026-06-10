@@ -198,6 +198,7 @@ class DebtListSection extends StatelessWidget {
             backgroundColor: Colors.transparent,
             builder: (context) => AddEntrySheet(
               walletId: walletId,
+              userId: userId,
               debtToEdit: debt,
             ),
           );
@@ -481,6 +482,7 @@ class ReceivableListSection extends StatelessWidget {
             backgroundColor: Colors.transparent,
             builder: (context) => AddEntrySheet(
               walletId: walletId,
+              userId: userId,
               receivableToEdit: receivable,
             ),
           );

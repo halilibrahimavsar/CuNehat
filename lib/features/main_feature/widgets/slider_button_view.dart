@@ -187,6 +187,7 @@ class SliderButtonView extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => AddEntrySheet(
         walletId: activeWallet.id!,
+        userId: activeWallet.userId,
         initialIsDebt: isDebt,
       ),
     );
