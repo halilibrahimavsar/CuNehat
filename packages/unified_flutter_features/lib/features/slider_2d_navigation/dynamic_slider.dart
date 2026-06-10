@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/slider_models.dart';
@@ -91,6 +92,7 @@ class DynamicSlider extends StatefulWidget {
 
 class _DynamicSliderState extends State<DynamicSlider> {
   bool _isDragging = false;
+  bool _isVerticalDragging = false;
   double _widgetWidth = 0.0;
   SliderState? _lastState;
 
@@ -136,7 +138,7 @@ class _DynamicSliderState extends State<DynamicSlider> {
         _updateArrowVisibility();
       });
     }
-    if (oldWidget.selectedSubIndex != widget.selectedSubIndex ||
+    if (!mapEquals(oldWidget.selectedSubIndex, widget.selectedSubIndex) ||
         oldWidget.subMenuItems != widget.subMenuItems) {
       _syncCarouselToSelection();
     }
@@ -205,14 +207,19 @@ class _DynamicSliderState extends State<DynamicSlider> {
   }
 
   void _syncCarouselToSelection({bool animate = true}) {
+    if (_isVerticalDragging) return;
+
     final state = _getCurrentState();
     final subItems = widget.subMenuItems[state] ?? [];
     if (subItems.isEmpty) return;
 
+    // null seçim = ana başlık: uygulama seçimi temizlediğinde (closeToMain)
+    // carousel de başlığa dönmeli; yoksa knob alt menü etiketinde asılı kalır
+    // ve ekran (ana görünüm) ile çelişir.
     final selectedIndex = widget.selectedSubIndex[state];
-    if (selectedIndex == null) return;
-
-    final targetIndex = (selectedIndex + 1).clamp(0, subItems.length);
+    final targetIndex = selectedIndex != null
+        ? (selectedIndex + 1).clamp(0, subItems.length)
+        : 0;
 
     if (!_carouselController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -456,6 +463,7 @@ class _DynamicSliderState extends State<DynamicSlider> {
                       onVerticalDrag: subItems.isNotEmpty
                           ? (details) {
                               if (!_carouselController.hasClients) return;
+                              _isVerticalDragging = true;
                               final position = _carouselController.position;
                               final newOffset =
                                   (position.pixels - details.delta.dy)
@@ -469,6 +477,7 @@ class _DynamicSliderState extends State<DynamicSlider> {
                           : null,
                       onVerticalDragEnd: subItems.isNotEmpty
                           ? (details) {
+                              _isVerticalDragging = false;
                               const itemHeight =
                                   SliderConfig.carouselItemHeight;
                               int targetIndex =

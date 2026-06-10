@@ -69,6 +69,7 @@ class HomeNavigationController extends ChangeNotifier {
 
     if (sliderState != null && viewIndex > 0) {
       _selectedSubIndices[sliderState] = viewIndex - 1; // -1 because main is 0
+      notifyListeners(); // DynamicSlider carousel'i yeni seçimle senkronlansın
     }
 
     await _viewStack.navigateTo(viewIndex);
@@ -76,7 +77,15 @@ class HomeNavigationController extends ChangeNotifier {
 
 
   /// Close all subviews and return to main
+  ///
+  /// Seçim hatırlama yok ("unut" davranışı): ana görünüme dönüldüğünde
+  /// saklanan alt menü seçimleri de silinir; yoksa paket sınır geçişinde
+  /// carousel'i bayat seçime geri kaydırıp knob ile ekranı ayrıştırır.
   Future<void> closeToMain() async {
+    if (_selectedSubIndices.isNotEmpty) {
+      _selectedSubIndices.clear();
+      notifyListeners();
+    }
     await _viewStack.navigateTo(0);
   }
 
@@ -98,8 +107,12 @@ class HomeNavigationController extends ChangeNotifier {
   // ==================== PRIVATE ====================
 
   void _onHorizontalChanged() {
-    // Close subviews when main slider moves
-    if (!isAtMainView && !isAnimating) {
+    // Close subviews when main slider moves. isAnimating guard'ı YOK:
+    // durum butonuna tap ile başlayan animateTo sırasında da alt sayfa hemen
+    // kapanmalı; eski guard sınır geçilene dek eski alt sayfayı ekranda
+    // bırakıyordu. navigateTo isTransitioning'i kuyruklayıp _currentIndex'i
+    // hemen 0 yaptığı için tekrarlı çağrı oluşmaz.
+    if (!isAtMainView) {
       closeToMain();
     }
   }

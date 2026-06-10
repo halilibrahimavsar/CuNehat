@@ -396,14 +396,18 @@ class ReceivableListSection extends StatelessWidget {
         if (state is ReceivableLoading || state is ReceivableOperationSuccess) {
           return const Center(child: CircularProgressIndicator());
         } else if (state is ReceivableLoaded) {
-          if (state.receivables.isEmpty) {
+          // Ödenenler borçlardaki gibi Geçmiş alt sayfasına taşınır.
+          final activeReceivables =
+              state.receivables.where((r) => !r.isPaid).toList();
+
+          if (activeReceivables.isEmpty) {
             return const Center(child: Text("Henüz alacak kaydı yok."));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: state.receivables.length,
+            itemCount: activeReceivables.length,
             itemBuilder: (context, index) {
-              final receivable = state.receivables[index];
+              final receivable = activeReceivables[index];
               return _buildReceivableCard(context, receivable);
             },
           );

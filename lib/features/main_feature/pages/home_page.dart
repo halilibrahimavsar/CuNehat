@@ -33,12 +33,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final HomeNavigationController _navController;
   String? _currentWalletId;
   SubViewFactory? _subViewFactory;
+  SliderState? _lastSliderState;
+
+  /// Build içinde yaratılırsa her rebuild'de key değişir ve scaffold'un tüm
+  /// alt ağacı (DynamicSlider dahil) remount olur; bu da slider sürüklenirken
+  /// 0.25/0.75 sınırında tetiklenen rebuild'le jesti öldürüp knob'u dondurur.
+  final _scaffoldKey = GlobalKey<AnimatedScaffoldWrapperState>();
 
   @override
   void initState() {
     super.initState();
     _navController = HomeNavigationController(this);
+    _lastSliderState = _navController.currentSliderState;
+    _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
     _loadWallets();
+  }
+
+  /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in
+  /// yeni durumun alt sayfalarıyla yeniden kurulması için rebuild tetikler.
+  /// Bu olmadan stack ilk build'deki durumda (transactions) donar ve
+  /// Birikim'in "Detay"ı / Borç'un "Geçmiş"i hep işlem sayfasını açar.
+  void _onSliderStateMaybeChanged() {
+    final state = _navController.currentSliderState;
+    if (state == _lastSliderState) return;
+    _lastSliderState = state;
+    if (mounted) setState(() {});
   }
 
   void _loadWallets() {
@@ -51,18 +70,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _navController.horizontalController
+        .removeListener(_onSliderStateMaybeChanged);
     _navController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scaffoldKey = GlobalKey<AnimatedScaffoldWrapperState>();
-
     return SafeArea(
       top: false,
       child: AnimatedScaffoldWrapper(
-        key: scaffoldKey,
+        key: _scaffoldKey,
         drawer: const ModernDrawer(),
         appBar: PreferredSize(
           preferredSize: const Size(double.maxFinite, AppSizes.appBarHeight),
@@ -149,12 +168,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: _buildAnimatedContent(userId, activeWallet),
         ),
         if (_subViewFactory != null)
-          SliderButtonView(
-            controller: _navController.horizontalController,
-            navigationController: _navController,
-            userId: userId,
-            walletState: walletState,
-            subViewFactory: _subViewFactory!,
+          // _navController'a bağlı: closeToMain/navigateToView seçim map'ini
+          // değiştirip notifyListeners çağırınca DynamicSlider.didUpdateWidget
+          // tetiklenir ve knob carousel'i ekranla senkron kalır.
+          AnimatedBuilder(
+            animation: _navController,
+            builder: (context, _) => SliderButtonView(
+              controller: _navController.horizontalController,
+              navigationController: _navController,
+              userId: userId,
+              walletState: walletState,
+              subViewFactory: _subViewFactory!,
+            ),
           ),
       ],
     );

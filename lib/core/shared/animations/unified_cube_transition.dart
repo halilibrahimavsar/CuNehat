@@ -159,6 +159,8 @@ class VerticalListTransitionManager extends ChangeNotifier {
   late final AnimationController _controller;
 
   final List<Widget> _views = [];
+  List<Widget>? _pendingViews;
+  int? _pendingTarget;
   int _currentIndex = 0;
   int? _previousIndex;
   bool _isTransitioning = false;
@@ -176,24 +178,59 @@ class VerticalListTransitionManager extends ChangeNotifier {
   bool get isAtMainView => _currentIndex == 0;
 
   /// Register available views
+  ///
+  /// Geçiş animasyonu sürerken liste değiştirilmez; kapanan sayfanın
+  /// animasyon ortasında başka bir sayfaya dönüşmemesi için yeni liste
+  /// bekletilip animasyon bitince uygulanır.
   void setViews(List<Widget> views) {
+    if (_isTransitioning) {
+      _pendingViews = List.of(views);
+      return;
+    }
+    _applyViews(views);
+    // No notifyListeners() here to prevent 'markNeedsBuild() called during build' exception.
+    // The widget calling this is already rebuilding, so the UI will update naturally.
+  }
+
+  void _applyViews(List<Widget> views) {
     _views.clear();
     _views.addAll(views);
-    // Removed notifyListeners() to prevent 'markNeedsBuild() called during build' exception.
-    // The widget calling this is already rebuilding, so the UI will update naturally.
+    if (_currentIndex >= _views.length) {
+      _currentIndex = 0;
+    }
   }
 
   void _onStatusChanged(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
       _previousIndex = null;
       _isTransitioning = false;
+      if (_pendingViews != null) {
+        _applyViews(_pendingViews!);
+        _pendingViews = null;
+      }
+      final pendingTarget = _pendingTarget;
+      _pendingTarget = null;
+      if (pendingTarget != null &&
+          pendingTarget >= 0 &&
+          pendingTarget < _views.length &&
+          pendingTarget != _currentIndex) {
+        navigateTo(pendingTarget);
+      }
       notifyListeners();
     }
   }
 
   /// Navigate to a specific index
+  ///
+  /// Geçiş sürerken gelen istek düşürülmez; bekletilir ve mevcut animasyon
+  /// bitince işlenir. Yoksa kapanış animasyonu sırasında yapılan alt menü
+  /// seçimi yutulur ve knob ile ekran birbirinden kopar.
   Future<void> navigateTo(int index) async {
-    if (_isTransitioning || index < 0 || index >= _views.length) return;
+    if (_isTransitioning) {
+      _pendingTarget = index;
+      return;
+    }
+    if (index < 0 || index >= _views.length) return;
     if (index == _currentIndex) return;
 
     _isTransitioning = true;
