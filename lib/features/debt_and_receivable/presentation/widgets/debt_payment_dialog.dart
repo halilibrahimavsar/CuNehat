@@ -1,5 +1,6 @@
 // lib/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart
 
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -197,7 +198,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  helperText: 'Maksimum: ${remaining.toStringAsFixed(2)} ₺',
+                  helperText: 'Maksimum: ${formatMoney(remaining)}',
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

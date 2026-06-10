@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -27,7 +28,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       builder: (dialogContext) => AlertDialog(
         title: Text('${investment.name} kaldırılsın mı?'),
         content: Text(
-          'Sat: Güncel değer (${investment.currentValue.toStringAsFixed(2)} ₺) '
+          'Sat: Güncel değer (${formatMoney(investment.currentValue)}) '
           'cüzdana gelir olarak işlenir.\n\n'
           'Kaydı Sil: Nakit etkisi olmaz; geçmiş alım işlemleri korunur '
           '(hatalı girişler için).',

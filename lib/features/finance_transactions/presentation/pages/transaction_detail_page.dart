@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
@@ -362,7 +363,7 @@ class _SummaryTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${amount.toStringAsFixed(2)} ₺',
+              formatMoney(amount),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,
