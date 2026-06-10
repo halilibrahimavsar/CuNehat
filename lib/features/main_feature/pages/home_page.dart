@@ -124,16 +124,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     if (_currentWalletId != activeWallet?.id) {
       _currentWalletId = activeWallet?.id;
-      _navController.onWalletChanged();
+      // navigateTo → notifyListeners build sırasında patlamasın diye ertele.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _navController.onWalletChanged();
+      });
     }
 
     if (activeWallet == null) {
       return const NoWalletView(infoText: "Cüzdan seçiniz", showButton: false);
     }
 
-    // Initialize factory with actual data
-    _subViewFactory ??=
-        SubViewFactory(userId: userId, walletId: activeWallet.id!);
+    // Cüzdan değişiminde fabrika YENİDEN kurulmalı; yoksa alt sayfalar
+    // (detay/rapor/borç geçmişi...) sonsuza dek ilk cüzdanın walletId'siyle
+    // veri çeker (cüzdan verileri karışıyor hatasının kökü buydu).
+    if (_subViewFactory == null ||
+        _subViewFactory!.walletId != activeWallet.id) {
+      _subViewFactory =
+          SubViewFactory(userId: userId, walletId: activeWallet.id!);
+    }
 
     return Column(
       children: [
@@ -171,14 +179,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _setupViewStack(String userId, dynamic activeWallet) {
     // Create main view
+    // Cüzdan-bazlı key'ler: cüzdan değişince Element (ve dolayısıyla
+    // sayfaların bloc/state'i) tazelensin.
     final mainView = HorizontalCubeAnimationView(
       controller: _navController.horizontalController,
-      firstView: InvestmentMoneyPage(activeWallet: activeWallet),
+      firstView: InvestmentMoneyPage(
+        key: ValueKey('investment-${activeWallet.id}'),
+        activeWallet: activeWallet,
+      ),
       secondView: TransactionsPage(
+        key: ValueKey('transactions-${activeWallet.id}'),
         userId: userId,
         wallet: activeWallet,
       ),
       thirdView: DebtAndReceivablePage(
+        key: ValueKey('debt-${activeWallet.id}'),
         userId: userId,
         walletId: activeWallet.id!,
       ),

@@ -19,19 +19,38 @@ class SubViewFactory {
     required this.walletId,
   });
 
-  /// Create all subviews for a slider state
+  /// Create all subviews for a slider state.
+  ///
+  /// walletId'li ValueKey ŞART: sayfalar bloc'larını `BlocProvider(create:)`
+  /// ile kurar; key olmadan Flutter cüzdan değişiminde Element'i yeniden
+  /// kullanır ve eski cüzdanın bloc'u/verisi ekranda kalır.
   List<Widget> createSubViewsForState(String stateType) {
     return switch (stateType) {
       'savedMoney' => [
-          InvestmentDetailPage(userId: userId, walletId: walletId),
+          InvestmentDetailPage(
+              key: ValueKey('invDetail-$walletId'),
+              userId: userId,
+              walletId: walletId),
         ],
       'transactions' => [
-          TransactionDetailPage(userId: userId, walletId: walletId),
-          TransactionReportPage(userId: userId, walletId: walletId),
-          TransactionPendingPage(userId: userId, walletId: walletId),
+          TransactionDetailPage(
+              key: ValueKey('txDetail-$walletId'),
+              userId: userId,
+              walletId: walletId),
+          TransactionReportPage(
+              key: ValueKey('txReport-$walletId'),
+              userId: userId,
+              walletId: walletId),
+          TransactionPendingPage(
+              key: ValueKey('txPending-$walletId'),
+              userId: userId,
+              walletId: walletId),
         ],
       'debt' => [
-          DebtHistoryPage(userId: userId, walletId: walletId),
+          DebtHistoryPage(
+              key: ValueKey('debtHistory-$walletId'),
+              userId: userId,
+              walletId: walletId),
         ],
       _ => [],
     };
