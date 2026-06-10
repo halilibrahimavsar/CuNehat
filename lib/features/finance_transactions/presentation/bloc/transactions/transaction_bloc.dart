@@ -101,6 +101,17 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     final currentData = state.currentTransactions;
 
+    // Savunma: sistem işlemleri (borç/yatırım kuplajı) bloc üzerinden
+    // değiştirilemez; defterle desync olmasın.
+    if (event.newTransaction.isSystem ||
+        event.previousTransaction.isSystem) {
+      emit(TransactionError(
+        'Sistem işlemi; ilgili kayıttan yönetilir',
+        transactions: currentData,
+      ));
+      return;
+    }
+
     // Bkz. _onAddTransaction: mutasyon öncesi opening geri doldurma.
     await _safeSyncBalance(event.newTransaction.walletId);
 
@@ -138,6 +149,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         transactions: currentData,
       )),
       (transaction) async {
+        // Savunma: sistem işlemi silinemez (kuplaj kayıtla yönetilir).
+        if (transaction.isSystem) {
+          emit(TransactionError(
+            'Sistem işlemi; ilgili kayıttan yönetilir',
+            transactions: currentData,
+          ));
+          return;
+        }
+
         // Bkz. _onAddTransaction: mutasyon öncesi opening geri doldurma.
         await _safeSyncBalance(transaction.walletId);
 

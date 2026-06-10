@@ -4,6 +4,7 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -141,7 +142,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       final term = int.tryParse(_termController.text.trim()) ?? 1;
       final interest = parseAmount(_interestController.text) ?? 0;
       final overdue = parseAmount(_overdueController.text) ?? 0;
-      final dueDate = _selectedDate.add(Duration(days: 30 * term));
+      final dueDate = addMonthsClamped(_selectedDate, term);
 
       if (_isEditing && widget.debtToEdit != null) {
         final updated = widget.debtToEdit!.copyWith(

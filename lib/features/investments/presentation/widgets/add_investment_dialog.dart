@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
@@ -199,8 +200,7 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       final newInvestment = InvestmentEntity(
-        id: widget.investmentToEdit?.id ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
+        id: widget.investmentToEdit?.id ?? UidGenerator.generateV7(),
         userId: widget.userId,
         walletId: widget.walletId,
         name: _nameController.text,
