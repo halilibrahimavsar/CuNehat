@@ -4,8 +4,9 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/category_filter_section.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/price_range_filter_section.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class FilterView extends StatefulWidget {
   final CombinedFilter filter;
@@ -393,7 +394,12 @@ class _FilterViewState extends State<FilterView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Fiyat Aralığı Filtresi
-                  _buildPriceRangeFilter(),
+                  PriceRangeFilterSection(
+                    filter: widget.filter,
+                    minController: _minPriceController,
+                    maxController: _maxPriceController,
+                    onPriceRangeChanged: _onPriceRangeChanged,
+                  ),
                   const SizedBox(height: 24),
 
                   // Tarih Aralığı
@@ -401,7 +407,13 @@ class _FilterViewState extends State<FilterView> {
                   const SizedBox(height: 24),
 
                   // Kategori Filtresi
-                  _buildCategoryFilter(),
+                  CategoryFilterSection(
+                    filter: widget.filter,
+                    incomeCategories: _incomeCategories,
+                    expenseCategories: _expenseCategories,
+                    isLoading: _isLoadingCategories,
+                    onCategoryToggle: _onCategoryToggle,
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -434,257 +446,6 @@ class _FilterViewState extends State<FilterView> {
           const SizedBox(height: 8),
         ],
       ),
-    );
-  }
-
-  Widget _buildCategoryFilter() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'KATEGORİ FİLTRESİ',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant
-                .withValues(alpha: 0.8),
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 10),
-        if (_isLoadingCategories)
-          const Center(child: CircularProgressIndicator())
-        else if (_incomeCategories.isEmpty && _expenseCategories.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'Kategori bulunamadı',
-              style: TextStyle(color: Colors.grey),
-            ),
-          )
-        else ...[
-          if (_incomeCategories.isNotEmpty)
-            _buildCategoryGroup('GELİRLER', _incomeCategories, Colors.green),
-          if (_incomeCategories.isNotEmpty && _expenseCategories.isNotEmpty)
-            const SizedBox(height: 16),
-          if (_expenseCategories.isNotEmpty)
-            _buildCategoryGroup('GİDERLER', _expenseCategories, Colors.red),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildCategoryGroup(
-      String title, List<CategoryEntity> categories, Color groupColor) {
-    final isCompareMode =
-        widget.filter.viewFilter.financeMode == FinanceMode.compare;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (isCompareMode) ...[
-          Row(
-            children: [
-              Icon(
-                title == 'GELİRLER'
-                    ? Icons.trending_up_rounded
-                    : Icons.trending_down_rounded,
-                size: 16,
-                color: groupColor,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: groupColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-        ],
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: categories.map((category) {
-            final isSelected = widget.filter.dataFilter.selectedCategories
-                .contains(category.id);
-            return FilterChip(
-              label: Text(category.id),
-              selected: isSelected,
-              onSelected: (_) => _onCategoryToggle(category.id),
-              avatar: Icon(
-                _getIcon(category.iconName),
-                size: 18,
-                color: isSelected
-                    ? Colors.white
-                    : (isCompareMode ? groupColor : Colors.grey),
-              ),
-              selectedColor: isCompareMode
-                  ? groupColor
-                  : widget.filter.viewFilter.financeMode.primaryColor,
-              checkmarkColor: Colors.white,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-              side: isCompareMode && !isSelected
-                  ? BorderSide(color: groupColor.withValues(alpha: 0.3))
-                  : null,
-              backgroundColor:
-                  isCompareMode ? groupColor.withValues(alpha: 0.05) : null,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPriceRangeFilter() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'FİYAT ARALIĞI',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant
-                .withValues(alpha: 0.8),
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _minPriceController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Min',
-                  hintText: '0',
-                  suffixText: '₺',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.03),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                '—',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Expanded(
-              child: TextField(
-                controller: _maxPriceController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Max',
-                  hintText: '∞',
-                  suffixText: '₺',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.03),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Uygula Butonu
-            InkWell(
-              onTap: () {
-                final min = double.tryParse(_minPriceController.text);
-                final max = double.tryParse(_maxPriceController.text);
-                _onPriceRangeChanged(
-                  PriceRangeFilter(minPrice: min, maxPrice: max),
-                );
-                FocusScope.of(context).unfocus(); // Klavyeyi kapat
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: widget.filter.viewFilter.financeMode.primaryColor
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: widget.filter.viewFilter.financeMode.primaryColor
-                          .withValues(alpha: 0.3)),
-                ),
-                child: Icon(
-                  Icons.check_rounded,
-                  color: widget.filter.viewFilter.financeMode.primaryColor,
-                  size: 24,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (widget.filter.dataFilter.priceRange != null) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle,
-                    color: Colors.green.shade700, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  widget.filter.dataFilter.priceRange.toString(),
-                  style: TextStyle(
-                    color: Colors.green.shade900,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -762,33 +523,5 @@ class _FilterViewState extends State<FilterView> {
     final start = widget.filter.viewFilter.startDate;
     final end = widget.filter.viewFilter.endDate;
     return '${start.day}.${start.month}.${start.year} - ${end.day}.${end.month}.${end.year}';
-  }
-
-  IconData _getIcon(String iconName) {
-    switch (iconName.toLowerCase()) {
-      case 'food':
-      case 'yemek':
-        return Icons.restaurant;
-      case 'transport':
-      case 'ulasim':
-        return Icons.directions_bus;
-      case 'shopping':
-      case 'alisveris':
-        return Icons.shopping_bag;
-      case 'bills':
-      case 'fatura':
-        return Icons.receipt;
-      case 'entertainment':
-      case 'eglence':
-        return Icons.movie;
-      case 'health':
-      case 'saglik':
-        return Icons.local_hospital;
-      case 'education':
-      case 'egitim':
-        return Icons.school;
-      default:
-        return Icons.category;
-    }
   }
 }
