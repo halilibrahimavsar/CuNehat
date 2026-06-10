@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/services/data_repair_service.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -31,6 +32,10 @@ class AppInitialization {
 
       // Diğer tüm servisler ve modüller hazır olduktan sonra bağımlılık enjeksiyonunu yapılandırıyoruz.
       await configureDependencies();
+
+      // Kendi-kendini onarım: yanlış userId'li kayıtları cüzdan sahibine
+      // çeker (idempotent; hata açılışı bloklamaz — servis içinde yutulur).
+      await getIt<DataRepairService>().run();
 
       final authBloc = getIt<AppAuthBloc>();
       final router = createAppRouter(authBloc);

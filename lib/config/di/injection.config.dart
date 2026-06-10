@@ -10,6 +10,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
+import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
     as _i186;
 import 'package:cunehat/core/services/wallet_metrics_service.dart' as _i239;
@@ -214,6 +215,8 @@ extension GetItInjectableX on _i174.GetIt {
               investmentRepository: gh<_i589.InvestmentRepository>(),
               transactionsRepository: gh<_i543.TransactionsRepository>(),
             ));
+    gh.lazySingleton<_i816.DataRepairService>(
+        () => _i816.DataRepairService(gh<_i239.WalletMetricsService>()));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(
           getTransactionsGroupedUseCase:
               gh<_i257.GetTransactionsGroupedUseCase>(),
