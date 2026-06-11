@@ -46,6 +46,9 @@ class AddEntrySheet extends StatefulWidget {
 class _AddEntrySheetState extends State<AddEntrySheet> {
   bool _isDebt = true;
   bool _isEditing = false;
+  bool _isBankLoanMonthly = true;
+  bool _includeBankTaxes = false;
+  bool _isInstallmentAmortized = true;
 
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
@@ -53,6 +56,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   final _termController = TextEditingController();
   final _interestController = TextEditingController();
   final _overdueController = TextEditingController();
+  final _installmentController = TextEditingController();
 
   DebtType _selectedDebtType = DebtType.bankLoan;
   DateTime _selectedDate = DateTime.now();
@@ -78,6 +82,15 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _overdueController.text = _fmt(d.overdueInterestRate);
       _selectedDebtType = d.type;
       _originalAmount = d.principalAmount;
+      if (d.expectedTotalAmount != null && d.type == DebtType.bankLoan) {
+        _isBankLoanMonthly = true;
+        if (d.termMonths > 0) {
+          _installmentController.text =
+              _fmt(d.expectedTotalAmount! / d.termMonths);
+        }
+      } else {
+        _isBankLoanMonthly = false;
+      }
     } else if (widget.receivableToEdit != null) {
       _isEditing = true;
       _isDebt = false;
@@ -97,6 +110,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _termController.dispose();
     _interestController.dispose();
     _overdueController.dispose();
+    _installmentController.dispose();
     super.dispose();
   }
 
@@ -139,9 +153,48 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final amount = _parsedAmount!;
 
     if (_isDebt) {
-      final term = int.tryParse(_termController.text.trim()) ?? 1;
-      final interest = parseAmount(_interestController.text) ?? 0;
-      final overdue = parseAmount(_overdueController.text) ?? 0;
+      int term = 1;
+      double interest = 0;
+      double overdue = 0;
+      double? expectedTotal;
+
+      if (_selectedDebtType == DebtType.personalDebt) {
+        term = 1;
+        expectedTotal = amount; // Tutar == Toplam Tutar
+      } else if (_selectedDebtType == DebtType.installmentDebt) {
+        term = int.tryParse(_termController.text.trim()) ?? 1;
+        interest = parseAmount(_interestController.text) ?? 0;
+        if (_isInstallmentAmortized) {
+          expectedTotal = DebtEntity.calculateAmortizedTotal(
+            principal: amount,
+            monthlyInterestRate: interest,
+            termMonths: term,
+            includeTaxes: false,
+          );
+        } else {
+          expectedTotal = amount + (amount * interest / 100);
+        }
+      } else if (_selectedDebtType == DebtType.bankLoan) {
+        term = int.tryParse(_termController.text.trim()) ?? 1;
+        if (_isBankLoanMonthly) {
+          final monthly = parseAmount(_installmentController.text) ?? 0;
+          expectedTotal = monthly * term;
+        } else {
+          interest = parseAmount(_interestController.text) ?? 0;
+          overdue = parseAmount(_overdueController.text) ?? 0;
+          expectedTotal = DebtEntity.calculateAmortizedTotal(
+            principal: amount,
+            monthlyInterestRate: interest,
+            termMonths: term,
+            includeTaxes: _includeBankTaxes,
+          );
+        }
+      } else {
+        term = int.tryParse(_termController.text.trim()) ?? 1;
+        interest = parseAmount(_interestController.text) ?? 0;
+        overdue = parseAmount(_overdueController.text) ?? 0;
+      }
+
       final dueDate = addMonthsClamped(_selectedDate, term);
 
       if (_isEditing && widget.debtToEdit != null) {
@@ -155,6 +208,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           overdueInterestRate: overdue,
           startDate: _selectedDate,
           dueDate: dueDate,
+          expectedTotalAmount: expectedTotal,
         );
         context.read<DebtBloc>().add(UpdateDebtEvent(updated,
             prevPrincipal: _originalAmount ?? updated.principalAmount));
@@ -171,6 +225,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           overdueInterestRate: overdue,
           startDate: _selectedDate,
           dueDate: dueDate,
+          expectedTotalAmount: expectedTotal,
         );
         context.read<DebtBloc>().add(AddDebtEvent(debt));
       }
@@ -245,12 +300,43 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           cs: cs,
                         ),
                         const SizedBox(height: 14),
-                        _filledField(
-                          controller: _counterpartyController,
-                          hint: 'Kurum / Kişi · örn. Ziraat Bankası',
-                          icon: Icons.account_balance_rounded,
-                          cs: cs,
-                        ),
+                        if (_selectedDebtType != DebtType.personalDebt) ...[
+                          _filledField(
+                            controller: _counterpartyController,
+                            hint: 'Kurum / Kişi · örn. Ziraat Bankası',
+                            icon: Icons.account_balance_rounded,
+                            cs: cs,
+                          ),
+                          const SizedBox(height: 14),
+                        ] else ...[
+                          _filledField(
+                            controller: _counterpartyController,
+                            hint: 'Kişi Adı',
+                            icon: Icons.person_rounded,
+                            cs: cs,
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        _buildDatePill(cs),
+                        if (_selectedDebtType != DebtType.personalDebt) ...[
+                          const SizedBox(height: 20),
+                          _sectionLabel('Vade & detaylar', cs),
+                          const SizedBox(height: 10),
+                          if (_selectedDebtType == DebtType.bankLoan) ...[
+                            _buildBankLoanToggle(cs),
+                            const SizedBox(height: 10),
+                            if (!_isBankLoanMonthly) ...[
+                              _buildTaxSwitch(cs),
+                              const SizedBox(height: 10),
+                            ],
+                          ],
+                          if (_selectedDebtType ==
+                              DebtType.installmentDebt) ...[
+                            _buildInstallmentTypeToggle(cs),
+                            const SizedBox(height: 10),
+                          ],
+                          _buildDynamicDetails(cs),
+                        ],
                       ] else ...[
                         _filledField(
                           controller: _titleController,
@@ -258,14 +344,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           icon: Icons.person_rounded,
                           cs: cs,
                         ),
-                      ],
-                      const SizedBox(height: 14),
-                      _buildDatePill(cs),
-                      if (_isDebt) ...[
-                        const SizedBox(height: 20),
-                        _sectionLabel('Vade & faiz', cs),
-                        const SizedBox(height: 10),
-                        _buildDebtDetails(cs),
+                        const SizedBox(height: 14),
+                        _buildDatePill(cs),
                       ],
                       if (_error != null) ...[
                         const SizedBox(height: 16),
@@ -370,7 +450,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _isDebt ? 'Borç tutarı (ana para)' : 'Alacak tutarı',
+            _isDebt
+                ? (_selectedDebtType == DebtType.bankLoan
+                    ? 'Kredi tutarı (ana para)'
+                    : (_selectedDebtType == DebtType.installmentDebt ||
+                            _selectedDebtType == DebtType.personalDebt)
+                        ? 'Toplam tutar'
+                        : 'Borç tutarı (ana para)')
+                : 'Alacak tutarı',
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -425,7 +512,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             ],
           ),
           // Borç modunda: faiz/taksit/toplam canlı özet (aynı kart içinde).
-          if (_isDebt) _buildRepaymentBreakdown(cs),
+          if (_isDebt && _selectedDebtType != DebtType.personalDebt)
+            _buildRepaymentBreakdown(cs),
         ],
       ),
     );
@@ -433,22 +521,62 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   Widget _buildRepaymentBreakdown(ColorScheme cs) {
     return AnimatedBuilder(
-      animation: Listenable.merge(
-          [_amountController, _interestController, _termController]),
+      animation: Listenable.merge([
+        _amountController,
+        _interestController,
+        _termController,
+        _installmentController
+      ]),
       builder: (context, _) {
         final principal = _parsedAmount ?? 0;
-        final interest = parseAmount(_interestController.text) ?? 0;
         final term = int.tryParse(_termController.text.trim()) ?? 0;
-
-        // Önizleme, kaydedilen borçla aynı domain formülünü kullanır.
-        final total = DebtEntity.calculateTotalDebt(
-          principal: principal,
-          interestRate: interest,
-          termMonths: term,
-        );
-        final totalInterest = total - principal;
-        final monthly = term > 0 ? total / term : 0.0;
         final hasData = principal > 0;
+
+        double total = principal;
+        double monthly = 0;
+        double totalInterest = 0;
+
+        if (_selectedDebtType == DebtType.installmentDebt) {
+          final interest = parseAmount(_interestController.text) ?? 0;
+          if (_isInstallmentAmortized) {
+            total = DebtEntity.calculateAmortizedTotal(
+              principal: principal,
+              monthlyInterestRate: interest,
+              termMonths: term,
+              includeTaxes: false,
+            );
+          } else {
+            // Basit Vade Farkı (AnaPara + %Faiz)
+            total = principal + (principal * interest / 100);
+          }
+          totalInterest = total - principal;
+          monthly = term > 0 ? total / term : 0;
+        } else if (_selectedDebtType == DebtType.bankLoan &&
+            _isBankLoanMonthly) {
+          monthly = parseAmount(_installmentController.text) ?? 0;
+          total = monthly * term;
+          totalInterest = total > principal ? total - principal : 0;
+        } else if (_selectedDebtType == DebtType.bankLoan &&
+            !_isBankLoanMonthly) {
+          final interest = parseAmount(_interestController.text) ?? 0;
+          total = DebtEntity.calculateAmortizedTotal(
+            principal: principal,
+            monthlyInterestRate: interest,
+            termMonths: term,
+            includeTaxes: _includeBankTaxes,
+          );
+          totalInterest = total - principal;
+          monthly = term > 0 ? total / term : 0;
+        } else {
+          final interest = parseAmount(_interestController.text) ?? 0;
+          total = DebtEntity.calculateTotalDebt(
+            principal: principal,
+            interestRate: interest,
+            termMonths: term,
+          );
+          totalInterest = total - principal;
+          monthly = term > 0 ? total / term : 0;
+        }
 
         return Column(
           children: [
@@ -457,7 +585,10 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               child: Divider(height: 1, color: _accent.withValues(alpha: 0.20)),
             ),
             _summaryRow(
-              'Toplam faiz',
+              _selectedDebtType == DebtType.installmentDebt &&
+                      !_isInstallmentAmortized
+                  ? 'Vade farkı'
+                  : 'Toplam faiz',
               hasData
                   ? '+ ${AppFormatters.currency.format(totalInterest)}'
                   : '—',
@@ -554,7 +685,195 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   // ------------------------------------------------------------ Debt details
 
-  Widget _buildDebtDetails(ColorScheme cs) {
+  Widget _buildBankLoanToggle(ColorScheme cs) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _isBankLoanMonthly = true),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _isBankLoanMonthly ? cs.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: _isBankLoanMonthly
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4)
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: Text('Aylık taksiti biliyorum',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: _isBankLoanMonthly
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: _isBankLoanMonthly
+                            ? _accent
+                            : cs.onSurfaceVariant)),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _isBankLoanMonthly = false),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: !_isBankLoanMonthly ? cs.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: !_isBankLoanMonthly
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4)
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: Text('Faiz oranı ile',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: !_isBankLoanMonthly
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: !_isBankLoanMonthly
+                            ? _accent
+                            : cs.onSurfaceVariant)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaxSwitch(ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'KKDF ve BSMV vergilerini (%30) dahil et',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface),
+                ),
+              ),
+              Switch(
+                value: _includeBankTaxes,
+                onChanged: (val) => setState(() => _includeBankTaxes = val),
+                activeColor: _accent,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tüketici kredilerinde faize yasal olarak %15 KKDF ve %15 BSMV eklenir. Konut vb. kredilerde bu vergiler %0 olabilir. Duruma göre aktifleştirin.',
+            style: TextStyle(
+                fontSize: 11.5, color: cs.onSurfaceVariant, height: 1.3),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstallmentTypeToggle(ColorScheme cs) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _isInstallmentAmortized = true),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color:
+                      _isInstallmentAmortized ? cs.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: _isInstallmentAmortized
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4)
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: Text('Kredi Kartı Faizi',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: _isInstallmentAmortized
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: _isInstallmentAmortized
+                            ? _accent
+                            : cs.onSurfaceVariant)),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _isInstallmentAmortized = false),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: !_isInstallmentAmortized
+                      ? cs.surface
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: !_isInstallmentAmortized
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4)
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: Text('Basit Vade Farkı',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: !_isInstallmentAmortized
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: !_isInstallmentAmortized
+                            ? _accent
+                            : cs.onSurfaceVariant)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDynamicDetails(ColorScheme cs) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -575,29 +894,53 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                   dense: true,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _filledField(
-                  controller: _interestController,
-                  hint: 'Faiz',
-                  icon: Icons.percent_rounded,
-                  cs: cs,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  dense: true,
+              if (_selectedDebtType == DebtType.bankLoan &&
+                  _isBankLoanMonthly) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _filledField(
+                    controller: _installmentController,
+                    hint: 'Aylık Taksit',
+                    icon: Icons.payments_rounded,
+                    cs: cs,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    dense: true,
+                  ),
                 ),
-              ),
+              ] else if (_selectedDebtType != DebtType.personalDebt) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _filledField(
+                    controller: _interestController,
+                    hint: _selectedDebtType == DebtType.installmentDebt &&
+                            !_isInstallmentAmortized
+                        ? 'Vade Farkı %'
+                        : 'Aylık Faiz %',
+                    icon: Icons.percent_rounded,
+                    cs: cs,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    dense: true,
+                  ),
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 10),
-          _filledField(
-            controller: _overdueController,
-            hint: 'Gecikme faizi (%)',
-            icon: Icons.running_with_errors_rounded,
-            cs: cs,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            dense: true,
-          ),
+          if (_selectedDebtType != DebtType.personalDebt &&
+              !(_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) &&
+              _selectedDebtType != DebtType.installmentDebt) ...[
+            const SizedBox(height: 10),
+            _filledField(
+              controller: _overdueController,
+              hint: 'Gecikme faizi (%)',
+              icon: Icons.running_with_errors_rounded,
+              cs: cs,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              dense: true,
+            ),
+          ],
         ],
       ),
     );

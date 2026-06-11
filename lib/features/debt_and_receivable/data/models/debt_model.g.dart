@@ -32,13 +32,14 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       payments: (fields[14] as List).cast<Payment>(),
       isPaid: fields[15] as bool,
       notes: fields[16] as String?,
+      expectedTotalAmount: fields[18] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, DebtModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +69,9 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       ..writeByte(15)
       ..write(obj.isPaid)
       ..writeByte(16)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(18)
+      ..write(obj.expectedTotalAmount);
   }
 
   @override

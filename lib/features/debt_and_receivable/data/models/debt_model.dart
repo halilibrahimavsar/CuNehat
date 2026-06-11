@@ -65,6 +65,10 @@ class DebtModel extends DebtEntity {
   @HiveField(16)
   String? get notes;
 
+  @override
+  @HiveField(18) // Yeni alan
+  double? get expectedTotalAmount;
+
   DebtModel({
     required super.id,
     required super.userId,
@@ -81,6 +85,7 @@ class DebtModel extends DebtEntity {
     super.payments = const [],
     super.isPaid = false,
     super.notes,
+    super.expectedTotalAmount,
   });
 
   factory DebtModel.fromEntity(DebtEntity entity) {
@@ -100,6 +105,7 @@ class DebtModel extends DebtEntity {
       payments: entity.payments.map((e) => PaymentModel.fromEntity(e)).toList(),
       isPaid: entity.isPaid,
       notes: entity.notes,
+      expectedTotalAmount: entity.expectedTotalAmount,
     );
   }
 
@@ -124,6 +130,7 @@ class DebtModel extends DebtEntity {
           .toList(),
       isPaid: isPaid,
       notes: notes,
+      expectedTotalAmount: expectedTotalAmount,
     );
   }
 
@@ -144,6 +151,7 @@ class DebtModel extends DebtEntity {
     List<Payment>? payments,
     bool? isPaid,
     String? notes,
+    double? expectedTotalAmount,
   }) {
     return DebtModel(
       id: id ?? this.id,
@@ -161,6 +169,7 @@ class DebtModel extends DebtEntity {
       payments: payments ?? this.payments,
       isPaid: isPaid ?? this.isPaid,
       notes: notes ?? this.notes,
+      expectedTotalAmount: expectedTotalAmount ?? this.expectedTotalAmount,
     );
   }
 
@@ -182,6 +191,7 @@ class DebtModel extends DebtEntity {
           payments.map((e) => PaymentModel.fromEntity(e).toJson()).toList(),
       'isPaid': isPaid,
       'notes': notes,
+      'expectedTotalAmount': expectedTotalAmount,
     };
   }
 
@@ -212,6 +222,7 @@ class DebtModel extends DebtEntity {
           .toList(),
       isPaid: json['isPaid'] as bool? ?? false,
       notes: json['notes'] as String?,
+      expectedTotalAmount: (json['expectedTotalAmount'] as num?)?.toDouble(),
     );
   }
 }

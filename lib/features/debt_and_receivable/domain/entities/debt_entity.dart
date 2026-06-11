@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 enum DebtType { bankLoan, installmentDebt, personalDebt, otherDebt }
 
 class Payment {
@@ -36,6 +38,7 @@ class DebtEntity {
   final List<Payment> payments;
   final bool isPaid;
   final String? notes;
+  final double? expectedTotalAmount;
 
   DebtEntity({
     this.id,
@@ -53,6 +56,7 @@ class DebtEntity {
     this.payments = const [],
     this.isPaid = false,
     this.notes,
+    this.expectedTotalAmount,
   });
 
   DebtEntity copyWith({
@@ -71,6 +75,7 @@ class DebtEntity {
     List<Payment>? payments,
     bool? isPaid,
     String? notes,
+    double? expectedTotalAmount,
   }) {
     return DebtEntity(
       id: id ?? this.id,
@@ -88,6 +93,7 @@ class DebtEntity {
       payments: payments ?? this.payments,
       isPaid: isPaid ?? this.isPaid,
       notes: notes ?? this.notes,
+      expectedTotalAmount: expectedTotalAmount ?? this.expectedTotalAmount,
     );
   }
 
@@ -96,8 +102,7 @@ class DebtEntity {
   /// Toplam Ödenen Tutar
   double get totalPaidAmount => payments.fold(0, (sum, p) => sum + p.amount);
 
-  /// Basit faiz formülü — kaydedilmiş borç (totalDebtAmount) ve form
-  /// önizlemesi AYNI hesabı kullansın diye tek yerde.
+  /// Basit faiz formülü
   static double calculateTotalDebt({
     required double principal,
     required double interestRate,
@@ -105,8 +110,35 @@ class DebtEntity {
   }) =>
       principal + (principal * interestRate * termMonths / 1200);
 
-  /// Toplam Borç Tutarı (Basit Faiz Hesabı: Ana Para + (Ana Para * Yıllık Faiz * Ay / 1200))
-  double get totalDebtAmount => calculateTotalDebt(
+  /// Eşit Taksitli Kredi (Amortisman) Formülü - Aylık Faiz üzerinden
+  static double calculateAmortizedTotal({
+    required double principal,
+    required double monthlyInterestRate,
+    required int termMonths,
+    bool includeTaxes = false,
+  }) {
+    if (principal <= 0 || termMonths <= 0) return principal;
+    if (monthlyInterestRate <= 0) return principal;
+
+    // Banka tüketici kredilerinde faiz üzerinden %15 KKDF ve %15 BSMV alınır (Toplam %30).
+    double effectiveRate = monthlyInterestRate;
+    if (includeTaxes) {
+      effectiveRate = monthlyInterestRate * 1.30;
+    }
+
+    final r = effectiveRate / 100;
+    final denominator = math.pow(1 + r, termMonths) - 1;
+    if (denominator == 0) return principal;
+
+    final monthlyPayment =
+        principal * (r * math.pow(1 + r, termMonths)) / denominator;
+    return monthlyPayment * termMonths;
+  }
+
+  /// Toplam Borç Tutarı
+  double get totalDebtAmount =>
+      expectedTotalAmount ??
+      calculateTotalDebt(
         principal: principalAmount,
         interestRate: interestRate,
         termMonths: termMonths,
