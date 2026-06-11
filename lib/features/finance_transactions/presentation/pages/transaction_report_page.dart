@@ -1,15 +1,21 @@
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
 
 class TransactionReportPage extends StatelessWidget {
   final String userId;
@@ -44,6 +50,10 @@ class _TransactionReportView extends StatefulWidget {
 
 class _TransactionReportViewState extends State<_TransactionReportView> {
   late DateTimeRange _range;
+  int _touchedExpenseIndex = -1;
+  int _touchedIncomeIndex = -1;
+
+  Map<String, IconData> _categoryIcons = {};
 
   @override
   void initState() {
@@ -53,6 +63,23 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       start: DateTime(now.year, now.month, 1),
       end: now,
     );
+    _loadCategoryIcons();
+  }
+
+  Future<void> _loadCategoryIcons() async {
+    final service = getIt<CategoryRepository>();
+    final results = await Future.wait([
+      service.getExpenseCategories(),
+      service.getIncomeCategories(),
+    ]);
+    if (!mounted) return;
+    final map = <String, IconData>{};
+    for (final list in results) {
+      for (final c in list) {
+        map[c.id] = AppIcons.getIconData(c.iconName);
+      }
+    }
+    setState(() => _categoryIcons = map);
   }
 
   Future<void> _pickDateRange() async {
@@ -63,7 +90,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      setState(() => _range = picked);
+      setState(() {
+        _range = picked;
+        _touchedExpenseIndex = -1;
+        _touchedIncomeIndex = -1;
+      });
     }
   }
 
@@ -106,10 +137,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           }
 
           final totals = _calculateTotals(filteredTransactions);
-          final expenseData =
-              _groupByTag(filteredTransactions, isExpense: true);
-          final incomeData =
-              _groupByTag(filteredTransactions, isExpense: false);
+          final expenseData = _buildCategoryData(filteredTransactions, true);
+          final incomeData = _buildCategoryData(filteredTransactions, false);
           final weeklyNet = _buildWeeklyNetPoints(filteredTransactions);
 
           return SingleChildScrollView(
@@ -148,13 +177,15 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 _buildChartCard(
                   context: context,
                   title: 'Giderler',
-                  sections: _buildSections(expenseData, true),
+                  categoryData: expenseData,
+                  isExpense: true,
                 ),
                 const SizedBox(height: 16),
                 _buildChartCard(
                   context: context,
                   title: 'Gelirler',
-                  sections: _buildSections(incomeData, false),
+                  categoryData: incomeData,
+                  isExpense: false,
                 ),
               ],
             ),
@@ -167,12 +198,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Widget _buildChartCard({
     required BuildContext context,
     required String title,
-    required List<PieChartSectionData> sections,
+    required List<_CategoryData> categoryData,
+    required bool isExpense,
   }) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    if (sections.isEmpty) {
+    if (categoryData.isEmpty) {
       return AppCard(
         section: AppSection.transactions,
         child: Padding(
@@ -191,23 +223,96 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       );
     }
 
+    final total =
+        categoryData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
+    final touchedIndex = isExpense ? _touchedExpenseIndex : _touchedIncomeIndex;
+
+    final sections =
+        List<PieChartSectionData>.generate(categoryData.length, (i) {
+      final item = categoryData[i];
+      final percent = total == 0 ? 0 : (item.totalAmount / total) * 100;
+      final isTouched = i == touchedIndex;
+      final radius = isTouched ? 75.0 : 66.0;
+
+      return PieChartSectionData(
+        value: item.totalAmount,
+        title: '%${percent.toStringAsFixed(0)}',
+        radius: radius,
+        color: item.color,
+        titleStyle: TextStyle(
+          fontSize: isTouched ? 14 : 12,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          shadows: const [
+            BoxShadow(
+                color: Colors.black45, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
+      );
+    });
+
     return AppCard(
       section: AppSection.transactions,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                formatMoney(total),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isExpense ? Colors.redAccent : Colors.green,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SizedBox(
             height: 200,
             child: PieChart(
               PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse == null ||
+                          pieTouchResponse.touchedSection == null) {
+                        if (isExpense) {
+                          _touchedExpenseIndex = -1;
+                        } else {
+                          _touchedIncomeIndex = -1;
+                        }
+                        return;
+                      }
+
+                      final newIndex =
+                          pieTouchResponse.touchedSection!.touchedSectionIndex;
+
+                      if (isExpense) {
+                        _touchedExpenseIndex = newIndex;
+                      } else {
+                        _touchedIncomeIndex = newIndex;
+                      }
+
+                      if (event is FlTapUpEvent && newIndex != -1) {
+                        _showCategoryDetailsBottomSheet(
+                          context,
+                          categoryData[newIndex],
+                          isExpense,
+                        );
+                      }
+                    });
+                  },
+                ),
                 sections: sections,
                 sectionsSpace: 3,
                 centerSpaceRadius: 40,
@@ -215,39 +320,145 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildLegend(theme, sections),
+          const SizedBox(height: 24),
+          _buildLegend(theme, categoryData, total),
         ],
       ),
     );
   }
 
-  Widget _buildLegend(ThemeData theme, List<PieChartSectionData> sections) {
+  void _showCategoryDetailsBottomSheet(
+      BuildContext context, _CategoryData category, bool isExpense) {
+    final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Wrap(
-      spacing: 12,
-      runSpacing: 8,
-      children: sections.map((section) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: section.color,
-                shape: BoxShape.circle,
+
+    // Convert transactions to TransactionWithBalance (balance is irrelevant here, so 0 is fine)
+    final transactionsWithBalance = category.transactions
+        .map((t) => TransactionWithBalance(transaction: t, balanceAfter: 0))
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          height: MediaQuery.of(sheetContext).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            children: [
+              // Bottom Sheet Header
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: scheme.shadow.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: category.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            category.name,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          formatMoney(category.totalAmount),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isExpense ? Colors.redAccent : Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              section.title.split(' ').first,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: 12,
-                color: scheme.onSurfaceVariant,
+              // Transaction List
+              Expanded(
+                child: DetailedListView(
+                  transactions: transactionsWithBalance,
+                  mode: isExpense ? FinanceMode.expense : FinanceMode.income,
+                  categoryIcons: _categoryIcons,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLegend(ThemeData theme, List<_CategoryData> data, double total) {
+    final scheme = theme.colorScheme;
+    return Column(
+      children: data.map((item) {
+        final percent = total == 0 ? 0 : (item.totalAmount / total) * 100;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Row(
+            children: [
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: item.color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  item.name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+              Text(
+                '${formatMoney(item.totalAmount)} (%${percent.toStringAsFixed(0)})',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         );
       }).toList(),
     );
@@ -444,6 +655,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       23,
       59,
       59,
+      447, // .999 instead of 447, actually just 59 seconds is enough.
     );
 
     return transactions
@@ -489,23 +701,17 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         .toList();
   }
 
-  Map<String, double> _groupByTag(
-    List<TransactionEntity> transactions, {
-    required bool isExpense,
-  }) {
-    final Map<String, double> data = {};
-    for (final t in transactions) {
-      if (t.isExpense != isExpense) continue;
-      data[t.tag] = (data[t.tag] ?? 0) + t.amount;
-    }
-    return data;
-  }
-
-  List<PieChartSectionData> _buildSections(
-    Map<String, double> data,
+  List<_CategoryData> _buildCategoryData(
+    List<TransactionEntity> transactions,
     bool isExpense,
   ) {
-    if (data.isEmpty) return [];
+    final Map<String, List<TransactionEntity>> grouped = {};
+    for (final t in transactions) {
+      if (t.isExpense != isExpense) continue;
+      grouped.putIfAbsent(t.tag, () => []).add(t);
+    }
+
+    if (grouped.isEmpty) return [];
 
     final colors = isExpense
         ? [
@@ -521,37 +727,41 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             Colors.indigoAccent
           ];
 
-    final entries = data.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    final total = entries.fold<double>(0.0, (sum, e) => sum + e.value);
+    final entries = grouped.entries.map((e) {
+      final sum = e.value.fold<double>(0.0, (prev, t) => prev + t.amount);
+      return MapEntry(e.key, MapEntry(sum, e.value));
+    }).toList()
+      ..sort((a, b) => b.value.key.compareTo(a.value.key));
 
     final topEntries = entries.take(4).toList();
-    final remaining = entries.skip(4);
-    if (remaining.isNotEmpty) {
-      final otherTotal = remaining.fold<double>(0.0, (sum, e) => sum + e.value);
-      topEntries.add(MapEntry('Diğer', otherTotal));
+    final remaining = entries.skip(4).toList();
+
+    List<_CategoryData> result = [];
+    for (int i = 0; i < topEntries.length; i++) {
+      result.add(_CategoryData(
+        topEntries[i].key,
+        topEntries[i].value.key,
+        topEntries[i].value.value,
+        colors[i % colors.length],
+      ));
     }
 
-    return List<PieChartSectionData>.generate(topEntries.length, (index) {
-      final entry = topEntries[index];
-      final percent = total == 0 ? 0 : (entry.value / total) * 100;
-      return PieChartSectionData(
-        value: entry.value,
-        title: '${entry.key} %${percent.toStringAsFixed(0)}',
-        radius: 66,
-        color: colors[index % colors.length],
-        titleStyle: const TextStyle(
-          fontSize: 10,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          shadows: [
-            BoxShadow(
-                color: Colors.black45, blurRadius: 4, offset: Offset(0, 1)),
-          ],
-        ),
-      );
-    });
+    if (remaining.isNotEmpty) {
+      double otherSum = 0;
+      List<TransactionEntity> otherTransactions = [];
+      for (final e in remaining) {
+        otherSum += e.value.key;
+        otherTransactions.addAll(e.value.value);
+      }
+      result.add(_CategoryData(
+        'Diğer',
+        otherSum,
+        otherTransactions,
+        colors[result.length % colors.length],
+      ));
+    }
+
+    return result;
   }
 
   Widget _buildEmptyState(BuildContext context, {String? message}) {
@@ -678,4 +888,13 @@ class _TransactionTotals {
     required this.totalExpense,
     required this.net,
   });
+}
+
+class _CategoryData {
+  final String name;
+  final double totalAmount;
+  final List<TransactionEntity> transactions;
+  final Color color;
+
+  _CategoryData(this.name, this.totalAmount, this.transactions, this.color);
 }
