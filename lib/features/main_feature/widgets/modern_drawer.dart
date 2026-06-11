@@ -117,11 +117,11 @@ class _ModernDrawerState extends State<ModernDrawer>
 
                       _buildAnimatedMenuItem(
                         index: 0,
-                        icon: Icons.person_outline_rounded,
-                        title: 'Profilim',
+                        icon: Icons.account_balance_wallet_outlined,
+                        title: 'Bütçe Planlama',
                         onTap: () {
                           Navigator.pop(context);
-                          context.push(AppRoutes.profile);
+                          context.push(AppRoutes.budgets);
                         },
                         delay: 50,
                         isDark: isDark,
@@ -129,13 +129,25 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                       _buildAnimatedMenuItem(
                         index: 1,
+                        icon: Icons.person_outline_rounded,
+                        title: 'Profilim',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(AppRoutes.profile);
+                        },
+                        delay: 100,
+                        isDark: isDark,
+                        theme: theme,
+                      ),
+                      _buildAnimatedMenuItem(
+                        index: 2,
                         icon: Icons.settings_rounded,
                         title: 'Ayarlar',
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.settings);
                         },
-                        delay: 100,
+                        delay: 150,
                         isDark: isDark,
                         theme: theme,
                       ),

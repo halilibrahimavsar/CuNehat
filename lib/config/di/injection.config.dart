@@ -14,6 +14,18 @@ import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
     as _i186;
 import 'package:cunehat/core/services/wallet_metrics_service.dart' as _i239;
+import 'package:cunehat/features/budgets/data/datasources/local/budget_local_datasource.dart'
+    as _i828;
+import 'package:cunehat/features/budgets/data/repositories/budget_repository_impl.dart'
+    as _i626;
+import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart'
+    as _i94;
+import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart'
+    as _i691;
+import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart'
+    as _i21;
+import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart'
+    as _i613;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart'
     as _i19;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/receivable_local_datasource.dart'
@@ -130,6 +142,8 @@ extension GetItInjectableX on _i174.GetIt {
         _i183.ReceivableRepositoryImpl(
             receivableDatasourceRepository:
                 gh<_i366.ReceivableLocalDatasource>()));
+    gh.lazySingleton<_i828.BudgetLocalDataSource>(
+        () => _i828.BudgetLocalDataSourceImpl());
     gh.lazySingleton<_i254.WalletRepository>(() => _i861.WalletRepositoryImpl(
         dataSource: gh<_i175.WalletLocalDataSource>()));
     gh.singleton<_i896.CategoryRepository>(
@@ -190,10 +204,18 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i207.WalletGetByIdUseCase(gh<_i254.WalletRepository>()));
     gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
         () => _i29.InvestmentRemoteDataSourceImpl(client: gh<_i519.Client>()));
+    gh.lazySingleton<_i94.BudgetRepository>(
+        () => _i626.BudgetRepositoryImpl(gh<_i828.BudgetLocalDataSource>()));
     gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
           gh<_i698.LocalAuthRepository>(),
           gh<_i460.SharedPreferences>(),
         ));
+    gh.factory<_i21.GetBudgetsUsecase>(
+        () => _i21.GetBudgetsUsecase(gh<_i94.BudgetRepository>()));
+    gh.factory<_i613.SaveBudgetUsecase>(
+        () => _i613.SaveBudgetUsecase(gh<_i94.BudgetRepository>()));
+    gh.factory<_i691.DeleteBudgetUsecase>(
+        () => _i691.DeleteBudgetUsecase(gh<_i94.BudgetRepository>()));
     gh.lazySingleton<_i589.InvestmentRepository>(
         () => _i497.InvestmentRepositoryImpl(
               localDataSource: gh<_i648.InvestmentLocalDatasource>(),

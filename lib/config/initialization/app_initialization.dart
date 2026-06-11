@@ -15,6 +15,7 @@ import 'package:cunehat/features/investments/data/models/investment_type_adapter
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
+import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 
@@ -67,6 +68,7 @@ class AppInitialization {
       Hive.openBox<InvestmentModel>('investments_box'),
       Hive.openBox<DebtModel>('debts'),
       Hive.openBox<ReceivableModel>('receivables'),
+      Hive.openBox<BudgetModel>('budgets_box'),
     ]);
   }
 
@@ -92,6 +94,7 @@ class AppInitialization {
     register(ReceivableModelAdapter());
     register(PaymentModelAdapter());
     register(DebtTypeAdapter());
+    register(BudgetModelAdapter());
     register(ColorAdapter());
   }
 }
