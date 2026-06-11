@@ -1,12 +1,12 @@
 // lib/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart
 
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Borç Ödeme Dialog'u - Kullanıcının borç ödemesi yapmasını sağlar
@@ -82,7 +82,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   void _handlePayment() {
     if (!_formKey.currentState!.validate()) return;
 
-    final amount = double.parse(_amountController.text.trim());
+    // Virgül ondalığını da kabul eden ortak ayrıştırıcı; validator
+    // geçtiyse null olamaz.
+    final amount = parseAmount(_amountController.text)!;
 
     // Yeni ödeme oluştur
     final newPayment = Payment(
@@ -182,14 +184,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Toplam Borç:',
-                      NumberFormat.currency(symbol: '₺').format(totalDebt)),
-                  _buildInfoRow('Ödenen:',
-                      NumberFormat.currency(symbol: '₺').format(totalPaid),
+                  _buildInfoRow('Toplam Borç:', formatMoney(totalDebt)),
+                  _buildInfoRow('Ödenen:', formatMoney(totalPaid),
                       color: Colors.green),
                   const Divider(height: 16),
-                  _buildInfoRow('Kalan:',
-                      NumberFormat.currency(symbol: '₺').format(remaining),
+                  _buildInfoRow('Kalan:', formatMoney(remaining),
                       color: Colors.red, isBold: true),
                 ],
               ),
@@ -213,14 +212,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 helperText: 'Maksimum: ${formatMoney(remaining)}',
               ),
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Tutar giriniz';
-                }
-                final amount = double.tryParse(value.trim());
-                if (amount == null || amount <= 0) {
-                  return 'Geçerli bir tutar giriniz';
-                }
-                if (amount > remaining) {
+                final base = validateAmount(value ?? '');
+                if (base != null) return base;
+                if (parseAmount(value!)! > remaining) {
                   return 'Kalan tutardan fazla olamaz';
                 }
                 return null;
@@ -300,8 +294,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                             ),
                           ),
                           title: Text(
-                            NumberFormat.currency(symbol: '₺')
-                                .format(payment.amount),
+                            formatMoney(payment.amount),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -99,8 +100,8 @@ class PriceRangeFilterSection extends StatelessWidget {
             // Uygula Butonu
             InkWell(
               onTap: () {
-                final min = double.tryParse(minController.text);
-                final max = double.tryParse(maxController.text);
+                final min = parseAmount(minController.text);
+                final max = parseAmount(maxController.text);
                 onPriceRangeChanged(
                   PriceRangeFilter(minPrice: min, maxPrice: max),
                 );

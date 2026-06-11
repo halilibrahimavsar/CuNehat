@@ -112,8 +112,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       await result.fold(
         (failure) async => emit(InvestmentError(failure.message)),
         (_) async {
-          // Nakit kuplajı yalnız SATIŞTA: güncel değer kadar gelir.
-          // recordSale=false → hatalı girilen kayıt nakit etkisi olmadan silinir.
+          // Nakit kuplajı: satışta güncel değer kadar gelir. Satış DEĞİLSE
+          // (hatalı kayıt silme) eklemede yazılan alım gideri ters kayıtla
+          // dengelenir; yoksa bakiye kalıcı düşük kalır ve sistem işlemi
+          // UI'dan silinemediği için kullanıcı bunu düzeltemez.
           var cashOk = true;
           if (event.recordSale) {
             cashOk = await walletMetricsService.recordCashMovement(
@@ -124,11 +126,23 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               title: 'Yatırım Satışı',
               tag: CashMovementTags.investmentSell,
             );
+          } else if (event.amount > 0) {
+            // event.amount = güncel maliyet (alım + Σ maliyet güncellemeleri);
+            // kümülatif alım hareketlerini birebir tersine çevirir.
+            cashOk = await walletMetricsService.recordCashMovement(
+              walletId: event.walletId,
+              userId: event.userId,
+              amount: event.amount,
+              isIncome: true,
+              title: 'Yatırım kaydı silindi (düzeltme)',
+              tag: CashMovementTags.investmentCorrection,
+            );
           }
           await _safeSyncInvestment(event.walletId);
           emit(InvestmentActionSuccess(event.recordSale
               ? 'Yatırım satıldı${cashOk ? '' : CashCouplingMixin.cashWarning}'
-              : 'Kayıt silindi (nakit etkisi yok)'));
+              : 'Kayıt silindi, alım kaydı düzeltildi'
+                  '${cashOk ? '' : CashCouplingMixin.cashWarning}'));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },

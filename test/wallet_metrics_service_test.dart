@@ -195,6 +195,22 @@ class FailingTransactionsRepository extends FakeTransactionsRepository {
       const Left(CacheFailure('yazılamadı'));
 }
 
+/// Her okuma/yazmada event loop'a dönen varyant: eşzamanlı akışların
+/// araya girme pencerelerini büyütür (yarış testleri için).
+class YieldingWalletRepository extends FakeWalletRepository {
+  @override
+  Future<Either<Failure, WalletEntity?>> getWalletById(String walletId) async {
+    await Future<void>.delayed(Duration.zero);
+    return super.getWalletById(walletId);
+  }
+
+  @override
+  Future<Either<Failure, void>> updateWallet(WalletEntity wallet) async {
+    await Future<void>.delayed(Duration.zero);
+    return super.updateWallet(wallet);
+  }
+}
+
 // ---- Test helpers ----
 
 WalletEntity _wallet({
@@ -433,6 +449,71 @@ void main() {
       await service.syncDebt('w');
 
       expect(wallets.store['w']!.debt, 1000);
+    });
+  });
+
+  group('eşzamanlılık (cüzdan başına yazma kuyruğu)', () {
+    test('paralel syncBalance + syncDebt kayıp güncelleme üretmez', () async {
+      final yielding = YieldingWalletRepository();
+      final svc = WalletMetricsService(
+        walletRepository: yielding,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+      );
+      // Bakiye sapmış (999) → syncBalance 120'ye onaracak; aynı anda
+      // syncDebt debt=1000 yazacak. Kuyruk yoksa biri diğerinin yazımını
+      // bayat kopyayla ezebilir.
+      yielding.store['w'] = _wallet(id: 'w', balance: 999, openingBalance: 100);
+      txs.store.add(_income('w', 20));
+      debts.store.add(_debt('w', principal: 1000, paid: 0, isPaid: false));
+
+      await Future.wait([
+        svc.syncBalance('w'),
+        svc.syncDebt('w'),
+      ]);
+
+      final w = yielding.store['w']!;
+      expect(w.balance, 120, reason: 'syncDebt bayat balance yazmamalı');
+      expect(w.debt, 1000, reason: 'syncBalance debt güncellemesini ezmemeli');
+    });
+
+    test('paralel recordCashMovement çiftinde defter ve bakiye tutarlı',
+        () async {
+      wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
+
+      await Future.wait([
+        service.recordCashMovement(
+            walletId: 'w',
+            userId: 'u',
+            amount: 40,
+            isIncome: true,
+            title: 'a',
+            tag: 't'),
+        service.recordCashMovement(
+            walletId: 'w',
+            userId: 'u',
+            amount: 15,
+            isIncome: false,
+            title: 'b',
+            tag: 't'),
+      ]);
+
+      expect(txs.store.length, 2);
+      expect(wallets.store['w']!.balance, 125); // 100 + 40 - 15
+    });
+
+    test('farklı cüzdanlar birbirini bloklamaz', () async {
+      wallets.store['a'] = _wallet(id: 'a', balance: 10, openingBalance: 10);
+      wallets.store['b'] = _wallet(id: 'b', balance: 20, openingBalance: 20);
+
+      final results = await Future.wait([
+        service.syncBalance('a'),
+        service.syncBalance('b'),
+      ]);
+
+      expect(results, [true, true]);
     });
   });
 }

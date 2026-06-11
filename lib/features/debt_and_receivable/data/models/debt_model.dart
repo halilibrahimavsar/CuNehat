@@ -192,7 +192,12 @@ class DebtModel extends DebtEntity {
       walletId: json['walletId'] as String,
       title: json['title'] as String,
       counterparty: json['counterparty'] as String? ?? '',
-      type: DebtType.values.byName(json['type'] as String? ?? 'otherDebt'),
+      // byName bilinmeyen adda fırlatır ve tek bozuk kayıt tüm restore'u
+      // düşürür; bilinmeyen tür otherDebt'e düşsün.
+      type: DebtType.values.firstWhere(
+        (t) => t.name == json['type'],
+        orElse: () => DebtType.otherDebt,
+      ),
       principalAmount: (json['principalAmount'] as num).toDouble(),
       interestRate: (json['interestRate'] as num).toDouble(),
       termMonths: json['termMonths'] as int,

@@ -150,6 +150,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
       double price = 0.0;
       final response = await http.get(Uri.parse(
           'https://query1.finance.yahoo.com/v8/finance/chart/$symbol?interval=1d'));
+      // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
+      // release'te çöker.
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final result = data['chart']['result'];
@@ -169,7 +172,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
           }
         }
         setState(() {
-          _fetchedPriceMessage = 'Güncel Fiyat: $price'; // Yahoo usually returns local currency of the market
+          _fetchedPriceMessage =
+              'Güncel Fiyat: $price'; // Yahoo usually returns local currency of the market
           _fetchedPriceColor = Colors.green;
         });
       } else {
@@ -179,6 +183,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _fetchedPriceMessage = 'Bağlantı hatası.';
         _fetchedPriceColor = Colors.red;
@@ -446,8 +451,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
       },
       onSelected: (String selection) {
         _symbolController.text = selection;
-        _nameController.text = selection.split(' - ').length > 1 
-            ? selection.split(' - ')[1] 
+        _nameController.text = selection.split(' - ').length > 1
+            ? selection.split(' - ')[1]
             : selection;
       },
       fieldViewBuilder: (BuildContext context,
@@ -484,8 +489,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         );
       },
       optionsViewBuilder: (BuildContext context,
-          AutocompleteOnSelected<String> onSelected,
-          Iterable<String> options) {
+          AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
         return Align(
           alignment: Alignment.topLeft,
           child: Material(

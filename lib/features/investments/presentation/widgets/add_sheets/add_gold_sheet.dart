@@ -5,6 +5,7 @@ import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/tr_price_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -130,15 +131,13 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       double price = 0.0;
       final response =
           await http.get(Uri.parse('https://finans.truncgil.com/today.json'));
+      // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
+      // release'te çöker.
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data[_selectedGoldType] != null) {
-          String priceStr = data[_selectedGoldType]['Satış'].toString();
-          if (priceStr.contains(',')) {
-            priceStr = priceStr.replaceAll('.', '').replaceAll(',', '.');
-          }
-          price = double.tryParse(priceStr) ?? 0.0;
-        }
+        final entry = data[_selectedGoldType];
+        price = parseTrPrice(entry is Map ? entry['Satış'] : null) ?? 0.0;
       }
 
       if (price > 0) {
@@ -161,6 +160,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _fetchedPriceMessage = 'Bağlantı hatası.';
         _fetchedPriceColor = Colors.red;

@@ -61,7 +61,8 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
   final double currentValue;
 
   /// true → satış: güncel değer kadar nakit gelir oluşturulur.
-  /// false → yalnız kayıt silinir; nakit etkisi olmaz (hatalı giriş düzeltme).
+  /// false → hatalı giriş düzeltme: kayıt silinir ve eklemede yazılan alım
+  /// gideri, maliyet (amount) kadar gelirle ters kayıt edilir.
   final bool recordSale;
 
   const DeleteInvestmentEvent({

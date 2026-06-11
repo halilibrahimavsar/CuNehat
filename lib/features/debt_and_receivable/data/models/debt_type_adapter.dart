@@ -8,7 +8,11 @@ class DebtTypeAdapter extends TypeAdapter<DebtType> {
   @override
   DebtType read(BinaryReader reader) {
     final index = reader.readByte();
-    return DebtType.values[index];
+    // Diskteki index gelecekte enum'dan çıkarılmış olabilir; açılışta
+    // RangeError yerine güvenli varsayılana düş.
+    return index < DebtType.values.length
+        ? DebtType.values[index]
+        : DebtType.otherDebt;
   }
 
   @override

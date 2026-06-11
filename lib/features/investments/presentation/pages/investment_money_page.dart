@@ -31,8 +31,9 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       content: Text(
         'Sat: Güncel değer (${formatMoney(investment.currentValue)}) '
         'cüzdana gelir olarak işlenir.\n\n'
-        'Kaydı Sil: Nakit etkisi olmaz; geçmiş alım işlemleri korunur '
-        '(hatalı girişler için).',
+        'Kaydı Sil: Hatalı girişler için; alım gideri '
+        '(${formatMoney(investment.amount)}) düzeltme kaydıyla iade edilir, '
+        'bakiye yatırım öncesine döner.',
       ),
       actions: [
         TextButton(
@@ -166,7 +167,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                   return await _deleteInvestment(investment);
                                 },
                                 onEdit: (item) {
-                                  void onSave(InvestmentEntity updatedInvestment) {
+                                  void onSave(
+                                      InvestmentEntity updatedInvestment) {
                                     context
                                         .read<InvestmentBloc>()
                                         .add(UpdateInvestmentEvent(

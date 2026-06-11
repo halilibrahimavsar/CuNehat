@@ -201,7 +201,8 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   }
 
   Widget _buildHandleAndHeader(ColorScheme cs) {
-    final title = _isEditing ? 'Özel Yatırımı Düzenle' : 'Yeni Özel Yatırım Ekle';
+    final title =
+        _isEditing ? 'Özel Yatırımı Düzenle' : 'Yeni Özel Yatırım Ekle';
     return Column(
       children: [
         Container(

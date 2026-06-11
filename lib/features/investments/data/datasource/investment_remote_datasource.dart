@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cunehat/core/error/exceptions.dart';
+import 'package:cunehat/core/utils/tr_price_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
@@ -59,8 +60,14 @@ class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       if (data.containsKey(goldType)) {
-        final priceStr = data[goldType]['Alış'] as String;
-        return double.parse(priceStr.replaceAll('.', '').replaceAll(',', '.'));
+        // API sürümüne göre alan num ya da Türkçe biçimli string olabilir;
+        // koşulsuz nokta silme "4250.5"i 42505 yapardı.
+        final entry = data[goldType];
+        final price = parseTrPrice(entry is Map ? entry['Alış'] : null);
+        if (price == null) {
+          throw ServerException('Altın fiyatı ayrıştırılamadı: $goldType');
+        }
+        return price;
       } else {
         throw ServerException('Altın türü bulunamadı: $goldType');
       }

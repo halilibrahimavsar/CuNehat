@@ -30,8 +30,12 @@ class AppInitialization {
         ThemeBloc.preloadTheme(),
       ]);
 
-      // Diğer tüm servisler ve modüller hazır olduktan sonra bağımlılık enjeksiyonunu yapılandırıyoruz.
-      await configureDependencies();
+      // Diğer tüm servisler ve modüller hazır olduktan sonra bağımlılık
+      // enjeksiyonunu yapılandırıyoruz. Retry'da (init hata ekranı) ikinci
+      // kez kayıt GetIt'te fırlatır; sentinel ile atla.
+      if (!getIt.isRegistered<AppAuthBloc>()) {
+        await configureDependencies();
+      }
 
       // Kendi-kendini onarım: yanlış userId'li kayıtları cüzdan sahibine
       // çeker (idempotent; hata açılışı bloklamaz — servis içinde yutulur).
@@ -71,16 +75,24 @@ class AppInitialization {
   }
 
   static void _registerTypeAdapters() {
-    Hive.registerAdapter(WalletModelAdapter());
-    Hive.registerAdapter(TransactionModelAdapter());
-    Hive.registerAdapter(TransactionTypeModelAdapter());
-    Hive.registerAdapter(InvestmentModelAdapter());
-    Hive.registerAdapter(InvestmentTypeAdapter());
-    Hive.registerAdapter(DebtModelAdapter());
-    Hive.registerAdapter(ReceivableModelAdapter());
-    Hive.registerAdapter(PaymentModelAdapter());
-    Hive.registerAdapter(DebtTypeAdapter());
-    Hive.registerAdapter(ColorAdapter());
+    // İkinci kayıt HiveError fırlatır; retry (init hata ekranı) güvenli
+    // olsun diye kayıtlıysa atla.
+    void register<T>(TypeAdapter<T> adapter) {
+      if (!Hive.isAdapterRegistered(adapter.typeId)) {
+        Hive.registerAdapter(adapter);
+      }
+    }
+
+    register(WalletModelAdapter());
+    register(TransactionModelAdapter());
+    register(TransactionTypeModelAdapter());
+    register(InvestmentModelAdapter());
+    register(InvestmentTypeAdapter());
+    register(DebtModelAdapter());
+    register(ReceivableModelAdapter());
+    register(PaymentModelAdapter());
+    register(DebtTypeAdapter());
+    register(ColorAdapter());
   }
 }
 

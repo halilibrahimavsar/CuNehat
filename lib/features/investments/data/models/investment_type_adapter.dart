@@ -8,7 +8,11 @@ class InvestmentTypeAdapter extends TypeAdapter<InvestmentType> {
   @override
   InvestmentType read(BinaryReader reader) {
     final index = reader.readByte();
-    return InvestmentType.values[index];
+    // Diskteki index gelecekte enum'dan çıkarılmış olabilir; açılışta
+    // RangeError yerine güvenli varsayılana düş.
+    return index < InvestmentType.values.length
+        ? InvestmentType.values[index]
+        : InvestmentType.custom;
   }
 
   @override
