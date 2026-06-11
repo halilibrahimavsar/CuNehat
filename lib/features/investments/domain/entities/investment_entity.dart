@@ -19,6 +19,7 @@ class InvestmentEntity extends Equatable {
   final DateTime dateAdded;
   final String? symbol;
   final double? returnRate;
+  final double? targetAmount;
 
   const InvestmentEntity({
     required this.id,
@@ -32,6 +33,7 @@ class InvestmentEntity extends Equatable {
     required this.dateAdded,
     this.symbol,
     this.returnRate,
+    this.targetAmount,
   });
 
   InvestmentEntity copyWith({
@@ -46,6 +48,7 @@ class InvestmentEntity extends Equatable {
     DateTime? dateAdded,
     String? symbol,
     double? returnRate,
+    double? targetAmount,
   }) {
     return InvestmentEntity(
       id: id ?? this.id,
@@ -59,12 +62,23 @@ class InvestmentEntity extends Equatable {
       dateAdded: dateAdded ?? this.dateAdded,
       symbol: symbol ?? this.symbol,
       returnRate: returnRate ?? this.returnRate,
+      targetAmount: targetAmount ?? this.targetAmount,
     );
   }
 
   double get profit => currentValue - amount;
   double get profitPercentage => amount > 0 ? (profit / amount) * 100 : 0;
   bool get isProfitable => profit >= 0;
+
+  double get targetProgress {
+    if (targetAmount == null || targetAmount! <= 0) return 0.0;
+    return currentValue / targetAmount!;
+  }
+
+  bool get isTargetReached =>
+      targetAmount != null &&
+      targetAmount! > 0 &&
+      currentValue >= targetAmount!;
 
   @override
   List<Object?> get props => [
@@ -79,5 +93,6 @@ class InvestmentEntity extends Equatable {
         dateAdded,
         symbol,
         returnRate,
+        targetAmount,
       ];
 }

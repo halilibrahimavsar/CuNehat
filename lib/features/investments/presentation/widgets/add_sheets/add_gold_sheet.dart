@@ -59,6 +59,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   final _amountController = TextEditingController();
   final _quantityController = TextEditingController();
   final _currentValueController = TextEditingController();
+  final _targetAmountController = TextEditingController();
 
   String _selectedGoldType = 'gram-altin';
 
@@ -93,6 +94,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       _nameController.text = item.name;
       _amountController.text = _fmt(item.amount);
       _currentValueController.text = _fmt(item.currentValue);
+      if (item.targetAmount != null) {
+        _targetAmountController.text = _fmt(item.targetAmount!);
+      }
       _selectedColor = item.color;
       if (item.symbol != null && _goldTypes.containsKey(item.symbol)) {
         _selectedGoldType = item.symbol!;
@@ -106,6 +110,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     _amountController.dispose();
     _quantityController.dispose();
     _currentValueController.dispose();
+    _targetAmountController.dispose();
     super.dispose();
   }
 
@@ -115,6 +120,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   double? get _parsedAmount => parseAmount(_amountController.text);
   double? get _parsedQuantity => parseAmount(_quantityController.text);
   double? get _parsedCurrentValue => parseAmount(_currentValueController.text);
+  double? get _parsedTargetAmount => parseAmount(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
@@ -199,6 +205,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       dateAdded: widget.investmentToEdit?.dateAdded ?? DateTime.now(),
       symbol: _selectedGoldType,
       returnRate: 0,
+      targetAmount: _parsedTargetAmount,
     );
 
     widget.onSave(investment);
@@ -254,6 +261,15 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         controller: _amountController,
                         hint: 'Maliyet (Yatırılan Ana Para)',
                         icon: Icons.payments_rounded,
+                        cs: cs,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                      ),
+                      const SizedBox(height: 14),
+                      _filledField(
+                        controller: _targetAmountController,
+                        hint: 'Hedef Tutar (İsteğe Bağlı)',
+                        icon: Icons.flag_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),

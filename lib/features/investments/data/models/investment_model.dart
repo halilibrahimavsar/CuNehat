@@ -17,6 +17,7 @@ class InvestmentModel extends InvestmentEntity {
     required super.dateAdded,
     super.symbol,
     super.returnRate,
+    super.targetAmount,
   });
 
   // Create Investment from firestore document
@@ -36,6 +37,7 @@ class InvestmentModel extends InvestmentEntity {
       dateAdded: DateTime.parse(json['dateAdded']),
       symbol: json['symbol'],
       returnRate: (json['returnRate'] as num?)?.toDouble() ?? 0.0,
+      targetAmount: (json['targetAmount'] as num?)?.toDouble(),
     );
   }
 
@@ -52,6 +54,7 @@ class InvestmentModel extends InvestmentEntity {
           dateAdded: entity.dateAdded,
           symbol: entity.symbol,
           returnRate: entity.returnRate,
+          targetAmount: entity.targetAmount,
         );
 
   Map<String, dynamic> toJson() {
@@ -67,6 +70,7 @@ class InvestmentModel extends InvestmentEntity {
       'dateAdded': dateAdded.toIso8601String(),
       'symbol': symbol,
       'returnRate': returnRate,
+      'targetAmount': targetAmount,
     };
   }
 
@@ -84,6 +88,7 @@ class InvestmentModel extends InvestmentEntity {
     DateTime? dateAdded,
     String? symbol,
     double? returnRate,
+    double? targetAmount,
   }) {
     return InvestmentModel(
       id: id ?? this.id,
@@ -97,6 +102,7 @@ class InvestmentModel extends InvestmentEntity {
       dateAdded: dateAdded ?? this.dateAdded,
       symbol: symbol ?? this.symbol,
       returnRate: returnRate ?? this.returnRate,
+      targetAmount: targetAmount ?? this.targetAmount,
     );
   }
 
@@ -133,4 +139,8 @@ class InvestmentModel extends InvestmentEntity {
   @override
   @HiveField(10)
   double? get returnRate => super.returnRate;
+
+  @override
+  @HiveField(11)
+  double? get targetAmount => super.targetAmount;
 }

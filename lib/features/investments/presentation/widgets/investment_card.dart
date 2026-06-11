@@ -165,6 +165,70 @@ class InvestmentCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (investment.targetAmount != null &&
+                    investment.targetAmount! > 0) ...[
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Hedef: \${currencyFormat.format(investment.targetAmount)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '\${(investment.targetProgress * 100).toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: investment.isTargetReached
+                              ? Colors.green
+                              : accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: scheme.onSurface.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: investment.targetProgress.clamp(0.0, 1.0),
+                        child: Container(
+                          height: 6,
+                          decoration: BoxDecoration(
+                            gradient: investment.isTargetReached
+                                ? const LinearGradient(
+                                    colors: [Colors.green, Colors.lightGreen])
+                                : LinearGradient(colors: [
+                                    accent.withValues(alpha: 0.6),
+                                    accent
+                                  ]),
+                            borderRadius: BorderRadius.circular(3),
+                            boxShadow: investment.isTargetReached
+                                ? [
+                                    BoxShadow(
+                                        color:
+                                            Colors.green.withValues(alpha: 0.4),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2))
+                                  ]
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

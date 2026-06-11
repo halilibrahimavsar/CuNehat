@@ -52,6 +52,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _currentValueController = TextEditingController();
+  final _targetAmountController = TextEditingController();
 
   Color _selectedColor = Colors.purple;
 
@@ -75,6 +76,9 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
       _nameController.text = item.name;
       _amountController.text = _fmt(item.amount);
       _currentValueController.text = _fmt(item.currentValue);
+      if (item.targetAmount != null) {
+        _targetAmountController.text = _fmt(item.targetAmount!);
+      }
       _selectedColor = item.color;
     }
   }
@@ -84,6 +88,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
     _nameController.dispose();
     _amountController.dispose();
     _currentValueController.dispose();
+    _targetAmountController.dispose();
     super.dispose();
   }
 
@@ -92,6 +97,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
 
   double? get _parsedAmount => parseAmount(_amountController.text);
   double? get _parsedCurrentValue => parseAmount(_currentValueController.text);
+  double? get _parsedTargetAmount => parseAmount(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
@@ -126,6 +132,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
       dateAdded: widget.investmentToEdit?.dateAdded ?? DateTime.now(),
       symbol: null,
       returnRate: 0,
+      targetAmount: _parsedTargetAmount,
     );
 
     widget.onSave(investment);
@@ -175,6 +182,15 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                         controller: _amountController,
                         hint: 'Maliyet (Yatırılan Ana Para)',
                         icon: Icons.payments_rounded,
+                        cs: cs,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                      ),
+                      const SizedBox(height: 14),
+                      _filledField(
+                        controller: _targetAmountController,
+                        hint: 'Hedef Tutar (İsteğe Bağlı)',
+                        icon: Icons.flag_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),

@@ -89,6 +89,7 @@ dependencies:
 
   unified_flutter_features:
     path: packages/unified_flutter_features
+  confetti: ^0.8.0
 
   # firebase_bloc_auth:
   #   path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth
