@@ -12,6 +12,10 @@ import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/widgets/pending_recurring_dialog.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,6 +51,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _lastSliderState = _navController.currentSliderState;
     _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
     _loadWallets();
+    // Bekleyen işlemleri yükle
+    context.read<PendingRecurringBloc>().add(LoadPendingTransactionsEvent());
   }
 
   /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in
@@ -94,9 +100,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             },
           ),
         ),
-        child: BlocConsumer<WalletBloc, WalletState>(
-          listener: _handleWalletStateChanges,
-          builder: (context, walletState) => _buildContent(walletState),
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<WalletBloc, WalletState>(
+              listener: _handleWalletStateChanges,
+            ),
+            BlocListener<PendingRecurringBloc, PendingRecurringState>(
+              listener: (context, state) {
+                if (state is PendingRecurringLoaded &&
+                    state.pendingTransactions.isNotEmpty) {
+                  // Ekranda dialog varsa tekrar açmamak için ModalRoute kontrolü eklenebilir,
+                  // veya basitçe showDialog tetiklenir.
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => const PendingRecurringDialog(),
+                  );
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<WalletBloc, WalletState>(
+            builder: (context, walletState) => _buildContent(walletState),
+          ),
         ),
       ),
     );

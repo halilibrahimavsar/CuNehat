@@ -18,6 +18,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapt
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
 
 class AppInitialization {
   static Future<AppInitializationResult> initialize() async {
@@ -69,6 +70,7 @@ class AppInitialization {
       Hive.openBox<DebtModel>('debts'),
       Hive.openBox<ReceivableModel>('receivables'),
       Hive.openBox<BudgetModel>('budgets_box'),
+      Hive.openBox<RecurringTransactionModel>('recurring_transactions_box'),
     ]);
   }
 
@@ -95,6 +97,7 @@ class AppInitialization {
     register(PaymentModelAdapter());
     register(DebtTypeAdapter());
     register(BudgetModelAdapter());
+    register(RecurringTransactionModelAdapter());
     register(ColorAdapter());
   }
 }

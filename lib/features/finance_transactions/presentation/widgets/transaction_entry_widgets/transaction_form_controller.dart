@@ -3,6 +3,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:flutter/material.dart';
 
 /// İşlem formunun durum yöneticisi.
@@ -25,6 +26,8 @@ class TransactionFormController {
   final ValueNotifier<bool> categoriesLoading = ValueNotifier(true);
   final ValueNotifier<String?> categoryId = ValueNotifier(null);
   final ValueNotifier<DateTime> dateTime = ValueNotifier(DateTime.now());
+  final ValueNotifier<RecurringFrequency?> recurringFrequency =
+      ValueNotifier(null);
   final ValueNotifier<bool> submitting = ValueNotifier(false);
   final ValueNotifier<String?> error = ValueNotifier(null);
 
@@ -76,6 +79,7 @@ class TransactionFormController {
     categoriesLoading.dispose();
     categoryId.dispose();
     dateTime.dispose();
+    recurringFrequency.dispose();
     submitting.dispose();
     error.dispose();
   }

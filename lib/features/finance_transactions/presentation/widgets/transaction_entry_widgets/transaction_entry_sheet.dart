@@ -2,7 +2,12 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
+import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,7 +30,7 @@ class TransactionSheetHandler {
           userId: userId,
           isExpense: type == TransactionTypeModel.expense,
           initialTransaction: initialTransaction,
-          onSave: (transaction) {
+          onSave: (transaction, recurringFrequency) {
             Navigator.pop(sheetContext);
 
             // Send to BLoC
@@ -40,11 +45,44 @@ class TransactionSheetHandler {
               context.read<TransactionBloc>().add(
                     AddTransactionEvent(transaction),
                   );
+
+              if (recurringFrequency != null) {
+                // Şablonu da kaydet
+                // Şablonun id'si uuid ile oluşturulmalı, ama burada uuid paketi
+                // var mı? Evet, UidGenerator kullanabiliriz.
+                final template = RecurringTransactionEntity(
+                  id: UidGenerator.generateV7(),
+                  userId: userId,
+                  walletId: walletId,
+                  title: transaction.title,
+                  tag: transaction.tag,
+                  amount: transaction.amount,
+                  type: type,
+                  frequency: recurringFrequency,
+                  nextExecutionDate:
+                      _calculateNextDate(transaction.date, recurringFrequency),
+                );
+                final saveUsecase = getIt<SaveRecurringTransactionUsecase>();
+                saveUsecase(template);
+              }
             }
           },
           onCancel: () => Navigator.pop(sheetContext),
         );
       },
     );
+  }
+
+  static DateTime _calculateNextDate(DateTime from, RecurringFrequency freq) {
+    switch (freq) {
+      case RecurringFrequency.daily:
+        return from.add(const Duration(days: 1));
+      case RecurringFrequency.weekly:
+        return from.add(const Duration(days: 7));
+      case RecurringFrequency.monthly:
+        return DateTime(from.year, from.month + 1, from.day);
+      case RecurringFrequency.yearly:
+        return DateTime(from.year + 1, from.month, from.day);
+    }
   }
 }

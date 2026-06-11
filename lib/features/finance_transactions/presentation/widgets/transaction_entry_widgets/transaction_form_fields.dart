@@ -7,6 +7,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_amount_hero.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_category_picker.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_when_row.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 
 /// Gelir/gider ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
 ///
@@ -18,7 +19,8 @@ class TransactionFormSheet extends StatefulWidget {
   final String walletId;
   final String userId;
   final TransactionEntity? initialTransaction;
-  final ValueChanged<TransactionEntity> onSave;
+  final void Function(
+      TransactionEntity transaction, RecurringFrequency? frequency) onSave;
   final VoidCallback onCancel;
 
   const TransactionFormSheet({
@@ -108,7 +110,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
           ? TransactionTypeModel.expense
           : TransactionTypeModel.income,
     );
-    widget.onSave(transaction);
+    widget.onSave(transaction, _c.recurringFrequency.value);
   }
 
   @override
@@ -154,6 +156,9 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                       ),
                       const SizedBox(height: 22),
                       WhenRow(controller: _c, accent: _accent),
+                      const SizedBox(height: 22),
+                      _RecurringRow(
+                          controller: _c, accent: _accent, isEdit: _isEdit),
                       const SizedBox(height: 20),
                       _ErrorBanner(controller: _c),
                       _SaveButton(
@@ -359,6 +364,73 @@ class _SaveButton extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================ Recurring row
+
+class _RecurringRow extends StatelessWidget {
+  final TransactionFormController controller;
+  final Color accent;
+  final bool isEdit;
+
+  const _RecurringRow({
+    required this.controller,
+    required this.accent,
+    required this.isEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isEdit) {
+      return const SizedBox.shrink(); // Düzenlemede tekrarlama seçilemez
+    }
+
+    final cs = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<RecurringFrequency?>(
+      valueListenable: controller.recurringFrequency,
+      builder: (context, value, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: cs.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.repeat_rounded,
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<RecurringFrequency?>(
+                    value: value,
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    hint: const Text('Tekrarlama (İsteğe Bağlı)'),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Tekrar Etme'),
+                      ),
+                      ...RecurringFrequency.values.map(
+                        (freq) => DropdownMenuItem(
+                          value: freq,
+                          child: Text(freq.displayName),
+                        ),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      controller.recurringFrequency.value = val;
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },

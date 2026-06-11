@@ -9,6 +9,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Central widget for providing all BLoCs and Cubits to the app.
@@ -41,6 +42,7 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => getIt<InvestmentBloc>()),
         BlocProvider(create: (_) => getIt<AmountVisibilityCubit>()),
         BlocProvider(create: (_) => getIt<WalletBloc>()),
+        BlocProvider(create: (_) => getIt<PendingRecurringBloc>()),
         BlocProvider(create: (_) => getIt<ConnectionCubit>()),
 
         // Local Auth BLoCs

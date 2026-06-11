@@ -26,6 +26,8 @@ import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dar
     as _i21;
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart'
     as _i613;
+import 'package:cunehat/features/budgets/presentation/bloc/budgets_bloc.dart'
+    as _i645;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart'
     as _i19;
 import 'package:cunehat/features/debt_and_receivable/data/datasource/receivable_local_datasource.dart'
@@ -82,6 +84,22 @@ import 'package:cunehat/features/investments/domain/usecases/update_investment_u
     as _i420;
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart'
     as _i726;
+import 'package:cunehat/features/recurring_transactions/data/datasources/recurring_transaction_local_datasource.dart'
+    as _i648;
+import 'package:cunehat/features/recurring_transactions/data/repositories/recurring_transaction_repository_impl.dart'
+    as _i1054;
+import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart'
+    as _i788;
+import 'package:cunehat/features/recurring_transactions/domain/usecases/approve_recurring_transaction_usecase.dart'
+    as _i854;
+import 'package:cunehat/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart'
+    as _i817;
+import 'package:cunehat/features/recurring_transactions/domain/usecases/get_pending_recurring_transactions_usecase.dart'
+    as _i162;
+import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart'
+    as _i424;
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart'
+    as _i494;
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart'
     as _i460;
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart'
@@ -158,6 +176,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i866.UpdateReceivableUseCase(gh<_i329.ReceivableRepository>()));
     gh.factory<_i866.DeleteReceivableUseCase>(
         () => _i866.DeleteReceivableUseCase(gh<_i329.ReceivableRepository>()));
+    gh.lazySingleton<_i648.RecurringTransactionLocalDataSource>(
+        () => _i648.RecurringTransactionLocalDataSourceImpl());
     gh.lazySingleton<_i543.TransactionsRepository>(() =>
         _i510.TransactionRepositoryImpl(
             localDatasource: gh<_i934.TransactionHiveDataSource>()));
@@ -210,6 +230,18 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i698.LocalAuthRepository>(),
           gh<_i460.SharedPreferences>(),
         ));
+    gh.lazySingleton<_i788.RecurringTransactionRepository>(() =>
+        _i1054.RecurringTransactionRepositoryImpl(
+            gh<_i648.RecurringTransactionLocalDataSource>()));
+    gh.factory<_i424.SaveRecurringTransactionUsecase>(() =>
+        _i424.SaveRecurringTransactionUsecase(
+            gh<_i788.RecurringTransactionRepository>()));
+    gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
+        _i162.GetPendingRecurringTransactionsUsecase(
+            gh<_i788.RecurringTransactionRepository>()));
+    gh.factory<_i817.DeleteRecurringTransactionUsecase>(() =>
+        _i817.DeleteRecurringTransactionUsecase(
+            gh<_i788.RecurringTransactionRepository>()));
     gh.factory<_i21.GetBudgetsUsecase>(
         () => _i21.GetBudgetsUsecase(gh<_i94.BudgetRepository>()));
     gh.factory<_i613.SaveBudgetUsecase>(
@@ -229,6 +261,11 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i864.GetInvestmentsUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i420.UpdateInvestmentUseCase>(
         () => _i420.UpdateInvestmentUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
+          gh<_i21.GetBudgetsUsecase>(),
+          gh<_i613.SaveBudgetUsecase>(),
+          gh<_i691.DeleteBudgetUsecase>(),
+        ));
     gh.lazySingleton<_i239.WalletMetricsService>(
         () => _i239.WalletMetricsService(
               walletRepository: gh<_i254.WalletRepository>(),
@@ -237,8 +274,17 @@ extension GetItInjectableX on _i174.GetIt {
               investmentRepository: gh<_i589.InvestmentRepository>(),
               transactionsRepository: gh<_i543.TransactionsRepository>(),
             ));
+    gh.factory<_i854.ApproveRecurringTransactionUsecase>(
+        () => _i854.ApproveRecurringTransactionUsecase(
+              gh<_i788.RecurringTransactionRepository>(),
+              gh<_i543.TransactionsRepository>(),
+            ));
     gh.lazySingleton<_i816.DataRepairService>(
         () => _i816.DataRepairService(gh<_i239.WalletMetricsService>()));
+    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
+          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
+          gh<_i854.ApproveRecurringTransactionUsecase>(),
+        ));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(
           getTransactionsGroupedUseCase:
               gh<_i257.GetTransactionsGroupedUseCase>(),
