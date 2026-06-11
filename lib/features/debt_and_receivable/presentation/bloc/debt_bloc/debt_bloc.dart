@@ -94,7 +94,13 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
   Future<void> _onUpdateDebt(
       UpdateDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    final result = await updateDebtUseCase(event.debt);
+    // Tutar düzenlemesi isPaid'i geçersiz kılabilir (örn. 600 ödenmişken
+    // anapara 500'e indirilirse). isPaid yeniden hesaplanmazsa borç ne aktif
+    // listede (remaining ≤ 0) ne geçmişte (isPaid=false) görünür.
+    final debt = event.debt.copyWith(
+      isPaid: event.debt.totalPaidAmount >= event.debt.totalDebtAmount - 0.005,
+    );
+    final result = await updateDebtUseCase(debt);
 
     await result.fold(
       (failure) async => emit(DebtError(failure.message)),

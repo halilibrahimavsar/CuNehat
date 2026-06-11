@@ -88,18 +88,12 @@ class WalletRepositoryImpl implements WalletRepository {
   @override
   Future<Either<Failure, void>> updateWallet(WalletEntity wallet) async {
     try {
-      final oldEntity = await dataSource.getWalletById(wallet.id!);
-      if (oldEntity == null) throw Exception("Wallet not found");
-
-      final balanceDiff = wallet.balance - oldEntity.balance;
-      final newOpeningBalance =
-          (oldEntity.openingBalance ?? oldEntity.balance) + balanceDiff;
-
-      final updatedWallet = wallet.copyWith(
-        openingBalance: newOpeningBalance,
-      );
-
-      final model = WalletModel.fromEntity(updatedWallet);
+      // Entity OLDUĞU GİBİ yazılır. openingBalance burada yeniden
+      // hesaplanmaz: syncBalance tutarlı opening+balance çifti yazar ve
+      // buradaki bir kaydırma `balance = opening + Σtx` değişmezini bozup
+      // bakiyeyi her senkronda şişirir. Manuel bakiye düzenlemesinin
+      // opening kaydırması WalletBloc.UpdateWalletEvent'te yapılır.
+      final model = WalletModel.fromEntity(wallet);
       await dataSource.updateWallet(model);
       return const Right(null);
     } catch (e) {

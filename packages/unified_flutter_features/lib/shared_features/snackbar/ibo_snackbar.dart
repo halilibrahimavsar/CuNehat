@@ -235,7 +235,14 @@ class IboSnackbar {
         backgroundColor: Colors.transparent,
         duration: duration,
         behavior: behavior,
-        margin: resolvedStyle.margin,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.sizeOf(context).height -
+              MediaQuery.viewInsetsOf(context).bottom -
+              140,
+          left: 16,
+          right: 16,
+        ),
+        dismissDirection: DismissDirection.up,
         elevation: 0,
         action: action,
         showCloseIcon: resolvedStyle.showCloseIcon,

@@ -210,8 +210,6 @@ class TransactionCard extends StatelessWidget {
   }
 
   void _systemSnack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    IboSnackbar.showWarning(context, message);
   }
 }

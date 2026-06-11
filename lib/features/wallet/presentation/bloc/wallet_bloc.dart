@@ -126,7 +126,22 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
     // ========== CÜZDAN GÜNCELLE ==========
     on<UpdateWalletEvent>((event, emit) async {
-      final result = await updateWalletUseCase.call(event.wallet);
+      // Manuel bakiye düzenlemesi defter değişmezini (`balance = opening +
+      // Σtx`) bozmasın: bakiye farkı opening'e yansıtılır; böylece sonraki
+      // syncBalance kullanıcının düzeltmesini geri almaz.
+      var toWrite = event.wallet;
+      final current = state;
+      if (current is WalletLoadedSt) {
+        for (final old in current.wallets) {
+          if (old.id == event.wallet.id) {
+            final newOpening = (old.openingBalance ?? old.balance) +
+                (event.wallet.balance - old.balance);
+            toWrite = event.wallet.copyWith(openingBalance: newOpening);
+            break;
+          }
+        }
+      }
+      final result = await updateWalletUseCase.call(toWrite);
       result.fold(
         (failure) =>
             _emitError(emit, 'Cüzdan güncellenemedi: ${failure.message}'),

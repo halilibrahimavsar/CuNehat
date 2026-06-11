@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -41,28 +42,16 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       await context.read<AppAuthBloc>().updateDisplayName(name);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Profil ismi başarıyla güncellendi'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        IboSnackbar.showSuccess(
+          context,
+          'Profil ismi başarıyla güncellendi',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Hata oluştu: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        IboSnackbar.showError(
+          context,
+          'Hata oluştu: $e',
         );
       }
     } finally {

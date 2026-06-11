@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/services/google_drive_backup_service.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class GoogleDriveBackupCard extends StatefulWidget {
   const GoogleDriveBackupCard({super.key});
@@ -138,14 +139,15 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    if (color == Colors.green) {
+      IboSnackbar.showSuccess(context, message);
+    } else if (color == Colors.red) {
+      IboSnackbar.showError(context, message);
+    } else if (color == Colors.orange) {
+      IboSnackbar.showWarning(context, message);
+    } else {
+      IboSnackbar.showInfo(context, message);
+    }
   }
 
   @override

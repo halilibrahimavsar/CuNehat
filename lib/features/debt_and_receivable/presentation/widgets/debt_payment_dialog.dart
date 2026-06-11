@@ -66,7 +66,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       0.0,
       (sum, payment) => sum + payment.amount,
     );
-    final isPaid = totalPaid >= widget.debt.totalDebtAmount;
+    // Kuruş altı tolerans: kayan nokta birikimi son ödemede isPaid'i
+    // yanlışlıkla false bırakıp borcu 0,00 kalanla aktif listede tutmasın.
+    final isPaid = totalPaid >= widget.debt.totalDebtAmount - 0.005;
 
     // Güncellenmiş borcu oluştur
     final updatedDebt = widget.debt.copyWith(

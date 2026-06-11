@@ -134,6 +134,12 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
   /// Alacak ödendiğinde işaretle
   Future<void> _onMarkAsPaid(
       MarkReceivableAsPaidEvent event, Emitter<ReceivableState> emit) async {
+    // İdempotans: zaten tahsil edilmiş alacak ikinci kez işaretlenirse
+    // bakiyeye aynı tutar bir daha gelir olarak yazılırdı.
+    if (event.receivable.isPaid) {
+      add(GetReceivablesEvent(event.receivable.walletId));
+      return;
+    }
     emit(ReceivableLoading());
     final updatedReceivable = event.receivable.copyWith(isPaid: true);
     final result = await updateReceivableUseCase(updatedReceivable);
