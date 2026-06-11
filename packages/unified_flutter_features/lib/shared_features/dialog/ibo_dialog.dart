@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/texts/dialog_texts.dart';
 import '../common/ibo_glass_surface.dart';
 
@@ -113,30 +112,36 @@ class IboDialog {
       context,
       barrierDismissible: barrierDismissible,
       style: resolvedStyle,
-      child: _buildDialogBody(
-        title: title,
-        content: Text(
-          message,
-          style: resolvedStyle.contentStyle ??
-              TextStyle(
-                color: AppColors.onSurface.withValues(alpha: 0.9),
-                fontSize: 14,
-              ),
+      child: Builder(
+        builder: (context) => _buildDialogBody(
+          context: context,
+          title: title,
+          content: Text(
+            message,
+            style: resolvedStyle.contentStyle ??
+                TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.9),
+                  fontSize: 14,
+                ),
+          ),
+          icon: icon,
+          actions: [
+            TextButton(
+              style: resolvedStyle.cancelButtonStyle,
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(cancelText ?? texts.cancelText),
+            ),
+            TextButton(
+              style: resolvedStyle.confirmButtonStyle,
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmText ?? texts.confirmText),
+            ),
+          ],
+          style: resolvedStyle,
         ),
-        icon: icon,
-        actions: [
-          TextButton(
-            style: resolvedStyle.cancelButtonStyle,
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(cancelText ?? texts.cancelText),
-          ),
-          TextButton(
-            style: resolvedStyle.confirmButtonStyle,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmText ?? texts.confirmText),
-          ),
-        ],
-        style: resolvedStyle,
       ),
     );
   }
@@ -165,25 +170,31 @@ class IboDialog {
       context,
       barrierDismissible: barrierDismissible,
       style: resolvedStyle,
-      child: _buildDialogBody(
-        title: title,
-        content: Text(
-          message,
-          style: resolvedStyle.contentStyle ??
-              TextStyle(
-                color: AppColors.onSurface.withValues(alpha: 0.9),
-                fontSize: 14,
-              ),
-        ),
-        icon: icon,
-        actions: [
-          TextButton(
-            style: resolvedStyle.confirmButtonStyle,
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(closeText ?? texts.okText),
+      child: Builder(
+        builder: (context) => _buildDialogBody(
+          context: context,
+          title: title,
+          content: Text(
+            message,
+            style: resolvedStyle.contentStyle ??
+                TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.9),
+                  fontSize: 14,
+                ),
           ),
-        ],
-        style: resolvedStyle,
+          icon: icon,
+          actions: [
+            TextButton(
+              style: resolvedStyle.confirmButtonStyle,
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(closeText ?? texts.okText),
+            ),
+          ],
+          style: resolvedStyle,
+        ),
       ),
     );
   }
@@ -224,50 +235,63 @@ class IboDialog {
         context,
         barrierDismissible: true,
         style: resolvedStyle,
-        child: _buildDialogBody(
-          title: title,
-          icon: icon,
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: hintText,
-              filled: true,
-              fillColor: AppColors.surface.withValues(alpha: 0.12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.4),
+        child: Builder(
+          builder: (context) => _buildDialogBody(
+            context: context,
+            title: title,
+            icon: icon,
+            content: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: hintText,
+                filled: true,
+                fillColor: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.4),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.35),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.35),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.primary),
-              ),
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              obscureText: obscureText,
+              autofocus: true,
             ),
-            keyboardType: keyboardType,
-            maxLines: maxLines,
-            obscureText: obscureText,
-            autofocus: true,
+            actions: [
+              TextButton(
+                style: resolvedStyle.cancelButtonStyle,
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(cancelText ?? texts.cancelText),
+              ),
+              TextButton(
+                style: resolvedStyle.confirmButtonStyle,
+                onPressed: () => Navigator.of(context).pop(controller.text),
+                child: Text(confirmText ?? texts.confirmText),
+              ),
+            ],
+            style: resolvedStyle,
           ),
-          actions: [
-            TextButton(
-              style: resolvedStyle.cancelButtonStyle,
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(cancelText ?? texts.cancelText),
-            ),
-            TextButton(
-              style: resolvedStyle.confirmButtonStyle,
-              onPressed: () => Navigator.of(context).pop(controller.text),
-              child: Text(confirmText ?? texts.confirmText),
-            ),
-          ],
-          style: resolvedStyle,
         ),
       );
     } finally {
@@ -289,12 +313,15 @@ class IboDialog {
       context,
       barrierDismissible: barrierDismissible,
       style: resolvedStyle,
-      child: _buildDialogBody(
-        title: title,
-        icon: icon,
-        content: content,
-        actions: actions ?? const [],
-        style: resolvedStyle,
+      child: Builder(
+        builder: (context) => _buildDialogBody(
+          context: context,
+          title: title,
+          icon: icon,
+          content: content,
+          actions: actions ?? const [],
+          style: resolvedStyle,
+        ),
       ),
     );
   }
@@ -326,31 +353,37 @@ class IboDialog {
           _loadingDialogContext = dialogContext;
         },
         style: resolvedStyle,
-        child: _buildDialogBody(
-          title: null,
-          content: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message ?? texts.loadingMessage,
-                  style: resolvedStyle.contentStyle ??
-                      TextStyle(
-                        color: AppColors.onSurface.withValues(alpha: 0.9),
-                        fontSize: 14,
-                      ),
+        child: Builder(
+          builder: (context) => _buildDialogBody(
+            context: context,
+            title: null,
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message ?? texts.loadingMessage,
+                    style: resolvedStyle.contentStyle ??
+                        TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.9),
+                          fontSize: 14,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            actions: const [],
+            style: resolvedStyle,
           ),
-          actions: const [],
-          style: resolvedStyle,
         ),
       );
     } finally {
@@ -435,6 +468,7 @@ class IboDialog {
   }
 
   static Widget _buildDialogBody({
+    required BuildContext context,
     required Widget content,
     required List<Widget> actions,
     required IboDialogStyle style,
@@ -459,10 +493,10 @@ class IboDialog {
                   child: Text(
                     title,
                     style: style.titleStyle ??
-                        const TextStyle(
+                        TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.onSurface,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
                 ),
@@ -473,7 +507,10 @@ class IboDialog {
           child: DefaultTextStyle(
             style: style.contentStyle ??
                 TextStyle(
-                  color: AppColors.onSurface.withValues(alpha: 0.9),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.9),
                   fontSize: 14,
                 ),
             child: content,

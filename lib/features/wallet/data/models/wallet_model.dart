@@ -168,7 +168,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
     final isOldSchema = !fields.containsKey(9);
 
     final String? id = fields[0] is String ? fields[0] as String : null;
-    final String userId = fields[1] is String ? fields[1] as String : 'local_user';
+    final String userId =
+        fields[1] is String ? fields[1] as String : 'local_user';
     final String name = fields[2] is String ? fields[2] as String : '';
     final double balance = parseDouble(fields[3]);
 
@@ -188,7 +189,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       investment = 0.0;
       colorHex = fields[4] is String ? fields[4] as String : '0xFF2196F3';
       iconName = fields[5] is String ? fields[5] as String : 'wallet';
-      createdAt = fields[6] is DateTime ? fields[6] as DateTime : DateTime.now();
+      createdAt =
+          fields[6] is DateTime ? fields[6] as DateTime : DateTime.now();
       isActive = fields[7] is bool ? fields[7] as bool : false;
       sortOrder = fields[8] is int ? fields[8] as int : 0;
       openingBalance = null;
@@ -198,7 +200,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       investment = parseDouble(fields[6]);
       colorHex = fields[7] is String ? fields[7] as String : '0xFF2196F3';
       iconName = fields[8] is String ? fields[8] as String : 'wallet';
-      createdAt = fields[9] is DateTime ? fields[9] as DateTime : DateTime.now();
+      createdAt =
+          fields[9] is DateTime ? fields[9] as DateTime : DateTime.now();
       isActive = fields[10] is bool ? fields[10] as bool : false;
       sortOrder = fields[11] is int ? fields[11] as int : 0;
       openingBalance = fields[12] != null ? parseDouble(fields[12]) : null;

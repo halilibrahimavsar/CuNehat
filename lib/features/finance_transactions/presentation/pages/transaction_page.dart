@@ -104,9 +104,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
     // 0. Guard: cüzdan geçişi sırasında bloc state'i kısa süre ESKİ cüzdanın
     //    listesini taşıyabilir (TransactionLoading.previousTransactions).
     //    Yabancı cüzdan satırları yeni bakiyeye çapalanmasın.
-    final walletTransactions = allTransactions
-        .where((t) => t.walletId == widget.wallet.id)
-        .toList();
+    final walletTransactions =
+        allTransactions.where((t) => t.walletId == widget.wallet.id).toList();
 
     // 1. Tam geçmiş üzerinde running balance + tarih penceresi.
     final withBalance = buildLedgerView(
@@ -356,11 +355,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         accent.withValues(alpha: 0.04),
                       ],
                     ),
-                    border:
-                        Border.all(color: accent.withValues(alpha: 0.25), width: 1),
+                    border: Border.all(
+                        color: accent.withValues(alpha: 0.25), width: 1),
                   ),
-                  child: Icon(Icons.receipt_long_rounded,
-                      size: 42, color: accent),
+                  child:
+                      Icon(Icons.receipt_long_rounded, size: 42, color: accent),
                 ),
                 const SizedBox(height: 20),
                 Text(

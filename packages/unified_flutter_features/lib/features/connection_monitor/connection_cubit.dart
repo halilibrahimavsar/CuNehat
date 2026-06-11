@@ -120,7 +120,7 @@ class ConnectionCubit extends Cubit<ConnectionMonitorState> {
         case ConnectivityResult.vpn:
           types.add(texts.typeVpn);
           break;
-        // case ConnectivityResult.satellite:
+        case ConnectivityResult.satellite:
         case ConnectivityResult.other:
           types.add(texts.typeOther);
           break;

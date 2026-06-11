@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
+import 'package:unified_flutter_features/unified_flutter_features.dart';
+
 /// **Cüzdan Oluşturma/Düzenleme Dialog'unu Göster**
 ///
 /// [wallet] null ise → Yeni Cüzdan Oluştur
@@ -20,20 +22,18 @@ Future<void> showCreateEditDialog({
   required VoidCallback onSuccess,
   required Function(String error) onError,
 }) async {
-  await showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (dialogContext) {
-      return BlocProvider.value(
-        value: context.read<WalletBloc>(),
-        child: _WalletFormDialog(
-          userId: userId,
-          wallet: wallet,
-          onSuccess: onSuccess,
-          onError: onError,
-        ),
-      );
-    },
+  await IboDialog.showCustomDialog(
+    context,
+    title: wallet != null ? 'Cüzdanı Düzenle' : 'Yeni Cüzdan Ekle',
+    content: BlocProvider.value(
+      value: context.read<WalletBloc>(),
+      child: _WalletFormDialog(
+        userId: userId,
+        wallet: wallet,
+        onSuccess: onSuccess,
+        onError: onError,
+      ),
+    ),
   );
 }
 
@@ -104,11 +104,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   Widget build(BuildContext context) {
     return BlocListener<WalletBloc, WalletState>(
       listener: _handleBlocState,
-      child: AlertDialog(
-        title: Text(isEditMode ? 'Cüzdanı Düzenle' : 'Yeni Cüzdan Ekle'),
-        content: _buildForm(),
-        actions: _buildActions(),
-      ),
+      child: _buildForm(),
     );
   }
 
@@ -132,6 +128,11 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             _buildColorPicker(),
             const SizedBox(height: 16),
             _buildIconPicker(),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: _buildActions(),
+            ),
           ],
         ),
       ),
@@ -466,37 +467,35 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   void _showCustomColorPicker() {
     Color selectedColor = WalletColors.hexToColor(_selectedColorHex);
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Özel Renk Seçin'),
-        content: SingleChildScrollView(
-          child: ColorPicker(
-            pickerColor: selectedColor,
-            onColorChanged: (color) {
-              selectedColor = color;
-            },
-            enableAlpha: false,
-            displayThumbColor: true,
-            showLabel: true,
-            pickerAreaHeightPercent: 0.8,
-          ),
+    IboDialog.showCustomDialog(
+      context,
+      title: 'Özel Renk Seçin',
+      content: SingleChildScrollView(
+        child: ColorPicker(
+          pickerColor: selectedColor,
+          onColorChanged: (color) {
+            selectedColor = color;
+          },
+          enableAlpha: false,
+          displayThumbColor: true,
+          showLabel: true,
+          pickerAreaHeightPercent: 0.8,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() =>
-                  _selectedColorHex = WalletColors.colorToHex(selectedColor));
-              Navigator.pop(context);
-            },
-            child: const Text('Tamam'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('İptal'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() =>
+                _selectedColorHex = WalletColors.colorToHex(selectedColor));
+            Navigator.pop(context);
+          },
+          child: const Text('Tamam'),
+        ),
+      ],
     );
   }
 

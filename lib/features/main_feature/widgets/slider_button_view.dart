@@ -150,19 +150,17 @@ class SliderButtonView extends StatelessWidget {
   }
 
   void _showAddInvestmentDialog(BuildContext context, dynamic activeWallet) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AddInvestmentDialog(
-        userId: activeWallet.userId,
-        walletId: activeWallet.id!,
-        onSave: (investment) {
-          context.read<InvestmentBloc>().add(CreateInvestmentEvent(
-                investment: investment,
-                userId: activeWallet.userId,
-                walletId: activeWallet.id!,
-              ));
-        },
-      ),
+    AddInvestmentDialog.show(
+      context,
+      userId: activeWallet.userId,
+      walletId: activeWallet.id!,
+      onSave: (investment) {
+        context.read<InvestmentBloc>().add(CreateInvestmentEvent(
+              investment: investment,
+              userId: activeWallet.userId,
+              walletId: activeWallet.id!,
+            ));
+      },
     );
   }
 

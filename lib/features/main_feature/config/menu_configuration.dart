@@ -125,7 +125,6 @@ class MenuConfigs {
     ),
   };
 
-
   static Map<SliderState, MenuConfiguration> get allConfigs =>
       Map.unmodifiable(_configs);
 

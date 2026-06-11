@@ -4,6 +4,7 @@ import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class AddInvestmentDialog extends StatefulWidget {
   final String userId;
@@ -18,6 +19,25 @@ class AddInvestmentDialog extends StatefulWidget {
     required this.onSave,
     this.investmentToEdit,
   });
+
+  static Future<void> show(
+    BuildContext context, {
+    required String userId,
+    required String walletId,
+    required Function(InvestmentEntity) onSave,
+    InvestmentEntity? investmentToEdit,
+  }) {
+    return IboDialog.showCustomDialog<void>(
+      context,
+      title: investmentToEdit != null ? 'Yatırımı Düzenle' : 'Yeni Yatırım Ekle',
+      content: AddInvestmentDialog(
+        userId: userId,
+        walletId: walletId,
+        onSave: onSave,
+        investmentToEdit: investmentToEdit,
+      ),
+    );
+  }
 
   @override
   State<AddInvestmentDialog> createState() => _AddInvestmentDialogState();
@@ -224,325 +244,302 @@ class _AddInvestmentDialogState extends State<AddInvestmentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.investmentToEdit != null
-                      ? 'Yatırımı Düzenle'
-                      : 'Yeni Yatırım Ekle',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Yatırım Türü Seçimi
+            const Text(
+              'Yatırım Türü',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<InvestmentType>(
+              segments: const [
+                ButtonSegment<InvestmentType>(
+                  value: InvestmentType.stock,
+                  label: Text('Hisse'),
+                  icon: Icon(Icons.trending_up),
                 ),
-                const SizedBox(height: 24),
-
-                // Yatırım Türü Seçimi
-                const Text(
-                  'Yatırım Türü',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
+                ButtonSegment<InvestmentType>(
+                  value: InvestmentType.gold,
+                  label: Text('Altın'),
+                  icon: Icon(Icons.monetization_on),
                 ),
-                const SizedBox(height: 8),
-                SegmentedButton<InvestmentType>(
-                  segments: const [
-                    ButtonSegment<InvestmentType>(
-                      value: InvestmentType.stock,
-                      label: Text('Hisse'),
-                      icon: Icon(Icons.trending_up),
-                    ),
-                    ButtonSegment<InvestmentType>(
-                      value: InvestmentType.gold,
-                      label: Text('Altın'),
-                      icon: Icon(Icons.monetization_on),
-                    ),
-                    ButtonSegment<InvestmentType>(
-                      value: InvestmentType.custom,
-                      label: Text('Özel'),
-                      icon: Icon(Icons.account_balance_wallet),
-                    ),
-                  ],
-                  selected: {_selectedType},
-                  onSelectionChanged: (Set<InvestmentType> newSelection) {
-                    setState(() => _selectedType = newSelection.first);
-                    _resetForm();
-                  },
+                ButtonSegment<InvestmentType>(
+                  value: InvestmentType.custom,
+                  label: Text('Özel'),
+                  icon: Icon(Icons.account_balance_wallet),
                 ),
+              ],
+              selected: {_selectedType},
+              onSelectionChanged: (Set<InvestmentType> newSelection) {
+                setState(() => _selectedType = newSelection.first);
+                _resetForm();
+              },
+            ),
 
-                const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-                // İsim Alanı
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'İsim',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Lütfen bir isim girin';
-                    }
-                    return null;
-                  },
-                ),
+            // İsim Alanı
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'İsim',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Lütfen bir isim girin';
+                }
+                return null;
+              },
+            ),
 
-                const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-                // Sembol (Sadece hisse senedi için)
-                if (_selectedType == InvestmentType.stock)
-                  Column(
-                    children: [
-                      RawAutocomplete<String>(
-                        textEditingController: _symbolController,
-                        focusNode: _symbolFocusNode,
-                        optionsBuilder: (TextEditingValue textEditingValue) {
-                          return _searchStockSymbols(textEditingValue.text);
-                        },
-                        onSelected: (String selection) {
-                          // Seçilen değeri direkt controller'a yazıyoruz
-                          _symbolController.text = selection;
-                        },
-                        fieldViewBuilder: (BuildContext context,
-                            TextEditingController textEditingController,
-                            FocusNode focusNode,
-                            VoidCallback onFieldSubmitted) {
-                          return TextFormField(
-                            controller: textEditingController,
-                            focusNode: focusNode,
-                            decoration: const InputDecoration(
-                              labelText: 'Sembol (Örn: AAPL, THYAO.IS)',
-                              border: OutlineInputBorder(),
-                              suffixIcon: Icon(Icons.search),
-                            ),
-                            onFieldSubmitted: (String value) {
-                              onFieldSubmitted();
-                            },
-                          );
-                        },
-                        optionsViewBuilder: (BuildContext context,
-                            AutocompleteOnSelected<String> onSelected,
-                            Iterable<String> options) {
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Material(
-                              elevation: 4.0,
-                              child: SizedBox(
-                                height: 200.0,
-                                width: 250.0,
-                                child: ListView.builder(
-                                  padding: const EdgeInsets.all(8.0),
-                                  itemCount: options.length,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    final String option =
-                                        options.elementAt(index);
-                                    return ListTile(
-                                      title: Text(option),
-                                      onTap: () {
-                                        onSelected(option);
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-
-                // Altın Türü Seçimi
-                if (_selectedType == InvestmentType.gold)
-                  Column(
-                    children: [
-                      DropdownButtonFormField<String>(
-                        value: _selectedGoldType,
+            // Sembol (Sadece hisse senedi için)
+            if (_selectedType == InvestmentType.stock)
+              Column(
+                children: [
+                  RawAutocomplete<String>(
+                    textEditingController: _symbolController,
+                    focusNode: _symbolFocusNode,
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      return _searchStockSymbols(textEditingValue.text);
+                    },
+                    onSelected: (String selection) {
+                      // Seçilen değeri direkt controller'a yazıyoruz
+                      _symbolController.text = selection;
+                    },
+                    fieldViewBuilder: (BuildContext context,
+                        TextEditingController textEditingController,
+                        FocusNode focusNode,
+                        VoidCallback onFieldSubmitted) {
+                      return TextFormField(
+                        controller: textEditingController,
+                        focusNode: focusNode,
                         decoration: const InputDecoration(
-                          labelText: 'Altın Türü',
+                          labelText: 'Sembol (Örn: AAPL, THYAO.IS)',
                           border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.search),
                         ),
-                        items: _goldTypes.entries.map((e) {
-                          return DropdownMenuItem(
-                            value: e.key,
-                            child: Text(e.value),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _selectedGoldType = value);
-                          }
+                        onFieldSubmitted: (String value) {
+                          onFieldSubmitted();
                         },
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                      );
+                    },
+                    optionsViewBuilder: (BuildContext context,
+                        AutocompleteOnSelected<String> onSelected,
+                        Iterable<String> options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4.0,
+                          child: SizedBox(
+                            height: 200.0,
+                            width: 250.0,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(8.0),
+                              itemCount: options.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final String option = options.elementAt(index);
+                                return ListTile(
+                                  title: Text(option),
+                                  onTap: () {
+                                    onSelected(option);
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
+                  const SizedBox(height: 16),
+                ],
+              ),
 
-                // Adet ve Otomatik Hesaplama
-                if (_selectedType != InvestmentType.custom)
-                  Column(
+            // Altın Türü Seçimi
+            if (_selectedType == InvestmentType.gold)
+              Column(
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: _selectedGoldType,
+                    decoration: const InputDecoration(
+                      labelText: 'Altın Türü',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _goldTypes.entries.map((e) {
+                      return DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedGoldType = value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+
+            // Adet ve Otomatik Hesaplama
+            if (_selectedType != InvestmentType.custom)
+              Column(
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _quantityController,
-                              decoration: const InputDecoration(
-                                labelText: 'Adet',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                      decimal: true),
-                            ),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _quantityController,
+                          decoration: const InputDecoration(
+                            labelText: 'Adet',
+                            border: OutlineInputBorder(),
                           ),
-                          const SizedBox(width: 12),
-                          ElevatedButton.icon(
-                            onPressed: _isLoading ? null : _fetchLivePrice,
-                            icon: _isLoading
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2, color: Colors.white))
-                                : const Icon(Icons.refresh,
-                                    color: Colors.white),
-                            label: const Text('Hesapla',
-                                style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_fetchedPriceMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(_fetchedPriceMessage!,
-                              style: TextStyle(
-                                  color: _fetchedPriceColor,
-                                  fontWeight: FontWeight.bold)),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                         ),
-                      const SizedBox(height: 16),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _fetchLivePrice,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.refresh, color: Colors.white),
+                        label: const Text('Hesapla',
+                            style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 16),
+                        ),
+                      ),
                     ],
                   ),
-
-                // Yatırım Miktarı
-                TextFormField(
-                  controller: _amountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Yatırım Miktarı (₺)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Lütfen miktar girin';
-                    }
-                    return validateAmount(value);
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Mevcut Değer
-                TextFormField(
-                  controller: _currentValueController,
-                  decoration: const InputDecoration(
-                    labelText: 'Mevcut Değer (₺)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Lütfen mevcut değeri girin';
-                    }
-                    return validateAmount(value, allowZero: true);
-                  },
-                ),
-
-                const SizedBox(height: 24),
-
-                // Renk Seçimi
-                const Text(
-                  'Renk Seçin',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: _colorOptions.map((color) {
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: _selectedColor == color
-                              ? Border.all(color: Colors.black, width: 3)
-                              : null,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Butonlar
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text('İptal'),
-                      ),
+                  if (_fetchedPriceMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(_fetchedPriceMessage!,
+                          style: TextStyle(
+                              color: _fetchedPriceColor,
+                              fontWeight: FontWeight.bold)),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          widget.investmentToEdit != null ? 'Güncelle' : 'Ekle',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+
+            // Yatırım Miktarı
+            TextFormField(
+              controller: _amountController,
+              decoration: const InputDecoration(
+                labelText: 'Yatırım Miktarı (₺)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Lütfen miktar girin';
+                }
+                return validateAmount(value);
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // Mevcut Değer
+            TextFormField(
+              controller: _currentValueController,
+              decoration: const InputDecoration(
+                labelText: 'Mevcut Değer (₺)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Lütfen mevcut değeri girin';
+                }
+                return validateAmount(value, allowZero: true);
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            // Renk Seçimi
+            const Text(
+              'Renk Seçin',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: _colorOptions.map((color) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedColor = color;
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: _selectedColor == color
+                          ? Border.all(color: Colors.black, width: 3)
+                          : null,
                     ),
-                  ],
+                  ),
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Butonlar
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('İptal'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      widget.investmentToEdit != null ? 'Güncelle' : 'Ekle',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );

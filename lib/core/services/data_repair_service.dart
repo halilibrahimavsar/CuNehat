@@ -56,7 +56,8 @@ class DataRepairService {
 
       Future<void> repairBox<T>(
         String boxName,
-        ({dynamic key, String userId, String walletId}) Function(dynamic key, T m)
+        ({dynamic key, String userId, String walletId}) Function(
+                dynamic key, T m)
             describe,
         T Function(T m, String userId) rewrite,
       ) async {

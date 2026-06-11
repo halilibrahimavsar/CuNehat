@@ -248,7 +248,8 @@ class GoogleDriveBackupService {
         categories[entry.key] = entry.value as String;
       }
     } catch (e, st) {
-      debugPrint('GoogleDriveBackupService.restore download/parse error: $e\n$st');
+      debugPrint(
+          'GoogleDriveBackupService.restore download/parse error: $e\n$st');
       return false;
     }
 

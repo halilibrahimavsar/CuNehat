@@ -72,7 +72,8 @@ class WalletMetricsService {
       final addResult = await transactionsRepository.addTransaction(tx);
       final added = addResult.fold(
         (failure) {
-          debugPrint('recordCashMovement: işlem yazılamadı: ${failure.message}');
+          debugPrint(
+              'recordCashMovement: işlem yazılamadı: ${failure.message}');
           return false;
         },
         (_) => true,
@@ -120,7 +121,8 @@ class WalletMetricsService {
             final newBalance = opening + txSum;
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
-            if (wallet.openingBalance != null && (wallet.balance - newBalance).abs() < 0.001) {
+            if (wallet.openingBalance != null &&
+                (wallet.balance - newBalance).abs() < 0.001) {
               return true;
             }
 
@@ -158,15 +160,14 @@ class WalletMetricsService {
   Future<void> syncDebt(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
     await result.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (wallet) async {
         if (wallet == null) return;
 
         final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
         await debtsResult.fold(
           (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+              debugPrint('WalletMetricsService: ${failure.message}'),
           (debts) async {
             final totalDebt = debts
                 .where((debt) => !debt.isPaid)
@@ -185,8 +186,7 @@ class WalletMetricsService {
   Future<void> syncCredit(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
     await result.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (wallet) async {
         if (wallet == null) return;
 
@@ -195,7 +195,7 @@ class WalletMetricsService {
 
         await receivablesResult.fold(
           (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+              debugPrint('WalletMetricsService: ${failure.message}'),
           (receivables) async {
             final totalCredit = receivables
                 .where((r) => !r.isPaid)
@@ -214,8 +214,7 @@ class WalletMetricsService {
   Future<void> syncInvestment(String walletId) async {
     final result = await walletRepository.getWalletById(walletId);
     await result.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (wallet) async {
         if (wallet == null) return;
 
@@ -248,8 +247,7 @@ class WalletMetricsService {
       walletId: walletId,
     );
     await txsResult.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (txs) async {
         for (final t in txs) {
           if (t.id != null) {
@@ -261,8 +259,7 @@ class WalletMetricsService {
 
     final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
     await debtsResult.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (debts) async {
         for (final d in debts) {
           if (d.id != null) await debtRepository.deleteDebt(d.id!);
@@ -273,8 +270,7 @@ class WalletMetricsService {
     final receivablesResult =
         await receivableRepository.getReceivablesByWalletId(walletId);
     await receivablesResult.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (receivables) async {
         for (final r in receivables) {
           if (r.id != null) await receivableRepository.deleteReceivable(r.id!);
@@ -287,8 +283,7 @@ class WalletMetricsService {
       walletId: walletId,
     );
     await invResult.fold(
-      (failure) async =>
-          debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (investments) async {
         for (final inv in investments) {
           if (inv.id != null) {

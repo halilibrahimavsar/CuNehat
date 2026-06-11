@@ -23,31 +23,29 @@ class InvestmentMoneyPage extends StatefulWidget {
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   /// true → sat (nakit gelir işlenir), false → yalnız kaydı sil, null → vazgeç.
   Future<bool?> _askDeleteMode(InvestmentEntity investment) {
-    return showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('${investment.name} kaldırılsın mı?'),
-        content: Text(
-          'Sat: Güncel değer (${formatMoney(investment.currentValue)}) '
-          'cüzdana gelir olarak işlenir.\n\n'
-          'Kaydı Sil: Nakit etkisi olmaz; geçmiş alım işlemleri korunur '
-          '(hatalı girişler için).',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Vazgeç'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Kaydı Sil'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Sat'),
-          ),
-        ],
+    return IboDialog.showCustomDialog<bool>(
+      context,
+      title: '${investment.name} kaldırılsın mı?',
+      content: Text(
+        'Sat: Güncel değer (${formatMoney(investment.currentValue)}) '
+        'cüzdana gelir olarak işlenir.\n\n'
+        'Kaydı Sil: Nakit etkisi olmaz; geçmiş alım işlemleri korunur '
+        '(hatalı girişler için).',
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Vazgeç'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Kaydı Sil'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Sat'),
+        ),
+      ],
     );
   }
 
@@ -166,26 +164,22 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                   return await _deleteInvestment(investment);
                                 },
                                 onEdit: (item) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AddInvestmentDialog(
-                                      userId: investment.userId,
-                                      walletId: investment.walletId,
-                                      investmentToEdit: item,
-                                      onSave: (updatedInvestment) {
-                                        context
-                                            .read<InvestmentBloc>()
-                                            .add(UpdateInvestmentEvent(
-                                              investment: updatedInvestment,
-                                              userId:
-                                                  widget.activeWallet.userId,
-                                              walletId: widget.activeWallet.id!,
-                                              prevAmount: item.amount,
-                                              newAmount:
-                                                  updatedInvestment.amount,
-                                            ));
-                                      },
-                                    ),
+                                  AddInvestmentDialog.show(
+                                    context,
+                                    userId: investment.userId,
+                                    walletId: investment.walletId,
+                                    investmentToEdit: item,
+                                    onSave: (updatedInvestment) {
+                                      context
+                                          .read<InvestmentBloc>()
+                                          .add(UpdateInvestmentEvent(
+                                            investment: updatedInvestment,
+                                            userId: widget.activeWallet.userId,
+                                            walletId: widget.activeWallet.id!,
+                                            prevAmount: item.amount,
+                                            newAmount: updatedInvestment.amount,
+                                          ));
+                                    },
                                   );
                                 },
                                 child: InvestmentCard(

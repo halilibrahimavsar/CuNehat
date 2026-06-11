@@ -75,7 +75,8 @@ class _TransactionListSkeletonState extends State<TransactionListSkeleton>
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(color: _bone(context), shape: BoxShape.circle),
+            decoration:
+                BoxDecoration(color: _bone(context), shape: BoxShape.circle),
           ),
           const SizedBox(width: 12),
           Column(
@@ -97,7 +98,8 @@ class _TransactionListSkeletonState extends State<TransactionListSkeleton>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(

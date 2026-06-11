@@ -25,7 +25,8 @@ class DebtHistoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<DebtBloc>()..add(GetDebtsEvent(walletId))),
+        BlocProvider(
+            create: (_) => getIt<DebtBloc>()..add(GetDebtsEvent(walletId))),
         BlocProvider(
             create: (_) =>
                 getIt<ReceivableBloc>()..add(GetReceivablesEvent(walletId))),
@@ -139,8 +140,9 @@ class _ReceivableHistoryTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final receivables =
-            state is ReceivableLoaded ? state.receivables : <ReceivableEntity>[];
+        final receivables = state is ReceivableLoaded
+            ? state.receivables
+            : <ReceivableEntity>[];
         final paidReceivables = receivables.where((r) => r.isPaid).toList();
 
         if (paidReceivables.isEmpty) {

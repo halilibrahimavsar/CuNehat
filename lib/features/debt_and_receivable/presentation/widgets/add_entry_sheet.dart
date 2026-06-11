@@ -210,7 +210,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final cs = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
           color: cs.surface,
@@ -453,8 +454,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child:
-                  Divider(height: 1, color: _accent.withValues(alpha: 0.20)),
+              child: Divider(height: 1, color: _accent.withValues(alpha: 0.20)),
             ),
             _summaryRow(
               'Toplam faiz',
@@ -534,8 +534,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(meta.$2,
-                    size: 17,
-                    color: selected ? _accent : cs.onSurfaceVariant),
+                    size: 17, color: selected ? _accent : cs.onSurfaceVariant),
                 const SizedBox(width: 7),
                 Text(
                   meta.$1,
@@ -692,8 +691,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      textCapitalization:
-          keyboardType == null ? TextCapitalization.sentences : TextCapitalization.none,
+      textCapitalization: keyboardType == null
+          ? TextCapitalization.sentences
+          : TextCapitalization.none,
       onChanged: (_) => _clearError(),
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
@@ -706,8 +706,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         isDense: dense,
         filled: true,
         fillColor: cs.onSurface.withValues(alpha: 0.04),
-        contentPadding: EdgeInsets.symmetric(
-            horizontal: 14, vertical: dense ? 12 : 16),
+        contentPadding:
+            EdgeInsets.symmetric(horizontal: 14, vertical: dense ? 12 : 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,

@@ -31,7 +31,8 @@ class TransactionHeader extends StatelessWidget {
     final mutedColor =
         isDark ? Colors.white54 : theme.colorScheme.onSurfaceVariant;
 
-    final expenseColor = isDark ? Colors.redAccent.shade100 : Colors.red.shade600;
+    final expenseColor =
+        isDark ? Colors.redAccent.shade100 : Colors.red.shade600;
     final incomeColor =
         isDark ? Colors.greenAccent.shade400 : Colors.green.shade700;
 
@@ -51,11 +52,14 @@ class TransactionHeader extends StatelessWidget {
 
     final netBalance = totalIncome - totalExpense;
 
-    final hasActiveFilters = currentFilter?.dataFilter.hasActiveFilters ?? false;
+    final hasActiveFilters =
+        currentFilter?.dataFilter.hasActiveFilters ?? false;
     final String netStatusLabel =
         hasActiveFilters ? 'FİLTRELENEN NET DURUM' : 'NET DURUM';
     final String singleModeLabel = hasActiveFilters
-        ? (mode == FinanceMode.income ? 'FİLTRELENEN GELİR' : 'FİLTRELENEN GİDER')
+        ? (mode == FinanceMode.income
+            ? 'FİLTRELENEN GELİR'
+            : 'FİLTRELENEN GİDER')
         : (mode == FinanceMode.income ? 'TOPLAM GELİR' : 'TOPLAM GİDER');
     final String transactionCountLabel =
         hasActiveFilters ? 'Filtrelenen İşlem' : 'İşlem';
@@ -108,7 +112,8 @@ class TransactionHeader extends StatelessWidget {
             _buildNetRow(
               label: singleModeLabel,
               amount: mode == FinanceMode.income ? totalIncome : totalExpense,
-              amountColor: mode == FinanceMode.income ? incomeColor : expenseColor,
+              amountColor:
+                  mode == FinanceMode.income ? incomeColor : expenseColor,
               labelColor: labelColor,
               mutedColor: mutedColor,
               count: filteredTransactions.length,

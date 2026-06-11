@@ -103,8 +103,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
     // Savunma: sistem işlemleri (borç/yatırım kuplajı) bloc üzerinden
     // değiştirilemez; defterle desync olmasın.
-    if (event.newTransaction.isSystem ||
-        event.previousTransaction.isSystem) {
+    if (event.newTransaction.isSystem || event.previousTransaction.isSystem) {
       emit(TransactionError(
         'Sistem işlemi; ilgili kayıttan yönetilir',
         transactions: currentData,

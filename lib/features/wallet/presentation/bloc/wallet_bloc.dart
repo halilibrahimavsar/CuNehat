@@ -210,9 +210,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   }
 
   void _safeSyncBalance(String walletId) {
-    walletMetricsService
-        .syncBalance(walletId)
-        .catchError((Object e) {
+    walletMetricsService.syncBalance(walletId).catchError((Object e) {
       debugPrint('Açılış bakiye senkronizasyonu başarısız: $e');
       return false;
     });

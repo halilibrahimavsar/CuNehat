@@ -122,7 +122,9 @@ class SingleTransactionDetailPage extends StatelessWidget {
               child: Column(
                 children: [
                   _infoRow(context,
-                      icon: Icons.sell_rounded, label: 'Kategori', value: t.tag),
+                      icon: Icons.sell_rounded,
+                      label: 'Kategori',
+                      value: t.tag),
                   _divider(scheme),
                   _infoRow(context,
                       icon: Icons.event_rounded,

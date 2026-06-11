@@ -94,27 +94,16 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
   }
 
   Future<void> _restore() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Verileri Geri Yükle?'),
-        content: const Text(
-          'Buluttaki verileriniz cihazınızdaki mevcut verilerin üzerine yazılacaktır. Bu işlem geri alınamaz.',
+    final confirm = await IboDialog.showConfirmation(
+      context,
+      'Verileri Geri Yükle?',
+      'Buluttaki verileriniz cihazınızdaki mevcut verilerin üzerine yazılacaktır. Bu işlem geri alınamaz.',
+      confirmText: 'Geri Yükle',
+      cancelText: 'İptal',
+      style: IboDialogStyle(
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.error,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Geri Yükle'),
-          ),
-        ],
       ),
     );
 

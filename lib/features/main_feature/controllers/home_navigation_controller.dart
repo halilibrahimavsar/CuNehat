@@ -75,7 +75,6 @@ class HomeNavigationController extends ChangeNotifier {
     await _viewStack.navigateTo(viewIndex);
   }
 
-
   /// Close all subviews and return to main
   ///
   /// Seçim hatırlama yok ("unut" davranışı): ana görünüme dönüldüğünde

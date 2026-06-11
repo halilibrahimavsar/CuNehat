@@ -128,8 +128,7 @@ class _DetailedListViewState extends State<DetailedListView> {
                   context: context,
                   item: row.item,
                   isListView: true,
-                  categoryIcon:
-                      widget.categoryIcons[row.item.transaction.tag],
+                  categoryIcon: widget.categoryIcons[row.item.transaction.tag],
                 ),
                 if (row.dayEndBalance != null)
                   _buildDayEndBalance(context, row.dayEndBalance!),
@@ -161,9 +160,7 @@ class _DetailedListViewState extends State<DetailedListView> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: balance >= 0
-                  ? scheme.onSurfaceVariant
-                  : AppGradients.debt,
+              color: balance >= 0 ? scheme.onSurfaceVariant : AppGradients.debt,
             ),
           ),
         ],

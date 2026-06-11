@@ -350,11 +350,19 @@ void main() {
       wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
 
       await service.recordCashMovement(
-          walletId: 'w', userId: 'u', amount: 40, isIncome: true,
-          title: 'a', tag: 't');
+          walletId: 'w',
+          userId: 'u',
+          amount: 40,
+          isIncome: true,
+          title: 'a',
+          tag: 't');
       await service.recordCashMovement(
-          walletId: 'w', userId: 'u', amount: 15, isIncome: false,
-          title: 'b', tag: 't');
+          walletId: 'w',
+          userId: 'u',
+          amount: 15,
+          isIncome: false,
+          title: 'b',
+          tag: 't');
 
       expect(wallets.store['w']!.balance, 125); // 100 + 40 - 15
       // İşlem silinince yeniden hesap silmeyi de yansıtır.

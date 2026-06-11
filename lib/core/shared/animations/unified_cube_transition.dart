@@ -241,7 +241,6 @@ class VerticalListTransitionManager extends ChangeNotifier {
     await _controller.forward(from: 0.0);
   }
 
-
   /// Build the current transition
   Widget buildTransition({bool useFade = true}) {
     // Safety check: ensure views list is populated and indices are valid

@@ -1,24 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class WalletInfoDialog {
   static Future<void> show(BuildContext context) {
-    return showDialog(
-      context: context,
-      builder: (context) => const _WalletInfoDialogContent(),
-    );
-  }
-}
-
-class _WalletInfoDialogContent extends StatelessWidget {
-  const _WalletInfoDialogContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text(
-        'Cüzdan Yönetimi',
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
+    return IboDialog.showCustomDialog(
+      context,
+      title: 'Cüzdan Yönetimi',
       content: const Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

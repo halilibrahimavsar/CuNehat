@@ -353,27 +353,17 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
   }
 
   Future<bool> _confirmDelete(CategoryEntity category) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Kategori Sil'),
-        content: Text(
-          '"${category.id}" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
+    final confirmed = await IboDialog.showConfirmation(
+      context,
+      'Kategori Sil',
+      '"${category.id}" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
+      confirmText: 'Sil',
+      cancelText: 'İptal',
+      style: IboDialogStyle(
+        confirmButtonStyle: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Sil'),
-          ),
-        ],
       ),
     );
 
