@@ -2,7 +2,9 @@ import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_en
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
-import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
 import 'package:cunehat/features/main_feature/config/menu_configuration.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
@@ -89,6 +91,9 @@ class SliderButtonView extends StatelessWidget {
       'add_expense' => Colors.red,
       'add_debt' => Colors.red,
       'add_receivable' => Colors.green,
+      'add_gold_investment' => Colors.amber,
+      'add_stock_investment' => Colors.blue,
+      'add_custom_investment' => Colors.purple,
       _ => Colors.green,
     };
   }
@@ -129,8 +134,14 @@ class SliderButtonView extends StatelessWidget {
   void _handleAction(
       String actionType, BuildContext context, dynamic activeWallet) {
     switch (actionType) {
-      case 'add_investment':
-        _showAddInvestmentDialog(context, activeWallet);
+      case 'add_gold_investment':
+        _showAddGoldSheet(context, activeWallet);
+        break;
+      case 'add_stock_investment':
+        _showAddStockSheet(context, activeWallet);
+        break;
+      case 'add_custom_investment':
+        _showAddCustomSheet(context, activeWallet);
         break;
       case 'add_income':
         _showTransactionSheet(
@@ -149,8 +160,38 @@ class SliderButtonView extends StatelessWidget {
     }
   }
 
-  void _showAddInvestmentDialog(BuildContext context, dynamic activeWallet) {
-    AddInvestmentDialog.show(
+  void _showAddGoldSheet(BuildContext context, dynamic activeWallet) {
+    AddGoldSheet.show(
+      context,
+      userId: activeWallet.userId,
+      walletId: activeWallet.id!,
+      onSave: (investment) {
+        context.read<InvestmentBloc>().add(CreateInvestmentEvent(
+              investment: investment,
+              userId: activeWallet.userId,
+              walletId: activeWallet.id!,
+            ));
+      },
+    );
+  }
+
+  void _showAddStockSheet(BuildContext context, dynamic activeWallet) {
+    AddStockSheet.show(
+      context,
+      userId: activeWallet.userId,
+      walletId: activeWallet.id!,
+      onSave: (investment) {
+        context.read<InvestmentBloc>().add(CreateInvestmentEvent(
+              investment: investment,
+              userId: activeWallet.userId,
+              walletId: activeWallet.id!,
+            ));
+      },
+    );
+  }
+
+  void _showAddCustomSheet(BuildContext context, dynamic activeWallet) {
+    AddCustomSheet.show(
       context,
       userId: activeWallet.userId,
       walletId: activeWallet.id!,

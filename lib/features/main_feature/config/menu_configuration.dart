@@ -56,9 +56,19 @@ class MenuConfigs {
       sliderState: SliderState.savedMoney,
       miniButtons: [
         MiniButtonConfig(
-          label: 'Yatırım',
-          icon: Icons.savings,
-          actionType: 'add_investment',
+          label: 'Altın',
+          icon: Icons.monetization_on,
+          actionType: 'add_gold_investment',
+        ),
+        MiniButtonConfig(
+          label: 'Hisse',
+          icon: Icons.trending_up,
+          actionType: 'add_stock_investment',
+        ),
+        MiniButtonConfig(
+          label: 'Özel',
+          icon: Icons.account_balance_wallet,
+          actionType: 'add_custom_investment',
         ),
       ],
       subMenus: [

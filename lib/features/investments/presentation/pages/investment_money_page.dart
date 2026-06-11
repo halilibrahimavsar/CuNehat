@@ -7,7 +7,9 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_car
 import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/investments/presentation/widgets/add_investment_dialog.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -164,23 +166,47 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                   return await _deleteInvestment(investment);
                                 },
                                 onEdit: (item) {
-                                  AddInvestmentDialog.show(
-                                    context,
-                                    userId: investment.userId,
-                                    walletId: investment.walletId,
-                                    investmentToEdit: item,
-                                    onSave: (updatedInvestment) {
-                                      context
-                                          .read<InvestmentBloc>()
-                                          .add(UpdateInvestmentEvent(
-                                            investment: updatedInvestment,
-                                            userId: widget.activeWallet.userId,
-                                            walletId: widget.activeWallet.id!,
-                                            prevAmount: item.amount,
-                                            newAmount: updatedInvestment.amount,
-                                          ));
-                                    },
-                                  );
+                                  void onSave(InvestmentEntity updatedInvestment) {
+                                    context
+                                        .read<InvestmentBloc>()
+                                        .add(UpdateInvestmentEvent(
+                                          investment: updatedInvestment,
+                                          userId: widget.activeWallet.userId,
+                                          walletId: widget.activeWallet.id!,
+                                          prevAmount: item.amount,
+                                          newAmount: updatedInvestment.amount,
+                                        ));
+                                  }
+
+                                  switch (item.type) {
+                                    case InvestmentType.gold:
+                                      AddGoldSheet.show(
+                                        context,
+                                        userId: investment.userId,
+                                        walletId: investment.walletId,
+                                        investmentToEdit: item,
+                                        onSave: onSave,
+                                      );
+                                      break;
+                                    case InvestmentType.stock:
+                                      AddStockSheet.show(
+                                        context,
+                                        userId: investment.userId,
+                                        walletId: investment.walletId,
+                                        investmentToEdit: item,
+                                        onSave: onSave,
+                                      );
+                                      break;
+                                    case InvestmentType.custom:
+                                      AddCustomSheet.show(
+                                        context,
+                                        userId: investment.userId,
+                                        walletId: investment.walletId,
+                                        investmentToEdit: item,
+                                        onSave: onSave,
+                                      );
+                                      break;
+                                  }
                                 },
                                 child: InvestmentCard(
                                   investment: investment,
