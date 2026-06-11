@@ -10,6 +10,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
+import 'package:cunehat/core/services/csv_service.dart' as _i530;
 import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
     as _i186;
@@ -100,6 +101,8 @@ import 'package:cunehat/features/recurring_transactions/domain/usecases/save_rec
     as _i424;
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart'
     as _i494;
+import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart'
+    as _i407;
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart'
     as _i460;
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart'
@@ -150,6 +153,7 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i175.WalletLocalDataSource());
     gh.lazySingleton<_i186.GoogleDriveBackupService>(
         () => _i186.GoogleDriveBackupService());
+    gh.lazySingleton<_i530.CsvService>(() => _i530.CsvService());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
@@ -222,6 +226,11 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i207.WalletGetActiveUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletGetByIdUseCase>(
         () => _i207.WalletGetByIdUseCase(gh<_i254.WalletRepository>()));
+    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
+          csvService: gh<_i530.CsvService>(),
+          transactionsRepository: gh<_i543.TransactionsRepository>(),
+          walletRepository: gh<_i254.WalletRepository>(),
+        ));
     gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
         () => _i29.InvestmentRemoteDataSourceImpl(client: gh<_i519.Client>()));
     gh.lazySingleton<_i94.BudgetRepository>(

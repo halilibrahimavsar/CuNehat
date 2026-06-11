@@ -6,6 +6,7 @@ import 'package:cunehat/features/settings/presentation/widgets/settings_header.d
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
 import 'package:cunehat/features/settings/presentation/widgets/user_profile_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/google_drive_backup_card.dart';
+import 'package:cunehat/features/settings/presentation/widgets/data_export_import_card.dart';
 
 /// Main settings page, styled with premium, theme-aware AppCards.
 class SettingsPage extends StatelessWidget {
@@ -70,9 +71,11 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   const SecuritySettingsCard(),
                   const SizedBox(height: 24),
-                  const SettingsHeader(title: 'VERİ YEDEKLEME'),
+                  const SettingsHeader(title: 'VERİ YEDEKLEME / AKTARIM'),
                   const SizedBox(height: 8),
                   const GoogleDriveBackupCard(),
+                  const SizedBox(height: 16),
+                  const DataExportImportCard(),
                   const SizedBox(height: 24),
                   const SettingsHeader(title: 'HAKKINDA'),
                   const SizedBox(height: 8),

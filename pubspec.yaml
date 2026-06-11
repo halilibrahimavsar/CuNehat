@@ -90,6 +90,9 @@ dependencies:
   unified_flutter_features:
     path: packages/unified_flutter_features
   confetti: ^0.8.0
+  csv: ^6.0.0
+  share_plus: ^12.0.2
+  file_picker: ^11.0.2
 
   # firebase_bloc_auth:
   #   path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth
