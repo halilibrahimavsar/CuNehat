@@ -123,7 +123,7 @@ class SliderKnob extends StatelessWidget {
             // Carousel (if has sub menu)
             if (hasSubMenu)
               Positioned.fill(
-                child: _buildCarousel(carouselItems),
+                child: _buildCarousel(context, carouselItems),
               ),
           ],
         ),
@@ -150,25 +150,26 @@ class SliderKnob extends StatelessWidget {
     );
   }
 
-  Widget _buildCarousel(List<SubMenuItem> items) {
+  Widget _buildCarousel(BuildContext context, List<SubMenuItem> items) {
     return Opacity(
       opacity: transitionProgress,
       child: Transform.scale(
         scale: 0.5 + (0.5 * transitionProgress),
         child: ShaderMask(
           shaderCallback: (rect) {
+            final onSurface = Theme.of(context).colorScheme.onSurface;
             return LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.white.withValues(alpha: 0.3),
-                Colors.white.withValues(alpha: 0.3),
+                onSurface.withValues(alpha: 0.6),
+                onSurface.withValues(alpha: 0.6),
                 Colors.white,
                 Colors.white,
-                Colors.white.withValues(alpha: 0.3),
-                Colors.white.withValues(alpha: 0.3),
+                onSurface.withValues(alpha: 0.6),
+                onSurface.withValues(alpha: 0.6),
               ],
-              stops: const [0.0, 0.35, 0.42, 0.58, 0.65, 1.0],
+              stops: const [0.0, 0.30, 0.42, 0.58, 0.70, 1.0],
             ).createShader(rect);
           },
           blendMode: BlendMode.srcIn,

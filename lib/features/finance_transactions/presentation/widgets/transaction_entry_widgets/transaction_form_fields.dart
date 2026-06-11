@@ -98,7 +98,9 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       id: _isEdit ? widget.initialTransaction!.id : null,
       userId: widget.userId,
       walletId: widget.walletId,
-      title: _c.titleController.text.trim(),
+      title: _c.titleController.text.trim().isEmpty
+          ? _c.categoryId.value ?? 'İşlem'
+          : _c.titleController.text.trim(),
       tag: _c.categoryId.value!,
       amount: _c.parsedAmount!,
       date: when,
@@ -213,7 +215,7 @@ class _TitleField extends StatelessWidget {
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         counterText: '',
-        hintText: 'Başlık · örn. Market alışverişi',
+        hintText: 'Not (İsteğe bağlı) · örn. Market alışverişi',
         prefixIcon: Icon(Icons.edit_note_rounded,
             color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
         filled: true,

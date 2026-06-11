@@ -171,7 +171,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   }
 
   String? _validate() {
-    if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
+    // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
     if (_parsedAmount == null) return 'Geçerli bir yatırım miktarı girin';
     if (_parsedCurrentValue == null) return 'Geçerli bir mevcut değer girin';
     return null;
@@ -189,7 +189,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       id: widget.investmentToEdit?.id ?? UidGenerator.generateV7(),
       userId: widget.userId,
       walletId: widget.walletId,
-      name: _nameController.text.trim(),
+      name: _nameController.text.trim().isEmpty
+          ? 'Altın Yatırımı'
+          : _nameController.text.trim(),
       amount: _parsedAmount!,
       currentValue: _parsedCurrentValue!,
       type: InvestmentType.gold,
@@ -243,8 +245,8 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       const SizedBox(height: 10),
                       _filledField(
                         controller: _nameController,
-                        hint: 'İsim · örn. Düğün Altınları',
-                        icon: Icons.title_rounded,
+                        hint: 'Not (İsteğe bağlı) · örn. Düğün Altınları',
+                        icon: Icons.notes_rounded,
                         cs: cs,
                       ),
                       const SizedBox(height: 14),

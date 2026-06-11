@@ -189,7 +189,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
   }
 
   String? _validate() {
-    if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
+    // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
     if (_parsedAmount == null) return 'Geçerli bir yatırım miktarı girin';
     if (_parsedCurrentValue == null) return 'Geçerli bir mevcut değer girin';
     return null;
@@ -211,7 +211,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
       id: widget.investmentToEdit?.id ?? UidGenerator.generateV7(),
       userId: widget.userId,
       walletId: widget.walletId,
-      name: _nameController.text.trim(),
+      name: _nameController.text.trim().isEmpty
+          ? 'Hisse Yatırımı'
+          : _nameController.text.trim(),
       amount: _parsedAmount!,
       currentValue: _parsedCurrentValue!,
       type: InvestmentType.stock,
@@ -265,8 +267,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       const SizedBox(height: 10),
                       _filledField(
                         controller: _nameController,
-                        hint: 'İsim · örn. Apple, THYAO',
-                        icon: Icons.title_rounded,
+                        hint: 'Not (İsteğe bağlı) · örn. Uzun vade alım',
+                        icon: Icons.notes_rounded,
                         cs: cs,
                       ),
                       const SizedBox(height: 14),

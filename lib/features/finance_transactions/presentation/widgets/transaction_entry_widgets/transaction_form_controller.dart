@@ -61,7 +61,7 @@ class TransactionFormController {
 
   /// Geçerliyse `null`, değilse hata mesajını döndürür.
   String? validate() {
-    if (titleController.text.trim().isEmpty) return 'Başlık girin';
+    // Not (title) zorunluluğu kaldırıldı
     final amountError = validateAmount(amountController.text);
     if (amountError != null) return amountError;
     if (categoryId.value == null) return 'Bir kategori seçin';

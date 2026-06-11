@@ -23,12 +23,12 @@ class SliderConfig {
   static const miniButtonSpread = 0.9;
 
   // Arrow positioning
-  static const arrowOffsetHorizontal = 14.0;
-  static const arrowOffsetUp = 18.0;
-  static const arrowOffsetDown = 16.0;
-  static const arrowSize = 12.0;
-  static const arrowSizeVertical = 22.0;
-  static const arrowAlpha = 0.6;
+  static const arrowOffsetHorizontal = 18.0;
+  static const arrowOffsetUp = 20.0;
+  static const arrowOffsetDown = 18.0;
+  static const arrowSize = 18.0;
+  static const arrowSizeVertical = 28.0;
+  static const arrowAlpha = 0.95;
 
   // Plus icon
   static const plusIconWidth = 30.0;
