@@ -20,6 +20,8 @@ import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/notifications/notification_service.dart';
 
 /// HomePage with vertical list navigation
 ///
@@ -53,6 +55,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _loadWallets();
     // Bekleyen işlemleri yükle
     context.read<PendingRecurringBloc>().add(LoadPendingTransactionsEvent());
+    
+    // Bildirim izinlerini iste
+    _requestNotificationPermissions();
+  }
+
+  Future<void> _requestNotificationPermissions() async {
+    try {
+      await getIt<NotificationService>().requestPermissions();
+    } catch (e) {
+      debugPrint('Failed to request notification permissions: $e');
+    }
   }
 
   /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in

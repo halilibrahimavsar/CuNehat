@@ -10,6 +10,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
+import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
 import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
@@ -123,6 +124,8 @@ import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart'
     as _i207;
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart'
     as _i827;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as _i163;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:http/http.dart' as _i519;
 import 'package:injectable/injectable.dart' as _i526;
@@ -166,6 +169,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
+    gh.lazySingleton<_i163.FlutterLocalNotificationsPlugin>(
+        () => appModule.flutterLocalNotificationsPlugin);
     gh.lazySingleton<_i777.TransactionsChangedNotifier>(
       () => _i777.TransactionsChangedNotifier(),
       dispose: (i) => i.dispose(),
@@ -197,8 +202,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i543.TransactionsRepository>(() =>
         _i510.TransactionRepositoryImpl(
             localDatasource: gh<_i934.TransactionHiveDataSource>()));
-    gh.factory<_i257.AddTransactionUseCase>(
-        () => _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
+    gh.lazySingleton<_i551.NotificationService>(() =>
+        _i551.NotificationServiceImpl(
+            gh<_i163.FlutterLocalNotificationsPlugin>()));
     gh.factory<_i257.DeleteTransactionUseCase>(() =>
         _i257.DeleteTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.GetTransactionsGroupedUseCase>(() =>
@@ -212,12 +218,6 @@ extension GetItInjectableX on _i174.GetIt {
         _i257.GetTransactionByIdUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i855.GetDebtsUseCase>(
         () => _i855.GetDebtsUseCase(gh<_i889.DebtRepository>()));
-    gh.factory<_i855.AddDebtUseCase>(
-        () => _i855.AddDebtUseCase(gh<_i889.DebtRepository>()));
-    gh.factory<_i855.UpdateDebtUseCase>(
-        () => _i855.UpdateDebtUseCase(gh<_i889.DebtRepository>()));
-    gh.factory<_i855.DeleteDebtUseCase>(
-        () => _i855.DeleteDebtUseCase(gh<_i889.DebtRepository>()));
     gh.factory<_i698.LocalAuthLoginBloc>(
         () => appModule.localAuthLoginBloc(gh<_i698.LocalAuthRepository>()));
     gh.factory<_i698.LocalAuthSettingsBloc>(
@@ -249,14 +249,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i788.RecurringTransactionRepository>(() =>
         _i1054.RecurringTransactionRepositoryImpl(
             gh<_i648.RecurringTransactionLocalDataSource>()));
-    gh.factory<_i424.SaveRecurringTransactionUsecase>(() =>
-        _i424.SaveRecurringTransactionUsecase(
-            gh<_i788.RecurringTransactionRepository>()));
     gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
         _i162.GetPendingRecurringTransactionsUsecase(
-            gh<_i788.RecurringTransactionRepository>()));
-    gh.factory<_i817.DeleteRecurringTransactionUsecase>(() =>
-        _i817.DeleteRecurringTransactionUsecase(
             gh<_i788.RecurringTransactionRepository>()));
     gh.factory<_i21.GetBudgetsUsecase>(() => _i21.GetBudgetsUsecase(
           gh<_i94.BudgetRepository>(),
@@ -271,6 +265,18 @@ extension GetItInjectableX on _i174.GetIt {
               localDataSource: gh<_i648.InvestmentLocalDatasource>(),
               remoteDataSource: gh<_i29.InvestmentRemoteDataSource>(),
             ));
+    gh.factory<_i855.AddDebtUseCase>(() => _i855.AddDebtUseCase(
+          gh<_i889.DebtRepository>(),
+          gh<_i551.NotificationService>(),
+        ));
+    gh.factory<_i855.UpdateDebtUseCase>(() => _i855.UpdateDebtUseCase(
+          gh<_i889.DebtRepository>(),
+          gh<_i551.NotificationService>(),
+        ));
+    gh.factory<_i855.DeleteDebtUseCase>(() => _i855.DeleteDebtUseCase(
+          gh<_i889.DebtRepository>(),
+          gh<_i551.NotificationService>(),
+        ));
     gh.factory<_i818.AddInvestmentUseCase>(
         () => _i818.AddInvestmentUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i318.DeleteInvestmentUseCase>(
@@ -292,6 +298,21 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i613.SaveBudgetUsecase>(),
           gh<_i691.DeleteBudgetUsecase>(),
           gh<_i777.TransactionsChangedNotifier>(),
+        ));
+    gh.factory<_i424.SaveRecurringTransactionUsecase>(
+        () => _i424.SaveRecurringTransactionUsecase(
+              gh<_i788.RecurringTransactionRepository>(),
+              gh<_i551.NotificationService>(),
+            ));
+    gh.factory<_i817.DeleteRecurringTransactionUsecase>(
+        () => _i817.DeleteRecurringTransactionUsecase(
+              gh<_i788.RecurringTransactionRepository>(),
+              gh<_i551.NotificationService>(),
+            ));
+    gh.factory<_i257.AddTransactionUseCase>(() => _i257.AddTransactionUseCase(
+          gh<_i543.TransactionsRepository>(),
+          gh<_i94.BudgetRepository>(),
+          gh<_i551.NotificationService>(),
         ));
     gh.lazySingleton<_i239.WalletMetricsService>(() =>
         _i239.WalletMetricsService(

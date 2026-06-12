@@ -93,6 +93,8 @@ dependencies:
   csv: ^6.0.0
   share_plus: ^12.0.2
   file_picker: ^11.0.2
+  timezone: ^0.9.4
+  flutter_local_notifications: ^17.2.4
 
   # firebase_bloc_auth:
   #   path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth

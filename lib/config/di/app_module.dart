@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 
@@ -48,4 +49,7 @@ abstract class AppModule {
 
   @lazySingleton
   http.Client get httpClient => http.Client();
+
+  @lazySingleton
+  FlutterLocalNotificationsPlugin get flutterLocalNotificationsPlugin => FlutterLocalNotificationsPlugin();
 }

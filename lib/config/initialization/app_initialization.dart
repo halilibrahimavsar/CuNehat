@@ -7,6 +7,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/services/data_repair_service.dart';
+import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -39,6 +40,9 @@ class AppInitialization {
       if (!getIt.isRegistered<AppAuthBloc>()) {
         await configureDependencies();
       }
+
+      // Initialize NotificationService
+      await getIt<NotificationService>().initialize();
 
       // Kendi-kendini onarım: yanlış userId'li kayıtları cüzdan sahibine
       // çeker (idempotent; hata açılışı bloklamaz — servis içinde yutulur).
