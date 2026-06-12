@@ -72,7 +72,7 @@ class InvestmentEntity extends Equatable {
 
   double get targetProgress {
     if (targetAmount == null || targetAmount! <= 0) return 0.0;
-    return currentValue / targetAmount!;
+    return (currentValue / targetAmount!).clamp(0.0, 1.0);
   }
 
   bool get isTargetReached =>

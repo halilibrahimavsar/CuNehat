@@ -52,52 +52,56 @@ class CsvService {
     );
 
     if (result != null && result.files.single.path != null) {
-      final input = File(result.files.single.path!).openRead();
-      final fields = await input
-          .transform(const Utf8Decoder())
-          .transform(const CsvToListConverter())
-          .toList();
+      try {
+        final input = File(result.files.single.path!).openRead();
+        final fields = await input
+            .transform(const Utf8Decoder(allowMalformed: true))
+            .transform(const CsvToListConverter())
+            .toList();
 
-      if (fields.isEmpty) return null;
+        if (fields.isEmpty) return null;
 
-      // Skip header
-      List<TransactionEntity> importedTransactions = [];
-      for (int i = 1; i < fields.length; i++) {
-        final row = fields[i];
-        if (row.length < 6) continue;
+        // Skip header
+        List<TransactionEntity> importedTransactions = [];
+        for (int i = 1; i < fields.length; i++) {
+          final row = fields[i];
+          if (row.length < 6) continue;
 
-        try {
-          final title = row[0].toString();
-          final tag = row[1].toString();
-          final amount = double.tryParse(row[2].toString()) ?? 0.0;
-          final date = DateTime.tryParse(row[3].toString()) ?? DateTime.now();
-          final typeStr = row[4].toString();
-          final isSystemStr = row[5].toString().toLowerCase();
+          try {
+            final title = row[0].toString();
+            final tag = row[1].toString();
+            final amount = double.tryParse(row[2].toString()) ?? 0.0;
+            final date = DateTime.tryParse(row[3].toString()) ?? DateTime.now();
+            final typeStr = row[4].toString();
+            final isSystemStr = row[5].toString().toLowerCase();
 
-          final type = typeStr == 'income'
-              ? TransactionTypeModel.income
-              : TransactionTypeModel.expense;
-          final isSystem = isSystemStr == 'true';
+            final type = typeStr == 'income'
+                ? TransactionTypeModel.income
+                : TransactionTypeModel.expense;
+            final isSystem = isSystemStr == 'true';
 
-          importedTransactions.add(
-            TransactionEntity(
-              id: _uuid.v4(),
-              userId: userId,
-              walletId: '', // Bu daha sonra Cüzdan ID ile güncellenecek
-              title: title,
-              tag: tag,
-              amount: amount,
-              date: date,
-              type: type,
-              isSystem: isSystem,
-            ),
-          );
-        } catch (e) {
-          // ignore parsing error for a row
+            importedTransactions.add(
+              TransactionEntity(
+                id: _uuid.v4(),
+                userId: userId,
+                walletId: '', // Bu daha sonra Cüzdan ID ile güncellenecek
+                title: title,
+                tag: tag,
+                amount: amount,
+                date: date,
+                type: type,
+                isSystem: isSystem,
+              ),
+            );
+          } catch (e) {
+            // ignore parsing error for a row
+          }
         }
-      }
 
-      return importedTransactions;
+        return importedTransactions;
+      } catch (e) {
+        throw Exception("Dosya okunamadı veya format hatalı: $e");
+      }
     }
     return null;
   }

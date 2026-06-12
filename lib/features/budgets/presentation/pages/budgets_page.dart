@@ -9,13 +9,24 @@ import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+
 class BudgetsPage extends StatelessWidget {
   const BudgetsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.read<AppAuthBloc>().state;
+    final userId = authState is AppAuthenticated ? authState.user.uid : '';
+    
+    final walletState = context.read<WalletBloc>().state;
+    final walletId = walletState is WalletLoadedSt && walletState.wallets.isNotEmpty 
+        ? (walletState.activeWallet?.id ?? walletState.wallets.first.id!) 
+        : '';
+
     return BlocProvider(
-      create: (context) => getIt<BudgetsBloc>()..add(LoadBudgetsEvent()),
+      create: (context) => getIt<BudgetsBloc>()..add(LoadBudgetsEvent(userId: userId, walletId: walletId)),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Bütçe Planlama'),
@@ -70,21 +81,60 @@ class _BudgetListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Burada harcanan miktarı işlem deposundan çekip hesaplamak gerekir.
-    // Şimdilik sadece bütçe limitini gösteriyoruz.
     return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        title: Text(budget.categoryId), // Kategori ID aynı zamanda isim.
-        subtitle: Text(
-            'Aylık Limit: ${AppFormatters.currency.format(budget.limitAmount)}'),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () {
-            context
-                .read<BudgetsBloc>()
-                .add(DeleteBudgetEvent(budget.categoryId));
-          },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    budget.categoryId,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    context
+                        .read<BudgetsBloc>()
+                        .add(DeleteBudgetEvent(budget.categoryId));
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Harcanan: ${AppFormatters.currency.format(budget.spentAmount)}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: budget.isExceeded ? Colors.red : null,
+                    fontWeight: budget.isExceeded ? FontWeight.bold : null,
+                  ),
+                ),
+                Text(
+                  'Limit: ${AppFormatters.currency.format(budget.limitAmount)}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: budget.progress,
+              backgroundColor: Colors.grey.shade200,
+              color: budget.isExceeded ? Colors.red : Colors.green,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ],
         ),
       ),
     );
@@ -96,57 +146,107 @@ class _AddBudgetButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
-        _showAddBudgetDialog(context);
+        showDialog(
+          context: context,
+          builder: (ctx) => _AddBudgetDialog(bloc: context.read<BudgetsBloc>()),
+        );
       },
       child: const Icon(Icons.add),
     );
   }
+}
 
-  void _showAddBudgetDialog(BuildContext context) {
-    final bloc = context.read<BudgetsBloc>();
-    String categoryName = '';
-    double limit = 0;
+class _AddBudgetDialog extends StatefulWidget {
+  final BudgetsBloc bloc;
+  const _AddBudgetDialog({required this.bloc});
 
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Yeni Bütçe Ekle'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(labelText: 'Kategori Adı'),
-                onChanged: (val) => categoryName = val,
+  @override
+  State<_AddBudgetDialog> createState() => _AddBudgetDialogState();
+}
+
+class _AddBudgetDialogState extends State<_AddBudgetDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _categoryController = TextEditingController();
+  final _limitController = TextEditingController();
+
+  @override
+  void dispose() {
+    _categoryController.dispose();
+    _limitController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (_formKey.currentState!.validate()) {
+      final categoryName = _categoryController.text.trim();
+      final limitStr = _limitController.text.trim().replaceAll(',', '.');
+      final limit = double.tryParse(limitStr) ?? 0;
+
+      if (limit > 0) {
+        widget.bloc.add(SaveBudgetEvent(BudgetEntity(
+          categoryId: categoryName,
+          limitAmount: limit,
+        )));
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Yeni Bütçe Ekle'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _categoryController,
+              decoration: const InputDecoration(
+                labelText: 'Kategori Adı',
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Aylık Limit'),
-                keyboardType: TextInputType.number,
-                onChanged: (val) => limit = double.tryParse(val) ?? 0,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('İptal'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (categoryName.isNotEmpty && limit > 0) {
-                  bloc.add(SaveBudgetEvent(BudgetEntity(
-                    categoryId: categoryName,
-                    limitAmount: limit,
-                  )));
-                  Navigator.pop(ctx);
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Kategori adı boş olamaz';
                 }
+                return null;
               },
-              child: const Text('Kaydet'),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _limitController,
+              decoration: const InputDecoration(
+                labelText: 'Aylık Limit',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Tutar boş olamaz';
+                }
+                final parsedStr = value.replaceAll(',', '.');
+                final parsed = double.tryParse(parsedStr);
+                if (parsed == null || parsed <= 0) {
+                  return 'Geçerli bir tutar girin';
+                }
+                return null;
+              },
             ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('İptal'),
+        ),
+        FilledButton(
+          onPressed: _save,
+          child: const Text('Kaydet'),
+        ),
+      ],
     );
   }
 }

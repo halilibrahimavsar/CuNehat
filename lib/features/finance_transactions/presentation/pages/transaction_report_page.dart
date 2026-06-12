@@ -207,18 +207,40 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     if (categoryData.isEmpty) {
       return AppCard(
         section: AppSection.transactions,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 8),
-              Text(
-                '$title için veri yok',
-                style: TextStyle(color: scheme.onSurfaceVariant),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  formatMoney(0),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Icon(Icons.pie_chart_outline_rounded,
+                size: 48, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
+            const SizedBox(height: 12),
+            Text(
+              '$title için veri yok',
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       );
     }
@@ -655,7 +677,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       23,
       59,
       59,
-      447, // .999 instead of 447, actually just 59 seconds is enough.
+      999,
     );
 
     return transactions

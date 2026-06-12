@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../bloc/pending_recurring_bloc.dart';
 import '../bloc/pending_recurring_event.dart';
 import '../bloc/pending_recurring_state.dart';
+import '../../domain/entities/recurring_transaction_entity.dart';
 
 class PendingRecurringDialog extends StatelessWidget {
   const PendingRecurringDialog({super.key});
@@ -63,19 +64,37 @@ class PendingRecurringDialog extends StatelessWidget {
                           title: Text(tx.title),
                           subtitle:
                               Text('Tarih: $dateStr\nTutar: ${tx.amount}'),
-                          trailing: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                            onPressed: () {
-                              context
-                                  .read<PendingRecurringBloc>()
-                                  .add(ApproveTransactionEvent(tx));
-                            },
-                            child: const Text('Onayla'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () {
+                                  context.read<PendingRecurringBloc>().add(
+                                      DeleteTransactionEvent(tx.id));
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+                                onPressed: () {
+                                  _showEditDialog(context, tx);
+                                },
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: () {
+                                  context
+                                      .read<PendingRecurringBloc>()
+                                      .add(ApproveTransactionEvent(tx));
+                                },
+                                child: const Text('Onayla'),
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -95,4 +114,38 @@ class PendingRecurringDialog extends StatelessWidget {
       },
     );
   }
+}
+
+void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
+  final bloc = context.read<PendingRecurringBloc>();
+  final amountController = TextEditingController(text: tx.amount.toString());
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('İşlemi Düzenle'),
+      content: TextField(
+        controller: amountController,
+        decoration: const InputDecoration(labelText: 'Yeni Tutar'),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('İptal'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final val = amountController.text.replaceAll(',', '.');
+            final newAmount = double.tryParse(val) ?? tx.amount;
+            if (newAmount > 0) {
+              final updatedTemplate = tx.copyWith(amount: newAmount);
+              bloc.add(ApproveTransactionEvent(updatedTemplate));
+              Navigator.pop(ctx);
+            }
+          },
+          child: const Text('Kaydet ve Onayla'),
+        ),
+      ],
+    ),
+  );
 }

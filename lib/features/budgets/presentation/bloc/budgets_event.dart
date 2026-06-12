@@ -8,7 +8,15 @@ abstract class BudgetsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadBudgetsEvent extends BudgetsEvent {}
+class LoadBudgetsEvent extends BudgetsEvent {
+  final String userId;
+  final String walletId;
+
+  const LoadBudgetsEvent({required this.userId, required this.walletId});
+
+  @override
+  List<Object?> get props => [userId, walletId];
+}
 
 class SaveBudgetEvent extends BudgetsEvent {
   final BudgetEntity budget;

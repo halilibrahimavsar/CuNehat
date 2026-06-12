@@ -29,3 +29,12 @@ class SkipTransactionEvent extends PendingRecurringEvent {
   @override
   List<Object?> get props => [template];
 }
+
+class DeleteTransactionEvent extends PendingRecurringEvent {
+  final String id;
+
+  const DeleteTransactionEvent(this.id);
+
+  @override
+  List<Object?> get props => [id];
+}

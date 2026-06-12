@@ -22,12 +22,17 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     on<DeleteBudgetEvent>(_onDeleteBudget);
   }
 
+  String? _currentUserId;
+  String? _currentWalletId;
+
   Future<void> _onLoadBudgets(
     LoadBudgetsEvent event,
     Emitter<BudgetsState> emit,
   ) async {
+    _currentUserId = event.userId;
+    _currentWalletId = event.walletId;
     emit(BudgetsLoading());
-    final result = await _getBudgetsUsecase();
+    final result = await _getBudgetsUsecase(event.userId, event.walletId);
     result.fold(
       (failure) => emit(BudgetsError(failure)),
       (budgets) => emit(BudgetsLoaded(budgets)),
@@ -43,7 +48,12 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
       (failure) => emit(BudgetsError(failure)),
       (_) {
         // Yeniden yükle
-        add(LoadBudgetsEvent());
+        if (_currentUserId != null && _currentWalletId != null) {
+          add(LoadBudgetsEvent(
+            userId: _currentUserId!,
+            walletId: _currentWalletId!,
+          ));
+        }
       },
     );
   }
@@ -56,7 +66,12 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     result.fold(
       (failure) => emit(BudgetsError(failure)),
       (_) {
-        add(LoadBudgetsEvent());
+        if (_currentUserId != null && _currentWalletId != null) {
+          add(LoadBudgetsEvent(
+            userId: _currentUserId!,
+            walletId: _currentWalletId!,
+          ));
+        }
       },
     );
   }

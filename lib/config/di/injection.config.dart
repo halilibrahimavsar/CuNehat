@@ -251,8 +251,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i817.DeleteRecurringTransactionUsecase>(() =>
         _i817.DeleteRecurringTransactionUsecase(
             gh<_i788.RecurringTransactionRepository>()));
-    gh.factory<_i21.GetBudgetsUsecase>(
-        () => _i21.GetBudgetsUsecase(gh<_i94.BudgetRepository>()));
+    gh.factory<_i21.GetBudgetsUsecase>(() => _i21.GetBudgetsUsecase(
+          gh<_i94.BudgetRepository>(),
+          gh<_i543.TransactionsRepository>(),
+        ));
     gh.factory<_i613.SaveBudgetUsecase>(
         () => _i613.SaveBudgetUsecase(gh<_i94.BudgetRepository>()));
     gh.factory<_i691.DeleteBudgetUsecase>(
@@ -290,10 +292,6 @@ extension GetItInjectableX on _i174.GetIt {
             ));
     gh.lazySingleton<_i816.DataRepairService>(
         () => _i816.DataRepairService(gh<_i239.WalletMetricsService>()));
-    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
-          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
-          gh<_i854.ApproveRecurringTransactionUsecase>(),
-        ));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(
           getTransactionsGroupedUseCase:
               gh<_i257.GetTransactionsGroupedUseCase>(),
@@ -318,6 +316,11 @@ extension GetItInjectableX on _i174.GetIt {
           updateInvestmentUseCase: gh<_i420.UpdateInvestmentUseCase>(),
           deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
+        ));
+    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
+          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
+          gh<_i854.ApproveRecurringTransactionUsecase>(),
+          gh<_i817.DeleteRecurringTransactionUsecase>(),
         ));
     gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
           getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
