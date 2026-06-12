@@ -80,6 +80,16 @@ class PendingRecurringDialog extends StatelessWidget {
                                   _showEditDialog(context, tx);
                                 },
                               ),
+                              IconButton(
+                                icon: const Icon(Icons.skip_next_outlined,
+                                    color: Colors.orange),
+                                tooltip: 'Bu vadeyi atla',
+                                onPressed: () {
+                                  context
+                                      .read<PendingRecurringBloc>()
+                                      .add(SkipTransactionEvent(tx));
+                                },
+                              ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,

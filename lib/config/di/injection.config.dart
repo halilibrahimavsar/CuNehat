@@ -97,10 +97,14 @@ import 'package:cunehat/features/recurring_transactions/domain/usecases/approve_
     as _i854;
 import 'package:cunehat/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart'
     as _i817;
+import 'package:cunehat/features/recurring_transactions/domain/usecases/get_all_recurring_templates_usecase.dart'
+    as _i547;
 import 'package:cunehat/features/recurring_transactions/domain/usecases/get_pending_recurring_transactions_usecase.dart'
     as _i162;
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart'
     as _i424;
+import 'package:cunehat/features/recurring_transactions/domain/usecases/skip_recurring_transaction_usecase.dart'
+    as _i111;
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart'
     as _i494;
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart'
@@ -273,6 +277,12 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i864.GetInvestmentsUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i420.UpdateInvestmentUseCase>(
         () => _i420.UpdateInvestmentUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i111.SkipRecurringTransactionUsecase>(() =>
+        _i111.SkipRecurringTransactionUsecase(
+            gh<_i788.RecurringTransactionRepository>()));
+    gh.factory<_i547.GetAllRecurringTemplatesUsecase>(() =>
+        _i547.GetAllRecurringTemplatesUsecase(
+            gh<_i788.RecurringTransactionRepository>()));
     gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
           gh<_i21.GetBudgetsUsecase>(),
           gh<_i613.SaveBudgetUsecase>(),
@@ -310,13 +320,6 @@ extension GetItInjectableX on _i174.GetIt {
           deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
-    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
-          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
-          gh<_i854.ApproveRecurringTransactionUsecase>(),
-          gh<_i817.DeleteRecurringTransactionUsecase>(),
-          gh<_i239.WalletMetricsService>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-        ));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(
           getTransactionsGroupedUseCase:
               gh<_i257.GetTransactionsGroupedUseCase>(),
@@ -333,6 +336,14 @@ extension GetItInjectableX on _i174.GetIt {
           updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
           deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
+        ));
+    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
+          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
+          gh<_i854.ApproveRecurringTransactionUsecase>(),
+          gh<_i817.DeleteRecurringTransactionUsecase>(),
+          gh<_i111.SkipRecurringTransactionUsecase>(),
+          gh<_i239.WalletMetricsService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
         ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),

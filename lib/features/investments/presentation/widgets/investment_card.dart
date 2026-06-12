@@ -172,7 +172,7 @@ class InvestmentCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Hedef: \${currencyFormat.format(investment.targetAmount)}',
+                        'Hedef: ${currencyFormat.format(investment.targetAmount)}',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -180,7 +180,7 @@ class InvestmentCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '\${(investment.targetProgress * 100).toStringAsFixed(1)}%',
+                        '${(investment.targetProgress * 100).toStringAsFixed(1)}%',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,

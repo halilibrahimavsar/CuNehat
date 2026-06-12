@@ -670,18 +670,16 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       _range.start.month,
       _range.start.day,
     );
-    final end = DateTime(
+    // Gün sonu yerine "ertesi gün 00:00'dan önce": 23:59:59.999'dan sonraki
+    // mikrosaniyeli kayıtlar da bitiş gününe dahil kalır.
+    final endExclusive = DateTime(
       _range.end.year,
       _range.end.month,
-      _range.end.day,
-      23,
-      59,
-      59,
-      999,
+      _range.end.day + 1,
     );
 
     return transactions
-        .where((t) => !t.date.isBefore(start) && !t.date.isAfter(end))
+        .where((t) => !t.date.isBefore(start) && t.date.isBefore(endExclusive))
         .toList();
   }
 

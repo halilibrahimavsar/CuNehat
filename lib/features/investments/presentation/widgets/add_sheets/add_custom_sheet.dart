@@ -105,8 +105,16 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
 
   String? _validate() {
     // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
-    if (_parsedAmount == null) return 'Geçerli bir yatırım miktarı girin';
-    if (_parsedCurrentValue == null) return 'Geçerli bir mevcut değer girin';
+    if (_parsedAmount == null || _parsedAmount! <= 0) {
+      return 'Geçerli bir yatırım miktarı girin';
+    }
+    if (_parsedCurrentValue == null || _parsedCurrentValue! < 0) {
+      return 'Geçerli bir mevcut değer girin';
+    }
+    if (_targetAmountController.text.trim().isNotEmpty &&
+        (_parsedTargetAmount == null || _parsedTargetAmount! <= 0)) {
+      return 'Geçerli bir hedef tutar girin';
+    }
     return null;
   }
 

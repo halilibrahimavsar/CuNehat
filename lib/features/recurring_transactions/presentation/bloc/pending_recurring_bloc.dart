@@ -7,6 +7,7 @@ import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import '../../domain/usecases/get_pending_recurring_transactions_usecase.dart';
 import '../../domain/usecases/approve_recurring_transaction_usecase.dart';
 import '../../domain/usecases/delete_recurring_transaction_usecase.dart';
+import '../../domain/usecases/skip_recurring_transaction_usecase.dart';
 import 'pending_recurring_event.dart';
 import 'pending_recurring_state.dart';
 
@@ -16,6 +17,7 @@ class PendingRecurringBloc
   final GetPendingRecurringTransactionsUsecase getPendingUsecase;
   final ApproveRecurringTransactionUsecase approveUsecase;
   final DeleteRecurringTransactionUsecase deleteUsecase;
+  final SkipRecurringTransactionUsecase skipUsecase;
   final WalletMetricsService walletMetricsService;
   final TransactionsChangedNotifier transactionsChangedNotifier;
 
@@ -23,11 +25,13 @@ class PendingRecurringBloc
     this.getPendingUsecase,
     this.approveUsecase,
     this.deleteUsecase,
+    this.skipUsecase,
     this.walletMetricsService,
     this.transactionsChangedNotifier,
   ) : super(PendingRecurringInitial()) {
     on<LoadPendingTransactionsEvent>(_onLoadPendingTransactions);
     on<ApproveTransactionEvent>(_onApproveTransaction);
+    on<SkipTransactionEvent>(_onSkipTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
   }
 
@@ -64,6 +68,20 @@ class PendingRecurringBloc
         // Açık liste/grafik/bütçe ekranları yeni işlemi görsün
         transactionsChangedNotifier.notify();
         // İşlem onaylandığında listeden çıkması için tekrar load eventini tetikle
+        add(LoadPendingTransactionsEvent());
+      },
+    );
+  }
+
+  Future<void> _onSkipTransaction(
+    SkipTransactionEvent event,
+    Emitter<PendingRecurringState> emit,
+  ) async {
+    final result = await skipUsecase(event.template);
+    result.fold(
+      (failure) => emit(PendingRecurringFailure(failure)),
+      (_) {
+        // İşlem yaratılmadığı için bakiye/defter değişmez; sadece listeyi tazele
         add(LoadPendingTransactionsEvent());
       },
     );

@@ -12,6 +12,7 @@ import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
 import 'package:cunehat/features/settings/presentation/page/profile_settings_page.dart';
 import 'package:cunehat/features/budgets/presentation/pages/budgets_page.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/pages/recurring_templates_page.dart';
 
 GoRouter createAppRouter(AppAuthBloc authBloc) {
   return GoRouter(
@@ -68,6 +69,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           return CubeInTransition(
             key: state.pageKey,
             child: const BudgetsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.recurringTemplates,
+        pageBuilder: (context, state) {
+          return CubeInTransition(
+            key: state.pageKey,
+            child: const RecurringTemplatesPage(),
           );
         },
       ),

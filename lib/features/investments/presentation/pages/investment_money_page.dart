@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -99,6 +100,67 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       return true;
     }
     return false;
+  }
+
+  /// Birikim hedefine para ekleme: tutar hem maliyete hem güncel değere
+  /// eklenir; mevcut maliyet-farkı kuplajı (UpdateInvestmentEvent) tutarı
+  /// cüzdandan gider olarak düşer.
+  void _showContributeDialog(
+      BuildContext context, InvestmentEntity investment) {
+    final bloc = context.read<InvestmentBloc>();
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${investment.name} hedefine para ekle'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: 'Tutar',
+              border: const OutlineInputBorder(),
+              helperText:
+                  'Birikmiş: ${formatMoney(investment.currentValue)} / '
+                  'Hedef: ${formatMoney(investment.targetAmount ?? 0)}',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            validator: (value) => validateAmount(value ?? ''),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('İptal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              final contribution = parseAmount(controller.text)!;
+              final updated = investment.copyWith(
+                amount: investment.amount + contribution,
+                currentValue: investment.currentValue + contribution,
+              );
+              bloc.add(UpdateInvestmentEvent(
+                investment: updated,
+                userId: widget.activeWallet.userId,
+                walletId: widget.activeWallet.id!,
+                prevAmount: investment.amount,
+                newAmount: updated.amount,
+              ));
+              if (updated.isTargetReached && !investment.isTargetReached) {
+                _confettiController.play();
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Ekle'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -232,8 +294,17 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                           break;
                                       }
                                     },
-                                    child: InvestmentCard(
-                                      investment: investment,
+                                    child: GestureDetector(
+                                      // Hedefli (birikim) kayıtlarda dokunuş
+                                      // "hedefe para ekle" akışını açar.
+                                      onTap: investment.targetAmount != null &&
+                                              investment.targetAmount! > 0
+                                          ? () => _showContributeDialog(
+                                              context, investment)
+                                          : null,
+                                      child: InvestmentCard(
+                                        investment: investment,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),

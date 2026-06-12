@@ -5,6 +5,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
+import 'package:cunehat/features/recurring_transactions/domain/usecases/approve_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
@@ -73,16 +74,7 @@ class TransactionSheetHandler {
     );
   }
 
-  static DateTime _calculateNextDate(DateTime from, RecurringFrequency freq) {
-    switch (freq) {
-      case RecurringFrequency.daily:
-        return from.add(const Duration(days: 1));
-      case RecurringFrequency.weekly:
-        return from.add(const Duration(days: 7));
-      case RecurringFrequency.monthly:
-        return DateTime(from.year, from.month + 1, from.day);
-      case RecurringFrequency.yearly:
-        return DateTime(from.year + 1, from.month, from.day);
-    }
-  }
+  static DateTime _calculateNextDate(DateTime from, RecurringFrequency freq) =>
+      // Ay sonu taşmasına karşı clamp'li ortak hesap (31 Oca → 28 Şub).
+      ApproveRecurringTransactionUsecase.nextExecutionDateAfter(from, freq);
 }
