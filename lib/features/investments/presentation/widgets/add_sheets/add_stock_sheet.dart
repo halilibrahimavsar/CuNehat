@@ -142,7 +142,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         final quotes = data['quotes'] as List;
         return quotes
             .map((e) =>
-                "\${e['symbol']} - \${e['shortname'] ?? e['longname'] ?? ''}")
+                "${e['symbol']} - ${e['shortname'] ?? e['longname'] ?? ''}")
             .toList();
       }
     } catch (e) {
