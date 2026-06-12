@@ -15,10 +15,13 @@ class LoadPendingTransactionsEvent extends PendingRecurringEvent {}
 class ApproveTransactionEvent extends PendingRecurringEvent {
   final RecurringTransactionEntity template;
 
-  const ApproveTransactionEvent(this.template);
+  /// Yalnızca bu vadenin işlemi için geçerli tutar; şablon tutarı değişmez.
+  final double? overrideAmount;
+
+  const ApproveTransactionEvent(this.template, {this.overrideAmount});
 
   @override
-  List<Object?> get props => [template];
+  List<Object?> get props => [template, overrideAmount];
 }
 
 class SkipTransactionEvent extends PendingRecurringEvent {

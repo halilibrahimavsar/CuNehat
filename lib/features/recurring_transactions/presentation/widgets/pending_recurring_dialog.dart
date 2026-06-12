@@ -138,8 +138,8 @@ void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
             final val = amountController.text.replaceAll(',', '.');
             final newAmount = double.tryParse(val) ?? tx.amount;
             if (newAmount > 0) {
-              final updatedTemplate = tx.copyWith(amount: newAmount);
-              bloc.add(ApproveTransactionEvent(updatedTemplate));
+              // Tutar yalnızca bu vade için geçerli; şablon değişmez.
+              bloc.add(ApproveTransactionEvent(tx, overrideAmount: newAmount));
               Navigator.pop(ctx);
             }
           },

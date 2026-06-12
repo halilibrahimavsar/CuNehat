@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/csv_service.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
@@ -13,11 +14,13 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
   final CsvService csvService;
   final TransactionsRepository transactionsRepository;
   final WalletRepository walletRepository;
+  final WalletMetricsService walletMetricsService;
 
   DataExportImportCubit({
     required this.csvService,
     required this.transactionsRepository,
     required this.walletRepository,
+    required this.walletMetricsService,
   }) : super(DataExportImportInitial());
 
   Future<void> exportTransactions(String userId, String walletId) async {
@@ -86,6 +89,10 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
           await transactionsRepository
               .addTransaction(t.copyWith(walletId: newWalletId));
         }
+
+        // Bakiye, eklenen işlemlerin defterinden hesaplansın; aksi halde
+        // cüzdan 0 bakiyeyle görünür.
+        await walletMetricsService.syncBalance(newWalletId);
 
         // Set as active wallet
         await walletRepository.setActiveWallet(

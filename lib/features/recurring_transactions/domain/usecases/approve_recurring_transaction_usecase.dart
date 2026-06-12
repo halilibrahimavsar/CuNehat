@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import '../entities/recurring_transaction_entity.dart';
@@ -20,8 +21,12 @@ class ApproveRecurringTransactionUsecase {
     this.transactionRepository,
   );
 
+  /// [overrideAmount] yalnızca bu vadenin işlemine uygulanır; şablonun
+  /// kalıcı tutarı değişmez.
   Future<Either<Failure, void>> call(
-      RecurringTransactionEntity template) async {
+    RecurringTransactionEntity template, {
+    double? overrideAmount,
+  }) async {
     // 1. Gerçek işlemi oluştur
     final newTransaction = TransactionEntity(
       id: UidGenerator.generateV7(),
@@ -29,9 +34,11 @@ class ApproveRecurringTransactionUsecase {
       walletId: template.walletId,
       title: template.title,
       tag: template.tag,
-      amount: template.amount,
+      amount: overrideAmount ?? template.amount,
       type: template.type,
-      date: DateTime.now(),
+      // Onay tarihi değil vade tarihi: birikmiş vadeler doğru aya işlensin
+      // diye (bütçe ve raporlar bu tarihe göre toplar).
+      date: template.nextExecutionDate,
       isSystem: true, // Düzenli işlem tarafından otomatik eklendi
     );
 
@@ -41,38 +48,35 @@ class ApproveRecurringTransactionUsecase {
     return result.fold(
       (failure) => Left(failure),
       (_) async {
-        // 3. İşlem başarıyla eklendiyse şablonun bir sonraki ödeme tarihini hesapla ve güncelle
-        DateTime nextDate;
-        switch (template.frequency) {
-          case RecurringFrequency.daily:
-            nextDate = template.nextExecutionDate.add(const Duration(days: 1));
-            break;
-          case RecurringFrequency.weekly:
-            nextDate = template.nextExecutionDate.add(const Duration(days: 7));
-            break;
-          case RecurringFrequency.monthly:
-            // Bir ay ileri sar (Olası şubat/31 çeken ay sınırlarına dikkat ederek)
-            nextDate = DateTime(
-              template.nextExecutionDate.year,
-              template.nextExecutionDate.month + 1,
-              template.nextExecutionDate.day,
-            );
-            break;
-          case RecurringFrequency.yearly:
-            nextDate = DateTime(
-              template.nextExecutionDate.year + 1,
-              template.nextExecutionDate.month,
-              template.nextExecutionDate.day,
-            );
-            break;
-        }
-
-        // Geçmişten gelen ve çok birikmiş işlemler için nextDate bugünden küçük kalıyorsa,
-        // onu bir sonraki hedefe atlatabiliriz. Ama genelde kullanıcı bunları ardışık onaylayacak.
+        // 3. İşlem başarıyla eklendiyse şablonun bir sonraki ödeme tarihini
+        // hesapla ve güncelle
+        final nextDate = nextExecutionDateAfter(
+          template.nextExecutionDate,
+          template.frequency,
+        );
 
         final updatedTemplate = template.copyWith(nextExecutionDate: nextDate);
         return await recurringRepository.saveTemplate(updatedTemplate);
       },
     );
+  }
+
+  /// Bir sonraki vade tarihini hesaplar. Aylık/yıllık ilerletmede gün, hedef
+  /// ayın son gününe clamp'lenir (31 Oca → 28/29 Şub); aksi halde Dart'ın
+  /// tarih normalizasyonu vadeyi sonraki ayın başına kaydırır.
+  static DateTime nextExecutionDateAfter(
+    DateTime current,
+    RecurringFrequency frequency,
+  ) {
+    switch (frequency) {
+      case RecurringFrequency.daily:
+        return current.add(const Duration(days: 1));
+      case RecurringFrequency.weekly:
+        return current.add(const Duration(days: 7));
+      case RecurringFrequency.monthly:
+        return addMonthsClamped(current, 1);
+      case RecurringFrequency.yearly:
+        return addMonthsClamped(current, 12);
+    }
   }
 }

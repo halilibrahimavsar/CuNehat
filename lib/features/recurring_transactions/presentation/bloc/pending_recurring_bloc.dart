@@ -2,6 +2,7 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import '../../domain/usecases/get_pending_recurring_transactions_usecase.dart';
 import '../../domain/usecases/approve_recurring_transaction_usecase.dart';
 import '../../domain/usecases/delete_recurring_transaction_usecase.dart';
@@ -14,11 +15,13 @@ class PendingRecurringBloc
   final GetPendingRecurringTransactionsUsecase getPendingUsecase;
   final ApproveRecurringTransactionUsecase approveUsecase;
   final DeleteRecurringTransactionUsecase deleteUsecase;
+  final WalletMetricsService walletMetricsService;
 
   PendingRecurringBloc(
     this.getPendingUsecase,
     this.approveUsecase,
     this.deleteUsecase,
+    this.walletMetricsService,
   ) : super(PendingRecurringInitial()) {
     on<LoadPendingTransactionsEvent>(_onLoadPendingTransactions);
     on<ApproveTransactionEvent>(_onApproveTransaction);
@@ -44,11 +47,17 @@ class PendingRecurringBloc
   ) async {
     // UI'ın anlık tepki vermesi için loading state'e çekebiliriz ama
     // arka planda sessiz yapıp reload da atabiliriz. Sessiz reload daha iyi.
-    final result = await approveUsecase(event.template);
+    final result = await approveUsecase(
+      event.template,
+      overrideAmount: event.overrideAmount,
+    );
 
-    result.fold(
-      (failure) => emit(PendingRecurringFailure(failure)),
-      (_) {
+    await result.fold(
+      (failure) async => emit(PendingRecurringFailure(failure)),
+      (_) async {
+        // İşlem TransactionBloc yolunun dışında eklendiği için bakiyenin
+        // defterden yeniden hesaplanması burada tetiklenmeli.
+        await walletMetricsService.syncBalance(event.template.walletId);
         // İşlem onaylandığında listeden çıkması için tekrar load eventini tetikle
         add(LoadPendingTransactionsEvent());
       },

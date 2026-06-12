@@ -226,11 +226,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i207.WalletGetActiveUseCase(gh<_i254.WalletRepository>()));
     gh.factory<_i207.WalletGetByIdUseCase>(
         () => _i207.WalletGetByIdUseCase(gh<_i254.WalletRepository>()));
-    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
-          csvService: gh<_i530.CsvService>(),
-          transactionsRepository: gh<_i543.TransactionsRepository>(),
-          walletRepository: gh<_i254.WalletRepository>(),
-        ));
     gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
         () => _i29.InvestmentRemoteDataSourceImpl(client: gh<_i519.Client>()));
     gh.lazySingleton<_i94.BudgetRepository>(
@@ -317,16 +312,23 @@ extension GetItInjectableX on _i174.GetIt {
           deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
-    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
-          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
-          gh<_i854.ApproveRecurringTransactionUsecase>(),
-          gh<_i817.DeleteRecurringTransactionUsecase>(),
-        ));
     gh.factory<_i238.DebtBloc>(() => _i238.DebtBloc(
           getDebtsUseCase: gh<_i855.GetDebtsUseCase>(),
           addDebtUseCase: gh<_i855.AddDebtUseCase>(),
           updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
           deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+        ));
+    gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
+          gh<_i162.GetPendingRecurringTransactionsUsecase>(),
+          gh<_i854.ApproveRecurringTransactionUsecase>(),
+          gh<_i817.DeleteRecurringTransactionUsecase>(),
+          gh<_i239.WalletMetricsService>(),
+        ));
+    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
+          csvService: gh<_i530.CsvService>(),
+          transactionsRepository: gh<_i543.TransactionsRepository>(),
+          walletRepository: gh<_i254.WalletRepository>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
