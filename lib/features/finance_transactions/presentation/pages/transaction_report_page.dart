@@ -304,10 +304,22 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               PieChartData(
                 pieTouchData: PieTouchData(
                   touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    final isTapUp = event is FlTapUpEvent;
+                    int? tappedIndex;
+
                     setState(() {
                       if (!event.isInterestedForInteractions ||
                           pieTouchResponse == null ||
                           pieTouchResponse.touchedSection == null) {
+                        
+                        final touchIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex ?? -1;
+                        final currentIndex = isExpense ? _touchedExpenseIndex : _touchedIncomeIndex;
+                        final actualIndex = touchIndex != -1 ? touchIndex : currentIndex;
+
+                        if (isTapUp && actualIndex != -1 && actualIndex < categoryData.length) {
+                          tappedIndex = actualIndex;
+                        }
+
                         if (isExpense) {
                           _touchedExpenseIndex = -1;
                         } else {
@@ -325,14 +337,18 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         _touchedIncomeIndex = newIndex;
                       }
 
-                      if (event is FlTapUpEvent && newIndex != -1) {
-                        _showCategoryDetailsBottomSheet(
-                          context,
-                          categoryData[newIndex],
-                          isExpense,
-                        );
+                      if (isTapUp && newIndex != -1 && newIndex < categoryData.length) {
+                        tappedIndex = newIndex;
                       }
                     });
+
+                    if (tappedIndex != null) {
+                      _showCategoryDetailsBottomSheet(
+                        context,
+                        categoryData[tappedIndex!],
+                        isExpense,
+                      );
+                    }
                   },
                 ),
                 sections: sections,
