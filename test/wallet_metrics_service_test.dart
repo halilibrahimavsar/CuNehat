@@ -8,6 +8,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
@@ -181,11 +182,12 @@ class FakeInvestmentRepository implements InvestmentRepository {
       Right<Failure, void>(null);
 
   @override
-  Future<Either<Failure, double>> getLivePrice({
+  Future<Either<Failure, LivePriceQuote>> getLiveQuote({
     required String symbol,
     required InvestmentType type,
   }) async =>
-      Right<Failure, double>(0);
+      const Right<Failure, LivePriceQuote>(
+          LivePriceQuote(price: 0, currency: 'TRY', priceTl: 0));
 }
 
 /// addTransaction'ı her zaman başarısız kılan varyant (hata yolu testi).

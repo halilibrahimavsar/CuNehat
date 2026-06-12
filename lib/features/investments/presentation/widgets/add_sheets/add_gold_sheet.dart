@@ -1,12 +1,12 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/core/utils/tr_price_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
+import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -62,6 +62,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   final _targetAmountController = TextEditingController();
 
   String _selectedGoldType = 'gram-altin';
+  String? _selectedGoalCategory;
 
   final Map<String, String> _goldTypes = {
     'gram-altin': 'Gram Altın',
@@ -97,11 +98,17 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       if (item.targetAmount != null) {
         _targetAmountController.text = _fmt(item.targetAmount!);
       }
+      if (item.quantity != null) {
+        _quantityController.text = _fmt(item.quantity!);
+      }
+      _selectedGoalCategory = item.goalCategory;
       _selectedColor = item.color;
       if (item.symbol != null && _goldTypes.containsKey(item.symbol)) {
         _selectedGoldType = item.symbol!;
       }
     }
+    // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
+    _targetAmountController.addListener(() => setState(() {}));
   }
 
   @override
@@ -133,47 +140,36 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       _fetchedPriceColor = Colors.orange;
     });
 
-    try {
-      double price = 0.0;
-      final response =
-          await http.get(Uri.parse('https://finans.truncgil.com/today.json'));
-      // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
-      // release'te çöker.
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final entry = data[_selectedGoldType];
-        price = parseTrPrice(entry is Map ? entry['Satış'] : null) ?? 0.0;
-      }
+    final result = await getIt<GetLiveQuoteUseCase>()(
+      symbol: _selectedGoldType,
+      type: InvestmentType.gold,
+    );
+    // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
+    // release'te çöker.
+    if (!mounted) return;
 
-      if (price > 0) {
+    result.fold(
+      (failure) => setState(() {
+        _fetchedPriceMessage = 'Fiyat alınamadı.';
+        _fetchedPriceColor = Colors.red;
+        _isLoading = false;
+      }),
+      (quote) {
         final qty = _parsedQuantity ?? 0.0;
         if (qty > 0) {
-          final total = price * qty;
+          final total = quote.priceTl * qty;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
             _amountController.text = _fmt(total);
           }
         }
         setState(() {
-          _fetchedPriceMessage = 'Güncel Fiyat: $price ₺';
+          _fetchedPriceMessage = 'Güncel Fiyat: ${quote.priceTl} ₺';
           _fetchedPriceColor = Colors.green;
+          _isLoading = false;
         });
-      } else {
-        setState(() {
-          _fetchedPriceMessage = 'Fiyat alınamadı.';
-          _fetchedPriceColor = Colors.red;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _fetchedPriceMessage = 'Bağlantı hatası.';
-        _fetchedPriceColor = Colors.red;
-      });
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+      },
+    );
   }
 
   String? _validate() {
@@ -206,6 +202,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       symbol: _selectedGoldType,
       returnRate: 0,
       targetAmount: _parsedTargetAmount,
+      quantity: _parsedQuantity ?? widget.investmentToEdit?.quantity,
+      goalCategory: _parsedTargetAmount != null ? _selectedGoalCategory : null,
+      currency: 'TRY',
     );
 
     widget.onSave(investment);
@@ -274,6 +273,21 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                       ),
+                      if (_targetAmountController.text.trim().isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        _sectionLabel('Hedef Kategorisi', cs),
+                        const SizedBox(height: 10),
+                        GoalCategorySelector(
+                          selectedKey: _selectedGoalCategory,
+                          onChanged: (key) =>
+                              setState(() => _selectedGoalCategory = key),
+                          accentColor: Colors.amber.shade700,
+                        ),
+                      ],
+                      if (_isEditing) ...[
+                        const SizedBox(height: 14),
+                        _buildCostEditWarning(cs),
+                      ],
                       const SizedBox(height: 20),
                       _sectionLabel('Renk Seçimi', cs),
                       const SizedBox(height: 10),
@@ -611,6 +625,34 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Colors.amber, width: 1.6),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCostEditWarning(ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              size: 16, color: Colors.orange),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Maliyeti değiştirirseniz fark, cüzdana düzeltme '
+              'hareketi olarak işlenir.',
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

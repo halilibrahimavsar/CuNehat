@@ -3,6 +3,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 import 'package:injectable/injectable.dart';
 
@@ -69,16 +70,16 @@ class InvestmentRepositoryImpl implements InvestmentRepository {
   }
 
   @override
-  Future<Either<Failure, double>> getLivePrice({
+  Future<Either<Failure, LivePriceQuote>> getLiveQuote({
     required String symbol,
     required InvestmentType type,
   }) async {
     try {
-      final price = await remoteDataSource.getLivePrice(
+      final quote = await remoteDataSource.getLiveQuote(
         symbol: symbol,
         type: type,
       );
-      return Right(price);
+      return Right(quote);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

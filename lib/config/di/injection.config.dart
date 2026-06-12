@@ -83,6 +83,8 @@ import 'package:cunehat/features/investments/domain/usecases/delete_investment_u
     as _i318;
 import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart'
     as _i864;
+import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart'
+    as _i362;
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart'
     as _i420;
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart'
@@ -277,6 +279,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i864.GetInvestmentsUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i420.UpdateInvestmentUseCase>(
         () => _i420.UpdateInvestmentUseCase(gh<_i589.InvestmentRepository>()));
+    gh.factory<_i362.GetLiveQuoteUseCase>(
+        () => _i362.GetLiveQuoteUseCase(gh<_i589.InvestmentRepository>()));
     gh.factory<_i111.SkipRecurringTransactionUsecase>(() =>
         _i111.SkipRecurringTransactionUsecase(
             gh<_i788.RecurringTransactionRepository>()));

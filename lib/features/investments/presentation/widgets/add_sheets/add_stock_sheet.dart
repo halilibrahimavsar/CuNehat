@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
+import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -54,6 +57,11 @@ class _AddStockSheetState extends State<AddStockSheet> {
   String? _fetchedPriceMessage;
   Color _fetchedPriceColor = Colors.blue;
 
+  /// Son başarılı fiyat sorgusunun para birimi; kayıtta saklanır ki
+  /// sonraki yenilemelerde TL çevrimi bilinçli yapılabilsin.
+  String? _fetchedCurrency;
+  String? _selectedGoalCategory;
+
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _quantityController = TextEditingController();
@@ -87,9 +95,16 @@ class _AddStockSheetState extends State<AddStockSheet> {
       if (item.targetAmount != null) {
         _targetAmountController.text = _fmt(item.targetAmount!);
       }
+      if (item.quantity != null) {
+        _quantityController.text = _fmt(item.quantity!);
+      }
+      _selectedGoalCategory = item.goalCategory;
+      _fetchedCurrency = item.currency;
       _selectedColor = item.color;
       _symbolController.text = item.symbol ?? '';
     }
+    // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
+    _targetAmountController.addListener(() => setState(() {}));
   }
 
   @override
@@ -152,51 +167,40 @@ class _AddStockSheetState extends State<AddStockSheet> {
       _fetchedPriceColor = Colors.blue;
     });
 
-    try {
-      double price = 0.0;
-      final response = await http.get(Uri.parse(
-          'https://query1.finance.yahoo.com/v8/finance/chart/$symbol?interval=1d'));
-      // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
-      // release'te çöker.
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final result = data['chart']['result'];
-        if (result != null && result.isNotEmpty) {
-          final meta = result[0]['meta'];
-          price = double.tryParse(meta['regularMarketPrice'].toString()) ?? 0.0;
-        }
-      }
+    final result = await getIt<GetLiveQuoteUseCase>()(
+      symbol: symbol,
+      type: InvestmentType.stock,
+    );
+    // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
+    // release'te çöker.
+    if (!mounted) return;
 
-      if (price > 0) {
+    result.fold(
+      (failure) => setState(() {
+        _fetchedPriceMessage = 'Fiyat alınamadı.';
+        _fetchedPriceColor = Colors.red;
+        _isLoading = false;
+      }),
+      (quote) {
         final qty = _parsedQuantity ?? 0.0;
         if (qty > 0) {
-          final total = price * qty;
+          final total = quote.priceTl * qty;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
             _amountController.text = _fmt(total);
           }
         }
         setState(() {
-          _fetchedPriceMessage =
-              'Güncel Fiyat: $price'; // Yahoo usually returns local currency of the market
+          _fetchedCurrency = quote.currency;
+          _fetchedPriceMessage = quote.currency == 'TRY'
+              ? 'Güncel Fiyat: ${quote.priceTl} ₺'
+              : 'Güncel Fiyat: ${quote.price} ${quote.currency} '
+                  '(≈${quote.priceTl.toStringAsFixed(2)} ₺)';
           _fetchedPriceColor = Colors.green;
+          _isLoading = false;
         });
-      } else {
-        setState(() {
-          _fetchedPriceMessage = 'Fiyat alınamadı.';
-          _fetchedPriceColor = Colors.red;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _fetchedPriceMessage = 'Bağlantı hatası.';
-        _fetchedPriceColor = Colors.red;
-      });
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+      },
+    );
   }
 
   String? _validate() {
@@ -233,6 +237,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
       symbol: symbol,
       returnRate: 0,
       targetAmount: _parsedTargetAmount,
+      quantity: _parsedQuantity ?? widget.investmentToEdit?.quantity,
+      goalCategory: _parsedTargetAmount != null ? _selectedGoalCategory : null,
+      currency: _fetchedCurrency,
     );
 
     widget.onSave(investment);
@@ -301,6 +308,21 @@ class _AddStockSheetState extends State<AddStockSheet> {
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                       ),
+                      if (_targetAmountController.text.trim().isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        _sectionLabel('Hedef Kategorisi', cs),
+                        const SizedBox(height: 10),
+                        GoalCategorySelector(
+                          selectedKey: _selectedGoalCategory,
+                          onChanged: (key) =>
+                              setState(() => _selectedGoalCategory = key),
+                          accentColor: Colors.blue.shade600,
+                        ),
+                      ],
+                      if (_isEditing) ...[
+                        const SizedBox(height: 14),
+                        _buildCostEditWarning(cs),
+                      ],
                       const SizedBox(height: 20),
                       _sectionLabel('Renk Seçimi', cs),
                       const SizedBox(height: 10),
@@ -686,6 +708,34 @@ class _AddStockSheetState extends State<AddStockSheet> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Colors.blue, width: 1.6),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCostEditWarning(ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              size: 16, color: Colors.orange),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Maliyeti değiştirirseniz fark, cüzdana düzeltme '
+              'hareketi olarak işlenir.',
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 
 abstract class InvestmentRepository {
   Future<Either<Failure, void>> addInvestment(InvestmentEntity investment);
@@ -11,8 +12,8 @@ abstract class InvestmentRepository {
   });
   Future<Either<Failure, void>> updateInvestment(InvestmentEntity investment);
 
-  /// Fetches the live price for a given symbol or gold type.
-  Future<Either<Failure, double>> getLivePrice({
+  /// Sembol/altın türü için canlı fiyatı (TL karşılığıyla) getirir.
+  Future<Either<Failure, LivePriceQuote>> getLiveQuote({
     required String symbol,
     required InvestmentType type,
   });
