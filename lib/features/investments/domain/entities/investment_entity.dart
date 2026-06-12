@@ -21,6 +21,15 @@ class InvestmentEntity extends Equatable {
   final double? returnRate;
   final double? targetAmount;
 
+  /// Toplam birim (gram/lot/adet). null = miktar takibi olmayan eski kayıt.
+  final double? quantity;
+
+  /// Hedef kategorisi anahtarı (ev, dugun, araba, acil_fon, egitim, diger).
+  final String? goalCategory;
+
+  /// Fiyat kaynağının para birimi (örn. 'TRY', 'USD'). null ⇒ TRY varsayılır.
+  final String? currency;
+
   const InvestmentEntity({
     required this.id,
     required this.userId,
@@ -34,6 +43,9 @@ class InvestmentEntity extends Equatable {
     this.symbol,
     this.returnRate,
     this.targetAmount,
+    this.quantity,
+    this.goalCategory,
+    this.currency,
   });
 
   InvestmentEntity copyWith({
@@ -49,6 +61,9 @@ class InvestmentEntity extends Equatable {
     String? symbol,
     double? returnRate,
     double? targetAmount,
+    double? quantity,
+    String? goalCategory,
+    String? currency,
   }) {
     return InvestmentEntity(
       id: id ?? this.id,
@@ -63,6 +78,9 @@ class InvestmentEntity extends Equatable {
       symbol: symbol ?? this.symbol,
       returnRate: returnRate ?? this.returnRate,
       targetAmount: targetAmount ?? this.targetAmount,
+      quantity: quantity ?? this.quantity,
+      goalCategory: goalCategory ?? this.goalCategory,
+      currency: currency ?? this.currency,
     );
   }
 
@@ -80,6 +98,16 @@ class InvestmentEntity extends Equatable {
       targetAmount! > 0 &&
       currentValue >= targetAmount!;
 
+  bool get isGoal => targetAmount != null && targetAmount! > 0;
+
+  /// Birim başına güncel değer; miktar takibi yoksa null.
+  double? get unitValue =>
+      (quantity != null && quantity! > 0) ? currentValue / quantity! : null;
+
+  /// Fiyat yenileme yalnızca sembollü ve miktarı bilinen kayıtlarda mümkün.
+  bool get canRefreshPrice =>
+      symbol != null && quantity != null && quantity! > 0;
+
   @override
   List<Object?> get props => [
         id,
@@ -94,5 +122,8 @@ class InvestmentEntity extends Equatable {
         symbol,
         returnRate,
         targetAmount,
+        quantity,
+        goalCategory,
+        currency,
       ];
 }

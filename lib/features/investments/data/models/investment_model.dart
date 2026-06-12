@@ -18,6 +18,9 @@ class InvestmentModel extends InvestmentEntity {
     super.symbol,
     super.returnRate,
     super.targetAmount,
+    super.quantity,
+    super.goalCategory,
+    super.currency,
   });
 
   // Create Investment from firestore document
@@ -38,6 +41,9 @@ class InvestmentModel extends InvestmentEntity {
       symbol: json['symbol'],
       returnRate: (json['returnRate'] as num?)?.toDouble() ?? 0.0,
       targetAmount: (json['targetAmount'] as num?)?.toDouble(),
+      quantity: (json['quantity'] as num?)?.toDouble(),
+      goalCategory: json['goalCategory'],
+      currency: json['currency'],
     );
   }
 
@@ -55,6 +61,9 @@ class InvestmentModel extends InvestmentEntity {
           symbol: entity.symbol,
           returnRate: entity.returnRate,
           targetAmount: entity.targetAmount,
+          quantity: entity.quantity,
+          goalCategory: entity.goalCategory,
+          currency: entity.currency,
         );
 
   Map<String, dynamic> toJson() {
@@ -71,6 +80,9 @@ class InvestmentModel extends InvestmentEntity {
       'symbol': symbol,
       'returnRate': returnRate,
       'targetAmount': targetAmount,
+      'quantity': quantity,
+      'goalCategory': goalCategory,
+      'currency': currency,
     };
   }
 
@@ -89,6 +101,9 @@ class InvestmentModel extends InvestmentEntity {
     String? symbol,
     double? returnRate,
     double? targetAmount,
+    double? quantity,
+    String? goalCategory,
+    String? currency,
   }) {
     return InvestmentModel(
       id: id ?? this.id,
@@ -103,6 +118,9 @@ class InvestmentModel extends InvestmentEntity {
       symbol: symbol ?? this.symbol,
       returnRate: returnRate ?? this.returnRate,
       targetAmount: targetAmount ?? this.targetAmount,
+      quantity: quantity ?? this.quantity,
+      goalCategory: goalCategory ?? this.goalCategory,
+      currency: currency ?? this.currency,
     );
   }
 
@@ -143,4 +161,16 @@ class InvestmentModel extends InvestmentEntity {
   @override
   @HiveField(11)
   double? get targetAmount => super.targetAmount;
+
+  @override
+  @HiveField(12)
+  double? get quantity => super.quantity;
+
+  @override
+  @HiveField(13)
+  String? get goalCategory => super.goalCategory;
+
+  @override
+  @HiveField(14)
+  String? get currency => super.currency;
 }
