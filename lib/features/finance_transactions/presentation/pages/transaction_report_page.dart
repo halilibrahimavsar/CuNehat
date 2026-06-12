@@ -366,95 +366,131 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   void _showCategoryDetailsBottomSheet(
-      BuildContext context, _CategoryData category, bool isExpense) {
+      BuildContext context, _CategoryData initialCategory, bool isExpense) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-
-    // Convert transactions to TransactionWithBalance (balance is irrelevant here, so 0 is fine)
-    final transactionsWithBalance = category.transactions
-        .map((t) => TransactionWithBalance(transaction: t, balanceAfter: 0))
-        .toList();
+    final transactionBloc = context.read<TransactionBloc>();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return Container(
-          height: MediaQuery.of(sheetContext).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            children: [
-              // Bottom Sheet Header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        return BlocProvider.value(
+          value: transactionBloc,
+          child: BlocBuilder<TransactionBloc, TransactionState>(
+            builder: (context, state) {
+              final allTransactions = state.currentTransactions;
+              final filteredTransactions =
+                  _filterTransactionsByRange(allTransactions);
+              final categoryDataList =
+                  _buildCategoryData(filteredTransactions, isExpense);
+
+              final updatedCategory = categoryDataList.firstWhere(
+                (c) => c.name == initialCategory.name,
+                orElse: () => _CategoryData(
+                    initialCategory.name, 0, [], initialCategory.color),
+              );
+
+              final transactionsWithBalance = updatedCategory.transactions
+                  .map((t) =>
+                      TransactionWithBalance(transaction: t, balanceAfter: 0))
+                  .toList();
+
+              return Container(
+                height: MediaQuery.of(sheetContext).size.height * 0.75,
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: scheme.shadow.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Column(
                   children: [
+                    // Bottom Sheet Header
                     Container(
-                      width: 40,
-                      height: 4,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 16),
                       decoration: BoxDecoration(
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: category.color,
-                            shape: BoxShape.circle,
+                        color: scheme.surface,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(32)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: scheme.shadow.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            category.name,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: scheme.onSurfaceVariant
+                                  .withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(2),
                             ),
                           ),
-                        ),
-                        Text(
-                          formatMoney(category.totalAmount),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isExpense ? Colors.redAccent : Colors.green,
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Container(
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: updatedCategory.color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  updatedCategory.name,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                formatMoney(updatedCategory.totalAmount),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isExpense
+                                      ? Colors.redAccent
+                                      : Colors.green,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+                    // Transaction List
+                    Expanded(
+                      child: transactionsWithBalance.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Bu kategoriye ait işlem bulunmuyor.',
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          : DetailedListView(
+                              transactions: transactionsWithBalance,
+                              mode: isExpense
+                                  ? FinanceMode.expense
+                                  : FinanceMode.income,
+                              categoryIcons: _categoryIcons,
+                            ),
                     ),
                   ],
                 ),
-              ),
-              // Transaction List
-              Expanded(
-                child: DetailedListView(
-                  transactions: transactionsWithBalance,
-                  mode: isExpense ? FinanceMode.expense : FinanceMode.income,
-                  categoryIcons: _categoryIcons,
-                ),
-              ),
-            ],
+              );
+            },
           ),
         );
       },

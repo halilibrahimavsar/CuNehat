@@ -3,6 +3,8 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:flutter/material.dart';
@@ -29,185 +31,202 @@ class SingleTransactionDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = item.transaction;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final accent = t.isIncome ? AppGradients.savings : AppGradients.debt;
+    return BlocConsumer<TransactionBloc, TransactionState>(
+      listener: (context, state) {
+        if (state is TransactionActionSuccess) {
+          final isDeleted = !state.currentTransactions
+              .any((tx) => tx.id == item.transaction.id);
+          if (isDeleted && Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        }
+      },
+      builder: (context, state) {
+        final tList = state.currentTransactions;
+        final t = tList.firstWhere(
+          (x) => x.id == item.transaction.id,
+          orElse: () => item.transaction,
+        );
+        
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final accent = t.isIncome ? AppGradients.savings : AppGradients.debt;
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text('İşlem Detayı'),
-        actions: [
-          if (!t.isSystem)
-            IconButton(
-              icon: const Icon(Icons.edit_rounded),
-              tooltip: 'Düzenle',
-              onPressed: () => _edit(context),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Hero ikon + tutar
-            Center(
-              child: Column(
-                children: [
-                  Hero(
-                    tag: heroTag,
-                    child: Container(
-                      width: 84,
-                      height: 84,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            accent.withValues(alpha: 0.22),
-                            accent.withValues(alpha: 0.06),
-                          ],
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            title: const Text('İşlem Detayı'),
+            actions: [
+              if (!t.isSystem)
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded),
+                  tooltip: 'Düzenle',
+                  onPressed: () => _edit(context, t),
+                ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Hero ikon + tutar
+                Center(
+                  child: Column(
+                    children: [
+                      Hero(
+                        tag: heroTag,
+                        child: Container(
+                          width: 84,
+                          height: 84,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                accent.withValues(alpha: 0.22),
+                                accent.withValues(alpha: 0.06),
+                              ],
+                            ),
+                            border: Border.all(
+                                color: accent.withValues(alpha: 0.3), width: 1.5),
+                          ),
+                          child: Icon(
+                            categoryIcon ??
+                                (t.isIncome
+                                    ? Icons.arrow_upward_rounded
+                                    : Icons.arrow_downward_rounded),
+                            color: accent,
+                            size: 38,
+                          ),
                         ),
-                        border: Border.all(
-                            color: accent.withValues(alpha: 0.3), width: 1.5),
                       ),
-                      child: Icon(
-                        categoryIcon ??
-                            (t.isIncome
-                                ? Icons.arrow_upward_rounded
-                                : Icons.arrow_downward_rounded),
-                        color: accent,
-                        size: 38,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  SignedAmountDisplay(
-                    amount: t.amount,
-                    isExpense: t.isExpense,
-                    style: TextStyle(
-                      color: accent,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 36,
-                      letterSpacing: -1,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    t.title,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  if (t.isSystem) ...[
-                    const SizedBox(height: 8),
-                    _systemBadge(scheme),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            // Bilgi kartı
-            AppCard(
-              accent: accent,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-              child: Column(
-                children: [
-                  _infoRow(context,
-                      icon: Icons.sell_rounded,
-                      label: 'Kategori',
-                      value: t.tag),
-                  _divider(scheme),
-                  _infoRow(context,
-                      icon: Icons.event_rounded,
-                      label: 'Tarih',
-                      value: AppFormatters.dateLong.format(t.date)),
-                  _divider(scheme),
-                  _infoRow(context,
-                      icon: Icons.schedule_rounded,
-                      label: 'Saat',
-                      value: AppFormatters.time.format(t.date)),
-                  _divider(scheme),
-                  _infoRow(context,
-                      icon: t.isIncome
-                          ? Icons.trending_up_rounded
-                          : Icons.trending_down_rounded,
-                      label: 'Tür',
-                      value: t.isIncome ? 'Gelir' : 'Gider',
-                      valueColor: accent),
-                  _divider(scheme),
-                  _infoRow(context,
-                      icon: Icons.account_balance_wallet_rounded,
-                      label: 'İşlem sonrası bakiye',
-                      valueWidget: AmountDisplay(
-                        amount: item.balanceAfter,
+                      const SizedBox(height: 18),
+                      SignedAmountDisplay(
+                        amount: t.amount,
+                        isExpense: t.isExpense,
                         style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: item.balanceAfter >= 0
-                              ? scheme.onSurface
-                              : AppGradients.debt,
+                          color: accent,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 36,
+                          letterSpacing: -1,
                         ),
-                      )),
-                ],
-              ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        t.title,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      if (t.isSystem) ...[
+                        const SizedBox(height: 8),
+                        _systemBadge(scheme),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Bilgi kartı
+                AppCard(
+                  accent: accent,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                  child: Column(
+                    children: [
+                      _infoRow(context,
+                          icon: Icons.sell_rounded,
+                          label: 'Kategori',
+                          value: t.tag),
+                      _divider(scheme),
+                      _infoRow(context,
+                          icon: Icons.event_rounded,
+                          label: 'Tarih',
+                          value: AppFormatters.dateLong.format(t.date)),
+                      _divider(scheme),
+                      _infoRow(context,
+                          icon: Icons.schedule_rounded,
+                          label: 'Saat',
+                          value: AppFormatters.time.format(t.date)),
+                      _divider(scheme),
+                      _infoRow(context,
+                          icon: t.isIncome
+                              ? Icons.trending_up_rounded
+                              : Icons.trending_down_rounded,
+                          label: 'Tür',
+                          value: t.isIncome ? 'Gelir' : 'Gider',
+                          valueColor: accent),
+                      _divider(scheme),
+                      _infoRow(context,
+                          icon: Icons.account_balance_wallet_rounded,
+                          label: 'İşlem sonrası bakiye',
+                          valueWidget: AmountDisplay(
+                            amount: item.balanceAfter,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: item.balanceAfter >= 0
+                                  ? scheme.onSurface
+                                  : AppGradients.debt,
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Aksiyonlar
+                if (t.isSystem)
+                  _systemNotice(scheme)
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _delete(context, t),
+                          icon: const Icon(Icons.delete_outline_rounded),
+                          label: const Text('Sil'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppGradients.debt,
+                            side: BorderSide(
+                                color: AppGradients.debt.withValues(alpha: 0.5)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => _edit(context, t),
+                          icon: const Icon(Icons.edit_rounded),
+                          label: const Text('Düzenle'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: accent,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
-
-            const SizedBox(height: 24),
-
-            // Aksiyonlar
-            if (t.isSystem)
-              _systemNotice(scheme)
-            else
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _delete(context),
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      label: const Text('Sil'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppGradients.debt,
-                        side: BorderSide(
-                            color: AppGradients.debt.withValues(alpha: 0.5)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => _edit(context),
-                      icon: const Icon(Icons.edit_rounded),
-                      label: const Text('Düzenle'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accent,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  void _edit(BuildContext context) {
-    final t = item.transaction;
+  void _edit(BuildContext context, TransactionEntity t) {
     if (t.isSystem) return;
     TransactionSheetHandler.showSheet(
       context: context,
@@ -218,8 +237,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
     );
   }
 
-  Future<void> _delete(BuildContext context) async {
-    final t = item.transaction;
+  Future<void> _delete(BuildContext context, TransactionEntity t) async {
     final confirmed = await IboDialog.showConfirmation(
       context,
       'İşlem Sil',
@@ -227,7 +245,6 @@ class SingleTransactionDetailPage extends StatelessWidget {
     );
     if (confirmed == true && context.mounted && t.id != null) {
       context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
-      Navigator.of(context).pop();
     }
   }
 
