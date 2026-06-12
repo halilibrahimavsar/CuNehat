@@ -1,6 +1,7 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/investments/domain/contribution_calculator.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:flutter/material.dart';
@@ -140,26 +141,15 @@ class _ContributeSheetState extends State<ContributeSheet> {
     late final InvestmentEntity updated;
 
     if (_isAssetMode) {
-      final qtyAdded = _parsedQuantity!;
-      final paid = _parsedAmount ?? 0.0;
-      final newQuantity = (inv.quantity ?? 0) + qtyAdded;
-      // Fiyat biliniyorsa portföy değeri gerçek piyasa değerine oturur;
-      // bilinmiyorsa nakit kadar artırmak tek güvenli varsayımdır.
-      final newCurrentValue = _livePriceTl != null
-          ? newQuantity * _livePriceTl!
-          : inv.currentValue + paid;
-      updated = inv.copyWith(
-        amount: inv.amount + paid,
-        currentValue: newCurrentValue,
-        quantity: newQuantity,
-        currency: _liveCurrency ?? inv.currency,
+      updated = applyAssetPurchase(
+        inv,
+        qtyAdded: _parsedQuantity!,
+        paid: _parsedAmount ?? 0.0,
+        livePriceTl: _livePriceTl,
+        liveCurrency: _liveCurrency,
       );
     } else {
-      final contribution = _parsedAmount!;
-      updated = inv.copyWith(
-        amount: inv.amount + contribution,
-        currentValue: inv.currentValue + contribution,
-      );
+      updated = applyCashContribution(inv, _parsedAmount!);
     }
 
     widget.onSave(updated);

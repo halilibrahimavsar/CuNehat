@@ -1,5 +1,6 @@
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -83,6 +84,41 @@ class InvestmentCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (GoalCategory.byKey(investment.goalCategory) != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                GoalCategory.byKey(investment.goalCategory)!
+                                    .icon,
+                                size: 12,
+                                color: accent,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                GoalCategory.byKey(investment.goalCategory)!
+                                    .label,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: accent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     if (investment.symbol != null)
                       Container(
                         padding: const EdgeInsets.symmetric(

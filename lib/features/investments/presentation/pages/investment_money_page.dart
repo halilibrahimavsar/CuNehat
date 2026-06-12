@@ -246,7 +246,13 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         // Özet metrikler state üzerinde hazır (InvestmentLoaded getters).
         final loaded =
             investmentState is InvestmentLoaded ? investmentState : null;
-        final investments = loaded?.investments ?? const <InvestmentEntity>[];
+        // Hedefli birikimler listenin başında gösterilir (kararlı sıra).
+        final allInvestments =
+            loaded?.investments ?? const <InvestmentEntity>[];
+        final investments = [
+          ...allInvestments.where((i) => i.isGoal),
+          ...allInvestments.where((i) => !i.isGoal),
+        ];
         final totalInvestment = loaded?.totalAmount ?? 0.0;
         final totalCurrentValue = loaded?.totalCurrentValue ?? 0.0;
         final totalProfit = loaded?.totalProfit ?? 0.0;
