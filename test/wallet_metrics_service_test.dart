@@ -1,4 +1,5 @@
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -286,6 +287,7 @@ void main() {
       receivableRepository: FakeReceivableRepository(),
       investmentRepository: FakeInvestmentRepository(),
       transactionsRepository: txs,
+      transactionsChangedNotifier: TransactionsChangedNotifier(),
     );
   });
 
@@ -348,6 +350,7 @@ void main() {
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
         transactionsRepository: FailingTransactionsRepository(),
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
 
       final ok = await failingService.recordCashMovement(
@@ -463,6 +466,7 @@ void main() {
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
         transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
       // Bakiye sapmış (999) → syncBalance 120'ye onaracak; aynı anda
       // syncDebt debt=1000 yazacak. Kuyruk yoksa biri diğerinin yazımını

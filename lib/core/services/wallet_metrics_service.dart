@@ -1,4 +1,5 @@
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repository/receivable_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -30,6 +31,7 @@ class WalletMetricsService {
   final ReceivableRepository receivableRepository;
   final InvestmentRepository investmentRepository;
   final TransactionsRepository transactionsRepository;
+  final TransactionsChangedNotifier transactionsChangedNotifier;
 
   WalletMetricsService({
     required this.walletRepository,
@@ -37,6 +39,7 @@ class WalletMetricsService {
     required this.receivableRepository,
     required this.investmentRepository,
     required this.transactionsRepository,
+    required this.transactionsChangedNotifier,
   });
 
   /// Cüzdan başına yazma kuyruğu: aynı cüzdanın bakiye/metrik
@@ -125,6 +128,9 @@ class WalletMetricsService {
         (_) => true,
       );
       if (!added) return false;
+      // Kuplajla yazılan sistem işlemi de defteri değiştirir; işlem sayfası
+      // ve diğer dinleyiciler canlı yenilensin.
+      transactionsChangedNotifier.notify();
       return await _syncBalanceImpl(walletId);
     } catch (e) {
       debugPrint('recordCashMovement başarısız: $e');

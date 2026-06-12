@@ -293,14 +293,29 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i691.DeleteBudgetUsecase>(),
           gh<_i777.TransactionsChangedNotifier>(),
         ));
-    gh.lazySingleton<_i239.WalletMetricsService>(
-        () => _i239.WalletMetricsService(
-              walletRepository: gh<_i254.WalletRepository>(),
-              debtRepository: gh<_i889.DebtRepository>(),
-              receivableRepository: gh<_i329.ReceivableRepository>(),
-              investmentRepository: gh<_i589.InvestmentRepository>(),
-              transactionsRepository: gh<_i543.TransactionsRepository>(),
-            ));
+    gh.lazySingleton<_i239.WalletMetricsService>(() =>
+        _i239.WalletMetricsService(
+          walletRepository: gh<_i254.WalletRepository>(),
+          debtRepository: gh<_i889.DebtRepository>(),
+          receivableRepository: gh<_i329.ReceivableRepository>(),
+          investmentRepository: gh<_i589.InvestmentRepository>(),
+          transactionsRepository: gh<_i543.TransactionsRepository>(),
+          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
+        ));
+    gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
+          getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
+          addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
+          updateReceivableUseCase: gh<_i866.UpdateReceivableUseCase>(),
+          deleteReceivableUseCase: gh<_i866.DeleteReceivableUseCase>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+        ));
+    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
+          csvService: gh<_i530.CsvService>(),
+          transactionsRepository: gh<_i543.TransactionsRepository>(),
+          walletRepository: gh<_i254.WalletRepository>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
+        ));
     gh.factory<_i854.ApproveRecurringTransactionUsecase>(
         () => _i854.ApproveRecurringTransactionUsecase(
               gh<_i788.RecurringTransactionRepository>(),
@@ -349,20 +364,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i111.SkipRecurringTransactionUsecase>(),
           gh<_i239.WalletMetricsService>(),
           gh<_i777.TransactionsChangedNotifier>(),
-        ));
-    gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
-          getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
-          addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
-          updateReceivableUseCase: gh<_i866.UpdateReceivableUseCase>(),
-          deleteReceivableUseCase: gh<_i866.DeleteReceivableUseCase>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-        ));
-    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
-          csvService: gh<_i530.CsvService>(),
-          transactionsRepository: gh<_i543.TransactionsRepository>(),
-          walletRepository: gh<_i254.WalletRepository>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
     return this;
   }
