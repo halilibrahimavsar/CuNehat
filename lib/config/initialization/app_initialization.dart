@@ -19,6 +19,7 @@ import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 
 class AppInitialization {
   static Future<AppInitializationResult> initialize() async {
@@ -98,6 +99,7 @@ class AppInitialization {
     register(DebtTypeAdapter());
     register(BudgetModelAdapter());
     register(RecurringTransactionModelAdapter());
+    register(RecurringFrequencyAdapter());
     register(ColorAdapter());
   }
 }

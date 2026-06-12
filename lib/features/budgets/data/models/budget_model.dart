@@ -3,7 +3,9 @@ import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 
 part 'budget_model.g.dart';
 
-@HiveType(typeId: 10)
+// typeId 10 DebtTypeAdapter tarafından kullanılıyor; çakışırsa adapter hiç
+// kaydedilmez ve her budget yazımı "unknown type" ile düşer.
+@HiveType(typeId: 12)
 class BudgetModel extends HiveObject {
   @HiveField(0)
   final String categoryId;

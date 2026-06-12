@@ -8,7 +8,7 @@ part of 'budget_model.dart';
 
 class BudgetModelAdapter extends TypeAdapter<BudgetModel> {
   @override
-  final int typeId = 10;
+  final int typeId = 12;
 
   @override
   BudgetModel read(BinaryReader reader) {

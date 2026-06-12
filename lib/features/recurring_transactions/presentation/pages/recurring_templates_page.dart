@@ -7,7 +7,6 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
-import '../../domain/entities/recurring_frequency_enum.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/usecases/delete_recurring_transaction_usecase.dart';
 import '../../domain/usecases/get_all_recurring_templates_usecase.dart';
@@ -86,101 +85,253 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
     }
   }
 
-  String _frequencyLabel(RecurringFrequency frequency) {
-    switch (frequency) {
-      case RecurringFrequency.daily:
-        return 'Günlük';
-      case RecurringFrequency.weekly:
-        return 'Haftalık';
-      case RecurringFrequency.monthly:
-        return 'Aylık';
-      case RecurringFrequency.yearly:
-        return 'Yıllık';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Düzenli İşlemler'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => context.pop(),
+      backgroundColor: scheme.surface,
+      body: RefreshIndicator(
+        onRefresh: _loadTemplates,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 120,
+              pinned: true,
+              backgroundColor: scheme.primary,
+              leading: IconButton(
+                icon:
+                    const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                onPressed: () => context.pop(),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                title: const Text(
+                  'Düzenli İşlemler',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                centerTitle: false,
+                titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [scheme.primary, scheme.secondary],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            _buildContent(),
+          ],
         ),
       ),
-      body: _buildBody(),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildContent() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null) {
-      return Center(child: Text('Hata: $_error'));
-    }
-    if (_templates.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'Henüz düzenli işlem yok.\n\nİşlem eklerken tekrar sıklığı seçerseniz şablon burada görünür.',
-            textAlign: TextAlign.center,
-          ),
-        ),
+      return const SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: CircularProgressIndicator()),
       );
     }
+    if (_error != null) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: Text('Hata: $_error')),
+      );
+    }
+    if (_templates.isEmpty) {
+      return const _EmptyTemplates();
+    }
 
-    return RefreshIndicator(
-      onRefresh: _loadTemplates,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _templates.length,
-        itemBuilder: (context, index) {
-          final template = _templates[index];
-          final isIncome = template.type == TransactionTypeModel.income;
-          final dateStr =
-              DateFormat('dd MMM yyyy').format(template.nextExecutionDate);
+    return SliverPadding(
+      padding: const EdgeInsets.all(16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _TemplateCard(
+            template: _templates[index],
+            onToggle: _toggleActive,
+            onDelete: _delete,
+          ),
+          childCount: _templates.length,
+        ),
+      ),
+    );
+  }
+}
 
-          return AppCard(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              leading: Icon(
-                isIncome ? Icons.trending_up : Icons.trending_down,
-                color: isIncome ? Colors.green : Colors.red,
-              ),
-              title: Text(
-                template.title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  decoration:
-                      template.isActive ? null : TextDecoration.lineThrough,
+class _EmptyTemplates extends StatelessWidget {
+  const _EmptyTemplates();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(Icons.event_repeat_rounded,
+                    size: 48, color: scheme.primary),
               ),
-              subtitle: Text(
-                '${formatMoney(template.amount)} · ${_frequencyLabel(template.frequency)}\n'
-                '${template.isActive ? "Sonraki: $dateStr" : "Duraklatıldı"}',
+              const SizedBox(height: 16),
+              Text(
+                'Henüz düzenli işlem yok',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
-              isThreeLine: true,
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Switch(
-                    value: template.isActive,
-                    onChanged: (_) => _toggleActive(template),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _delete(template),
-                  ),
-                ],
+              const SizedBox(height: 8),
+              Text(
+                'İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TemplateCard extends StatelessWidget {
+  final RecurringTransactionEntity template;
+  final ValueChanged<RecurringTransactionEntity> onToggle;
+  final ValueChanged<RecurringTransactionEntity> onDelete;
+
+  const _TemplateCard({
+    required this.template,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isIncome = template.type == TransactionTypeModel.income;
+    final accent = template.isActive
+        ? (isIncome ? Colors.green : Colors.red)
+        : scheme.onSurfaceVariant;
+    final dateStr =
+        DateFormat('dd MMM yyyy').format(template.nextExecutionDate);
+
+    return AppCard(
+      accent: accent,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
-          );
-        },
+            child: Icon(
+              template.isActive
+                  ? (isIncome
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded)
+                  : Icons.pause_rounded,
+              color: accent,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  template.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: template.isActive
+                        ? scheme.onSurface
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: accent.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        template.frequency.displayName,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        template.isActive ? dateStr : 'Duraklatıldı',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  formatMoney(template.amount),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Switch(
+                value: template.isActive,
+                activeColor: Colors.green,
+                onChanged: (_) => onToggle(template),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.delete_outline,
+                    color: scheme.onSurfaceVariant, size: 22),
+                onPressed: () => onDelete(template),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
