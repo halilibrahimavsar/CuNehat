@@ -5,6 +5,7 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart';
+import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
@@ -19,6 +20,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
   final AddInvestmentUseCase addInvestmentUseCase;
   final UpdateInvestmentUseCase updateInvestmentUseCase;
   final DeleteInvestmentUseCase deleteInvestmentUseCase;
+  final GetLiveQuoteUseCase getLiveQuoteUseCase;
   final WalletMetricsService walletMetricsService;
 
   InvestmentBloc({
@@ -26,6 +28,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
     required this.addInvestmentUseCase,
     required this.updateInvestmentUseCase,
     required this.deleteInvestmentUseCase,
+    required this.getLiveQuoteUseCase,
     required this.walletMetricsService,
   }) : super(InvestmentInitial()) {
     // Yatırımları Getir
@@ -98,6 +101,71 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           await _safeSyncInvestment(event.walletId);
           emit(InvestmentActionSuccess(
               'Yatırım güncellendi${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+          add(GetInvestmentsEvent(
+              userId: event.userId, walletId: event.walletId));
+        },
+      );
+    });
+
+    // Fiyat Yenile: güncel değer = miktar × canlı TL fiyatı. Maliyet
+    // değişmediği için (costDiff yok) defterde nakit hareketi oluşmaz;
+    // yalnızca portföy/birikim metriği senkronlanır.
+    on<RefreshPricesEvent>((event, emit) async {
+      emit(InvestmentLoading());
+      final listResult = await getInvestmentsUseCase.call(
+        userId: event.userId,
+        walletId: event.walletId,
+      );
+
+      await listResult.fold(
+        (failure) async => emit(InvestmentError(failure.message)),
+        (investments) async {
+          final targets = investments
+              .where((inv) =>
+                  inv.canRefreshPrice &&
+                  (event.investmentId == null ||
+                      inv.id == event.investmentId))
+              .toList();
+
+          if (targets.isEmpty) {
+            emit(const InvestmentError(
+                'Yenilenebilir yatırım yok (sembol ve miktar gerekli)'));
+            return;
+          }
+
+          var updatedCount = 0;
+          var failedCount = 0;
+          // Sıralı istek: fiyat servislerini boğmamak için bilinçli olarak
+          // paralel değil.
+          for (final inv in targets) {
+            final quoteResult = await getLiveQuoteUseCase(
+              symbol: inv.symbol!,
+              type: inv.type,
+            );
+            final ok = await quoteResult.fold(
+              (_) async => false,
+              (quote) async {
+                final updated = inv.copyWith(
+                  currentValue: inv.quantity! * quote.priceTl,
+                  currency: quote.currency,
+                );
+                final saveResult =
+                    await updateInvestmentUseCase.call(updated);
+                return saveResult.isRight();
+              },
+            );
+            ok ? updatedCount++ : failedCount++;
+          }
+
+          await _safeSyncInvestment(event.walletId);
+          if (updatedCount == 0) {
+            emit(const InvestmentError(
+                'Fiyatlar alınamadı, değerler değiştirilmedi'));
+          } else {
+            emit(InvestmentActionSuccess(failedCount == 0
+                ? '$updatedCount yatırımın fiyatı güncellendi'
+                : '$updatedCount güncellendi, $failedCount alınamadı'));
+          }
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },

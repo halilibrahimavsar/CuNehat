@@ -308,6 +308,14 @@ extension GetItInjectableX on _i174.GetIt {
             ));
     gh.lazySingleton<_i816.DataRepairService>(
         () => _i816.DataRepairService(gh<_i239.WalletMetricsService>()));
+    gh.factory<_i726.InvestmentBloc>(() => _i726.InvestmentBloc(
+          getInvestmentsUseCase: gh<_i864.GetInvestmentsUseCase>(),
+          addInvestmentUseCase: gh<_i818.AddInvestmentUseCase>(),
+          updateInvestmentUseCase: gh<_i420.UpdateInvestmentUseCase>(),
+          deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
+          getLiveQuoteUseCase: gh<_i362.GetLiveQuoteUseCase>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+        ));
     gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
           getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
           watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
@@ -315,13 +323,6 @@ extension GetItInjectableX on _i174.GetIt {
           updateWalletUseCase: gh<_i207.WalletUpdateUseCase>(),
           deleteWalletUseCase: gh<_i207.WalletDeleteUseCase>(),
           setActiveWalletUseCase: gh<_i207.WalletSetActiveUseCase>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-        ));
-    gh.factory<_i726.InvestmentBloc>(() => _i726.InvestmentBloc(
-          getInvestmentsUseCase: gh<_i864.GetInvestmentsUseCase>(),
-          addInvestmentUseCase: gh<_i818.AddInvestmentUseCase>(),
-          updateInvestmentUseCase: gh<_i420.UpdateInvestmentUseCase>(),
-          deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(

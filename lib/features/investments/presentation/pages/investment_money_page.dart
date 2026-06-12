@@ -1,9 +1,10 @@
-import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
+import 'package:cunehat/features/investments/presentation/widgets/contribute_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/investment_action_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_card.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
@@ -28,30 +29,48 @@ class InvestmentMoneyPage extends StatefulWidget {
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   late ConfettiController _confettiController;
 
-  /// true → sat (nakit gelir işlenir), false → yalnız kaydı sil, null → vazgeç.
-  Future<bool?> _askDeleteMode(InvestmentEntity investment) {
+  /// Satış onayı: güncel değer cüzdana gelir olarak işlenir.
+  Future<bool?> _confirmSell(InvestmentEntity investment) {
     return IboDialog.showCustomDialog<bool>(
       context,
-      title: '${investment.name} kaldırılsın mı?',
+      title: '${investment.name} satılsın mı?',
       content: Text(
-        'Sat: Güncel değer (${formatMoney(investment.currentValue)}) '
-        'cüzdana gelir olarak işlenir.\n\n'
-        'Kaydı Sil: Hatalı girişler için; alım gideri '
-        '(${formatMoney(investment.amount)}) düzeltme kaydıyla iade edilir, '
-        'bakiye yatırım öncesine döner.',
+        'Güncel değer (${formatMoney(investment.currentValue)}) cüzdana '
+        'gelir olarak işlenir ve kayıt kapatılır.',
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Vazgeç'),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Kaydı Sil'),
-        ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
           child: const Text('Sat'),
+        ),
+      ],
+    );
+  }
+
+  /// Kayıt silme onayı: hatalı girişler için, alım gideri iade edilir.
+  Future<bool?> _confirmDelete(InvestmentEntity investment) {
+    return IboDialog.showCustomDialog<bool>(
+      context,
+      title: '${investment.name} kaydı silinsin mi?',
+      content: Text(
+        'Hatalı girişler için: alım gideri '
+        '(${formatMoney(investment.amount)}) düzeltme kaydıyla iade edilir, '
+        'bakiye yatırım öncesine döner.\n\n'
+        'Gerçekten sattıysanız bunun yerine "Sat" kullanın.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Vazgeç'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Kaydı Sil'),
         ),
       ],
     );
@@ -86,81 +105,130 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         ));
   }
 
+  /// Sat: nakit gelir işlenir; Kaydı Sil: alım gideri ters kayıtla iade.
+  void _dispatchDelete(InvestmentEntity investment, {required bool sell}) {
+    context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
+          id: investment.id!,
+          userId: widget.activeWallet.userId,
+          walletId: widget.activeWallet.id!,
+          amount: investment.amount,
+          currentValue: investment.currentValue,
+          recordSale: sell,
+        ));
+  }
+
+  /// Sağa kaydırma artık yalnızca "Kaydı Sil" akışıdır; satış eylem
+  /// menüsünden ayrıca yapılır.
   Future<bool> _deleteInvestment(InvestmentEntity investment) async {
-    final sell = await _askDeleteMode(investment);
-    if (sell != null && mounted) {
-      context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
-            id: investment.id!,
-            userId: widget.activeWallet.userId,
-            walletId: widget.activeWallet.id!,
-            amount: investment.amount,
-            currentValue: investment.currentValue,
-            recordSale: sell,
-          ));
+    final confirmed = await _confirmDelete(investment);
+    if (confirmed == true && mounted) {
+      _dispatchDelete(investment, sell: false);
       return true;
     }
     return false;
   }
 
-  /// Birikim hedefine para ekleme: tutar hem maliyete hem güncel değere
-  /// eklenir; mevcut maliyet-farkı kuplajı (UpdateInvestmentEvent) tutarı
-  /// cüzdandan gider olarak düşer.
-  void _showContributeDialog(
-      BuildContext context, InvestmentEntity investment) {
+  /// Katkı (Mod A: nakit, Mod B: varlık alımı) — muhasebe contribute_sheet'te.
+  void _showContributeSheet(InvestmentEntity investment) {
     final bloc = context.read<InvestmentBloc>();
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('${investment.name} hedefine para ekle'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: 'Tutar',
-              border: const OutlineInputBorder(),
-              helperText:
-                  'Birikmiş: ${formatMoney(investment.currentValue)} / '
-                  'Hedef: ${formatMoney(investment.targetAmount ?? 0)}',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            validator: (value) => validateAmount(value ?? ''),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              final contribution = parseAmount(controller.text)!;
-              final updated = investment.copyWith(
-                amount: investment.amount + contribution,
-                currentValue: investment.currentValue + contribution,
-              );
-              bloc.add(UpdateInvestmentEvent(
-                investment: updated,
-                userId: widget.activeWallet.userId,
-                walletId: widget.activeWallet.id!,
-                prevAmount: investment.amount,
-                newAmount: updated.amount,
-              ));
-              if (updated.isTargetReached && !investment.isTargetReached) {
-                _confettiController.play();
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Ekle'),
-          ),
-        ],
-      ),
+    ContributeSheet.show(
+      context,
+      investment: investment,
+      onSave: (updated) {
+        bloc.add(UpdateInvestmentEvent(
+          investment: updated,
+          userId: widget.activeWallet.userId,
+          walletId: widget.activeWallet.id!,
+          prevAmount: investment.amount,
+          newAmount: updated.amount,
+        ));
+        if (updated.isTargetReached && !investment.isTargetReached) {
+          _confettiController.play();
+        }
+      },
     );
+  }
+
+  void _openEditSheet(InvestmentEntity item) {
+    void onSave(InvestmentEntity updatedInvestment) {
+      context.read<InvestmentBloc>().add(UpdateInvestmentEvent(
+            investment: updatedInvestment,
+            userId: widget.activeWallet.userId,
+            walletId: widget.activeWallet.id!,
+            prevAmount: item.amount,
+            newAmount: updatedInvestment.amount,
+          ));
+
+      if (updatedInvestment.isTargetReached && !item.isTargetReached) {
+        _confettiController.play();
+      }
+    }
+
+    switch (item.type) {
+      case InvestmentType.gold:
+        AddGoldSheet.show(
+          context,
+          userId: item.userId,
+          walletId: item.walletId,
+          investmentToEdit: item,
+          onSave: onSave,
+        );
+        break;
+      case InvestmentType.stock:
+        AddStockSheet.show(
+          context,
+          userId: item.userId,
+          walletId: item.walletId,
+          investmentToEdit: item,
+          onSave: onSave,
+        );
+        break;
+      case InvestmentType.custom:
+        AddCustomSheet.show(
+          context,
+          userId: item.userId,
+          walletId: item.walletId,
+          investmentToEdit: item,
+          onSave: onSave,
+        );
+        break;
+    }
+  }
+
+  /// Karta dokunma: Sat / Sil / Düzenle / Katkı / Fiyat eylemleri ayrı
+  /// satırlar olarak sunulur.
+  Future<void> _showActionSheet(InvestmentEntity investment) async {
+    final action =
+        await InvestmentActionSheet.show(context, investment: investment);
+    if (action == null || !mounted) return;
+
+    switch (action) {
+      case InvestmentAction.contribute:
+        _showContributeSheet(investment);
+        break;
+      case InvestmentAction.refreshPrice:
+        context.read<InvestmentBloc>().add(RefreshPricesEvent(
+              userId: widget.activeWallet.userId,
+              walletId: widget.activeWallet.id!,
+              investmentId: investment.id,
+            ));
+        break;
+      case InvestmentAction.edit:
+        _openEditSheet(investment);
+        break;
+      case InvestmentAction.sell:
+        final confirmed = await _confirmSell(investment);
+        if (confirmed == true && mounted) {
+          _dispatchDelete(investment, sell: true);
+        }
+        break;
+      case InvestmentAction.delete:
+        final confirmed = await _confirmDelete(investment);
+        if (confirmed == true && mounted) {
+          _dispatchDelete(investment, sell: false);
+        }
+        break;
+    }
   }
 
   @override
@@ -221,11 +289,34 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Text(
-                                  '${investments.length} yatırım',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${investments.length} yatırım',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    if (investments
+                                        .any((i) => i.canRefreshPrice))
+                                      IconButton(
+                                        tooltip: 'Fiyatları Güncelle',
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () => context
+                                            .read<InvestmentBloc>()
+                                            .add(RefreshPricesEvent(
+                                              userId:
+                                                  widget.activeWallet.userId,
+                                              walletId:
+                                                  widget.activeWallet.id!,
+                                            )),
+                                        icon: const Icon(
+                                          Icons.refresh_rounded,
+                                          size: 20,
+                                          color: Colors.teal,
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -243,65 +334,12 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                       return await _deleteInvestment(
                                           investment);
                                     },
-                                    onEdit: (item) {
-                                      void onSave(
-                                          InvestmentEntity updatedInvestment) {
-                                        context
-                                            .read<InvestmentBloc>()
-                                            .add(UpdateInvestmentEvent(
-                                              investment: updatedInvestment,
-                                              userId:
-                                                  widget.activeWallet.userId,
-                                              walletId: widget.activeWallet.id!,
-                                              prevAmount: item.amount,
-                                              newAmount:
-                                                  updatedInvestment.amount,
-                                            ));
-
-                                        if (updatedInvestment.isTargetReached &&
-                                            !item.isTargetReached) {
-                                          _confettiController.play();
-                                        }
-                                      }
-
-                                      switch (item.type) {
-                                        case InvestmentType.gold:
-                                          AddGoldSheet.show(
-                                            context,
-                                            userId: investment.userId,
-                                            walletId: investment.walletId,
-                                            investmentToEdit: item,
-                                            onSave: onSave,
-                                          );
-                                          break;
-                                        case InvestmentType.stock:
-                                          AddStockSheet.show(
-                                            context,
-                                            userId: investment.userId,
-                                            walletId: investment.walletId,
-                                            investmentToEdit: item,
-                                            onSave: onSave,
-                                          );
-                                          break;
-                                        case InvestmentType.custom:
-                                          AddCustomSheet.show(
-                                            context,
-                                            userId: investment.userId,
-                                            walletId: investment.walletId,
-                                            investmentToEdit: item,
-                                            onSave: onSave,
-                                          );
-                                          break;
-                                      }
-                                    },
+                                    onEdit: (item) => _openEditSheet(item),
                                     child: GestureDetector(
-                                      // Hedefli (birikim) kayıtlarda dokunuş
-                                      // "hedefe para ekle" akışını açar.
-                                      onTap: investment.targetAmount != null &&
-                                              investment.targetAmount! > 0
-                                          ? () => _showContributeDialog(
-                                              context, investment)
-                                          : null,
+                                      // Dokunuş eylem menüsünü açar: katkı,
+                                      // fiyat, düzenle, sat ve sil ayrı ayrı.
+                                      onTap: () =>
+                                          _showActionSheet(investment),
                                       child: InvestmentCard(
                                         investment: investment,
                                       ),

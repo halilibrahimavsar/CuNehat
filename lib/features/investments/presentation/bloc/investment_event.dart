@@ -51,6 +51,23 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
   List<Object> get props => [investment, userId, walletId];
 }
 
+/// Canlı fiyatlardan güncel değer yenileme. [investmentId] verilirse tek
+/// kayıt, verilmezse yenilenebilir (sembol + miktar) tüm kayıtlar güncellenir.
+/// Maliyet değişmediği için defterde nakit hareketi oluşturmaz.
+final class RefreshPricesEvent extends InvestmentEvent {
+  final String userId;
+  final String walletId;
+  final String? investmentId;
+
+  const RefreshPricesEvent({
+    required this.userId,
+    required this.walletId,
+    this.investmentId,
+  });
+  @override
+  List<Object> get props => [userId, walletId, investmentId ?? ''];
+}
+
 final class DeleteInvestmentEvent extends InvestmentEvent {
   final String userId;
   final String walletId;
