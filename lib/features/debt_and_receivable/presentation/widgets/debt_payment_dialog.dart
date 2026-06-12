@@ -1,6 +1,7 @@
 // lib/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart
 
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -71,6 +72,19 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
   DateTime _paymentDate = DateTime.now();
+  double? _activeQuickPay;
+  bool _showInstallmentPlan = false;
+  bool _showPaymentHistory = false;
+
+  void _applyQuickPay(double amount) {
+    final v = amount == amount.roundToDouble()
+        ? amount.toStringAsFixed(0)
+        : amount.toStringAsFixed(2);
+    setState(() {
+      _activeQuickPay = amount;
+      _amountController.text = v;
+    });
+  }
 
   @override
   void dispose() {
@@ -82,11 +96,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   void _handlePayment() {
     if (!_formKey.currentState!.validate()) return;
 
-    // Virgül ondalığını da kabul eden ortak ayrıştırıcı; validator
-    // geçtiyse null olamaz.
     final amount = parseAmount(_amountController.text)!;
 
-    // Yeni ödeme oluştur
     final newPayment = Payment(
       date: _paymentDate,
       amount: amount,
@@ -95,28 +106,21 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
           : _notesController.text.trim(),
     );
 
-    // Mevcut ödemelere ekle
     final updatedPayments = List<Payment>.from(widget.debt.payments)
       ..add(newPayment);
 
-    // Borcun tamamen ödenip ödenmediğini kontrol et
     final totalPaid = updatedPayments.fold<double>(
       0.0,
       (sum, payment) => sum + payment.amount,
     );
-    // Kuruş altı tolerans: kayan nokta birikimi son ödemede isPaid'i
-    // yanlışlıkla false bırakıp borcu 0,00 kalanla aktif listede tutmasın.
     final isPaid = totalPaid >= widget.debt.totalDebtAmount - 0.005;
 
-    // Güncellenmiş borcu oluştur
     final updatedDebt = widget.debt.copyWith(
       payments: updatedPayments,
       isPaid: isPaid,
     );
 
-    // Bloc'a gönder: ödeme tutarı kadar nakit gider de oluşturulur.
     context.read<DebtBloc>().add(PayDebtEvent(updatedDebt, amount));
-
     Navigator.of(context).pop(true);
   }
 
@@ -127,199 +131,396 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       firstDate: widget.debt.startDate,
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-
-    if (picked != null) {
-      setState(() => _paymentDate = picked);
-    }
+    if (picked != null) setState(() => _paymentDate = picked);
   }
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    // IboDialog içeriğe sonsuz yükseklik veriyor; ConstrainedBox bunu filtreler
+    // ve SingleChildScrollView sınırlı alanda scroll eder → overflow yok.
+    final maxH =
+        (mq.size.height - mq.viewInsets.bottom - 250).clamp(380.0, 700.0);
+
     final remaining = widget.debt.remainingAmount;
     final totalDebt = widget.debt.totalDebtAmount;
     final totalPaid = widget.debt.totalPaidAmount;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return SingleChildScrollView(
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Borç Özeti
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.15)
-                    : Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark
-                      ? Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.35)
-                      : Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.2),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.debt.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow('Toplam Borç:', formatMoney(totalDebt)),
-                  _buildInfoRow('Ödenen:', formatMoney(totalPaid),
-                      color: Colors.green),
-                  const Divider(height: 16),
-                  _buildInfoRow('Kalan:', formatMoney(remaining),
-                      color: Colors.red, isBold: true),
-                ],
-              ),
-            ),
+    final cs = Theme.of(context).colorScheme;
 
-            const SizedBox(height: 20),
-
-            // Ödeme Tutarı
-            TextFormField(
-              controller: _amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Ödeme Tutarı *',
-                hintText: '0.00',
-                prefixIcon: const Icon(Icons.attach_money),
-                suffixText: '₺',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                helperText: 'Maksimum: ${formatMoney(remaining)}',
-              ),
-              validator: (value) {
-                final base = validateAmount(value ?? '');
-                if (base != null) return base;
-                if (parseAmount(value!)! > remaining) {
-                  return 'Kalan tutardan fazla olamaz';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // Ödeme Tarihi
-            InkWell(
-              onTap: _selectDate,
-              borderRadius: BorderRadius.circular(12),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Ödeme Tarihi',
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  AppFormatters.dateLong.format(_paymentDate),
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Notlar (Opsiyonel)
-            TextFormField(
-              controller: _notesController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Not (Opsiyonel)',
-                hintText: 'Ödeme ile ilgili notlar...',
-                prefixIcon: const Icon(Icons.note_alt),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-
-            // Ödeme Geçmişi
-            if (widget.debt.payments.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text(
-                'Ödeme Geçmişi (${widget.debt.payments.length})',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxH),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Borç Özeti
               Container(
-                constraints: const BoxConstraints(maxHeight: 150),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: widget.debt.payments.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final payment = entry.value;
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          dense: true,
-                          leading: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Colors.green.shade100,
-                            child: Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                color: Colors.green.shade700,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            formatMoney(payment.amount),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            AppFormatters.dateShort.format(payment.date),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          trailing: payment.notes != null
-                              ? Tooltip(
-                                  message: payment.notes!,
-                                  child:
-                                      const Icon(Icons.info_outline, size: 16),
-                                )
-                              : null,
-                        ),
-                      );
-                    }).toList(),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? cs.primary.withValues(alpha: 0.15)
+                      : cs.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? cs.primary.withValues(alpha: 0.35)
+                        : cs.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.debt.title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow('Toplam Borç:', formatMoney(totalDebt)),
+                    _buildInfoRow('Ödenen:', formatMoney(totalPaid),
+                        color: Colors.green),
+                    const Divider(height: 16),
+                    _buildInfoRow('Kalan:', formatMoney(remaining),
+                        color: Colors.red, isBold: true),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Hızlı seçim chip'leri
+              _buildQuickPayOptions(remaining),
+
+              const SizedBox(height: 12),
+
+              // Ödeme Tutarı
+              TextFormField(
+                controller: _amountController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (_) {
+                  if (_activeQuickPay != null) {
+                    setState(() => _activeQuickPay = null);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: 'Ödeme Tutarı *',
+                  hintText: '0.00',
+                  prefixIcon: const Icon(Icons.attach_money),
+                  suffixText: '₺',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  helperText: 'Maksimum: ${formatMoney(remaining)}',
+                ),
+                validator: (value) {
+                  final base = validateAmount(value ?? '');
+                  if (base != null) return base;
+                  if (parseAmount(value!)! > remaining) {
+                    return 'Kalan tutardan fazla olamaz';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Ödeme Tarihi
+              InkWell(
+                onTap: _selectDate,
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Ödeme Tarihi',
+                    prefixIcon: const Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    AppFormatters.dateLong.format(_paymentDate),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // Notlar
+              TextFormField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Not (Opsiyonel)',
+                  hintText: 'Ödeme ile ilgili notlar...',
+                  prefixIcon: const Icon(Icons.note_alt),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+
+              // Taksit Planı (foldable)
+              if (widget.debt.termMonths > 1) ...[
+                const SizedBox(height: 8),
+                _buildCollapsibleSection(
+                  cs: cs,
+                  title: 'Taksit Planı (${widget.debt.termMonths} ay)',
+                  icon: Icons.calendar_month_rounded,
+                  isExpanded: _showInstallmentPlan,
+                  onToggle: () => setState(
+                      () => _showInstallmentPlan = !_showInstallmentPlan),
+                  child: _buildInstallmentPlanList(isDark),
+                ),
+              ],
+
+              // Ödeme Geçmişi (foldable)
+              if (widget.debt.payments.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                _buildCollapsibleSection(
+                  cs: cs,
+                  title:
+                      'Ödeme Geçmişi (${widget.debt.payments.length})',
+                  icon: Icons.history_rounded,
+                  isExpanded: _showPaymentHistory,
+                  onToggle: () => setState(
+                      () => _showPaymentHistory = !_showPaymentHistory),
+                  child: _buildPaymentHistoryList(),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------- Sections
+
+  Widget _buildCollapsibleSection({
+    required ColorScheme cs,
+    required String title,
+    required IconData icon,
+    required bool isExpanded,
+    required VoidCallback onToggle,
+    required Widget child,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                Icon(icon, size: 16, color: cs.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                Icon(
+                  isExpanded
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
+                  color: cs.onSurfaceVariant,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: isExpanded ? child : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInstallmentPlanList(bool isDark) {
+    final monthlyAmount =
+        widget.debt.totalDebtAmount / widget.debt.termMonths;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(widget.debt.termMonths, (i) {
+        final scheduledDate =
+            addMonthsClamped(widget.debt.startDate, i + 1);
+        final isPaidInstallment = i < widget.debt.payments.length;
+        final isOverdue =
+            !isPaidInstallment && scheduledDate.isBefore(DateTime.now());
+
+        final Color statusColor;
+        final IconData statusIcon;
+        final String statusText;
+        if (isPaidInstallment) {
+          statusColor = Colors.green;
+          statusIcon = Icons.check_circle_rounded;
+          statusText = formatMoney(widget.debt.payments[i].amount);
+        } else if (isOverdue) {
+          statusColor = Colors.red;
+          statusIcon = Icons.warning_rounded;
+          statusText = 'Gecikmiş';
+        } else {
+          statusColor = Colors.orange;
+          statusIcon = Icons.schedule_rounded;
+          statusText = 'Bekleniyor';
+        }
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 6),
+          child: ListTile(
+            dense: true,
+            leading: CircleAvatar(
+              radius: 14,
+              backgroundColor:
+                  statusColor.withValues(alpha: isDark ? 0.25 : 0.12),
+              child: Icon(statusIcon, size: 16, color: statusColor),
+            ),
+            title: Text(
+              '${i + 1}. Taksit — ${AppFormatters.dateShort.format(scheduledDate)}',
+              style: const TextStyle(fontSize: 13),
+            ),
+            subtitle: Text(
+              '≈ ${formatMoney(monthlyAmount)}',
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark
+                    ? Colors.grey.shade400
+                    : Colors.grey.shade600,
+              ),
+            ),
+            trailing: Text(
+              statusText,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: statusColor,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildPaymentHistoryList() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: widget.debt.payments.asMap().entries.map((entry) {
+        final index = entry.key;
+        final payment = entry.value;
+        return Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            dense: true,
+            leading: CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.green.shade100,
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  color: Colors.green.shade700,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            title: Text(
+              formatMoney(payment.amount),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              AppFormatters.dateShort.format(payment.date),
+              style: const TextStyle(fontSize: 12),
+            ),
+            trailing: payment.notes != null
+                ? Tooltip(
+                    message: payment.notes!,
+                    child: const Icon(Icons.info_outline, size: 16),
+                  )
+                : null,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ---------------------------------------------------------------- Quick pay
+
+  Widget _buildQuickPayOptions(double remaining) {
+    final termMonths = widget.debt.termMonths;
+    final monthly =
+        termMonths > 1 ? widget.debt.totalDebtAmount / termMonths : null;
+
+    final options = <({String label, double amount})>[
+      if (monthly != null) ...[
+        (label: '1 taksit', amount: monthly.clamp(0, remaining)),
+        if (remaining > monthly * 1.5)
+          (
+            label: '2 taksit',
+            amount: (monthly * 2).clamp(0, remaining),
+          ),
+      ],
+      (label: 'Tamamını öde', amount: remaining),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: options.map((opt) {
+          final isActive = _activeQuickPay == opt.amount;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => _applyQuickPay(opt.amount),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isActive ? Colors.green : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  '${opt.label}  ${formatMoney(opt.amount)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                        isActive ? FontWeight.w700 : FontWeight.w500,
+                    color: isActive
+                        ? (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.greenAccent
+                            : Colors.green.shade700)
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------- Info row
 
   Widget _buildInfoRow(String label, String value,
       {Color? color, bool isBold = false}) {

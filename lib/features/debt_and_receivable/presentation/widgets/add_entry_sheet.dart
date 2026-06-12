@@ -82,14 +82,18 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _overdueController.text = _fmt(d.overdueInterestRate);
       _selectedDebtType = d.type;
       _originalAmount = d.principalAmount;
-      if (d.expectedTotalAmount != null && d.type == DebtType.bankLoan) {
-        _isBankLoanMonthly = true;
-        if (d.termMonths > 0) {
+      if (d.type == DebtType.bankLoan) {
+        // Proxy: interestRate == 0 → "aylık taksiti biliyorum" modu
+        _isBankLoanMonthly = d.interestRate == 0;
+        if (_isBankLoanMonthly &&
+            d.termMonths > 0 &&
+            d.expectedTotalAmount != null) {
           _installmentController.text =
               _fmt(d.expectedTotalAmount! / d.termMonths);
         }
-      } else {
-        _isBankLoanMonthly = false;
+      } else if (d.type == DebtType.installmentDebt) {
+        // Proxy: interestRate == 0 → "basit vade farkı" modu
+        _isInstallmentAmortized = d.interestRate != 0;
       }
     } else if (widget.receivableToEdit != null) {
       _isEditing = true;
@@ -138,6 +142,16 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     }
     final amountError = validateAmount(_amountController.text);
     if (amountError != null) return amountError;
+
+    if (_isDebt && _selectedDebtType != DebtType.personalDebt) {
+      final t = int.tryParse(_termController.text.trim()) ?? 0;
+      if (t <= 0) return 'Vade (ay) en az 1 olmalı';
+      if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
+        if (parseAmount(_installmentController.text) == null) {
+          return 'Aylık taksit tutarını girin';
+        }
+      }
+    }
     return null;
   }
 
@@ -173,6 +187,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           );
         } else {
           expectedTotal = amount + (amount * interest / 100);
+          // Proxy sentinel: interestRate = 0 → restore'da basit vade farkı modu olduğu anlaşılır
+          interest = 0;
         }
       } else if (_selectedDebtType == DebtType.bankLoan) {
         term = int.tryParse(_termController.text.trim()) ?? 1;
@@ -190,9 +206,15 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           );
         }
       } else {
+        // otherDebt
         term = int.tryParse(_termController.text.trim()) ?? 1;
         interest = parseAmount(_interestController.text) ?? 0;
         overdue = parseAmount(_overdueController.text) ?? 0;
+        expectedTotal = DebtEntity.calculateTotalDebt(
+          principal: amount,
+          interestRate: interest,
+          termMonths: term,
+        );
       }
 
       final dueDate = addMonthsClamped(_selectedDate, term);
@@ -825,7 +847,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       : [],
                 ),
                 alignment: Alignment.center,
-                child: Text('Kredi Kartı Faizi',
+                child: Text('Eşit Taksit (Amortisman)',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: _isInstallmentAmortized
