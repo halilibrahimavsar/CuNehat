@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/transactions_usecases.dart';
@@ -16,6 +19,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final DeleteTransactionUseCase deleteTransactionUseCase;
   final GetTransactionByIdUseCase getTransactionByIdUseCase;
   final WalletMetricsService walletMetricsService;
+  final TransactionsChangedNotifier transactionsChangedNotifier;
+
+  /// Defter değiştiğinde aynı sorguyu yenileyebilmek için son yükleme eventi.
+  GetTransactionsEvent? _lastQuery;
+  StreamSubscription<void>? _changedSubscription;
 
   TransactionBloc({
     required this.getTransactionsGroupedUseCase,
@@ -24,17 +32,33 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     required this.deleteTransactionUseCase,
     required this.getTransactionByIdUseCase,
     required this.walletMetricsService,
+    required this.transactionsChangedNotifier,
   }) : super(TransactionLoading()) {
     on<GetTransactionsEvent>(_onLoadTransactions);
     on<AddTransactionEvent>(_onAddTransaction);
     on<UpdateTransactionEvent>(_onUpdateTransaction);
     on<DeleteTransactionEvent>(_onDeleteTransaction);
+
+    // Defter başka bir yerden değişirse (diğer bloc örneği, recurring onayı,
+    // import) açık listeyi/grafiği aynı sorguyla tazele.
+    _changedSubscription = transactionsChangedNotifier.stream.listen((_) {
+      final last = _lastQuery;
+      if (last != null) add(last);
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _changedSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onLoadTransactions(
     GetTransactionsEvent event,
     Emitter<TransactionState> emit,
   ) async {
+    _lastQuery = event;
+
     // Mevcut veriyi koruyarak loading durumuna geç
     emit(TransactionLoading(previousTransactions: state.currentTransactions));
 
@@ -91,6 +115,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           transactions: currentData,
           warning: synced ? null : _syncWarning,
         ));
+        transactionsChangedNotifier.notify();
       },
     );
   }
@@ -129,6 +154,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           transactions: currentData,
           warning: synced ? null : _syncWarning,
         ));
+        transactionsChangedNotifier.notify();
       },
     );
   }
@@ -178,6 +204,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
               transactions: currentData,
               warning: synced ? null : _syncWarning,
             ));
+            transactionsChangedNotifier.notify();
           },
         );
       },

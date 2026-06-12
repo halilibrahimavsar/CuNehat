@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/csv_service.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
@@ -15,12 +16,14 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
   final TransactionsRepository transactionsRepository;
   final WalletRepository walletRepository;
   final WalletMetricsService walletMetricsService;
+  final TransactionsChangedNotifier transactionsChangedNotifier;
 
   DataExportImportCubit({
     required this.csvService,
     required this.transactionsRepository,
     required this.walletRepository,
     required this.walletMetricsService,
+    required this.transactionsChangedNotifier,
   }) : super(DataExportImportInitial());
 
   Future<void> exportTransactions(String userId, String walletId) async {
@@ -97,6 +100,8 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
         // Set as active wallet
         await walletRepository.setActiveWallet(
             userId: userId, newActiveWalletId: newWalletId);
+
+        transactionsChangedNotifier.notify();
 
         emit(const DataExportImportSuccess(
             "Veriler başarıyla içe aktarıldı. Yeni cüzdan oluşturuldu ve seçildi."));

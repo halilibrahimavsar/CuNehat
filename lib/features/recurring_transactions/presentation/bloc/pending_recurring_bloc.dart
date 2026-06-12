@@ -2,6 +2,7 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import '../../domain/usecases/get_pending_recurring_transactions_usecase.dart';
 import '../../domain/usecases/approve_recurring_transaction_usecase.dart';
@@ -16,12 +17,14 @@ class PendingRecurringBloc
   final ApproveRecurringTransactionUsecase approveUsecase;
   final DeleteRecurringTransactionUsecase deleteUsecase;
   final WalletMetricsService walletMetricsService;
+  final TransactionsChangedNotifier transactionsChangedNotifier;
 
   PendingRecurringBloc(
     this.getPendingUsecase,
     this.approveUsecase,
     this.deleteUsecase,
     this.walletMetricsService,
+    this.transactionsChangedNotifier,
   ) : super(PendingRecurringInitial()) {
     on<LoadPendingTransactionsEvent>(_onLoadPendingTransactions);
     on<ApproveTransactionEvent>(_onApproveTransaction);
@@ -58,6 +61,8 @@ class PendingRecurringBloc
         // İşlem TransactionBloc yolunun dışında eklendiği için bakiyenin
         // defterden yeniden hesaplanması burada tetiklenmeli.
         await walletMetricsService.syncBalance(event.template.walletId);
+        // Açık liste/grafik/bütçe ekranları yeni işlemi görsün
+        transactionsChangedNotifier.notify();
         // İşlem onaylandığında listeden çıkması için tekrar load eventini tetikle
         add(LoadPendingTransactionsEvent());
       },

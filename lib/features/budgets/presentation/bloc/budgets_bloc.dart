@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
@@ -12,14 +15,34 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
   final SaveBudgetUsecase _saveBudgetUsecase;
   final DeleteBudgetUsecase _deleteBudgetUsecase;
 
+  StreamSubscription<void>? _transactionsChangedSubscription;
+
   BudgetsBloc(
     this._getBudgetsUsecase,
     this._saveBudgetUsecase,
     this._deleteBudgetUsecase,
+    TransactionsChangedNotifier transactionsChangedNotifier,
   ) : super(BudgetsInitial()) {
     on<LoadBudgetsEvent>(_onLoadBudgets);
     on<SaveBudgetEvent>(_onSaveBudget);
     on<DeleteBudgetEvent>(_onDeleteBudget);
+
+    // İşlem defteri değişince harcanan tutarlar bayatlamasın diye yenile.
+    _transactionsChangedSubscription =
+        transactionsChangedNotifier.stream.listen((_) {
+      if (_currentUserId != null && _currentWalletId != null) {
+        add(LoadBudgetsEvent(
+          userId: _currentUserId!,
+          walletId: _currentWalletId!,
+        ));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _transactionsChangedSubscription?.cancel();
+    return super.close();
   }
 
   String? _currentUserId;
