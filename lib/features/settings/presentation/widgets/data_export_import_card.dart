@@ -7,6 +7,7 @@ import 'package:cunehat/features/settings/presentation/blocs/data_export_import/
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class DataExportImportCard extends StatelessWidget {
   const DataExportImportCard({super.key});
@@ -60,7 +61,7 @@ class _DataExportImportCardContent extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'İşlem Dışa / İçe Aktar',
+                    context.l10n.dataExportImport,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
@@ -77,7 +78,7 @@ class _DataExportImportCardContent extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Tüm işlemlerinizi standart CSV formatında dışa aktararak diğer uygulamalarda kullanabilir veya yedekleyebilirsiniz.',
+                context.l10n.dataExportImportDesc,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -106,7 +107,7 @@ class _DataExportImportCardContent extends StatelessWidget {
                               }
                             },
                       icon: const Icon(Icons.file_download_rounded),
-                      label: const Text('İçe Aktar (CSV)'),
+                      label: Text(context.l10n.iceAktarCsv),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -142,14 +143,13 @@ class _DataExportImportCardContent extends StatelessWidget {
                               if (userId != null && walletId != null) {
                                 context
                                     .read<DataExportImportCubit>()
-                                    .exportTransactions(userId, walletId);
+                                    .exportTransactions(userId, walletId, shareText: context.l10n.islemGecmisiCsv);
                               } else {
-                                IboSnackbar.showWarning(context,
-                                    "Dışa aktarım için aktif bir cüzdan gereklidir.");
+                                IboSnackbar.showWarning(context, context.l10n.activeWalletRequiredForExport);
                               }
                             },
                       icon: const Icon(Icons.file_upload_rounded),
-                      label: const Text('Dışa Aktar (CSV)'),
+                      label: Text(context.l10n.disaAktarCsv),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,

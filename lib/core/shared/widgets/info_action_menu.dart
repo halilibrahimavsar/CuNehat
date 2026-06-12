@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Tıklanabilir, modern görünümlü ve aksiyon menülü sarmalayıcı widget.
 /// Herhangi bir widget'ı (child) sarmalayarak ona "sağ tık" menüsü özelliği kazandırır.
@@ -105,7 +106,7 @@ class AnimatedInfoDisplay extends StatelessWidget {
           curve: Curves.easeOutExpo,
           builder: (context, value, child) {
             return Text(
-              '${value.toStringAsFixed(2)} $currencySymbol',
+              context.l10n.valueTostringasfixedCurrencysymbol(value.toStringAsFixed(2), currencySymbol),
               style: valueStyle ??
                   const TextStyle(
                     fontSize: 24,

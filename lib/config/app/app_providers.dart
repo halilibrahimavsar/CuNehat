@@ -8,6 +8,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/filterin
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
+import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -35,6 +36,7 @@ class AppProviders extends StatelessWidget {
 
         // Feature BLoCs
         BlocProvider(create: (_) => getIt<ThemeBloc>()),
+        BlocProvider(create: (_) => getIt<LanguageBloc>()),
         BlocProvider(create: (_) => getIt<DebtBloc>()),
         BlocProvider(create: (_) => getIt<ReceivableBloc>()),
         BlocProvider(create: (_) => getIt<TransactionFilterCubit>()),

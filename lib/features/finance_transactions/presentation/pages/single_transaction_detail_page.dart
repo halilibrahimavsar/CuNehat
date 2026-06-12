@@ -1,5 +1,6 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -57,12 +58,12 @@ class SingleTransactionDetailPage extends StatelessWidget {
             backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
-            title: const Text('İşlem Detayı'),
+            title: Text(context.l10n.islemDetayi),
             actions: [
               if (!t.isSystem)
                 IconButton(
                   icon: const Icon(Icons.edit_rounded),
-                  tooltip: 'Düzenle',
+                  tooltip: context.l10n.duzenle,
                   onPressed: () => _edit(context, t),
                 ),
             ],
@@ -126,7 +127,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                       ),
                       if (t.isSystem) ...[
                         const SizedBox(height: 8),
-                        _systemBadge(scheme),
+                        _systemBadge(context, scheme),
                       ],
                     ],
                   ),
@@ -183,7 +184,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
 
                 // Aksiyonlar
                 if (t.isSystem)
-                  _systemNotice(scheme)
+                  _systemNotice(context, scheme)
                 else
                   Row(
                     children: [
@@ -191,7 +192,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                         child: OutlinedButton.icon(
                           onPressed: () => _delete(context, t),
                           icon: const Icon(Icons.delete_outline_rounded),
-                          label: const Text('Sil'),
+                          label: Text(context.l10n.sil),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppGradients.debt,
                             side: BorderSide(
@@ -207,7 +208,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                         child: FilledButton.icon(
                           onPressed: () => _edit(context, t),
                           icon: const Icon(Icons.edit_rounded),
-                          label: const Text('Düzenle'),
+                          label: Text(context.l10n.duzenle),
                           style: FilledButton.styleFrom(
                             backgroundColor: accent,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -248,7 +249,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
     }
   }
 
-  Widget _systemBadge(ColorScheme scheme) {
+  Widget _systemBadge(BuildContext context, ColorScheme scheme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -262,7 +263,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
               size: 13, color: scheme.onSurfaceVariant),
           const SizedBox(width: 6),
           Text(
-            'Otomatik işlem',
+            context.l10n.otomatikIslem,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -274,7 +275,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _systemNotice(ColorScheme scheme) {
+  Widget _systemNotice(BuildContext context, ColorScheme scheme) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -290,7 +291,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.',
+              context.l10n.buIslemOtomatikOlusturuldu,
               style: TextStyle(
                 fontSize: 12,
                 height: 1.35,

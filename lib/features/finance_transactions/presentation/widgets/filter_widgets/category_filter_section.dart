@@ -2,6 +2,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// filter_view.dart'tan bölündü (v1 temizliği): davranış aynı.
 class CategoryFilterSection extends StatelessWidget {
@@ -26,7 +27,7 @@ class CategoryFilterSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'KATEGORİ FİLTRESİ',
+          context.l10n.kATEGORIFiltresi,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -47,9 +48,9 @@ class CategoryFilterSection extends StatelessWidget {
               color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'Kategori bulunamadı',
-              style: TextStyle(color: Colors.grey),
+            child: Text(
+              context.l10n.kategoriBulunamadi,
+              style: const TextStyle(color: Colors.grey),
             ),
           )
         else ...[

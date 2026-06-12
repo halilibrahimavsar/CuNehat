@@ -1,4 +1,5 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -386,7 +387,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mevcut Değer',
+            context.l10n.mevcutDeger,
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -517,9 +518,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.refresh_rounded),
-                  label: const Text(
-                    'Hesapla',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  label: Text(
+                    context.l10n.hesapla,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                 ),
               ),
@@ -643,8 +644,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Maliyeti değiştirirseniz fark, cüzdana düzeltme '
-              'hareketi olarak işlenir.',
+              context.l10n.maliyetiDegistirirsenizFarkCuzdana,
               style: TextStyle(
                 color: cs.onSurfaceVariant,
                 fontSize: 12,

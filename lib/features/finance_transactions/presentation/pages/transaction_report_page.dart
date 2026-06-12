@@ -1,6 +1,7 @@
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -105,13 +106,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     return Scaffold(
       appBar: widget.showAppBar
           ? AppBar(
-              title: const Text('İşlem Raporu'),
+              title: Text(context.l10n.islemRaporu),
               centerTitle: true,
               actions: [
                 IconButton(
                   icon: const Icon(Icons.date_range),
                   onPressed: _pickDateRange,
-                  tooltip: 'Tarih Aralığı',
+                  tooltip: context.l10n.tooltipTarihAraligi,
                 ),
               ],
             )
@@ -132,7 +133,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           if (filteredTransactions.isEmpty) {
             return _buildEmptyState(
               context,
-              message: 'Seçilen tarih aralığında işlem yok',
+              message: context.l10n.msgSecilenTarihAraligindaIslem,
             );
           }
 
@@ -147,7 +148,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'İşlem Raporu',
+                  context.l10n.islemRaporu,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -159,7 +160,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 _buildSummaryCards(totals),
                 const SizedBox(height: 24),
                 Text(
-                  'Haftalık Net Akış',
+                  context.l10n.haftalikNetAkis,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -168,7 +169,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 _buildBarChartCard(context, weeklyNet),
                 const SizedBox(height: 24),
                 Text(
-                  'Kategori Dağılımı',
+                  context.l10n.kategoriDagilimi,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -233,7 +234,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 size: 48, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
             const SizedBox(height: 12),
             Text(
-              '$title için veri yok',
+              context.l10n.titleIcinVeriYok(title),
               style: TextStyle(
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
@@ -472,7 +473,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                       child: transactionsWithBalance.isEmpty
                           ? Center(
                               child: Text(
-                                'Bu kategoriye ait işlem bulunmuyor.',
+                                context.l10n.buKategoriyeAitIslem,
                                 style: TextStyle(
                                   color: scheme.onSurfaceVariant,
                                   fontSize: 16,
@@ -525,7 +526,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 ),
               ),
               Text(
-                '${formatMoney(item.totalAmount)} (%${percent.toStringAsFixed(0)})',
+                context.l10n.formatMoneyItemTotalamountPercent(formatMoney(item.totalAmount), percent.toStringAsFixed(0)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: scheme.onSurfaceVariant,
@@ -552,7 +553,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
               const SizedBox(width: 8),
               Text(
-                'Grafik için yeterli veri yok',
+                context.l10n.grafikIcinYeterliVeri,
                 style: TextStyle(color: scheme.onSurfaceVariant),
               ),
             ],
@@ -708,7 +709,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               foregroundColor: scheme.primary,
               textStyle: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            child: const Text('Değiştir'),
+            child: Text(context.l10n.degistir),
           ),
         ],
       ),
@@ -870,7 +871,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.',
+                context.l10n.buDonemIcinHenuz,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

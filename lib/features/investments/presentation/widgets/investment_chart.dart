@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -24,7 +25,7 @@ class InvestmentChart extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Center(
           child: Text(
-            'Grafik için yatırım bulunmuyor',
+            context.l10n.grafikIcinYatirimBulunmuyor,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -40,7 +41,7 @@ class InvestmentChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Portföy Dağılımı',
+            context.l10n.portfoyDagilimi,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: scheme.onSurface,
@@ -59,7 +60,7 @@ class InvestmentChart extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          ..._buildLegend(theme),
+          ..._buildLegend(context, theme),
         ],
       ),
     );
@@ -96,7 +97,7 @@ class InvestmentChart extends StatelessWidget {
     }).toList();
   }
 
-  List<Widget> _buildLegend(ThemeData theme) {
+  List<Widget> _buildLegend(BuildContext context, ThemeData theme) {
     final scheme = theme.colorScheme;
     final totalValue = investments.fold(0.0, (sum, i) => sum + i.currentValue);
 
@@ -128,7 +129,7 @@ class InvestmentChart extends StatelessWidget {
               ),
             ),
             Text(
-              '%$percentage',
+              context.l10n.percentage(percentage),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,

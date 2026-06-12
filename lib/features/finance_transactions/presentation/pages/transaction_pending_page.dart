@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 
@@ -23,7 +24,7 @@ class TransactionPendingPage extends StatelessWidget {
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
-              title: const Text('Bekleyen İşlemler'),
+              title: Text(context.l10n.bekleyenIslemler),
               centerTitle: true,
             )
           : null,
@@ -68,7 +69,7 @@ class TransactionPendingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  'Tüm İşlemleriniz Güncel',
+                  context.l10n.tumIslemlerinizGuncel,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: scheme.onSurface,
@@ -77,7 +78,7 @@ class TransactionPendingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bekleyen çevrimdışı işlem bulunmuyor. Cihazınız internete bağlandığında veya yeni veriler girildiğinde senkronizasyon otomatik olarak tetiklenir.',
+                  context.l10n.bekleyenCevrimdisiIslemBulunmuyor,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

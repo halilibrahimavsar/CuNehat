@@ -19,6 +19,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapt
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
+import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 
@@ -32,6 +33,7 @@ class AppInitialization {
         _initializeHive(),
         _initializeDateFormatting(),
         ThemeBloc.preloadTheme(),
+        LanguageBloc.preloadLanguage(),
       ]);
 
       // Diğer tüm servisler ve modüller hazır olduktan sonra bağımlılık

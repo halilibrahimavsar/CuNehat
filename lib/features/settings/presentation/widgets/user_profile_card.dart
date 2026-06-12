@@ -4,6 +4,7 @@ import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/models/local_user.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:go_router/go_router.dart';
 
 /// Displays the current user's information in a premium, theme-aware card.
@@ -17,7 +18,7 @@ class UserProfileCard extends StatelessWidget {
     return BlocBuilder<AppAuthBloc, AppAuthState>(
       builder: (context, state) {
         final user = _extractUser(state);
-        final name = user?.displayName ?? 'Kullanıcı';
+        final name = user?.displayName ?? context.l10n.defaultUser;
         final initial = name.isNotEmpty ? name[0].toUpperCase() : 'K';
 
         return AppCard(
@@ -28,7 +29,7 @@ class UserProfileCard extends StatelessWidget {
             children: [
               _buildAvatar(theme, initial),
               const SizedBox(width: 16),
-              _buildUserInfo(theme, name),
+              _buildUserInfo(theme, name, context.l10n.welcomeUser),
               Icon(Icons.chevron_right,
                   color: theme.colorScheme.onSurfaceVariant),
             ],
@@ -59,13 +60,13 @@ class UserProfileCard extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInfo(ThemeData theme, String email) {
+  Widget _buildUserInfo(ThemeData theme, String email, String welcomeText) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hoşgeldiniz',
+            welcomeText,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
             ),

@@ -1,5 +1,6 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -41,7 +42,7 @@ class SummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TOPLAM PORTFÖY DEĞERİ',
+                context.l10n.tOPLAMPortfoyDegeri,
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.5,
@@ -96,7 +97,7 @@ class SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'TOPLAM MALİYET',
+                    context.l10n.tOPLAMMaliyet,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                       fontWeight: FontWeight.bold,
@@ -119,7 +120,7 @@ class SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'KAZANÇ / ZARAR',
+                    context.l10n.kAZANCZarar,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                       fontWeight: FontWeight.bold,
@@ -145,7 +146,7 @@ class SummaryCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          '${isProfit ? "+" : ""}${totalProfitPercentage.toStringAsFixed(1)}%',
+                          context.l10n.isProfitTotalprofitpercentageTostringasfixed(isProfit ? '+' : '', totalProfitPercentage.toStringAsFixed(1)),
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: profitColor,
                             fontWeight: FontWeight.w900,

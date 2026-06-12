@@ -258,14 +258,27 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     );
   }
 
+  String? _localizeMessage(String? msg) {
+    if (msg == null) return null;
+    if (msg.startsWith('Incorrect PIN. Remaining tries:')) {
+      final tries = msg.split(':').last.trim();
+      return widget.texts.msgIncorrectPinRemainingTries.replaceFirst('{tries}', tries);
+    }
+    if (msg.startsWith('PIN verification failed')) {
+      final error = msg.replaceFirst('PIN verification failed: ', '');
+      return widget.texts.msgPINVerificationFailedE.replaceFirst('{error}', error);
+    }
+    return msg;
+  }
+
   String _statusText(LocalAuthLoginState state, bool isLockedOut) {
     if (isLockedOut) {
       return '${widget.texts.lockedOutPromptPrefix}\n$_remainingSeconds ${widget.texts.lockedOutPromptSuffix}';
     }
     if (state.authStatus == AuthStatus.failure) {
-      return state.message ?? widget.texts.invalidPinFallback;
+      return _localizeMessage(state.message) ?? widget.texts.invalidPinFallback;
     }
-    return state.message ?? widget.texts.enterPinPrompt;
+    return _localizeMessage(state.message) ?? widget.texts.enterPinPrompt;
   }
 
   bool _isPinError(LocalAuthLoginState state) {

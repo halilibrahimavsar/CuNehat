@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -46,9 +47,9 @@ class BudgetsPage extends StatelessWidget {
                 onPressed: () => context.pop(),
               ),
               flexibleSpace: FlexibleSpaceBar(
-                title: const Text(
-                  'Bütçe Planlama',
-                  style: TextStyle(
+                title: Text(
+                  context.l10n.butcePlanlama,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -90,7 +91,7 @@ class _BudgetsBody extends StatelessWidget {
         } else if (state is BudgetsError) {
           return SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('Hata: ${state.failure.message}')),
+            child: Center(child: Text(context.l10n.hataStateFailureMessage(state.failure.message))),
           );
         } else if (state is BudgetsLoaded) {
           if (state.budgets.isEmpty) {
@@ -137,7 +138,7 @@ class _EmptyBudgets extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Henüz bütçe yok',
+              context.l10n.henuzButceYok,
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
@@ -145,7 +146,7 @@ class _EmptyBudgets extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Kategorilerinize aylık harcama limiti koyun,\nharcamalarınızı buradan takip edin.',
+              context.l10n.kategorilerinizeAylikHarcamaLimiti,
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
@@ -186,7 +187,7 @@ class _BudgetSummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'BU AY TOPLAM HARCAMA',
+                context.l10n.bUAyToplamHarcama,
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.5,
@@ -228,7 +229,7 @@ class _BudgetSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Toplam limit: ${AppFormatters.currency.format(totalLimit)}',
+            context.l10n.toplamLimitAppformattersCurrency(AppFormatters.currency.format(totalLimit)),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -300,7 +301,7 @@ class _BudgetListItem extends StatelessWidget {
                       Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  '%$percent',
+                  context.l10n.percent(percent),
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.w900,
@@ -333,7 +334,7 @@ class _BudgetListItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Harcanan: ${AppFormatters.currency.format(budget.spentAmount)}',
+                context.l10n.harcananAppformattersCurrencyFormat(AppFormatters.currency.format(budget.spentAmount)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: budget.isExceeded ? Colors.red : scheme.onSurface,
                   fontWeight:
@@ -341,7 +342,7 @@ class _BudgetListItem extends StatelessWidget {
                 ),
               ),
               Text(
-                'Limit: ${AppFormatters.currency.format(budget.limitAmount)}',
+                context.l10n.limitAppformattersCurrencyFormat(AppFormatters.currency.format(budget.limitAmount)),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),
@@ -442,7 +443,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Yeni Bütçe Ekle'),
+      title: Text(context.l10n.yeniButceEkle),
       content: Form(
         key: _formKey,
         child: Column(
@@ -450,9 +451,9 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
           children: [
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Kategori',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.labelKategori,
+                border: const OutlineInputBorder(),
               ),
               items: _categories
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -462,19 +463,19 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                   value == null ? 'Bir kategori seçin' : null,
             ),
             if (_isUpdate)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  'Bu kategorinin bütçesi var; limit güncellenecek.',
-                  style: TextStyle(fontSize: 12, color: Colors.orange),
+                  context.l10n.buKategorininButcesiVar,
+                  style: const TextStyle(fontSize: 12, color: Colors.orange),
                 ),
               ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _limitController,
-              decoration: const InputDecoration(
-                labelText: 'Aylık Limit',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.labelAylikLimit,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
@@ -495,7 +496,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('İptal'),
+          child: Text(context.l10n.iptal),
         ),
         FilledButton(
           onPressed: _save,

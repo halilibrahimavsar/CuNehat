@@ -1,6 +1,7 @@
 import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -140,7 +141,10 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${_categories.where((c) => !c.isDefault).length} özel, ${_categories.where((c) => c.isDefault).length} varsayılan',
+                      context.l10n.categoriesWhereCC(
+                        _categories.where((c) => !c.isDefault).length,
+                        _categories.where((c) => c.isDefault).length,
+                      ),
                       style:
                           TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
@@ -164,9 +168,9 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
       labelColor: color,
       unselectedLabelColor: Colors.grey,
       indicatorColor: color,
-      tabs: const [
-        Tab(text: 'Özel Kategoriler'),
-        Tab(text: 'Varsayılan Kategoriler'),
+      tabs: [
+        Tab(text: context.l10n.ozelKategoriler),
+        Tab(text: context.l10n.varsayilanKategoriler),
       ],
     );
   }
@@ -199,7 +203,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
             if (!showDefaults) ...[
               const SizedBox(height: 8),
               Text(
-                'Aşağıdaki butondan ekleyebilirsiniz',
+                context.l10n.asagidakiButondanEkleyebilirsiniz,
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
             ],
@@ -278,7 +282,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
                     Icon(Icons.lock, size: 14, color: Colors.grey.shade600),
                     const SizedBox(width: 4),
                     Text(
-                      'Varsayılan',
+                      context.l10n.varsayilan,
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey.shade600,
@@ -323,7 +327,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
               ),
             ),
             icon: const Icon(Icons.add),
-            label: const Text('Yeni Kategori Ekle'),
+            label: Text(context.l10n.yeniKategoriEkle),
           ),
         ),
       ),

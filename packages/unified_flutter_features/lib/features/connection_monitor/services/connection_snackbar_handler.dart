@@ -38,6 +38,24 @@ class ConnectionSnackbarHandler extends StatefulWidget {
 class _ConnectionSnackbarHandlerState extends State<ConnectionSnackbarHandler> {
   ConnectionMonitorState? lastState;
 
+  String? _localizeMessage(String? msg) {
+    if (msg == null) return null;
+    if (msg == 'Internet connection is active') {
+      return widget.texts.connectedMessage;
+    }
+    if (msg == 'No internet connection') {
+      return widget.texts.disconnectedMessage;
+    }
+    if (msg == 'Checking connection...') {
+      return widget.texts.checkingMessage;
+    }
+    if (msg.startsWith('Connection check failed')) {
+      final error = msg.replaceFirst('Connection check failed: ', '').replaceFirst('Connection check failed', '');
+      return '${widget.texts.checkFailedPrefix}: $error';
+    }
+    return msg;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<ConnectionCubit, ConnectionMonitorState>(
@@ -75,7 +93,7 @@ class _ConnectionSnackbarHandlerState extends State<ConnectionSnackbarHandler> {
                     Expanded(
                       child: Text(
                         widget.connectedMessage ??
-                            state.message ??
+                            _localizeMessage(state.message) ??
                             widget.texts.connectedMessage,
                         style: widget.textStyle ??
                             const TextStyle(color: Colors.white),
@@ -106,7 +124,7 @@ class _ConnectionSnackbarHandlerState extends State<ConnectionSnackbarHandler> {
                     Expanded(
                       child: Text(
                         widget.disconnectedMessage ??
-                            state.message ??
+                            _localizeMessage(state.message) ??
                             widget.texts.disconnectedMessage,
                         style: widget.textStyle ??
                             const TextStyle(color: Colors.white),
@@ -150,7 +168,7 @@ class _ConnectionSnackbarHandlerState extends State<ConnectionSnackbarHandler> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        state.message ?? widget.texts.checkingMessage,
+                        _localizeMessage(state.message) ?? widget.texts.checkingMessage,
                         style: widget.textStyle ??
                             const TextStyle(color: Colors.white),
                       ),

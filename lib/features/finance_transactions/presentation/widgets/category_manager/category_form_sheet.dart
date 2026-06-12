@@ -1,5 +1,6 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -133,8 +134,8 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
     return TextFormField(
       controller: _nameController,
       decoration: InputDecoration(
-        labelText: 'Kategori Adı',
-        hintText: 'Örn: Market, Kira, Maaş',
+        labelText: context.l10n.labelKategoriAdi,
+        hintText: context.l10n.hintOrnMarketKiraMaas,
         prefixIcon: const Icon(Icons.label),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
@@ -159,7 +160,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'İkon Seçin',
+          context.l10n.ikonSecin,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
@@ -188,9 +189,9 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Text(
-                  'İkon değiştirmek için dokun',
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  context.l10n.ikonDegistirmekIcinDokun,
+                  style: const TextStyle(color: Colors.grey),
                 ),
                 const Spacer(),
                 Icon(Icons.arrow_forward_ios,
@@ -214,7 +215,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
           Expanded(
             child: TextButton(
               onPressed: _isLoading ? null : () => Navigator.pop(context),
-              child: const Text('İptal'),
+              child: Text(context.l10n.iptal),
             ),
           ),
           const SizedBox(width: 16),

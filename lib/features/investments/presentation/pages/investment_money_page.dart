@@ -7,6 +7,7 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_act
 import 'package:cunehat/features/investments/presentation/widgets/investment_card.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
@@ -34,17 +35,16 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       title: '${investment.name} satılsın mı?',
       content: Text(
-        'Güncel değer (${formatMoney(investment.currentValue)}) cüzdana '
-        'gelir olarak işlenir ve kayıt kapatılır.',
+        context.l10n.guncelDegerFormatmoneyInvestment(formatMoney(investment.currentValue)),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Vazgeç'),
+          child: Text(context.l10n.vazgec),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Sat'),
+          child: Text(context.l10n.sat),
         ),
       ],
     );
@@ -56,20 +56,17 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       title: '${investment.name} kaydı silinsin mi?',
       content: Text(
-        'Hatalı girişler için: alım gideri '
-        '(${formatMoney(investment.amount)}) düzeltme kaydıyla iade edilir, '
-        'bakiye yatırım öncesine döner.\n\n'
-        'Gerçekten sattıysanız bunun yerine "Sat" kullanın.',
+        context.l10n.hataliGirislerIcinAlim(formatMoney(investment.amount)),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Vazgeç'),
+          child: Text(context.l10n.vazgec),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: Colors.red),
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Kaydı Sil'),
+          child: Text(context.l10n.kaydiSil),
         ),
       ],
     );
@@ -276,9 +273,9 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Portföyüm',
-                                  style: TextStyle(
+                                Text(
+                                  context.l10n.portfoyum,
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -286,7 +283,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                 Row(
                                   children: [
                                     Text(
-                                      '${investments.length} yatırım',
+                                      context.l10n.investmentsLengthYatirim(investments.length),
                                       style: const TextStyle(
                                         color: Colors.grey,
                                       ),
@@ -294,7 +291,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                     if (investments
                                         .any((i) => i.canRefreshPrice))
                                       IconButton(
-                                        tooltip: 'Fiyatları Güncelle',
+                                        tooltip: context.l10n.tooltipFiyatlariGuncelle,
                                         visualDensity: VisualDensity.compact,
                                         onPressed: () => context
                                             .read<InvestmentBloc>()

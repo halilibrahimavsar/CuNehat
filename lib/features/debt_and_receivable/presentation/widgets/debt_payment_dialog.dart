@@ -9,6 +9,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Borç Ödeme Dialog'u - Kullanıcının borç ödemesi yapmasını sağlar
 class DebtPaymentDialog extends StatefulWidget {
@@ -44,7 +45,7 @@ class DebtPaymentDialog extends StatefulWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('İptal'),
+          child: Text(context.l10n.iptal),
         ),
         ElevatedButton.icon(
           onPressed: () => key.currentState?._handlePayment(),
@@ -57,7 +58,7 @@ class DebtPaymentDialog extends StatefulWidget {
             ),
           ),
           icon: const Icon(Icons.check_circle, size: 20),
-          label: const Text('Ödemeyi Kaydet'),
+          label: Text(context.l10n.odemeyiKaydet),
         ),
       ],
     );
@@ -208,13 +209,13 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'Ödeme Tutarı *',
+                  labelText: context.l10n.labelOdemeTutari,
                   hintText: '0.00',
                   prefixIcon: const Icon(Icons.attach_money),
                   suffixText: '₺',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  helperText: 'Maksimum: ${formatMoney(remaining)}',
+                  helperText: context.l10n.maksimumFormatmoneyRemaining(formatMoney(remaining)),
                 ),
                 validator: (value) {
                   final base = validateAmount(value ?? '');
@@ -234,7 +235,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 borderRadius: BorderRadius.circular(12),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Ödeme Tarihi',
+                    labelText: context.l10n.labelOdemeTarihi,
                     prefixIcon: const Icon(Icons.calendar_today),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -253,8 +254,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 controller: _notesController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Not (Opsiyonel)',
-                  hintText: 'Ödeme ile ilgili notlar...',
+                  labelText: context.l10n.labelNotOpsiyonel,
+                  hintText: context.l10n.hintOdemeIleIlgiliNotlar,
                   prefixIcon: const Icon(Icons.note_alt),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
@@ -386,11 +387,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               child: Icon(statusIcon, size: 16, color: statusColor),
             ),
             title: Text(
-              '${i + 1}. Taksit — ${AppFormatters.dateShort.format(scheduledDate)}',
+              context.l10n.iTaksitAppformattersDateshort(i + 1, AppFormatters.dateShort.format(scheduledDate)),
               style: const TextStyle(fontSize: 13),
             ),
             subtitle: Text(
-              '≈ ${formatMoney(monthlyAmount)}',
+              context.l10n.formatMoneyMonthlyamount(formatMoney(monthlyAmount)),
               style: TextStyle(
                 fontSize: 11,
                 color: isDark
@@ -426,7 +427,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               radius: 16,
               backgroundColor: Colors.green.shade100,
               child: Text(
-                '${index + 1}',
+                context.l10n.index(index + 1),
                 style: TextStyle(
                   color: Colors.green.shade700,
                   fontSize: 12,
@@ -463,14 +464,14 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
 
     final options = <({String label, double amount})>[
       if (monthly != null) ...[
-        (label: '1 taksit', amount: monthly.clamp(0, remaining)),
+        (label: context.l10n.taksit1, amount: monthly.clamp(0, remaining)),
         if (remaining > monthly * 1.5)
           (
-            label: '2 taksit',
+            label: context.l10n.taksit2,
             amount: (monthly * 2).clamp(0, remaining),
           ),
       ],
-      (label: 'Tamamını öde', amount: remaining),
+      (label: context.l10n.tamaminiOde, amount: remaining),
     ];
 
     return SingleChildScrollView(
@@ -500,7 +501,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   ),
                 ),
                 child: Text(
-                  '${opt.label}  ${formatMoney(opt.amount)}',
+                  context.l10n.optLabelFormatmoneyOpt(opt.label, formatMoney(opt.amount)),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight:

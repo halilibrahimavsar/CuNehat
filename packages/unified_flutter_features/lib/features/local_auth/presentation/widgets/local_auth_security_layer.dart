@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import '../../data/local_auth_repository.dart';
 import 'local_auth_background_lock.dart';
 import '../../../../shared_features/privacy_guard/ibo_privacy_guard.dart';
@@ -66,11 +67,15 @@ class LocalAuthSecurityLayer extends StatefulWidget {
   /// Optional custom builder for privacy guard overlay.
   final PrivacyGuardOverlayBuilder? privacyGuardOverlayBuilder;
 
+  /// Localization texts.
+  final LocalAuthTexts texts;
+
   const LocalAuthSecurityLayer({
     super.key,
     required this.repository,
     required this.child,
     this.controller,
+    this.texts = const LocalAuthTexts(),
     this.privacyGuardStyle = const PrivacyGuardOverlayStyle(),
     this.privacyBlurOn = const {
       AppLifecycleState.inactive,
@@ -154,6 +159,7 @@ class _LocalAuthSecurityLayerState extends State<LocalAuthSecurityLayer> {
       overlayBuilder: widget.privacyGuardOverlayBuilder,
       child: LocalAuthBackgroundLock(
         repository: widget.repository,
+        texts: widget.texts,
         child: widget.child,
       ),
     );

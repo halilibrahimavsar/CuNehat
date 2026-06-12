@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import '../bloc/settings/local_auth_settings_state.dart';
 import '../utils/local_auth_utils.dart';
 import 'local_auth_settings_components.dart';
@@ -8,12 +9,14 @@ class LocalAuthSettingsHeader extends StatelessWidget {
   final LocalAuthSettingsState state;
   final LocalAuthSettingsStyle style;
   final Widget? header;
+  final LocalAuthTexts texts;
 
   const LocalAuthSettingsHeader({
     super.key,
     required this.state,
     required this.style,
     this.header,
+    this.texts = const LocalAuthTexts(),
   });
 
   @override
@@ -27,6 +30,8 @@ class LocalAuthSettingsHeader extends StatelessWidget {
         theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
         );
+
+    final isEn = texts.logoutLabel == 'Logout';
 
     return Container(
       padding: style.headerPadding,
@@ -66,9 +71,9 @@ class LocalAuthSettingsHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Security Settings', style: headerTitleStyle),
+                    Text(texts.securitySettings, style: headerTitleStyle),
                     const SizedBox(height: 4),
-                    Text('Manage your app security',
+                    Text(texts.manageYourAppSecurity,
                         style: headerSubtitleStyle),
                   ],
                 ),
@@ -81,18 +86,21 @@ class LocalAuthSettingsHeader extends StatelessWidget {
             runSpacing: 8,
             children: [
               LocalAuthStatusChip(
-                label: state.isPinSet ? 'PIN On' : 'PIN Off',
+                label: state.isPinSet
+                    ? '${texts.pinLockTitle} ${isEn ? 'On' : 'Açık'}'
+                    : '${texts.pinLockTitle} ${isEn ? 'Off' : 'Kapalı'}',
                 enabled: state.isPinSet,
               ),
               LocalAuthStatusChip(
-                label:
-                    state.isBiometricEnabled ? 'Biometric On' : 'Biometric Off',
+                label: state.isBiometricEnabled
+                    ? '${texts.biometricLoginTitle} ${isEn ? 'On' : 'Açık'}'
+                    : '${texts.biometricLoginTitle} ${isEn ? 'Off' : 'Kapalı'}',
                 enabled: state.isBiometricEnabled,
               ),
               LocalAuthStatusChip(
                 label: state.isPrivacyGuardEnabled
-                    ? 'Privacy Guard On'
-                    : 'Privacy Guard Off',
+                    ? '${texts.privacyGuardTitle} ${isEn ? 'On' : 'Açık'}'
+                    : '${texts.privacyGuardTitle} ${isEn ? 'Off' : 'Kapalı'}',
                 enabled: state.isPrivacyGuardEnabled,
               ),
             ],
@@ -109,6 +117,7 @@ class LocalAuthPinSection extends StatelessWidget {
   final VoidCallback onCreatePin;
   final VoidCallback onChangePin;
   final VoidCallback onDeletePin;
+  final LocalAuthTexts texts;
 
   const LocalAuthPinSection({
     super.key,
@@ -117,38 +126,40 @@ class LocalAuthPinSection extends StatelessWidget {
     required this.onCreatePin,
     required this.onChangePin,
     required this.onDeletePin,
+    this.texts = const LocalAuthTexts(),
   });
 
   @override
   Widget build(BuildContext context) {
+    final isEn = texts.logoutLabel == 'Logout';
     return LocalAuthSectionCard(
       style: style,
-      title: 'PIN Lock',
-      subtitle: state.isPinSet ? 'PIN enabled' : 'PIN not set',
+      title: texts.pinLockTitle,
+      subtitle: state.isPinSet ? texts.pinEnabledSubtitle : texts.pinNotSetSubtitle,
       icon: Icons.dialpad,
       trailing: LocalAuthStatusChip(
-        label: state.isPinSet ? 'On' : 'Off',
+        label: state.isPinSet ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
         enabled: state.isPinSet,
       ),
       children: [
         if (!state.isPinSet)
           LocalAuthActionButton(
             style: style,
-            text: 'Create PIN',
+            text: texts.createPin,
             icon: Icons.add,
             onPressed: onCreatePin,
           ),
         if (state.isPinSet) ...[
           LocalAuthActionButton(
             style: style,
-            text: 'Change PIN',
+            text: texts.changePin,
             icon: Icons.edit,
             onPressed: onChangePin,
           ),
           SizedBox(height: style.buttonSpacing),
           LocalAuthActionButton(
             style: style,
-            text: 'Remove PIN',
+            text: texts.removePin,
             icon: Icons.delete_outline,
             isDestructive: true,
             onPressed: onDeletePin,
@@ -163,29 +174,32 @@ class LocalAuthBiometricSection extends StatelessWidget {
   final LocalAuthSettingsStyle style;
   final LocalAuthSettingsState state;
   final ValueChanged<bool>? onToggle;
+  final LocalAuthTexts texts;
 
   const LocalAuthBiometricSection({
     super.key,
     required this.style,
     required this.state,
     required this.onToggle,
+    this.texts = const LocalAuthTexts(),
   });
 
   @override
   Widget build(BuildContext context) {
+    final isEn = texts.logoutLabel == 'Logout';
     if (!state.isBiometricAvailable) {
       return LocalAuthSectionCard(
         style: style,
-        title: 'Biometric Login',
-        subtitle: 'Biometric authentication is not available on this device',
+        title: texts.biometricLoginTitle,
+        subtitle: texts.biometricNotAvailableSubtitle,
         icon: Icons.fingerprint,
-        trailing: const LocalAuthStatusChip(
-          label: 'Unsupported',
+        trailing: LocalAuthStatusChip(
+          label: isEn ? 'Unsupported' : 'Desteklenmiyor',
           enabled: false,
         ),
-        children: const [
+        children: [
           LocalAuthInfoBanner(
-            message: 'Biometric authentication cannot be used on this device.',
+            message: texts.msgBiometricAuthenticationCannotBe,
             icon: Icons.block,
           ),
         ],
@@ -196,30 +210,30 @@ class LocalAuthBiometricSection extends StatelessWidget {
 
     return LocalAuthSectionCard(
       style: style,
-      title: 'Biometric Login',
+      title: texts.biometricLoginTitle,
       subtitle: state.isBiometricEnabled
-          ? 'Biometric login enabled'
-          : 'Biometric login disabled',
+          ? texts.biometricEnabledSubtitle
+          : texts.biometricDisabledSubtitle,
       icon: Icons.fingerprint,
       trailing: LocalAuthStatusChip(
-        label: state.isBiometricEnabled ? 'On' : 'Off',
+        label: state.isBiometricEnabled ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
         enabled: state.isBiometricEnabled,
       ),
       children: [
         LocalAuthSwitchTile(
           style: style,
-          title: 'Biometric Authentication',
+          title: texts.biometricAuthTileTitle,
           subtitle: state.isBiometricEnabled
-              ? 'On - Sign in with fingerprint or face recognition'
-              : 'Off',
+              ? texts.biometricAuthTileSubtitleOn
+              : texts.biometricAuthTileSubtitleOff,
           value: state.isBiometricEnabled,
           icon: Icons.fingerprint,
           onChanged: canToggle ? onToggle : null,
         ),
         if (!state.isPinSet) ...[
           SizedBox(height: style.tileSpacing),
-          const LocalAuthInfoBanner(
-            message: 'Create a PIN first to enable biometric login.',
+          LocalAuthInfoBanner(
+            message: texts.msgCreateAPinFirst2,
           ),
         ],
       ],
@@ -231,34 +245,37 @@ class LocalAuthPrivacyGuardSection extends StatelessWidget {
   final LocalAuthSettingsStyle style;
   final LocalAuthSettingsState state;
   final ValueChanged<bool> onToggle;
+  final LocalAuthTexts texts;
 
   const LocalAuthPrivacyGuardSection({
     super.key,
     required this.style,
     required this.state,
     required this.onToggle,
+    this.texts = const LocalAuthTexts(),
   });
 
   @override
   Widget build(BuildContext context) {
+    final isEn = texts.logoutLabel == 'Logout';
     return LocalAuthSectionCard(
       style: style,
-      title: 'Privacy Guard',
+      title: texts.privacyGuardTitle,
       subtitle: state.isPrivacyGuardEnabled
-          ? 'Screen protection enabled'
-          : 'Screen protection disabled',
+          ? texts.privacyGuardEnabledSubtitle
+          : texts.privacyGuardDisabledSubtitle,
       icon: Icons.privacy_tip_outlined,
       trailing: LocalAuthStatusChip(
-        label: state.isPrivacyGuardEnabled ? 'On' : 'Off',
+        label: state.isPrivacyGuardEnabled ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
         enabled: state.isPrivacyGuardEnabled,
       ),
       children: [
         LocalAuthSwitchTile(
           style: style,
-          title: 'Screen Protection',
+          title: texts.screenProtectionTileTitle,
           subtitle: state.isPrivacyGuardEnabled
-              ? 'On - Hide content while app is in background'
-              : 'Off',
+              ? texts.screenProtectionTileSubtitleOn
+              : texts.screenProtectionTileSubtitleOff,
           value: state.isPrivacyGuardEnabled,
           icon: Icons.privacy_tip_outlined,
           onChanged: onToggle,
@@ -272,35 +289,38 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
   final LocalAuthSettingsStyle style;
   final LocalAuthSettingsState state;
   final ValueChanged<int> onTimeoutSelected;
+  final LocalAuthTexts texts;
 
   const LocalAuthBackgroundLockSection({
     super.key,
     required this.style,
     required this.state,
     required this.onTimeoutSelected,
+    this.texts = const LocalAuthTexts(),
   });
 
   @override
   Widget build(BuildContext context) {
     final currentTimeout = state.backgroundLockTimeoutSeconds;
     final canEdit = state.isPinSet || state.isBiometricEnabled;
+    final isEn = texts.logoutLabel == 'Logout';
 
     final subtitle = currentTimeout > 0
-        ? 'Locks after ${_formatDuration(currentTimeout)} (${_getAuthMethod(state)})'
-        : 'Off';
+        ? '${texts.backgroundLockSubtitlePrefix}${_formatDuration(currentTimeout)} (${_getAuthMethod(state, texts)})'
+        : (isEn ? 'Off' : 'Kapalı');
 
     return LocalAuthSectionCard(
       style: style,
-      title: 'Background Lock',
+      title: texts.backgroundLockTitle,
       subtitle: subtitle,
       icon: Icons.lock_outline,
       trailing: LocalAuthStatusChip(
-        label: currentTimeout > 0 ? 'On' : 'Off',
+        label: currentTimeout > 0 ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
         enabled: currentTimeout > 0,
       ),
       children: [
         Text(
-          'Require ${_getAuthMethod(state)} when app stays in background',
+          texts.backgroundLockTileTitle,
           style: style.tileSubtitleStyle ??
               Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
@@ -308,9 +328,8 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
         ),
         if (!canEdit) ...[
           SizedBox(height: style.tileSpacing),
-          const LocalAuthInfoBanner(
-            message:
-                'To enable background lock, set a PIN or enable biometric login.',
+          LocalAuthInfoBanner(
+            message: texts.backgroundLockTileSubtitle,
           ),
         ],
         SizedBox(height: style.tileSpacing),
@@ -319,7 +338,7 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
           runSpacing: 8,
           children: [
             LocalAuthChoiceChip(
-              label: 'Off',
+              label: isEn ? 'Off' : 'Kapalı',
               selected: currentTimeout == 0,
               enabled: canEdit || currentTimeout == 0,
               onSelected: () => onTimeoutSelected(0),
@@ -337,7 +356,7 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
         if (currentTimeout > 0) ...[
           const SizedBox(height: 10),
           Text(
-            'Note: Authentication screen appears when returning to app.',
+            texts.backgroundLockTileInfo,
             style: style.tileSubtitleStyle ??
                 Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
@@ -352,12 +371,13 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
     return LocalAuthUtils.getRemainingTimeText(seconds);
   }
 
-  String _getAuthMethod(LocalAuthSettingsState state) {
+  String _getAuthMethod(LocalAuthSettingsState state, LocalAuthTexts texts) {
+    final isEn = texts.logoutLabel == 'Logout';
     if (state.isBiometricEnabled) {
-      return 'biometric authentication';
+      return isEn ? 'biometric authentication' : 'biyometrik kimlik doğrulama';
     } else if (state.isPinSet) {
       return 'PIN';
     }
-    return 'authentication';
+    return isEn ? 'authentication' : 'kimlik doğrulama';
   }
 }

@@ -1,5 +1,6 @@
 // icon_data.dart - İkon verilerini yöneten model
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class IconCategory {
   final String name;
@@ -323,7 +324,7 @@ class _IconPickerState extends State<IconPicker>
               controller: _searchController,
               onChanged: (value) => setState(() => _searchQuery = value),
               decoration: InputDecoration(
-                hintText: 'İkon ara...',
+                hintText: context.l10n.hintIkonAra,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -376,10 +377,10 @@ class _IconPickerState extends State<IconPicker>
 
   Widget _buildIconGrid(List<IconItem> icons) {
     if (icons.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'İkon bulunamadı',
-          style: TextStyle(color: Colors.grey),
+          context.l10n.ikonBulunamadi,
+          style: const TextStyle(color: Colors.grey),
         ),
       );
     }

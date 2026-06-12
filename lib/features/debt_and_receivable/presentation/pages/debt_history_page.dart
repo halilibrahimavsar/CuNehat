@@ -8,6 +8,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivabl
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class DebtHistoryPage extends StatelessWidget {
   final String userId;
@@ -48,7 +49,7 @@ class _DebtHistoryView extends StatelessWidget {
       child: Scaffold(
         appBar: showAppBar
             ? AppBar(
-                title: const Text('Geçmiş'),
+                title: Text(context.l10n.gecmis),
                 centerTitle: true,
               )
             : null,
@@ -58,9 +59,9 @@ class _DebtHistoryView extends StatelessWidget {
               indicatorWeight: 4,
               labelStyle:
                   const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              tabs: const [
-                Tab(icon: Icon(Icons.outbound), text: "Borç Geçmişi"),
-                Tab(icon: Icon(Icons.call_received), text: "Alacak Geçmişi"),
+              tabs: [
+                Tab(icon: const Icon(Icons.outbound), text: context.l10n.borcGecmisi),
+                Tab(icon: const Icon(Icons.call_received), text: context.l10n.alacakGecmisi),
               ],
             ),
             const Expanded(
@@ -93,10 +94,10 @@ class _DebtHistoryTab extends StatelessWidget {
         final paidDebts = debts.where((d) => d.isPaid).toList();
 
         if (paidDebts.isEmpty) {
-          return const _HistoryEmptyState(
+          return _HistoryEmptyState(
             title: 'Henüz Kapanan Borç Yok',
             message:
-                'Ödemesi tamamlanıp kapatılan borçlarınızın geçmişi burada görüntülenecektir.',
+                context.l10n.msgOdemesiTamamlanipKapatilanBorclarinizin,
           );
         }
 
@@ -109,7 +110,7 @@ class _DebtHistoryTab extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             _HistorySummaryCard(
-              text: '${paidDebts.length} borç kapandı',
+              text: context.l10n.paidDebtsLengthBorcKapandi(paidDebts.length),
               amount: totalPaid,
             ),
             const SizedBox(height: 16),
@@ -146,10 +147,10 @@ class _ReceivableHistoryTab extends StatelessWidget {
         final paidReceivables = receivables.where((r) => r.isPaid).toList();
 
         if (paidReceivables.isEmpty) {
-          return const _HistoryEmptyState(
+          return _HistoryEmptyState(
             title: 'Henüz Tahsil Edilen Alacak Yok',
             message:
-                'Ödendi olarak işaretlenen alacaklarınızın geçmişi burada görüntülenecektir.',
+                context.l10n.msgOdendiOlarakIsaretlenenAlacaklarinizin,
           );
         }
 
@@ -162,7 +163,7 @@ class _ReceivableHistoryTab extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             _HistorySummaryCard(
-              text: '${paidReceivables.length} alacak tahsil edildi',
+              text: context.l10n.paidReceivablesLengthAlacakTahsil(paidReceivables.length),
               amount: totalCollected,
             ),
             const SizedBox(height: 16),

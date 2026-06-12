@@ -12,6 +12,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivabl
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Borç / alacak ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
 ///
@@ -628,7 +629,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             Row(
               children: [
                 Text(
-                  'Toplam geri ödeme',
+                  context.l10n.toplamGeriOdeme,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -733,7 +734,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       : [],
                 ),
                 alignment: Alignment.center,
-                child: Text('Aylık taksiti biliyorum',
+                child: Text(context.l10n.aylikTaksitiBiliyorum,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: _isBankLoanMonthly
@@ -762,7 +763,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       : [],
                 ),
                 alignment: Alignment.center,
-                child: Text('Faiz oranı ile',
+                child: Text(context.l10n.faizOraniIle,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: !_isBankLoanMonthly
@@ -794,7 +795,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             children: [
               Expanded(
                 child: Text(
-                  'KKDF ve BSMV vergilerini (%30) dahil et',
+                  context.l10n.kKDFVeBsmvVergilerini,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -811,7 +812,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Tüketici kredilerinde faize yasal olarak %15 KKDF ve %15 BSMV eklenir. Konut vb. kredilerde bu vergiler %0 olabilir. Duruma göre aktifleştirin.',
+            context.l10n.tuketiciKredilerindeFaizeYasal,
             style: TextStyle(
                 fontSize: 11.5, color: cs.onSurfaceVariant, height: 1.3),
           ),
@@ -847,7 +848,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       : [],
                 ),
                 alignment: Alignment.center,
-                child: Text('Eşit Taksit (Amortisman)',
+                child: Text(context.l10n.esitTaksitAmortisman,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: _isInstallmentAmortized
@@ -878,7 +879,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       : [],
                 ),
                 alignment: Alignment.center,
-                child: Text('Basit Vade Farkı',
+                child: Text(context.l10n.basitVadeFarki,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: !_isInstallmentAmortized

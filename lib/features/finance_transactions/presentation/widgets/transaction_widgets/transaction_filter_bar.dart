@@ -2,6 +2,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// İnce, tek satırlık sticky kontrol çubuğu.
 ///
@@ -65,7 +66,7 @@ class TransactionFilterBar extends StatelessWidget {
     return _Chip(
       icon: Icons.calendar_month_rounded,
       text:
-          '${AppFormatters.dateShort.format(startDate)} - ${AppFormatters.dateShort.format(endDate)}',
+          context.l10n.appFormattersDateshortFormatStartdate(AppFormatters.dateShort.format(startDate), AppFormatters.dateShort.format(endDate)),
       badgeText: badge,
       onTap: onDateTap,
       background: scheme.onSurface.withValues(alpha: 0.05),
@@ -122,7 +123,7 @@ class TransactionFilterBar extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_Chip(
         icon: Icons.category_rounded,
-        text: '${dataFilter.selectedCategories.length} Kategori',
+        text: context.l10n.dataFilterSelectedcategoriesLengthKategori(dataFilter.selectedCategories.length),
         onTap: onFilterTap,
         background: Colors.orange.shade400.withValues(alpha: 0.15),
         borderColor: Colors.orange.shade400.withValues(alpha: 0.4),

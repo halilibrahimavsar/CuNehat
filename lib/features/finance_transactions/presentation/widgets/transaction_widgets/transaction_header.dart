@@ -3,6 +3,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 
@@ -74,6 +75,7 @@ class TransactionHeader extends StatelessWidget {
         children: [
           if (mode == FinanceMode.compare) ...[
             _buildNetRow(
+              context: context,
               label: netStatusLabel,
               amount: netBalance,
               amountColor: contentColor,
@@ -110,6 +112,7 @@ class TransactionHeader extends StatelessWidget {
             ),
           ] else ...[
             _buildNetRow(
+              context: context,
               label: singleModeLabel,
               amount: mode == FinanceMode.income ? totalIncome : totalExpense,
               amountColor:
@@ -127,6 +130,7 @@ class TransactionHeader extends StatelessWidget {
   }
 
   Widget _buildNetRow({
+    required BuildContext context,
     required String label,
     required double amount,
     required Color amountColor,
@@ -180,7 +184,7 @@ class TransactionHeader extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
           child: Text(
-            '$count $countLabel',
+            context.l10n.countCountlabel(count, countLabel),
             style: TextStyle(
               color: mutedColor.withValues(alpha: 0.7),
               fontSize: 11,

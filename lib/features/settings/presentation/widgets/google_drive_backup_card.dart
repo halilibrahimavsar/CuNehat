@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/google_drive_backup_service.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
@@ -20,7 +21,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
   bool _isLoading = false;
   bool _isConnected = false;
   String _userEmail = '';
-  String _lastBackup = 'Hiç yedekleme yapılmadı';
+  String? _lastBackup;
 
   static const String _lastBackupKey = 'last_google_drive_backup_time';
 
@@ -59,9 +60,9 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
     });
 
     if (success) {
-      _showSnackBar('Google Drive başarıyla bağlandı.', Colors.green);
+      if (mounted) _showSnackBar(context.l10n.googleDriveConnected, Colors.green);
     } else {
-      _showSnackBar('Google Drive bağlantısı başarısız oldu.', Colors.red);
+      if (mounted) _showSnackBar(context.l10n.googleDriveConnectionFailed, Colors.red);
     }
   }
 
@@ -73,7 +74,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
       _userEmail = '';
       _isLoading = false;
     });
-    _showSnackBar('Google Drive bağlantısı kesildi.', Colors.orange);
+    if (mounted) _showSnackBar(context.l10n.googleDriveDisconnected, Colors.orange);
   }
 
   Future<void> _backup() async {
@@ -85,10 +86,9 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
       setState(() {
         _lastBackup = nowStr;
       });
-      _showSnackBar(
-          'Veriler Google Drive\'a başarıyla yedeklendi.', Colors.green);
+      if (mounted) _showSnackBar(context.l10n.dataBackedUpSuccess, Colors.green);
     } else {
-      _showSnackBar('Yedekleme başarısız oldu.', Colors.red);
+      if (mounted) _showSnackBar(context.l10n.backupFailed, Colors.red);
     }
     setState(() => _isLoading = false);
   }
@@ -96,10 +96,10 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
   Future<void> _restore() async {
     final confirm = await IboDialog.showConfirmation(
       context,
-      'Verileri Geri Yükle?',
-      'Buluttaki verileriniz cihazınızdaki mevcut verilerin üzerine yazılacaktır. Bu işlem geri alınamaz.',
-      confirmText: 'Geri Yükle',
-      cancelText: 'İptal',
+      context.l10n.restoreDataTitle,
+      context.l10n.restoreDataDesc,
+      confirmText: context.l10n.geriYukle,
+      cancelText: context.l10n.cancelLabel,
       style: IboDialogStyle(
         confirmButtonStyle: TextButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.error,
@@ -112,13 +112,14 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
     setState(() => _isLoading = true);
     final success = await _backupService.restore();
     if (success) {
-      _showSnackBar(
-        'Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.',
-        Colors.green,
-      );
+      if (mounted) {
+        _showSnackBar(
+          context.l10n.dataRestoredSuccess,
+          Colors.green,
+        );
+      }
     } else {
-      _showSnackBar(
-          'Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.', Colors.red);
+      if (mounted) _showSnackBar(context.l10n.restoreFailedNoBackup, Colors.red);
     }
     setState(() => _isLoading = false);
   }
@@ -165,7 +166,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Google Drive Yedekleme',
+                context.l10n.googleDriveBackup,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurface,
@@ -183,7 +184,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
           const SizedBox(height: 16),
           if (!_isConnected) ...[
             Text(
-              'Verilerinizin güvenliği için kendi kişisel Google Drive hesabınıza yedekleme yapın.',
+              context.l10n.googleDriveBackupDesc,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -194,7 +195,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _connect,
                 icon: const Icon(Icons.link_rounded),
-                label: const Text('Google Drive\'a Bağlan'),
+                label: Text(context.l10n.connectGoogleDrive),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
@@ -222,7 +223,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Hesap:',
+                        context.l10n.account,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -241,13 +242,13 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Son Yedekleme:',
+                        context.l10n.lastBackup,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Text(
-                        _lastBackup,
+                        _lastBackup ?? context.l10n.noBackupsYet,
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
@@ -265,7 +266,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
                   child: OutlinedButton.icon(
                     onPressed: _isLoading ? null : _restore,
                     icon: const Icon(Icons.download_rounded),
-                    label: const Text('Geri Yükle'),
+                    label: Text(context.l10n.geriYukle),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -280,7 +281,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
                   child: ElevatedButton.icon(
                     onPressed: _isLoading ? null : _backup,
                     icon: const Icon(Icons.upload_rounded),
-                    label: const Text('Yedekle'),
+                    label: Text(context.l10n.yedekle),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -300,8 +301,8 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
                 onPressed: _isLoading ? null : _disconnect,
                 icon:
                     const Icon(Icons.link_off_rounded, color: Colors.redAccent),
-                label: const Text(
-                  'Bağlantıyı Kes',
+                label: Text(
+                  context.l10n.disconnect,
                   style: TextStyle(color: Colors.redAccent),
                 ),
                 style: TextButton.styleFrom(

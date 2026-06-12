@@ -1,9 +1,11 @@
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/features/settings/presentation/widgets/about_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security_settings_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
+import 'package:cunehat/features/settings/presentation/widgets/language_selector_dropdown.dart';
 import 'package:cunehat/features/settings/presentation/widgets/user_profile_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/google_drive_backup_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/data_export_import_card.dart';
@@ -30,8 +32,8 @@ class SettingsPage extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Ayarlar',
+              title: Text(
+                context.l10n.settings,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -60,24 +62,29 @@ class SettingsPage extends StatelessWidget {
                 [
                   const UserProfileCard(),
                   const SizedBox(height: 24),
-                  const SettingsHeader(title: 'GÖRÜNÜM'),
+                  SettingsHeader(title: context.l10n.appearance),
                   const SizedBox(height: 8),
                   const AppCard(
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: ThemeSelectorDropdown(),
                   ),
+                  const SizedBox(height: 8),
+                  const AppCard(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: LanguageSelectorDropdown(),
+                  ),
                   const SizedBox(height: 24),
-                  const SettingsHeader(title: 'GÜVENLİK'),
+                  SettingsHeader(title: context.l10n.security),
                   const SizedBox(height: 8),
                   const SecuritySettingsCard(),
                   const SizedBox(height: 24),
-                  const SettingsHeader(title: 'VERİ YEDEKLEME / AKTARIM'),
+                  SettingsHeader(title: context.l10n.dataBackupTransfer),
                   const SizedBox(height: 8),
                   const GoogleDriveBackupCard(),
                   const SizedBox(height: 16),
                   const DataExportImportCard(),
                   const SizedBox(height: 24),
-                  const SettingsHeader(title: 'HAKKINDA'),
+                  SettingsHeader(title: context.l10n.about),
                   const SizedBox(height: 8),
                   const AboutCard(),
                   const SizedBox(height: 40),

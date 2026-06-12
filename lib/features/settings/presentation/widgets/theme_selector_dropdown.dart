@@ -2,6 +2,7 @@
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class ThemeSelectorDropdown extends StatelessWidget {
   const ThemeSelectorDropdown({super.key});
@@ -15,7 +16,7 @@ class ThemeSelectorDropdown extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: DropdownButtonFormField<ThemeData>(
             decoration: InputDecoration(
-              labelText: 'Uygulama Teması',
+              labelText: context.l10n.labelUygulamaTemasi,
               prefixIcon: const Icon(Icons.palette_outlined),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),

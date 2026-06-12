@@ -1,4 +1,5 @@
 import 'package:cunehat/core/shared/widgets/error_view.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
@@ -137,20 +138,20 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Cüzdanlarım',
-                  style: TextStyle(
+                  context.l10n.cuzdanlarim,
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'Cüzdanlarınızı yönetin',
-                  style: TextStyle(
+                  context.l10n.cuzdanlariniziYonetin,
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
                   ),
@@ -198,8 +199,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       WalletErrorSt() => Center(
           child: ErrorView(message: state.err),
         ),
-      _ => const Center(
-          child: Text('Beklenmeyen durum'),
+      _ => Center(
+          child: Text(context.l10n.beklenmeyenDurum),
         ),
     };
   }
@@ -269,9 +270,9 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
               ),
             ),
             icon: const Icon(Icons.add, size: 22),
-            label: const Text(
-              'Yeni Cüzdan Oluştur',
-              style: TextStyle(
+            label: Text(
+              context.l10n.yeniCuzdanOlustur,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

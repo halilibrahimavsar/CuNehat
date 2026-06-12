@@ -1,5 +1,6 @@
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,7 +25,7 @@ class PriceRangeFilterSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'FİYAT ARALIĞI',
+          context.l10n.fIYATAraligi,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -46,7 +47,7 @@ class PriceRangeFilterSection extends StatelessWidget {
                 style:
                     TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
-                  labelText: 'Min',
+                  labelText: context.l10n.labelMin,
                   hintText: '0',
                   suffixText: '₺',
                   border: OutlineInputBorder(
@@ -80,7 +81,7 @@ class PriceRangeFilterSection extends StatelessWidget {
                 style:
                     TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
-                  labelText: 'Max',
+                  labelText: context.l10n.labelMax,
                   hintText: '∞',
                   suffixText: '₺',
                   border: OutlineInputBorder(

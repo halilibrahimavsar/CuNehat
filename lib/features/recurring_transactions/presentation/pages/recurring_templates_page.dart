@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -63,18 +64,18 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Şablonu Sil'),
+        title: Text(context.l10n.sablonuSil),
         content: Text(
-            '"${template.title}" düzenli işlemi silinsin mi?\n\nDeftere işlenmiş geçmiş işlemler silinmez.'),
+            context.l10n.templateTitleDuzenliIslemi(template.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('İptal'),
+            child: Text(context.l10n.iptal),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sil'),
+            child: Text(context.l10n.sil),
           ),
         ],
       ),
@@ -105,9 +106,9 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
                 onPressed: () => context.pop(),
               ),
               flexibleSpace: FlexibleSpaceBar(
-                title: const Text(
-                  'Düzenli İşlemler',
-                  style: TextStyle(
+                title: Text(
+                  context.l10n.duzenliIslemler,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -142,7 +143,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
     if (_error != null) {
       return SliverFillRemaining(
         hasScrollBody: false,
-        child: Center(child: Text('Hata: $_error')),
+        child: Center(child: Text(context.l10n.hataError(_error.toString()))),
       );
     }
     if (_templates.isEmpty) {
@@ -190,7 +191,7 @@ class _EmptyTemplates extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Henüz düzenli işlem yok',
+                context.l10n.henuzDuzenliIslemYok,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -198,7 +199,7 @@ class _EmptyTemplates extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.',
+                context.l10n.islemEklerkenTekrarSikligi,
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
                     .textTheme

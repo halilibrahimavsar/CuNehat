@@ -112,6 +112,8 @@ import 'package:cunehat/features/recurring_transactions/presentation/bloc/pendin
     as _i494;
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart'
     as _i407;
+import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart'
+    as _i570;
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart'
     as _i460;
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart'
@@ -152,6 +154,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => appModule.prefs,
       preResolve: true,
     );
+    gh.factory<_i570.LanguageBloc>(() => _i570.LanguageBloc());
     gh.singleton<_i1002.CategoryService>(() => _i1002.CategoryService());
     gh.singleton<_i934.TransactionHiveDataSource>(
         () => _i934.TransactionHiveDataSource());

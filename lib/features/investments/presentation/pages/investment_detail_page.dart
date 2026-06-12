@@ -1,5 +1,6 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
@@ -41,7 +42,7 @@ class _InvestmentDetailView extends StatelessWidget {
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
-              title: const Text('Birikim Detayı'),
+              title: Text(context.l10n.birikimDetayi),
               centerTitle: true,
             )
           : null,
@@ -72,9 +73,9 @@ class _InvestmentDetailView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Birikim Detayı',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  context.l10n.birikimDetayi,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 SummaryCard(
@@ -86,9 +87,9 @@ class _InvestmentDetailView extends StatelessWidget {
                 const SizedBox(height: 24),
                 InvestmentChart(investments: investments),
                 const SizedBox(height: 24),
-                const Text(
-                  'Portföy Detayı',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  context.l10n.portfoyDetayi,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ...investments.map(
@@ -130,7 +131,7 @@ class _InvestmentDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Henüz Yatırım Kaydı Yok',
+                context.l10n.henuzYatirimKaydiYok,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: scheme.onSurface,
@@ -138,7 +139,7 @@ class _InvestmentDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Yatırımlarınızı ekledikten sonra detaylı analizler burada görünecektir.',
+                context.l10n.yatirimlariniziEklediktenSonraDetayli,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

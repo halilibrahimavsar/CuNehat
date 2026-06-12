@@ -4,6 +4,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
 // Timeline yerleşim sabitleri (önceki magic offset'ler yerine).
@@ -149,7 +150,7 @@ class _DetailedListViewState extends State<DetailedListView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Gün sonu ',
+            context.l10n.gunSonu,
             style: TextStyle(
               fontSize: 10.5,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
@@ -303,7 +304,7 @@ class _DetailedListViewState extends State<DetailedListView> {
             ),
           ),
           child: Text(
-            'Net: ${net >= 0 ? "+" : ""}${AppFormatters.currency.format(net)}',
+            context.l10n.netNetAppformattersCurrency('${net >= 0 ? "+" : ""}${AppFormatters.currency.format(net)}'),
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,

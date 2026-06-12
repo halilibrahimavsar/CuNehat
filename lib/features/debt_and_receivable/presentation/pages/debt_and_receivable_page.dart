@@ -11,6 +11,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_p
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class DebtAndReceivablePage extends StatefulWidget {
   final String userId;
@@ -58,7 +59,7 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
       appBar: AppBar(
         toolbarHeight: 70,
         title: Text(
-          "Finansal Takip",
+          context.l10n.finansalTakip,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
@@ -70,9 +71,9 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
           indicatorWeight: 4,
           labelStyle:
               const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          tabs: const [
-            Tab(icon: Icon(Icons.outbound), text: "Borçlarım"),
-            Tab(icon: Icon(Icons.call_received), text: "Alacaklarım"),
+          tabs: [
+            Tab(icon: const Icon(Icons.outbound), text: context.l10n.borclarim),
+            Tab(icon: const Icon(Icons.call_received), text: context.l10n.alacaklarim),
           ],
         ),
       ),
@@ -117,7 +118,7 @@ class DebtListSection extends StatelessWidget {
               .toList();
 
           if (activeDebts.isEmpty) {
-            return const Center(child: Text("Henüz borç kaydı yok."));
+            return Center(child: Text(context.l10n.henuzBorcKaydiYok));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -139,7 +140,7 @@ class DebtListSection extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () =>
                       context.read<DebtBloc>().add(GetDebtsEvent(walletId)),
-                  child: const Text("Tekrar Dene"),
+                  child: Text(context.l10n.tekrarDene),
                 ),
               ],
             ),
@@ -157,33 +158,33 @@ class DebtListSection extends StatelessWidget {
 
     return InfoActionMenu<String>(
       items: [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'payment',
           child: Row(
             children: [
-              Icon(Icons.payment, color: Colors.green),
-              SizedBox(width: 8),
-              Text("Ödeme Yap", style: TextStyle(color: Colors.green)),
+              const Icon(Icons.payment, color: Colors.green),
+              const SizedBox(width: 8),
+              Text(context.l10n.odemeYap, style: const TextStyle(color: Colors.green)),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, color: Colors.blueGrey),
-              SizedBox(width: 8),
-              Text("Düzenle"),
+              const Icon(Icons.edit, color: Colors.blueGrey),
+              const SizedBox(width: 8),
+              Text(context.l10n.duzenle),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete, color: Colors.red),
-              SizedBox(width: 8),
-              Text("Sil", style: TextStyle(color: Colors.red)),
+              const Icon(Icons.delete, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(context.l10n.sil, style: const TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -269,9 +270,9 @@ class DebtListSection extends StatelessWidget {
                             border: Border.all(
                                 color: Colors.red.withValues(alpha: 0.3)),
                           ),
-                          child: const Text(
-                            'VADESİ GEÇMİŞ',
-                            style: TextStyle(
+                          child: Text(
+                            context.l10n.vADESIGecmis,
+                            style: const TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.w900,
                               fontSize: 10,
@@ -306,9 +307,9 @@ class DebtListSection extends StatelessWidget {
                           border: Border.all(
                               color: Colors.green.withValues(alpha: 0.3)),
                         ),
-                        child: const Text(
-                          'ÖDENDİ',
-                          style: TextStyle(
+                        child: Text(
+                          context.l10n.oDENDI,
+                          style: const TextStyle(
                             color: Colors.green,
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -339,7 +340,7 @@ class DebtListSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Vade: ${debt.termMonths} Ay | ${debt.payments.length} Ödeme",
+                  context.l10n.vadeDebtTermmonthsAy(debt.termMonths, debt.payments.length),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -352,7 +353,7 @@ class DebtListSection extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: () => DebtPaymentDialog.show(context, debt),
                     icon: const Icon(Icons.payment, size: 16),
-                    label: const Text("Öde"),
+                    label: Text(context.l10n.ode),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.green.withValues(alpha: 0.15),
                       foregroundColor: Colors.green,
@@ -401,7 +402,7 @@ class ReceivableListSection extends StatelessWidget {
               state.receivables.where((r) => !r.isPaid).toList();
 
           if (activeReceivables.isEmpty) {
-            return const Center(child: Text("Henüz alacak kaydı yok."));
+            return Center(child: Text(context.l10n.henuzAlacakKaydiYok));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -424,7 +425,7 @@ class ReceivableListSection extends StatelessWidget {
                   onPressed: () => context
                       .read<ReceivableBloc>()
                       .add(GetReceivablesEvent(walletId)),
-                  child: const Text("Tekrar Dene"),
+                  child: Text(context.l10n.tekrarDene),
                 ),
               ],
             ),
@@ -443,33 +444,33 @@ class ReceivableListSection extends StatelessWidget {
     return InfoActionMenu<String>(
       items: [
         if (!receivable.isPaid)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'mark_paid',
             child: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green),
-                SizedBox(width: 8),
-                Text("Ödendi İşaretle", style: TextStyle(color: Colors.green)),
+                const Icon(Icons.check_circle, color: Colors.green),
+                const SizedBox(width: 8),
+                Text(context.l10n.odendiIsaretle, style: const TextStyle(color: Colors.green)),
               ],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, color: Colors.blueGrey),
-              SizedBox(width: 8),
-              Text("Düzenle"),
+              const Icon(Icons.edit, color: Colors.blueGrey),
+              const SizedBox(width: 8),
+              Text(context.l10n.duzenle),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete, color: Colors.red),
-              SizedBox(width: 8),
-              Text("Sil", style: TextStyle(color: Colors.red)),
+              const Icon(Icons.delete, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(context.l10n.sil, style: const TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -541,7 +542,7 @@ class ReceivableListSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}",
+                    context.l10n.vadeDateformatDdMmm(DateFormat('dd MMM yyyy').format(receivable.dueDate)),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
@@ -558,9 +559,9 @@ class ReceivableListSection extends StatelessWidget {
                         border: Border.all(
                             color: Colors.orange.withValues(alpha: 0.3)),
                       ),
-                      child: const Text(
-                        'VADESİ GEÇMİŞ',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.vADESIGecmis,
+                        style: const TextStyle(
                           color: Colors.orange,
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
@@ -594,9 +595,9 @@ class ReceivableListSection extends StatelessWidget {
                       border: Border.all(
                           color: Colors.green.withValues(alpha: 0.3)),
                     ),
-                    child: const Text(
-                      'ÖDENDİ',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.oDENDI,
+                      style: const TextStyle(
                         color: Colors.green,
                         fontSize: 10,
                         fontWeight: FontWeight.w900,

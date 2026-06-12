@@ -26,7 +26,7 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
     required this.transactionsChangedNotifier,
   }) : super(DataExportImportInitial());
 
-  Future<void> exportTransactions(String userId, String walletId) async {
+  Future<void> exportTransactions(String userId, String walletId, {String? shareText}) async {
     emit(DataExportImportLoading());
     try {
       final result = await transactionsRepository.getTransactions(
@@ -41,7 +41,7 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
               "Dışa aktarılacak işlem bulunamadı."));
           return;
         }
-        await csvService.exportTransactionsToCSV(r);
+        await csvService.exportTransactionsToCSV(r, shareText: shareText);
         emit(const DataExportImportSuccess(
             "İşlemler başarıyla dışa aktarıldı."));
       });

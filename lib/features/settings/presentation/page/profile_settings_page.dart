@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -121,7 +122,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
-              'Profil Ayarları',
+              context.l10n.profilAyarlari,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -181,8 +182,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                       color: colorScheme.onPrimary,
                                     ),
                                   )
-                                : const Text(
-                                    'Bilgileri Güncelle',
+                                : Text(
+                                    context.l10n.bilgileriGuncelle,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,

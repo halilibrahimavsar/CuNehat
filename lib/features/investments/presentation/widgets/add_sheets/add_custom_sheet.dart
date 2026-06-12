@@ -6,6 +6,7 @@ import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/services.dart';
 
 class AddCustomSheet extends StatefulWidget {
@@ -325,7 +326,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mevcut Değer',
+            context.l10n.mevcutDeger,
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -485,8 +486,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Maliyeti değiştirirseniz fark, cüzdana düzeltme '
-              'hareketi olarak işlenir.',
+              context.l10n.maliyetiDegistirirsenizFarkCuzdana,
               style: TextStyle(
                 color: cs.onSurfaceVariant,
                 fontSize: 12,

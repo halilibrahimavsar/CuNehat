@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import '../bloc/pending_recurring_bloc.dart';
 import '../bloc/pending_recurring_event.dart';
 import '../bloc/pending_recurring_state.dart';
@@ -39,13 +40,13 @@ class PendingRecurringDialog extends StatelessWidget {
                   const Icon(Icons.notifications_active_rounded,
                       size: 48, color: Colors.orangeAccent),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Bekleyen Düzenli İşlemler',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Text(
+                    context.l10n.bekleyenDuzenliIslemler,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.',
+                  Text(
+                    context.l10n.vadesiGelmisIslemlerinizVar,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -63,7 +64,7 @@ class PendingRecurringDialog extends StatelessWidget {
                           contentPadding: EdgeInsets.zero,
                           title: Text(tx.title),
                           subtitle:
-                              Text('Tarih: $dateStr\nTutar: ${tx.amount}'),
+                              Text(context.l10n.titleTarihDatestrNtutarTx(dateStr, tx.amount.toString())),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -83,7 +84,7 @@ class PendingRecurringDialog extends StatelessWidget {
                               IconButton(
                                 icon: const Icon(Icons.skip_next_outlined,
                                     color: Colors.orange),
-                                tooltip: 'Bu vadeyi atla',
+                                tooltip: context.l10n.tooltipBuVadeyiAtla,
                                 onPressed: () {
                                   context
                                       .read<PendingRecurringBloc>()
@@ -102,7 +103,7 @@ class PendingRecurringDialog extends StatelessWidget {
                                       .read<PendingRecurringBloc>()
                                       .add(ApproveTransactionEvent(tx));
                                 },
-                                child: const Text('Onayla'),
+                                child: Text(context.l10n.onayla),
                               ),
                             ],
                           ),
@@ -113,7 +114,7 @@ class PendingRecurringDialog extends StatelessWidget {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Kapat'),
+                    child: Text(context.l10n.kapat),
                   ),
                 ],
               ),
@@ -132,16 +133,16 @@ void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('İşlemi Düzenle'),
+      title: Text(context.l10n.islemiDuzenle),
       content: TextField(
         controller: amountController,
-        decoration: const InputDecoration(labelText: 'Yeni Tutar'),
+        decoration: InputDecoration(labelText: context.l10n.labelYeniTutar),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('İptal'),
+          child: Text(context.l10n.iptal),
         ),
         FilledButton(
           onPressed: () {
@@ -153,7 +154,7 @@ void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
               Navigator.pop(ctx);
             }
           },
-          child: const Text('Kaydet ve Onayla'),
+          child: Text(context.l10n.kaydetVeOnayla),
         ),
       ],
     ),

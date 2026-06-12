@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
+import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart';
 
 /// Widget that handles theme changes and renders the appropriate app state.
 ///
@@ -9,7 +10,7 @@ import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_b
 /// - AuthenticatedApp when user is logged in
 /// - UnauthenticatedApp when user is not logged in
 class ThemedApp extends StatelessWidget {
-  final Widget Function(ThemeData theme) builder;
+  final Widget Function(ThemeData theme, Locale locale) builder;
 
   const ThemedApp({
     super.key,
@@ -20,7 +21,11 @@ class ThemedApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeBloc, ThemeState>(
       builder: (context, themeState) {
-        return builder(themeState.name);
+        return BlocBuilder<LanguageBloc, LanguageState>(
+          builder: (context, languageState) {
+            return builder(themeState.name, Locale(languageState.languageCode));
+          },
+        );
       },
     );
   }

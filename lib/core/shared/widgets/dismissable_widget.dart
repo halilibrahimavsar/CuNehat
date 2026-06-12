@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class DismissableWidget<T> extends StatelessWidget {
   final T item;
@@ -34,13 +35,13 @@ class DismissableWidget<T> extends StatelessWidget {
         alignment: Alignment.centerLeft,
         color: Colors.blue,
         icon: Icons.edit,
-        text: 'Düzenle',
+        text: context.l10n.duzenle,
       ),
       secondaryBackground: _buildDismissBackground(
         alignment: Alignment.centerRight,
         color: Colors.red,
         icon: Icons.delete,
-        text: 'Sil',
+        text: context.l10n.sil,
       ),
       child: child,
     );

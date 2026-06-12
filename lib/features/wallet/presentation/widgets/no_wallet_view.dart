@@ -1,5 +1,6 @@
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/widgets/pressable_scale.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,7 +69,7 @@ class NoWalletView extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'Finansal\nYolculuğunuz Başlıyor',
+                context.l10n.finansalNyolculugunuzBasliyor,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w900,
@@ -136,7 +137,7 @@ class NoWalletView extends StatelessWidget {
                           const Icon(Icons.add, color: Colors.white, size: 24),
                           const SizedBox(width: 12),
                           Text(
-                            'İlk Cüzdanı Oluştur',
+                            context.l10n.ilkCuzdaniOlustur,
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,

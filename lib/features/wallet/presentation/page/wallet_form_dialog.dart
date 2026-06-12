@@ -3,6 +3,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -143,10 +144,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   Widget _buildNameField() {
     return TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: 'Cüzdan Adı *',
-        hintText: 'Örn: Ana Cüzdan, Tatil Fonu',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: context.l10n.labelCuzdanAdi,
+        hintText: context.l10n.hintOrnAnaCuzdanTatil,
+        border: const OutlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -198,13 +199,13 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Otomatik hesaplanan değerler:',
+        Text(
+          context.l10n.otomatikHesaplananDegerler,
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Borç/alacak/yatırım kayıtlarından türetilir; buradan düzenlenemez.',
+        Text(
+          context.l10n.borcAlacakYatirimKayitlarindan,
           style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
         const SizedBox(height: 12),
@@ -238,8 +239,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Renk Seçin:',
+        Text(
+          context.l10n.renkSecin,
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 12),
@@ -335,8 +336,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'İkon Seçin:',
+        Text(
+          context.l10n.ikonSecin2,
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 12),
@@ -366,8 +367,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
                       size: 28,
                     ),
                     const SizedBox(width: 12),
-                    const Text(
-                      'İkon Değiştir',
+                    Text(
+                      context.l10n.ikonDegistir,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -388,7 +389,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     return [
       TextButton(
         onPressed: _isLoading ? null : () => Navigator.pop(context),
-        child: const Text('İptal'),
+        child: Text(context.l10n.iptal),
       ),
       ElevatedButton(
         onPressed: _isLoading ? null : _handleSubmit,
@@ -485,7 +486,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('İptal'),
+          child: Text(context.l10n.iptal),
         ),
         ElevatedButton(
           onPressed: () {
@@ -493,7 +494,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
                 _selectedColorHex = WalletColors.colorToHex(selectedColor));
             Navigator.pop(context);
           },
-          child: const Text('Tamam'),
+          child: Text(context.l10n.tamam),
         ),
       ],
     );

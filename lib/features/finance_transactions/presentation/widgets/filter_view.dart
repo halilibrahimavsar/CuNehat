@@ -6,6 +6,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/finan
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/category_filter_section.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/price_range_filter_section.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 
 class FilterView extends StatefulWidget {
@@ -364,7 +365,7 @@ class _FilterViewState extends State<FilterView> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Filtreler',
+                context.l10n.filtreler,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -376,7 +377,7 @@ class _FilterViewState extends State<FilterView> {
                 TextButton.icon(
                   onPressed: _clearAllFilters,
                   icon: const Icon(Icons.clear_all, size: 16),
-                  label: const Text('Temizle'),
+                  label: Text(context.l10n.temizle),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -436,9 +437,9 @@ class _FilterViewState extends State<FilterView> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Uygula',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                context.l10n.uygula,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -454,7 +455,7 @@ class _FilterViewState extends State<FilterView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'TARİH ARALIĞI',
+          context.l10n.tARIHAraligi,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -488,7 +489,7 @@ class _FilterViewState extends State<FilterView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Seçili Aralık',
+                        context.l10n.seciliAralik,
                         style: TextStyle(
                           fontSize: 12,
                           color:

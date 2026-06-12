@@ -6,6 +6,7 @@ import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
@@ -421,7 +422,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mevcut Değer',
+            context.l10n.mevcutDeger,
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -502,7 +503,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
           focusNode: focusNode,
           style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
-            hintText: 'Sembol (Örn: AAPL, THYAO.IS)',
+            hintText: context.l10n.hintSembolOrnAaplThyao,
             hintStyle: TextStyle(
                 color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w400),
@@ -600,9 +601,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.refresh_rounded),
-                  label: const Text(
-                    'Hesapla',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  label: Text(
+                    context.l10n.hesapla,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                 ),
               ),
@@ -726,8 +727,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Maliyeti değiştirirseniz fark, cüzdana düzeltme '
-              'hareketi olarak işlenir.',
+              context.l10n.maliyetiDegistirirsenizFarkCuzdana,
               style: TextStyle(
                 color: cs.onSurfaceVariant,
                 fontSize: 12,

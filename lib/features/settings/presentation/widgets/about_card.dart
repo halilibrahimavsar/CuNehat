@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Card displaying app information and logout option, styled with AppCard.
 class AboutCard extends StatelessWidget {
@@ -17,7 +18,7 @@ class AboutCard extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.info_outline, color: scheme.primary),
             title: Text(
-              'Versiyon',
+              context.l10n.version,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
@@ -35,14 +36,14 @@ class AboutCard extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.code, color: scheme.primary),
             title: Text(
-              'Geliştirici',
+              context.l10n.developer,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
               ),
             ),
             trailing: Text(
-              'İbo',
+              context.l10n.ibo,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: scheme.onSurfaceVariant,

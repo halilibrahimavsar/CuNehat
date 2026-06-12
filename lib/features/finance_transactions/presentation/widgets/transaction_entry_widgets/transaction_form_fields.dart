@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -220,7 +221,7 @@ class _TitleField extends StatelessWidget {
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         counterText: '',
-        hintText: 'Not (İsteğe bağlı) · örn. Market alışverişi',
+        hintText: context.l10n.hintNotIstegeBagliOrn,
         prefixIcon: Icon(Icons.edit_note_rounded,
             color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
         filled: true,
@@ -411,11 +412,11 @@ class _RecurringRow extends StatelessWidget {
                     value: value,
                     isExpanded: true,
                     icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                    hint: const Text('Tekrarlama (İsteğe Bağlı)'),
+                    hint: Text(context.l10n.tekrarlamaIstegeBagli),
                     items: [
-                      const DropdownMenuItem(
+                      DropdownMenuItem(
                         value: null,
-                        child: Text('Tekrar Etme'),
+                        child: Text(context.l10n.tekrarEtme),
                       ),
                       ...RecurringFrequency.values.map(
                         (freq) => DropdownMenuItem(

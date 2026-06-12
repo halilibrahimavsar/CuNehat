@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/l10n/app_localizations.dart';
 
 /// Açılış (Hive/DI) başarısız olduğunda gösterilen bağımsız mini uygulama.
 ///
@@ -47,57 +49,70 @@ class _InitErrorAppState extends State<InitErrorApp> {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(Icons.error_outline, size: 56, color: Colors.red),
-                const SizedBox(height: 16),
-                const Text(
-                  'Uygulama başlatılamadı',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Verileriniz silinmedi. Tekrar deneyin; sorun sürerse '
-                  'cihazı yeniden başlatıp uygulamayı yeniden açın.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ExpansionTile(
-                  title: const Text('Hata detayı'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('tr'),
+        Locale('en'),
+      ],
+      home: Builder(
+        builder: (context) {
+          return Scaffold(
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        _error,
-                        style: const TextStyle(
-                            fontSize: 12, fontFamily: 'monospace'),
-                      ),
+                    const Icon(Icons.error_outline, size: 56, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppLocalizations.of(context)!.uygulamaBaslatilamadi,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppLocalizations.of(context)!.verilerinizSilinmediTekrarDeneyin,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ExpansionTile(
+                      title: Text(AppLocalizations.of(context)!.hataDetayi),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            _error,
+                            style: const TextStyle(
+                                fontSize: 12, fontFamily: 'monospace'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: _retrying ? null : _retry,
+                      icon: _retrying
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh),
+                      label: Text(AppLocalizations.of(context)!.tekrarDene),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _retrying ? null : _retry,
-                  icon: _retrying
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh),
-                  label: const Text('Tekrar Dene'),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        }
       ),
     );
   }

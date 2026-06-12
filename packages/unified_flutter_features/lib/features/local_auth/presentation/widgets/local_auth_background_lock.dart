@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import '../../data/local_auth_repository.dart';
 import '../bloc/login/local_auth_login_bloc.dart';
 import '../pages/biometric_auth_page.dart';
@@ -17,11 +18,13 @@ import '../pages/biometric_auth_page.dart';
 class LocalAuthBackgroundLock extends StatefulWidget {
   final Widget child;
   final LocalAuthRepository repository;
+  final LocalAuthTexts texts;
 
   const LocalAuthBackgroundLock({
     super.key,
     required this.child,
     required this.repository,
+    this.texts = const LocalAuthTexts(),
   });
 
   @override
@@ -112,6 +115,7 @@ class _LocalAuthBackgroundLockState extends State<LocalAuthBackgroundLock>
             unawaited(_onAuthSuccess());
           },
           showLogoutButton: false,
+          texts: widget.texts,
         ),
       );
     }

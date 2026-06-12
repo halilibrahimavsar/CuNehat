@@ -1,6 +1,7 @@
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
@@ -45,7 +46,7 @@ class _TransactionDetailView extends StatelessWidget {
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
-              title: const Text('İşlem Detayı'),
+              title: Text(context.l10n.islemDetayi),
               centerTitle: true,
             )
           : null,
@@ -70,7 +71,7 @@ class _TransactionDetailView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'İşlem Detayı',
+                  context.l10n.islemDetayi,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -80,7 +81,7 @@ class _TransactionDetailView extends StatelessWidget {
                 _buildSummaryCards(totals),
                 const SizedBox(height: 24),
                 Text(
-                  'Nakit Akışı',
+                  context.l10n.nakitAkisi,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -130,7 +131,7 @@ class _TransactionDetailView extends StatelessWidget {
           height: 220,
           alignment: Alignment.center,
           child: Text(
-            'Grafik için yeterli veri yok',
+            context.l10n.grafikIcinYeterliVeri,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -308,7 +309,7 @@ class _TransactionDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Detay Gösterilecek İşlem Yok',
+                context.l10n.detayGosterilecekIslemYok,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: scheme.onSurface,
@@ -316,7 +317,7 @@ class _TransactionDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.',
+                context.l10n.gelirVeyaGiderKaydettikten,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

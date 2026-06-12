@@ -1,6 +1,7 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class CompactFilterInfo extends StatelessWidget {
   final DateTime startDate;
@@ -77,7 +78,7 @@ class CompactFilterInfo extends StatelessWidget {
                 ? Icons.calendar_month_rounded
                 : Icons.calendar_today,
             text:
-                '${AppFormatters.dateShort.format(startDate)} - ${AppFormatters.dateShort.format(endDate)}',
+                context.l10n.appFormattersDateshortFormatStartdate(AppFormatters.dateShort.format(startDate), AppFormatters.dateShort.format(endDate)),
             badgeText: dateBadgeText,
             badgeColor: dateBadgeColor,
             onTap: onDateTap,
@@ -85,13 +86,13 @@ class CompactFilterInfo extends StatelessWidget {
           ),
 
           // 2. Aktif Filtreler (Varsa göster)
-          if (dataFilter != null) ..._buildActiveFilterChips(dataFilter!),
+          if (dataFilter != null) ..._buildActiveFilterChips(context, dataFilter!),
         ],
       ),
     );
   }
 
-  List<Widget> _buildActiveFilterChips(DataFilter filter) {
+  List<Widget> _buildActiveFilterChips(BuildContext context, DataFilter filter) {
     List<Widget> chips = [];
 
     // Kategori Filtresi
@@ -99,7 +100,7 @@ class CompactFilterInfo extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_buildInfoChip(
         icon: isLightMode ? Icons.category_rounded : Icons.category_outlined,
-        text: '${filter.selectedCategories.length} Kategori',
+        text: context.l10n.filterSelectedcategoriesLengthKategori(filter.selectedCategories.length),
         backgroundColor: isLightMode
             ? Colors.orange.shade400.withValues(alpha: 0.9)
             : Colors.orange.shade100,

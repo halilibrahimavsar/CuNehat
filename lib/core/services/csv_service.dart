@@ -24,7 +24,7 @@ class CsvService {
   final _uuid = const Uuid();
 
   Future<void> exportTransactionsToCSV(
-      List<TransactionEntity> transactions) async {
+      List<TransactionEntity> transactions, {String? shareText}) async {
     List<List<dynamic>> rows = [];
 
     // Header
@@ -50,7 +50,7 @@ class CsvService {
 
     await SharePlus.instance.share(ShareParams(
       files: [XFile(path)],
-      text: 'İşlem Geçmişi (CSV)',
+      text: shareText ?? 'İşlem Geçmişi (CSV)',
     ));
   }
 

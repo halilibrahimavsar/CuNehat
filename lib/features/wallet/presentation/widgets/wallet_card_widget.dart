@@ -1,5 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -70,7 +71,7 @@ class WalletCardWidget extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Oluşturulma: ${AppFormatters.dateShort.format(wallet.createdAt)}',
+                      context.l10n.olusturulmaAppformattersDateshortFormat(AppFormatters.dateShort.format(wallet.createdAt)),
                       style: TextStyle(
                         fontSize: 12,
                         color: scheme.onSurfaceVariant,
@@ -93,14 +94,14 @@ class WalletCardWidget extends StatelessWidget {
                       color: Colors.green.withValues(alpha: 0.4),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 16, color: Colors.green),
-                      SizedBox(width: 4),
+                      const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                      const SizedBox(width: 4),
                       Text(
-                        'Aktif',
-                        style: TextStyle(
+                        context.l10n.aktif,
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.green,
                           fontWeight: FontWeight.w500,
@@ -143,18 +144,18 @@ class WalletCardWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: IboGlassButton(
-                  text: 'Düzenle',
+                  text: context.l10n.duzenle,
                   onPressed: onEdit,
                   backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   foregroundColor: Colors.blue,
                   borderColor: Colors.blue.withValues(alpha: 0.3),
                   borderWidth: 1,
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.edit, size: 18),
-                      SizedBox(width: 6),
-                      Text('Düzenle'),
+                      const Icon(Icons.edit, size: 18),
+                      const SizedBox(width: 6),
+                      Text(context.l10n.duzenle),
                     ],
                   ),
                 ),
@@ -163,18 +164,18 @@ class WalletCardWidget extends StatelessWidget {
               if (!wallet.isActive)
                 Expanded(
                   child: IboGlassButton(
-                    text: 'Sil',
+                    text: context.l10n.sil,
                     onPressed: onDelete,
                     backgroundColor: Colors.red.withValues(alpha: 0.1),
                     foregroundColor: Colors.red,
                     borderColor: Colors.red.withValues(alpha: 0.3),
                     borderWidth: 1,
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.delete, size: 18),
-                        SizedBox(width: 6),
-                        Text('Sil'),
+                        const Icon(Icons.delete, size: 18),
+                        const SizedBox(width: 6),
+                        Text(context.l10n.sil),
                       ],
                     ),
                   ),

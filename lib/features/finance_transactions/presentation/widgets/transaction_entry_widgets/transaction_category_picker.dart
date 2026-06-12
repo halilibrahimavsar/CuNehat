@@ -1,6 +1,7 @@
 // transaction_form_fields.dart'tan bölündü (v1 temizliği): davranış aynı.
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -33,7 +34,7 @@ class CategoryPicker extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Kategori',
+              context.l10n.labelKategori,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -45,7 +46,7 @@ class CategoryPicker extends StatelessWidget {
             TextButton.icon(
               onPressed: () => _openManager(context),
               icon: Icon(Icons.tune_rounded, size: 16, color: accent),
-              label: Text('Düzenle',
+              label: Text(context.l10n.duzenle,
                   style: TextStyle(
                       fontSize: 12,
                       color: accent,
@@ -214,7 +215,7 @@ class _AddCategoryTile extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Yeni',
+              context.l10n.yeni,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,

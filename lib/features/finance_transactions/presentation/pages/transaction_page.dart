@@ -16,6 +16,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
@@ -363,7 +364,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Henüz işlem yok',
+                  context.l10n.henuzIslemYok,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -373,7 +374,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.',
+                  context.l10n.buDonemIcinKayit,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,

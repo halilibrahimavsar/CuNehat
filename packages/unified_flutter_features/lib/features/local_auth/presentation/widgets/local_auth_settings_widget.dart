@@ -105,6 +105,7 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
               state: state,
               style: widget.style,
               header: widget.header,
+              texts: widget.texts,
             ));
           }
           if (widget.showPinSection) {
@@ -114,6 +115,7 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
               onCreatePin: _showCreatePinDialog,
               onChangePin: _showChangePinDialog,
               onDeletePin: _showDeletePinDialog,
+              texts: widget.texts,
             ));
           }
           if (widget.showBiometricSection) {
@@ -122,6 +124,7 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
               state: state,
               onToggle: (value) =>
                   _bloc.add(ToggleBiometricEvent(enable: value)),
+              texts: widget.texts,
             ));
           }
           if (widget.showPrivacyGuardSection) {
@@ -130,6 +133,7 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
               state: state,
               onToggle: (value) =>
                   _bloc.add(TogglePrivacyGuardEvent(enable: value)),
+              texts: widget.texts,
             ));
           }
           if (widget.showBackgroundLockSection) {
@@ -138,6 +142,7 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
               state: state,
               onTimeoutSelected: (seconds) =>
                   _bloc.add(UpdateBackgroundLockTimeoutEvent(seconds: seconds)),
+              texts: widget.texts,
             ));
           }
 
@@ -154,12 +159,57 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
     );
   }
 
+  String? _localizeMessage(String? msg) {
+    if (msg == null) return null;
+    if (msg == 'Create a PIN first') {
+      return widget.texts.msgCreateAPinFirst;
+    }
+    if (msg == 'Biometric authentication is not supported') {
+      return widget.texts.msgBiometricAuthenticationIsNot;
+    }
+    if (msg == 'Biometric authentication failed') {
+      return widget.texts.msgBiometricAuthenticationFailed;
+    }
+    if (msg == 'Biometric login enabled') {
+      return widget.texts.msgBiometricLoginEnabled;
+    }
+    if (msg == 'Biometric login disabled') {
+      return widget.texts.msgBiometricLoginDisabled;
+    }
+    if (msg == 'PIN already exists, use change PIN instead') {
+      return widget.texts.msgPINAlreadyExistsUse;
+    }
+    if (msg == 'PINs do not match') {
+      return widget.texts.msgPINsDoNotMatch;
+    }
+    if (msg == 'PIN saved successfully') {
+      return widget.texts.msgPINSavedSuccessfully;
+    }
+    if (msg == 'New PIN values do not match') {
+      return widget.texts.msgNewPinValuesDo;
+    }
+    if (msg == 'Current PIN is incorrect') {
+      return widget.texts.msgCurrentPinIsIncorrect;
+    }
+    if (msg == 'PIN updated successfully') {
+      return widget.texts.msgPINUpdatedSuccessfully;
+    }
+    if (msg == 'PIN removed') {
+      return widget.texts.msgPINRemoved;
+    }
+    if (msg == 'Background lock and Privacy Guard enabled') {
+      return widget.texts.msgBackgroundLockAndPrivacy;
+    }
+    return msg;
+  }
+
   void _handleStateChanges(BuildContext context, LocalAuthSettingsState state) {
     if (state.message != null) {
+      final localizedMsg = _localizeMessage(state.message);
       if (state.status == SettingsStatus.error) {
-        IboSnackbar.showError(context, state.message!);
+        IboSnackbar.showError(context, localizedMsg ?? state.message!);
       } else if (state.status == SettingsStatus.success) {
-        IboSnackbar.showSuccess(context, state.message!);
+        IboSnackbar.showSuccess(context, localizedMsg ?? state.message!);
       }
     }
 

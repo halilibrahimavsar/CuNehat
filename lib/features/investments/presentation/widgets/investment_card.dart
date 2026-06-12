@@ -1,4 +1,5 @@
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
@@ -156,7 +157,7 @@ class InvestmentCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Mevcut Değer',
+                          context.l10n.mevcutDeger,
                           style: TextStyle(
                             fontSize: 11,
                             color: scheme.onSurfaceVariant,
@@ -176,7 +177,7 @@ class InvestmentCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Kar/Zarar',
+                          context.l10n.karZarar,
                           style: TextStyle(
                             fontSize: 11,
                             color: scheme.onSurfaceVariant,
@@ -191,7 +192,7 @@ class InvestmentCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${investment.profitPercentage.toStringAsFixed(2)}%',
+                          context.l10n.investmentProfitpercentageTostringasfixed(investment.profitPercentage.toStringAsFixed(2)),
                           style: TextStyle(
                             fontSize: 11,
                             color: profitColor,
@@ -208,7 +209,7 @@ class InvestmentCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Hedef: ${currencyFormat.format(investment.targetAmount)}',
+                        context.l10n.hedefCurrencyformatFormatInvestment(currencyFormat.format(investment.targetAmount)),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -216,7 +217,7 @@ class InvestmentCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${(investment.targetProgress * 100).toStringAsFixed(1)}%',
+                        context.l10n.investmentTargetprogressTostringasfixed((investment.targetProgress * 100).toStringAsFixed(1)),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,

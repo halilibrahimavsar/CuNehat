@@ -1,6 +1,7 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/investments/domain/contribution_calculator.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
@@ -204,8 +205,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
                   const SizedBox(height: 6),
                   if (inv.isGoal)
                     Text(
-                      'Birikmiş: ${formatMoney(inv.currentValue)} / '
-                      'Hedef: ${formatMoney(inv.targetAmount!)}',
+                      '${context.l10n.birikmisFormatmoneyInvCurrentvalue(formatMoney(inv.currentValue))}'
+                      '${context.l10n.hedefCurrencyformatFormatInvestment(formatMoney(inv.targetAmount!))}',
                       style: TextStyle(
                         fontSize: 13,
                         color: cs.onSurfaceVariant,
@@ -251,9 +252,9 @@ class _ContributeSheetState extends State<ContributeSheet> {
                                 child:
                                     CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.refresh_rounded, size: 20),
-                        label: const Text(
-                          'Güncel Fiyatı Getir',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+                        label: Text(
+                          context.l10n.guncelFiyatiGetir,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -317,7 +318,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       Expanded(
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('İptal'),
+                          child: Text(context.l10n.iptal),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -332,9 +333,9 @@ class _ContributeSheetState extends State<ContributeSheet> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          child: const Text(
-                            'Ekle',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                          child: Text(
+                            context.l10n.ekle,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
                       ),

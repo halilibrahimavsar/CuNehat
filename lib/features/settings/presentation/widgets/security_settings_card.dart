@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Card that navigates to security settings, styled with the premium AppCard.
 class SecuritySettingsCard extends StatelessWidget {
@@ -21,14 +22,14 @@ class SecuritySettingsCard extends StatelessWidget {
         ),
         leading: Icon(Icons.lock_outline, color: scheme.primary),
         title: Text(
-          'Uygulama Kilidi',
+          context.l10n.uygulamaKilidi,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: scheme.onSurface,
           ),
         ),
         subtitle: Text(
-          'PIN, Biyometrik ve Gizlilik Ayarları',
+          context.l10n.pINBiyometrikVeGizlilik,
           style: theme.textTheme.bodySmall?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
