@@ -18,6 +18,7 @@ class AppCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry? margin;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final bool elevated;
 
   const AppCard({
@@ -28,6 +29,7 @@ class AppCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.margin,
     this.onTap,
+    this.onLongPress,
     this.elevated = true,
   });
 
@@ -44,8 +46,8 @@ class AppCard extends StatelessWidget {
       child: Padding(padding: padding, child: child),
     );
 
-    if (onTap != null) {
-      card = PressableScale(onTap: onTap, child: card);
+    if (onTap != null || onLongPress != null) {
+      card = PressableScale(onTap: onTap, onLongPress: onLongPress, child: card);
     }
     if (margin != null) {
       card = Padding(padding: margin!, child: card);

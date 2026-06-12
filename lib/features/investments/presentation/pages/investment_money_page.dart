@@ -1,5 +1,4 @@
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
@@ -115,17 +114,6 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           currentValue: investment.currentValue,
           recordSale: sell,
         ));
-  }
-
-  /// Sağa kaydırma artık yalnızca "Kaydı Sil" akışıdır; satış eylem
-  /// menüsünden ayrıca yapılır.
-  Future<bool> _deleteInvestment(InvestmentEntity investment) async {
-    final confirmed = await _confirmDelete(investment);
-    if (confirmed == true && mounted) {
-      _dispatchDelete(investment, sell: false);
-      return true;
-    }
-    return false;
   }
 
   /// Katkı (Mod A: nakit, Mod B: varlık alımı) — muhasebe contribute_sheet'te.
@@ -333,22 +321,13 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                             ...investments.map((investment) {
                               return Column(
                                 children: [
-                                  DismissableWidget<InvestmentEntity>(
-                                    item: investment,
-                                    dismissKey: investment.id!,
-                                    onDelete: (item) async {
-                                      return await _deleteInvestment(
-                                          investment);
-                                    },
-                                    onEdit: (item) => _openEditSheet(item),
-                                    child: GestureDetector(
-                                      // Dokunuş eylem menüsünü açar: katkı,
-                                      // fiyat, düzenle, sat ve sil ayrı ayrı.
-                                      onTap: () =>
-                                          _showActionSheet(investment),
-                                      child: InvestmentCard(
-                                        investment: investment,
-                                      ),
+                                  GestureDetector(
+                                    // Dokunuş eylem menüsünü açar: katkı,
+                                    // fiyat, düzenle, sat ve sil ayrı ayrı.
+                                    onTap: () =>
+                                        _showActionSheet(investment),
+                                    child: InvestmentCard(
+                                      investment: investment,
                                     ),
                                   ),
                                   const SizedBox(height: 12),

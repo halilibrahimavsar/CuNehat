@@ -5,14 +5,14 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
-import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Premium işlem kartı: kategori glyph'i, marka renkleri, baskın tutar.
-/// Dokununca tek-işlem detay sayfasını açar; swipe ile sil/düzenle.
+/// Dokununca tek-işlem detay sayfasını açar; basılı tutunca sil/düzenle menüsü açar.
 class TransactionCard extends StatelessWidget {
   final BuildContext context;
   final TransactionWithBalance item;
@@ -29,37 +29,18 @@ class TransactionCard extends StatelessWidget {
 
   String get _heroTag => 'tx_${item.transaction.id ?? item.hashCode}';
 
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _showActionSheet(BuildContext context, Color accent) async {
     final t = item.transaction;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final accent = t.isIncome ? AppGradients.savings : AppGradients.debt;
 
-    return DismissableWidget<TransactionWithBalance>(
-      item: item,
-      dismissKey: t.id ?? '',
-      onDelete: (item) async {
-        if (t.isSystem) {
-          _systemSnack(context,
-              'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından silin.');
-          return false;
-        }
-        final confirmed = await IboDialog.showConfirmation(
-          context,
-          'İşlem Sil',
-          '${t.title} işlemini silmek istediğinizden emin misiniz?',
-        );
+    final action = await TransactionActionSheet.show(
+      context,
+      transaction: t,
+      accent: accent,
+    );
+    if (action == null || !context.mounted) return;
 
-        if (confirmed == true && context.mounted) {
-          if (t.id != null) {
-            context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
-            return true;
-          }
-        }
-        return false;
-      },
-      onEdit: (item) {
+    switch (action) {
+      case TransactionAction.edit:
         if (t.isSystem) {
           _systemSnack(context,
               'Otomatik işlem düzenlenemez. İlgili borç/yatırım/alacak kaydından değiştirin.');
@@ -72,102 +53,130 @@ class TransactionCard extends StatelessWidget {
           type: t.type,
           initialTransaction: t,
         );
-      },
-      child: AppCard(
-        accent: accent,
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        onTap: () => _openDetail(context),
-        child: Row(
-          children: [
-            // Kategori glyph'i (yoksa yön oku fallback)
-            Hero(
-              tag: _heroTag,
-              child: Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.25),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  categoryIcon ??
-                      (t.isIncome
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded),
-                  color: accent,
-                  size: 18,
+        break;
+      case TransactionAction.delete:
+        if (t.isSystem) {
+          _systemSnack(context,
+              'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından silin.');
+          return;
+        }
+        final confirmed = await IboDialog.showConfirmation(
+          context,
+          'İşlem Sil',
+          '${t.title} işlemini silmek istediğinizden emin misiniz?',
+        );
+
+        if (confirmed == true && context.mounted) {
+          if (t.id != null) {
+            context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
+          }
+        }
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = item.transaction;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final accent = t.isIncome ? AppGradients.savings : AppGradients.debt;
+
+    return AppCard(
+      accent: accent,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      onTap: () => _openDetail(context),
+      onLongPress: () => _showActionSheet(context, accent),
+      child: Row(
+        children: [
+          // Kategori glyph'i (yoksa yön oku fallback)
+          Hero(
+            tag: _heroTag,
+            child: Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: accent.withValues(alpha: 0.25),
+                  width: 1,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-
-            // Başlık + kategori chip + saat
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          t.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (t.isSystem) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.lock_outline_rounded,
-                          size: 12,
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      _categoryChip(scheme, accent, t.tag),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppFormatters.time.format(t.date),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // Baskın tutar
-            SignedAmountDisplay(
-              amount: t.amount,
-              isExpense: t.isExpense,
-              style: TextStyle(
+              child: Icon(
+                categoryIcon ??
+                    (t.isIncome
+                        ? Icons.arrow_upward_rounded
+                        : Icons.arrow_downward_rounded),
                 color: accent,
-                fontWeight: FontWeight.w900,
-                fontSize: 17,
-                letterSpacing: -0.5,
+                size: 18,
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+
+          // Başlık + kategori chip + saat
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        t.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (t.isSystem) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        size: 12,
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    _categoryChip(scheme, accent, t.tag),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppFormatters.time.format(t.date),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Baskın tutar
+          SignedAmountDisplay(
+            amount: t.amount,
+            isExpense: t.isExpense,
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
