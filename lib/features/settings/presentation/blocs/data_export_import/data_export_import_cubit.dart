@@ -53,13 +53,13 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
   Future<void> importTransactions(String userId) async {
     emit(DataExportImportLoading());
     try {
-      final importedTransactions =
-          await csvService.importTransactionsFromCSV(userId);
-      if (importedTransactions == null) {
+      final importResult = await csvService.importTransactionsFromCSV(userId);
+      if (importResult == null) {
         emit(DataExportImportInitial()); // User cancelled
         return;
       }
 
+      final importedTransactions = importResult.transactions;
       if (importedTransactions.isEmpty) {
         emit(const DataExportImportError(
             "CSV dosyasında geçerli işlem bulunamadı."));
@@ -103,8 +103,11 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
 
         transactionsChangedNotifier.notify();
 
-        emit(const DataExportImportSuccess(
-            "Veriler başarıyla içe aktarıldı. Yeni cüzdan oluşturuldu ve seçildi."));
+        final skippedNote = importResult.skippedRows > 0
+            ? " ${importResult.skippedRows} satır tarih/tutar hatası nedeniyle atlandı."
+            : "";
+        emit(DataExportImportSuccess(
+            "Veriler başarıyla içe aktarıldı. Yeni cüzdan oluşturuldu ve seçildi.$skippedNote"));
       });
     } catch (e) {
       emit(DataExportImportError(e.toString()));

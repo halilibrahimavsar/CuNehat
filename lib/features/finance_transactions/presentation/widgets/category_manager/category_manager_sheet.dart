@@ -2,6 +2,7 @@ import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
@@ -370,6 +371,10 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     if (confirmed == true) {
       try {
         await _categoryService.deleteCategory(category.id, widget.isExpense);
+        if (widget.isExpense) {
+          // Kategorinin bütçesi kalmasın (hayalet bütçe önlemi)
+          await getIt<DeleteBudgetUsecase>()(category.id);
+        }
         _loadCategories();
         if (mounted) {
           IboSnackbar.showSuccess(context, '🗑️ Kategori silindi');

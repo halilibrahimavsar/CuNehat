@@ -10,6 +10,7 @@ import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
 class BudgetsPage extends StatelessWidget {
@@ -146,9 +147,15 @@ class _AddBudgetButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
+        final bloc = context.read<BudgetsBloc>();
+        final state = bloc.state;
         showDialog(
           context: context,
-          builder: (ctx) => _AddBudgetDialog(bloc: context.read<BudgetsBloc>()),
+          builder: (ctx) => _AddBudgetDialog(
+            bloc: bloc,
+            existingBudgets:
+                state is BudgetsLoaded ? state.budgets : const [],
+          ),
         );
       },
       child: const Icon(Icons.add),
@@ -158,7 +165,8 @@ class _AddBudgetButton extends StatelessWidget {
 
 class _AddBudgetDialog extends StatefulWidget {
   final BudgetsBloc bloc;
-  const _AddBudgetDialog({required this.bloc});
+  final List<BudgetEntity> existingBudgets;
+  const _AddBudgetDialog({required this.bloc, required this.existingBudgets});
 
   @override
   State<_AddBudgetDialog> createState() => _AddBudgetDialogState();
@@ -166,25 +174,53 @@ class _AddBudgetDialog extends StatefulWidget {
 
 class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _categoryController = TextEditingController();
   final _limitController = TextEditingController();
+
+  List<String> _categories = [];
+  String? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    // Serbest metin yerine gerçek gider kategorileri: bütçenin categoryId'si
+    // işlem tag'iyle birebir eşleşmezse harcama hiç birikmez.
+    final categories =
+        await getIt<CategoryRepository>().getCategories(true);
+    if (!mounted) return;
+    setState(() => _categories = categories.map((c) => c.id).toList());
+  }
 
   @override
   void dispose() {
-    _categoryController.dispose();
     _limitController.dispose();
     super.dispose();
   }
 
+  bool get _isUpdate =>
+      widget.existingBudgets.any((b) => b.categoryId == _selectedCategory);
+
+  void _onCategorySelected(String? value) {
+    setState(() => _selectedCategory = value);
+    // Mevcut bütçesi olan kategori seçilirse limiti öne doldur (güncelleme).
+    final existing =
+        widget.existingBudgets.where((b) => b.categoryId == value).toList();
+    if (existing.isNotEmpty) {
+      _limitController.text = existing.first.limitAmount.toString();
+    }
+  }
+
   void _save() {
     if (_formKey.currentState!.validate()) {
-      final categoryName = _categoryController.text.trim();
       final limitStr = _limitController.text.trim().replaceAll(',', '.');
       final limit = double.tryParse(limitStr) ?? 0;
 
-      if (limit > 0) {
+      if (_selectedCategory != null && limit > 0) {
         widget.bloc.add(SaveBudgetEvent(BudgetEntity(
-          categoryId: categoryName,
+          categoryId: _selectedCategory!,
           limitAmount: limit,
         )));
         Navigator.pop(context);
@@ -201,19 +237,27 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
-              controller: _categoryController,
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
               decoration: const InputDecoration(
-                labelText: 'Kategori Adı',
+                labelText: 'Kategori',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Kategori adı boş olamaz';
-                }
-                return null;
-              },
+              items: _categories
+                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                  .toList(),
+              onChanged: _onCategorySelected,
+              validator: (value) =>
+                  value == null ? 'Bir kategori seçin' : null,
             ),
+            if (_isUpdate)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Bu kategorinin bütçesi var; limit güncellenecek.',
+                  style: TextStyle(fontSize: 12, color: Colors.orange),
+                ),
+              ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _limitController,
@@ -244,7 +288,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
         ),
         FilledButton(
           onPressed: _save,
-          child: const Text('Kaydet'),
+          child: Text(_isUpdate ? 'Güncelle' : 'Kaydet'),
         ),
       ],
     );
