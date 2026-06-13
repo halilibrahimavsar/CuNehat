@@ -55,59 +55,83 @@ class PendingRecurringDialog extends StatelessWidget {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: state.pendingTransactions.length,
-                      separatorBuilder: (_, __) => const Divider(),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final tx = state.pendingTransactions[index];
                         final dateStr = DateFormat('dd MMM yyyy')
                             .format(tx.nextExecutionDate);
 
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(tx.title),
-                          subtitle: Text(context.l10n.titleTarihDatestrNtutarTx(
-                              dateStr, tx.amount.toString())),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    color: Colors.red),
-                                onPressed: () {
-                                  context
-                                      .read<PendingRecurringBloc>()
-                                      .add(DeleteTransactionEvent(tx.id));
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined,
-                                    color: Colors.blue),
-                                onPressed: () {
-                                  _showEditDialog(context, tx);
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.skip_next_outlined,
-                                    color: Colors.orange),
-                                tooltip: context.l10n.tooltipBuVadeyiAtla,
-                                onPressed: () {
-                                  context
-                                      .read<PendingRecurringBloc>()
-                                      .add(SkipTransactionEvent(tx));
-                                },
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
+                              Text(
+                                tx.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
-                                onPressed: () {
-                                  context
-                                      .read<PendingRecurringBloc>()
-                                      .add(ApproveTransactionEvent(tx));
-                                },
-                                child: Text(context.l10n.onayla),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                context.l10n.titleTarihDatestrNtutarTx(
+                                    dateStr, tx.amount.toString()),
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline,
+                                        color: Colors.red),
+                                    onPressed: () {
+                                      context
+                                          .read<PendingRecurringBloc>()
+                                          .add(DeleteTransactionEvent(tx.id));
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined,
+                                        color: Colors.blue),
+                                    onPressed: () {
+                                      _showEditDialog(context, tx);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.skip_next_outlined,
+                                        color: Colors.orange),
+                                    tooltip: context.l10n.tooltipBuVadeyiAtla,
+                                    onPressed: () {
+                                      context
+                                          .read<PendingRecurringBloc>()
+                                          .add(SkipTransactionEvent(tx));
+                                    },
+                                  ),
+                                  const Spacer(),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12)),
+                                    ),
+                                    onPressed: () {
+                                      context
+                                          .read<PendingRecurringBloc>()
+                                          .add(ApproveTransactionEvent(tx));
+                                    },
+                                    child: Text(context.l10n.onayla),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
