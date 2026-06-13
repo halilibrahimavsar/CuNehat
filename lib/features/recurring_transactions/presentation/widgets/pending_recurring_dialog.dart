@@ -26,6 +26,7 @@ class PendingRecurringDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PendingRecurringBloc, PendingRecurringState>(
+      buildWhen: (previous, current) => current is PendingRecurringLoaded,
       builder: (context, state) {
         if (state is PendingRecurringLoaded &&
             state.pendingTransactions.isNotEmpty) {

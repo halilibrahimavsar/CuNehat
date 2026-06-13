@@ -41,6 +41,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String? _currentWalletId;
   SubViewFactory? _subViewFactory;
   SliderState? _lastSliderState;
+  bool _isPendingDialogShowing = false;
 
   /// Build içinde yaratılırsa her rebuild'de key değişir ve scaffold'un tüm
   /// alt ağacı (DynamicSlider dahil) remount olur; bu da slider sürüklenirken
@@ -120,16 +121,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               listener: _handleWalletStateChanges,
             ),
             BlocListener<PendingRecurringBloc, PendingRecurringState>(
-              listener: (context, state) {
-                if (state is PendingRecurringLoaded &&
-                    state.pendingTransactions.isNotEmpty) {
-                  // Ekranda dialog varsa tekrar açmamak için ModalRoute kontrolü eklenebilir,
-                  // veya basitçe showDialog tetiklenir.
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (_) => const PendingRecurringDialog(),
-                  );
+              listener: (context, state) async {
+                if (state is PendingRecurringLoaded) {
+                  if (state.pendingTransactions.isNotEmpty) {
+                    if (!_isPendingDialogShowing) {
+                      _isPendingDialogShowing = true;
+                      await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => const PendingRecurringDialog(),
+                      );
+                      _isPendingDialogShowing = false;
+                    }
+                  } else if (_isPendingDialogShowing) {
+                    Navigator.of(context, rootNavigator: true).pop();
+                  }
                 }
               },
             ),
