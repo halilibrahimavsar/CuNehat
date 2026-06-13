@@ -1,13 +1,14 @@
 import 'dart:math' as math;
+import 'package:equatable/equatable.dart';
 
 enum DebtType { bankLoan, installmentDebt, personalDebt, otherDebt }
 
-class Payment {
+class Payment extends Equatable {
   final DateTime date;
   final double amount;
   final String? notes;
 
-  Payment({required this.date, required this.amount, this.notes});
+  const Payment({required this.date, required this.amount, this.notes});
 
   Payment copyWith({
     DateTime? date,
@@ -20,10 +21,13 @@ class Payment {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  List<Object?> get props => [date, amount, notes];
 }
 
-class DebtEntity {
-  String? id;
+class DebtEntity extends Equatable {
+  final String? id;
   final String userId;
   final String walletId;
   final String title;
@@ -40,7 +44,7 @@ class DebtEntity {
   final String? notes;
   final double? expectedTotalAmount;
 
-  DebtEntity({
+  const DebtEntity({
     this.id,
     required this.userId,
     required this.walletId,
@@ -150,4 +154,24 @@ class DebtEntity {
   /// Ödeme İlerlemesi (0.0 - 1.0 arası)
   double get progress =>
       totalDebtAmount == 0 ? 0 : totalPaidAmount / totalDebtAmount;
+
+  @override
+  List<Object?> get props => [
+        id,
+        userId,
+        walletId,
+        title,
+        counterparty,
+        type,
+        principalAmount,
+        interestRate,
+        termMonths,
+        overdueInterestRate,
+        startDate,
+        dueDate,
+        payments,
+        isPaid,
+        notes,
+        expectedTotalAmount,
+      ];
 }

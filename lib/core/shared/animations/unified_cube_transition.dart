@@ -176,6 +176,8 @@ class VerticalListTransitionManager extends ChangeNotifier {
   AnimationController get controller => _controller;
   bool get isTransitioning => _isTransitioning;
   bool get isAtMainView => _currentIndex == 0;
+  int get currentIndex => _currentIndex;
+  List<Widget> get views => List.unmodifiable(_views);
 
   /// Register available views
   ///

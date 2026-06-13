@@ -1,16 +1,19 @@
-// lib/features/transactions/domain/entities/filter_entity.dart
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:equatable/equatable.dart';
 
 /// Veri filtreleri için temel sınıf
-abstract base class BaseFilter {
+abstract base class BaseFilter extends Equatable {
   const BaseFilter();
 
   bool get hasActiveFilters;
   int get activeFilterCount;
+
+  @override
+  List<Object?> get props => [];
 }
 
 /// Fiyat aralığı filtresi
-class PriceRangeFilter {
+class PriceRangeFilter extends Equatable {
   final double? minPrice;
   final double? maxPrice;
 
@@ -27,6 +30,9 @@ class PriceRangeFilter {
     if (maxPrice != null && price > maxPrice!) return false;
     return true;
   }
+
+  @override
+  List<Object?> get props => [minPrice, maxPrice];
 
   @override
   String toString() {
@@ -94,10 +100,13 @@ base class DataFilter extends BaseFilter {
     if (searchQuery?.trim().isNotEmpty ?? false) count++;
     return count;
   }
+
+  @override
+  List<Object?> get props => [selectedCategories, priceRange, searchQuery];
 }
 
 /// Görünüm filtreleri (UI durumunu yönetmek için)
-class ViewFilter {
+class ViewFilter extends Equatable {
   final FinanceMode financeMode;
   final DateTime startDate;
   final DateTime endDate;
@@ -119,10 +128,13 @@ class ViewFilter {
       endDate: endDate ?? this.endDate,
     );
   }
+
+  @override
+  List<Object?> get props => [financeMode, startDate, endDate];
 }
 
 /// Tam filtre bileşimi
-class CombinedFilter {
+class CombinedFilter extends Equatable {
   final ViewFilter viewFilter;
   final DataFilter dataFilter;
 
@@ -140,4 +152,7 @@ class CombinedFilter {
       dataFilter: dataFilter ?? this.dataFilter,
     );
   }
+
+  @override
+  List<Object?> get props => [viewFilter, dataFilter];
 }
