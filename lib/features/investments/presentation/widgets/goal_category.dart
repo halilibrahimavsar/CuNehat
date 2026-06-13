@@ -65,9 +65,8 @@ class GoalCategorySelector extends StatelessWidget {
           selectedColor: accentColor,
           backgroundColor: cs.onSurface.withValues(alpha: 0.04),
           side: BorderSide(
-            color: isSelected
-                ? accentColor
-                : cs.onSurface.withValues(alpha: 0.08),
+            color:
+                isSelected ? accentColor : cs.onSurface.withValues(alpha: 0.08),
           ),
           showCheckmark: false,
           shape: RoundedRectangleBorder(

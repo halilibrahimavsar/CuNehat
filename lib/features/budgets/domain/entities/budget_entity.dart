@@ -29,7 +29,8 @@ class BudgetEntity extends Equatable {
     );
   }
 
-  double get progress => limitAmount > 0 ? (spentAmount / limitAmount).clamp(0.0, 1.0) : 0.0;
+  double get progress =>
+      limitAmount > 0 ? (spentAmount / limitAmount).clamp(0.0, 1.0) : 0.0;
   bool get isExceeded => spentAmount > limitAmount;
 
   @override

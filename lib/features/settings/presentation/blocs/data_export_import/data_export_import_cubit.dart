@@ -26,7 +26,8 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
     required this.transactionsChangedNotifier,
   }) : super(DataExportImportInitial());
 
-  Future<void> exportTransactions(String userId, String walletId, {String? shareText}) async {
+  Future<void> exportTransactions(String userId, String walletId,
+      {String? shareText}) async {
     emit(DataExportImportLoading());
     try {
       final result = await transactionsRepository.getTransactions(
@@ -37,13 +38,13 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
       await result.fold((l) async => emit(DataExportImportError(l.message)),
           (r) async {
         if (r.isEmpty) {
-          emit(const DataExportImportError(
-              "Dışa aktarılacak işlem bulunamadı."));
+          emit(const DataExportImportSuccess(
+              DataExportMessageType.noTransactionsToExport));
           return;
         }
         await csvService.exportTransactionsToCSV(r, shareText: shareText);
-        emit(const DataExportImportSuccess(
-            "İşlemler başarıyla dışa aktarıldı."));
+        emit(
+            const DataExportImportSuccess(DataExportMessageType.exportSuccess));
       });
     } catch (e) {
       emit(DataExportImportError(e.toString()));
@@ -61,17 +62,17 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
 
       final importedTransactions = importResult.transactions;
       if (importedTransactions.isEmpty) {
-        emit(const DataExportImportError(
-            "CSV dosyasında geçerli işlem bulunamadı."));
+        emit(const DataExportImportSuccess(
+            DataExportMessageType.noValidTransactionsInCsv));
         return;
       }
 
-      // Create a new wallet
+      // Tarih bazlı isim oluşturma — prefix ARB'den widget katmanında alınır.
+      final now = DateTime.now();
       final newWallet = WalletEntity(
         id: const Uuid().v4(),
         userId: userId,
-        name:
-            "İçe Aktarılan Cüzdan - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
+        name: "importedWallet-${now.day}-${now.month}-${now.year}",
         balance: 0,
         debt: 0,
         credit: 0,
@@ -83,10 +84,9 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
 
       final walletResult = await walletRepository.createWallet(newWallet);
 
-      await walletResult.fold(
-          (l) async => emit(
-              DataExportImportError("Cüzdan oluşturulamadı: ${l.message}")),
-          (newWalletId) async {
+      await walletResult
+          .fold((l) async => emit(DataExportImportError(l.message)),
+              (newWalletId) async {
         // Add transactions
         for (var t in importedTransactions) {
           await transactionsRepository
@@ -103,11 +103,10 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
 
         transactionsChangedNotifier.notify();
 
-        final skippedNote = importResult.skippedRows > 0
-            ? " ${importResult.skippedRows} satır tarih/tutar hatası nedeniyle atlandı."
-            : "";
         emit(DataExportImportSuccess(
-            "Veriler başarıyla içe aktarıldı. Yeni cüzdan oluşturuldu ve seçildi.$skippedNote"));
+          DataExportMessageType.importSuccess,
+          skippedRows: importResult.skippedRows,
+        ));
       });
     } catch (e) {
       emit(DataExportImportError(e.toString()));

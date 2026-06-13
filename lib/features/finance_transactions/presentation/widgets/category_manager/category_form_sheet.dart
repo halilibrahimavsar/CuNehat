@@ -117,7 +117,9 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _isEditMode ? 'Kategori Düzenle' : 'Yeni Kategori',
+              _isEditMode
+                  ? context.l10n.kategoriDuzenle
+                  : context.l10n.yeniKategori,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
@@ -145,10 +147,10 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       maxLength: 20,
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Kategori adı boş olamaz';
+          return context.l10n.kategoriAdiBosOlamaz;
         }
         if (value.trim().length < 2) {
-          return 'En az 2 karakter olmalı';
+          return context.l10n.enAz2KarakterOlmali;
         }
         return null;
       },
@@ -240,7 +242,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(_isEditMode ? 'Kaydet' : 'Ekle'),
+                  : Text(_isEditMode ? context.l10n.kaydet : context.l10n.ekle),
             ),
           ),
         ],
@@ -291,8 +293,9 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       }
 
       if (mounted) {
-        final message =
-            _isEditMode ? '✅ Kategori güncellendi' : '✅ Kategori eklendi';
+        final message = _isEditMode
+            ? '✅ ${context.l10n.kategoriGuncellendi}'
+            : '✅ ${context.l10n.kategoriOlusturuldu}';
         Navigator.pop(context, true);
         // Bir sonraki frame'de göstermek için Future.microtask kullan
         Future.microtask(() {
@@ -303,7 +306,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       }
     } catch (e) {
       if (mounted) {
-        IboSnackbar.showError(context, 'Hata: ${e.toString()}');
+        IboSnackbar.showError(context, context.l10n.hataError(e.toString()));
       }
     } finally {
       setState(() => _isLoading = false);

@@ -136,20 +136,22 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   String? _validate() {
     if (_titleController.text.trim().isEmpty) {
-      return _isDebt ? 'Başlık girin' : 'Borçlu kişi adını girin';
+      return _isDebt
+          ? context.l10n.baslikGirin
+          : context.l10n.borcluKisiAdiGirin;
     }
     if (_isDebt && _counterpartyController.text.trim().isEmpty) {
-      return 'Kurum/kişi girin';
+      return context.l10n.kurumKisiGirin;
     }
     final amountError = validateAmount(_amountController.text);
     if (amountError != null) return amountError;
 
     if (_isDebt && _selectedDebtType != DebtType.personalDebt) {
       final t = int.tryParse(_termController.text.trim()) ?? 0;
-      if (t <= 0) return 'Vade (ay) en az 1 olmalı';
+      if (t <= 0) return context.l10n.vadeEnAz1Olmali;
       if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
         if (parseAmount(_installmentController.text) == null) {
-          return 'Aylık taksit tutarını girin';
+          return context.l10n.aylikTaksitTutariniGirin;
         }
       }
     }
@@ -312,13 +314,13 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       _buildAmountCard(cs),
                       const SizedBox(height: 20),
                       if (_isDebt) ...[
-                        _sectionLabel('Borç türü', cs),
+                        _sectionLabel(context.l10n.borcTuruLabel, cs),
                         const SizedBox(height: 10),
                         _buildDebtTypeChips(cs),
                         const SizedBox(height: 20),
                         _filledField(
                           controller: _titleController,
-                          hint: 'Başlık · örn. Konut Kredisi',
+                          hint: context.l10n.borcBaslikHint,
                           icon: Icons.title_rounded,
                           cs: cs,
                         ),
@@ -326,7 +328,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         if (_selectedDebtType != DebtType.personalDebt) ...[
                           _filledField(
                             controller: _counterpartyController,
-                            hint: 'Kurum / Kişi · örn. Ziraat Bankası',
+                            hint: context.l10n.kurumKisiHint,
                             icon: Icons.account_balance_rounded,
                             cs: cs,
                           ),
@@ -334,7 +336,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         ] else ...[
                           _filledField(
                             controller: _counterpartyController,
-                            hint: 'Kişi Adı',
+                            hint: context.l10n.kisiAdiHint,
                             icon: Icons.person_rounded,
                             cs: cs,
                           ),
@@ -343,7 +345,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         _buildDatePill(cs),
                         if (_selectedDebtType != DebtType.personalDebt) ...[
                           const SizedBox(height: 20),
-                          _sectionLabel('Vade & detaylar', cs),
+                          _sectionLabel(context.l10n.vadeVeDetaylarLabel, cs),
                           const SizedBox(height: 10),
                           if (_selectedDebtType == DebtType.bankLoan) ...[
                             _buildBankLoanToggle(cs),
@@ -363,7 +365,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       ] else ...[
                         _filledField(
                           controller: _titleController,
-                          hint: 'Borçlu kişi adı',
+                          hint: context.l10n.borcluKisiAdiHint,
                           icon: Icons.person_rounded,
                           cs: cs,
                         ),
@@ -391,8 +393,10 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   Widget _buildHandleAndHeader(ColorScheme cs) {
     final title = _isEditing
-        ? (_isDebt ? 'Borç Düzenle' : 'Alacak Düzenle')
-        : (_isDebt ? 'Yeni Borç' : 'Yeni Alacak');
+        ? (_isDebt
+            ? context.l10n.borcDuzenleTitle
+            : context.l10n.alacakDuzenleTitle)
+        : (_isDebt ? context.l10n.yeniBorcTitle : context.l10n.yeniAlacakTitle);
 
     return Column(
       children: [
@@ -475,12 +479,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           Text(
             _isDebt
                 ? (_selectedDebtType == DebtType.bankLoan
-                    ? 'Kredi tutarı (ana para)'
+                    ? context.l10n.krediTutariAnaPara
                     : (_selectedDebtType == DebtType.installmentDebt ||
                             _selectedDebtType == DebtType.personalDebt)
-                        ? 'Toplam tutar'
-                        : 'Borç tutarı (ana para)')
-                : 'Alacak tutarı',
+                        ? context.l10n.toplamTutar
+                        : context.l10n.borcTutariAnaPara)
+                : context.l10n.alacakTutari,
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -610,8 +614,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             _summaryRow(
               _selectedDebtType == DebtType.installmentDebt &&
                       !_isInstallmentAmortized
-                  ? 'Vade farkı'
-                  : 'Toplam faiz',
+                  ? context.l10n.vadeFarkiLabel
+                  : context.l10n.toplamFaizLabel,
               hasData
                   ? '+ ${AppFormatters.currency.format(totalInterest)}'
                   : '—',
@@ -620,7 +624,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             if (term > 0) ...[
               const SizedBox(height: 8),
               _summaryRow(
-                'Aylık taksit (≈)',
+                context.l10n.aylikTaksitLabel,
                 hasData ? AppFormatters.currency.format(monthly) : '—',
                 cs,
               ),
@@ -662,6 +666,15 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     DebtType.otherDebt: ('Diğer', Icons.more_horiz_rounded),
   };
 
+  String _getDebtTypeLabel(BuildContext context, DebtType type) {
+    return switch (type) {
+      DebtType.bankLoan => context.l10n.debtTypeBankLoan,
+      DebtType.installmentDebt => context.l10n.debtTypeInstallment,
+      DebtType.personalDebt => context.l10n.debtTypePersonal,
+      DebtType.otherDebt => context.l10n.debtTypeOther,
+    };
+  }
+
   Widget _buildDebtTypeChips(ColorScheme cs) {
     return Wrap(
       spacing: 8,
@@ -691,7 +704,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                     size: 17, color: selected ? _accent : cs.onSurfaceVariant),
                 const SizedBox(width: 7),
                 Text(
-                  meta.$1,
+                  _getDebtTypeLabel(context, type),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -910,7 +923,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               Expanded(
                 child: _filledField(
                   controller: _termController,
-                  hint: 'Vade (ay)',
+                  hint: context.l10n.vadeAyHint,
                   icon: Icons.event_repeat_rounded,
                   cs: cs,
                   keyboardType: TextInputType.number,
@@ -923,7 +936,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                 Expanded(
                   child: _filledField(
                     controller: _installmentController,
-                    hint: 'Aylık Taksit',
+                    hint: context.l10n.aylikTaksitHint,
                     icon: Icons.payments_rounded,
                     cs: cs,
                     keyboardType:
@@ -938,8 +951,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                     controller: _interestController,
                     hint: _selectedDebtType == DebtType.installmentDebt &&
                             !_isInstallmentAmortized
-                        ? 'Vade Farkı %'
-                        : 'Aylık Faiz %',
+                        ? context.l10n.vadeFarkiYuzdeHint
+                        : context.l10n.aylikFaizYuzdeHint,
                     icon: Icons.percent_rounded,
                     cs: cs,
                     keyboardType:
@@ -956,7 +969,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             const SizedBox(height: 10),
             _filledField(
               controller: _overdueController,
-              hint: 'Gecikme faizi (%)',
+              hint: context.l10n.gecikmeFaiziYuzdeHint,
               icon: Icons.running_with_errors_rounded,
               cs: cs,
               keyboardType:
@@ -1009,7 +1022,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               Icon(Icons.calendar_today_rounded, size: 18, color: _accent),
               const SizedBox(width: 12),
               Text(
-                _isDebt ? 'Başlangıç' : 'Vade',
+                _isDebt ? context.l10n.baslangicLabel : context.l10n.vadeLabel,
                 style: TextStyle(
                   fontSize: 13,
                   color: cs.onSurfaceVariant,
@@ -1144,7 +1157,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       color: Colors.white, size: 22),
                   const SizedBox(width: 8),
                   Text(
-                    _isEditing ? 'Güncelle' : 'Kaydet',
+                    _isEditing ? context.l10n.guncelle : context.l10n.kaydet,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,

@@ -81,7 +81,8 @@ class CuNehatApp extends StatelessWidget {
                     msgPINUpdatedSuccessfully: l10n.msgPINUpdatedSuccessfully,
                     msgCurrentPinIsIncorrect2: l10n.msgCurrentPinIsIncorrect,
                     msgPINRemoved: l10n.msgPINRemoved,
-                    msgBackgroundLockAndPrivacy: l10n.msgBackgroundLockAndPrivacy,
+                    msgBackgroundLockAndPrivacy:
+                        l10n.msgBackgroundLockAndPrivacy,
                     securitySettings: l10n.securitySettings,
                     manageYourAppSecurity: l10n.manageYourAppSecurity,
                     createPin: l10n.createPin,
@@ -92,7 +93,8 @@ class CuNehatApp extends StatelessWidget {
                     msgCreateAPinFirst2: l10n.msgCreateAPinFirst2,
                     msgIncorrectPinRemainingTries:
                         l10n.msgIncorrectPinRemainingTries('{tries}'),
-                    msgPINVerificationFailedE: l10n.msgPINVerificationFailedE('{error}'),
+                    msgPINVerificationFailedE:
+                        l10n.msgPINVerificationFailedE('{error}'),
                     pinLockTitle: l10n.pinLockTitle,
                     pinEnabledSubtitle: l10n.pinEnabledSubtitle,
                     pinNotSetSubtitle: l10n.pinNotSetSubtitle,
@@ -102,11 +104,13 @@ class CuNehatApp extends StatelessWidget {
                     biometricEnabledSubtitle: l10n.biometricEnabledSubtitle,
                     biometricDisabledSubtitle: l10n.biometricDisabledSubtitle,
                     biometricAuthTileTitle: l10n.biometricAuthTileTitle,
-                    biometricAuthTileSubtitleOn: l10n.biometricAuthTileSubtitleOn,
+                    biometricAuthTileSubtitleOn:
+                        l10n.biometricAuthTileSubtitleOn,
                     biometricAuthTileSubtitleOff:
                         l10n.biometricAuthTileSubtitleOff,
                     privacyGuardTitle: l10n.privacyGuardTitle,
-                    privacyGuardEnabledSubtitle: l10n.privacyGuardEnabledSubtitle,
+                    privacyGuardEnabledSubtitle:
+                        l10n.privacyGuardEnabledSubtitle,
                     privacyGuardDisabledSubtitle:
                         l10n.privacyGuardDisabledSubtitle,
                     screenProtectionTileTitle: l10n.screenProtectionTileTitle,

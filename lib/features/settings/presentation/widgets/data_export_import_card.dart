@@ -32,7 +32,20 @@ class _DataExportImportCardContent extends StatelessWidget {
     return BlocConsumer<DataExportImportCubit, DataExportImportState>(
       listener: (context, state) {
         if (state is DataExportImportSuccess) {
-          IboSnackbar.showSuccess(context, state.message);
+          final l = context.l10n;
+          switch (state.messageType) {
+            case DataExportMessageType.noTransactionsToExport:
+              IboSnackbar.showError(context, l.disaAktarilacakIslemBulunamadi);
+            case DataExportMessageType.noValidTransactionsInCsv:
+              IboSnackbar.showError(context, l.csvGecerliIslemBulunamadi);
+            case DataExportMessageType.exportSuccess:
+              IboSnackbar.showSuccess(context, l.islemlerDisaAktarildi);
+            case DataExportMessageType.importSuccess:
+              final msg = state.skippedRows > 0
+                  ? '${l.verilerIceAktarildi} ${l.satirAtlandi(state.skippedRows)}'
+                  : l.verilerIceAktarildi;
+              IboSnackbar.showSuccess(context, msg);
+          }
         } else if (state is DataExportImportError) {
           IboSnackbar.showError(context, state.message);
         }
@@ -143,9 +156,12 @@ class _DataExportImportCardContent extends StatelessWidget {
                               if (userId != null && walletId != null) {
                                 context
                                     .read<DataExportImportCubit>()
-                                    .exportTransactions(userId, walletId, shareText: context.l10n.islemGecmisiCsv);
+                                    .exportTransactions(userId, walletId,
+                                        shareText:
+                                            context.l10n.islemGecmisiCsv);
                               } else {
-                                IboSnackbar.showWarning(context, context.l10n.activeWalletRequiredForExport);
+                                IboSnackbar.showWarning(context,
+                                    context.l10n.activeWalletRequiredForExport);
                               }
                             },
                       icon: const Icon(Icons.file_upload_rounded),

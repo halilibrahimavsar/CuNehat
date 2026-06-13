@@ -64,7 +64,8 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        IboSnackbar.showError(context, 'Kategoriler yüklenemedi: $e');
+        IboSnackbar.showError(
+            context, context.l10n.kategorilerYuklenemedi(e.toString()));
       }
     }
   }
@@ -135,8 +136,8 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
                   children: [
                     Text(
                       widget.isExpense
-                          ? 'Gider Kategorileri'
-                          : 'Gelir Kategorileri',
+                          ? context.l10n.giderKategorileri
+                          : context.l10n.gelirKategorileri,
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
@@ -196,8 +197,8 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
             const SizedBox(height: 16),
             Text(
               showDefaults
-                  ? 'Varsayılan kategori yok'
-                  : 'Henüz özel kategori yok',
+                  ? context.l10n.varsayilanKategoriYok
+                  : context.l10n.henuzOzelKategoriYok,
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             if (!showDefaults) ...[
@@ -360,10 +361,10 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
   Future<bool> _confirmDelete(CategoryEntity category) async {
     final confirmed = await IboDialog.showConfirmation(
       context,
-      'Kategori Sil',
-      '"${category.id}" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.',
-      confirmText: 'Sil',
-      cancelText: 'İptal',
+      context.l10n.kategoriSilTitle,
+      context.l10n.kategoriSilConfirmMessage(category.id),
+      confirmText: context.l10n.sil,
+      cancelText: context.l10n.iptal,
       style: IboDialogStyle(
         confirmButtonStyle: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
@@ -381,12 +382,13 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
         }
         _loadCategories();
         if (mounted) {
-          IboSnackbar.showSuccess(context, '🗑️ Kategori silindi');
+          IboSnackbar.showSuccess(
+              context, '🗑️ ${context.l10n.kategoriSilindi}');
         }
         return true;
       } catch (e) {
         if (mounted) {
-          IboSnackbar.showError(context, 'Hata: $e');
+          IboSnackbar.showError(context, context.l10n.hataError(e.toString()));
         }
         return false;
       }

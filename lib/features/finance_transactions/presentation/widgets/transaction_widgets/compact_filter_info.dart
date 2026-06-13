@@ -50,22 +50,22 @@ class CompactFilterInfo extends StatelessWidget {
 
     // Kontroller (Öncelik sırasına göre)
     if (isSameDay(startDate, today) && isSameDay(endDate, today)) {
-      dateBadgeText = 'BUGÜN';
+      dateBadgeText = context.l10n.dateBadgeToday;
     } else if (isSameDay(startDate, yesterday) &&
         isSameDay(endDate, yesterday)) {
-      dateBadgeText = 'DÜN';
+      dateBadgeText = context.l10n.dateBadgeYesterday;
     } else if (isSameDay(startDate, startOfWeek) &&
         (isSameDay(endDate, endOfWeek) || isSameDay(endDate, today))) {
-      dateBadgeText = 'BU HAFTA';
+      dateBadgeText = context.l10n.dateBadgeThisWeek;
     } else if (isSameDay(startDate, startOfLastWeek) &&
         isSameDay(endDate, endOfLastWeek)) {
-      dateBadgeText = 'GEÇEN HAFTA';
+      dateBadgeText = context.l10n.dateBadgeLastWeek;
     } else if (isSameDay(startDate, startOfMonth) &&
         (isSameDay(endDate, endOfMonth) || isSameDay(endDate, today))) {
-      dateBadgeText = 'BU AY';
+      dateBadgeText = context.l10n.dateBadgeThisMonth;
     } else if (isSameDay(startDate, startOfLastMonth) &&
         isSameDay(endDate, endOfLastMonth)) {
-      dateBadgeText = 'GEÇEN AY';
+      dateBadgeText = context.l10n.dateBadgeLastMonth;
     }
 
     return SingleChildScrollView(
@@ -77,8 +77,9 @@ class CompactFilterInfo extends StatelessWidget {
             icon: isLightMode
                 ? Icons.calendar_month_rounded
                 : Icons.calendar_today,
-            text:
-                context.l10n.appFormattersDateshortFormatStartdate(AppFormatters.dateShort.format(startDate), AppFormatters.dateShort.format(endDate)),
+            text: context.l10n.appFormattersDateshortFormatStartdate(
+                AppFormatters.dateShort.format(startDate),
+                AppFormatters.dateShort.format(endDate)),
             badgeText: dateBadgeText,
             badgeColor: dateBadgeColor,
             onTap: onDateTap,
@@ -86,13 +87,15 @@ class CompactFilterInfo extends StatelessWidget {
           ),
 
           // 2. Aktif Filtreler (Varsa göster)
-          if (dataFilter != null) ..._buildActiveFilterChips(context, dataFilter!),
+          if (dataFilter != null)
+            ..._buildActiveFilterChips(context, dataFilter!),
         ],
       ),
     );
   }
 
-  List<Widget> _buildActiveFilterChips(BuildContext context, DataFilter filter) {
+  List<Widget> _buildActiveFilterChips(
+      BuildContext context, DataFilter filter) {
     List<Widget> chips = [];
 
     // Kategori Filtresi
@@ -100,7 +103,8 @@ class CompactFilterInfo extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_buildInfoChip(
         icon: isLightMode ? Icons.category_rounded : Icons.category_outlined,
-        text: context.l10n.filterSelectedcategoriesLengthKategori(filter.selectedCategories.length),
+        text: context.l10n.filterSelectedcategoriesLengthKategori(
+            filter.selectedCategories.length),
         backgroundColor: isLightMode
             ? Colors.orange.shade400.withValues(alpha: 0.9)
             : Colors.orange.shade100,

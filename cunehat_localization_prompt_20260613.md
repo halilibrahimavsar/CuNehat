@@ -409,7 +409,30 @@
   "baglantiKontrolEdiliyor": "Checking connection...",
   "taksit1": "1 installment",
   "taksit2": "2 installments",
-  "tamaminiOde": "Pay all"
+  "tamaminiOde": "Pay all",
+  "sliderSavings": "SAVINGS",
+  "sliderTransactions": "TRANSACTIONS",
+  "sliderDebt": "DEBT",
+  "myProfile": "My Profile",
+  "recurringTransactions": "Recurring Transactions",
+  "budgetPlanning": "Budget Planning",
+  "drawerBalance": "Balance",
+  "drawerInvestment": "Investment",
+  "drawerDebt": "Debt",
+  "createWallet": "Create Wallet",
+  "selectWallet": "Select Wallet",
+  "wallet": "Wallet",
+  "menuGold": "Gold",
+  "menuStock": "Stock",
+  "menuCustom": "Custom",
+  "menuDetails": "Details",
+  "menuIncome": "Income",
+  "menuExpense": "Expense",
+  "menuReport": "Report",
+  "menuPending": "Pending",
+  "menuDebt": "Debt",
+  "menuReceivable": "Receivable",
+  "menuHistory": "History"
 }
 ```
 
@@ -810,7 +833,30 @@
   "baglantiKontrolEdiliyor": "Bağlantı kontrol ediliyor...",
   "taksit1": "1 taksit",
   "taksit2": "2 taksit",
-  "tamaminiOde": "Tamamını öde"
+  "tamaminiOde": "Tamamını öde",
+  "sliderSavings": "BİRİKİM",
+  "sliderTransactions": "İŞLEMLER",
+  "sliderDebt": "BORÇ",
+  "myProfile": "Profilim",
+  "recurringTransactions": "Düzenli İşlemler",
+  "budgetPlanning": "Bütçe Planlama",
+  "drawerBalance": "Bakiye",
+  "drawerInvestment": "Yatırım",
+  "drawerDebt": "Borç",
+  "createWallet": "Cüzdan Oluştur",
+  "selectWallet": "Cüzdan Seçin",
+  "wallet": "Cüzdan",
+  "menuGold": "Altın",
+  "menuStock": "Hisse",
+  "menuCustom": "Özel",
+  "menuDetails": "Detay",
+  "menuIncome": "Gelir",
+  "menuExpense": "Gider",
+  "menuReport": "Rapor",
+  "menuPending": "Bekleyen",
+  "menuDebt": "Borç",
+  "menuReceivable": "Alacak",
+  "menuHistory": "Geçmiş"
 }
 ```
 
@@ -843,19 +889,19 @@
 |------|--------|--------|---------|-----|
 | 64 | `message/content` | "Create a PIN first" | `msgCreateAPinFirst` | 🇬🇧 |
 | 72 | `message/content` | "Biometric authentication is not supported" | `msgBiometricAuthenticationIsNot` | 🇬🇧 |
-| 83 | `message/content` | "Biometric authentication failed" | `msgBiometricAuthenticationFailed` | 🇬🇧 |
-| 90 | `message/content` | "Biometric login enabled" | `msgBiometricLoginEnabled` | 🇬🇧 |
-| 96 | `message/content` | "Biometric login disabled" | `msgBiometricLoginDisabled` | 🇬🇧 |
-| 112 | `message/content` | "PIN already exists, use change PIN instead" | `msgPINAlreadyExistsUse` | 🇬🇧 |
-| 117 | `message/content` | "PINs do not match" | `msgPINsDoNotMatch` | 🇬🇧 |
-| 124 | `message/content` | "PIN saved successfully" | `msgPINSavedSuccessfully` | 🇬🇧 |
-| 138 | `message/content` | "New PIN values do not match" | `msgNewPinValuesDo` | 🇬🇧 |
-| 145 | `message/content` | "Current PIN is incorrect" | `msgCurrentPinIsIncorrect` | 🇬🇧 |
-| 153 | `message/content` | "PIN updated successfully" | `msgPINUpdatedSuccessfully` | 🇬🇧 |
-| 167 | `message/content` | "Current PIN is incorrect" | `msgCurrentPinIsIncorrect` | 🇬🇧 |
-| 176 | `message/content` | "PIN removed" | `msgPINRemoved` | 🇬🇧 |
-| 218 | `message/content` | "PIN or biometric login is required for background lock" | `msgPINOrBiometricLogin` | 🇬🇧 |
-| 231 | `message/content` | "Background lock and Privacy Guard enabled" | `msgBackgroundLockAndPrivacy` | 🇬🇧 |
+| 85 | `message/content` | "Biometric authentication failed" | `msgBiometricAuthenticationFailed` | 🇬🇧 |
+| 92 | `message/content` | "Biometric login enabled" | `msgBiometricLoginEnabled` | 🇬🇧 |
+| 98 | `message/content` | "Biometric login disabled" | `msgBiometricLoginDisabled` | 🇬🇧 |
+| 114 | `message/content` | "PIN already exists, use change PIN instead" | `msgPINAlreadyExistsUse` | 🇬🇧 |
+| 119 | `message/content` | "PINs do not match" | `msgPINsDoNotMatch` | 🇬🇧 |
+| 126 | `message/content` | "PIN saved successfully" | `msgPINSavedSuccessfully` | 🇬🇧 |
+| 140 | `message/content` | "New PIN values do not match" | `msgNewPinValuesDo` | 🇬🇧 |
+| 147 | `message/content` | "Current PIN is incorrect" | `msgCurrentPinIsIncorrect` | 🇬🇧 |
+| 155 | `message/content` | "PIN updated successfully" | `msgPINUpdatedSuccessfully` | 🇬🇧 |
+| 169 | `message/content` | "Current PIN is incorrect" | `msgCurrentPinIsIncorrect` | 🇬🇧 |
+| 178 | `message/content` | "PIN removed" | `msgPINRemoved` | 🇬🇧 |
+| 220 | `message/content` | "PIN or biometric login is required for background lock" | `msgPINOrBiometricLogin` | 🇬🇧 |
+| 233 | `message/content` | "Background lock and Privacy Guard enabled" | `msgBackgroundLockAndPrivacy` | 🇬🇧 |
 
 ### `packages/unified_flutter_features/lib/main.dart`
 
@@ -999,19 +1045,19 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 - Satır 64: `"Create a PIN first"` → `AppLocalizations.of(context)!.msgCreateAPinFirst`
 - Satır 72: `"Biometric authentication is not supported"` → `AppLocalizations.of(context)!.msgBiometricAuthenticationIsNot`
-- Satır 83: `"Biometric authentication failed"` → `AppLocalizations.of(context)!.msgBiometricAuthenticationFailed`
-- Satır 90: `"Biometric login enabled"` → `AppLocalizations.of(context)!.msgBiometricLoginEnabled`
-- Satır 96: `"Biometric login disabled"` → `AppLocalizations.of(context)!.msgBiometricLoginDisabled`
-- Satır 112: `"PIN already exists, use change PIN instead"` → `AppLocalizations.of(context)!.msgPINAlreadyExistsUse`
-- Satır 117: `"PINs do not match"` → `AppLocalizations.of(context)!.msgPINsDoNotMatch`
-- Satır 124: `"PIN saved successfully"` → `AppLocalizations.of(context)!.msgPINSavedSuccessfully`
-- Satır 138: `"New PIN values do not match"` → `AppLocalizations.of(context)!.msgNewPinValuesDo`
-- Satır 145: `"Current PIN is incorrect"` → `AppLocalizations.of(context)!.msgCurrentPinIsIncorrect`
-- Satır 153: `"PIN updated successfully"` → `AppLocalizations.of(context)!.msgPINUpdatedSuccessfully`
-- Satır 167: `"Current PIN is incorrect"` → `AppLocalizations.of(context)!.msgCurrentPinIsIncorrect`
-- Satır 176: `"PIN removed"` → `AppLocalizations.of(context)!.msgPINRemoved`
-- Satır 218: `"PIN or biometric login is required for background lock"` → `AppLocalizations.of(context)!.msgPINOrBiometricLogin`
-- Satır 231: `"Background lock and Privacy Guard enabled"` → `AppLocalizations.of(context)!.msgBackgroundLockAndPrivacy`
+- Satır 85: `"Biometric authentication failed"` → `AppLocalizations.of(context)!.msgBiometricAuthenticationFailed`
+- Satır 92: `"Biometric login enabled"` → `AppLocalizations.of(context)!.msgBiometricLoginEnabled`
+- Satır 98: `"Biometric login disabled"` → `AppLocalizations.of(context)!.msgBiometricLoginDisabled`
+- Satır 114: `"PIN already exists, use change PIN instead"` → `AppLocalizations.of(context)!.msgPINAlreadyExistsUse`
+- Satır 119: `"PINs do not match"` → `AppLocalizations.of(context)!.msgPINsDoNotMatch`
+- Satır 126: `"PIN saved successfully"` → `AppLocalizations.of(context)!.msgPINSavedSuccessfully`
+- Satır 140: `"New PIN values do not match"` → `AppLocalizations.of(context)!.msgNewPinValuesDo`
+- Satır 147: `"Current PIN is incorrect"` → `AppLocalizations.of(context)!.msgCurrentPinIsIncorrect`
+- Satır 155: `"PIN updated successfully"` → `AppLocalizations.of(context)!.msgPINUpdatedSuccessfully`
+- Satır 169: `"Current PIN is incorrect"` → `AppLocalizations.of(context)!.msgCurrentPinIsIncorrect`
+- Satır 178: `"PIN removed"` → `AppLocalizations.of(context)!.msgPINRemoved`
+- Satır 220: `"PIN or biometric login is required for background lock"` → `AppLocalizations.of(context)!.msgPINOrBiometricLogin`
+- Satır 233: `"Background lock and Privacy Guard enabled"` → `AppLocalizations.of(context)!.msgBackgroundLockAndPrivacy`
 
 **`packages/unified_flutter_features/lib/main.dart`**
 

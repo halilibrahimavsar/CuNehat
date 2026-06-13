@@ -1,5 +1,6 @@
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 enum TransactionAction { edit, delete }
 
@@ -90,16 +91,16 @@ class TransactionActionSheet extends StatelessWidget {
               context,
               icon: Icons.edit_rounded,
               color: Colors.blueGrey,
-              title: 'Düzenle',
-              subtitle: 'Tutar, tarih, kategori ve diğer detaylar',
+              title: context.l10n.duzenle,
+              subtitle: context.l10n.duzenleSubtitle,
               action: TransactionAction.edit,
             ),
             _tile(
               context,
               icon: Icons.delete_outline_rounded,
               color: Colors.red,
-              title: 'İşlemi Sil',
-              subtitle: 'Bakiye eski haline döner',
+              title: context.l10n.islemiSil,
+              subtitle: context.l10n.silSubtitle,
               action: TransactionAction.delete,
             ),
             const SizedBox(height: 8),

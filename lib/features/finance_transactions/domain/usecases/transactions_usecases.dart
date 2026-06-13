@@ -22,9 +22,9 @@ class AddTransactionUseCase {
     if (params.id == null || params.id!.isEmpty) {
       params = params.copyWith(id: UidGenerator.generateV7());
     }
-    
+
     final result = await repository.addTransaction(params);
-    
+
     // Check budget if it's an expense
     if (params.type == TransactionTypeModel.expense) {
       result.fold(
@@ -70,7 +70,7 @@ class AddTransactionUseCase {
         },
       );
     }
-    
+
     return result;
   }
 }

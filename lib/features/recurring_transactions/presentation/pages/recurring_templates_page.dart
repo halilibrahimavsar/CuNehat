@@ -65,8 +65,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.sablonuSil),
-        content: Text(
-            context.l10n.templateTitleDuzenliIslemi(template.title)),
+        content: Text(context.l10n.templateTitleDuzenliIslemi(template.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -101,8 +100,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
               pinned: true,
               backgroundColor: scheme.primary,
               leading: IconButton(
-                icon:
-                    const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
                 onPressed: () => context.pop(),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -282,8 +280,8 @@ class _TemplateCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: accent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: accent.withValues(alpha: 0.3)),
+                        border:
+                            Border.all(color: accent.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         template.frequency.displayName,

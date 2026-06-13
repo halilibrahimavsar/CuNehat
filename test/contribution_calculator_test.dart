@@ -40,8 +40,7 @@ void main() {
   });
 
   group('applyAssetPurchase (Mod B)', () {
-    test('canlı fiyatla: miktar artar, değer piyasaya oturur, kâr korunur',
-        () {
+    test('canlı fiyatla: miktar artar, değer piyasaya oturur, kâr korunur', () {
       // 10g @ amount 40k, value 45k; 2g daha @4500 → paid 9000.
       final updated = applyAssetPurchase(
         _inv(),

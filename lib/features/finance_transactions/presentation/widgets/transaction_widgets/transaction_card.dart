@@ -10,6 +10,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Premium işlem kartı: kategori glyph'i, marka renkleri, baskın tutar.
 /// Dokununca tek-işlem detay sayfasını açar; basılı tutunca sil/düzenle menüsü açar.
@@ -148,7 +149,8 @@ class TransactionCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Row(
                   children: [
-                    _categoryChip(scheme, accent, t.tag),
+                    if (t.tag.isNotEmpty)
+                      _categoryChip(context, scheme, accent, t.tag),
                     const SizedBox(width: 8),
                     Text(
                       AppFormatters.time.format(t.date),
@@ -181,7 +183,8 @@ class TransactionCard extends StatelessWidget {
     );
   }
 
-  Widget _categoryChip(ColorScheme scheme, Color accent, String tag) {
+  Widget _categoryChip(
+      BuildContext context, ColorScheme scheme, Color accent, String tag) {
     return Flexible(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -190,7 +193,7 @@ class TransactionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          tag,
+          context.translateCategory(tag),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

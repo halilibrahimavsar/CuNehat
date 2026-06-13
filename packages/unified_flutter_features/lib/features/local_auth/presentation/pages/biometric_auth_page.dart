@@ -137,7 +137,11 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
             state.authStatus == AuthStatus.initial &&
             !_hasAutoTriggeredBiometric) {
           _hasAutoTriggeredBiometric = true;
-          context.read<LocalAuthLoginBloc>().add(BiometricAuthLoginEvent());
+          context.read<LocalAuthLoginBloc>().add(BiometricAuthLoginEvent(
+                reason: widget.texts.biometricReason,
+                signInTitle: widget.texts.biometricLoginTitle,
+                cancelButton: widget.texts.cancelLabel,
+              ));
         }
       },
       builder: (context, state) {
@@ -247,7 +251,11 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                   onBackspace: () => _handleDelete(isLockedOut),
                   onBiometric: () => context
                       .read<LocalAuthLoginBloc>()
-                      .add(BiometricAuthLoginEvent()),
+                      .add(BiometricAuthLoginEvent(
+                        reason: widget.texts.biometricReason,
+                        signInTitle: widget.texts.biometricLoginTitle,
+                        cancelButton: widget.texts.cancelLabel,
+                      )),
                 ),
                 const SizedBox(height: 40),
               ],
@@ -262,11 +270,13 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
     if (msg == null) return null;
     if (msg.startsWith('Incorrect PIN. Remaining tries:')) {
       final tries = msg.split(':').last.trim();
-      return widget.texts.msgIncorrectPinRemainingTries.replaceFirst('{tries}', tries);
+      return widget.texts.msgIncorrectPinRemainingTries
+          .replaceFirst('{tries}', tries);
     }
     if (msg.startsWith('PIN verification failed')) {
       final error = msg.replaceFirst('PIN verification failed: ', '');
-      return widget.texts.msgPINVerificationFailedE.replaceFirst('{error}', error);
+      return widget.texts.msgPINVerificationFailedE
+          .replaceFirst('{error}', error);
     }
     return msg;
   }

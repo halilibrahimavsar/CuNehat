@@ -61,12 +61,13 @@ class TransactionFilterBar extends StatelessWidget {
 
   Widget _buildDateChip(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final badge = _resolveDateBadge();
+    final badge = _resolveDateBadge(context);
 
     return _Chip(
       icon: Icons.calendar_month_rounded,
-      text:
-          context.l10n.appFormattersDateshortFormatStartdate(AppFormatters.dateShort.format(startDate), AppFormatters.dateShort.format(endDate)),
+      text: context.l10n.appFormattersDateshortFormatStartdate(
+          AppFormatters.dateShort.format(startDate),
+          AppFormatters.dateShort.format(endDate)),
       badgeText: badge,
       onTap: onDateTap,
       background: scheme.onSurface.withValues(alpha: 0.05),
@@ -76,7 +77,7 @@ class TransactionFilterBar extends StatelessWidget {
     );
   }
 
-  String? _resolveDateBadge() {
+  String? _resolveDateBadge(BuildContext context) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -94,22 +95,22 @@ class TransactionFilterBar extends StatelessWidget {
     final endOfLastMonth = DateTime(today.year, today.month, 0);
 
     if (isSameDay(startDate, today) && isSameDay(endDate, today)) {
-      return 'BUGÜN';
+      return context.l10n.dateBadgeToday;
     } else if (isSameDay(startDate, yesterday) &&
         isSameDay(endDate, yesterday)) {
-      return 'DÜN';
+      return context.l10n.dateBadgeYesterday;
     } else if (isSameDay(startDate, startOfWeek) &&
         (isSameDay(endDate, endOfWeek) || isSameDay(endDate, today))) {
-      return 'BU HAFTA';
+      return context.l10n.dateBadgeThisWeek;
     } else if (isSameDay(startDate, startOfLastWeek) &&
         isSameDay(endDate, endOfLastWeek)) {
-      return 'GEÇEN HAFTA';
+      return context.l10n.dateBadgeLastWeek;
     } else if (isSameDay(startDate, startOfMonth) &&
         (isSameDay(endDate, endOfMonth) || isSameDay(endDate, today))) {
-      return 'BU AY';
+      return context.l10n.dateBadgeThisMonth;
     } else if (isSameDay(startDate, startOfLastMonth) &&
         isSameDay(endDate, endOfLastMonth)) {
-      return 'GEÇEN AY';
+      return context.l10n.dateBadgeLastMonth;
     }
     return null;
   }
@@ -123,7 +124,8 @@ class TransactionFilterBar extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_Chip(
         icon: Icons.category_rounded,
-        text: context.l10n.dataFilterSelectedcategoriesLengthKategori(dataFilter.selectedCategories.length),
+        text: context.l10n.dataFilterSelectedcategoriesLengthKategori(
+            dataFilter.selectedCategories.length),
         onTap: onFilterTap,
         background: Colors.orange.shade400.withValues(alpha: 0.15),
         borderColor: Colors.orange.shade400.withValues(alpha: 0.4),

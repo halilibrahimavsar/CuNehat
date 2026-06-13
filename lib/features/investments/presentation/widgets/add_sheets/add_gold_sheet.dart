@@ -65,14 +65,23 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   String _selectedGoldType = 'gram-altin';
   String? _selectedGoalCategory;
 
-  final Map<String, String> _goldTypes = {
-    'gram-altin': 'Gram Altın',
-    'ceyrek-altin': 'Çeyrek Altın',
-    'yarim-altin': 'Yarım Altın',
-    'tam-altin': 'Tam Altın',
-    'cumhuriyet-altini': 'Cumhuriyet Altını',
-    'ata-altin': 'Ata Altın',
+  static const _goldTypeKeys = {
+    'gram-altin',
+    'ceyrek-altin',
+    'yarim-altin',
+    'tam-altin',
+    'cumhuriyet-altini',
+    'ata-altin',
   };
+
+  Map<String, String> get _goldTypes => {
+        'gram-altin': context.l10n.gramAltin,
+        'ceyrek-altin': context.l10n.ceyrekAltin,
+        'yarim-altin': context.l10n.yarimAltin,
+        'tam-altin': context.l10n.tamAltin,
+        'cumhuriyet-altini': context.l10n.cumhuriyetAltini,
+        'ata-altin': context.l10n.ataAltin,
+      };
 
   Color _selectedColor = Colors.amber;
 
@@ -104,7 +113,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       }
       _selectedGoalCategory = item.goalCategory;
       _selectedColor = item.color;
-      if (item.symbol != null && _goldTypes.containsKey(item.symbol)) {
+      if (item.symbol != null && _goldTypeKeys.contains(item.symbol)) {
         _selectedGoldType = item.symbol!;
       }
     }
@@ -137,7 +146,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   Future<void> _fetchLivePrice() async {
     setState(() {
       _isLoading = true;
-      _fetchedPriceMessage = 'Fiyat alınıyor...';
+      _fetchedPriceMessage = context.l10n.fiyatAliniyor;
       _fetchedPriceColor = Colors.orange;
     });
 
@@ -151,7 +160,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
 
     result.fold(
       (failure) => setState(() {
-        _fetchedPriceMessage = 'Fiyat alınamadı.';
+        _fetchedPriceMessage = context.l10n.fiyatAlinamadi;
         _fetchedPriceColor = Colors.red;
         _isLoading = false;
       }),
@@ -165,7 +174,8 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
           }
         }
         setState(() {
-          _fetchedPriceMessage = 'Güncel Fiyat: ${quote.priceTl} ₺';
+          _fetchedPriceMessage =
+              context.l10n.guncelFiyatFormatTry(_fmt(quote.priceTl));
           _fetchedPriceColor = Colors.green;
           _isLoading = false;
         });
@@ -175,8 +185,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
 
   String? _validate() {
     // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
-    if (_parsedAmount == null) return 'Geçerli bir yatırım miktarı girin';
-    if (_parsedCurrentValue == null) return 'Geçerli bir mevcut değer girin';
+    if (_parsedAmount == null) return context.l10n.gecerliYatirimMiktariGirin;
+    if (_parsedCurrentValue == null)
+      return context.l10n.gecerliMevcutDegerGirin;
     return null;
   }
 
@@ -193,7 +204,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       userId: widget.userId,
       walletId: widget.walletId,
       name: _nameController.text.trim().isEmpty
-          ? 'Altın Yatırımı'
+          ? context.l10n.altinYatirimi
           : _nameController.text.trim(),
       amount: _parsedAmount!,
       currentValue: _parsedCurrentValue!,
@@ -242,24 +253,24 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                     children: [
                       _buildAmountCard(cs),
                       const SizedBox(height: 20),
-                      _sectionLabel('Altın Türü & Otomatik Fiyat', cs),
+                      _sectionLabel(context.l10n.altinTuruVeOtomatikFiyat, cs),
                       const SizedBox(height: 10),
                       _buildGoldTypeSelector(cs),
                       const SizedBox(height: 14),
                       _buildQuantityAndFetch(cs),
                       const SizedBox(height: 20),
-                      _sectionLabel('Yatırım Detayları', cs),
+                      _sectionLabel(context.l10n.yatirimDetaylari, cs),
                       const SizedBox(height: 10),
                       _filledField(
                         controller: _nameController,
-                        hint: 'Not (İsteğe bağlı) · örn. Düğün Altınları',
+                        hint: context.l10n.altinNotHint,
                         icon: Icons.notes_rounded,
                         cs: cs,
                       ),
                       const SizedBox(height: 14),
                       _filledField(
                         controller: _amountController,
-                        hint: 'Maliyet (Yatırılan Ana Para)',
+                        hint: context.l10n.maliyetYatirilanAnaPara,
                         icon: Icons.payments_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -268,7 +279,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       const SizedBox(height: 14),
                       _filledField(
                         controller: _targetAmountController,
-                        hint: 'Hedef Tutar (İsteğe Bağlı)',
+                        hint: context.l10n.hedefTutarIstegeBagli,
                         icon: Icons.flag_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -276,7 +287,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       ),
                       if (_targetAmountController.text.trim().isNotEmpty) ...[
                         const SizedBox(height: 14),
-                        _sectionLabel('Hedef Kategorisi', cs),
+                        _sectionLabel(context.l10n.hedefKategorisi, cs),
                         const SizedBox(height: 10),
                         GoalCategorySelector(
                           selectedKey: _selectedGoalCategory,
@@ -290,7 +301,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         _buildCostEditWarning(cs),
                       ],
                       const SizedBox(height: 20),
-                      _sectionLabel('Renk Seçimi', cs),
+                      _sectionLabel(context.l10n.renkSecimi, cs),
                       const SizedBox(height: 10),
                       _buildColorSelector(),
                       if (_error != null) ...[
@@ -311,7 +322,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   }
 
   Widget _buildHandleAndHeader(ColorScheme cs) {
-    final title = _isEditing ? 'Altın Yatırımını Düzenle' : 'Yeni Altın Ekle';
+    final title = _isEditing
+        ? context.l10n.altinYatiriminiDuzenle
+        : context.l10n.yeniAltinEkle;
     return Column(
       children: [
         Container(
@@ -487,7 +500,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
           flex: 2,
           child: _filledField(
             controller: _quantityController,
-            hint: 'Adet',
+            hint: context.l10n.adet,
             icon: Icons.numbers_rounded,
             cs: cs,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -520,7 +533,8 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       : const Icon(Icons.refresh_rounded),
                   label: Text(
                     context.l10n.hesapla,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                 ),
               ),
@@ -710,7 +724,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       color: Colors.white, size: 22),
                   const SizedBox(width: 8),
                   Text(
-                    _isEditing ? 'Güncelle' : 'Kaydet',
+                    _isEditing ? context.l10n.guncelle : context.l10n.kaydet,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,

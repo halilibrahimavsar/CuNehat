@@ -6,7 +6,7 @@ class WalletInfoDialog {
   static Future<void> show(BuildContext context) {
     return IboDialog.showCustomDialog(
       context,
-      title: 'Cüzdan Yönetimi',
+      title: context.l10n.cuzdanYonetimiTitle,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

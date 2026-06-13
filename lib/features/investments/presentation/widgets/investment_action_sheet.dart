@@ -1,5 +1,6 @@
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Yatırım kartına dokununca açılan eylem menüsü seçenekleri.
 enum InvestmentAction { contribute, refreshPrice, edit, sell, delete }
@@ -87,11 +88,13 @@ class InvestmentActionSheet extends StatelessWidget {
               icon: Icons.add_circle_outline_rounded,
               color: investment.color,
               title: investment.symbol != null
-                  ? 'Varlık Ekle'
-                  : (investment.isGoal ? 'Hedefe Para Ekle' : 'Para Ekle'),
+                  ? context.l10n.varlikEkle
+                  : (investment.isGoal
+                      ? context.l10n.hedefeParaEkle
+                      : context.l10n.paraEkle),
               subtitle: investment.symbol != null
-                  ? 'Yeni alım: miktar ve ödenen tutar'
-                  : 'Maliyete ve değere eklenir, cüzdandan düşer',
+                  ? context.l10n.yeniAlimMiktarVeOdenenTutar
+                  : context.l10n.maliyeteVeDegereEklenir,
               action: InvestmentAction.contribute,
             ),
             if (investment.canRefreshPrice)
@@ -99,33 +102,32 @@ class InvestmentActionSheet extends StatelessWidget {
                 context,
                 icon: Icons.refresh_rounded,
                 color: Colors.teal,
-                title: 'Fiyatı Güncelle',
-                subtitle: 'Güncel değer = miktar × canlı fiyat; '
-                    'bakiyeyi etkilemez',
+                title: context.l10n.fiyatiGuncelle,
+                subtitle: context.l10n.canliFiyatGuncellemeAciklamasi,
                 action: InvestmentAction.refreshPrice,
               ),
             _tile(
               context,
               icon: Icons.edit_rounded,
               color: Colors.blueGrey,
-              title: 'Düzenle',
-              subtitle: 'İsim, maliyet, hedef ve diğer detaylar',
+              title: context.l10n.duzenle,
+              subtitle: context.l10n.duzenleYatirimSubtitle,
               action: InvestmentAction.edit,
             ),
             _tile(
               context,
               icon: Icons.sell_rounded,
               color: Colors.green,
-              title: 'Sat',
-              subtitle: 'Güncel değer cüzdana gelir olarak işlenir',
+              title: context.l10n.sat,
+              subtitle: context.l10n.satSubtitle,
               action: InvestmentAction.sell,
             ),
             _tile(
               context,
               icon: Icons.delete_outline_rounded,
               color: Colors.red,
-              title: 'Kaydı Sil',
-              subtitle: 'Hatalı giriş düzeltme; alım gideri iade edilir',
+              title: context.l10n.kaydiSil,
+              subtitle: context.l10n.kaydiSilSubtitle,
               action: InvestmentAction.delete,
             ),
             const SizedBox(height: 8),

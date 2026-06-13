@@ -71,7 +71,8 @@ class WalletCardWidget extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      context.l10n.olusturulmaAppformattersDateshortFormat(AppFormatters.dateShort.format(wallet.createdAt)),
+                      context.l10n.olusturulmaAppformattersDateshortFormat(
+                          AppFormatters.dateShort.format(wallet.createdAt)),
                       style: TextStyle(
                         fontSize: 12,
                         color: scheme.onSurfaceVariant,
@@ -97,7 +98,8 @@ class WalletCardWidget extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                      const Icon(Icons.check_circle,
+                          size: 16, color: Colors.green),
                       const SizedBox(width: 4),
                       Text(
                         context.l10n.aktif,

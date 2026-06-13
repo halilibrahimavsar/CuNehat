@@ -37,6 +37,7 @@ class LocalAuthTexts {
   final String msgCurrentPinIsIncorrect2;
   final String msgPINRemoved;
   final String msgBackgroundLockAndPrivacy;
+  final String msgPINOrBiometricLogin;
   final String securitySettings;
   final String manageYourAppSecurity;
   final String createPin;
@@ -94,7 +95,8 @@ class LocalAuthTexts {
 
     // Default English translations for new fields
     this.msgCreateAPinFirst = 'Create a PIN first',
-    this.msgBiometricAuthenticationIsNot = 'Biometric authentication is not supported',
+    this.msgBiometricAuthenticationIsNot =
+        'Biometric authentication is not supported',
     this.msgBiometricAuthenticationFailed = 'Biometric authentication failed',
     this.msgBiometricLoginEnabled = 'Biometric login enabled',
     this.msgBiometricLoginDisabled = 'Biometric login disabled',
@@ -106,39 +108,49 @@ class LocalAuthTexts {
     this.msgPINUpdatedSuccessfully = 'PIN updated successfully',
     this.msgCurrentPinIsIncorrect2 = 'Current PIN is incorrect',
     this.msgPINRemoved = 'PIN removed',
-    this.msgBackgroundLockAndPrivacy = 'Background lock and Privacy Guard enabled',
+    this.msgBackgroundLockAndPrivacy =
+        'Background lock and Privacy Guard enabled',
+    this.msgPINOrBiometricLogin =
+        'PIN or biometric login is required for background lock',
     this.securitySettings = 'Security Settings',
     this.manageYourAppSecurity = 'Manage your app security',
     this.createPin = 'Create PIN',
     this.changePin = 'Change PIN',
     this.removePin = 'Remove PIN',
-    this.msgBiometricAuthenticationCannotBe = 'Biometric authentication cannot be used on this device.',
+    this.msgBiometricAuthenticationCannotBe =
+        'Biometric authentication cannot be used on this device.',
     this.msgCreateAPinFirst2 = 'Create a PIN first to enable biometric login.',
-    this.msgIncorrectPinRemainingTries = 'Incorrect PIN. Remaining tries: {tries}',
+    this.msgIncorrectPinRemainingTries =
+        'Incorrect PIN. Remaining tries: {tries}',
     this.msgPINVerificationFailedE = 'PIN verification failed: {error}',
-
     this.pinLockTitle = 'PIN Lock',
     this.pinEnabledSubtitle = 'PIN enabled',
     this.pinNotSetSubtitle = 'PIN not set',
     this.biometricLoginTitle = 'Biometric Login',
-    this.biometricNotAvailableSubtitle = 'Biometric authentication is not available on this device',
+    this.biometricNotAvailableSubtitle =
+        'Biometric authentication is not available on this device',
     this.biometricEnabledSubtitle = 'Biometric login enabled',
     this.biometricDisabledSubtitle = 'Biometric login disabled',
     this.biometricAuthTileTitle = 'Biometric Authentication',
-    this.biometricAuthTileSubtitleOn = 'On - Sign in with fingerprint or face recognition',
+    this.biometricAuthTileSubtitleOn =
+        'On - Sign in with fingerprint or face recognition',
     this.biometricAuthTileSubtitleOff = 'Off',
     this.privacyGuardTitle = 'Privacy Guard',
     this.privacyGuardEnabledSubtitle = 'Screen protection enabled',
     this.privacyGuardDisabledSubtitle = 'Screen protection disabled',
     this.screenProtectionTileTitle = 'Screen Protection',
-    this.screenProtectionTileSubtitleOn = 'On - Hide content while app is in background',
+    this.screenProtectionTileSubtitleOn =
+        'On - Hide content while app is in background',
     this.screenProtectionTileSubtitleOff = 'Off',
     this.backgroundLockTitle = 'Background Lock',
     this.backgroundLockSubtitlePrefix = 'Locks after: ',
     this.backgroundLockSubtitleOff = 'Off',
-    this.backgroundLockTileTitle = 'Require authentication when app stays in background',
-    this.backgroundLockTileSubtitle = 'To enable background lock, set a PIN or enable biometric login.',
-    this.backgroundLockTileInfo = 'Note: Authentication screen appears when returning to app.',
+    this.backgroundLockTileTitle =
+        'Require authentication when app stays in background',
+    this.backgroundLockTileSubtitle =
+        'To enable background lock, set a PIN or enable biometric login.',
+    this.backgroundLockTileInfo =
+        'Note: Authentication screen appears when returning to app.',
   });
 
   LocalAuthTexts copyWith({
@@ -175,6 +187,7 @@ class LocalAuthTexts {
     String? msgCurrentPinIsIncorrect2,
     String? msgPINRemoved,
     String? msgBackgroundLockAndPrivacy,
+    String? msgPINOrBiometricLogin,
     String? securitySettings,
     String? manageYourAppSecurity,
     String? createPin,
@@ -231,10 +244,10 @@ class LocalAuthTexts {
       pinMismatchMessage: pinMismatchMessage ?? this.pinMismatchMessage,
       pinValidationMessage: pinValidationMessage ?? this.pinValidationMessage,
       msgCreateAPinFirst: msgCreateAPinFirst ?? this.msgCreateAPinFirst,
-      msgBiometricAuthenticationIsNot:
-          msgBiometricAuthenticationIsNot ?? this.msgBiometricAuthenticationIsNot,
-      msgBiometricAuthenticationFailed:
-          msgBiometricAuthenticationFailed ?? this.msgBiometricAuthenticationFailed,
+      msgBiometricAuthenticationIsNot: msgBiometricAuthenticationIsNot ??
+          this.msgBiometricAuthenticationIsNot,
+      msgBiometricAuthenticationFailed: msgBiometricAuthenticationFailed ??
+          this.msgBiometricAuthenticationFailed,
       msgBiometricLoginEnabled:
           msgBiometricLoginEnabled ?? this.msgBiometricLoginEnabled,
       msgBiometricLoginDisabled:
@@ -254,14 +267,16 @@ class LocalAuthTexts {
       msgPINRemoved: msgPINRemoved ?? this.msgPINRemoved,
       msgBackgroundLockAndPrivacy:
           msgBackgroundLockAndPrivacy ?? this.msgBackgroundLockAndPrivacy,
+      msgPINOrBiometricLogin:
+          msgPINOrBiometricLogin ?? this.msgPINOrBiometricLogin,
       securitySettings: securitySettings ?? this.securitySettings,
       manageYourAppSecurity:
           manageYourAppSecurity ?? this.manageYourAppSecurity,
       createPin: createPin ?? this.createPin,
       changePin: changePin ?? this.changePin,
       removePin: removePin ?? this.removePin,
-      msgBiometricAuthenticationCannotBe:
-          msgBiometricAuthenticationCannotBe ?? this.msgBiometricAuthenticationCannotBe,
+      msgBiometricAuthenticationCannotBe: msgBiometricAuthenticationCannotBe ??
+          this.msgBiometricAuthenticationCannotBe,
       msgCreateAPinFirst2: msgCreateAPinFirst2 ?? this.msgCreateAPinFirst2,
       msgIncorrectPinRemainingTries:
           msgIncorrectPinRemainingTries ?? this.msgIncorrectPinRemainingTries,
@@ -292,8 +307,8 @@ class LocalAuthTexts {
           screenProtectionTileTitle ?? this.screenProtectionTileTitle,
       screenProtectionTileSubtitleOn:
           screenProtectionTileSubtitleOn ?? this.screenProtectionTileSubtitleOn,
-      screenProtectionTileSubtitleOff:
-          screenProtectionTileSubtitleOff ?? this.screenProtectionTileSubtitleOff,
+      screenProtectionTileSubtitleOff: screenProtectionTileSubtitleOff ??
+          this.screenProtectionTileSubtitleOff,
       backgroundLockTitle: backgroundLockTitle ?? this.backgroundLockTitle,
       backgroundLockSubtitlePrefix:
           backgroundLockSubtitlePrefix ?? this.backgroundLockSubtitlePrefix,

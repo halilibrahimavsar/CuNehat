@@ -1,5 +1,5 @@
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
-
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
@@ -132,7 +132,9 @@ class _AppBarContentState extends State<AppBarContent> {
     } else {
       return Center(
         child: Text(
-          state is NoWalletSt ? "Cüzdan Oluştur" : "Cüzdan Seçin",
+          state is NoWalletSt
+              ? context.l10n.createWallet
+              : context.l10n.selectWallet,
           style: const TextStyle(
             color: AppColors.white,
             fontWeight: FontWeight.bold,
@@ -147,23 +149,24 @@ class _AppBarContentState extends State<AppBarContent> {
       BuildContext context, WalletLoadedSt state, double sliderValue) {
     double value = 0.0;
     String valueName = "";
+    SliderState st = SliderState.transactions;
 
     if (state.activeWallet != null) {
       // Same source of truth as the navbar/controller (0.25/0.75 boundaries).
-      final st = SliderStateHelper.getStateFromValue(
+      st = SliderStateHelper.getStateFromValue(
         sliderValue,
         SliderState.values.length,
       );
       switch (st) {
         case SliderState.savedMoney:
           value = state.activeWallet?.investment ?? 0.0;
-          valueName = "YATIRIM";
+          valueName = context.l10n.drawerInvestment.toUpperCase();
         case SliderState.transactions:
           value = state.activeWallet?.balance ?? 0.0;
-          valueName = "BAKİYE";
+          valueName = context.l10n.drawerBalance.toUpperCase();
         case SliderState.debt:
           value = state.activeWallet?.debt ?? 0.0;
-          valueName = "BORÇ";
+          valueName = context.l10n.drawerDebt.toUpperCase();
       }
     }
 
@@ -189,7 +192,7 @@ class _AppBarContentState extends State<AppBarContent> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildWalletNameBadge(state.activeWallet, valueName),
+            _buildWalletNameBadge(context, state.activeWallet, valueName, st),
             const SizedBox(height: 2),
             _buildAmountDisplay(value),
           ],
@@ -198,7 +201,8 @@ class _AppBarContentState extends State<AppBarContent> {
     );
   }
 
-  Widget _buildWalletNameBadge(activeWallet, String valueName) {
+  Widget _buildWalletNameBadge(
+      BuildContext context, activeWallet, String valueName, SliderState st) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
@@ -217,9 +221,10 @@ class _AppBarContentState extends State<AppBarContent> {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              valueName == "BAKİYE"
-                  ? (activeWallet?.name.toUpperCase() ?? "CÜZDAN")
-                  : "${activeWallet?.name.toUpperCase() ?? 'CÜZDAN'} • $valueName",
+              st == SliderState.transactions
+                  ? (activeWallet?.name.toUpperCase() ??
+                      context.l10n.wallet.toUpperCase())
+                  : "${activeWallet?.name.toUpperCase() ?? context.l10n.wallet.toUpperCase()} • $valueName",
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.white,

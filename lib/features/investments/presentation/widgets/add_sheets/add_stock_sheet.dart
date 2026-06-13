@@ -156,7 +156,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
     final symbol = _symbolController.text.split(' - ')[0].trim().toUpperCase();
     if (symbol.isEmpty) {
       setState(() {
-        _fetchedPriceMessage = 'Sembol girin!';
+        _fetchedPriceMessage = context.l10n.sembolGirin;
         _fetchedPriceColor = Colors.red;
       });
       return;
@@ -164,7 +164,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
 
     setState(() {
       _isLoading = true;
-      _fetchedPriceMessage = 'Fiyat alınıyor...';
+      _fetchedPriceMessage = context.l10n.fiyatAliniyor;
       _fetchedPriceColor = Colors.blue;
     });
 
@@ -178,7 +178,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
 
     result.fold(
       (failure) => setState(() {
-        _fetchedPriceMessage = 'Fiyat alınamadı.';
+        _fetchedPriceMessage = context.l10n.fiyatAlinamadi;
         _fetchedPriceColor = Colors.red;
         _isLoading = false;
       }),
@@ -194,9 +194,12 @@ class _AddStockSheetState extends State<AddStockSheet> {
         setState(() {
           _fetchedCurrency = quote.currency;
           _fetchedPriceMessage = quote.currency == 'TRY'
-              ? 'Güncel Fiyat: ${quote.priceTl} ₺'
-              : 'Güncel Fiyat: ${quote.price} ${quote.currency} '
-                  '(≈${quote.priceTl.toStringAsFixed(2)} ₺)';
+              ? context.l10n.guncelFiyatFormatTry(_fmt(quote.priceTl))
+              : context.l10n.guncelFiyatFormatForeign(
+                  quote.price.toString(),
+                  quote.currency,
+                  quote.priceTl.toStringAsFixed(2),
+                );
           _fetchedPriceColor = Colors.green;
           _isLoading = false;
         });
@@ -206,8 +209,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
 
   String? _validate() {
     // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
-    if (_parsedAmount == null) return 'Geçerli bir yatırım miktarı girin';
-    if (_parsedCurrentValue == null) return 'Geçerli bir mevcut değer girin';
+    if (_parsedAmount == null) return context.l10n.gecerliYatirimMiktariGirin;
+    if (_parsedCurrentValue == null)
+      return context.l10n.gecerliMevcutDegerGirin;
     return null;
   }
 
@@ -228,7 +232,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
       userId: widget.userId,
       walletId: widget.walletId,
       name: _nameController.text.trim().isEmpty
-          ? 'Hisse Yatırımı'
+          ? context.l10n.hisseYatirimi
           : _nameController.text.trim(),
       amount: _parsedAmount!,
       currentValue: _parsedCurrentValue!,
@@ -277,24 +281,24 @@ class _AddStockSheetState extends State<AddStockSheet> {
                     children: [
                       _buildAmountCard(cs),
                       const SizedBox(height: 20),
-                      _sectionLabel('Hisse Senedi Bul', cs),
+                      _sectionLabel(context.l10n.hisseSenediBul, cs),
                       const SizedBox(height: 10),
                       _buildSymbolSearch(cs),
                       const SizedBox(height: 14),
                       _buildQuantityAndFetch(cs),
                       const SizedBox(height: 20),
-                      _sectionLabel('Yatırım Detayları', cs),
+                      _sectionLabel(context.l10n.yatirimDetaylari, cs),
                       const SizedBox(height: 10),
                       _filledField(
                         controller: _nameController,
-                        hint: 'Not (İsteğe bağlı) · örn. Uzun vade alım',
+                        hint: context.l10n.hisseNotHint,
                         icon: Icons.notes_rounded,
                         cs: cs,
                       ),
                       const SizedBox(height: 14),
                       _filledField(
                         controller: _amountController,
-                        hint: 'Maliyet (Yatırılan Ana Para)',
+                        hint: context.l10n.maliyetYatirilanAnaPara,
                         icon: Icons.payments_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -303,7 +307,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       const SizedBox(height: 14),
                       _filledField(
                         controller: _targetAmountController,
-                        hint: 'Hedef Tutar (İsteğe Bağlı)',
+                        hint: context.l10n.hedefTutarIstegeBagli,
                         icon: Icons.flag_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -311,7 +315,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       ),
                       if (_targetAmountController.text.trim().isNotEmpty) ...[
                         const SizedBox(height: 14),
-                        _sectionLabel('Hedef Kategorisi', cs),
+                        _sectionLabel(context.l10n.hedefKategorisi, cs),
                         const SizedBox(height: 10),
                         GoalCategorySelector(
                           selectedKey: _selectedGoalCategory,
@@ -325,7 +329,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                         _buildCostEditWarning(cs),
                       ],
                       const SizedBox(height: 20),
-                      _sectionLabel('Renk Seçimi', cs),
+                      _sectionLabel(context.l10n.renkSecimi, cs),
                       const SizedBox(height: 10),
                       _buildColorSelector(),
                       if (_error != null) ...[
@@ -346,7 +350,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
   }
 
   Widget _buildHandleAndHeader(ColorScheme cs) {
-    final title = _isEditing ? 'Hisse Yatırımını Düzenle' : 'Yeni Hisse Ekle';
+    final title = _isEditing
+        ? context.l10n.hisseYatiriminiDuzenle
+        : context.l10n.yeniHisseEkle;
     return Column(
       children: [
         Container(
@@ -570,7 +576,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
           flex: 2,
           child: _filledField(
             controller: _quantityController,
-            hint: 'Adet',
+            hint: context.l10n.adet,
             icon: Icons.numbers_rounded,
             cs: cs,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -603,7 +609,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       : const Icon(Icons.refresh_rounded),
                   label: Text(
                     context.l10n.hesapla,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                 ),
               ),
@@ -793,7 +800,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       color: Colors.white, size: 22),
                   const SizedBox(width: 8),
                   Text(
-                    _isEditing ? 'Güncelle' : 'Kaydet',
+                    _isEditing ? context.l10n.guncelle : context.l10n.kaydet,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,

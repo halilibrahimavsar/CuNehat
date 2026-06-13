@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:unified_flutter_features/core/constants/app_colors.dart';
+import 'package:unified_flutter_features/core/texts/slider_texts.dart';
 import '../models/slider_models.dart';
 
 class SliderStateHelper {
@@ -23,14 +24,14 @@ class SliderStateHelper {
     }
   }
 
-  static String getLabelForState(SliderState state) {
+  static String getLabelForState(SliderState state, SliderTexts texts) {
     switch (state) {
       case SliderState.savedMoney:
-        return 'SAVINGS';
+        return texts.savings;
       case SliderState.transactions:
-        return 'TRANSACTIONS';
+        return texts.transactions;
       case SliderState.debt:
-        return 'DEBT';
+        return texts.debt;
     }
   }
 

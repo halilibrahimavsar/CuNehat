@@ -59,61 +59,61 @@ class _InitErrorAppState extends State<InitErrorApp> {
         Locale('tr'),
         Locale('en'),
       ],
-      home: Builder(
-        builder: (context) {
-          return Scaffold(
-            body: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(Icons.error_outline, size: 56, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppLocalizations.of(context)!.uygulamaBaslatilamadi,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppLocalizations.of(context)!.verilerinizSilinmediTekrarDeneyin,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ExpansionTile(
-                      title: Text(AppLocalizations.of(context)!.hataDetayi),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            _error,
-                            style: const TextStyle(
-                                fontSize: 12, fontFamily: 'monospace'),
-                          ),
+      home: Builder(builder: (context) {
+        return Scaffold(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(Icons.error_outline, size: 56, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppLocalizations.of(context)!.uygulamaBaslatilamadi,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!
+                        .verilerinizSilinmediTekrarDeneyin,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ExpansionTile(
+                    title: Text(AppLocalizations.of(context)!.hataDetayi),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          _error,
+                          style: const TextStyle(
+                              fontSize: 12, fontFamily: 'monospace'),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: _retrying ? null : _retry,
-                      icon: _retrying
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.refresh),
-                      label: Text(AppLocalizations.of(context)!.tekrarDene),
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _retrying ? null : _retry,
+                    icon: _retrying
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh),
+                    label: Text(AppLocalizations.of(context)!.tekrarDene),
+                  ),
+                ],
               ),
             ),
-          );
-        }
-      ),
+          ),
+        );
+      }),
     );
   }
 }

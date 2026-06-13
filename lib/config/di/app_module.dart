@@ -26,12 +26,16 @@ abstract class AppModule {
   // Local Auth Login Bloc
   @injectable
   LocalAuthLoginBloc localAuthLoginBloc(LocalAuthRepository repository) {
+    // Varsayılan İngilizce texts. Gerçek dil, UnifiedFeaturesTextsProvider
+    // aracılığıyla widget ağacında inject edilir (bkz. context.localAuthTexts).
     return LocalAuthLoginBloc(repository: repository);
   }
 
   // Local Auth Settings Bloc
   @injectable
   LocalAuthSettingsBloc localAuthSettingsBloc(LocalAuthRepository repository) {
+    // Varsayılan İngilizce texts. Gerçek dil, UnifiedFeaturesTextsProvider
+    // aracılığıyla widget ağacında inject edilir (bkz. context.localAuthTexts).
     return LocalAuthSettingsBloc(repository: repository);
   }
 
@@ -51,5 +55,6 @@ abstract class AppModule {
   http.Client get httpClient => http.Client();
 
   @lazySingleton
-  FlutterLocalNotificationsPlugin get flutterLocalNotificationsPlugin => FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin get flutterLocalNotificationsPlugin =>
+      FlutterLocalNotificationsPlugin();
 }

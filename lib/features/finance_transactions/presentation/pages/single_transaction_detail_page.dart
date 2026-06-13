@@ -48,7 +48,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
           (x) => x.id == item.transaction.id,
           orElse: () => item.transaction,
         );
-        
+
         final theme = Theme.of(context);
         final scheme = theme.colorScheme;
         final accent = t.isIncome ? AppGradients.savings : AppGradients.debt;
@@ -93,7 +93,8 @@ class SingleTransactionDetailPage extends StatelessWidget {
                               ],
                             ),
                             border: Border.all(
-                                color: accent.withValues(alpha: 0.3), width: 1.5),
+                                color: accent.withValues(alpha: 0.3),
+                                width: 1.5),
                           ),
                           child: Icon(
                             categoryIcon ??
@@ -137,35 +138,38 @@ class SingleTransactionDetailPage extends StatelessWidget {
                 // Bilgi kartı
                 AppCard(
                   accent: accent,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
                   child: Column(
                     children: [
                       _infoRow(context,
                           icon: Icons.sell_rounded,
-                          label: 'Kategori',
-                          value: t.tag),
+                          label: context.l10n.labelKategori,
+                          value: context.translateCategory(t.tag)),
                       _divider(scheme),
                       _infoRow(context,
                           icon: Icons.event_rounded,
-                          label: 'Tarih',
+                          label: context.l10n.detailLabelTarih,
                           value: AppFormatters.dateLong.format(t.date)),
                       _divider(scheme),
                       _infoRow(context,
                           icon: Icons.schedule_rounded,
-                          label: 'Saat',
+                          label: context.l10n.detailLabelSaat,
                           value: AppFormatters.time.format(t.date)),
                       _divider(scheme),
                       _infoRow(context,
                           icon: t.isIncome
                               ? Icons.trending_up_rounded
                               : Icons.trending_down_rounded,
-                          label: 'Tür',
-                          value: t.isIncome ? 'Gelir' : 'Gider',
+                          label: context.l10n.detailLabelTur,
+                          value: t.isIncome
+                              ? context.l10n.detailLabelGelir
+                              : context.l10n.detailLabelGider,
                           valueColor: accent),
                       _divider(scheme),
                       _infoRow(context,
                           icon: Icons.account_balance_wallet_rounded,
-                          label: 'İşlem sonrası bakiye',
+                          label: context.l10n.detailLabelIslemSonrasiBakiye,
                           valueWidget: AmountDisplay(
                             amount: item.balanceAfter,
                             style: TextStyle(
@@ -196,7 +200,8 @@ class SingleTransactionDetailPage extends StatelessWidget {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppGradients.debt,
                             side: BorderSide(
-                                color: AppGradients.debt.withValues(alpha: 0.5)),
+                                color:
+                                    AppGradients.debt.withValues(alpha: 0.5)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),

@@ -73,7 +73,9 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
               const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           tabs: [
             Tab(icon: const Icon(Icons.outbound), text: context.l10n.borclarim),
-            Tab(icon: const Icon(Icons.call_received), text: context.l10n.alacaklarim),
+            Tab(
+                icon: const Icon(Icons.call_received),
+                text: context.l10n.alacaklarim),
           ],
         ),
       ),
@@ -164,7 +166,8 @@ class DebtListSection extends StatelessWidget {
             children: [
               const Icon(Icons.payment, color: Colors.green),
               const SizedBox(width: 8),
-              Text(context.l10n.odemeYap, style: const TextStyle(color: Colors.green)),
+              Text(context.l10n.odemeYap,
+                  style: const TextStyle(color: Colors.green)),
             ],
           ),
         ),
@@ -340,7 +343,8 @@ class DebtListSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  context.l10n.vadeDebtTermmonthsAy(debt.termMonths, debt.payments.length),
+                  context.l10n.vadeDebtTermmonthsAy(
+                      debt.termMonths, debt.payments.length),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -450,7 +454,8 @@ class ReceivableListSection extends StatelessWidget {
               children: [
                 const Icon(Icons.check_circle, color: Colors.green),
                 const SizedBox(width: 8),
-                Text(context.l10n.odendiIsaretle, style: const TextStyle(color: Colors.green)),
+                Text(context.l10n.odendiIsaretle,
+                    style: const TextStyle(color: Colors.green)),
               ],
             ),
           ),
@@ -542,7 +547,8 @@ class ReceivableListSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    context.l10n.vadeDateformatDdMmm(DateFormat('dd MMM yyyy').format(receivable.dueDate)),
+                    context.l10n.vadeDateformatDdMmm(
+                        DateFormat('dd MMM yyyy').format(receivable.dueDate)),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,

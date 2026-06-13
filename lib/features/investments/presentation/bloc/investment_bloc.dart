@@ -123,8 +123,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           final targets = investments
               .where((inv) =>
                   inv.canRefreshPrice &&
-                  (event.investmentId == null ||
-                      inv.id == event.investmentId))
+                  (event.investmentId == null || inv.id == event.investmentId))
               .toList();
 
           if (targets.isEmpty) {
@@ -149,8 +148,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                   currentValue: inv.quantity! * quote.priceTl,
                   currency: quote.currency,
                 );
-                final saveResult =
-                    await updateInvestmentUseCase.call(updated);
+                final saveResult = await updateInvestmentUseCase.call(updated);
                 return saveResult.isRight();
               },
             );

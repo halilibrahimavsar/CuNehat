@@ -304,7 +304,8 @@ class _DetailedListViewState extends State<DetailedListView> {
             ),
           ),
           child: Text(
-            context.l10n.netNetAppformattersCurrency('${net >= 0 ? "+" : ""}${AppFormatters.currency.format(net)}'),
+            context.l10n.netNetAppformattersCurrency(
+                '${net >= 0 ? "+" : ""}${AppFormatters.currency.format(net)}'),
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,

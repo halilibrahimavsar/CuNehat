@@ -77,7 +77,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
   Future<void> _fetchLivePrice() async {
     setState(() {
       _isLoading = true;
-      _priceMessage = 'Fiyat alınıyor...';
+      _priceMessage = context.l10n.fiyatAliniyor;
       _priceColor = Colors.orange;
     });
 
@@ -89,7 +89,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
 
     result.fold(
       (failure) => setState(() {
-        _priceMessage = 'Fiyat alınamadı.';
+        _priceMessage = context.l10n.fiyatAlinamadi;
         _priceColor = Colors.red;
         _isLoading = false;
       }),
@@ -103,9 +103,12 @@ class _ContributeSheetState extends State<ContributeSheet> {
         }
         setState(() {
           _priceMessage = quote.currency == 'TRY'
-              ? 'Güncel Fiyat: ${quote.priceTl} ₺'
-              : 'Güncel Fiyat: ${quote.price} ${quote.currency} '
-                  '(≈${quote.priceTl.toStringAsFixed(2)} ₺)';
+              ? context.l10n.guncelFiyatFormatTry(quote.priceTl.toString())
+              : context.l10n.guncelFiyatFormatForeign(
+                  quote.price.toString(),
+                  quote.currency,
+                  quote.priceTl.toStringAsFixed(2),
+                );
           _priceColor = Colors.green;
           _isLoading = false;
         });
@@ -116,16 +119,16 @@ class _ContributeSheetState extends State<ContributeSheet> {
   String? _validate() {
     if (_isAssetMode) {
       if (_parsedQuantity == null || _parsedQuantity! <= 0) {
-        return 'Geçerli bir miktar girin';
+        return context.l10n.gecerliMiktarGirin;
       }
       // Ödenen 0 olabilir (hediye varlık); negatif/bozuk giriş olamaz.
       if (_amountController.text.trim().isNotEmpty &&
           (_parsedAmount == null || _parsedAmount! < 0)) {
-        return 'Geçerli bir ödenen tutar girin';
+        return context.l10n.gecerliOdenenTutarGirin;
       }
     } else {
       if (_parsedAmount == null || _parsedAmount! <= 0) {
-        return 'Geçerli bir tutar girin';
+        return context.l10n.gecerliTutarGirin;
       }
     }
     return null;
@@ -194,8 +197,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
                   ),
                   Text(
                     _isAssetMode
-                        ? '${inv.name} · Varlık Ekle'
-                        : '${inv.name} · Para Ekle',
+                        ? context.l10n.varlikEkleTitle(inv.name)
+                        : context.l10n.paraEkleTitle(inv.name),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -223,8 +226,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
                         cs,
                         accent,
                         hint: inv.type == InvestmentType.gold
-                            ? 'Alınan miktar (örn. gram/adet)'
-                            : 'Alınan adet (lot)',
+                            ? context.l10n.alinanMiktarAltinHint
+                            : context.l10n.alinanAdetHisseHint,
                         icon: Icons.numbers_rounded,
                       ),
                       onChanged: (_) {
@@ -239,8 +242,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
                         onPressed: _isLoading ? null : _fetchLivePrice,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: accent,
-                          side: BorderSide(
-                              color: accent.withValues(alpha: 0.5)),
+                          side:
+                              BorderSide(color: accent.withValues(alpha: 0.5)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -278,7 +281,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       decoration: _inputDecoration(
                         cs,
                         accent,
-                        hint: 'Ödenen tutar (₺) · hediye ise 0',
+                        hint: context.l10n.odenenTutarHint,
                         icon: Icons.payments_rounded,
                       ),
                       onChanged: (_) {
@@ -294,7 +297,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       decoration: _inputDecoration(
                         cs,
                         accent,
-                        hint: 'Tutar (₺)',
+                        hint: context.l10n.tutarHint,
                         icon: Icons.payments_rounded,
                       ),
                       onChanged: (_) {

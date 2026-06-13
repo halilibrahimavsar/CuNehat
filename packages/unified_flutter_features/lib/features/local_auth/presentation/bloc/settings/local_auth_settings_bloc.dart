@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'local_auth_settings_event.dart';
 import 'local_auth_settings_state.dart';
@@ -10,8 +11,15 @@ class LocalAuthSettingsBloc
     extends Bloc<LocalAuthSettingsEvent, LocalAuthSettingsState> {
   final LocalAuthRepository _repository;
 
-  LocalAuthSettingsBloc({required LocalAuthRepository repository})
-      : _repository = repository,
+  /// Lokalize edilmiş UI metinleri. Widget katmanından inject edilir;
+  /// varsayılan değerleri İngilizce'dir (package standalone kullanımı için).
+  final LocalAuthTexts _texts;
+
+  LocalAuthSettingsBloc({
+    required LocalAuthRepository repository,
+    LocalAuthTexts texts = const LocalAuthTexts(),
+  })  : _repository = repository,
+        _texts = texts,
         super(const LocalAuthSettingsState()) {
     on<LoadSettingsEvent>(_onLoadSettings);
     on<ToggleBiometricEvent>(_onToggleBiometric);
@@ -61,7 +69,8 @@ class LocalAuthSettingsBloc
           final isPinSet = await _repository.isPinSet();
           if (!isPinSet) {
             emit(state.copyWith(
-                status: SettingsStatus.error, message: "Create a PIN first"));
+                status: SettingsStatus.error,
+                message: _texts.msgCreateAPinFirst));
             return;
           }
 
@@ -69,31 +78,33 @@ class LocalAuthSettingsBloc
           if (!isAvailable) {
             emit(state.copyWith(
                 status: SettingsStatus.error,
-                message: "Biometric authentication is not supported"));
+                message: _texts.msgBiometricAuthenticationIsNot));
             return;
           }
         }
 
         final authenticated = await _repository.authenticateWithBiometrics(
-          reason: LocalAuthConstants.enableBiometricReason,
+          reason: event.reason ?? LocalAuthConstants.enableBiometricReason,
+          signInTitle: event.signInTitle,
+          cancelButton: event.cancelButton,
         );
         if (!authenticated) {
           emit(state.copyWith(
               status: SettingsStatus.error,
-              message: "Biometric authentication failed"));
+              message: _texts.msgBiometricAuthenticationFailed));
           return;
         }
         await _repository.setBiometricEnabled(true);
         emit(state.copyWith(
             isBiometricEnabled: true,
             status: SettingsStatus.success,
-            message: "Biometric login enabled"));
+            message: _texts.msgBiometricLoginEnabled));
       } else {
         await _repository.setBiometricEnabled(false);
         emit(state.copyWith(
             isBiometricEnabled: false,
             status: SettingsStatus.success,
-            message: "Biometric login disabled"));
+            message: _texts.msgBiometricLoginDisabled));
       }
     } catch (e) {
       emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
@@ -109,19 +120,19 @@ class LocalAuthSettingsBloc
       if (alreadySet) {
         emit(state.copyWith(
             status: SettingsStatus.error,
-            message: "PIN already exists, use change PIN instead"));
+            message: _texts.msgPINAlreadyExistsUse));
         return;
       }
       if (event.pin != event.confirmPin) {
         emit(state.copyWith(
-            status: SettingsStatus.error, message: "PINs do not match"));
+            status: SettingsStatus.error, message: _texts.msgPINsDoNotMatch));
         return;
       }
       await _repository.savePin(event.pin);
       emit(state.copyWith(
           isPinSet: true,
           status: SettingsStatus.success,
-          message: "PIN saved successfully"));
+          message: _texts.msgPINSavedSuccessfully));
     } catch (e) {
       emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
     }
@@ -134,15 +145,15 @@ class LocalAuthSettingsBloc
     try {
       if (event.newPin != event.confirmPin) {
         emit(state.copyWith(
-            status: SettingsStatus.error,
-            message: "New PIN values do not match"));
+            status: SettingsStatus.error, message: _texts.msgNewPinValuesDo));
         return;
       }
 
       final isValid = await _repository.verifyPin(event.currentPin);
       if (!isValid) {
         emit(state.copyWith(
-            status: SettingsStatus.error, message: "Current PIN is incorrect"));
+            status: SettingsStatus.error,
+            message: _texts.msgCurrentPinIsIncorrect));
         return;
       }
 
@@ -150,7 +161,7 @@ class LocalAuthSettingsBloc
       emit(state.copyWith(
           isPinSet: true,
           status: SettingsStatus.success,
-          message: "PIN updated successfully"));
+          message: _texts.msgPINUpdatedSuccessfully));
     } catch (e) {
       emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
     }
@@ -164,7 +175,8 @@ class LocalAuthSettingsBloc
       final isValid = await _repository.verifyPin(event.currentPin);
       if (!isValid) {
         emit(state.copyWith(
-            status: SettingsStatus.error, message: "Current PIN is incorrect"));
+            status: SettingsStatus.error,
+            message: _texts.msgCurrentPinIsIncorrect2));
         return;
       }
       await _repository.deletePin();
@@ -173,7 +185,7 @@ class LocalAuthSettingsBloc
           isPinSet: false,
           isBiometricEnabled: false,
           status: SettingsStatus.success,
-          message: "PIN removed"));
+          message: _texts.msgPINRemoved));
     } catch (e) {
       emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
     }
@@ -215,8 +227,7 @@ class LocalAuthSettingsBloc
           emit(state.copyWith(
               status: SettingsStatus.error,
               backgroundLockTimeoutSeconds: currentTimeout,
-              message:
-                  "PIN or biometric login is required for background lock"));
+              message: _texts.msgPINOrBiometricLogin));
           return;
         }
 
@@ -228,7 +239,7 @@ class LocalAuthSettingsBloc
               isPrivacyGuardEnabled: true,
               backgroundLockTimeoutSeconds: seconds,
               status: SettingsStatus.success,
-              message: "Background lock and Privacy Guard enabled"));
+              message: _texts.msgBackgroundLockAndPrivacy));
           return;
         }
       }

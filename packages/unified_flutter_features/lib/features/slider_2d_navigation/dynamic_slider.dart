@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:unified_flutter_features/core/texts/slider_texts.dart';
 import 'models/slider_models.dart';
 import 'constants/slider_config.dart';
 import 'helpers/slider_state_helper.dart';
@@ -76,6 +77,9 @@ class DynamicSlider extends StatefulWidget {
   /// Selected sub-menu index for each state (0-based, excluding title item).
   final Map<SliderState, int> selectedSubIndex;
 
+  /// Localized texts for the slider labels.
+  final SliderTexts texts;
+
   const DynamicSlider({
     super.key,
     required this.controller,
@@ -84,6 +88,7 @@ class DynamicSlider extends StatefulWidget {
     this.miniButtons = const {},
     this.subMenuItems = const {},
     this.selectedSubIndex = const {},
+    this.texts = const SliderTexts(),
   });
 
   @override
@@ -437,6 +442,7 @@ class _DynamicSliderState extends State<DynamicSlider> {
                       showUpArrow: _showUpArrow,
                       showDownArrow: _showDownArrow,
                       showAddButton: isMainSelected,
+                      texts: widget.texts,
                       onTap: isMainSelected
                           ? () {
                               _toggleMiniButtons();
@@ -487,7 +493,7 @@ class _DynamicSliderState extends State<DynamicSlider> {
                                 SubMenuItem(
                                     icon: Icons.title,
                                     label: SliderStateHelper.getLabelForState(
-                                        state),
+                                        state, widget.texts),
                                     onTap: () {}),
                                 ...subItems
                               ];
@@ -547,7 +553,8 @@ class _DynamicSliderState extends State<DynamicSlider> {
     double width,
     bool isActive,
   ) {
-    final label = SliderStateHelper.getLabelForState(targetState);
+    final label = SliderStateHelper.getLabelForState(targetState, widget.texts);
+
     final icon = SliderStateHelper.getIconForState(targetState);
     final color = SliderStateHelper.getColorForState(targetState);
 

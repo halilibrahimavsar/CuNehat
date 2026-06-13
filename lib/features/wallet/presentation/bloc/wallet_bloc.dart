@@ -118,7 +118,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           );
           activeResult.fold(
             (f) => _emitError(emit, 'Aktif cüzdan ayarlanamadı: ${f.message}'),
-            (_) => _emitSuccess(emit, "Cüzdan oluşturuldu!"),
+            (_) => _emitSuccess(emit, WalletMessageType.created),
           );
         },
       );
@@ -145,7 +145,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       result.fold(
         (failure) =>
             _emitError(emit, 'Cüzdan güncellenemedi: ${failure.message}'),
-        (_) => _emitSuccess(emit, "Cüzdan güncellendi!"),
+        (_) => _emitSuccess(emit, WalletMessageType.updated),
       );
     });
 
@@ -164,7 +164,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       final result = await deleteWalletUseCase.call(event.walletId);
       result.fold(
         (failure) => _emitError(emit, 'Cüzdan silinemedi: ${failure.message}'),
-        (_) => _emitSuccess(emit, "Cüzdan silindi!"),
+        (_) => _emitSuccess(emit, WalletMessageType.deleted),
       );
     });
 
@@ -177,17 +177,17 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       result.fold(
         (failure) => _emitError(
             emit, 'Aktif cüzdan değiştirilemedi: ${failure.message}'),
-        (_) => _emitSuccess(emit, "Cüzdan seçildi"),
+        (_) => _emitSuccess(emit, WalletMessageType.selected),
       );
     });
   }
 
-  void _emitSuccess(Emitter<WalletState> emit, String message) {
+  void _emitSuccess(Emitter<WalletState> emit, WalletMessageType type) {
     if (state is WalletLoadedSt) {
       emit((state as WalletLoadedSt)
-          .copyWith(message: message, clearError: true));
+          .copyWith(messageType: type, clearError: true));
     } else if (state is NoWalletSt) {
-      emit(NoWalletSt(message: message));
+      emit(NoWalletSt(messageType: type));
     }
   }
 

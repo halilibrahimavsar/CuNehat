@@ -102,7 +102,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       userId: widget.userId,
       walletId: widget.walletId,
       title: _c.titleController.text.trim().isEmpty
-          ? _c.categoryId.value ?? 'İşlem'
+          ? _c.categoryId.value ?? context.l10n.islem
           : _c.titleController.text.trim(),
       tag: _c.categoryId.value!,
       amount: _c.parsedAmount!,
@@ -353,7 +353,9 @@ class _SaveButton extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              isEdit ? 'Güncelle' : 'Kaydet',
+                              isEdit
+                                  ? context.l10n.guncelle
+                                  : context.l10n.kaydet,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -421,7 +423,15 @@ class _RecurringRow extends StatelessWidget {
                       ...RecurringFrequency.values.map(
                         (freq) => DropdownMenuItem(
                           value: freq,
-                          child: Text(freq.displayName),
+                          child: Text(
+                            switch (freq) {
+                              RecurringFrequency.daily => context.l10n.daily,
+                              RecurringFrequency.weekly => context.l10n.weekly,
+                              RecurringFrequency.monthly =>
+                                context.l10n.monthly,
+                              RecurringFrequency.yearly => context.l10n.yearly,
+                            },
+                          ),
                         ),
                       ),
                     ],

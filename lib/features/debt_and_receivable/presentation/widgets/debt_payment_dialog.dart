@@ -27,7 +27,7 @@ class DebtPaymentDialog extends StatefulWidget {
     return IboDialog.showCustomDialog<bool>(
       context,
       barrierDismissible: false,
-      title: 'Ödeme Yap',
+      title: context.l10n.odemeYap,
       icon: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -181,11 +181,14 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                           fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 8),
-                    _buildInfoRow('Toplam Borç:', formatMoney(totalDebt)),
-                    _buildInfoRow('Ödenen:', formatMoney(totalPaid),
+                    _buildInfoRow(
+                        context.l10n.toplamBorcLabel, formatMoney(totalDebt)),
+                    _buildInfoRow(
+                        context.l10n.odenenLabel, formatMoney(totalPaid),
                         color: Colors.green),
                     const Divider(height: 16),
-                    _buildInfoRow('Kalan:', formatMoney(remaining),
+                    _buildInfoRow(
+                        context.l10n.kalanLabel, formatMoney(remaining),
                         color: Colors.red, isBold: true),
                   ],
                 ),
@@ -215,13 +218,14 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   suffixText: '₺',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  helperText: context.l10n.maksimumFormatmoneyRemaining(formatMoney(remaining)),
+                  helperText: context.l10n
+                      .maksimumFormatmoneyRemaining(formatMoney(remaining)),
                 ),
                 validator: (value) {
                   final base = validateAmount(value ?? '');
                   if (base != null) return base;
                   if (parseAmount(value!)! > remaining) {
-                    return 'Kalan tutardan fazla olamaz';
+                    return context.l10n.kalanTutardanFazlaOlamaz;
                   }
                   return null;
                 },
@@ -267,7 +271,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 const SizedBox(height: 8),
                 _buildCollapsibleSection(
                   cs: cs,
-                  title: 'Taksit Planı (${widget.debt.termMonths} ay)',
+                  title: context.l10n
+                      .taksitPlaniFormat(widget.debt.termMonths.toString()),
                   icon: Icons.calendar_month_rounded,
                   isExpanded: _showInstallmentPlan,
                   onToggle: () => setState(
@@ -281,8 +286,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 const SizedBox(height: 4),
                 _buildCollapsibleSection(
                   cs: cs,
-                  title:
-                      'Ödeme Geçmişi (${widget.debt.payments.length})',
+                  title: context.l10n.odemeGecmisiFormat(
+                      widget.debt.payments.length.toString()),
                   icon: Icons.history_rounded,
                   isExpanded: _showPaymentHistory,
                   onToggle: () => setState(
@@ -348,13 +353,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   }
 
   Widget _buildInstallmentPlanList(bool isDark) {
-    final monthlyAmount =
-        widget.debt.totalDebtAmount / widget.debt.termMonths;
+    final monthlyAmount = widget.debt.totalDebtAmount / widget.debt.termMonths;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(widget.debt.termMonths, (i) {
-        final scheduledDate =
-            addMonthsClamped(widget.debt.startDate, i + 1);
+        final scheduledDate = addMonthsClamped(widget.debt.startDate, i + 1);
         final isPaidInstallment = i < widget.debt.payments.length;
         final isOverdue =
             !isPaidInstallment && scheduledDate.isBefore(DateTime.now());
@@ -369,11 +372,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
         } else if (isOverdue) {
           statusColor = Colors.red;
           statusIcon = Icons.warning_rounded;
-          statusText = 'Gecikmiş';
+          statusText = context.l10n.gecikmis;
         } else {
           statusColor = Colors.orange;
           statusIcon = Icons.schedule_rounded;
-          statusText = 'Bekleniyor';
+          statusText = context.l10n.bekleniyor;
         }
 
         return Card(
@@ -387,16 +390,15 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               child: Icon(statusIcon, size: 16, color: statusColor),
             ),
             title: Text(
-              context.l10n.iTaksitAppformattersDateshort(i + 1, AppFormatters.dateShort.format(scheduledDate)),
+              context.l10n.iTaksitAppformattersDateshort(
+                  i + 1, AppFormatters.dateShort.format(scheduledDate)),
               style: const TextStyle(fontSize: 13),
             ),
             subtitle: Text(
               context.l10n.formatMoneyMonthlyamount(formatMoney(monthlyAmount)),
               style: TextStyle(
                 fontSize: 11,
-                color: isDark
-                    ? Colors.grey.shade400
-                    : Colors.grey.shade600,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
               ),
             ),
             trailing: Text(
@@ -501,11 +503,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   ),
                 ),
                 child: Text(
-                  context.l10n.optLabelFormatmoneyOpt(opt.label, formatMoney(opt.amount)),
+                  context.l10n.optLabelFormatmoneyOpt(
+                      opt.label, formatMoney(opt.amount)),
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight:
-                        isActive ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                     color: isActive
                         ? (Theme.of(context).brightness == Brightness.dark
                             ? Colors.greenAccent

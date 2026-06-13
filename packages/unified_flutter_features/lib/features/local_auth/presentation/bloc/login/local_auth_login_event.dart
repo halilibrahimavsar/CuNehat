@@ -32,7 +32,30 @@ class VerifyPinLoginEvent extends LocalAuthLoginEvent {
 /// Event to initiate biometric authentication.
 ///
 /// Triggers fingerprint, face ID, or other biometric authentication.
-class BiometricAuthLoginEvent extends LocalAuthLoginEvent {}
+class BiometricAuthLoginEvent extends LocalAuthLoginEvent {
+  final String? reason;
+  final String? signInTitle;
+  final String? cancelButton;
+
+  const BiometricAuthLoginEvent({
+    this.reason,
+    this.signInTitle,
+    this.cancelButton,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BiometricAuthLoginEvent &&
+          runtimeType == other.runtimeType &&
+          reason == other.reason &&
+          signInTitle == other.signInTitle &&
+          cancelButton == other.cancelButton;
+
+  @override
+  int get hashCode =>
+      reason.hashCode ^ signInTitle.hashCode ^ cancelButton.hashCode;
+}
 
 /// Event to check current lockout status.
 ///

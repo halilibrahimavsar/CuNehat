@@ -62,7 +62,8 @@ import 'app_localizations_tr.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,7 +84,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -567,7 +570,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{checkFailedPrefix}: {error}'**
-  String msgTextsCheckfailedprefixETostring(Object checkFailedPrefix, Object error);
+  String msgTextsCheckfailedprefixETostring(
+      Object checkFailedPrefix, Object error);
 
   /// No description provided for @msgPINVerificationFailedE.
   ///
@@ -1191,7 +1195,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{toStringAsFixed} {currencySymbol}'**
-  String valueTostringasfixedCurrencysymbol(Object toStringAsFixed, Object currencySymbol);
+  String valueTostringasfixedCurrencysymbol(
+      Object toStringAsFixed, Object currencySymbol);
 
   /// No description provided for @butcePlanlama.
   ///
@@ -1431,7 +1436,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{totalAmount} (%{toStringAsFixed})'**
-  String formatMoneyItemTotalamountPercent(Object totalAmount, Object toStringAsFixed);
+  String formatMoneyItemTotalamountPercent(
+      Object totalAmount, Object toStringAsFixed);
 
   /// No description provided for @buDonemIcinHenuz.
   ///
@@ -1521,7 +1527,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{startDate} - {endDate}'**
-  String appFormattersDateshortFormatStartdate(Object startDate, Object endDate);
+  String appFormattersDateshortFormatStartdate(
+      Object startDate, Object endDate);
 
   /// No description provided for @filterSelectedcategoriesLengthKategori.
   ///
@@ -1695,7 +1702,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{isProfit}{toStringAsFixed}%'**
-  String isProfitTotalprofitpercentageTostringasfixed(Object isProfit, Object toStringAsFixed);
+  String isProfitTotalprofitpercentageTostringasfixed(
+      Object isProfit, Object toStringAsFixed);
 
   /// No description provided for @templateTitleDuzenliIslemi.
   ///
@@ -1912,9 +1920,1283 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tamamını öde'**
   String get tamaminiOde;
+
+  /// No description provided for @sliderSavings.
+  ///
+  /// In tr, this message translates to:
+  /// **'BİRİKİM'**
+  String get sliderSavings;
+
+  /// No description provided for @sliderTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İŞLEMLER'**
+  String get sliderTransactions;
+
+  /// No description provided for @sliderDebt.
+  ///
+  /// In tr, this message translates to:
+  /// **'BORÇ'**
+  String get sliderDebt;
+
+  /// No description provided for @myProfile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profilim'**
+  String get myProfile;
+
+  /// No description provided for @recurringTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli İşlemler'**
+  String get recurringTransactions;
+
+  /// No description provided for @budgetPlanning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe Planlama'**
+  String get budgetPlanning;
+
+  /// No description provided for @drawerBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye'**
+  String get drawerBalance;
+
+  /// No description provided for @drawerInvestment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım'**
+  String get drawerInvestment;
+
+  /// No description provided for @drawerDebt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç'**
+  String get drawerDebt;
+
+  /// No description provided for @createWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan Oluştur'**
+  String get createWallet;
+
+  /// No description provided for @selectWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan Seçin'**
+  String get selectWallet;
+
+  /// No description provided for @wallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan'**
+  String get wallet;
+
+  /// No description provided for @menuGold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın'**
+  String get menuGold;
+
+  /// No description provided for @menuStock.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hisse'**
+  String get menuStock;
+
+  /// No description provided for @menuCustom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel'**
+  String get menuCustom;
+
+  /// No description provided for @menuDetails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Detay'**
+  String get menuDetails;
+
+  /// No description provided for @menuIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir'**
+  String get menuIncome;
+
+  /// No description provided for @menuExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider'**
+  String get menuExpense;
+
+  /// No description provided for @menuReport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rapor'**
+  String get menuReport;
+
+  /// No description provided for @menuPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleyen'**
+  String get menuPending;
+
+  /// No description provided for @menuDebt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç'**
+  String get menuDebt;
+
+  /// No description provided for @menuReceivable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak'**
+  String get menuReceivable;
+
+  /// No description provided for @menuHistory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmiş'**
+  String get menuHistory;
+
+  /// No description provided for @themeSysLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem [Açık]'**
+  String get themeSysLight;
+
+  /// No description provided for @themeSysDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem [Kapalı]'**
+  String get themeSysDark;
+
+  /// No description provided for @cuzdanOlusturunuz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan oluşturunuz'**
+  String get cuzdanOlusturunuz;
+
+  /// No description provided for @cuzdanSeciniz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan seçiniz'**
+  String get cuzdanSeciniz;
+
+  /// No description provided for @yerelMod.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerel Mod'**
+  String get yerelMod;
+
+  /// No description provided for @henuzCuzdanOlusturmadiniz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz cüzdan oluşturmadınız'**
+  String get henuzCuzdanOlusturmadiniz;
+
+  /// No description provided for @cuzdanOlusturuldu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan oluşturuldu!'**
+  String get cuzdanOlusturuldu;
+
+  /// No description provided for @cuzdanGuncellendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan güncellendi!'**
+  String get cuzdanGuncellendi;
+
+  /// No description provided for @cuzdanSilindi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan silindi!'**
+  String get cuzdanSilindi;
+
+  /// No description provided for @cuzdanSecildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan seçildi'**
+  String get cuzdanSecildi;
+
+  /// No description provided for @disaAktarilacakIslemBulunamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dışa aktarılacak işlem bulunamadı.'**
+  String get disaAktarilacakIslemBulunamadi;
+
+  /// No description provided for @islemlerDisaAktarildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler başarıyla dışa aktarıldı.'**
+  String get islemlerDisaAktarildi;
+
+  /// No description provided for @csvGecerliIslemBulunamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'CSV dosyasında geçerli işlem bulunamadı.'**
+  String get csvGecerliIslemBulunamadi;
+
+  /// No description provided for @iceAktarilanCuzdanPrefix.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe Aktarılan Cüzdan'**
+  String get iceAktarilanCuzdanPrefix;
+
+  /// No description provided for @verilerIceAktarildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veriler başarıyla içe aktarıldı. Yeni cüzdan oluşturuldu ve seçildi.'**
+  String get verilerIceAktarildi;
+
+  /// No description provided for @cuzdanOlusturulamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan oluşturulamadı'**
+  String get cuzdanOlusturulamadi;
+
+  /// No description provided for @satirAtlandi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır tarih/tutar hatası nedeniyle atlandı.'**
+  String satirAtlandi(int count);
+
+  /// No description provided for @guncelle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncelle'**
+  String get guncelle;
+
+  /// No description provided for @kaydet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get kaydet;
+
+  /// No description provided for @islem.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem'**
+  String get islem;
+
+  /// No description provided for @daily.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük'**
+  String get daily;
+
+  /// No description provided for @weekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık'**
+  String get monthly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıllık'**
+  String get yearly;
+
+  /// No description provided for @kategoriDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori Düzenle'**
+  String get kategoriDuzenle;
+
+  /// No description provided for @yeniKategori.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Kategori'**
+  String get yeniKategori;
+
+  /// No description provided for @kategoriAdiBosOlamaz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori adı boş olamaz'**
+  String get kategoriAdiBosOlamaz;
+
+  /// No description provided for @enAz2KarakterOlmali.
+  ///
+  /// In tr, this message translates to:
+  /// **'En az 2 karakter olmalı'**
+  String get enAz2KarakterOlmali;
+
+  /// No description provided for @kategoriOlusturuldu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori oluşturuldu!'**
+  String get kategoriOlusturuldu;
+
+  /// No description provided for @kategoriGuncellendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori güncellendi!'**
+  String get kategoriGuncellendi;
+
+  /// No description provided for @kategoriSilindi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori silindi!'**
+  String get kategoriSilindi;
+
+  /// No description provided for @kategoriSilTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori Sil'**
+  String get kategoriSilTitle;
+
+  /// No description provided for @kategoriSilConfirmMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{id}\" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.'**
+  String kategoriSilConfirmMessage(Object id);
+
+  /// No description provided for @kategorilerYuklenemedi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler yüklenemedi: {error}'**
+  String kategorilerYuklenemedi(Object error);
+
+  /// No description provided for @giderKategorileri.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider Kategorileri'**
+  String get giderKategorileri;
+
+  /// No description provided for @gelirKategorileri.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir Kategorileri'**
+  String get gelirKategorileri;
+
+  /// No description provided for @varsayilanKategoriYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan kategori yok'**
+  String get varsayilanKategoriYok;
+
+  /// No description provided for @henuzOzelKategoriYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz özel kategori yok'**
+  String get henuzOzelKategoriYok;
+
+  /// No description provided for @duzenleSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar, tarih, kategori ve diğer detaylar'**
+  String get duzenleSubtitle;
+
+  /// No description provided for @islemiSil.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemi Sil'**
+  String get islemiSil;
+
+  /// No description provided for @silSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye eski haline döner'**
+  String get silSubtitle;
+
+  /// No description provided for @gramAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gram Altın'**
+  String get gramAltin;
+
+  /// No description provided for @ceyrekAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çeyrek Altın'**
+  String get ceyrekAltin;
+
+  /// No description provided for @yarimAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarım Altın'**
+  String get yarimAltin;
+
+  /// No description provided for @tamAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam Altın'**
+  String get tamAltin;
+
+  /// No description provided for @cumhuriyetAltini.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cumhuriyet Altını'**
+  String get cumhuriyetAltini;
+
+  /// No description provided for @ataAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ata Altın'**
+  String get ataAltin;
+
+  /// No description provided for @fiyatAliniyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyat alınıyor...'**
+  String get fiyatAliniyor;
+
+  /// No description provided for @fiyatAlinamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyat alınamadı.'**
+  String get fiyatAlinamadi;
+
+  /// No description provided for @guncelFiyatFormatTry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel Fiyat: {price} ₺'**
+  String guncelFiyatFormatTry(Object price);
+
+  /// No description provided for @guncelFiyatFormatForeign.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel Fiyat: {price} {currency} (≈{priceTl} ₺)'**
+  String guncelFiyatFormatForeign(
+      Object price, Object currency, Object priceTl);
+
+  /// No description provided for @gecerliYatirimMiktariGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir yatırım miktarı girin'**
+  String get gecerliYatirimMiktariGirin;
+
+  /// No description provided for @gecerliMevcutDegerGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir mevcut değer girin'**
+  String get gecerliMevcutDegerGirin;
+
+  /// No description provided for @altinYatirimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın Yatırımı'**
+  String get altinYatirimi;
+
+  /// No description provided for @altinTuruVeOtomatikFiyat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın Türü & Otomatik Fiyat'**
+  String get altinTuruVeOtomatikFiyat;
+
+  /// No description provided for @yatirimDetaylari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım Detayları'**
+  String get yatirimDetaylari;
+
+  /// No description provided for @altinNotHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not (İsteğe bağlı) · örn. Düğün Altınları'**
+  String get altinNotHint;
+
+  /// No description provided for @maliyetYatirilanAnaPara.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maliyet (Yatırılan Ana Para)'**
+  String get maliyetYatirilanAnaPara;
+
+  /// No description provided for @hedefTutarIstegeBagli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef Tutar (İsteğe Bağlı)'**
+  String get hedefTutarIstegeBagli;
+
+  /// No description provided for @hedefKategorisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef Kategorisi'**
+  String get hedefKategorisi;
+
+  /// No description provided for @renkSecimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk Seçimi'**
+  String get renkSecimi;
+
+  /// No description provided for @altinYatiriminiDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın Yatırımını Düzenle'**
+  String get altinYatiriminiDuzenle;
+
+  /// No description provided for @yeniAltinEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Altın Ekle'**
+  String get yeniAltinEkle;
+
+  /// No description provided for @adet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adet'**
+  String get adet;
+
+  /// No description provided for @sembolGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sembol girin!'**
+  String get sembolGirin;
+
+  /// No description provided for @hisseYatirimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hisse Yatırımı'**
+  String get hisseYatirimi;
+
+  /// No description provided for @hisseSenediBul.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hisse Senedi Bul'**
+  String get hisseSenediBul;
+
+  /// No description provided for @hisseNotHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not (İsteğe bağlı) · örn. Uzun vade alım'**
+  String get hisseNotHint;
+
+  /// No description provided for @hisseYatiriminiDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hisse Yatırımını Düzenle'**
+  String get hisseYatiriminiDuzenle;
+
+  /// No description provided for @yeniHisseEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Hisse Ekle'**
+  String get yeniHisseEkle;
+
+  /// No description provided for @gecerliHedefTutarGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir hedef tutar girin'**
+  String get gecerliHedefTutarGirin;
+
+  /// No description provided for @ozelYatirimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel Yatırım'**
+  String get ozelYatirimi;
+
+  /// No description provided for @customNotHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz'**
+  String get customNotHint;
+
+  /// No description provided for @ozelYatiriminiDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel Yatırımını Düzenle'**
+  String get ozelYatiriminiDuzenle;
+
+  /// No description provided for @yeniOzelYatirimEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Özel Yatırım Ekle'**
+  String get yeniOzelYatirimEkle;
+
+  /// No description provided for @varlikEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varlık Ekle'**
+  String get varlikEkle;
+
+  /// No description provided for @hedefeParaEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefe Para Ekle'**
+  String get hedefeParaEkle;
+
+  /// No description provided for @paraEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para Ekle'**
+  String get paraEkle;
+
+  /// No description provided for @yeniAlimMiktarVeOdenenTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni alım: miktar ve ödenen tutar'**
+  String get yeniAlimMiktarVeOdenenTutar;
+
+  /// No description provided for @maliyeteVeDegereEklenir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maliyete ve değere eklenir, cüzdandan düşer'**
+  String get maliyeteVeDegereEklenir;
+
+  /// No description provided for @fiyatiGuncelle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyatı Güncelle'**
+  String get fiyatiGuncelle;
+
+  /// No description provided for @canliFiyatGuncellemeAciklamasi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel değer = miktar × canlı fiyat; bakiyeyi etkilemez'**
+  String get canliFiyatGuncellemeAciklamasi;
+
+  /// No description provided for @duzenleYatirimSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İsim, maliyet, hedef ve diğer detaylar'**
+  String get duzenleYatirimSubtitle;
+
+  /// No description provided for @satSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel değer cüzdana gelir olarak işlenir'**
+  String get satSubtitle;
+
+  /// No description provided for @kaydiSilSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatalı giriş düzeltme; alım gideri iade edilir'**
+  String get kaydiSilSubtitle;
+
+  /// No description provided for @varlikEkleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} · Varlık Ekle'**
+  String varlikEkleTitle(Object name);
+
+  /// No description provided for @paraEkleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} · Para Ekle'**
+  String paraEkleTitle(Object name);
+
+  /// No description provided for @alinanMiktarAltinHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınan miktar (örn. gram/adet)'**
+  String get alinanMiktarAltinHint;
+
+  /// No description provided for @alinanAdetHisseHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınan adet (lot)'**
+  String get alinanAdetHisseHint;
+
+  /// No description provided for @odenenTutarHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödenen tutar (₺) · hediye ise 0'**
+  String get odenenTutarHint;
+
+  /// No description provided for @tutarHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar (₺)'**
+  String get tutarHint;
+
+  /// No description provided for @gecerliMiktarGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir miktar girin'**
+  String get gecerliMiktarGirin;
+
+  /// No description provided for @gecerliOdenenTutarGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir ödenen tutar girin'**
+  String get gecerliOdenenTutarGirin;
+
+  /// No description provided for @gecerliTutarGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir tutar girin'**
+  String get gecerliTutarGirin;
+
+  /// No description provided for @baslikGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık girin'**
+  String get baslikGirin;
+
+  /// No description provided for @borcluKisiAdiGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borçlu kişi adını girin'**
+  String get borcluKisiAdiGirin;
+
+  /// No description provided for @kurumKisiGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurum/kişi girin'**
+  String get kurumKisiGirin;
+
+  /// No description provided for @vadeEnAz1Olmali.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade (ay) en az 1 olmalı'**
+  String get vadeEnAz1Olmali;
+
+  /// No description provided for @aylikTaksitTutariniGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık taksit tutarını girin'**
+  String get aylikTaksitTutariniGirin;
+
+  /// No description provided for @borcTuruLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç türü'**
+  String get borcTuruLabel;
+
+  /// No description provided for @borcBaslikHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık · örn. Konut Kredisi'**
+  String get borcBaslikHint;
+
+  /// No description provided for @kurumKisiHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurum / Kişi · örn. Ziraat Bankası'**
+  String get kurumKisiHint;
+
+  /// No description provided for @kisiAdiHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişi Adı'**
+  String get kisiAdiHint;
+
+  /// No description provided for @vadeVeDetaylarLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade & detaylar'**
+  String get vadeVeDetaylarLabel;
+
+  /// No description provided for @borcluKisiAdiHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borçlu kişi adı'**
+  String get borcluKisiAdiHint;
+
+  /// No description provided for @borcDuzenleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç Düzenle'**
+  String get borcDuzenleTitle;
+
+  /// No description provided for @alacakDuzenleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak Düzenle'**
+  String get alacakDuzenleTitle;
+
+  /// No description provided for @yeniBorcTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Borç'**
+  String get yeniBorcTitle;
+
+  /// No description provided for @yeniAlacakTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Alacak'**
+  String get yeniAlacakTitle;
+
+  /// No description provided for @krediTutariAnaPara.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi tutarı (ana para)'**
+  String get krediTutariAnaPara;
+
+  /// No description provided for @borcTutariAnaPara.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç tutarı (ana para)'**
+  String get borcTutariAnaPara;
+
+  /// No description provided for @alacakTutari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak tutarı'**
+  String get alacakTutari;
+
+  /// No description provided for @toplamTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam tutar'**
+  String get toplamTutar;
+
+  /// No description provided for @vadeFarkiLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade farkı'**
+  String get vadeFarkiLabel;
+
+  /// No description provided for @toplamFaizLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam faiz'**
+  String get toplamFaizLabel;
+
+  /// No description provided for @aylikTaksitLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık taksit (≈)'**
+  String get aylikTaksitLabel;
+
+  /// No description provided for @debtTypeBankLoan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka Kredisi'**
+  String get debtTypeBankLoan;
+
+  /// No description provided for @debtTypeInstallment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksitli'**
+  String get debtTypeInstallment;
+
+  /// No description provided for @debtTypePersonal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel'**
+  String get debtTypePersonal;
+
+  /// No description provided for @debtTypeOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get debtTypeOther;
+
+  /// No description provided for @vadeAyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade (ay)'**
+  String get vadeAyHint;
+
+  /// No description provided for @aylikTaksitHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık Taksit'**
+  String get aylikTaksitHint;
+
+  /// No description provided for @vadeFarkiYuzdeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade Farkı %'**
+  String get vadeFarkiYuzdeHint;
+
+  /// No description provided for @aylikFaizYuzdeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık Faiz %'**
+  String get aylikFaizYuzdeHint;
+
+  /// No description provided for @gecikmeFaiziYuzdeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikme faizi (%)'**
+  String get gecikmeFaiziYuzdeHint;
+
+  /// No description provided for @baslangicLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç'**
+  String get baslangicLabel;
+
+  /// No description provided for @vadeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade'**
+  String get vadeLabel;
+
+  /// No description provided for @toplamBorcLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam Borç:'**
+  String get toplamBorcLabel;
+
+  /// No description provided for @odenenLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödenen:'**
+  String get odenenLabel;
+
+  /// No description provided for @kalanLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan:'**
+  String get kalanLabel;
+
+  /// No description provided for @kalanTutardanFazlaOlamaz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan tutardan fazla olamaz'**
+  String get kalanTutardanFazlaOlamaz;
+
+  /// No description provided for @taksitPlaniFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksit Planı ({months} ay)'**
+  String taksitPlaniFormat(Object months);
+
+  /// No description provided for @odemeGecmisiFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Geçmişi ({count})'**
+  String odemeGecmisiFormat(Object count);
+
+  /// No description provided for @gecikmis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikmiş'**
+  String get gecikmis;
+
+  /// No description provided for @bekleniyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleniyor'**
+  String get bekleniyor;
+
+  /// No description provided for @cuzdanDuzenleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanı Düzenle'**
+  String get cuzdanDuzenleTitle;
+
+  /// No description provided for @yeniCuzdanEkleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni Cüzdan Ekle'**
+  String get yeniCuzdanEkleTitle;
+
+  /// No description provided for @cuzdanAdiBosOlamaz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan adı boş olamaz'**
+  String get cuzdanAdiBosOlamaz;
+
+  /// No description provided for @cuzdanAdiEnAz2Karakter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan adı en az 2 karakter olmalı'**
+  String get cuzdanAdiEnAz2Karakter;
+
+  /// No description provided for @bakiyeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye *'**
+  String get bakiyeLabel;
+
+  /// No description provided for @baslangicBakiyesiLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç Bakiyesi *'**
+  String get baslangicBakiyesiLabel;
+
+  /// No description provided for @bakiyeBosOlamaz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye boş olamaz'**
+  String get bakiyeBosOlamaz;
+
+  /// No description provided for @gecerliBirSayiGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir sayı girin'**
+  String get gecerliBirSayiGirin;
+
+  /// No description provided for @tutarCokBuyuk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar çok büyük'**
+  String get tutarCokBuyuk;
+
+  /// No description provided for @borcLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç'**
+  String get borcLabel;
+
+  /// No description provided for @alacakLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak'**
+  String get alacakLabel;
+
+  /// No description provided for @birikimLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikim'**
+  String get birikimLabel;
+
+  /// No description provided for @olustur.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluştur'**
+  String get olustur;
+
+  /// No description provided for @ozelRenkSecin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel Renk Seçin'**
+  String get ozelRenkSecin;
+
+  /// No description provided for @cuzdanYonetimiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan Yönetimi'**
+  String get cuzdanYonetimiTitle;
+
+  /// No description provided for @dateBadgeToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'BUGÜN'**
+  String get dateBadgeToday;
+
+  /// No description provided for @dateBadgeYesterday.
+  ///
+  /// In tr, this message translates to:
+  /// **'DÜN'**
+  String get dateBadgeYesterday;
+
+  /// No description provided for @dateBadgeThisWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'BU HAFTA'**
+  String get dateBadgeThisWeek;
+
+  /// No description provided for @dateBadgeLastWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'GEÇEN HAFTA'**
+  String get dateBadgeLastWeek;
+
+  /// No description provided for @dateBadgeThisMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'BU AY'**
+  String get dateBadgeThisMonth;
+
+  /// No description provided for @dateBadgeLastMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'GEÇEN AY'**
+  String get dateBadgeLastMonth;
+
+  /// No description provided for @categoryFinans.
+  ///
+  /// In tr, this message translates to:
+  /// **'Finans'**
+  String get categoryFinans;
+
+  /// No description provided for @categoryGrafikler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Grafikler'**
+  String get categoryGrafikler;
+
+  /// No description provided for @categoryIsVeOfis.
+  ///
+  /// In tr, this message translates to:
+  /// **'İş & Ofis'**
+  String get categoryIsVeOfis;
+
+  /// No description provided for @categoryAlisveris.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş'**
+  String get categoryAlisveris;
+
+  /// No description provided for @categoryYemekVeIcecek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yemek & İçecek'**
+  String get categoryYemekVeIcecek;
+
+  /// No description provided for @categoryUlasim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ulaşım'**
+  String get categoryUlasim;
+
+  /// No description provided for @categoryEvVeYasam.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev & Yaşam'**
+  String get categoryEvVeYasam;
+
+  /// No description provided for @categoryEglence.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğlence'**
+  String get categoryEglence;
+
+  /// No description provided for @categorySaglikVeSpor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağlık & Spor'**
+  String get categorySaglikVeSpor;
+
+  /// No description provided for @categoryEgitim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğitim'**
+  String get categoryEgitim;
+
+  /// No description provided for @categoryKisiselBakim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel Bakım'**
+  String get categoryKisiselBakim;
+
+  /// No description provided for @categoryHayvanlar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hayvanlar'**
+  String get categoryHayvanlar;
+
+  /// No description provided for @categorySeyahat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seyahat'**
+  String get categorySeyahat;
+
+  /// No description provided for @categoryTeknoloji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teknoloji'**
+  String get categoryTeknoloji;
+
+  /// No description provided for @categoryIletisim.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletişim'**
+  String get categoryIletisim;
+
+  /// No description provided for @categoryHediyeVeBagis.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hediye & Bağış'**
+  String get categoryHediyeVeBagis;
+
+  /// No description provided for @categoryHizmetler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hizmetler'**
+  String get categoryHizmetler;
+
+  /// No description provided for @categoryDiger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get categoryDiger;
+
+  /// No description provided for @defaultCategoryFood.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yemek'**
+  String get defaultCategoryFood;
+
+  /// No description provided for @defaultCategoryTransport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ulaşım'**
+  String get defaultCategoryTransport;
+
+  /// No description provided for @defaultCategoryShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş'**
+  String get defaultCategoryShopping;
+
+  /// No description provided for @defaultCategoryBills.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura'**
+  String get defaultCategoryBills;
+
+  /// No description provided for @defaultCategoryEntertainment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğlence'**
+  String get defaultCategoryEntertainment;
+
+  /// No description provided for @defaultCategorySalary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maaş'**
+  String get defaultCategorySalary;
+
+  /// No description provided for @defaultCategoryInvestment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım'**
+  String get defaultCategoryInvestment;
+
+  /// No description provided for @defaultCategoryFreelance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Serbest'**
+  String get defaultCategoryFreelance;
+
+  /// No description provided for @kategorisiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorisiz'**
+  String get kategorisiz;
+
+  /// No description provided for @detailLabelTarih.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih'**
+  String get detailLabelTarih;
+
+  /// No description provided for @detailLabelSaat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get detailLabelSaat;
+
+  /// No description provided for @detailLabelTur.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tür'**
+  String get detailLabelTur;
+
+  /// No description provided for @detailLabelGelir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir'**
+  String get detailLabelGelir;
+
+  /// No description provided for @detailLabelGider.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider'**
+  String get detailLabelGider;
+
+  /// No description provided for @detailLabelIslemSonrasiBakiye.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem sonrası bakiye'**
+  String get detailLabelIslemSonrasiBakiye;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1923,25 +3205,25 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'tr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en': return AppLocalizationsEn();
-    case 'tr': return AppLocalizationsTr();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'tr':
+      return AppLocalizationsTr();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

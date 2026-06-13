@@ -439,7 +439,8 @@ class _FilterViewState extends State<FilterView> {
               ),
               child: Text(
                 context.l10n.uygula,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),

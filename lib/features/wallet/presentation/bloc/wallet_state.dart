@@ -1,5 +1,19 @@
 part of 'wallet_bloc.dart';
 
+/// Widget katmanında l10n ile çevrilen cüzdan operasyon mesajları.
+/// BLoC'ta string yerine typed mesaj kullanılır; dil bağımsızlığı bu şekilde sağlanır.
+enum WalletMessageType {
+  created,
+  updated,
+  deleted,
+  selected,
+  createFailed,
+  updateFailed,
+  deleteFailed,
+  selectFailed,
+  activeSetFailed,
+}
+
 sealed class WalletState extends Equatable {
   const WalletState();
 
@@ -18,12 +32,14 @@ final class WalletLoadingSt extends WalletState {
 final class WalletLoadedSt extends WalletState {
   final List<WalletEntity> wallets;
   final WalletEntity? activeWallet;
+  final WalletMessageType? messageType;
   final String? message;
   final String? error;
 
   const WalletLoadedSt(
     this.wallets,
     this.activeWallet, {
+    this.messageType,
     this.message,
     this.error,
   });
@@ -31,6 +47,7 @@ final class WalletLoadedSt extends WalletState {
   WalletLoadedSt copyWith({
     List<WalletEntity>? wallets,
     WalletEntity? activeWallet,
+    WalletMessageType? messageType,
     String? message,
     String? error,
     bool clearMessage = false,
@@ -39,23 +56,26 @@ final class WalletLoadedSt extends WalletState {
     return WalletLoadedSt(
       wallets ?? this.wallets,
       activeWallet ?? this.activeWallet,
+      messageType: clearMessage ? null : (messageType ?? this.messageType),
       message: clearMessage ? null : (message ?? this.message),
       error: clearError ? null : (error ?? this.error),
     );
   }
 
   @override
-  List<Object?> get props => [wallets, activeWallet, message, error];
+  List<Object?> get props =>
+      [wallets, activeWallet, messageType, message, error];
 }
 
 final class NoWalletSt extends WalletState {
+  final WalletMessageType? messageType;
   final String? message;
   final String? error;
 
-  const NoWalletSt({this.message, this.error});
+  const NoWalletSt({this.messageType, this.message, this.error});
 
   @override
-  List<Object?> get props => [message, error];
+  List<Object?> get props => [messageType, message, error];
 }
 
 final class WalletErrorSt extends WalletState {

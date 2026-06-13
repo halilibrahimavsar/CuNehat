@@ -186,9 +186,9 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   /// Body content based on state
   Widget _buildBody(WalletState state) {
     return switch (state) {
-      NoWalletSt() => const Center(
+      NoWalletSt() => Center(
           child: NoWalletView(
-            infoText: "Henüz cüzdan oluşturmadınız",
+            infoText: context.l10n.henuzCuzdanOlusturmadiniz,
             showButton: false,
           ),
         ),

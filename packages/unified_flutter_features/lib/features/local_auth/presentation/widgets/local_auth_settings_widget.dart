@@ -75,7 +75,10 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
   @override
   void initState() {
     super.initState();
-    _bloc = LocalAuthSettingsBloc(repository: widget.repository);
+    _bloc = LocalAuthSettingsBloc(
+      repository: widget.repository,
+      texts: widget.texts,
+    );
     _bloc.add(LoadSettingsEvent());
   }
 
@@ -122,8 +125,12 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
             addSection(LocalAuthBiometricSection(
               style: widget.style,
               state: state,
-              onToggle: (value) =>
-                  _bloc.add(ToggleBiometricEvent(enable: value)),
+              onToggle: (value) => _bloc.add(ToggleBiometricEvent(
+                enable: value,
+                reason: widget.texts.biometricReason,
+                signInTitle: widget.texts.biometricLoginTitle,
+                cancelButton: widget.texts.cancelLabel,
+              )),
               texts: widget.texts,
             ));
           }

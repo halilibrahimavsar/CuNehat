@@ -47,7 +47,8 @@ class AppCard extends StatelessWidget {
     );
 
     if (onTap != null || onLongPress != null) {
-      card = PressableScale(onTap: onTap, onLongPress: onLongPress, child: card);
+      card =
+          PressableScale(onTap: onTap, onLongPress: onLongPress, child: card);
     }
     if (margin != null) {
       card = Padding(padding: margin!, child: card);

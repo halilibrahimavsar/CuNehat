@@ -135,10 +135,12 @@ class LocalAuthPinSection extends StatelessWidget {
     return LocalAuthSectionCard(
       style: style,
       title: texts.pinLockTitle,
-      subtitle: state.isPinSet ? texts.pinEnabledSubtitle : texts.pinNotSetSubtitle,
+      subtitle:
+          state.isPinSet ? texts.pinEnabledSubtitle : texts.pinNotSetSubtitle,
       icon: Icons.dialpad,
       trailing: LocalAuthStatusChip(
-        label: state.isPinSet ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
+        label:
+            state.isPinSet ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
         enabled: state.isPinSet,
       ),
       children: [
@@ -216,7 +218,9 @@ class LocalAuthBiometricSection extends StatelessWidget {
           : texts.biometricDisabledSubtitle,
       icon: Icons.fingerprint,
       trailing: LocalAuthStatusChip(
-        label: state.isBiometricEnabled ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
+        label: state.isBiometricEnabled
+            ? (isEn ? 'On' : 'Açık')
+            : (isEn ? 'Off' : 'Kapalı'),
         enabled: state.isBiometricEnabled,
       ),
       children: [
@@ -266,7 +270,9 @@ class LocalAuthPrivacyGuardSection extends StatelessWidget {
           : texts.privacyGuardDisabledSubtitle,
       icon: Icons.privacy_tip_outlined,
       trailing: LocalAuthStatusChip(
-        label: state.isPrivacyGuardEnabled ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
+        label: state.isPrivacyGuardEnabled
+            ? (isEn ? 'On' : 'Açık')
+            : (isEn ? 'Off' : 'Kapalı'),
         enabled: state.isPrivacyGuardEnabled,
       ),
       children: [
@@ -315,7 +321,9 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
       subtitle: subtitle,
       icon: Icons.lock_outline,
       trailing: LocalAuthStatusChip(
-        label: currentTimeout > 0 ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
+        label: currentTimeout > 0
+            ? (isEn ? 'On' : 'Açık')
+            : (isEn ? 'Off' : 'Kapalı'),
         enabled: currentTimeout > 0,
       ),
       children: [

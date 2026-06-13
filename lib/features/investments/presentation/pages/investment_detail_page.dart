@@ -75,7 +75,8 @@ class _InvestmentDetailView extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.birikimDetayi,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 SummaryCard(
@@ -89,7 +90,8 @@ class _InvestmentDetailView extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   context.l10n.portfoyDetayi,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ...investments.map(

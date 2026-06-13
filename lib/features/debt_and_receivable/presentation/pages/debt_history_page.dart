@@ -60,8 +60,12 @@ class _DebtHistoryView extends StatelessWidget {
               labelStyle:
                   const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               tabs: [
-                Tab(icon: const Icon(Icons.outbound), text: context.l10n.borcGecmisi),
-                Tab(icon: const Icon(Icons.call_received), text: context.l10n.alacakGecmisi),
+                Tab(
+                    icon: const Icon(Icons.outbound),
+                    text: context.l10n.borcGecmisi),
+                Tab(
+                    icon: const Icon(Icons.call_received),
+                    text: context.l10n.alacakGecmisi),
               ],
             ),
             const Expanded(
@@ -96,8 +100,7 @@ class _DebtHistoryTab extends StatelessWidget {
         if (paidDebts.isEmpty) {
           return _HistoryEmptyState(
             title: 'Henüz Kapanan Borç Yok',
-            message:
-                context.l10n.msgOdemesiTamamlanipKapatilanBorclarinizin,
+            message: context.l10n.msgOdemesiTamamlanipKapatilanBorclarinizin,
           );
         }
 
@@ -149,8 +152,7 @@ class _ReceivableHistoryTab extends StatelessWidget {
         if (paidReceivables.isEmpty) {
           return _HistoryEmptyState(
             title: 'Henüz Tahsil Edilen Alacak Yok',
-            message:
-                context.l10n.msgOdendiOlarakIsaretlenenAlacaklarinizin,
+            message: context.l10n.msgOdendiOlarakIsaretlenenAlacaklarinizin,
           );
         }
 
@@ -163,7 +165,8 @@ class _ReceivableHistoryTab extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             _HistorySummaryCard(
-              text: context.l10n.paidReceivablesLengthAlacakTahsil(paidReceivables.length),
+              text: context.l10n
+                  .paidReceivablesLengthAlacakTahsil(paidReceivables.length),
               amount: totalCollected,
             ),
             const SizedBox(height: 16),

@@ -42,7 +42,8 @@ class PendingRecurringDialog extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     context.l10n.bekleyenDuzenliIslemler,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -63,20 +64,23 @@ class PendingRecurringDialog extends StatelessWidget {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(tx.title),
-                          subtitle:
-                              Text(context.l10n.titleTarihDatestrNtutarTx(dateStr, tx.amount.toString())),
+                          subtitle: Text(context.l10n.titleTarihDatestrNtutarTx(
+                              dateStr, tx.amount.toString())),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                icon: const Icon(Icons.delete_outline,
+                                    color: Colors.red),
                                 onPressed: () {
-                                  context.read<PendingRecurringBloc>().add(
-                                      DeleteTransactionEvent(tx.id));
+                                  context
+                                      .read<PendingRecurringBloc>()
+                                      .add(DeleteTransactionEvent(tx.id));
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+                                icon: const Icon(Icons.edit_outlined,
+                                    color: Colors.blue),
                                 onPressed: () {
                                   _showEditDialog(context, tx);
                                 },

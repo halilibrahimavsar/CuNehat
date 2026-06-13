@@ -8,18 +8,33 @@ class LoadSettingsEvent extends LocalAuthSettingsEvent {}
 
 class ToggleBiometricEvent extends LocalAuthSettingsEvent {
   final bool enable;
+  final String? reason;
+  final String? signInTitle;
+  final String? cancelButton;
 
-  const ToggleBiometricEvent({required this.enable});
+  const ToggleBiometricEvent({
+    required this.enable,
+    this.reason,
+    this.signInTitle,
+    this.cancelButton,
+  });
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ToggleBiometricEvent &&
           runtimeType == other.runtimeType &&
-          enable == other.enable;
+          enable == other.enable &&
+          reason == other.reason &&
+          signInTitle == other.signInTitle &&
+          cancelButton == other.cancelButton;
 
   @override
-  int get hashCode => enable.hashCode;
+  int get hashCode =>
+      enable.hashCode ^
+      reason.hashCode ^
+      signInTitle.hashCode ^
+      cancelButton.hashCode;
 }
 
 class SavePinEvent extends LocalAuthSettingsEvent {

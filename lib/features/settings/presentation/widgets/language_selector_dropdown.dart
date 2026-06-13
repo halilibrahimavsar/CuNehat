@@ -37,9 +37,7 @@ class LanguageSelectorDropdown extends StatelessWidget {
             ],
             onChanged: (String? newValue) {
               if (newValue != null) {
-                context
-                    .read<LanguageBloc>()
-                    .add(LanguageChangeEvent(newValue));
+                context.read<LanguageBloc>().add(LanguageChangeEvent(newValue));
               }
             },
           ),

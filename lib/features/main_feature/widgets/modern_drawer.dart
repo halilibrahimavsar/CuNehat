@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/models/local_user.dart';
 import 'package:cunehat/core/services/google_drive_backup_service.dart';
 import 'package:cunehat/config/di/injection.dart';
@@ -118,7 +119,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       _buildAnimatedMenuItem(
                         index: 0,
                         icon: Icons.account_balance_wallet_outlined,
-                        title: 'Bütçe Planlama',
+                        title: context.l10n.budgetPlanning,
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.budgets);
@@ -130,7 +131,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       _buildAnimatedMenuItem(
                         index: 1,
                         icon: Icons.event_repeat_rounded,
-                        title: 'Düzenli İşlemler',
+                        title: context.l10n.recurringTransactions,
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.recurringTemplates);
@@ -142,7 +143,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       _buildAnimatedMenuItem(
                         index: 2,
                         icon: Icons.person_outline_rounded,
-                        title: 'Profilim',
+                        title: context.l10n.myProfile,
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.profile);
@@ -154,7 +155,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       _buildAnimatedMenuItem(
                         index: 3,
                         icon: Icons.settings_rounded,
-                        title: 'Ayarlar',
+                        title: context.l10n.settings,
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.settings);
@@ -206,7 +207,7 @@ class _ModernDrawerState extends State<ModernDrawer>
             children: [
               _buildAvatar(user, isDark, primary),
               const SizedBox(height: 15),
-              _buildUserInfo(user, isDark, theme),
+              _buildUserInfo(context, user, isDark, theme),
             ],
           ),
         ),
@@ -252,11 +253,16 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildUserInfo(LocalUser? user, bool isDark, ThemeData theme) {
+  Widget _buildUserInfo(
+    BuildContext context,
+    LocalUser? user,
+    bool isDark,
+    ThemeData theme,
+  ) {
     final driveUser = getIt<GoogleDriveBackupService>().currentUser;
     final displayName =
-        driveUser?.displayName ?? user?.displayName ?? "Kullanıcı";
-    final email = driveUser?.email ?? user?.email ?? "Yerel Mod";
+        driveUser?.displayName ?? user?.displayName ?? context.l10n.defaultUser;
+    final email = driveUser?.email ?? user?.email ?? context.l10n.yerelMod;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,14 +365,14 @@ class _ModernDrawerState extends State<ModernDrawer>
                     color: isDark ? Colors.white12 : theme.dividerColor,
                     height: 1),
                 const SizedBox(height: 12),
-                _buildDrawerMetricRow(
-                    'Bakiye', wallet.balance, Colors.white, theme),
+                _buildDrawerMetricRow(context.l10n.drawerBalance,
+                    wallet.balance, Colors.white, theme),
                 const SizedBox(height: 8),
-                _buildDrawerMetricRow(
-                    'Yatırım', wallet.investment, Colors.greenAccent, theme),
+                _buildDrawerMetricRow(context.l10n.drawerInvestment,
+                    wallet.investment, Colors.greenAccent, theme),
                 const SizedBox(height: 8),
-                _buildDrawerMetricRow(
-                    'Borç', wallet.debt, Colors.redAccent, theme),
+                _buildDrawerMetricRow(context.l10n.drawerDebt, wallet.debt,
+                    Colors.redAccent, theme),
               ],
             ),
           ),

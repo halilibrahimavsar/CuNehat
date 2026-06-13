@@ -1,3 +1,4 @@
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
@@ -46,8 +47,9 @@ class SliderButtonView extends StatelessWidget {
         onValueChanged: (_) => _onSliderInteraction(),
         onStateTap: (_) => _onSliderInteraction(),
         miniButtons: _buildMiniButtons(context),
-        subMenuItems: _buildSubMenuItems(),
+        subMenuItems: _buildSubMenuItems(context),
         selectedSubIndex: navigationController.selectedSubIndices,
+        texts: context.sliderTexts,
       ),
     );
   }
@@ -79,10 +81,33 @@ class SliderButtonView extends StatelessWidget {
 
     return MiniButtonData(
       icon: config.icon,
-      label: config.label,
+      label: _getLocalizedMiniButtonLabel(
+          context, config.actionType, config.label),
       color: color,
       onTap: () => _handleAction(config.actionType, context, activeWallet),
     );
+  }
+
+  String _getLocalizedMiniButtonLabel(
+      BuildContext context, String actionType, String defaultLabel) {
+    switch (actionType) {
+      case 'add_gold_investment':
+        return context.l10n.menuGold;
+      case 'add_stock_investment':
+        return context.l10n.menuStock;
+      case 'add_custom_investment':
+        return context.l10n.menuCustom;
+      case 'add_income':
+        return context.l10n.menuIncome;
+      case 'add_expense':
+        return context.l10n.menuExpense;
+      case 'add_debt':
+        return context.l10n.menuDebt;
+      case 'add_receivable':
+        return context.l10n.menuReceivable;
+      default:
+        return defaultLabel;
+    }
   }
 
   Color _getActionColor(String actionType) {
@@ -98,25 +123,42 @@ class SliderButtonView extends StatelessWidget {
     };
   }
 
-  Map<SliderState, List<SubMenuItem>> _buildSubMenuItems() {
+  Map<SliderState, List<SubMenuItem>> _buildSubMenuItems(BuildContext context) {
     return {
       for (final entry in MenuConfigs.configs.entries)
         entry.key: entry.value.subMenus
-            .map((config) => _createSubMenuItem(entry.key, config))
+            .map((config) => _createSubMenuItem(context, entry.key, config))
             .toList(),
     };
   }
 
   /// Create submenu item using viewIndex from config
   SubMenuItem _createSubMenuItem(
+    BuildContext context,
     SliderState sliderState,
     SubMenuConfig config,
   ) {
     return SubMenuItem(
       icon: config.icon,
-      label: config.label,
+      label: _getLocalizedSubMenuLabel(context, config.label),
       onTap: () => _handleSubMenuTap(config.viewIndex, sliderState),
     );
+  }
+
+  String _getLocalizedSubMenuLabel(BuildContext context, String rawLabel) {
+    switch (rawLabel.toLowerCase()) {
+      case 'detay':
+        return context.l10n.menuDetails;
+      case 'rapor':
+        return context.l10n.menuReport;
+      case 'bekleyen':
+        return context.l10n.menuPending;
+      case 'geçmiş':
+      case 'gecmis':
+        return context.l10n.menuHistory;
+      default:
+        return rawLabel;
+    }
   }
 
   /// Handle submenu tap - navigate to view in vertical stack

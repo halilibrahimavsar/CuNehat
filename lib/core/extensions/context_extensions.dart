@@ -76,4 +76,82 @@ extension LocalizationX on BuildContext {
       backgroundLockTileInfo: l.backgroundLockTileInfo,
     );
   }
+
+  /// Builds a localized SliderTexts model.
+  SliderTexts get sliderTexts {
+    final l = l10n;
+    return SliderTexts(
+      savings: l.sliderSavings,
+      transactions: l.sliderTransactions,
+      debt: l.sliderDebt,
+    );
+  }
+
+  /// Translates icon categories
+  String translateIconCategory(String categoryName) {
+    switch (categoryName) {
+      case 'Finans':
+        return l10n.categoryFinans;
+      case 'Grafikler':
+        return l10n.categoryGrafikler;
+      case 'İş & Ofis':
+        return l10n.categoryIsVeOfis;
+      case 'Alışveriş':
+        return l10n.categoryAlisveris;
+      case 'Yemek & İçecek':
+        return l10n.categoryYemekVeIcecek;
+      case 'Ulaşım':
+        return l10n.categoryUlasim;
+      case 'Ev & Yaşam':
+        return l10n.categoryEvVeYasam;
+      case 'Eğlence':
+        return l10n.categoryEglence;
+      case 'Sağlık & Spor':
+        return l10n.categorySaglikVeSpor;
+      case 'Eğitim':
+        return l10n.categoryEgitim;
+      case 'Kişisel Bakım':
+        return l10n.categoryKisiselBakim;
+      case 'Hayvanlar':
+        return l10n.categoryHayvanlar;
+      case 'Seyahat':
+        return l10n.categorySeyahat;
+      case 'Teknoloji':
+        return l10n.categoryTeknoloji;
+      case 'İletişim':
+        return l10n.categoryIletisim;
+      case 'Hediye & Bağış':
+        return l10n.categoryHediyeVeBagis;
+      case 'Hizmetler':
+        return l10n.categoryHizmetler;
+      case 'Diğer':
+        return l10n.categoryDiger;
+      default:
+        return categoryName;
+    }
+  }
+
+  /// Translates default transaction categories
+  String translateCategory(String categoryName) {
+    switch (categoryName) {
+      case 'Yemek':
+        return l10n.defaultCategoryFood;
+      case 'Ulaşım':
+        return l10n.defaultCategoryTransport;
+      case 'Alışveriş':
+        return l10n.defaultCategoryShopping;
+      case 'Fatura':
+        return l10n.defaultCategoryBills;
+      case 'Eğlence':
+        return l10n.defaultCategoryEntertainment;
+      case 'Maaş':
+        return l10n.defaultCategorySalary;
+      case 'Yatırım':
+        return l10n.defaultCategoryInvestment;
+      case 'Serbest':
+        return l10n.defaultCategoryFreelance;
+      default:
+        return categoryName;
+    }
+  }
 }

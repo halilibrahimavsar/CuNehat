@@ -1,5 +1,13 @@
 import 'package:equatable/equatable.dart';
 
+/// Widget katmanında l10n ile çevrilen dışa/içe aktarım mesaj tipleri.
+enum DataExportMessageType {
+  exportSuccess,
+  importSuccess,
+  noTransactionsToExport,
+  noValidTransactionsInCsv,
+}
+
 abstract class DataExportImportState extends Equatable {
   const DataExportImportState();
 
@@ -12,12 +20,16 @@ class DataExportImportInitial extends DataExportImportState {}
 class DataExportImportLoading extends DataExportImportState {}
 
 class DataExportImportSuccess extends DataExportImportState {
-  final String message;
+  /// Lokalize edilmiş mesaj tipi. Widget'ta l10n lookup ile çevrilir.
+  final DataExportMessageType messageType;
 
-  const DataExportImportSuccess(this.message);
+  /// İçe aktarımda atlanan satır sayısı (0 ise ek bilgi gösterilmez).
+  final int skippedRows;
+
+  const DataExportImportSuccess(this.messageType, {this.skippedRows = 0});
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [messageType, skippedRows];
 }
 
 class DataExportImportError extends DataExportImportState {

@@ -127,7 +127,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tooltipTarihAraligi => 'Tarih Aralığı';
 
   @override
-  String get msgSecilenTarihAraligindaIslem => 'Seçilen tarih aralığında işlem yok';
+  String get msgSecilenTarihAraligindaIslem =>
+      'Seçilen tarih aralığında işlem yok';
 
   @override
   String get degistir => 'Değiştir';
@@ -157,7 +158,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get labelMax => 'Max';
 
   @override
-  String get hintNotIstegeBagliOrn => 'Not (İsteğe bağlı) · örn. Market alışverişi';
+  String get hintNotIstegeBagliOrn =>
+      'Not (İsteğe bağlı) · örn. Market alışverişi';
 
   @override
   String get tekrarlamaIstegeBagli => 'Tekrarlama (İsteğe Bağlı)';
@@ -240,16 +242,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get beklenmeyenDurum => 'Beklenmeyen durum';
 
   @override
-  String get aktifCuzdaniniziDegistirmekIcin => '• Aktif cüzdanınızı değiştirmek için bir cüzdana tıklayın.';
+  String get aktifCuzdaniniziDegistirmekIcin =>
+      '• Aktif cüzdanınızı değiştirmek için bir cüzdana tıklayın.';
 
   @override
-  String get cuzdanBakiyeleriOtomatikOlarak => '• Cüzdan bakiyeleri otomatik olarak güncellenir.';
+  String get cuzdanBakiyeleriOtomatikOlarak =>
+      '• Cüzdan bakiyeleri otomatik olarak güncellenir.';
 
   @override
-  String get herCuzdaninKendiGelir => '• Her cüzdanın kendi gelir/gider kayıtları vardır.';
+  String get herCuzdaninKendiGelir =>
+      '• Her cüzdanın kendi gelir/gider kayıtları vardır.';
 
   @override
-  String msgTextsCheckfailedprefixETostring(Object checkFailedPrefix, Object error) {
+  String msgTextsCheckfailedprefixETostring(
+      Object checkFailedPrefix, Object error) {
     return '$checkFailedPrefix: $error';
   }
 
@@ -262,19 +268,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get msgCreateAPinFirst => 'Önce bir PIN oluşturun';
 
   @override
-  String get msgBiometricAuthenticationIsNot => 'Biyometrik kimlik doğrulama desteklenmiyor';
+  String get msgBiometricAuthenticationIsNot =>
+      'Biyometrik kimlik doğrulama desteklenmiyor';
 
   @override
-  String get msgBiometricAuthenticationFailed => 'Biyometrik kimlik doğrulama başarısız';
+  String get msgBiometricAuthenticationFailed =>
+      'Biyometrik kimlik doğrulama başarısız';
 
   @override
   String get msgBiometricLoginEnabled => 'Biyometrik giriş etkinleştirildi';
 
   @override
-  String get msgBiometricLoginDisabled => 'Biyometrik giriş devre dışı bırakıldı';
+  String get msgBiometricLoginDisabled =>
+      'Biyometrik giriş devre dışı bırakıldı';
 
   @override
-  String get msgPINAlreadyExistsUse => 'PIN zaten mevcut, bunun yerine PIN değiştirmeyi kullanın';
+  String get msgPINAlreadyExistsUse =>
+      'PIN zaten mevcut, bunun yerine PIN değiştirmeyi kullanın';
 
   @override
   String get msgPINsDoNotMatch => 'PIN\'ler eşleşmiyor';
@@ -295,7 +305,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get msgPINRemoved => 'PIN kaldırıldı';
 
   @override
-  String get msgBackgroundLockAndPrivacy => 'Arka plan kilidi ve Ekran Koruması etkinleştirildi';
+  String get msgBackgroundLockAndPrivacy =>
+      'Arka plan kilidi ve Ekran Koruması etkinleştirildi';
 
   @override
   String get securitySettings => 'Güvenlik Ayarları';
@@ -313,10 +324,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get removePin => 'PIN Kaldır';
 
   @override
-  String get msgBiometricAuthenticationCannotBe => 'Biyometrik kimlik doğrulama bu cihazda kullanılamaz.';
+  String get msgBiometricAuthenticationCannotBe =>
+      'Biyometrik kimlik doğrulama bu cihazda kullanılamaz.';
 
   @override
-  String get msgCreateAPinFirst2 => 'Biyometrik girişi etkinleştirmek için önce bir PIN oluşturun.';
+  String get msgCreateAPinFirst2 =>
+      'Biyometrik girişi etkinleştirmek için önce bir PIN oluşturun.';
 
   @override
   String get unifiedFeaturesDemo => 'Birleşik Özellikler Demosu';
@@ -382,7 +395,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get verifyPinTitle => 'PIN Doğrula';
 
   @override
-  String get deletePinConfirmMessage => 'PIN kaldırma biyometrik girişi de devre dışı bırakır. Devam edilsin mi?';
+  String get deletePinConfirmMessage =>
+      'PIN kaldırma biyometrik girişi de devre dışı bırakır. Devam edilsin mi?';
 
   @override
   String get saveLabel => 'Kaydet';
@@ -415,7 +429,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get biometricLoginTitle => 'Biyometrik Giriş';
 
   @override
-  String get biometricNotAvailableSubtitle => 'Biyometrik kimlik doğrulama bu cihazda kullanılamaz';
+  String get biometricNotAvailableSubtitle =>
+      'Biyometrik kimlik doğrulama bu cihazda kullanılamaz';
 
   @override
   String get biometricEnabledSubtitle => 'Biyometrik giriş etkin';
@@ -427,7 +442,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get biometricAuthTileTitle => 'Biyometrik Kimlik Doğrulama';
 
   @override
-  String get biometricAuthTileSubtitleOn => 'Açık - Parmak izi veya yüz tanıma ile giriş yapın';
+  String get biometricAuthTileSubtitleOn =>
+      'Açık - Parmak izi veya yüz tanıma ile giriş yapın';
 
   @override
   String get biometricAuthTileSubtitleOff => 'Kapalı';
@@ -445,7 +461,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get screenProtectionTileTitle => 'Ekran Koruması';
 
   @override
-  String get screenProtectionTileSubtitleOn => 'Açık - Uygulama arka plandayken içeriği gizle';
+  String get screenProtectionTileSubtitleOn =>
+      'Açık - Uygulama arka plandayken içeriği gizle';
 
   @override
   String get screenProtectionTileSubtitleOff => 'Kapalı';
@@ -460,13 +477,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backgroundLockSubtitleOff => 'Kapalı';
 
   @override
-  String get backgroundLockTileTitle => 'Uygulama arka planda kaldığında kimlik doğrulama gerektir';
+  String get backgroundLockTileTitle =>
+      'Uygulama arka planda kaldığında kimlik doğrulama gerektir';
 
   @override
-  String get backgroundLockTileSubtitle => 'Arka plan kilidini etkinleştirmek için bir PIN ayarlayın veya biyometrik girişi açın.';
+  String get backgroundLockTileSubtitle =>
+      'Arka plan kilidini etkinleştirmek için bir PIN ayarlayın veya biyometrik girişi açın.';
 
   @override
-  String get backgroundLockTileInfo => 'Not: Uygulamaya dönerken kimlik doğrulama ekranı görünür.';
+  String get backgroundLockTileInfo =>
+      'Not: Uygulamaya dönerken kimlik doğrulama ekranı görünür.';
 
   @override
   String msgIncorrectPinRemainingTries(Object newAttempts) {
@@ -492,7 +512,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get googleDriveBackup => 'Google Drive Yedekleme';
 
   @override
-  String get googleDriveBackupDesc => 'Verilerinizin güvenliği için kendi kişisel Google Drive hesabınıza yedekleme yapın.';
+  String get googleDriveBackupDesc =>
+      'Verilerinizin güvenliği için kendi kişisel Google Drive hesabınıza yedekleme yapın.';
 
   @override
   String get connectGoogleDrive => 'Google Drive\'a Bağlan';
@@ -519,28 +540,33 @@ class AppLocalizationsTr extends AppLocalizations {
   String get restoreDataTitle => 'Verileri Geri Yükle?';
 
   @override
-  String get restoreDataDesc => 'Buluttaki verileriniz cihazınızdaki mevcut verilerin üzerine yazılacaktır. Bu işlem geri alınamaz.';
+  String get restoreDataDesc =>
+      'Buluttaki verileriniz cihazınızdaki mevcut verilerin üzerine yazılacaktır. Bu işlem geri alınamaz.';
 
   @override
   String get googleDriveConnected => 'Google Drive başarıyla bağlandı.';
 
   @override
-  String get googleDriveConnectionFailed => 'Google Drive bağlantısı başarısız oldu.';
+  String get googleDriveConnectionFailed =>
+      'Google Drive bağlantısı başarısız oldu.';
 
   @override
   String get googleDriveDisconnected => 'Google Drive bağlantısı kesildi.';
 
   @override
-  String get dataBackedUpSuccess => 'Veriler Google Drive\'a başarıyla yedeklendi.';
+  String get dataBackedUpSuccess =>
+      'Veriler Google Drive\'a başarıyla yedeklendi.';
 
   @override
   String get backupFailed => 'Yedekleme başarısız oldu.';
 
   @override
-  String get dataRestoredSuccess => 'Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.';
+  String get dataRestoredSuccess =>
+      'Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.';
 
   @override
-  String get restoreFailedNoBackup => 'Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.';
+  String get restoreFailedNoBackup =>
+      'Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.';
 
   @override
   String get welcomeUser => 'Hoşgeldiniz';
@@ -552,22 +578,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dataExportImport => 'İşlem Dışa / İçe Aktar';
 
   @override
-  String get dataExportImportDesc => 'Tüm işlemlerinizi standart CSV formatında dışa aktararak diğer uygulamalarda kullanabilir veya yedekleyebilirsiniz.';
+  String get dataExportImportDesc =>
+      'Tüm işlemlerinizi standart CSV formatında dışa aktararak diğer uygulamalarda kullanabilir veya yedekleyebilirsiniz.';
 
   @override
-  String get activeWalletRequiredForExport => 'Dışa aktarım için aktif bir cüzdan gereklidir.';
+  String get activeWalletRequiredForExport =>
+      'Dışa aktarım için aktif bir cüzdan gereklidir.';
 
   @override
   String get uygulamaBaslatilamadi => 'Uygulama başlatılamadı';
 
   @override
-  String get verilerinizSilinmediTekrarDeneyin => 'Verileriniz silinmedi. Tekrar deneyin; sorun sürerse ';
+  String get verilerinizSilinmediTekrarDeneyin =>
+      'Verileriniz silinmedi. Tekrar deneyin; sorun sürerse ';
 
   @override
   String get ikonBulunamadi => 'İkon bulunamadı';
 
   @override
-  String valueTostringasfixedCurrencysymbol(Object toStringAsFixed, Object currencySymbol) {
+  String valueTostringasfixedCurrencysymbol(
+      Object toStringAsFixed, Object currencySymbol) {
     return '$toStringAsFixed $currencySymbol';
   }
 
@@ -578,7 +608,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get henuzButceYok => 'Henüz bütçe yok';
 
   @override
-  String get kategorilerinizeAylikHarcamaLimiti => 'Kategorilerinize aylık harcama limiti koyun,\nharcamalarınızı buradan takip edin.';
+  String get kategorilerinizeAylikHarcamaLimiti =>
+      'Kategorilerinize aylık harcama limiti koyun,\nharcamalarınızı buradan takip edin.';
 
   @override
   String get bUAyToplamHarcama => 'BU AY TOPLAM HARCAMA';
@@ -604,7 +635,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get buKategorininButcesiVar => 'Bu kategorinin bütçesi var; limit güncellenecek.';
+  String get buKategorininButcesiVar =>
+      'Bu kategorinin bütçesi var; limit güncellenecek.';
 
   @override
   String get finansalTakip => 'Finansal Takip';
@@ -626,7 +658,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get msgOdemesiTamamlanipKapatilanBorclarinizin => 'Ödemesi tamamlanıp kapatılan borçlarınızın geçmişi burada görüntülenecektir.';
+  String get msgOdemesiTamamlanipKapatilanBorclarinizin =>
+      'Ödemesi tamamlanıp kapatılan borçlarınızın geçmişi burada görüntülenecektir.';
 
   @override
   String paidDebtsLengthBorcKapandi(Object length) {
@@ -634,7 +667,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get msgOdendiOlarakIsaretlenenAlacaklarinizin => 'Ödendi olarak işaretlenen alacaklarınızın geçmişi burada görüntülenecektir.';
+  String get msgOdendiOlarakIsaretlenenAlacaklarinizin =>
+      'Ödendi olarak işaretlenen alacaklarınızın geçmişi burada görüntülenecektir.';
 
   @override
   String paidReceivablesLengthAlacakTahsil(Object length) {
@@ -648,7 +682,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kKDFVeBsmvVergilerini => 'KKDF ve BSMV vergilerini (%30) dahil et';
 
   @override
-  String get tuketiciKredilerindeFaizeYasal => 'Tüketici kredilerinde faize yasal olarak %15 KKDF ve %15 BSMV eklenir. Konut vb. kredilerde bu vergiler %0 olabilir. Duruma göre aktifleştirin.';
+  String get tuketiciKredilerindeFaizeYasal =>
+      'Tüketici kredilerinde faize yasal olarak %15 KKDF ve %15 BSMV eklenir. Konut vb. kredilerde bu vergiler %0 olabilir. Duruma göre aktifleştirin.';
 
   @override
   String iTaksitAppformattersDateshort(Object i, Object scheduledDate) {
@@ -674,7 +709,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get otomatikIslem => 'Otomatik işlem';
 
   @override
-  String get buIslemOtomatikOlusturuldu => 'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.';
+  String get buIslemOtomatikOlusturuldu =>
+      'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.';
 
   @override
   String get nakitAkisi => 'Nakit Akışı';
@@ -686,19 +722,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get detayGosterilecekIslemYok => 'Detay Gösterilecek İşlem Yok';
 
   @override
-  String get gelirVeyaGiderKaydettikten => 'Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.';
+  String get gelirVeyaGiderKaydettikten =>
+      'Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.';
 
   @override
   String get henuzIslemYok => 'Henüz işlem yok';
 
   @override
-  String get buDonemIcinKayit => 'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.';
+  String get buDonemIcinKayit =>
+      'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.';
 
   @override
   String get tumIslemlerinizGuncel => 'Tüm İşlemleriniz Güncel';
 
   @override
-  String get bekleyenCevrimdisiIslemBulunmuyor => 'Bekleyen çevrimdışı işlem bulunmuyor. Cihazınız internete bağlandığında veya yeni veriler girildiğinde senkronizasyon otomatik olarak tetiklenir.';
+  String get bekleyenCevrimdisiIslemBulunmuyor =>
+      'Bekleyen çevrimdışı işlem bulunmuyor. Cihazınız internete bağlandığında veya yeni veriler girildiğinde senkronizasyon otomatik olarak tetiklenir.';
 
   @override
   String get haftalikNetAkis => 'Haftalık Net Akış';
@@ -715,12 +754,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get buKategoriyeAitIslem => 'Bu kategoriye ait işlem bulunmuyor.';
 
   @override
-  String formatMoneyItemTotalamountPercent(Object totalAmount, Object toStringAsFixed) {
+  String formatMoneyItemTotalamountPercent(
+      Object totalAmount, Object toStringAsFixed) {
     return '$totalAmount (%$toStringAsFixed)';
   }
 
   @override
-  String get buDonemIcinHenuz => 'Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.';
+  String get buDonemIcinHenuz =>
+      'Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.';
 
   @override
   String get ikonSecin => 'İkon Seçin';
@@ -734,7 +775,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get asagidakiButondanEkleyebilirsiniz => 'Aşağıdaki butondan ekleyebilirsiniz';
+  String get asagidakiButondanEkleyebilirsiniz =>
+      'Aşağıdaki butondan ekleyebilirsiniz';
 
   @override
   String get varsayilan => 'Varsayılan';
@@ -764,7 +806,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get yeni => 'Yeni';
 
   @override
-  String appFormattersDateshortFormatStartdate(Object startDate, Object endDate) {
+  String appFormattersDateshortFormatStartdate(
+      Object startDate, Object endDate) {
     return '$startDate - $endDate';
   }
 
@@ -798,7 +841,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get henuzYatirimKaydiYok => 'Henüz Yatırım Kaydı Yok';
 
   @override
-  String get yatirimlariniziEklediktenSonraDetayli => 'Yatırımlarınızı ekledikten sonra detaylı analizler burada görünecektir.';
+  String get yatirimlariniziEklediktenSonraDetayli =>
+      'Yatırımlarınızı ekledikten sonra detaylı analizler burada görünecektir.';
 
   @override
   String guncelDegerFormatmoneyInvestment(Object currentValue) {
@@ -822,7 +866,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mevcutDeger => 'Mevcut Değer';
 
   @override
-  String get maliyetiDegistirirsenizFarkCuzdana => 'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.';
+  String get maliyetiDegistirirsenizFarkCuzdana =>
+      'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.';
 
   @override
   String get hesapla => 'Hesapla';
@@ -877,7 +922,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kAZANCZarar => 'KAZANÇ / ZARAR';
 
   @override
-  String isProfitTotalprofitpercentageTostringasfixed(Object isProfit, Object toStringAsFixed) {
+  String isProfitTotalprofitpercentageTostringasfixed(
+      Object isProfit, Object toStringAsFixed) {
     return '$isProfit$toStringAsFixed%';
   }
 
@@ -893,13 +939,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get henuzDuzenliIslemYok => 'Henüz düzenli işlem yok';
 
   @override
-  String get islemEklerkenTekrarSikligi => 'İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.';
+  String get islemEklerkenTekrarSikligi =>
+      'İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.';
 
   @override
   String get bekleyenDuzenliIslemler => 'Bekleyen Düzenli İşlemler';
 
   @override
-  String get vadesiGelmisIslemlerinizVar => 'Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.';
+  String get vadesiGelmisIslemlerinizVar =>
+      'Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.';
 
   @override
   String titleTarihDatestrNtutarTx(Object dateStr, Object amount) {
@@ -925,7 +973,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get otomatikHesaplananDegerler => 'Otomatik hesaplanan değerler:';
 
   @override
-  String get borcAlacakYatirimKayitlarindan => 'Borç/alacak/yatırım kayıtlarından türetilir; buradan düzenlenemez.';
+  String get borcAlacakYatirimKayitlarindan =>
+      'Borç/alacak/yatırım kayıtlarından türetilir; buradan düzenlenemez.';
 
   @override
   String get renkSecin => 'Renk Seçin:';
@@ -960,13 +1009,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aktif => 'Aktif';
 
   @override
-  String get aktifOlanCuzdanSilinemez => '• Aktif olan cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yapmalısınız.';
+  String get aktifOlanCuzdanSilinemez =>
+      '• Aktif olan cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yapmalısınız.';
 
   @override
-  String get cuzdanlarinizaAitBorcAlacak => '• Cüzdanlarınıza ait Borç, Alacak ve Birikim tutarlarını düzenle sayfasından manuel olarak yönetebilirsiniz.';
+  String get cuzdanlarinizaAitBorcAlacak =>
+      '• Cüzdanlarınıza ait Borç, Alacak ve Birikim tutarlarını düzenle sayfasından manuel olarak yönetebilirsiniz.';
 
   @override
-  String get msgPINOrBiometricLogin => 'PIN veya biyometrik giriş arka plan kilidi için gereklidir';
+  String get msgPINOrBiometricLogin =>
+      'PIN veya biyometrik giriş arka plan kilidi için gereklidir';
 
   @override
   String get sharedFeatures => 'Paylaşılan Özellikler';
@@ -994,4 +1046,665 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tamaminiOde => 'Tamamını öde';
+
+  @override
+  String get sliderSavings => 'BİRİKİM';
+
+  @override
+  String get sliderTransactions => 'İŞLEMLER';
+
+  @override
+  String get sliderDebt => 'BORÇ';
+
+  @override
+  String get myProfile => 'Profilim';
+
+  @override
+  String get recurringTransactions => 'Düzenli İşlemler';
+
+  @override
+  String get budgetPlanning => 'Bütçe Planlama';
+
+  @override
+  String get drawerBalance => 'Bakiye';
+
+  @override
+  String get drawerInvestment => 'Yatırım';
+
+  @override
+  String get drawerDebt => 'Borç';
+
+  @override
+  String get createWallet => 'Cüzdan Oluştur';
+
+  @override
+  String get selectWallet => 'Cüzdan Seçin';
+
+  @override
+  String get wallet => 'Cüzdan';
+
+  @override
+  String get menuGold => 'Altın';
+
+  @override
+  String get menuStock => 'Hisse';
+
+  @override
+  String get menuCustom => 'Özel';
+
+  @override
+  String get menuDetails => 'Detay';
+
+  @override
+  String get menuIncome => 'Gelir';
+
+  @override
+  String get menuExpense => 'Gider';
+
+  @override
+  String get menuReport => 'Rapor';
+
+  @override
+  String get menuPending => 'Bekleyen';
+
+  @override
+  String get menuDebt => 'Borç';
+
+  @override
+  String get menuReceivable => 'Alacak';
+
+  @override
+  String get menuHistory => 'Geçmiş';
+
+  @override
+  String get themeSysLight => 'Sistem [Açık]';
+
+  @override
+  String get themeSysDark => 'Sistem [Kapalı]';
+
+  @override
+  String get cuzdanOlusturunuz => 'Cüzdan oluşturunuz';
+
+  @override
+  String get cuzdanSeciniz => 'Cüzdan seçiniz';
+
+  @override
+  String get yerelMod => 'Yerel Mod';
+
+  @override
+  String get henuzCuzdanOlusturmadiniz => 'Henüz cüzdan oluşturmadınız';
+
+  @override
+  String get cuzdanOlusturuldu => 'Cüzdan oluşturuldu!';
+
+  @override
+  String get cuzdanGuncellendi => 'Cüzdan güncellendi!';
+
+  @override
+  String get cuzdanSilindi => 'Cüzdan silindi!';
+
+  @override
+  String get cuzdanSecildi => 'Cüzdan seçildi';
+
+  @override
+  String get disaAktarilacakIslemBulunamadi =>
+      'Dışa aktarılacak işlem bulunamadı.';
+
+  @override
+  String get islemlerDisaAktarildi => 'İşlemler başarıyla dışa aktarıldı.';
+
+  @override
+  String get csvGecerliIslemBulunamadi =>
+      'CSV dosyasında geçerli işlem bulunamadı.';
+
+  @override
+  String get iceAktarilanCuzdanPrefix => 'İçe Aktarılan Cüzdan';
+
+  @override
+  String get verilerIceAktarildi =>
+      'Veriler başarıyla içe aktarıldı. Yeni cüzdan oluşturuldu ve seçildi.';
+
+  @override
+  String get cuzdanOlusturulamadi => 'Cüzdan oluşturulamadı';
+
+  @override
+  String satirAtlandi(int count) {
+    return '$count satır tarih/tutar hatası nedeniyle atlandı.';
+  }
+
+  @override
+  String get guncelle => 'Güncelle';
+
+  @override
+  String get kaydet => 'Kaydet';
+
+  @override
+  String get islem => 'İşlem';
+
+  @override
+  String get daily => 'Günlük';
+
+  @override
+  String get weekly => 'Haftalık';
+
+  @override
+  String get monthly => 'Aylık';
+
+  @override
+  String get yearly => 'Yıllık';
+
+  @override
+  String get kategoriDuzenle => 'Kategori Düzenle';
+
+  @override
+  String get yeniKategori => 'Yeni Kategori';
+
+  @override
+  String get kategoriAdiBosOlamaz => 'Kategori adı boş olamaz';
+
+  @override
+  String get enAz2KarakterOlmali => 'En az 2 karakter olmalı';
+
+  @override
+  String get kategoriOlusturuldu => 'Kategori oluşturuldu!';
+
+  @override
+  String get kategoriGuncellendi => 'Kategori güncellendi!';
+
+  @override
+  String get kategoriSilindi => 'Kategori silindi!';
+
+  @override
+  String get kategoriSilTitle => 'Kategori Sil';
+
+  @override
+  String kategoriSilConfirmMessage(Object id) {
+    return '\"$id\" kategorisini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.';
+  }
+
+  @override
+  String kategorilerYuklenemedi(Object error) {
+    return 'Kategoriler yüklenemedi: $error';
+  }
+
+  @override
+  String get giderKategorileri => 'Gider Kategorileri';
+
+  @override
+  String get gelirKategorileri => 'Gelir Kategorileri';
+
+  @override
+  String get varsayilanKategoriYok => 'Varsayılan kategori yok';
+
+  @override
+  String get henuzOzelKategoriYok => 'Henüz özel kategori yok';
+
+  @override
+  String get duzenleSubtitle => 'Tutar, tarih, kategori ve diğer detaylar';
+
+  @override
+  String get islemiSil => 'İşlemi Sil';
+
+  @override
+  String get silSubtitle => 'Bakiye eski haline döner';
+
+  @override
+  String get gramAltin => 'Gram Altın';
+
+  @override
+  String get ceyrekAltin => 'Çeyrek Altın';
+
+  @override
+  String get yarimAltin => 'Yarım Altın';
+
+  @override
+  String get tamAltin => 'Tam Altın';
+
+  @override
+  String get cumhuriyetAltini => 'Cumhuriyet Altını';
+
+  @override
+  String get ataAltin => 'Ata Altın';
+
+  @override
+  String get fiyatAliniyor => 'Fiyat alınıyor...';
+
+  @override
+  String get fiyatAlinamadi => 'Fiyat alınamadı.';
+
+  @override
+  String guncelFiyatFormatTry(Object price) {
+    return 'Güncel Fiyat: $price ₺';
+  }
+
+  @override
+  String guncelFiyatFormatForeign(
+      Object price, Object currency, Object priceTl) {
+    return 'Güncel Fiyat: $price $currency (≈$priceTl ₺)';
+  }
+
+  @override
+  String get gecerliYatirimMiktariGirin => 'Geçerli bir yatırım miktarı girin';
+
+  @override
+  String get gecerliMevcutDegerGirin => 'Geçerli bir mevcut değer girin';
+
+  @override
+  String get altinYatirimi => 'Altın Yatırımı';
+
+  @override
+  String get altinTuruVeOtomatikFiyat => 'Altın Türü & Otomatik Fiyat';
+
+  @override
+  String get yatirimDetaylari => 'Yatırım Detayları';
+
+  @override
+  String get altinNotHint => 'Not (İsteğe bağlı) · örn. Düğün Altınları';
+
+  @override
+  String get maliyetYatirilanAnaPara => 'Maliyet (Yatırılan Ana Para)';
+
+  @override
+  String get hedefTutarIstegeBagli => 'Hedef Tutar (İsteğe Bağlı)';
+
+  @override
+  String get hedefKategorisi => 'Hedef Kategorisi';
+
+  @override
+  String get renkSecimi => 'Renk Seçimi';
+
+  @override
+  String get altinYatiriminiDuzenle => 'Altın Yatırımını Düzenle';
+
+  @override
+  String get yeniAltinEkle => 'Yeni Altın Ekle';
+
+  @override
+  String get adet => 'Adet';
+
+  @override
+  String get sembolGirin => 'Sembol girin!';
+
+  @override
+  String get hisseYatirimi => 'Hisse Yatırımı';
+
+  @override
+  String get hisseSenediBul => 'Hisse Senedi Bul';
+
+  @override
+  String get hisseNotHint => 'Not (İsteğe bağlı) · örn. Uzun vade alım';
+
+  @override
+  String get hisseYatiriminiDuzenle => 'Hisse Yatırımını Düzenle';
+
+  @override
+  String get yeniHisseEkle => 'Yeni Hisse Ekle';
+
+  @override
+  String get gecerliHedefTutarGirin => 'Geçerli bir hedef tutar girin';
+
+  @override
+  String get ozelYatirimi => 'Özel Yatırım';
+
+  @override
+  String get customNotHint => 'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz';
+
+  @override
+  String get ozelYatiriminiDuzenle => 'Özel Yatırımını Düzenle';
+
+  @override
+  String get yeniOzelYatirimEkle => 'Yeni Özel Yatırım Ekle';
+
+  @override
+  String get varlikEkle => 'Varlık Ekle';
+
+  @override
+  String get hedefeParaEkle => 'Hedefe Para Ekle';
+
+  @override
+  String get paraEkle => 'Para Ekle';
+
+  @override
+  String get yeniAlimMiktarVeOdenenTutar => 'Yeni alım: miktar ve ödenen tutar';
+
+  @override
+  String get maliyeteVeDegereEklenir =>
+      'Maliyete ve değere eklenir, cüzdandan düşer';
+
+  @override
+  String get fiyatiGuncelle => 'Fiyatı Güncelle';
+
+  @override
+  String get canliFiyatGuncellemeAciklamasi =>
+      'Güncel değer = miktar × canlı fiyat; bakiyeyi etkilemez';
+
+  @override
+  String get duzenleYatirimSubtitle => 'İsim, maliyet, hedef ve diğer detaylar';
+
+  @override
+  String get satSubtitle => 'Güncel değer cüzdana gelir olarak işlenir';
+
+  @override
+  String get kaydiSilSubtitle =>
+      'Hatalı giriş düzeltme; alım gideri iade edilir';
+
+  @override
+  String varlikEkleTitle(Object name) {
+    return '$name · Varlık Ekle';
+  }
+
+  @override
+  String paraEkleTitle(Object name) {
+    return '$name · Para Ekle';
+  }
+
+  @override
+  String get alinanMiktarAltinHint => 'Alınan miktar (örn. gram/adet)';
+
+  @override
+  String get alinanAdetHisseHint => 'Alınan adet (lot)';
+
+  @override
+  String get odenenTutarHint => 'Ödenen tutar (₺) · hediye ise 0';
+
+  @override
+  String get tutarHint => 'Tutar (₺)';
+
+  @override
+  String get gecerliMiktarGirin => 'Geçerli bir miktar girin';
+
+  @override
+  String get gecerliOdenenTutarGirin => 'Geçerli bir ödenen tutar girin';
+
+  @override
+  String get gecerliTutarGirin => 'Geçerli bir tutar girin';
+
+  @override
+  String get baslikGirin => 'Başlık girin';
+
+  @override
+  String get borcluKisiAdiGirin => 'Borçlu kişi adını girin';
+
+  @override
+  String get kurumKisiGirin => 'Kurum/kişi girin';
+
+  @override
+  String get vadeEnAz1Olmali => 'Vade (ay) en az 1 olmalı';
+
+  @override
+  String get aylikTaksitTutariniGirin => 'Aylık taksit tutarını girin';
+
+  @override
+  String get borcTuruLabel => 'Borç türü';
+
+  @override
+  String get borcBaslikHint => 'Başlık · örn. Konut Kredisi';
+
+  @override
+  String get kurumKisiHint => 'Kurum / Kişi · örn. Ziraat Bankası';
+
+  @override
+  String get kisiAdiHint => 'Kişi Adı';
+
+  @override
+  String get vadeVeDetaylarLabel => 'Vade & detaylar';
+
+  @override
+  String get borcluKisiAdiHint => 'Borçlu kişi adı';
+
+  @override
+  String get borcDuzenleTitle => 'Borç Düzenle';
+
+  @override
+  String get alacakDuzenleTitle => 'Alacak Düzenle';
+
+  @override
+  String get yeniBorcTitle => 'Yeni Borç';
+
+  @override
+  String get yeniAlacakTitle => 'Yeni Alacak';
+
+  @override
+  String get krediTutariAnaPara => 'Kredi tutarı (ana para)';
+
+  @override
+  String get borcTutariAnaPara => 'Borç tutarı (ana para)';
+
+  @override
+  String get alacakTutari => 'Alacak tutarı';
+
+  @override
+  String get toplamTutar => 'Toplam tutar';
+
+  @override
+  String get vadeFarkiLabel => 'Vade farkı';
+
+  @override
+  String get toplamFaizLabel => 'Toplam faiz';
+
+  @override
+  String get aylikTaksitLabel => 'Aylık taksit (≈)';
+
+  @override
+  String get debtTypeBankLoan => 'Banka Kredisi';
+
+  @override
+  String get debtTypeInstallment => 'Taksitli';
+
+  @override
+  String get debtTypePersonal => 'Kişisel';
+
+  @override
+  String get debtTypeOther => 'Diğer';
+
+  @override
+  String get vadeAyHint => 'Vade (ay)';
+
+  @override
+  String get aylikTaksitHint => 'Aylık Taksit';
+
+  @override
+  String get vadeFarkiYuzdeHint => 'Vade Farkı %';
+
+  @override
+  String get aylikFaizYuzdeHint => 'Aylık Faiz %';
+
+  @override
+  String get gecikmeFaiziYuzdeHint => 'Gecikme faizi (%)';
+
+  @override
+  String get baslangicLabel => 'Başlangıç';
+
+  @override
+  String get vadeLabel => 'Vade';
+
+  @override
+  String get toplamBorcLabel => 'Toplam Borç:';
+
+  @override
+  String get odenenLabel => 'Ödenen:';
+
+  @override
+  String get kalanLabel => 'Kalan:';
+
+  @override
+  String get kalanTutardanFazlaOlamaz => 'Kalan tutardan fazla olamaz';
+
+  @override
+  String taksitPlaniFormat(Object months) {
+    return 'Taksit Planı ($months ay)';
+  }
+
+  @override
+  String odemeGecmisiFormat(Object count) {
+    return 'Ödeme Geçmişi ($count)';
+  }
+
+  @override
+  String get gecikmis => 'Gecikmiş';
+
+  @override
+  String get bekleniyor => 'Bekleniyor';
+
+  @override
+  String get cuzdanDuzenleTitle => 'Cüzdanı Düzenle';
+
+  @override
+  String get yeniCuzdanEkleTitle => 'Yeni Cüzdan Ekle';
+
+  @override
+  String get cuzdanAdiBosOlamaz => 'Cüzdan adı boş olamaz';
+
+  @override
+  String get cuzdanAdiEnAz2Karakter => 'Cüzdan adı en az 2 karakter olmalı';
+
+  @override
+  String get bakiyeLabel => 'Bakiye *';
+
+  @override
+  String get baslangicBakiyesiLabel => 'Başlangıç Bakiyesi *';
+
+  @override
+  String get bakiyeBosOlamaz => 'Bakiye boş olamaz';
+
+  @override
+  String get gecerliBirSayiGirin => 'Geçerli bir sayı girin';
+
+  @override
+  String get tutarCokBuyuk => 'Tutar çok büyük';
+
+  @override
+  String get borcLabel => 'Borç';
+
+  @override
+  String get alacakLabel => 'Alacak';
+
+  @override
+  String get birikimLabel => 'Birikim';
+
+  @override
+  String get olustur => 'Oluştur';
+
+  @override
+  String get ozelRenkSecin => 'Özel Renk Seçin';
+
+  @override
+  String get cuzdanYonetimiTitle => 'Cüzdan Yönetimi';
+
+  @override
+  String get dateBadgeToday => 'BUGÜN';
+
+  @override
+  String get dateBadgeYesterday => 'DÜN';
+
+  @override
+  String get dateBadgeThisWeek => 'BU HAFTA';
+
+  @override
+  String get dateBadgeLastWeek => 'GEÇEN HAFTA';
+
+  @override
+  String get dateBadgeThisMonth => 'BU AY';
+
+  @override
+  String get dateBadgeLastMonth => 'GEÇEN AY';
+
+  @override
+  String get categoryFinans => 'Finans';
+
+  @override
+  String get categoryGrafikler => 'Grafikler';
+
+  @override
+  String get categoryIsVeOfis => 'İş & Ofis';
+
+  @override
+  String get categoryAlisveris => 'Alışveriş';
+
+  @override
+  String get categoryYemekVeIcecek => 'Yemek & İçecek';
+
+  @override
+  String get categoryUlasim => 'Ulaşım';
+
+  @override
+  String get categoryEvVeYasam => 'Ev & Yaşam';
+
+  @override
+  String get categoryEglence => 'Eğlence';
+
+  @override
+  String get categorySaglikVeSpor => 'Sağlık & Spor';
+
+  @override
+  String get categoryEgitim => 'Eğitim';
+
+  @override
+  String get categoryKisiselBakim => 'Kişisel Bakım';
+
+  @override
+  String get categoryHayvanlar => 'Hayvanlar';
+
+  @override
+  String get categorySeyahat => 'Seyahat';
+
+  @override
+  String get categoryTeknoloji => 'Teknoloji';
+
+  @override
+  String get categoryIletisim => 'İletişim';
+
+  @override
+  String get categoryHediyeVeBagis => 'Hediye & Bağış';
+
+  @override
+  String get categoryHizmetler => 'Hizmetler';
+
+  @override
+  String get categoryDiger => 'Diğer';
+
+  @override
+  String get defaultCategoryFood => 'Yemek';
+
+  @override
+  String get defaultCategoryTransport => 'Ulaşım';
+
+  @override
+  String get defaultCategoryShopping => 'Alışveriş';
+
+  @override
+  String get defaultCategoryBills => 'Fatura';
+
+  @override
+  String get defaultCategoryEntertainment => 'Eğlence';
+
+  @override
+  String get defaultCategorySalary => 'Maaş';
+
+  @override
+  String get defaultCategoryInvestment => 'Yatırım';
+
+  @override
+  String get defaultCategoryFreelance => 'Serbest';
+
+  @override
+  String get kategorisiz => 'Kategorisiz';
+
+  @override
+  String get detailLabelTarih => 'Tarih';
+
+  @override
+  String get detailLabelSaat => 'Saat';
+
+  @override
+  String get detailLabelTur => 'Tür';
+
+  @override
+  String get detailLabelGelir => 'Gelir';
+
+  @override
+  String get detailLabelGider => 'Gider';
+
+  @override
+  String get detailLabelIslemSonrasiBakiye => 'İşlem sonrası bakiye';
 }

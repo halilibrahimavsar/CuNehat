@@ -109,7 +109,10 @@ class _LocalAuthBackgroundLockState extends State<LocalAuthBackgroundLock>
   Widget build(BuildContext context) {
     if (_shouldShowLock) {
       return BlocProvider(
-        create: (_) => LocalAuthLoginBloc(repository: widget.repository),
+        create: (_) => LocalAuthLoginBloc(
+          repository: widget.repository,
+          texts: widget.texts,
+        ),
         child: BiometricAuthPage(
           onSuccess: () {
             unawaited(_onAuthSuccess());

@@ -112,14 +112,14 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   String? _validate() {
     // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
     if (_parsedAmount == null || _parsedAmount! <= 0) {
-      return 'Geçerli bir yatırım miktarı girin';
+      return context.l10n.gecerliYatirimMiktariGirin;
     }
     if (_parsedCurrentValue == null || _parsedCurrentValue! < 0) {
-      return 'Geçerli bir mevcut değer girin';
+      return context.l10n.gecerliMevcutDegerGirin;
     }
     if (_targetAmountController.text.trim().isNotEmpty &&
         (_parsedTargetAmount == null || _parsedTargetAmount! <= 0)) {
-      return 'Geçerli bir hedef tutar girin';
+      return context.l10n.gecerliHedefTutarGirin;
     }
     return null;
   }
@@ -137,7 +137,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
       userId: widget.userId,
       walletId: widget.walletId,
       name: _nameController.text.trim().isEmpty
-          ? 'Özel Yatırım'
+          ? context.l10n.ozelYatirimi
           : _nameController.text.trim(),
       amount: _parsedAmount!,
       currentValue: _parsedCurrentValue!,
@@ -186,18 +186,18 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                     children: [
                       _buildAmountCard(cs),
                       const SizedBox(height: 20),
-                      _sectionLabel('Yatırım Detayları', cs),
+                      _sectionLabel(context.l10n.yatirimDetaylari, cs),
                       const SizedBox(height: 10),
                       _filledField(
                         controller: _nameController,
-                        hint: 'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz',
+                        hint: context.l10n.customNotHint,
                         icon: Icons.notes_rounded,
                         cs: cs,
                       ),
                       const SizedBox(height: 14),
                       _filledField(
                         controller: _amountController,
-                        hint: 'Maliyet (Yatırılan Ana Para)',
+                        hint: context.l10n.maliyetYatirilanAnaPara,
                         icon: Icons.payments_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -206,7 +206,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                       const SizedBox(height: 14),
                       _filledField(
                         controller: _targetAmountController,
-                        hint: 'Hedef Tutar (İsteğe Bağlı)',
+                        hint: context.l10n.hedefTutarIstegeBagli,
                         icon: Icons.flag_rounded,
                         cs: cs,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -214,7 +214,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                       ),
                       if (_targetAmountController.text.trim().isNotEmpty) ...[
                         const SizedBox(height: 14),
-                        _sectionLabel('Hedef Kategorisi', cs),
+                        _sectionLabel(context.l10n.hedefKategorisi, cs),
                         const SizedBox(height: 10),
                         GoalCategorySelector(
                           selectedKey: _selectedGoalCategory,
@@ -228,7 +228,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                         _buildCostEditWarning(cs),
                       ],
                       const SizedBox(height: 20),
-                      _sectionLabel('Renk Seçimi', cs),
+                      _sectionLabel(context.l10n.renkSecimi, cs),
                       const SizedBox(height: 10),
                       _buildColorSelector(),
                       if (_error != null) ...[
@@ -249,8 +249,9 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   }
 
   Widget _buildHandleAndHeader(ColorScheme cs) {
-    final title =
-        _isEditing ? 'Özel Yatırımı Düzenle' : 'Yeni Özel Yatırım Ekle';
+    final title = _isEditing
+        ? context.l10n.ozelYatiriminiDuzenle
+        : context.l10n.yeniOzelYatirimEkle;
     return Column(
       children: [
         Container(
@@ -552,7 +553,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                       color: Colors.white, size: 22),
                   const SizedBox(width: 8),
                   Text(
-                    _isEditing ? 'Güncelle' : 'Kaydet',
+                    _isEditing ? context.l10n.guncelle : context.l10n.kaydet,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,

@@ -51,8 +51,14 @@ abstract class LocalAuthRepository {
   /// Performs biometric authentication with optional reason.
   ///
   /// [reason] Optional reason to show in biometric prompt.
+  /// [signInTitle] Optional sign in title for Android prompt.
+  /// [cancelButton] Optional cancel button label for Android/iOS prompt.
   /// Returns true if authentication was successful.
-  Future<bool> authenticateWithBiometrics({String? reason});
+  Future<bool> authenticateWithBiometrics({
+    String? reason,
+    String? signInTitle,
+    String? cancelButton,
+  });
 
   /// Checks if privacy guard (background blur) is enabled.
   ///

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'local_auth_login_event.dart';
 import 'local_auth_login_state.dart';
@@ -25,11 +26,19 @@ class LocalAuthLoginBloc
     extends Bloc<LocalAuthLoginEvent, LocalAuthLoginState> {
   final LocalAuthRepository _repository;
 
+  /// Lokalize edilmiş UI metinleri. Widget katmanından inject edilir;
+  /// varsayılan değerleri İngilizce'dir (package standalone kullanımı için).
+  final LocalAuthTexts _texts;
+
   /// Creates a [LocalAuthLoginBloc] instance.
   ///
   /// [repository] The repository for authentication operations.
-  LocalAuthLoginBloc({required LocalAuthRepository repository})
-      : _repository = repository,
+  /// [texts] Optional localized text strings; defaults to English.
+  LocalAuthLoginBloc({
+    required LocalAuthRepository repository,
+    LocalAuthTexts texts = const LocalAuthTexts(),
+  })  : _repository = repository,
+        _texts = texts,
         super(const LocalAuthLoginState()) {
     on<LoadLoginPolicyEvent>(_onLoadPolicy);
     on<VerifyPinLoginEvent>(_onVerifyPinLogin);
@@ -127,15 +136,20 @@ class LocalAuthLoginBloc
           emit(state.copyWith(
             authStatus: AuthStatus.failure,
             failedAttempts: newAttempts,
-            message:
-                'Incorrect PIN. Remaining tries: ${LocalAuthConstants.maxFailedAttempts - newAttempts}',
+            message: _texts.msgIncorrectPinRemainingTries.replaceAll(
+              '{tries}',
+              '${LocalAuthConstants.maxFailedAttempts - newAttempts}',
+            ),
           ));
         }
       }
     } catch (e) {
       emit(state.copyWith(
           authStatus: AuthStatus.failure,
-          message: 'PIN verification failed: ${e.toString()}'));
+          message: _texts.msgPINVerificationFailedE.replaceAll(
+            '{error}',
+            e.toString(),
+          )));
     }
   }
 
@@ -146,7 +160,9 @@ class LocalAuthLoginBloc
     if (state.authStatus == AuthStatus.lockedOut) return;
 
     final success = await _repository.authenticateWithBiometrics(
-      reason: LocalAuthConstants.defaultBiometricReason,
+      reason: event.reason ?? LocalAuthConstants.defaultBiometricReason,
+      signInTitle: event.signInTitle,
+      cancelButton: event.cancelButton,
     );
     if (success) {
       await _repository.clearLockoutState();

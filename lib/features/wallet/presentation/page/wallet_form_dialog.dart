@@ -25,7 +25,9 @@ Future<void> showCreateEditDialog({
 }) async {
   await IboDialog.showCustomDialog(
     context,
-    title: wallet != null ? 'Cüzdanı Düzenle' : 'Yeni Cüzdan Ekle',
+    title: wallet != null
+        ? context.l10n.cuzdanDuzenleTitle
+        : context.l10n.yeniCuzdanEkleTitle,
     content: BlocProvider.value(
       value: context.read<WalletBloc>(),
       child: _WalletFormDialog(
@@ -151,10 +153,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Cüzdan adı boş olamaz';
+          return context.l10n.cuzdanAdiBosOlamaz;
         }
         if (value.trim().length < 2) {
-          return 'Cüzdan adı en az 2 karakter olmalı';
+          return context.l10n.cuzdanAdiEnAz2Karakter;
         }
         return null;
       },
@@ -168,7 +170,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     return TextFormField(
       controller: _balanceController,
       decoration: InputDecoration(
-        labelText: isEditMode ? 'Bakiye *' : 'Başlangıç Bakiyesi *',
+        labelText: isEditMode
+            ? context.l10n.bakiyeLabel
+            : context.l10n.baslangicBakiyesiLabel,
         hintText: '0.00',
         border: const OutlineInputBorder(),
         suffixText: '₺',
@@ -176,15 +180,15 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Bakiye boş olamaz';
+          return context.l10n.bakiyeBosOlamaz;
         }
         final amount = parseAmount(value);
         if (amount == null) {
-          return 'Geçerli bir sayı girin';
+          return context.l10n.gecerliBirSayiGirin;
         }
         // Bakiye negatif olabilir (eksiye düşmüş hesap); yalnız büyüklüğü sınırla.
         if (amount.abs() > kMaxAmount) {
-          return 'Tutar çok büyük';
+          return context.l10n.tutarCokBuyuk;
         }
         return null;
       },
@@ -209,9 +213,12 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
           style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
         const SizedBox(height: 12),
-        _derivedRow('Borç', w.debt, Icons.arrow_downward, Colors.red),
-        _derivedRow('Alacak', w.credit, Icons.arrow_upward, Colors.green),
-        _derivedRow('Birikim', w.investment, Icons.savings, Colors.orange),
+        _derivedRow(
+            context.l10n.borcLabel, w.debt, Icons.arrow_downward, Colors.red),
+        _derivedRow(context.l10n.alacakLabel, w.credit, Icons.arrow_upward,
+            Colors.green),
+        _derivedRow(context.l10n.birikimLabel, w.investment, Icons.savings,
+            Colors.orange),
       ],
     );
   }
@@ -399,7 +406,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
                 height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Text(isEditMode ? 'Kaydet' : 'Oluştur'),
+            : Text(isEditMode ? context.l10n.kaydet : context.l10n.olustur),
       ),
     ];
   }
@@ -470,7 +477,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
     IboDialog.showCustomDialog(
       context,
-      title: 'Özel Renk Seçin',
+      title: context.l10n.ozelRenkSecin,
       content: SingleChildScrollView(
         child: ColorPicker(
           pickerColor: selectedColor,

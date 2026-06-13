@@ -19,16 +19,16 @@ class GetDebtsUseCase {
 class AddDebtUseCase {
   final DebtRepository repository;
   final NotificationService notificationService;
-  
+
   AddDebtUseCase(this.repository, this.notificationService);
 
   Future<Either<Failure, void>> call(DebtEntity debt) async {
     if (debt.id == null || debt.id!.isEmpty) {
       debt = debt.copyWith(id: UidGenerator.generateV7());
     }
-    
+
     final result = await repository.addDebt(debt);
-    
+
     result.fold(
       (failure) => null,
       (_) {
@@ -37,10 +37,11 @@ class AddDebtUseCase {
           notificationService.scheduleNotification(
             id: id,
             title: 'Borç Hatırlatması',
-            body: '${debt.title} başlıklı borcunuzun son ödeme tarihi yaklaştı.',
+            body:
+                '${debt.title} başlıklı borcunuzun son ödeme tarihi yaklaştı.',
             scheduledDate: debt.dueDate!.subtract(const Duration(days: 1)),
           );
-          
+
           notificationService.scheduleNotification(
             id: id + 1, // Farklı bir ID ile tam gününde
             title: 'Borç Son Ödeme Tarihi!',
@@ -50,7 +51,7 @@ class AddDebtUseCase {
         }
       },
     );
-    
+
     return result;
   }
 }
@@ -59,7 +60,7 @@ class AddDebtUseCase {
 class UpdateDebtUseCase {
   final DebtRepository repository;
   final NotificationService notificationService;
-  
+
   UpdateDebtUseCase(this.repository, this.notificationService);
 
   Future<Either<Failure, void>> call(DebtEntity debt) async {
@@ -68,7 +69,7 @@ class UpdateDebtUseCase {
           ValidationFailure('Debt ID cannot be null for update operation'));
     }
     final result = await repository.updateDebt(debt);
-    
+
     result.fold(
       (failure) => null,
       (_) {
@@ -76,16 +77,17 @@ class UpdateDebtUseCase {
         // Önce eskileri iptal et
         notificationService.cancelNotification(id);
         notificationService.cancelNotification(id + 1);
-        
+
         // Eğer ödenmediyse ve tarihi varsa tekrar kur
         if (debt.dueDate != null && !debt.isPaid) {
           notificationService.scheduleNotification(
             id: id,
             title: 'Borç Hatırlatması',
-            body: '${debt.title} başlıklı borcunuzun son ödeme tarihi yaklaştı.',
+            body:
+                '${debt.title} başlıklı borcunuzun son ödeme tarihi yaklaştı.',
             scheduledDate: debt.dueDate!.subtract(const Duration(days: 1)),
           );
-          
+
           notificationService.scheduleNotification(
             id: id + 1,
             title: 'Borç Son Ödeme Tarihi!',
@@ -103,7 +105,7 @@ class UpdateDebtUseCase {
 class DeleteDebtUseCase {
   final DebtRepository repository;
   final NotificationService notificationService;
-  
+
   DeleteDebtUseCase(this.repository, this.notificationService);
 
   Future<Either<Failure, void>> call(String id) async {

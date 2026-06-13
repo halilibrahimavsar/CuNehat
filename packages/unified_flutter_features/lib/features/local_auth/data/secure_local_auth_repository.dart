@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'local_auth_migration.dart';
 import 'local_auth_repository.dart';
@@ -95,11 +97,24 @@ class SecureLocalAuthRepository implements LocalAuthRepository {
   }
 
   @override
-  Future<bool> authenticateWithBiometrics({String? reason}) async {
+  Future<bool> authenticateWithBiometrics({
+    String? reason,
+    String? signInTitle,
+    String? cancelButton,
+  }) async {
     final available = await isBiometricAvailable();
     if (!available) return false;
     return _auth.authenticate(
       localizedReason: reason ?? LocalAuthConstants.defaultBiometricReason,
+      authMessages: [
+        AndroidAuthMessages(
+          signInTitle: signInTitle,
+          cancelButton: cancelButton,
+        ),
+        IOSAuthMessages(
+          cancelButton: cancelButton,
+        ),
+      ],
       options: const AuthenticationOptions(
         biometricOnly: true,
         stickyAuth: true,

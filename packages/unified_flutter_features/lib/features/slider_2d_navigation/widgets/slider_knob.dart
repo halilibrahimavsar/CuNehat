@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
+import 'package:unified_flutter_features/core/texts/slider_texts.dart';
 import '../models/slider_models.dart';
 import '../constants/slider_config.dart';
 import '../helpers/slider_state_helper.dart';
@@ -16,6 +17,7 @@ class SliderKnob extends StatelessWidget {
   final double transitionProgress;
   final bool showUpArrow;
   final bool showDownArrow;
+  final SliderTexts texts;
 
   /// Whether the add ('+') affordance should be shown. Only true when the main
   /// title is centered in the carousel (i.e. tapping opens the mini buttons).
@@ -40,6 +42,7 @@ class SliderKnob extends StatelessWidget {
     required this.showUpArrow,
     required this.showDownArrow,
     this.showAddButton = true,
+    this.texts = const SliderTexts(),
     required this.onTap,
     this.onMainTitleTap,
     required this.onHorizontalDragStart,
@@ -51,7 +54,7 @@ class SliderKnob extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = SliderStateHelper.getLabelForState(currentState);
+    final label = SliderStateHelper.getLabelForState(currentState, texts);
     final hasSubMenu = subMenuItems.isNotEmpty;
 
     // Build carousel items: title + sub menu items

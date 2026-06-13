@@ -22,11 +22,12 @@ class BudgetsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authState = context.read<AppAuthBloc>().state;
     final userId = authState is AppAuthenticated ? authState.user.uid : '';
-    
+
     final walletState = context.read<WalletBloc>().state;
-    final walletId = walletState is WalletLoadedSt && walletState.wallets.isNotEmpty 
-        ? (walletState.activeWallet?.id ?? walletState.wallets.first.id!) 
-        : '';
+    final walletId =
+        walletState is WalletLoadedSt && walletState.wallets.isNotEmpty
+            ? (walletState.activeWallet?.id ?? walletState.wallets.first.id!)
+            : '';
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -42,8 +43,7 @@ class BudgetsPage extends StatelessWidget {
               pinned: true,
               backgroundColor: scheme.primary,
               leading: IconButton(
-                icon:
-                    const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
                 onPressed: () => context.pop(),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -91,7 +91,9 @@ class _BudgetsBody extends StatelessWidget {
         } else if (state is BudgetsError) {
           return SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text(context.l10n.hataStateFailureMessage(state.failure.message))),
+            child: Center(
+                child: Text(context.l10n
+                    .hataStateFailureMessage(state.failure.message))),
           );
         } else if (state is BudgetsLoaded) {
           if (state.budgets.isEmpty) {
@@ -133,8 +135,8 @@ class _EmptyBudgets extends StatelessWidget {
                 color: scheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.savings_outlined,
-                  size: 48, color: scheme.primary),
+              child:
+                  Icon(Icons.savings_outlined, size: 48, color: scheme.primary),
             ),
             const SizedBox(height: 16),
             Text(
@@ -195,13 +197,11 @@ class _BudgetSummaryCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: statusColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   exceededCount > 0
@@ -229,7 +229,8 @@ class _BudgetSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            context.l10n.toplamLimitAppformattersCurrency(AppFormatters.currency.format(totalLimit)),
+            context.l10n.toplamLimitAppformattersCurrency(
+                AppFormatters.currency.format(totalLimit)),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -292,13 +293,11 @@ class _BudgetListItem extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: statusColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   context.l10n.percent(percent),
@@ -309,8 +308,8 @@ class _BudgetListItem extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.delete_outline,
-                    color: scheme.onSurfaceVariant),
+                icon:
+                    Icon(Icons.delete_outline, color: scheme.onSurfaceVariant),
                 onPressed: () {
                   context
                       .read<BudgetsBloc>()
@@ -334,7 +333,8 @@ class _BudgetListItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                context.l10n.harcananAppformattersCurrencyFormat(AppFormatters.currency.format(budget.spentAmount)),
+                context.l10n.harcananAppformattersCurrencyFormat(
+                    AppFormatters.currency.format(budget.spentAmount)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: budget.isExceeded ? Colors.red : scheme.onSurface,
                   fontWeight:
@@ -342,7 +342,8 @@ class _BudgetListItem extends StatelessWidget {
                 ),
               ),
               Text(
-                context.l10n.limitAppformattersCurrencyFormat(AppFormatters.currency.format(budget.limitAmount)),
+                context.l10n.limitAppformattersCurrencyFormat(
+                    AppFormatters.currency.format(budget.limitAmount)),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),
@@ -365,8 +366,7 @@ class _AddBudgetButton extends StatelessWidget {
           context: context,
           builder: (ctx) => _AddBudgetDialog(
             bloc: bloc,
-            existingBudgets:
-                state is BudgetsLoaded ? state.budgets : const [],
+            existingBudgets: state is BudgetsLoaded ? state.budgets : const [],
           ),
         );
       },
@@ -400,8 +400,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   Future<void> _loadCategories() async {
     // Serbest metin yerine gerçek gider kategorileri: bütçenin categoryId'si
     // işlem tag'iyle birebir eşleşmezse harcama hiç birikmez.
-    final categories =
-        await getIt<CategoryRepository>().getCategories(true);
+    final categories = await getIt<CategoryRepository>().getCategories(true);
     if (!mounted) return;
     setState(() => _categories = categories.map((c) => c.id).toList());
   }
@@ -459,8 +458,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                   .toList(),
               onChanged: _onCategorySelected,
-              validator: (value) =>
-                  value == null ? 'Bir kategori seçin' : null,
+              validator: (value) => value == null ? 'Bir kategori seçin' : null,
             ),
             if (_isUpdate)
               Padding(
@@ -477,7 +475,8 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                 labelText: context.l10n.labelAylikLimit,
                 border: const OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Tutar boş olamaz';

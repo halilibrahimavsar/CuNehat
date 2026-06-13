@@ -50,7 +50,9 @@ class _ConnectionSnackbarHandlerState extends State<ConnectionSnackbarHandler> {
       return widget.texts.checkingMessage;
     }
     if (msg.startsWith('Connection check failed')) {
-      final error = msg.replaceFirst('Connection check failed: ', '').replaceFirst('Connection check failed', '');
+      final error = msg
+          .replaceFirst('Connection check failed: ', '')
+          .replaceFirst('Connection check failed', '');
       return '${widget.texts.checkFailedPrefix}: $error';
     }
     return msg;
@@ -168,7 +170,8 @@ class _ConnectionSnackbarHandlerState extends State<ConnectionSnackbarHandler> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _localizeMessage(state.message) ?? widget.texts.checkingMessage,
+                        _localizeMessage(state.message) ??
+                            widget.texts.checkingMessage,
                         style: widget.textStyle ??
                             const TextStyle(color: Colors.white),
                       ),

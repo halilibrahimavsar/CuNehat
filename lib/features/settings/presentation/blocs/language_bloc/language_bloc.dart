@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'language_event.dart';
@@ -16,12 +17,16 @@ class LanguageBloc extends Bloc<LanguageEvent, LanguageState> {
     final savedLanguage = prefs.getString(_languageKey);
     if (savedLanguage != null) {
       _preloadedLanguage = savedLanguage;
+      Intl.defaultLocale = savedLanguage;
+    } else {
+      Intl.defaultLocale = 'tr';
     }
   }
 
   LanguageBloc() : super(LanguageState(_preloadedLanguage ?? 'tr')) {
     on<LanguageChangeEvent>((event, emit) async {
       await _saveLanguage(event.languageCode);
+      Intl.defaultLocale = event.languageCode;
       emit(LanguageState(event.languageCode));
     });
 

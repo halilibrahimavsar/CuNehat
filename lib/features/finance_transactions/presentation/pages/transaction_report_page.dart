@@ -17,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-
 class TransactionReportPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -231,7 +230,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             ),
             const SizedBox(height: 32),
             Icon(Icons.pie_chart_outline_rounded,
-                size: 48, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                size: 48,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
             const SizedBox(height: 12),
             Text(
               context.l10n.titleIcinVeriYok(title),
@@ -312,12 +312,18 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                       if (!event.isInterestedForInteractions ||
                           pieTouchResponse == null ||
                           pieTouchResponse.touchedSection == null) {
-                        
-                        final touchIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex ?? -1;
-                        final currentIndex = isExpense ? _touchedExpenseIndex : _touchedIncomeIndex;
-                        final actualIndex = touchIndex != -1 ? touchIndex : currentIndex;
+                        final touchIndex = pieTouchResponse
+                                ?.touchedSection?.touchedSectionIndex ??
+                            -1;
+                        final currentIndex = isExpense
+                            ? _touchedExpenseIndex
+                            : _touchedIncomeIndex;
+                        final actualIndex =
+                            touchIndex != -1 ? touchIndex : currentIndex;
 
-                        if (isTapUp && actualIndex != -1 && actualIndex < categoryData.length) {
+                        if (isTapUp &&
+                            actualIndex != -1 &&
+                            actualIndex < categoryData.length) {
                           tappedIndex = actualIndex;
                         }
 
@@ -338,7 +344,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         _touchedIncomeIndex = newIndex;
                       }
 
-                      if (isTapUp && newIndex != -1 && newIndex < categoryData.length) {
+                      if (isTapUp &&
+                          newIndex != -1 &&
+                          newIndex < categoryData.length) {
                         tappedIndex = newIndex;
                       }
                     });
@@ -526,7 +534,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 ),
               ),
               Text(
-                context.l10n.formatMoneyItemTotalamountPercent(formatMoney(item.totalAmount), percent.toStringAsFixed(0)),
+                context.l10n.formatMoneyItemTotalamountPercent(
+                    formatMoney(item.totalAmount), percent.toStringAsFixed(0)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: scheme.onSurfaceVariant,

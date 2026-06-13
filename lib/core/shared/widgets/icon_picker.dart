@@ -353,7 +353,8 @@ class _IconPickerState extends State<IconPicker>
               unselectedLabelColor: Colors.grey,
               indicatorColor: widget.iconColor,
               tabs: AppIcons.categories
-                  .map((cat) => Tab(text: cat.name))
+                  .map((cat) =>
+                      Tab(text: context.translateIconCategory(cat.name)))
                   .toList(),
             ),
 

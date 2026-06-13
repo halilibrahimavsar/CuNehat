@@ -106,7 +106,8 @@ class AnimatedInfoDisplay extends StatelessWidget {
           curve: Curves.easeOutExpo,
           builder: (context, value, child) {
             return Text(
-              context.l10n.valueTostringasfixedCurrencysymbol(value.toStringAsFixed(2), currencySymbol),
+              context.l10n.valueTostringasfixedCurrencysymbol(
+                  value.toStringAsFixed(2), currencySymbol),
               style: valueStyle ??
                   const TextStyle(
                     fontSize: 24,

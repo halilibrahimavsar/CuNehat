@@ -27,9 +27,8 @@ InvestmentEntity applyAssetPurchase(
   String? liveCurrency,
 }) {
   final newQuantity = (inv.quantity ?? 0) + qtyAdded;
-  final newCurrentValue = livePriceTl != null
-      ? newQuantity * livePriceTl
-      : inv.currentValue + paid;
+  final newCurrentValue =
+      livePriceTl != null ? newQuantity * livePriceTl : inv.currentValue + paid;
   return inv.copyWith(
     amount: inv.amount + paid,
     currentValue: newCurrentValue,

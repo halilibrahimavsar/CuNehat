@@ -67,16 +67,17 @@ class AppConstants {
 }
 
 class AppFormatters {
-  static final DateFormat dateShort = DateFormat('dd.MM.yy', 'tr_TR');
-  static final DateFormat dateLong = DateFormat('dd MMMM yyyy', 'tr_TR');
-  static final DateFormat dateTime = DateFormat('dd.MM.yyyy HH:mm', 'tr_TR');
-  static final DateFormat time = DateFormat('HH:mm', 'tr_TR');
+  static DateFormat get dateShort => DateFormat('dd.MM.yy', Intl.defaultLocale);
+  static DateFormat get dateLong => DateFormat.yMMMMd(Intl.defaultLocale);
+  static DateFormat get dateTime =>
+      DateFormat('dd.MM.yyyy HH:mm', Intl.defaultLocale);
+  static DateFormat get time => DateFormat('HH:mm', Intl.defaultLocale);
 
-  static final NumberFormat currency = NumberFormat.currency(
-    locale: 'tr_TR',
-    symbol: AppConstants.currency,
-    decimalDigits: 2,
-  );
+  static NumberFormat get currency => NumberFormat.currency(
+        locale: Intl.defaultLocale,
+        symbol: AppConstants.currency,
+        decimalDigits: 2,
+      );
 }
 
 class AppRoutes {

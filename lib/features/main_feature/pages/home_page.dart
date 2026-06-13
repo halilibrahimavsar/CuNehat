@@ -1,6 +1,7 @@
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/animations/horizontal_cube_animation_view.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_and_receivable_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_money_page.dart';
@@ -55,7 +56,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _loadWallets();
     // Bekleyen işlemleri yükle
     context.read<PendingRecurringBloc>().add(LoadPendingTransactionsEvent());
-    
+
     // Bildirim izinlerini iste
     _requestNotificationPermissions();
   }
@@ -143,16 +144,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _handleWalletStateChanges(BuildContext context, WalletState state) {
     if (state is WalletLoadedSt) {
-      if (state.message != null) {
-        IboSnackbar.showSuccess(context, state.message!);
-      }
+      final msg =
+          _resolveWalletMessage(context, state.messageType, state.message);
+      if (msg != null) IboSnackbar.showSuccess(context, msg);
       if (state.error != null) {
         IboSnackbar.showError(context, state.error!);
       }
     } else if (state is NoWalletSt) {
-      if (state.message != null) {
-        IboSnackbar.showSuccess(context, state.message!);
-      }
+      final msg =
+          _resolveWalletMessage(context, state.messageType, state.message);
+      if (msg != null) IboSnackbar.showSuccess(context, msg);
       if (state.error != null) {
         IboSnackbar.showError(context, state.error!);
       }
@@ -161,18 +162,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  /// WalletMessageType enum'unu l10n ile lokalize edilmiş stringe çevirir.
+  /// messageType null ise fallback olarak message string'i kullanır.
+  String? _resolveWalletMessage(
+    BuildContext context,
+    WalletMessageType? type,
+    String? fallback,
+  ) {
+    if (type == null) return fallback;
+    final l = context.l10n;
+    return switch (type) {
+      WalletMessageType.created => l.cuzdanOlusturuldu,
+      WalletMessageType.updated => l.cuzdanGuncellendi,
+      WalletMessageType.deleted => l.cuzdanSilindi,
+      WalletMessageType.selected => l.cuzdanSecildi,
+      _ => fallback,
+    };
+  }
+
   Widget _buildContent(WalletState walletState) {
     return switch (walletState) {
       WalletLoadingSt() => const Center(child: CircularProgressIndicator()),
       WalletErrorSt() => ErrorView(
           message: walletState.err,
           onPressed: _loadWallets,
-          buttonText: "Tekrar Dene",
+          buttonText: context.l10n.tekrarDene,
           customIcon:
               Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
         ),
       WalletLoadedSt() => _buildLoadedContent(walletState),
-      _ => const NoWalletView(infoText: "Cüzdan oluşturunuz"),
+      _ => NoWalletView(infoText: context.l10n.cuzdanOlusturunuz),
     };
   }
 
@@ -189,7 +208,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
 
     if (activeWallet == null) {
-      return const NoWalletView(infoText: "Cüzdan seçiniz", showButton: false);
+      return NoWalletView(
+        infoText: context.l10n.cuzdanSeciniz,
+        showButton: false,
+      );
     }
 
     // Cüzdan değişiminde fabrika YENİDEN kurulmalı; yoksa alt sayfalar

@@ -23,8 +23,8 @@ class CsvImportResult {
 class CsvService {
   final _uuid = const Uuid();
 
-  Future<void> exportTransactionsToCSV(
-      List<TransactionEntity> transactions, {String? shareText}) async {
+  Future<void> exportTransactionsToCSV(List<TransactionEntity> transactions,
+      {String? shareText}) async {
     List<List<dynamic>> rows = [];
 
     // Header

@@ -35,7 +35,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       title: '${investment.name} satılsın mı?',
       content: Text(
-        context.l10n.guncelDegerFormatmoneyInvestment(formatMoney(investment.currentValue)),
+        context.l10n.guncelDegerFormatmoneyInvestment(
+            formatMoney(investment.currentValue)),
       ),
       actions: [
         TextButton(
@@ -283,7 +284,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                 Row(
                                   children: [
                                     Text(
-                                      context.l10n.investmentsLengthYatirim(investments.length),
+                                      context.l10n.investmentsLengthYatirim(
+                                          investments.length),
                                       style: const TextStyle(
                                         color: Colors.grey,
                                       ),
@@ -291,15 +293,15 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                     if (investments
                                         .any((i) => i.canRefreshPrice))
                                       IconButton(
-                                        tooltip: context.l10n.tooltipFiyatlariGuncelle,
+                                        tooltip: context
+                                            .l10n.tooltipFiyatlariGuncelle,
                                         visualDensity: VisualDensity.compact,
                                         onPressed: () => context
                                             .read<InvestmentBloc>()
                                             .add(RefreshPricesEvent(
                                               userId:
                                                   widget.activeWallet.userId,
-                                              walletId:
-                                                  widget.activeWallet.id!,
+                                              walletId: widget.activeWallet.id!,
                                             )),
                                         icon: const Icon(
                                           Icons.refresh_rounded,
@@ -321,8 +323,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                   GestureDetector(
                                     // Dokunuş eylem menüsünü açar: katkı,
                                     // fiyat, düzenle, sat ve sil ayrı ayrı.
-                                    onTap: () =>
-                                        _showActionSheet(investment),
+                                    onTap: () => _showActionSheet(investment),
                                     child: InvestmentCard(
                                       investment: investment,
                                     ),
