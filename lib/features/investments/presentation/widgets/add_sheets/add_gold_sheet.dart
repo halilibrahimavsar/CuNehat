@@ -185,9 +185,12 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
 
   String? _validate() {
     // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
-    if (_parsedAmount == null) return context.l10n.gecerliYatirimMiktariGirin;
-    if (_parsedCurrentValue == null)
+    if (_parsedAmount == null) {
+      return context.l10n.gecerliYatirimMiktariGirin;
+    }
+    if (_parsedCurrentValue == null) {
       return context.l10n.gecerliMevcutDegerGirin;
+    }
     return null;
   }
 

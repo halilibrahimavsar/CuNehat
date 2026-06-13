@@ -60,11 +60,13 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
     });
 
     if (success) {
-      if (mounted)
+      if (mounted) {
         _showSnackBar(context.l10n.googleDriveConnected, Colors.green);
+      }
     } else {
-      if (mounted)
+      if (mounted) {
         _showSnackBar(context.l10n.googleDriveConnectionFailed, Colors.red);
+      }
     }
   }
 
@@ -76,8 +78,9 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
       _userEmail = '';
       _isLoading = false;
     });
-    if (mounted)
+    if (mounted) {
       _showSnackBar(context.l10n.googleDriveDisconnected, Colors.orange);
+    }
   }
 
   Future<void> _backup() async {
@@ -89,10 +92,13 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
       setState(() {
         _lastBackup = nowStr;
       });
-      if (mounted)
+      if (mounted) {
         _showSnackBar(context.l10n.dataBackedUpSuccess, Colors.green);
+      }
     } else {
-      if (mounted) _showSnackBar(context.l10n.backupFailed, Colors.red);
+      if (mounted) {
+        _showSnackBar(context.l10n.backupFailed, Colors.red);
+      }
     }
     setState(() => _isLoading = false);
   }
@@ -123,8 +129,9 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
         );
       }
     } else {
-      if (mounted)
+      if (mounted) {
         _showSnackBar(context.l10n.restoreFailedNoBackup, Colors.red);
+      }
     }
     setState(() => _isLoading = false);
   }
