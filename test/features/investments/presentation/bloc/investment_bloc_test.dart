@@ -15,10 +15,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetInvestmentsUseCase extends Mock implements GetInvestmentsUseCase {}
+
 class MockAddInvestmentUseCase extends Mock implements AddInvestmentUseCase {}
-class MockUpdateInvestmentUseCase extends Mock implements UpdateInvestmentUseCase {}
-class MockDeleteInvestmentUseCase extends Mock implements DeleteInvestmentUseCase {}
+
+class MockUpdateInvestmentUseCase extends Mock
+    implements UpdateInvestmentUseCase {}
+
+class MockDeleteInvestmentUseCase extends Mock
+    implements DeleteInvestmentUseCase {}
+
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
+
 class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 
 void main() {
@@ -93,7 +100,8 @@ void main() {
             )).thenAnswer((_) async => Right([testInvestment]));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123')),
+      act: (bloc) => bloc.add(const GetInvestmentsEvent(
+          userId: 'user_123', walletId: 'wallet_123')),
       expect: () => [
         InvestmentLoading(),
         InvestmentLoaded([testInvestment], totalAmount: 1000.0),
@@ -104,12 +112,14 @@ void main() {
       'emits [InvestmentLoading, InvestmentError] on failure',
       build: () {
         when(() => mockGetInvestmentsUseCase(
-              userId: 'user_123',
-              walletId: 'wallet_123',
-            )).thenAnswer((_) async => const Left(ServerFailure('Fetch Error')));
+                  userId: 'user_123',
+                  walletId: 'wallet_123',
+                ))
+            .thenAnswer((_) async => const Left(ServerFailure('Fetch Error')));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123')),
+      act: (bloc) => bloc.add(const GetInvestmentsEvent(
+          userId: 'user_123', walletId: 'wallet_123')),
       expect: () => [
         InvestmentLoading(),
         const InvestmentError('Fetch Error'),
@@ -192,7 +202,8 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Yatırım başarıyla eklendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        const InvestmentActionSuccess(
+            'Yatırım başarıyla eklendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
         InvestmentLoading(),
         InvestmentLoaded([testInvestment], totalAmount: 1000.0),
       ],
@@ -238,7 +249,8 @@ void main() {
               walletId: 'wallet_123',
               userId: 'user_123',
               amount: 500.0, // cost diff is 1500 - 1000 = 500.
-              isIncome: false, // positive cost diff means we spent money (expense)
+              isIncome:
+                  false, // positive cost diff means we spent money (expense)
               title: 'Yatırım güncellendi: Apple Inc.',
               tag: CashMovementTags.investmentBuy,
             )).thenAnswer((_) async => true);
@@ -261,7 +273,8 @@ void main() {
         InvestmentLoading(),
         const InvestmentActionSuccess('Yatırım güncellendi'),
         InvestmentLoading(),
-        InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)], totalAmount: 1500.0),
+        InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)],
+            totalAmount: 1500.0),
       ],
     );
 
@@ -275,7 +288,8 @@ void main() {
               walletId: 'wallet_123',
               userId: 'user_123',
               amount: 200.0, // cost diff absolute is 200.
-              isIncome: true, // negative cost diff means we got money back (income)
+              isIncome:
+                  true, // negative cost diff means we got money back (income)
               title: 'Yatırım güncellendi: Apple Inc.',
               tag: CashMovementTags.investmentBuy,
             )).thenAnswer((_) async => true);
@@ -298,7 +312,8 @@ void main() {
         InvestmentLoading(),
         const InvestmentActionSuccess('Yatırım güncellendi'),
         InvestmentLoading(),
-        InvestmentLoaded([testInvestment.copyWith(amount: 800.0)], totalAmount: 800.0),
+        InvestmentLoaded([testInvestment.copyWith(amount: 800.0)],
+            totalAmount: 800.0),
       ],
     );
 
@@ -356,6 +371,20 @@ void main() {
       quantity: 1.5,
     );
 
+    final secondInvestment = InvestmentEntity(
+      id: 'inv_second',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Gold Extra',
+      amount: 3000.0,
+      currentValue: 3000.0,
+      type: InvestmentType.gold,
+      color: const Color(0xFFFFFF00),
+      dateAdded: DateTime(2026, 6, 13),
+      symbol: 'XAU',
+      quantity: 2.0,
+    );
+
     const testQuote = LivePriceQuote(
       price: 1500.0,
       currency: 'USD',
@@ -390,7 +419,9 @@ void main() {
         InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
       ],
       verify: (_) {
-        final captured = verify(() => mockUpdateUseCase(captureAny())).captured.first as InvestmentEntity;
+        final captured = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .first as InvestmentEntity;
         // quantity (1.5) * priceTl (1600.0) = 2400.0
         expect(captured.currentValue, 2400.0);
         expect(captured.currency, 'USD');
@@ -425,7 +456,8 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentError('Yenilenebilir yatırım yok (sembol ve miktar gerekli)'),
+        const InvestmentError(
+            'Yenilenebilir yatırım yok (sembol ve miktar gerekli)'),
       ],
     );
 
@@ -437,9 +469,10 @@ void main() {
               walletId: 'wallet_123',
             )).thenAnswer((_) async => Right([refreshableInvestment]));
         when(() => mockGetLiveQuoteUseCase(
-              symbol: 'XAU',
-              type: InvestmentType.gold,
-            )).thenAnswer((_) async => const Left(ServerFailure('Quote failed')));
+                  symbol: 'XAU',
+                  type: InvestmentType.gold,
+                ))
+            .thenAnswer((_) async => const Left(ServerFailure('Quote failed')));
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
         return investmentBloc;
@@ -455,7 +488,118 @@ void main() {
         InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
       ],
     );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'refreshes only the investment matching the provided investmentId filter',
+      build: () {
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async =>
+            Right([refreshableInvestment]));
+        when(() => mockGetLiveQuoteUseCase(
+              symbol: 'XAU',
+              type: InvestmentType.gold,
+            )).thenAnswer((_) async => const Right(testQuote));
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(const RefreshPricesEvent(
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        investmentId: 'inv_refresh',
+      )),
+      expect: () => [
+        InvestmentLoading(),
+        const InvestmentActionSuccess('1 yatırımın fiyatı güncellendi'),
+        InvestmentLoading(),
+        InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
+      ],
+      verify: (_) {
+        verify(() => mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
+            .called(1);
+      },
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'emits partial success message when some refreshes succeed and some fail',
+      build: () {
+        bool firstUpdate = true;
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async =>
+            Right([refreshableInvestment, secondInvestment]));
+        when(() => mockGetLiveQuoteUseCase(
+              symbol: 'XAU',
+              type: InvestmentType.gold,
+            )).thenAnswer((_) async => const Right(testQuote));
+        when(() => mockUpdateUseCase(any())).thenAnswer((_) async {
+          if (firstUpdate) {
+            firstUpdate = false;
+            return const Right(null);
+          }
+          return const Left(ServerFailure('Save failed'));
+        });
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(const RefreshPricesEvent(
+        userId: 'user_123',
+        walletId: 'wallet_123',
+      )),
+      expect: () => [
+        InvestmentLoading(),
+        const InvestmentActionSuccess('1 güncellendi, 1 alınamadı'),
+        InvestmentLoading(),
+        InvestmentLoaded([refreshableInvestment, secondInvestment],
+            totalAmount: 5000.0),
+      ],
+    );
   });
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'emits success with cash warning when recordCashMovement returns false during update',
+      build: () {
+        final updated = testInvestment.copyWith(amount: 1500.0);
+        when(() => mockUpdateUseCase(updated))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            )).thenAnswer((_) async => false);
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => Right([updated]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(UpdateInvestmentEvent(
+        investment: testInvestment.copyWith(amount: 1500.0),
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        prevAmount: 1000.0,
+        newAmount: 1500.0,
+      )),
+      expect: () => [
+        InvestmentLoading(),
+        const InvestmentActionSuccess(
+            'Yatırım güncellendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        InvestmentLoading(),
+        InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)],
+            totalAmount: 1500.0),
+      ],
+    );
 
   group('DeleteInvestmentEvent', () {
     blocTest<InvestmentBloc, InvestmentState>(
@@ -533,6 +677,44 @@ void main() {
     );
 
     blocTest<InvestmentBloc, InvestmentState>(
+      'emits success with cash warning when recordCashMovement returns false during sale',
+      build: () {
+        when(() => mockDeleteUseCase('inv_123'))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            )).thenAnswer((_) async => false);
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteInvestmentEvent(
+        id: 'inv_123',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        amount: 1000.0,
+        currentValue: 1200.0,
+        recordSale: true,
+      )),
+      expect: () => [
+        InvestmentLoading(),
+        const InvestmentActionSuccess(
+            'Yatırım satıldı (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        InvestmentLoading(),
+        const InvestmentLoaded([], totalAmount: 0.0),
+      ],
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
       'does NOT record cash movement when recordSale is false and amount is 0',
       build: () {
         when(() => mockDeleteUseCase('inv_123'))
@@ -574,8 +756,8 @@ void main() {
     blocTest<InvestmentBloc, InvestmentState>(
       'emits [InvestmentLoading, InvestmentError] on failure',
       build: () {
-        when(() => mockDeleteUseCase('inv_123'))
-            .thenAnswer((_) async => const Left(ServerFailure('Delete failed')));
+        when(() => mockDeleteUseCase('inv_123')).thenAnswer(
+            (_) async => const Left(ServerFailure('Delete failed')));
         return investmentBloc;
       },
       act: (bloc) => bloc.add(const DeleteInvestmentEvent(

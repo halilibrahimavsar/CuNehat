@@ -9,9 +9,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetDebtsUseCase extends Mock implements GetDebtsUseCase {}
+
 class MockAddDebtUseCase extends Mock implements AddDebtUseCase {}
+
 class MockUpdateDebtUseCase extends Mock implements UpdateDebtUseCase {}
+
 class MockDeleteDebtUseCase extends Mock implements DeleteDebtUseCase {}
+
 class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 
 void main() {
@@ -77,7 +81,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits [DebtLoading, DebtLoaded] when success',
       build: () {
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => Right([testDebt]));
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
         return debtBloc;
       },
       act: (bloc) => bloc.add(const GetDebtsEvent('wallet_123')),
@@ -90,7 +95,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits [DebtLoading, DebtError] when failure',
       build: () {
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => const Left(ServerFailure('DB Error')));
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Left(ServerFailure('DB Error')));
         return debtBloc;
       },
       act: (bloc) => bloc.add(const GetDebtsEvent('wallet_123')),
@@ -105,7 +111,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits loading, triggers cash record, syncs debt, emits success and triggers GetDebts reload',
       build: () {
-        when(() => mockAddUseCase(testDebt)).thenAnswer((_) async => const Right(null));
+        when(() => mockAddUseCase(testDebt))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: 'wallet_123',
               userId: 'user_123',
@@ -114,8 +121,10 @@ void main() {
               title: 'Friend Loan',
               tag: CashMovementTags.debt,
             )).thenAnswer((_) async => true);
-        when(() => mockMetricsService.syncDebt('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
         return debtBloc;
       },
       act: (bloc) => bloc.add(AddDebtEvent(testDebt)),
@@ -142,7 +151,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits warning in success message when recordCashMovement returns false',
       build: () {
-        when(() => mockAddUseCase(testDebt)).thenAnswer((_) async => const Right(null));
+        when(() => mockAddUseCase(testDebt))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: any(named: 'walletId'),
               userId: any(named: 'userId'),
@@ -151,17 +161,44 @@ void main() {
               title: any(named: 'title'),
               tag: any(named: 'tag'),
             )).thenAnswer((_) async => false);
-        when(() => mockMetricsService.syncDebt('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
         return debtBloc;
       },
       act: (bloc) => bloc.add(AddDebtEvent(testDebt)),
       expect: () => [
         DebtLoading(),
-        const DebtOperationSuccess('Borç başarıyla eklendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        const DebtOperationSuccess(
+            'Borç başarıyla eklendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
         DebtLoading(),
         DebtLoaded([testDebt]),
       ],
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits [DebtLoading, DebtError] when usecase fails',
+      build: () {
+        when(() => mockAddUseCase(testDebt))
+            .thenAnswer((_) async => const Left(ServerFailure('Add failed')));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(AddDebtEvent(testDebt)),
+      expect: () => [
+        DebtLoading(),
+        const DebtError('Add failed'),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            ));
+      },
     );
   });
 
@@ -169,7 +206,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits loading, updates debt, records cash payment (expense), syncs debt and reloads',
       build: () {
-        when(() => mockUpdateUseCase(testDebt)).thenAnswer((_) async => const Right(null));
+        when(() => mockUpdateUseCase(testDebt))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: 'wallet_123',
               userId: 'user_123',
@@ -178,8 +216,10 @@ void main() {
               title: 'Ödeme: Friend Loan',
               tag: CashMovementTags.debtPayment,
             )).thenAnswer((_) async => true);
-        when(() => mockMetricsService.syncDebt('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => Right([testDebt]));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
         return debtBloc;
       },
       act: (bloc) => bloc.add(PayDebtEvent(testDebt, 250.0)),
@@ -201,6 +241,49 @@ void main() {
             )).called(1);
       },
     );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits success with cash warning when recordCashMovement returns false',
+      build: () {
+        when(() => mockUpdateUseCase(testDebt))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            )).thenAnswer((_) async => false);
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(PayDebtEvent(testDebt, 250.0)),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess(
+            'Ödeme kaydedildi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        DebtLoading(),
+        DebtLoaded([testDebt]),
+      ],
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits [DebtLoading, DebtError] when usecase fails',
+      build: () {
+        when(() => mockUpdateUseCase(testDebt))
+            .thenAnswer((_) async => const Left(ServerFailure('Pay failed')));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(PayDebtEvent(testDebt, 250.0)),
+      expect: () => [
+        DebtLoading(),
+        const DebtError('Pay failed'),
+      ],
+    );
   });
 
   group('UpdateDebtEvent', () {
@@ -209,7 +292,8 @@ void main() {
       build: () {
         // Principal increased from 1000 to 1200 (diff = +200, which means we borrowed more, so it is an income of 200)
         final updatedDebt = testDebt.copyWith(principalAmount: 1200.0);
-        when(() => mockUpdateUseCase(any())).thenAnswer((_) async => const Right(null));
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: 'wallet_123',
               userId: 'user_123',
@@ -218,8 +302,10 @@ void main() {
               title: 'Borç güncellendi: Friend Loan',
               tag: CashMovementTags.debt,
             )).thenAnswer((_) async => true);
-        when(() => mockMetricsService.syncDebt('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => Right([updatedDebt]));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([updatedDebt]));
         return debtBloc;
       },
       act: (bloc) => bloc.add(UpdateDebtEvent(
@@ -244,6 +330,122 @@ void main() {
             )).called(1);
       },
     );
+
+    blocTest<DebtBloc, DebtState>(
+      'records expense cash movement when principal decreases',
+      build: () {
+        // Principal decreased from 1000 to 800 (diff = -200, so we owe less → net expense to return cash)
+        final updated = testDebt.copyWith(principalAmount: 800.0);
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: 'wallet_123',
+              userId: 'user_123',
+              amount: 200.0,
+              isIncome: false,
+              title: 'Borç güncellendi: Friend Loan',
+              tag: CashMovementTags.debt,
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([updated]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        testDebt.copyWith(principalAmount: 800.0),
+        prevPrincipal: 1000.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç güncellendi.'),
+        DebtLoading(),
+        DebtLoaded([testDebt.copyWith(principalAmount: 800.0)]),
+      ],
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'does NOT record cash movement when principal is unchanged',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        testDebt,
+        prevPrincipal: 1000.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç güncellendi.'),
+        DebtLoading(),
+        DebtLoaded([testDebt]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            ));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits success with cash warning when recordCashMovement returns false',
+      build: () {
+        final updated = testDebt.copyWith(principalAmount: 1200.0);
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            )).thenAnswer((_) async => false);
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([updated]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        testDebt.copyWith(principalAmount: 1200.0),
+        prevPrincipal: 1000.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess(
+            'Borç güncellendi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        DebtLoading(),
+        DebtLoaded([testDebt.copyWith(principalAmount: 1200.0)]),
+      ],
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits [DebtLoading, DebtError] when usecase fails',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Left(ServerFailure('Update failed')));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        testDebt,
+        prevPrincipal: 1000.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtError('Update failed'),
+      ],
+    );
   });
 
   group('DeleteDebtEvent', () {
@@ -253,7 +455,8 @@ void main() {
         // principal = 1000, paid = 300.
         // reversal = paid - principal = 300 - 1000 = -700.
         // reversal < 0, so isIncome = false, amount = 700.
-        when(() => mockDeleteUseCase('debt_123')).thenAnswer((_) async => const Right(null));
+        when(() => mockDeleteUseCase('debt_123'))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: 'wallet_123',
               userId: 'user_123',
@@ -262,8 +465,10 @@ void main() {
               title: 'Borç silindi',
               tag: CashMovementTags.debt,
             )).thenAnswer((_) async => true);
-        when(() => mockMetricsService.syncDebt('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockGetUseCase('wallet_123')).thenAnswer((_) async => const Right([]));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Right([]));
         return debtBloc;
       },
       act: (bloc) => bloc.add(const DeleteDebtEvent(
@@ -290,6 +495,98 @@ void main() {
               tag: CashMovementTags.debt,
             )).called(1);
       },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'does NOT record cash movement when reversal is zero (principal == paid)',
+      build: () {
+        // principal = 1000, paid = 1000 → reversal = 0
+        when(() => mockDeleteUseCase('debt_123'))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Right([]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteDebtEvent(
+        id: 'debt_123',
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        principalAmount: 1000.0,
+        totalPaidAmount: 1000.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç silindi.'),
+        DebtLoading(),
+        const DebtLoaded([]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            ));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits success with cash warning when recordCashMovement returns false',
+      build: () {
+        when(() => mockDeleteUseCase('debt_123'))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            )).thenAnswer((_) async => false);
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Right([]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteDebtEvent(
+        id: 'debt_123',
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        principalAmount: 1000.0,
+        totalPaidAmount: 300.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess(
+            'Borç silindi. (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        DebtLoading(),
+        const DebtLoaded([]),
+      ],
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'emits [DebtLoading, DebtError] when usecase fails',
+      build: () {
+        when(() => mockDeleteUseCase('debt_123'))
+            .thenAnswer((_) async => const Left(ServerFailure('Delete failed')));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteDebtEvent(
+        id: 'debt_123',
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        principalAmount: 1000.0,
+        totalPaidAmount: 300.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtError('Delete failed'),
+      ],
     );
   });
 }

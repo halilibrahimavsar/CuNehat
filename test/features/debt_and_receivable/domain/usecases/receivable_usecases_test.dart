@@ -50,9 +50,11 @@ void main() {
   );
 
   group('GetReceivablesUseCase', () {
-    test('should return Right(List<ReceivableEntity>) when query succeeds', () async {
+    test('should return Right(List<ReceivableEntity>) when query succeeds',
+        () async {
       final list = [testReceivable];
-      when(() => mockRepo.getReceivablesByWalletId('wallet_123')).thenAnswer((_) async => Right(list));
+      when(() => mockRepo.getReceivablesByWalletId('wallet_123'))
+          .thenAnswer((_) async => Right(list));
 
       final result = await getUseCase('wallet_123');
 
@@ -101,12 +103,16 @@ void main() {
 
       final result = await updateUseCase(recWithNullId);
 
-      expect(result, const Left<Failure, void>(ValidationFailure('Receivable ID cannot be null for update operation')));
+      expect(
+          result,
+          const Left<Failure, void>(ValidationFailure(
+              'Receivable ID cannot be null for update operation')));
       verifyZeroInteractions(mockRepo);
     });
 
     test('should update receivable successfully', () async {
-      when(() => mockRepo.updateReceivable(testReceivable)).thenAnswer((_) async => const Right(null));
+      when(() => mockRepo.updateReceivable(testReceivable))
+          .thenAnswer((_) async => const Right(null));
 
       final result = await updateUseCase(testReceivable);
 
@@ -117,7 +123,8 @@ void main() {
 
   group('DeleteReceivableUseCase', () {
     test('should delete receivable successfully', () async {
-      when(() => mockRepo.deleteReceivable('receivable_123')).thenAnswer((_) async => const Right(null));
+      when(() => mockRepo.deleteReceivable('receivable_123'))
+          .thenAnswer((_) async => const Right(null));
 
       final result = await deleteUseCase('receivable_123');
 

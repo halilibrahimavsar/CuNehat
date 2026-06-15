@@ -63,7 +63,8 @@ void main() {
   );
 
   group('GetInvestmentsUseCase', () {
-    test('should return a list of investments from repository on success', () async {
+    test('should return a list of investments from repository on success',
+        () async {
       // Arrange
       final list = [testInvestment];
       when(() => mockRepository.getInvestments(
@@ -227,7 +228,8 @@ void main() {
   group('GetLiveQuoteUseCase', () {
     test('should return LivePriceQuote when symbol is valid', () async {
       // Arrange
-      const quote = LivePriceQuote(price: 180.0, currency: 'USD', priceTl: 5400.0);
+      const quote =
+          LivePriceQuote(price: 180.0, currency: 'USD', priceTl: 5400.0);
       when(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
@@ -249,7 +251,8 @@ void main() {
 
     test('should trim symbol and query repository', () async {
       // Arrange
-      const quote = LivePriceQuote(price: 180.0, currency: 'USD', priceTl: 5400.0);
+      const quote =
+          LivePriceQuote(price: 180.0, currency: 'USD', priceTl: 5400.0);
       when(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
@@ -269,7 +272,8 @@ void main() {
           )).called(1);
     });
 
-    test('should return ValidationFailure when symbol is empty/whitespace', () async {
+    test('should return ValidationFailure when symbol is empty/whitespace',
+        () async {
       // Act
       final result = await getLiveQuoteUseCase(
         symbol: '   ',

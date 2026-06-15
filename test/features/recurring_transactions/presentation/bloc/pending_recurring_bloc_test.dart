@@ -109,8 +109,8 @@ void main() {
     blocTest<PendingRecurringBloc, PendingRecurringState>(
       'emits [PendingRecurringLoading, PendingRecurringFailure] on failure',
       build: () {
-        when(() => mockGetPendingUsecase())
-            .thenAnswer((_) async => const Left(ServerFailure('Pending load error')));
+        when(() => mockGetPendingUsecase()).thenAnswer(
+            (_) async => const Left(ServerFailure('Pending load error')));
         return pendingRecurringBloc;
       },
       act: (bloc) => bloc.add(LoadPendingTransactionsEvent()),
@@ -125,7 +125,8 @@ void main() {
     blocTest<PendingRecurringBloc, PendingRecurringState>(
       'emits loading and loaded states via reload after successful approve',
       build: () {
-        when(() => mockApproveUsecase(testTemplate, overrideAmount: any(named: 'overrideAmount')))
+        when(() => mockApproveUsecase(testTemplate,
+                overrideAmount: any(named: 'overrideAmount')))
             .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.syncBalance('wallet_123'))
             .thenAnswer((_) async => true);
@@ -155,21 +156,48 @@ void main() {
             .thenAnswer((_) async => const Right([]));
         return pendingRecurringBloc;
       },
-      act: (bloc) => bloc.add(ApproveTransactionEvent(testTemplate, overrideAmount: 20.0)),
+      act: (bloc) =>
+          bloc.add(ApproveTransactionEvent(testTemplate, overrideAmount: 20.0)),
       expect: () => [
         PendingRecurringLoading(),
         const PendingRecurringLoaded([]),
       ],
       verify: (_) {
-        verify(() => mockApproveUsecase(testTemplate, overrideAmount: 20.0)).called(1);
+        verify(() => mockApproveUsecase(testTemplate, overrideAmount: 20.0))
+            .called(1);
+      },
+    );
+
+    blocTest<PendingRecurringBloc, PendingRecurringState>(
+      'completes approve successfully even when syncBalance fails',
+      build: () {
+        when(() => mockApproveUsecase(testTemplate,
+                overrideAmount: any(named: 'overrideAmount')))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => false);
+        when(() => mockGetPendingUsecase())
+            .thenAnswer((_) async => const Right([]));
+        return pendingRecurringBloc;
+      },
+      act: (bloc) => bloc.add(ApproveTransactionEvent(testTemplate)),
+      expect: () => [
+        PendingRecurringLoading(),
+        const PendingRecurringLoaded([]),
+      ],
+      verify: (_) {
+        verify(() => mockApproveUsecase(testTemplate)).called(1);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
       },
     );
 
     blocTest<PendingRecurringBloc, PendingRecurringState>(
       'emits [PendingRecurringFailure] on approveUsecase failure',
       build: () {
-        when(() => mockApproveUsecase(testTemplate, overrideAmount: any(named: 'overrideAmount')))
-            .thenAnswer((_) async => const Left(ServerFailure('Approve error')));
+        when(() => mockApproveUsecase(testTemplate,
+                overrideAmount: any(named: 'overrideAmount')))
+            .thenAnswer(
+                (_) async => const Left(ServerFailure('Approve error')));
         return pendingRecurringBloc;
       },
       act: (bloc) => bloc.add(ApproveTransactionEvent(testTemplate)),
@@ -199,6 +227,7 @@ void main() {
       ],
       verify: (_) {
         verify(() => mockSkipUsecase(testTemplate)).called(1);
+        verifyNever(() => mockMetricsService.syncBalance(any()));
       },
     );
 
@@ -233,6 +262,7 @@ void main() {
       ],
       verify: (_) {
         verify(() => mockDeleteUsecase('rec_123')).called(1);
+        verifyNever(() => mockMetricsService.syncBalance(any()));
       },
     );
 

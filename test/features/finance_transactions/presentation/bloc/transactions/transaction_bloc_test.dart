@@ -13,11 +13,20 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGetTransactionsGroupedUseCase extends Mock implements GetTransactionsGroupedUseCase {}
+class MockGetTransactionsGroupedUseCase extends Mock
+    implements GetTransactionsGroupedUseCase {}
+
 class MockAddTransactionUseCase extends Mock implements AddTransactionUseCase {}
-class MockUpdateTransactionUseCase extends Mock implements UpdateTransactionUseCase {}
-class MockDeleteTransactionUseCase extends Mock implements DeleteTransactionUseCase {}
-class MockGetTransactionByIdUseCase extends Mock implements GetTransactionByIdUseCase {}
+
+class MockUpdateTransactionUseCase extends Mock
+    implements UpdateTransactionUseCase {}
+
+class MockDeleteTransactionUseCase extends Mock
+    implements DeleteTransactionUseCase {}
+
+class MockGetTransactionByIdUseCase extends Mock
+    implements GetTransactionByIdUseCase {}
+
 class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 
 void main() {
@@ -145,7 +154,8 @@ void main() {
       )),
       expect: () => [
         const TransactionLoading(previousTransactions: []),
-        const TransactionError('İşlemler yüklenirken hata oluştu: Load error', transactions: []),
+        const TransactionError('İşlemler yüklenirken hata oluştu: Load error',
+            transactions: []),
       ],
     );
   });
@@ -154,13 +164,16 @@ void main() {
     blocTest<TransactionBloc, TransactionState>(
       'pre-syncs, adds transaction, post-syncs, emits success and triggers notifier',
       build: () {
-        when(() => mockMetricsService.syncBalance('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockAddUseCase(testTransaction)).thenAnswer((_) async => const Right('tx_123'));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockAddUseCase(testTransaction))
+            .thenAnswer((_) async => const Right('tx_123'));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
       expect: () => [
-        const TransactionActionSuccess('Grocery başarıyla eklendi', transactions: []),
+        const TransactionActionSuccess('Grocery başarıyla eklendi',
+            transactions: []),
       ],
       verify: (_) {
         verify(() => mockMetricsService.syncBalance('wallet_123')).called(2);
@@ -173,11 +186,13 @@ void main() {
       build: () {
         // Pre-sync succeeds, post-sync fails
         var callCount = 0;
-        when(() => mockMetricsService.syncBalance('wallet_123')).thenAnswer((_) async {
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async {
           callCount++;
           return callCount == 1; // True first, false second
         });
-        when(() => mockAddUseCase(testTransaction)).thenAnswer((_) async => const Right('tx_123'));
+        when(() => mockAddUseCase(testTransaction))
+            .thenAnswer((_) async => const Right('tx_123'));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
@@ -185,7 +200,28 @@ void main() {
         const TransactionActionSuccess(
           'Grocery başarıyla eklendi',
           transactions: [],
-          warning: 'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+          warning:
+              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+        ),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'emits success with warning when syncBalance throws an exception',
+      build: () {
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenThrow(Exception('Sync exception'));
+        when(() => mockAddUseCase(testTransaction))
+            .thenAnswer((_) async => const Right('tx_123'));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
+      expect: () => [
+        const TransactionActionSuccess(
+          'Grocery başarıyla eklendi',
+          transactions: [],
+          warning:
+              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
         ),
       ],
     );
@@ -193,14 +229,16 @@ void main() {
     blocTest<TransactionBloc, TransactionState>(
       'emits TransactionError when addUseCase fails',
       build: () {
-        when(() => mockMetricsService.syncBalance('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockAddUseCase(testTransaction))
-            .thenAnswer((_) async => const Left(ServerFailure('Create failed')));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockAddUseCase(testTransaction)).thenAnswer(
+            (_) async => const Left(ServerFailure('Create failed')));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
       expect: () => [
-        const TransactionError('İşlem eklenirken hata oluştu: Create failed', transactions: []),
+        const TransactionError('İşlem eklenirken hata oluştu: Create failed',
+            transactions: []),
       ],
     );
   });
@@ -216,7 +254,8 @@ void main() {
         newTransaction: testTransaction,
       )),
       expect: () => [
-        const TransactionError('Sistem işlemi; ilgili kayıttan yönetilir', transactions: []),
+        const TransactionError('Sistem işlemi; ilgili kayıttan yönetilir',
+            transactions: []),
       ],
       verify: (_) {
         verifyZeroInteractions(mockUpdateUseCase);
@@ -226,8 +265,10 @@ void main() {
     blocTest<TransactionBloc, TransactionState>(
       'updates non-system transaction successfully',
       build: () {
-        when(() => mockMetricsService.syncBalance('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockUpdateUseCase(testTransaction)).thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockUpdateUseCase(testTransaction))
+            .thenAnswer((_) async => const Right(null));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(UpdateTransactionEvent(
@@ -235,12 +276,60 @@ void main() {
         newTransaction: testTransaction,
       )),
       expect: () => [
-        const TransactionActionSuccess('Grocery başarıyla güncellendi', transactions: []),
+        const TransactionActionSuccess('Grocery başarıyla güncellendi',
+            transactions: []),
       ],
       verify: (_) {
         verify(() => mockMetricsService.syncBalance('wallet_123')).called(2);
         verify(() => mockUpdateUseCase(testTransaction)).called(1);
       },
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'emits success with warning when post-sync fails',
+      build: () {
+        var callCount = 0;
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async {
+          callCount++;
+          return callCount == 1;
+        });
+        when(() => mockUpdateUseCase(testTransaction))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(UpdateTransactionEvent(
+        previousTransaction: testTransaction,
+        newTransaction: testTransaction,
+      )),
+      expect: () => [
+        const TransactionActionSuccess(
+          'Grocery başarıyla güncellendi',
+          transactions: [],
+          warning:
+              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+        ),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'emits TransactionError when updateTransactionUseCase fails',
+      build: () {
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockUpdateUseCase(testTransaction)).thenAnswer(
+            (_) async => const Left(ServerFailure('Update failed')));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(UpdateTransactionEvent(
+        previousTransaction: testTransaction,
+        newTransaction: testTransaction,
+      )),
+      expect: () => [
+        const TransactionError(
+            'İşlem güncellenirken hata oluştu: Update failed',
+            transactions: []),
+      ],
     );
   });
 
@@ -267,7 +356,8 @@ void main() {
       },
       act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_sys')),
       expect: () => [
-        const TransactionError('Sistem işlemi; ilgili kayıttan yönetilir', transactions: []),
+        const TransactionError('Sistem işlemi; ilgili kayıttan yönetilir',
+            transactions: []),
       ],
       verify: (_) {
         verifyZeroInteractions(mockDeleteUseCase);
@@ -279,8 +369,10 @@ void main() {
       build: () {
         when(() => mockGetByIdUseCase('tx_123'))
             .thenAnswer((_) async => Right(testTransaction));
-        when(() => mockMetricsService.syncBalance('wallet_123')).thenAnswer((_) async => true);
-        when(() => mockDeleteUseCase('tx_123')).thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockDeleteUseCase('tx_123'))
+            .thenAnswer((_) async => const Right(null));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
@@ -292,10 +384,56 @@ void main() {
         verify(() => mockDeleteUseCase('tx_123')).called(1);
       },
     );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'emits TransactionError when deleteTransactionUseCase fails',
+      build: () {
+        when(() => mockGetByIdUseCase('tx_123'))
+            .thenAnswer((_) async => Right(testTransaction));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockDeleteUseCase('tx_123')).thenAnswer(
+            (_) async => const Left(ServerFailure('Delete failed')));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
+      expect: () => [
+        const TransactionError('İşlem silinirken hata oluştu: Delete failed',
+            transactions: []),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'emits success with warning when post-sync fails',
+      build: () {
+        when(() => mockGetByIdUseCase('tx_123'))
+            .thenAnswer((_) async => Right(testTransaction));
+        var callCount = 0;
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async {
+          callCount++;
+          return callCount == 1;
+        });
+        when(() => mockDeleteUseCase('tx_123'))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
+      expect: () => [
+        const TransactionActionSuccess(
+          'Grocery silindi',
+          transactions: [],
+          warning:
+              'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+        ),
+      ],
+    );
   });
 
   group('Notifier reactive flow', () {
-    test('subscribes to changedNotifier and triggers query reload when notifier fires', () async {
+    test(
+        'subscribes to changedNotifier and triggers query reload when notifier fires',
+        () async {
       final grouped = {
         DateTime(2026, 6, 13): [testTransaction]
       };
@@ -307,7 +445,7 @@ void main() {
         userId: 'user_123',
         walletId: 'wallet_123',
       ));
-      
+
       await expectLater(
         transactionBloc.stream,
         emitsInOrder([

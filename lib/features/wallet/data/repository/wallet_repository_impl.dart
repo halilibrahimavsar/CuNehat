@@ -43,14 +43,15 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
-  Stream<Either<Failure, List<WalletEntity>>> watchWallets(String userId) {
-    return dataSource.watchWallets(userId).map((models) {
-      return Right<Failure, List<WalletEntity>>(
-          models.map((m) => m.toEntity()).toList());
-    }).handleError((error) {
-      return Left<Failure, List<WalletEntity>>(
-          CacheFailure('Cüzdanlar dinlenemedi: ${error.toString()}'));
-    });
+  Stream<Either<Failure, List<WalletEntity>>> watchWallets(
+      String userId) async* {
+    try {
+      await for (final models in dataSource.watchWallets(userId)) {
+        yield Right(models.map((m) => m.toEntity()).toList());
+      }
+    } catch (error) {
+      yield Left(CacheFailure('Cüzdanlar dinlenemedi: ${error.toString()}'));
+    }
   }
 
   @override

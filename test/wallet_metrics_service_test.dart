@@ -14,6 +14,7 @@ import 'package:cunehat/features/investments/domain/repositories/investment_repo
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // ---- In-memory fakes (mockito/mocktail bağımlılığı eklemeden) ----
@@ -151,8 +152,10 @@ class FakeReceivableRepository implements ReceivableRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, void>> deleteReceivable(String id) async =>
-      const Right(null);
+  Future<Either<Failure, void>> deleteReceivable(String id) async {
+    store.removeWhere((r) => r.id == id);
+    return const Right(null);
+  }
 
   @override
   Future<Either<Failure, List<ReceivableEntity>>> getReceivablesByWalletId(
@@ -161,26 +164,37 @@ class FakeReceivableRepository implements ReceivableRepository {
 }
 
 class FakeInvestmentRepository implements InvestmentRepository {
-  @override
-  Future<Either<Failure, void>> addInvestment(
-          InvestmentEntity investment) async =>
-      Right<Failure, void>(null);
+  final List<InvestmentEntity> store = [];
 
   @override
-  Future<Either<Failure, void>> deleteInvestment(String id) async =>
-      Right<Failure, void>(null);
+  Future<Either<Failure, void>> addInvestment(
+      InvestmentEntity investment) async {
+    store.add(investment);
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteInvestment(String id) async {
+    store.removeWhere((i) => i.id == id);
+    return const Right(null);
+  }
 
   @override
   Future<Either<Failure, List<InvestmentEntity>>> getInvestments({
     required String userId,
     required String walletId,
   }) async =>
-      Right<Failure, List<InvestmentEntity>>(const []);
+      Right(store
+          .where((i) => i.userId == userId && i.walletId == walletId)
+          .toList());
 
   @override
   Future<Either<Failure, void>> updateInvestment(
-          InvestmentEntity investment) async =>
-      Right<Failure, void>(null);
+      InvestmentEntity investment) async {
+    final idx = store.indexWhere((i) => i.id == investment.id);
+    if (idx >= 0) store[idx] = investment;
+    return const Right(null);
+  }
 
   @override
   Future<Either<Failure, LivePriceQuote>> getLiveQuote({
@@ -196,6 +210,71 @@ class FailingTransactionsRepository extends FakeTransactionsRepository {
   @override
   Future<Either<Failure, String>> addTransaction(TransactionEntity t) async =>
       const Left(CacheFailure('yazılamadı'));
+
+  @override
+  Future<Either<Failure, List<TransactionEntity>>> getTransactions({
+    required String userId,
+    required String walletId,
+    DateTime? startDate,
+    DateTime? endDate,
+    TransactionTypeModel? type,
+  }) async =>
+      const Left(CacheFailure('işlemler okunamadı'));
+}
+
+class FailingWalletRepository extends FakeWalletRepository {
+  @override
+  Future<Either<Failure, WalletEntity?>> getWalletById(String walletId) async =>
+      const Left(CacheFailure('okunamadı'));
+}
+
+class ThrowingWalletRepository extends FakeWalletRepository {
+  @override
+  Future<Either<Failure, WalletEntity?>> getWalletById(String walletId) async {
+    throw Exception('Database crash');
+  }
+}
+
+class ToggleFailingWalletRepository extends FakeWalletRepository {
+  int calls = 0;
+  @override
+  Future<Either<Failure, WalletEntity?>> getWalletById(String walletId) async {
+    calls++;
+    if (calls == 1) {
+      return Right(store[walletId]);
+    } else {
+      return const Left(CacheFailure('Taze okunamadı'));
+    }
+  }
+}
+
+class FailingUpdateWalletRepository extends FakeWalletRepository {
+  @override
+  Future<Either<Failure, void>> updateWallet(WalletEntity wallet) async =>
+      const Left(CacheFailure('güncellenemedi'));
+}
+
+class FailingDebtRepository extends FakeDebtRepository {
+  @override
+  Future<Either<Failure, List<DebtEntity>>> getDebtsByWalletId(
+          String walletId) async =>
+      const Left(CacheFailure('borçlar okunamadı'));
+}
+
+class FailingReceivableRepository extends FakeReceivableRepository {
+  @override
+  Future<Either<Failure, List<ReceivableEntity>>> getReceivablesByWalletId(
+          String walletId) async =>
+      const Left(CacheFailure('alacaklar okunamadı'));
+}
+
+class FailingInvestmentRepository extends FakeInvestmentRepository {
+  @override
+  Future<Either<Failure, List<InvestmentEntity>>> getInvestments({
+    required String userId,
+    required String walletId,
+  }) async =>
+      const Left(CacheFailure('yatırımlar okunamadı'));
 }
 
 /// Her okuma/yazmada event loop'a dönen varyant: eşzamanlı akışların
@@ -454,6 +533,430 @@ void main() {
       await service.syncDebt('w');
 
       expect(wallets.store['w']!.debt, 1000);
+    });
+  });
+
+  group('syncCredit', () {
+    test('isPaid alacakları hariç tutar ve cüzdanı günceller', () async {
+      final receivables = FakeReceivableRepository();
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: receivables,
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w', balance: 100);
+      receivables.store.add(ReceivableEntity(
+        id: 'r1',
+        userId: 'u',
+        walletId: 'w',
+        debtorName: 'C1',
+        amount: 200,
+        dueDate: DateTime.now(),
+        isPaid: false,
+      ));
+      receivables.store.add(ReceivableEntity(
+        id: 'r2',
+        userId: 'u',
+        walletId: 'w',
+        debtorName: 'C2',
+        amount: 300,
+        dueDate: DateTime.now(),
+        isPaid: true,
+      ));
+
+      await svc.syncCredit('w');
+
+      expect(wallets.store['w']!.credit, 200);
+    });
+
+    test('hata aldığında (Left(Failure)) cüzdanı güncellemez', () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FailingReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w', balance: 100);
+
+      await svc.syncCredit('w');
+
+      expect(wallets.store['w']!.credit, 0);
+    });
+  });
+
+  group('syncInvestment', () {
+    test('yatırım tutarlarını toplayıp cüzdanın investment alanını günceller',
+        () async {
+      final investments = FakeInvestmentRepository();
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: investments,
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w', balance: 100);
+      investments.store.add(InvestmentEntity(
+        id: 'i1',
+        userId: 'u',
+        walletId: 'w',
+        name: 'BTC',
+        amount: 100,
+        currentValue: 120,
+        type: InvestmentType.stock,
+        color: const Color(0xFF000000),
+        dateAdded: DateTime.now(),
+      ));
+      investments.store.add(InvestmentEntity(
+        id: 'i2',
+        userId: 'u',
+        walletId: 'w',
+        name: 'Gold',
+        amount: 200,
+        currentValue: 210,
+        type: InvestmentType.gold,
+        color: const Color(0xFF000000),
+        dateAdded: DateTime.now(),
+      ));
+
+      await svc.syncInvestment('w');
+
+      expect(wallets.store['w']!.investment, 330);
+    });
+
+    test('hata aldığında cüzdanı güncellemez', () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FailingInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w', balance: 100);
+
+      await svc.syncInvestment('w');
+
+      expect(wallets.store['w']!.investment, 0);
+    });
+  });
+
+  group('purgeWalletData', () {
+    test('cüzdana ait tüm alt kayıtları siler', () async {
+      final receivables = FakeReceivableRepository();
+      final investments = FakeInvestmentRepository();
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: receivables,
+        investmentRepository: investments,
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w');
+
+      txs.store.add(TransactionEntity(
+          id: 't1',
+          userId: 'u',
+          walletId: 'w',
+          title: 'T1',
+          tag: 'tag',
+          amount: 10,
+          date: DateTime.now(),
+          type: TransactionTypeModel.income));
+      txs.store.add(TransactionEntity(
+          id: 't_other',
+          userId: 'u',
+          walletId: 'other',
+          title: 'T_other',
+          tag: 'tag',
+          amount: 10,
+          date: DateTime.now(),
+          type: TransactionTypeModel.income));
+
+      debts.store.add(DebtEntity(
+          id: 'd1',
+          userId: 'u',
+          walletId: 'w',
+          title: 'D1',
+          counterparty: 'c',
+          principalAmount: 10,
+          interestRate: 0,
+          termMonths: 1,
+          startDate: DateTime.now(),
+          type: DebtType.personalDebt));
+
+      receivables.store.add(ReceivableEntity(
+          id: 'r1',
+          userId: 'u',
+          walletId: 'w',
+          debtorName: 'c',
+          amount: 10,
+          dueDate: DateTime.now()));
+
+      investments.store.add(InvestmentEntity(
+          id: 'i1',
+          userId: 'u',
+          walletId: 'w',
+          name: 'i1',
+          amount: 10,
+          currentValue: 10,
+          type: InvestmentType.stock,
+          color: const Color(0xff000000),
+          dateAdded: DateTime.now()));
+
+      await svc.purgeWalletData('w', 'u');
+
+      expect(txs.store.where((t) => t.walletId == 'w'), isEmpty);
+      expect(txs.store.where((t) => t.walletId == 'other').length, 1);
+      expect(debts.store.where((d) => d.walletId == 'w'), isEmpty);
+      expect(receivables.store.where((r) => r.walletId == 'w'), isEmpty);
+      expect(investments.store.where((i) => i.walletId == 'w'), isEmpty);
+    });
+  });
+
+  group('WalletMetricsService failure handling', () {
+    test('syncBalance returns false when transaction fetch fails', () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: FailingTransactionsRepository(),
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w');
+
+      final result = await svc.syncBalance('w');
+      expect(result, false);
+    });
+
+    test('syncBalance returns false when wallet get fails', () async {
+      final svc = WalletMetricsService(
+        walletRepository: FailingWalletRepository(),
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      final result = await svc.syncBalance('w');
+      expect(result, false);
+    });
+
+    test('syncDebt logs error but doesn\'t throw when debt fetch fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: FailingDebtRepository(),
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w');
+
+      expect(() => svc.syncDebt('w'), returnsNormally);
+    });
+
+    test('recordCashMovement returns false when db throws exception', () async {
+      final svc = WalletMetricsService(
+        walletRepository: ThrowingWalletRepository(),
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      final result = await svc.recordCashMovement(
+        walletId: 'w',
+        userId: 'u',
+        amount: 10,
+        isIncome: true,
+        title: 't',
+        tag: 'g',
+      );
+      expect(result, false);
+    });
+
+    test('syncBalance returns false when fresh wallet get fails', () async {
+      final togglingWallets = ToggleFailingWalletRepository();
+      togglingWallets.store['w'] =
+          _wallet(id: 'w', balance: 100, openingBalance: 100);
+      txs.store.add(_income('w', 20));
+
+      final svc = WalletMetricsService(
+        walletRepository: togglingWallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      final result = await svc.syncBalance('w');
+      expect(result, false);
+    });
+
+    test('syncBalance returns false when updateWallet fails', () async {
+      final failingUpdateWallets = FailingUpdateWalletRepository();
+      failingUpdateWallets.store['w'] =
+          _wallet(id: 'w', balance: 100, openingBalance: 100);
+      txs.store.add(_income('w', 20));
+
+      final svc = WalletMetricsService(
+        walletRepository: failingUpdateWallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      final result = await svc.syncBalance('w');
+      expect(result, false);
+    });
+
+    test('syncDebt logs error but doesn\'t throw when wallet get fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: FailingWalletRepository(),
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.syncDebt('w'), returnsNormally);
+    });
+
+    test('syncCredit logs error but doesn\'t throw when wallet get fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: FailingWalletRepository(),
+        debtRepository: debts,
+        receivableRepository: FailingReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.syncCredit('w'), returnsNormally);
+    });
+
+    test('syncInvestment logs error but doesn\'t throw when wallet get fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: FailingWalletRepository(),
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.syncInvestment('w'), returnsNormally);
+    });
+
+    test(
+        'syncInvestment logs error but doesn\'t throw when fresh wallet get fails',
+        () async {
+      final togglingWallets = ToggleFailingWalletRepository();
+      togglingWallets.store['w'] = _wallet(id: 'w');
+
+      final investments = FakeInvestmentRepository();
+      investments.store.add(InvestmentEntity(
+          id: 'i1',
+          userId: 'u',
+          walletId: 'w',
+          name: 'BTC',
+          amount: 100,
+          currentValue: 120,
+          type: InvestmentType.stock,
+          color: const Color(0xff000000),
+          dateAdded: DateTime.now()));
+
+      final svc = WalletMetricsService(
+        walletRepository: togglingWallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: investments,
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.syncInvestment('w'), returnsNormally);
+    });
+
+    test('purgeWalletData does not throw when transactions fetch fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: FailingTransactionsRepository(),
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
+    });
+
+    test('purgeWalletData does not throw when debts fetch fails', () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: FailingDebtRepository(),
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
+    });
+
+    test('purgeWalletData does not throw when receivables fetch fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FailingReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
+    });
+
+    test('purgeWalletData does not throw when investments fetch fails',
+        () async {
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FailingInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
     });
   });
 

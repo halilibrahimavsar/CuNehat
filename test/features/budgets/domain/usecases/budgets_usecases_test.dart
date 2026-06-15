@@ -12,7 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBudgetRepository extends Mock implements BudgetRepository {}
-class MockTransactionsRepository extends Mock implements TransactionsRepository {}
+
+class MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
 
 void main() {
   late MockBudgetRepository mockBudgetRepo;
@@ -47,7 +49,9 @@ void main() {
   );
 
   group('GetBudgetsUsecase', () {
-    test('should map spent amounts from current month expenses and return Right(updatedBudgets)', () async {
+    test(
+        'should map spent amounts from current month expenses and return Right(updatedBudgets)',
+        () async {
       final now = DateTime.now();
       final start = DateTime(now.year, now.month, 1);
       final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
@@ -85,7 +89,8 @@ void main() {
         ),
       ];
 
-      when(() => mockBudgetRepo.getBudgets()).thenAnswer((_) async => Right([testBudget]));
+      when(() => mockBudgetRepo.getBudgets())
+          .thenAnswer((_) async => Right([testBudget]));
       when(() => mockTransactionsRepo.getTransactions(
             userId: 'user_123',
             walletId: 'wallet_123',
@@ -115,7 +120,8 @@ void main() {
 
     test('should return Left(Failure) when getBudgets fails', () async {
       const failure = ServerFailure('DB error');
-      when(() => mockBudgetRepo.getBudgets()).thenAnswer((_) async => const Left(failure));
+      when(() => mockBudgetRepo.getBudgets())
+          .thenAnswer((_) async => const Left(failure));
 
       final result = await getUseCase('user_123', 'wallet_123');
 
@@ -130,7 +136,8 @@ void main() {
       final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
       const failure = ServerFailure('Network error');
 
-      when(() => mockBudgetRepo.getBudgets()).thenAnswer((_) async => Right([testBudget]));
+      when(() => mockBudgetRepo.getBudgets())
+          .thenAnswer((_) async => Right([testBudget]));
       when(() => mockTransactionsRepo.getTransactions(
             userId: 'user_123',
             walletId: 'wallet_123',
@@ -155,7 +162,8 @@ void main() {
 
   group('SaveBudgetUsecase', () {
     test('should save budget successfully', () async {
-      when(() => mockBudgetRepo.saveBudget(testBudget)).thenAnswer((_) async => const Right(null));
+      when(() => mockBudgetRepo.saveBudget(testBudget))
+          .thenAnswer((_) async => const Right(null));
 
       final result = await saveUseCase(testBudget);
 
@@ -166,7 +174,8 @@ void main() {
 
   group('DeleteBudgetUsecase', () {
     test('should delete budget successfully', () async {
-      when(() => mockBudgetRepo.deleteBudget('Food')).thenAnswer((_) async => const Right(null));
+      when(() => mockBudgetRepo.deleteBudget('Food'))
+          .thenAnswer((_) async => const Right(null));
 
       final result = await deleteUseCase('Food');
 

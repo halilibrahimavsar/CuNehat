@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockDebtRepository extends Mock implements DebtRepository {}
+
 class MockNotificationService extends Mock implements NotificationService {}
 
 void main() {
@@ -65,7 +66,8 @@ void main() {
   group('GetDebtsUseCase', () {
     test('should return Right(List<DebtEntity>) when query succeeds', () async {
       final list = [testDebt];
-      when(() => mockRepo.getDebtsByWalletId('wallet_123')).thenAnswer((_) async => Right(list));
+      when(() => mockRepo.getDebtsByWalletId('wallet_123'))
+          .thenAnswer((_) async => Right(list));
 
       final result = await getUseCase('wallet_123');
 
@@ -75,7 +77,9 @@ void main() {
   });
 
   group('AddDebtUseCase', () {
-    test('should assign v7 ID, save debt, and schedule notifications if not paid and has dueDate', () async {
+    test(
+        'should assign v7 ID, save debt, and schedule notifications if not paid and has dueDate',
+        () async {
       final debtWithoutId = DebtEntity(
         id: null,
         userId: 'user_123',
@@ -128,7 +132,8 @@ void main() {
           )).called(1);
     });
 
-    test('should save debt but NOT schedule notifications if dueDate is null', () async {
+    test('should save debt but NOT schedule notifications if dueDate is null',
+        () async {
       final debtNoDueDate = DebtEntity(
         id: 'debt_123',
         userId: 'user_123',
@@ -144,7 +149,8 @@ void main() {
         isPaid: false,
       );
 
-      when(() => mockRepo.addDebt(debtNoDueDate)).thenAnswer((_) async => const Right(null));
+      when(() => mockRepo.addDebt(debtNoDueDate))
+          .thenAnswer((_) async => const Right(null));
 
       final result = await addUseCase(debtNoDueDate);
 
@@ -171,14 +177,20 @@ void main() {
 
       final result = await updateUseCase(debtWithNullId);
 
-      expect(result, const Left<Failure, void>(ValidationFailure('Debt ID cannot be null for update operation')));
+      expect(
+          result,
+          const Left<Failure, void>(ValidationFailure(
+              'Debt ID cannot be null for update operation')));
       verifyZeroInteractions(mockRepo);
       verifyZeroInteractions(mockNotificationService);
     });
 
-    test('should cancel old notifications and schedule new ones if not paid', () async {
-      when(() => mockRepo.updateDebt(testDebt)).thenAnswer((_) async => const Right(null));
-      when(() => mockNotificationService.cancelNotification(any())).thenAnswer((_) async {});
+    test('should cancel old notifications and schedule new ones if not paid',
+        () async {
+      when(() => mockRepo.updateDebt(testDebt))
+          .thenAnswer((_) async => const Right(null));
+      when(() => mockNotificationService.cancelNotification(any()))
+          .thenAnswer((_) async {});
       when(() => mockNotificationService.scheduleNotification(
             id: any(named: 'id'),
             title: any(named: 'title'),
@@ -189,11 +201,13 @@ void main() {
       final result = await updateUseCase(testDebt);
 
       expect(result, const Right<Failure, void>(null));
-      
+
       final notifId = testDebt.id.hashCode;
       verify(() => mockRepo.updateDebt(testDebt)).called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId)).called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId + 1)).called(1);
+      verify(() => mockNotificationService.cancelNotification(notifId))
+          .called(1);
+      verify(() => mockNotificationService.cancelNotification(notifId + 1))
+          .called(1);
       verify(() => mockNotificationService.scheduleNotification(
             id: notifId,
             title: 'Borç Hatırlatması',
@@ -211,8 +225,10 @@ void main() {
 
   group('DeleteDebtUseCase', () {
     test('should delete debt and cancel notifications', () async {
-      when(() => mockRepo.deleteDebt('debt_123')).thenAnswer((_) async => const Right(null));
-      when(() => mockNotificationService.cancelNotification(any())).thenAnswer((_) async {});
+      when(() => mockRepo.deleteDebt('debt_123'))
+          .thenAnswer((_) async => const Right(null));
+      when(() => mockNotificationService.cancelNotification(any()))
+          .thenAnswer((_) async {});
 
       final result = await deleteUseCase('debt_123');
 
@@ -220,8 +236,10 @@ void main() {
 
       final notifId = 'debt_123'.hashCode;
       verify(() => mockRepo.deleteDebt('debt_123')).called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId)).called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId + 1)).called(1);
+      verify(() => mockNotificationService.cancelNotification(notifId))
+          .called(1);
+      verify(() => mockNotificationService.cancelNotification(notifId + 1))
+          .called(1);
     });
   });
 }

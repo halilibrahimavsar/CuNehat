@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -86,7 +87,7 @@ class CsvService {
             final amount = row[2] is num
                 ? (row[2] as num).toDouble()
                 : parseAmount(row[2].toString());
-            final date = _parseDate(row[3].toString());
+            final date = parseDate(row[3].toString());
             final typeStr = row[4].toString();
             final isSystemStr = row[5].toString().toLowerCase();
 
@@ -130,7 +131,8 @@ class CsvService {
 
   /// ISO 8601 (kendi export'umuz) ve yaygın TR/Avrupa biçimleri
   /// (31.01.2024, 31/01/2024, 31-01-2024).
-  static DateTime? _parseDate(String raw) {
+  @visibleForTesting
+  static DateTime? parseDate(String raw) {
     final trimmed = raw.trim();
     final iso = DateTime.tryParse(trimmed);
     if (iso != null) return iso;

@@ -13,7 +13,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetBudgetsUsecase extends Mock implements GetBudgetsUsecase {}
+
 class MockSaveBudgetUsecase extends Mock implements SaveBudgetUsecase {}
+
 class MockDeleteBudgetUsecase extends Mock implements DeleteBudgetUsecase {}
 
 void main() {
@@ -65,7 +67,8 @@ void main() {
             .thenAnswer((_) async => Right([testBudget]));
         return budgetsBloc;
       },
-      act: (bloc) => bloc.add(const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123')),
+      act: (bloc) => bloc.add(
+          const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123')),
       expect: () => [
         BudgetsLoading(),
         BudgetsLoaded([testBudget]),
@@ -82,7 +85,8 @@ void main() {
             .thenAnswer((_) async => const Left(ServerFailure('Load fail')));
         return budgetsBloc;
       },
-      act: (bloc) => bloc.add(const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123')),
+      act: (bloc) => bloc.add(
+          const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123')),
       expect: () => [
         BudgetsLoading(),
         const BudgetsError(ServerFailure('Load fail')),
@@ -94,7 +98,8 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'saves budget and does not reload if credentials are not set',
       build: () {
-        when(() => mockSaveUseCase(testBudget)).thenAnswer((_) async => const Right(null));
+        when(() => mockSaveUseCase(testBudget))
+            .thenAnswer((_) async => const Right(null));
         return budgetsBloc;
       },
       act: (bloc) => bloc.add(SaveBudgetEvent(testBudget)),
@@ -108,14 +113,16 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'saves budget and triggers reload if credentials are set',
       build: () {
-        when(() => mockSaveUseCase(testBudget)).thenAnswer((_) async => const Right(null));
+        when(() => mockSaveUseCase(testBudget))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockGetUseCase('user_123', 'wallet_123'))
             .thenAnswer((_) async => Right([testBudget]));
         return budgetsBloc;
       },
       act: (bloc) async {
         // Set credentials by loading first
-        bloc.add(const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
+        bloc.add(
+            const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
         await bloc.stream.firstWhere((state) => state is BudgetsLoaded);
         bloc.add(SaveBudgetEvent(testBudget));
       },
@@ -147,15 +154,32 @@ void main() {
 
   group('DeleteBudgetEvent', () {
     blocTest<BudgetsBloc, BudgetsState>(
+      'deletes budget and does NOT reload if credentials are not set',
+      build: () {
+        when(() => mockDeleteUseCase('Food'))
+            .thenAnswer((_) async => const Right(null));
+        return budgetsBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteBudgetEvent('Food')),
+      expect: () => [],
+      verify: (_) {
+        verify(() => mockDeleteUseCase('Food')).called(1);
+        verifyNever(() => mockGetUseCase(any(), any()));
+      },
+    );
+
+    blocTest<BudgetsBloc, BudgetsState>(
       'deletes budget and triggers reload if credentials are set',
       build: () {
-        when(() => mockDeleteUseCase('Food')).thenAnswer((_) async => const Right(null));
+        when(() => mockDeleteUseCase('Food'))
+            .thenAnswer((_) async => const Right(null));
         when(() => mockGetUseCase('user_123', 'wallet_123'))
             .thenAnswer((_) async => const Right([]));
         return budgetsBloc;
       },
       act: (bloc) async {
-        bloc.add(const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
+        bloc.add(
+            const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
         await bloc.stream.firstWhere((state) => state is BudgetsLoaded);
         bloc.add(const DeleteBudgetEvent('Food'));
       },
@@ -186,12 +210,21 @@ void main() {
   });
 
   group('TransactionsChangedNotifier Integration', () {
-    test('refreshes budgets when notifier stream fires and credentials are set', () async {
+    test('does NOT refresh budgets when notifier fires but credentials are not set',
+        () async {
+      changedNotifier.notify();
+      // No query should have been made
+      verifyZeroInteractions(mockGetUseCase);
+    });
+
+    test('refreshes budgets when notifier stream fires and credentials are set',
+        () async {
       when(() => mockGetUseCase('user_123', 'wallet_123'))
           .thenAnswer((_) async => Right([testBudget]));
 
       // Set credentials
-      budgetsBloc.add(const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
+      budgetsBloc.add(
+          const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
 
       await expectLater(
         budgetsBloc.stream,

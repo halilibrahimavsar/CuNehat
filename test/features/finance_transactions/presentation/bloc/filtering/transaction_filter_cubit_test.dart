@@ -16,7 +16,8 @@ void main() {
       cubit.close();
     });
 
-    test('initial state has correct default values for current month range', () {
+    test('initial state has correct default values for current month range',
+        () {
       final now = DateTime.now();
       final expectedStart = DateTime(now.year, now.month, 1);
       final expectedEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);

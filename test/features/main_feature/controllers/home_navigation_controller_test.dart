@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 void main() {
-  testWidgets('initial state has correct default values', (WidgetTester tester) async {
+  testWidgets('initial state has correct default values',
+      (WidgetTester tester) async {
     final controller = HomeNavigationController(const TestVSync());
     expect(controller.horizontalController.value, 0.5);
     expect(controller.isAtMainView, true);
@@ -14,7 +15,8 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('setupViewStack updates view stack views', (WidgetTester tester) async {
+  testWidgets('setupViewStack updates view stack views',
+      (WidgetTester tester) async {
     final controller = HomeNavigationController(const TestVSync());
     const mainView = Text('Main');
     const subView1 = Text('Sub 1');
@@ -32,7 +34,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('navigateToView updates active index and remembers sub index for slider state', (WidgetTester tester) async {
+  testWidgets(
+      'navigateToView updates active index and remembers sub index for slider state',
+      (WidgetTester tester) async {
     final controller = HomeNavigationController(const TestVSync());
     const mainView = Text('Main');
     const subView1 = Text('Sub 1');
@@ -56,7 +60,8 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('closeToMain returns to index 0 and clears selectedSubIndices', (WidgetTester tester) async {
+  testWidgets('closeToMain returns to index 0 and clears selectedSubIndices',
+      (WidgetTester tester) async {
     final controller = HomeNavigationController(const TestVSync());
     const mainView = Text('Main');
     const subView1 = Text('Sub 1');
@@ -81,7 +86,8 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('onWalletChanged calls closeToMain and clears selectedSubIndices', (WidgetTester tester) async {
+  testWidgets('onWalletChanged calls closeToMain and clears selectedSubIndices',
+      (WidgetTester tester) async {
     final controller = HomeNavigationController(const TestVSync());
     const mainView = Text('Main');
     const subView1 = Text('Sub 1');
@@ -104,7 +110,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('horizontal controller movement closes subviews if not at main view', (WidgetTester tester) async {
+  testWidgets(
+      'horizontal controller movement closes subviews if not at main view',
+      (WidgetTester tester) async {
     final controller = HomeNavigationController(const TestVSync());
     const mainView = Text('Main');
     const subView1 = Text('Sub 1');

@@ -15,8 +15,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCsvService extends Mock implements CsvService {}
-class MockTransactionsRepository extends Mock implements TransactionsRepository {}
+
+class MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
+
 class MockWalletRepository extends Mock implements WalletRepository {}
+
 class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 
 void main() {
@@ -96,8 +100,8 @@ void main() {
               userId: 'user_123',
               walletId: 'wallet_123',
             )).thenAnswer((_) async => Right([testTx]));
-        when(() => mockCsvService.exportTransactionsToCSV([testTx], shareText: any(named: 'shareText')))
-            .thenAnswer((_) async {});
+        when(() => mockCsvService.exportTransactionsToCSV([testTx],
+            shareText: any(named: 'shareText'))).thenAnswer((_) async {});
         return cubit;
       },
       act: (cubit) => cubit.exportTransactions('user_123', 'wallet_123'),
@@ -106,8 +110,10 @@ void main() {
         const DataExportImportSuccess(DataExportMessageType.exportSuccess),
       ],
       verify: (_) {
-        verify(() => mockTxRepo.getTransactions(userId: 'user_123', walletId: 'wallet_123')).called(1);
-        verify(() => mockCsvService.exportTransactionsToCSV([testTx])).called(1);
+        verify(() => mockTxRepo.getTransactions(
+            userId: 'user_123', walletId: 'wallet_123')).called(1);
+        verify(() => mockCsvService.exportTransactionsToCSV([testTx]))
+            .called(1);
       },
     );
 
@@ -123,10 +129,12 @@ void main() {
       act: (cubit) => cubit.exportTransactions('user_123', 'wallet_123'),
       expect: () => [
         DataExportImportLoading(),
-        const DataExportImportSuccess(DataExportMessageType.noTransactionsToExport),
+        const DataExportImportSuccess(
+            DataExportMessageType.noTransactionsToExport),
       ],
       verify: (_) {
-        verifyNever(() => mockCsvService.exportTransactionsToCSV(any(), shareText: any(named: 'shareText')));
+        verifyNever(() => mockCsvService.exportTransactionsToCSV(any(),
+            shareText: any(named: 'shareText')));
       },
     );
 
@@ -134,9 +142,11 @@ void main() {
       'emits [DataExportImportLoading, DataExportImportError] on failure',
       build: () {
         when(() => mockTxRepo.getTransactions(
-              userId: 'user_123',
-              walletId: 'wallet_123',
-            )).thenAnswer((_) async => const Left(ServerFailure('Export failed')));
+                  userId: 'user_123',
+                  walletId: 'wallet_123',
+                ))
+            .thenAnswer(
+                (_) async => const Left(ServerFailure('Export failed')));
         return cubit;
       },
       act: (cubit) => cubit.exportTransactions('user_123', 'wallet_123'),
@@ -172,7 +182,8 @@ void main() {
       act: (cubit) => cubit.importTransactions('user_123'),
       expect: () => [
         DataExportImportLoading(),
-        const DataExportImportSuccess(DataExportMessageType.noValidTransactionsInCsv),
+        const DataExportImportSuccess(
+            DataExportMessageType.noValidTransactionsInCsv),
       ],
     );
 
@@ -203,11 +214,15 @@ void main() {
       ],
       verify: (_) {
         verify(() => mockWalletRepo.createWallet(any())).called(1);
-        final txCaptured = verify(() => mockTxRepo.addTransaction(captureAny())).captured.first as TransactionEntity;
+        final txCaptured = verify(() => mockTxRepo.addTransaction(captureAny()))
+            .captured
+            .first as TransactionEntity;
         // Verify transaction is copied with the new active wallet id
         expect(txCaptured.walletId, 'new_wallet_123');
-        verify(() => mockMetricsService.syncBalance('new_wallet_123')).called(1);
-        verify(() => mockWalletRepo.setActiveWallet(userId: 'user_123', newActiveWalletId: 'new_wallet_123')).called(1);
+        verify(() => mockMetricsService.syncBalance('new_wallet_123'))
+            .called(1);
+        verify(() => mockWalletRepo.setActiveWallet(
+            userId: 'user_123', newActiveWalletId: 'new_wallet_123')).called(1);
       },
     );
 
@@ -216,8 +231,8 @@ void main() {
       build: () {
         when(() => mockCsvService.importTransactionsFromCSV('user_123'))
             .thenAnswer((_) async => CsvImportResult([testTx], 0));
-        when(() => mockWalletRepo.createWallet(any()))
-            .thenAnswer((_) async => const Left(ServerFailure('Wallet creation failed')));
+        when(() => mockWalletRepo.createWallet(any())).thenAnswer(
+            (_) async => const Left(ServerFailure('Wallet creation failed')));
         return cubit;
       },
       act: (cubit) => cubit.importTransactions('user_123'),

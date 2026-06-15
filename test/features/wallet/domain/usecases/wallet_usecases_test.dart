@@ -65,7 +65,8 @@ void main() {
   );
 
   group('WalletCreateUseCase', () {
-    test('should return Right(id) when wallet has an ID and creation succeeds', () async {
+    test('should return Right(id) when wallet has an ID and creation succeeds',
+        () async {
       when(() => mockRepository.createWallet(testWallet))
           .thenAnswer((_) async => const Right('wallet_123'));
 
@@ -76,7 +77,8 @@ void main() {
       verifyNoMoreInteractions(mockRepository);
     });
 
-    test('should generate V7 ID and return Right(id) when wallet ID is null', () async {
+    test('should generate V7 ID and return Right(id) when wallet ID is null',
+        () async {
       final walletWithoutId = WalletEntity(
         id: null,
         userId: 'user_123',
@@ -93,10 +95,10 @@ void main() {
       String? capturedId;
       when(() => mockRepository.createWallet(any()))
           .thenAnswer((invocation) async {
-            final wallet = invocation.positionalArguments[0] as WalletEntity;
-            capturedId = wallet.id;
-            return Right(wallet.id!);
-          });
+        final wallet = invocation.positionalArguments[0] as WalletEntity;
+        capturedId = wallet.id;
+        return Right(wallet.id!);
+      });
 
       final result = await createUseCase(walletWithoutId);
 
@@ -146,7 +148,8 @@ void main() {
   });
 
   group('WalletGetUseCase', () {
-    test('should return Right(List<WalletEntity>) when retrieval succeeds', () async {
+    test('should return Right(List<WalletEntity>) when retrieval succeeds',
+        () async {
       final wallets = [testWallet];
       when(() => mockRepository.getWallets('user_123'))
           .thenAnswer((_) async => Right(wallets));
@@ -189,7 +192,8 @@ void main() {
       verifyNoMoreInteractions(mockRepository);
     });
 
-    test('should emit Left(Failure) from the stream when database fails', () async {
+    test('should emit Left(Failure) from the stream when database fails',
+        () async {
       const failure = ServerFailure('Stream failure');
       when(() => mockRepository.watchWallets('user_123'))
           .thenAnswer((_) => Stream.value(const Left(failure)));
@@ -219,7 +223,8 @@ void main() {
       verifyNoMoreInteractions(mockRepository);
     });
 
-    test('should return Left(ValidationFailure) when wallet ID is null', () async {
+    test('should return Left(ValidationFailure) when wallet ID is null',
+        () async {
       final walletWithNullId = WalletEntity(
         id: null,
         userId: 'user_123',
@@ -235,7 +240,10 @@ void main() {
 
       final result = await updateUseCase(walletWithNullId);
 
-      expect(result, const Left<Failure, void>(ValidationFailure('Wallet ID cannot be null for update operation')));
+      expect(
+          result,
+          const Left<Failure, void>(ValidationFailure(
+              'Wallet ID cannot be null for update operation')));
       verifyZeroInteractions(mockRepository);
     });
 
@@ -253,13 +261,15 @@ void main() {
   });
 
   group('WalletSetActiveUseCase', () {
-    test('should return Right(void) when setting active wallet succeeds', () async {
+    test('should return Right(void) when setting active wallet succeeds',
+        () async {
       when(() => mockRepository.setActiveWallet(
             userId: 'user_123',
             newActiveWalletId: 'wallet_123',
           )).thenAnswer((_) async => const Right(null));
 
-      final result = await setActiveUseCase(userId: 'user_123', walletId: 'wallet_123');
+      final result =
+          await setActiveUseCase(userId: 'user_123', walletId: 'wallet_123');
 
       expect(result, const Right<Failure, void>(null));
       verify(() => mockRepository.setActiveWallet(
@@ -269,14 +279,16 @@ void main() {
       verifyNoMoreInteractions(mockRepository);
     });
 
-    test('should return Left(Failure) when setting active wallet fails', () async {
+    test('should return Left(Failure) when setting active wallet fails',
+        () async {
       const failure = ServerFailure('Failed to set active');
       when(() => mockRepository.setActiveWallet(
             userId: 'user_123',
             newActiveWalletId: 'wallet_123',
           )).thenAnswer((_) async => const Left(failure));
 
-      final result = await setActiveUseCase(userId: 'user_123', walletId: 'wallet_123');
+      final result =
+          await setActiveUseCase(userId: 'user_123', walletId: 'wallet_123');
 
       expect(result, const Left<Failure, void>(failure));
       verify(() => mockRepository.setActiveWallet(
@@ -288,7 +300,8 @@ void main() {
   });
 
   group('WalletGetActiveUseCase', () {
-    test('should return Right(WalletEntity?) when retrieval succeeds', () async {
+    test('should return Right(WalletEntity?) when retrieval succeeds',
+        () async {
       when(() => mockRepository.getActiveWallet('user_123'))
           .thenAnswer((_) async => Right(testWallet));
 
@@ -313,7 +326,8 @@ void main() {
   });
 
   group('WalletGetByIdUseCase', () {
-    test('should return Right(WalletEntity?) when retrieval succeeds', () async {
+    test('should return Right(WalletEntity?) when retrieval succeeds',
+        () async {
       when(() => mockRepository.getWalletById('wallet_123'))
           .thenAnswer((_) async => Right(testWallet));
 

@@ -15,14 +15,16 @@ void main() {
       build: () => LanguageBloc(),
       act: (bloc) => bloc.add(LanguageChangeEvent('en')),
       expect: () => [
-        isA<LanguageState>().having((s) => s.languageCode, 'languageCode', 'en'),
+        isA<LanguageState>()
+            .having((s) => s.languageCode, 'languageCode', 'en'),
       ],
       verify: (bloc) {
         expect(Intl.defaultLocale, 'en');
       },
     );
 
-    test('preloadLanguage loads saved language code from SharedPreferences', () async {
+    test('preloadLanguage loads saved language code from SharedPreferences',
+        () async {
       SharedPreferences.setMockInitialValues({
         'selected_language': 'tr',
       });

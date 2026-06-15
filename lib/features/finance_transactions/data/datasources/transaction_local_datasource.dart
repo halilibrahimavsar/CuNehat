@@ -3,18 +3,27 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
 
 @singleton
 class TransactionHiveDataSource {
   static const String _boxName = 'transactions';
 
+  final HiveInterface _hive;
+
+  @visibleForTesting
+  TransactionHiveDataSource(this._hive);
+
+  @factoryMethod
+  static TransactionHiveDataSource create() => TransactionHiveDataSource(Hive);
+
   static DateTime _dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
 
   Future<Box<TransactionModel>> _getBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox<TransactionModel>(_boxName);
+    if (!_hive.isBoxOpen(_boxName)) {
+      return await _hive.openBox<TransactionModel>(_boxName);
     }
-    return Hive.box<TransactionModel>(_boxName);
+    return _hive.box<TransactionModel>(_boxName);
   }
 
   Future<List<TransactionModel>> getTransactions({
