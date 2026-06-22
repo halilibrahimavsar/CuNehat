@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
@@ -134,6 +135,54 @@ void main() {
       final initial = await stream.first;
       expect(initial.length, 1);
       expect(initial[0].id, wModel.id);
+    });
+
+    test('watchWallets should emit updated wallets when box changes', () async {
+      await dataSource.createWallet(wModel);
+
+      final stream = dataSource.watchWallets('user_1');
+      
+      final completer = Completer<List<List<WalletModel>>>();
+      final emitted = <List<WalletModel>>[];
+      
+      final sub = stream.listen(
+        (data) {
+          emitted.add(data);
+          if (emitted.length == 2) {
+            completer.complete(emitted);
+          }
+        },
+      );
+      
+      // Wait for first yield
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      // Update wallet to trigger box change listener
+      final updated = wModel.copyWith(name: 'Updated Name');
+      await dataSource.updateWallet(updated);
+      
+      // Wait for debounce timer (150ms) to fire and emit the second item
+      final result = await completer.future.timeout(const Duration(seconds: 2));
+      
+      expect(result.length, 2);
+      expect(result[0][0].name, 'Cash');
+      expect(result[1][0].name, 'Updated Name');
+      
+      await sub.cancel();
+    });
+
+    test('should open boxes if closed', () async {
+      // Close boxes
+      await walletBox.close();
+      await userBox.close();
+      
+      // Now perform an action that opens them
+      final wallet = await dataSource.getWalletById('some_id');
+      expect(wallet, isNull);
+      
+      // Re-open boxes for tearDown cleanup to not fail
+      walletBox = await Hive.openBox<WalletModel>('wallets');
+      userBox = await Hive.openBox<Map>('users');
     });
   });
 }

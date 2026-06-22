@@ -11,9 +11,11 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
@@ -61,19 +63,22 @@ void main() {
   });
 
   Widget buildTestableWidget(Widget child) {
-    return MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('tr'),
-        Locale('en'),
-      ],
-      locale: const Locale('tr'),
-      home: child,
+    return BlocProvider<AmountVisibilityCubit>(
+      create: (_) => AmountVisibilityCubit(),
+      child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('tr'),
+          Locale('en'),
+        ],
+        locale: const Locale('tr'),
+        home: child,
+      ),
     );
   }
 
@@ -328,5 +333,67 @@ void main() {
     await tester.ensureVisible(pieChartFinder);
     await tester.tap(pieChartFinder);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('tapping legend item opens category details bottom sheet',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final now = DateTime.now();
+    final transactions = [
+      TransactionEntity(
+        id: 'tx_1',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Lunch',
+        tag: 'Food',
+        amount: 50.0,
+        date: now,
+        type: TransactionTypeModel.expense,
+      ),
+    ];
+
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {now: transactions},
+        allTransactions: transactions,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const TransactionReportPage(
+          userId: 'user_123',
+          walletId: 'wallet_123',
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Verify Food is rendered in the legend
+    final foodLegendFinder = find.text('Food');
+    expect(foodLegendFinder, findsOneWidget);
+
+    // Tap the legend item
+    await tester.tap(foodLegendFinder);
+    await tester.pumpAndSettle();
+
+    // Verify that the bottom sheet is opened by checking bottom sheet elements
+    // Header should show the category name
+    expect(find.text('Food'), findsWidgets); // One in legend, one in sheet header
+    // Sheet should show category total amount
+    expect(find.text('50.00 ₺'), findsWidgets);
+    
+    // Wait for list entrance animation
+    await tester.pump(const Duration(milliseconds: 500));
+    
+    // Sheet should render the transaction details in the list
+    expect(find.text('Lunch'), findsOneWidget);
   });
 }

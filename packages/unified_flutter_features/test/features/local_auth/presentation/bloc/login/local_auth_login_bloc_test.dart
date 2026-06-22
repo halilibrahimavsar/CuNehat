@@ -109,7 +109,7 @@ void main() {
       },
       act: (bloc) async {
         bloc.add(const VerifyPinLoginEvent(pin: '123456'));
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
       },
       expect: () => [
         predicate<LocalAuthLoginState>(
@@ -130,7 +130,7 @@ void main() {
       },
       act: (bloc) async {
         bloc.add(const VerifyPinLoginEvent(pin: 'wrong'));
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
       },
       expect: () => [
         predicate<LocalAuthLoginState>(
@@ -156,7 +156,7 @@ void main() {
       seed: () => const LocalAuthLoginState(failedAttempts: 2),
       act: (bloc) async {
         bloc.add(const VerifyPinLoginEvent(pin: 'wrong'));
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
       },
       expect: () => [
         predicate<LocalAuthLoginState>((s) =>
@@ -180,9 +180,9 @@ void main() {
       ),
       act: (bloc) async {
         bloc.add(const VerifyPinLoginEvent(pin: '123456'));
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
       },
-      expect: () => [],
+      expect: () => const <LocalAuthLoginState>[],
     );
 
     blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
@@ -194,7 +194,7 @@ void main() {
       },
       act: (bloc) async {
         bloc.add(const VerifyPinLoginEvent(pin: '123456'));
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
       },
       expect: () => [
         predicate<LocalAuthLoginState>(
@@ -237,7 +237,7 @@ void main() {
         return LocalAuthLoginBloc(repository: repository);
       },
       act: (bloc) => bloc.add(const BiometricAuthLoginEvent()),
-      expect: () => [],
+      expect: () => const <LocalAuthLoginState>[],
     );
 
     blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
@@ -250,7 +250,7 @@ void main() {
         lockoutEndTime: 9999999999999,
       ),
       act: (bloc) => bloc.add(const BiometricAuthLoginEvent()),
-      expect: () => [],
+      expect: () => const <LocalAuthLoginState>[],
     );
   });
 
@@ -295,7 +295,7 @@ void main() {
         return LocalAuthLoginBloc(repository: repository);
       },
       act: (bloc) => bloc.add(CheckLockoutEvent()),
-      expect: () => [],
+      expect: () => const <LocalAuthLoginState>[],
     );
   });
 }

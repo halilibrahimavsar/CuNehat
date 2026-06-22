@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -14,11 +16,27 @@ import 'package:mocktail/mocktail.dart';
 
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
+class MockHttpClientIo extends Mock implements HttpClient {}
+class MockHttpClientRequest extends Mock implements HttpClientRequest {}
+class MockHttpClientResponse extends Mock implements HttpClientResponse {}
+class MockHttpHeaders extends Mock implements HttpHeaders {}
+
+class FakeStreamListInt extends Fake implements Stream<List<int>> {}
+
+class TestHttpOverrides extends HttpOverrides {
+  final HttpClient client;
+  TestHttpOverrides(this.client);
+
+  @override
+  HttpClient createHttpClient(SecurityContext? context) => client;
+}
+
 void main() {
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
   setUpAll(() {
     getIt.allowReassignment = true;
+    registerFallbackValue(FakeStreamListInt());
   });
 
   setUp(() {
@@ -283,5 +301,155 @@ void main() {
     expect(updatedInvestment!.targetAmount, 12000.0);
     expect(updatedInvestment!.goalCategory, 'egitim');
     expect(updatedInvestment!.color, Colors.orange);
+  });
+
+  testWidgets('renders AddStockSheet and handles foreign currency conversion quote display and save',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    InvestmentEntity? savedInvestment;
+
+    when(() => mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
+        .thenAnswer((_) async => const Right(
+              LivePriceQuote(price: 150.0, currency: 'USD', priceTl: 4875.0),
+            ));
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddStockSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          onSave: (inv) => savedInvestment = inv,
+        ),
+      ),
+    );
+
+    // Enter AAPL
+    final symbolFinder = find.byWidgetPredicate((widget) =>
+        widget is TextField &&
+        widget.decoration?.hintText == 'Sembol (Örn: AAPL, THYAO.IS)');
+    await tester.enterText(symbolFinder, 'AAPL');
+
+    // Enter quantity
+    final quantityFinder = find.byWidgetPredicate((widget) =>
+        widget is TextField &&
+        widget.decoration?.hintText == 'Adet');
+    await tester.enterText(quantityFinder, '2');
+
+    // Tap Hesapla
+    await tester.tap(find.text('Hesapla'));
+    await tester.pumpAndSettle();
+
+    // Verify foreign price message shows USD and price and priceTl with approximation sign
+    expect(find.text('Güncel Fiyat: 150.0 USD (≈4875.00 ₺)'), findsOneWidget);
+
+    // Save should succeed with name field empty (which uses localized fallback "Hisse Yatırımı")
+    await tester.tap(find.text('Kaydet'));
+    await tester.pumpAndSettle();
+
+    expect(savedInvestment, isNotNull);
+    expect(savedInvestment!.name, 'Hisse Yatırımı');
+    expect(savedInvestment!.amount, 9750.0);
+    expect(savedInvestment!.currentValue, 9750.0);
+    expect(savedInvestment!.currency, 'USD');
+  });
+
+  testWidgets('renders AddStockSheet and handles autocomplete symbol search selection',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final mockHttpClient = MockHttpClientIo();
+    final mockRequest = MockHttpClientRequest();
+    final mockResponse = MockHttpClientResponse();
+    final mockHeaders = MockHttpHeaders();
+
+    HttpOverrides.global = TestHttpOverrides(mockHttpClient);
+    addTearDown(() {
+      HttpOverrides.global = null;
+    });
+
+    registerFallbackValue(Uri());
+
+    when(() => mockHttpClient.openUrl(any(), any())).thenAnswer((_) async => mockRequest);
+    when(() => mockRequest.headers).thenReturn(mockHeaders);
+    when(() => mockRequest.close()).thenAnswer((_) async => mockResponse);
+    when(() => mockRequest.done).thenAnswer((_) async => mockResponse);
+    when(() => mockRequest.flush()).thenAnswer((_) async => null);
+    when(() => mockRequest.addStream(any())).thenAnswer((_) async => null);
+    when(() => mockResponse.statusCode).thenReturn(200);
+    when(() => mockResponse.headers).thenReturn(mockHeaders);
+    when(() => mockResponse.contentLength).thenReturn(-1);
+    when(() => mockResponse.isRedirect).thenReturn(false);
+    when(() => mockResponse.persistentConnection).thenReturn(false);
+    when(() => mockResponse.redirects).thenReturn(<RedirectInfo>[]);
+    when(() => mockResponse.reasonPhrase).thenReturn('OK');
+    when(() => mockHeaders.forEach(any())).thenAnswer((_) {});
+
+    final body = json.encode({
+      'quotes': [
+        {
+          'symbol': 'AAPL',
+          'shortname': 'Apple Inc',
+          'longname': 'Apple Inc.'
+        }
+      ]
+    });
+    final bodyBytes = utf8.encode(body);
+    final stream = Stream.fromIterable([bodyBytes]);
+    when(() => mockResponse.listen(any(),
+        cancelOnError: any(named: 'cancelOnError'),
+        onDone: any(named: 'onDone'),
+        onError: any(named: 'onError')
+    )).thenAnswer((invocation) {
+      return stream.listen(
+        invocation.positionalArguments[0] as void Function(List<int>)?,
+        onError: invocation.namedArguments[#onError] as Function?,
+        onDone: invocation.namedArguments[#onDone] as void Function()?,
+        cancelOnError: invocation.namedArguments[#cancelOnError] as bool?,
+      );
+    });
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddStockSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          onSave: (_) {},
+        ),
+      ),
+    );
+
+    // Enter 'AAP'
+    final symbolFinder = find.byWidgetPredicate((widget) =>
+        widget is TextField &&
+        widget.decoration?.hintText == 'Sembol (Örn: AAPL, THYAO.IS)');
+    await tester.enterText(symbolFinder, 'AAP');
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Verify option is displayed
+    expect(find.text('AAPL - Apple Inc'), findsOneWidget);
+
+    // Tap option
+    await tester.tap(find.text('AAPL - Apple Inc'));
+    await tester.pumpAndSettle();
+
+    // Verify text field now has selected text
+    expect(tester.widget<TextField>(symbolFinder).controller?.text, 'AAPL - Apple Inc');
+
+    // Verify name field auto-filled to 'Apple Inc'
+    final nameFinder = find.byWidgetPredicate((widget) =>
+        widget is TextField &&
+        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Uzun vade alım');
+    expect(tester.widget<TextField>(nameFinder).controller?.text, 'Apple Inc');
   });
 }

@@ -142,7 +142,6 @@ void main() {
     expect(textFields, findsNWidgets(2));
 
     final quantityField = textFields.first;
-    final amountField = textFields.last;
 
     // Enter invalid quantity and check validation
     await tester.enterText(quantityField, '0');

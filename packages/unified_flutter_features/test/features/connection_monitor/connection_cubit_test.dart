@@ -92,7 +92,7 @@ void main() {
       },
       act: (cubit) async {
         cubit.manualCheck();
-        await Future.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
       },
       expect: () => [
         predicate<ConnectionMonitorState>((s) =>

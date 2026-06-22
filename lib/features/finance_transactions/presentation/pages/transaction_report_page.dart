@@ -368,7 +368,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             ),
           ),
           const SizedBox(height: 24),
-          _buildLegend(theme, categoryData, total),
+          _buildLegend(context, theme, categoryData, total, isExpense),
         ],
       ),
     );
@@ -506,42 +506,53 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildLegend(ThemeData theme, List<_CategoryData> data, double total) {
+  Widget _buildLegend(
+    BuildContext context,
+    ThemeData theme,
+    List<_CategoryData> data,
+    double total,
+    bool isExpense,
+  ) {
     final scheme = theme.colorScheme;
     return Column(
       children: data.map((item) {
         final percent = total == 0 ? 0 : (item.totalAmount / total) * 100;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
-          child: Row(
-            children: [
-              Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: item.color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  item.name,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () =>
+                _showCategoryDetailsBottomSheet(context, item, isExpense),
+            child: Row(
+              children: [
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: item.color,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-              Text(
-                context.l10n.formatMoneyItemTotalamountPercent(
-                    formatMoney(item.totalAmount), percent.toStringAsFixed(0)),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: scheme.onSurfaceVariant,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    item.name,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  context.l10n.formatMoneyItemTotalamountPercent(
+                      formatMoney(item.totalAmount), percent.toStringAsFixed(0)),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),

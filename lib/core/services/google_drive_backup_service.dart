@@ -21,7 +21,6 @@ class GoogleDriveBackupService {
   final http.Client _httpClient;
   final HiveInterface _hive;
 
-  @visibleForTesting
   GoogleDriveBackupService({
     GoogleSignIn? googleSignIn,
     http.Client? httpClient,
