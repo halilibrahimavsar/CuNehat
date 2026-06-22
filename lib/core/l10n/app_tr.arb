@@ -256,6 +256,7 @@
   "buIslemOtomatikOlusturuldu": "Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.",
   "nakitAkisi": "Nakit Akışı",
   "grafikIcinYeterliVeri": "Grafik için yeterli veri yok",
+  "cizgiGrafikIcinEnAzIkiGun": "Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır",
   "detayGosterilecekIslemYok": "Detay Gösterilecek İşlem Yok",
   "gelirVeyaGiderKaydettikten": "Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.",
   "henuzIslemYok": "Henüz işlem yok",

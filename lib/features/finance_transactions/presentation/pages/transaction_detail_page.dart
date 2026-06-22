@@ -130,10 +130,14 @@ class _TransactionDetailView extends StatelessWidget {
         child: Container(
           height: 220,
           alignment: Alignment.center,
-          child: Text(
-            context.l10n.grafikIcinYeterliVeri,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              context.l10n.cizgiGrafikIcinEnAzIkiGun,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),

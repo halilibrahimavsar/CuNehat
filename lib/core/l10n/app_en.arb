@@ -256,6 +256,7 @@
   "buIslemOtomatikOlusturuldu": "This transaction was created automatically. Edit or delete it from the corresponding debt/investment/receivable record.",
   "nakitAkisi": "Cash Flow",
   "grafikIcinYeterliVeri": "Not enough data for chart",
+  "cizgiGrafikIcinEnAzIkiGun": "At least two different days of transactions are required for the line chart.",
   "detayGosterilecekIslemYok": "No Transaction to Show Detail",
   "gelirVeyaGiderKaydettikten": "Analysis details will be listed here after you save income or expense.",
   "henuzIslemYok": "No transactions yet",
