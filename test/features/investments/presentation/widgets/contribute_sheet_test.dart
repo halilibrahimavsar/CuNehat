@@ -75,7 +75,8 @@ void main() {
     quantity: 1.5,
   );
 
-  testWidgets('renders ContributeSheet in Cash Mode (no symbol) and validates input',
+  testWidgets(
+      'renders ContributeSheet in Cash Mode (no symbol) and validates input',
       (WidgetTester tester) async {
     InvestmentEntity? savedInvestment;
 
@@ -89,7 +90,8 @@ void main() {
     );
 
     expect(find.text('Bireysel Emeklilik · Para Ekle'), findsOneWidget);
-    expect(find.text('Miktar'), findsNothing); // Quantity field not rendered in cash mode
+    expect(find.text('Miktar'),
+        findsNothing); // Quantity field not rendered in cash mode
 
     // Tap Ekle without input to verify validation error
     await tester.tap(find.text('Ekle'));
@@ -111,7 +113,8 @@ void main() {
     expect(savedInvestment!.currentValue, 1500.0);
   });
 
-  testWidgets('renders ContributeSheet in Asset Mode (with symbol), fetches live price and saves',
+  testWidgets(
+      'renders ContributeSheet in Asset Mode (with symbol), fetches live price and saves',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -123,7 +126,8 @@ void main() {
     InvestmentEntity? savedInvestment;
 
     final completer = Completer<Either<Failure, LivePriceQuote>>();
-    when(() => mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
+    when(() =>
+            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
         .thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
@@ -159,7 +163,7 @@ void main() {
 
     // Check loading indicator
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    
+
     // Complete the live price fetch
     completer.complete(const Right(
       LivePriceQuote(price: 1800.0, currency: 'TRY', priceTl: 1800.0),
@@ -168,7 +172,7 @@ void main() {
 
     // Verify price message and amount autofill (0.5 * 1800 = 900)
     expect(find.text('Güncel Fiyat: 1800.0 ₺'), findsOneWidget);
-    
+
     // Tap Ekle
     await tester.tap(find.text('Ekle'));
     await tester.pumpAndSettle();
@@ -184,7 +188,8 @@ void main() {
 
   testWidgets('handles live price quote failure gracefully',
       (WidgetTester tester) async {
-    when(() => mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
+    when(() =>
+            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
         .thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );

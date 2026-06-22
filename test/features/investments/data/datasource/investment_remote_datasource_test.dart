@@ -182,36 +182,49 @@ void main() {
       );
     });
 
-    test('getLiveQuote gold throws ServerException when gold API fails (non-200)', () async {
-      when(() => mockClient.get(Uri.parse('https://finans.truncgil.com/today.json')))
+    test(
+        'getLiveQuote gold throws ServerException when gold API fails (non-200)',
+        () async {
+      when(() => mockClient
+              .get(Uri.parse('https://finans.truncgil.com/today.json')))
           .thenAnswer((_) async => http.Response('Error', 500));
 
       expect(
-        () => dataSource.getLiveQuote(symbol: 'Gram Altın', type: InvestmentType.gold),
+        () => dataSource.getLiveQuote(
+            symbol: 'Gram Altın', type: InvestmentType.gold),
         throwsA(isA<ServerException>()),
       );
     });
 
-    test('getLiveQuote gold throws ServerException when gold price cannot be parsed', () async {
+    test(
+        'getLiveQuote gold throws ServerException when gold price cannot be parsed',
+        () async {
       final invalidGoldResponse = {
         'Gram Altın': {'Alış': '2.500,50'}
       };
-      when(() => mockClient.get(Uri.parse('https://finans.truncgil.com/today.json')))
-          .thenAnswer((_) async => http.Response(json.encode(invalidGoldResponse), 200,
+      when(() => mockClient
+              .get(Uri.parse('https://finans.truncgil.com/today.json')))
+          .thenAnswer((_) async => http.Response(
+              json.encode(invalidGoldResponse), 200,
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       expect(
-        () => dataSource.getLiveQuote(symbol: 'Gram Altın', type: InvestmentType.gold),
+        () => dataSource.getLiveQuote(
+            symbol: 'Gram Altın', type: InvestmentType.gold),
         throwsA(isA<ServerException>()),
       );
     });
 
-    test('getLiveQuote throws ServerException on generic exception in stock flow', () async {
-      when(() => mockClient.get(Uri.parse('https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+    test(
+        'getLiveQuote throws ServerException on generic exception in stock flow',
+        () async {
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
           .thenThrow(Exception('Socket Exception or generic error'));
 
       expect(
-        () => dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
+        () =>
+            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
         throwsA(isA<ServerException>()),
       );
     });

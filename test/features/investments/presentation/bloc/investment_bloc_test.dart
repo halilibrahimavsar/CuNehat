@@ -495,8 +495,7 @@ void main() {
         when(() => mockGetInvestmentsUseCase(
               userId: 'user_123',
               walletId: 'wallet_123',
-            )).thenAnswer((_) async =>
-            Right([refreshableInvestment]));
+            )).thenAnswer((_) async => Right([refreshableInvestment]));
         when(() => mockGetLiveQuoteUseCase(
               symbol: 'XAU',
               type: InvestmentType.gold,
@@ -519,8 +518,8 @@ void main() {
         InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
       ],
       verify: (_) {
-        verify(() => mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
-            .called(1);
+        verify(() => mockGetLiveQuoteUseCase(
+            symbol: 'XAU', type: InvestmentType.gold)).called(1);
       },
     );
 
@@ -529,10 +528,11 @@ void main() {
       build: () {
         bool firstUpdate = true;
         when(() => mockGetInvestmentsUseCase(
-              userId: 'user_123',
-              walletId: 'wallet_123',
-            )).thenAnswer((_) async =>
-            Right([refreshableInvestment, secondInvestment]));
+                  userId: 'user_123',
+                  walletId: 'wallet_123',
+                ))
+            .thenAnswer(
+                (_) async => Right([refreshableInvestment, secondInvestment]));
         when(() => mockGetLiveQuoteUseCase(
               symbol: 'XAU',
               type: InvestmentType.gold,
@@ -562,44 +562,44 @@ void main() {
     );
   });
 
-    blocTest<InvestmentBloc, InvestmentState>(
-      'emits success with cash warning when recordCashMovement returns false during update',
-      build: () {
-        final updated = testInvestment.copyWith(amount: 1500.0);
-        when(() => mockUpdateUseCase(updated))
-            .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
-              walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
-            )).thenAnswer((_) async => false);
-        when(() => mockMetricsService.syncInvestment('wallet_123'))
-            .thenAnswer((_) async => true);
-        when(() => mockGetInvestmentsUseCase(
-              userId: 'user_123',
-              walletId: 'wallet_123',
-            )).thenAnswer((_) async => Right([updated]));
-        return investmentBloc;
-      },
-      act: (bloc) => bloc.add(UpdateInvestmentEvent(
-        investment: testInvestment.copyWith(amount: 1500.0),
-        userId: 'user_123',
-        walletId: 'wallet_123',
-        prevAmount: 1000.0,
-        newAmount: 1500.0,
-      )),
-      expect: () => [
-        InvestmentLoading(),
-        const InvestmentActionSuccess(
-            'Yatırım güncellendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
-        InvestmentLoading(),
-        InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)],
-            totalAmount: 1500.0),
-      ],
-    );
+  blocTest<InvestmentBloc, InvestmentState>(
+    'emits success with cash warning when recordCashMovement returns false during update',
+    build: () {
+      final updated = testInvestment.copyWith(amount: 1500.0);
+      when(() => mockUpdateUseCase(updated))
+          .thenAnswer((_) async => const Right(null));
+      when(() => mockMetricsService.recordCashMovement(
+            walletId: any(named: 'walletId'),
+            userId: any(named: 'userId'),
+            amount: any(named: 'amount'),
+            isIncome: any(named: 'isIncome'),
+            title: any(named: 'title'),
+            tag: any(named: 'tag'),
+          )).thenAnswer((_) async => false);
+      when(() => mockMetricsService.syncInvestment('wallet_123'))
+          .thenAnswer((_) async => true);
+      when(() => mockGetInvestmentsUseCase(
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          )).thenAnswer((_) async => Right([updated]));
+      return investmentBloc;
+    },
+    act: (bloc) => bloc.add(UpdateInvestmentEvent(
+      investment: testInvestment.copyWith(amount: 1500.0),
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      prevAmount: 1000.0,
+      newAmount: 1500.0,
+    )),
+    expect: () => [
+      InvestmentLoading(),
+      const InvestmentActionSuccess(
+          'Yatırım güncellendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+      InvestmentLoading(),
+      InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)],
+          totalAmount: 1500.0),
+    ],
+  );
 
   group('DeleteInvestmentEvent', () {
     blocTest<InvestmentBloc, InvestmentState>(

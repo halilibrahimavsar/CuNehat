@@ -102,7 +102,8 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('renders empty state when there are no closed debts or receivables',
+  testWidgets(
+      'renders empty state when there are no closed debts or receivables',
       (WidgetTester tester) async {
     when(() => mockDebtBloc.state).thenReturn(const DebtLoaded([]));
     when(() => mockReceivableBloc.state).thenReturn(const ReceivableLoaded([]));

@@ -325,6 +325,8 @@ void main() {
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
-    verify(() => mockTransactionBloc.add(const DeleteTransactionEvent('tx_123'))).called(1);
+    verify(() =>
+            mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
+        .called(1);
   });
 }

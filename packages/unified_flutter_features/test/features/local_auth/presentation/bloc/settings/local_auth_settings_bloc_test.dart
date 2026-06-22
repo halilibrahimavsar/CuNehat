@@ -91,8 +91,7 @@ void main() {
         when(() => repository.isBiometricAvailable())
             .thenAnswer((_) async => true);
         when(() => repository.authenticateWithBiometrics(
-            reason: any(named: 'reason')))
-            .thenAnswer((_) async => true);
+            reason: any(named: 'reason'))).thenAnswer((_) async => true);
         when(() => repository.setBiometricEnabled(true))
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
@@ -154,8 +153,7 @@ void main() {
         when(() => repository.isBiometricAvailable())
             .thenAnswer((_) async => true);
         when(() => repository.authenticateWithBiometrics(
-            reason: any(named: 'reason')))
-            .thenAnswer((_) async => false);
+            reason: any(named: 'reason'))).thenAnswer((_) async => false);
         return LocalAuthSettingsBloc(repository: repository);
       },
       act: (bloc) => bloc.add(const ToggleBiometricEvent(enable: true)),
@@ -193,9 +191,9 @@ void main() {
         when(() => repository.isBiometricAvailable())
             .thenAnswer((_) async => true);
         when(() => repository.authenticateWithBiometrics(
-            reason: any(named: 'reason'),
-            signInTitle: any(named: 'signInTitle'),
-            cancelButton: any(named: 'cancelButton')))
+                reason: any(named: 'reason'),
+                signInTitle: any(named: 'signInTitle'),
+                cancelButton: any(named: 'cancelButton')))
             .thenAnswer((_) async => true);
         when(() => repository.setBiometricEnabled(true))
             .thenAnswer((_) async => throw Exception('toggle error'));
@@ -215,12 +213,11 @@ void main() {
       'saves pin successfully',
       build: () {
         when(() => repository.isPinSet()).thenAnswer((_) async => false);
-        when(() => repository.savePin('123456'))
-            .thenAnswer((_) async => {});
+        when(() => repository.savePin('123456')).thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const SavePinEvent(pin: '123456', confirmPin: '123456')),
+      act: (bloc) =>
+          bloc.add(const SavePinEvent(pin: '123456', confirmPin: '123456')),
       expect: () => [
         const LocalAuthSettingsState(
           isPinSet: true,
@@ -236,8 +233,8 @@ void main() {
         when(() => repository.isPinSet()).thenAnswer((_) async => true);
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const SavePinEvent(pin: '123456', confirmPin: '123456')),
+      act: (bloc) =>
+          bloc.add(const SavePinEvent(pin: '123456', confirmPin: '123456')),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -252,8 +249,8 @@ void main() {
         when(() => repository.isPinSet()).thenAnswer((_) async => false);
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const SavePinEvent(pin: '123456', confirmPin: '654321')),
+      act: (bloc) =>
+          bloc.add(const SavePinEvent(pin: '123456', confirmPin: '654321')),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -270,8 +267,8 @@ void main() {
             .thenThrow(Exception('save error'));
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const SavePinEvent(pin: '123456', confirmPin: '123456')),
+      act: (bloc) =>
+          bloc.add(const SavePinEvent(pin: '123456', confirmPin: '123456')),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -287,12 +284,11 @@ void main() {
       build: () {
         when(() => repository.verifyPin('oldPin'))
             .thenAnswer((_) async => true);
-        when(() => repository.savePin('newPin'))
-            .thenAnswer((_) async => {});
+        when(() => repository.savePin('newPin')).thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const ChangePinEvent(currentPin: 'oldPin', newPin: 'newPin', confirmPin: 'newPin')),
+      act: (bloc) => bloc.add(const ChangePinEvent(
+          currentPin: 'oldPin', newPin: 'newPin', confirmPin: 'newPin')),
       expect: () => [
         const LocalAuthSettingsState(
           isPinSet: true,
@@ -307,8 +303,8 @@ void main() {
       build: () {
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const ChangePinEvent(currentPin: 'oldPin', newPin: 'newPin', confirmPin: 'different')),
+      act: (bloc) => bloc.add(const ChangePinEvent(
+          currentPin: 'oldPin', newPin: 'newPin', confirmPin: 'different')),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -324,8 +320,8 @@ void main() {
             .thenAnswer((_) async => false);
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const ChangePinEvent(currentPin: 'wrong', newPin: 'newPin', confirmPin: 'newPin')),
+      act: (bloc) => bloc.add(const ChangePinEvent(
+          currentPin: 'wrong', newPin: 'newPin', confirmPin: 'newPin')),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -339,16 +335,13 @@ void main() {
     blocTest<LocalAuthSettingsBloc, LocalAuthSettingsState>(
       'deletes pin successfully',
       build: () {
-        when(() => repository.verifyPin('myPin'))
-            .thenAnswer((_) async => true);
-        when(() => repository.deletePin())
-            .thenAnswer((_) async => {});
+        when(() => repository.verifyPin('myPin')).thenAnswer((_) async => true);
+        when(() => repository.deletePin()).thenAnswer((_) async => {});
         when(() => repository.setBiometricEnabled(false))
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const DeletePinEvent(currentPin: 'myPin')),
+      act: (bloc) => bloc.add(const DeletePinEvent(currentPin: 'myPin')),
       expect: () => [
         const LocalAuthSettingsState(
           isPinSet: false,
@@ -366,8 +359,7 @@ void main() {
             .thenAnswer((_) async => false);
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const DeletePinEvent(currentPin: 'wrong')),
+      act: (bloc) => bloc.add(const DeletePinEvent(currentPin: 'wrong')),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -385,8 +377,7 @@ void main() {
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const TogglePrivacyGuardEvent(enable: true)),
+      act: (bloc) => bloc.add(const TogglePrivacyGuardEvent(enable: true)),
       expect: () => [
         const LocalAuthSettingsState(
           isPrivacyGuardEnabled: true,
@@ -403,8 +394,7 @@ void main() {
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const TogglePrivacyGuardEvent(enable: false)),
+      act: (bloc) => bloc.add(const TogglePrivacyGuardEvent(enable: false)),
       expect: () => [
         const LocalAuthSettingsState(
           isPrivacyGuardEnabled: false,
@@ -421,8 +411,7 @@ void main() {
             .thenThrow(Exception('privacy error'));
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const TogglePrivacyGuardEvent(enable: true)),
+      act: (bloc) => bloc.add(const TogglePrivacyGuardEvent(enable: true)),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -443,8 +432,8 @@ void main() {
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
+      act: (bloc) =>
+          bloc.add(const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
       expect: () => [
         const LocalAuthSettingsState(
           backgroundLockTimeoutSeconds: 30,
@@ -463,8 +452,8 @@ void main() {
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const UpdateBackgroundLockTimeoutEvent(seconds: 0)),
+      act: (bloc) =>
+          bloc.add(const UpdateBackgroundLockTimeoutEvent(seconds: 0)),
       expect: () => [
         const LocalAuthSettingsState(
           backgroundLockTimeoutSeconds: 0,
@@ -482,8 +471,8 @@ void main() {
             .thenAnswer((_) async => false);
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
+      act: (bloc) =>
+          bloc.add(const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -507,8 +496,8 @@ void main() {
       seed: () => const LocalAuthSettingsState(
         isPrivacyGuardEnabled: false,
       ),
-      act: (bloc) => bloc.add(
-          const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
+      act: (bloc) =>
+          bloc.add(const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
       expect: () => [
         const LocalAuthSettingsState(
           isPrivacyGuardEnabled: true,
@@ -529,8 +518,8 @@ void main() {
             .thenThrow(Exception('timeout error'));
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
+      act: (bloc) =>
+          bloc.add(const UpdateBackgroundLockTimeoutEvent(seconds: 30)),
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
@@ -548,8 +537,8 @@ void main() {
             .thenAnswer((_) async => {});
         return LocalAuthSettingsBloc(repository: repository);
       },
-      act: (bloc) => bloc.add(
-          const UpdateBackgroundLockTimeoutEvent(seconds: -5)),
+      act: (bloc) =>
+          bloc.add(const UpdateBackgroundLockTimeoutEvent(seconds: -5)),
       expect: () => [
         const LocalAuthSettingsState(
           backgroundLockTimeoutSeconds: 0,

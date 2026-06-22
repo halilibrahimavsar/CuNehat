@@ -25,7 +25,8 @@ void main() {
     );
   }
 
-  testWidgets('renders InvestmentCard with Gold type, goal category, and target progress',
+  testWidgets(
+      'renders InvestmentCard with Gold type, goal category, and target progress',
       (WidgetTester tester) async {
     final goldInvestment = InvestmentEntity(
       id: 'gold_inv',
@@ -53,7 +54,8 @@ void main() {
 
     // Verify Icons
     expect(find.byIcon(Icons.monetization_on), findsOneWidget); // Gold icon
-    expect(find.byIcon(Icons.home_rounded), findsOneWidget); // Goal category 'ev' (Home) icon
+    expect(find.byIcon(Icons.home_rounded),
+        findsOneWidget); // Goal category 'ev' (Home) icon
 
     // Verify Goal Category label
     expect(find.text('Ev'), findsOneWidget);
@@ -108,7 +110,8 @@ void main() {
     expect(find.textContaining('Hedef:'), findsNothing);
   });
 
-  testWidgets('renders InvestmentCard with Custom type and target reached state',
+  testWidgets(
+      'renders InvestmentCard with Custom type and target reached state',
       (WidgetTester tester) async {
     final customInvestment = InvestmentEntity(
       id: 'custom_inv',
@@ -120,7 +123,8 @@ void main() {
       type: InvestmentType.custom,
       color: Colors.green,
       dateAdded: DateTime(2026, 1, 1),
-      targetAmount: 800.0, // target is reached since currentValue >= targetAmount
+      targetAmount:
+          800.0, // target is reached since currentValue >= targetAmount
     );
 
     await tester.pumpWidget(

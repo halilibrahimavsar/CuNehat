@@ -195,7 +195,9 @@ void main() {
 
     when(() => mockTransactionBloc.state).thenReturn(
       TransactionLoaded(
-        groupedTransactions: {now: [tx]},
+        groupedTransactions: {
+          now: [tx]
+        },
         allTransactions: [tx],
       ),
     );
@@ -219,7 +221,8 @@ void main() {
     expect(find.byType(DateRangePickerDialog), findsOneWidget);
   });
 
-  testWidgets('groups categories into Diğer when there are more than 4 categories',
+  testWidgets(
+      'groups categories into Diğer when there are more than 4 categories',
       (WidgetTester tester) async {
     final now = DateTime.now();
     final categories = ['Cat1', 'Cat2', 'Cat3', 'Cat4', 'Cat5', 'Cat6'];
@@ -258,7 +261,8 @@ void main() {
     expect(find.text('Diğer'), findsOneWidget);
   });
 
-  testWidgets('renders empty state message when transactions exist but filtered out by date range',
+  testWidgets(
+      'renders empty state message when transactions exist but filtered out by date range',
       (WidgetTester tester) async {
     final oldDate = DateTime.now().subtract(const Duration(days: 100));
     final tx = TransactionEntity(
@@ -274,7 +278,9 @@ void main() {
 
     when(() => mockTransactionBloc.state).thenReturn(
       TransactionLoaded(
-        groupedTransactions: {oldDate: [tx]},
+        groupedTransactions: {
+          oldDate: [tx]
+        },
         allTransactions: [tx],
       ),
     );
@@ -386,13 +392,14 @@ void main() {
 
     // Verify that the bottom sheet is opened by checking bottom sheet elements
     // Header should show the category name
-    expect(find.text('Food'), findsWidgets); // One in legend, one in sheet header
+    expect(
+        find.text('Food'), findsWidgets); // One in legend, one in sheet header
     // Sheet should show category total amount
     expect(find.text('50.00 ₺'), findsWidgets);
-    
+
     // Wait for list entrance animation
     await tester.pump(const Duration(milliseconds: 500));
-    
+
     // Sheet should render the transaction details in the list
     expect(find.text('Lunch'), findsOneWidget);
   });

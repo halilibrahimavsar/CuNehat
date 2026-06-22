@@ -17,8 +17,11 @@ import 'package:mocktail/mocktail.dart';
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
 class MockHttpClientIo extends Mock implements HttpClient {}
+
 class MockHttpClientRequest extends Mock implements HttpClientRequest {}
+
 class MockHttpClientResponse extends Mock implements HttpClientResponse {}
+
 class MockHttpHeaders extends Mock implements HttpHeaders {}
 
 class FakeStreamListInt extends Fake implements Stream<List<int>> {}
@@ -81,7 +84,8 @@ void main() {
     quantity: 1.0,
   );
 
-  testWidgets('renders AddStockSheet in create mode and saves with computed price',
+  testWidgets(
+      'renders AddStockSheet in create mode and saves with computed price',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -93,8 +97,9 @@ void main() {
     InvestmentEntity? savedInvestment;
     final completer = Completer<Either<Failure, LivePriceQuote>>();
 
-    when(() => mockGetLiveQuoteUseCase(symbol: 'THYAO.IS', type: InvestmentType.stock))
-        .thenAnswer((_) => completer.future);
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'THYAO.IS',
+        type: InvestmentType.stock)).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -118,8 +123,7 @@ void main() {
 
     // Enters quantity
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'Adet');
     expect(quantityFinder, findsOneWidget);
     await tester.enterText(quantityFinder, '10.0');
 
@@ -140,11 +144,11 @@ void main() {
     expect(find.text('Güncel Fiyat: 300 ₺'), findsOneWidget);
 
     // Verify currentValue and amount TextFields have auto-filled '3000'
-    final currentValueFinder = find.byWidgetPredicate((w) =>
-        w is TextField &&
-        w.decoration?.hintText == '0');
+    final currentValueFinder = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0');
     expect(currentValueFinder, findsOneWidget);
-    expect(tester.widget<TextField>(currentValueFinder).controller?.text, '3000');
+    expect(
+        tester.widget<TextField>(currentValueFinder).controller?.text, '3000');
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
@@ -155,7 +159,8 @@ void main() {
     // Enter name
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Uzun vade alım');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Uzun vade alım');
     expect(nameFinder, findsOneWidget);
     await tester.enterText(nameFinder, 'Thy Hissem');
 
@@ -171,7 +176,8 @@ void main() {
     expect(savedInvestment!.symbol, 'THYAO.IS');
   });
 
-  testWidgets('validates empty inputs and handles live quote errors in AddStockSheet',
+  testWidgets(
+      'validates empty inputs and handles live quote errors in AddStockSheet',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -180,7 +186,8 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    when(() => mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
+    when(() =>
+            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
         .thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
@@ -207,7 +214,7 @@ void main() {
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
     await tester.enterText(amountFinder, '2000');
-    
+
     // Tap Save again, now it fails on currentValue being invalid
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
@@ -230,7 +237,8 @@ void main() {
     expect(find.text('Fiyat alınamadı.'), findsOneWidget);
   });
 
-  testWidgets('renders AddStockSheet in edit mode, displays correct details and updates',
+  testWidgets(
+      'renders AddStockSheet in edit mode, displays correct details and updates',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -258,7 +266,8 @@ void main() {
     // Verify initial values in TextFields
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Uzun vade alım');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Uzun vade alım');
     expect(tester.widget<TextField>(nameFinder).controller?.text, 'Apple Inc');
 
     final amountFinder = find.byWidgetPredicate((widget) =>
@@ -267,7 +276,10 @@ void main() {
     expect(tester.widget<TextField>(amountFinder).controller?.text, '5000');
 
     // Goal category warning should be rendered
-    expect(find.text('Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'), findsOneWidget);
+    expect(
+        find.text(
+            'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
+        findsOneWidget);
 
     // Enter a target amount to trigger goal category selection
     final targetFinder = find.byWidgetPredicate((widget) =>
@@ -285,8 +297,7 @@ void main() {
 
     // Tap color option circle to change color (e.g. index 5 is Orange)
     final colorFinders = find.byWidgetPredicate((widget) =>
-        widget is GestureDetector &&
-        widget.child is AnimatedContainer);
+        widget is GestureDetector && widget.child is AnimatedContainer);
     expect(colorFinders, findsNWidgets(8));
     await tester.tap(colorFinders.at(5));
     await tester.pumpAndSettle();
@@ -303,7 +314,8 @@ void main() {
     expect(updatedInvestment!.color, Colors.orange);
   });
 
-  testWidgets('renders AddStockSheet and handles foreign currency conversion quote display and save',
+  testWidgets(
+      'renders AddStockSheet and handles foreign currency conversion quote display and save',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -314,7 +326,8 @@ void main() {
 
     InvestmentEntity? savedInvestment;
 
-    when(() => mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
+    when(() =>
+            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
         .thenAnswer((_) async => const Right(
               LivePriceQuote(price: 150.0, currency: 'USD', priceTl: 4875.0),
             ));
@@ -337,8 +350,7 @@ void main() {
 
     // Enter quantity
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'Adet');
     await tester.enterText(quantityFinder, '2');
 
     // Tap Hesapla
@@ -359,7 +371,8 @@ void main() {
     expect(savedInvestment!.currency, 'USD');
   });
 
-  testWidgets('renders AddStockSheet and handles autocomplete symbol search selection',
+  testWidgets(
+      'renders AddStockSheet and handles autocomplete symbol search selection',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -380,7 +393,8 @@ void main() {
 
     registerFallbackValue(Uri());
 
-    when(() => mockHttpClient.openUrl(any(), any())).thenAnswer((_) async => mockRequest);
+    when(() => mockHttpClient.openUrl(any(), any()))
+        .thenAnswer((_) async => mockRequest);
     when(() => mockRequest.headers).thenReturn(mockHeaders);
     when(() => mockRequest.close()).thenAnswer((_) async => mockResponse);
     when(() => mockRequest.done).thenAnswer((_) async => mockResponse);
@@ -397,11 +411,7 @@ void main() {
 
     final body = json.encode({
       'quotes': [
-        {
-          'symbol': 'AAPL',
-          'shortname': 'Apple Inc',
-          'longname': 'Apple Inc.'
-        }
+        {'symbol': 'AAPL', 'shortname': 'Apple Inc', 'longname': 'Apple Inc.'}
       ]
     });
     final bodyBytes = utf8.encode(body);
@@ -409,8 +419,7 @@ void main() {
     when(() => mockResponse.listen(any(),
         cancelOnError: any(named: 'cancelOnError'),
         onDone: any(named: 'onDone'),
-        onError: any(named: 'onError')
-    )).thenAnswer((invocation) {
+        onError: any(named: 'onError'))).thenAnswer((invocation) {
       return stream.listen(
         invocation.positionalArguments[0] as void Function(List<int>)?,
         onError: invocation.namedArguments[#onError] as Function?,
@@ -444,12 +453,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify text field now has selected text
-    expect(tester.widget<TextField>(symbolFinder).controller?.text, 'AAPL - Apple Inc');
+    expect(tester.widget<TextField>(symbolFinder).controller?.text,
+        'AAPL - Apple Inc');
 
     // Verify name field auto-filled to 'Apple Inc'
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Uzun vade alım');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Uzun vade alım');
     expect(tester.widget<TextField>(nameFinder).controller?.text, 'Apple Inc');
   });
 }

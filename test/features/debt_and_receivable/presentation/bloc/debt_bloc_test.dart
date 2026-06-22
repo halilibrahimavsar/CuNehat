@@ -433,8 +433,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits [DebtLoading, DebtError] when usecase fails',
       build: () {
-        when(() => mockUpdateUseCase(any()))
-            .thenAnswer((_) async => const Left(ServerFailure('Update failed')));
+        when(() => mockUpdateUseCase(any())).thenAnswer(
+            (_) async => const Left(ServerFailure('Update failed')));
         return debtBloc;
       },
       act: (bloc) => bloc.add(UpdateDebtEvent(
@@ -572,8 +572,8 @@ void main() {
     blocTest<DebtBloc, DebtState>(
       'emits [DebtLoading, DebtError] when usecase fails',
       build: () {
-        when(() => mockDeleteUseCase('debt_123'))
-            .thenAnswer((_) async => const Left(ServerFailure('Delete failed')));
+        when(() => mockDeleteUseCase('debt_123')).thenAnswer(
+            (_) async => const Left(ServerFailure('Delete failed')));
         return debtBloc;
       },
       act: (bloc) => bloc.add(const DeleteDebtEvent(

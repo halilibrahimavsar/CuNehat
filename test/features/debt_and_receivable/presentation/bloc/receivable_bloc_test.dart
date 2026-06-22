@@ -316,7 +316,8 @@ void main() {
         ReceivableLoading(),
         const ReceivableOperationSuccess('Alacak güncellendi.'),
         ReceivableLoading(),
-        ReceivableLoaded([testReceivable.copyWith(isPaid: true, amount: 1200.0)]),
+        ReceivableLoaded(
+            [testReceivable.copyWith(isPaid: true, amount: 1200.0)]),
       ],
       verify: (_) {
         verifyNever(() => mockMetricsService.recordCashMovement(
@@ -366,8 +367,8 @@ void main() {
     blocTest<ReceivableBloc, ReceivableState>(
       'emits [ReceivableLoading, ReceivableError] when usecase fails',
       build: () {
-        when(() => mockUpdateUseCase(any()))
-            .thenAnswer((_) async => const Left(ServerFailure('Update failed')));
+        when(() => mockUpdateUseCase(any())).thenAnswer(
+            (_) async => const Left(ServerFailure('Update failed')));
         return receivableBloc;
       },
       act: (bloc) => bloc.add(UpdateReceivableEvent(
@@ -528,8 +529,8 @@ void main() {
     blocTest<ReceivableBloc, ReceivableState>(
       'emits [ReceivableLoading, ReceivableError] when usecase fails',
       build: () {
-        when(() => mockDeleteUseCase('receivable_123'))
-            .thenAnswer((_) async => const Left(ServerFailure('Delete failed')));
+        when(() => mockDeleteUseCase('receivable_123')).thenAnswer(
+            (_) async => const Left(ServerFailure('Delete failed')));
         return receivableBloc;
       },
       act: (bloc) => bloc.add(const DeleteReceivableEvent(

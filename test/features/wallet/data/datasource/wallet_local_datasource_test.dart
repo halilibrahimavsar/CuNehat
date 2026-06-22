@@ -141,10 +141,10 @@ void main() {
       await dataSource.createWallet(wModel);
 
       final stream = dataSource.watchWallets('user_1');
-      
+
       final completer = Completer<List<List<WalletModel>>>();
       final emitted = <List<WalletModel>>[];
-      
+
       final sub = stream.listen(
         (data) {
           emitted.add(data);
@@ -153,21 +153,21 @@ void main() {
           }
         },
       );
-      
+
       // Wait for first yield
       await Future.delayed(const Duration(milliseconds: 50));
-      
+
       // Update wallet to trigger box change listener
       final updated = wModel.copyWith(name: 'Updated Name');
       await dataSource.updateWallet(updated);
-      
+
       // Wait for debounce timer (150ms) to fire and emit the second item
       final result = await completer.future.timeout(const Duration(seconds: 2));
-      
+
       expect(result.length, 2);
       expect(result[0][0].name, 'Cash');
       expect(result[1][0].name, 'Updated Name');
-      
+
       await sub.cancel();
     });
 
@@ -175,11 +175,11 @@ void main() {
       // Close boxes
       await walletBox.close();
       await userBox.close();
-      
+
       // Now perform an action that opens them
       final wallet = await dataSource.getWalletById('some_id');
       expect(wallet, isNull);
-      
+
       // Re-open boxes for tearDown cleanup to not fail
       walletBox = await Hive.openBox<WalletModel>('wallets');
       userBox = await Hive.openBox<Map>('users');

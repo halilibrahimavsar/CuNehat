@@ -25,6 +25,8 @@ class MockBox<T> extends Mock implements Box<T> {}
 
 class FakeUri extends Fake implements Uri {}
 
+class FakeWalletModel extends Fake implements WalletModel {}
+
 void main() {
   late MockGoogleSignIn mockGoogleSignIn;
   late MockHttpClient mockHttpClient;
@@ -33,6 +35,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeUri());
+    registerFallbackValue(FakeWalletModel());
   });
 
   setUp(() {
@@ -46,6 +49,13 @@ void main() {
       httpClient: mockHttpClient,
       hive: mockHive,
     );
+  });
+
+  group('defaults', () {
+    test('default constructor sets up defaults', () {
+      final defaultService = GoogleDriveBackupService();
+      expect(defaultService.currentUser, isNull);
+    });
   });
 
   group('sign in / sign out', () {
@@ -166,8 +176,7 @@ void main() {
     }
 
     test('backup returns false when signIn fails', () async {
-      when(() => mockGoogleSignIn.signIn())
-          .thenAnswer((_) async => null);
+      when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
 
       final result = await service.backup();
 
@@ -183,9 +192,13 @@ void main() {
 
       setupHiveBoxes();
 
-      final findResponse = http.Response(jsonEncode({'files': [
-        {'id': 'file123'}
-      ]}), 200);
+      final findResponse = http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ]
+          }),
+          200);
       when(() => mockHttpClient.get(
             any(),
             headers: any(named: 'headers'),
@@ -212,9 +225,13 @@ void main() {
 
       setupHiveBoxes();
 
-      final findResponse = http.Response(jsonEncode({'files': [
-        {'id': 'file123'}
-      ]}), 200);
+      final findResponse = http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ]
+          }),
+          200);
       when(() => mockHttpClient.get(
             any(),
             headers: any(named: 'headers'),
@@ -242,7 +259,8 @@ void main() {
       setupHiveBoxes();
 
       final notFoundResponse = http.Response(jsonEncode({'files': []}), 200);
-      final createResponse = http.Response(jsonEncode({'id': 'newFile456'}), 201);
+      final createResponse =
+          http.Response(jsonEncode({'id': 'newFile456'}), 201);
       final patchResponse = http.Response('', 200);
 
       when(() => mockHttpClient.get(
@@ -263,6 +281,63 @@ void main() {
       final result = await service.backup();
 
       expect(result, true);
+    });
+
+    test(
+        'backup returns false on catch block execution (e.g. exception inside _serializeDatabase)',
+        () async {
+      final mockAccount = MockGoogleSignInAccount();
+      when(() => mockGoogleSignIn.signIn())
+          .thenAnswer((_) async => mockAccount);
+      when(() => mockAccount.authHeaders)
+          .thenAnswer((_) async => {'Authorization': 'Bearer test'});
+
+      final findResponse = http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ]
+          }),
+          200);
+      when(() => mockHttpClient.get(
+            any(),
+            headers: any(named: 'headers'),
+          )).thenAnswer((_) async => findResponse);
+
+      // Force openBox to throw to trigger catch block in backup()
+      when(() => mockHive.openBox<WalletModel>(any()))
+          .thenThrow(Exception('Hive corrupt'));
+
+      final result = await service.backup();
+      expect(result, isFalse);
+    });
+
+    test('_createBackupFile throws exception on bad status code', () async {
+      final mockAccount = MockGoogleSignInAccount();
+      when(() => mockGoogleSignIn.signIn())
+          .thenAnswer((_) async => mockAccount);
+      when(() => mockAccount.authHeaders)
+          .thenAnswer((_) async => {'Authorization': 'Bearer test'});
+
+      setupHiveBoxes();
+
+      // Find file returns null (not found)
+      final findResponse = http.Response(jsonEncode({'files': []}), 200);
+      // Create file returns 500
+      final createResponse = http.Response('Error', 500);
+
+      when(() => mockHttpClient.get(
+            any(),
+            headers: any(named: 'headers'),
+          )).thenAnswer((_) async => findResponse);
+      when(() => mockHttpClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => createResponse);
+
+      final result = await service.backup();
+      expect(result, isFalse);
     });
   });
 
@@ -344,8 +419,7 @@ void main() {
     }
 
     test('restore returns false when signIn fails', () async {
-      when(() => mockGoogleSignIn.signIn())
-          .thenAnswer((_) async => null);
+      when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
 
       final result = await service.restore();
 
@@ -369,9 +443,13 @@ void main() {
     test('restore returns false when download fails', () async {
       setupAuth();
 
-      final findResponse = http.Response(jsonEncode({'files': [
-        {'id': 'file123'}
-      ]}), 200);
+      final findResponse = http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ]
+          }),
+          200);
       final downloadResponse = http.Response('', 500);
 
       final getResponses = [findResponse, downloadResponse];
@@ -389,9 +467,13 @@ void main() {
       setupAuth();
       setupHiveBoxes();
 
-      final findResponse = http.Response(jsonEncode({'files': [
-        {'id': 'file123'}
-      ]}), 200);
+      final findResponse = http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ]
+          }),
+          200);
       final backupData = {
         'wallets': [],
         'transactions': [],
@@ -411,6 +493,102 @@ void main() {
       final result = await service.restore();
 
       expect(result, true);
+    });
+
+    test('restore catches exception during download/parse and returns false',
+        () async {
+      setupAuth();
+      // Cause find backup to throw exception
+      when(() => mockHttpClient.get(
+            any(),
+            headers: any(named: 'headers'),
+          )).thenThrow(Exception('HTTP exception'));
+
+      final result = await service.restore();
+      expect(result, isFalse);
+    });
+
+    test('restore triggers rollback if box writing fails', () async {
+      setupAuth();
+      setupHiveBoxes();
+
+      final findResponse = http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ]
+          }),
+          200);
+      final backupData = {
+        'wallets': [
+          {'id': 'w1', 'userId': 'u1', 'name': 'W1'}
+        ],
+        'transactions': [],
+        'investments': [],
+        'debts': [],
+        'receivables': [],
+        'users': {},
+        'categories': {'c1': 'custom1'}
+      };
+      final downloadResponse = http.Response(jsonEncode(backupData), 200);
+
+      final getResponses = [findResponse, downloadResponse];
+      when(() => mockHttpClient.get(
+            any(),
+            headers: any(named: 'headers'),
+          )).thenAnswer((_) async => getResponses.removeAt(0));
+
+      // Mock hive boxes to trigger write error
+      final mockWalletBox = MockBox<WalletModel>();
+      final mockTxBox = MockBox<TransactionModel>();
+      final mockInvBox = MockBox<InvestmentModel>();
+      final mockDebtBox = MockBox<DebtModel>();
+      final mockRecvBox = MockBox<ReceivableModel>();
+      final mockUserBox = MockBox<Map>();
+
+      when(() => mockWalletBox.toMap()).thenReturn({});
+      when(() => mockTxBox.toMap()).thenReturn({});
+      when(() => mockInvBox.toMap()).thenReturn({});
+      when(() => mockDebtBox.toMap()).thenReturn({});
+      when(() => mockRecvBox.toMap()).thenReturn({});
+      when(() => mockUserBox.toMap()).thenReturn({});
+
+      when(() => mockWalletBox.clear()).thenAnswer((_) async => 0);
+      when(() => mockTxBox.clear()).thenAnswer((_) async => 0);
+      when(() => mockInvBox.clear()).thenAnswer((_) async => 0);
+      when(() => mockDebtBox.clear()).thenAnswer((_) async => 0);
+      when(() => mockRecvBox.clear()).thenAnswer((_) async => 0);
+      when(() => mockUserBox.clear()).thenAnswer((_) async => 0);
+
+      when(() => mockWalletBox.putAll(any())).thenAnswer((_) async {});
+      when(() => mockTxBox.putAll(any())).thenAnswer((_) async {});
+      when(() => mockInvBox.putAll(any())).thenAnswer((_) async {});
+      when(() => mockDebtBox.putAll(any())).thenAnswer((_) async {});
+      when(() => mockRecvBox.putAll(any())).thenAnswer((_) async {});
+      when(() => mockUserBox.putAll(any())).thenAnswer((_) async {});
+
+      // Force put to throw exception
+      when(() => mockWalletBox.put(any(), any()))
+          .thenThrow(Exception('Write fail'));
+
+      when(() => mockHive.openBox<WalletModel>('wallets'))
+          .thenAnswer((_) async => mockWalletBox);
+      when(() => mockHive.openBox<TransactionModel>('transactions'))
+          .thenAnswer((_) async => mockTxBox);
+      when(() => mockHive.openBox<InvestmentModel>('investments_box'))
+          .thenAnswer((_) async => mockInvBox);
+      when(() => mockHive.openBox<DebtModel>('debts'))
+          .thenAnswer((_) async => mockDebtBox);
+      when(() => mockHive.openBox<ReceivableModel>('receivables'))
+          .thenAnswer((_) async => mockRecvBox);
+      when(() => mockHive.openBox<Map>('users'))
+          .thenAnswer((_) async => mockUserBox);
+
+      final result = await service.restore();
+      expect(result, isFalse);
+
+      // Verify rollback was called on walletBox
+      verify(() => mockWalletBox.putAll(any())).called(1);
     });
   });
 }

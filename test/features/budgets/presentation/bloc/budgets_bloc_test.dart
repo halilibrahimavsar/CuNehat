@@ -210,7 +210,8 @@ void main() {
   });
 
   group('TransactionsChangedNotifier Integration', () {
-    test('does NOT refresh budgets when notifier fires but credentials are not set',
+    test(
+        'does NOT refresh budgets when notifier fires but credentials are not set',
         () async {
       changedNotifier.notify();
       // No query should have been made

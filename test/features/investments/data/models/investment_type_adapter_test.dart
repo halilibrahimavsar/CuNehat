@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBinaryReader extends Mock implements BinaryReader {}
+
 class MockBinaryWriter extends Mock implements BinaryWriter {}
 
 void main() {
@@ -32,7 +33,8 @@ void main() {
     });
 
     test('read returns InvestmentType.custom when index is out of bounds', () {
-      when(() => mockReader.readByte()).thenReturn(InvestmentType.values.length + 10);
+      when(() => mockReader.readByte())
+          .thenReturn(InvestmentType.values.length + 10);
       final result = adapter.read(mockReader);
       expect(result, InvestmentType.custom);
     });

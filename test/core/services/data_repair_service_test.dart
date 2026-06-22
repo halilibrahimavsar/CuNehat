@@ -233,7 +233,7 @@ void main() {
 
     test('should not crash if exception is thrown', () async {
       await Hive.close();
-      expect(() => service.run(), returnsNormally);
+      await expectLater(service.run(), completes);
     });
   });
 }

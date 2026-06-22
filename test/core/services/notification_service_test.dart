@@ -143,5 +143,49 @@ void main() {
 
       verify(() => mockPlugin.cancelAll()).called(1);
     });
+
+    test('initialize registers callbacks', () async {
+      registerFallbackValue((NotificationResponse response) {});
+      registerFallbackValue(const InitializationSettings());
+
+      when(() => mockPlugin.initialize(
+            any(),
+            onDidReceiveNotificationResponse:
+                any(named: 'onDidReceiveNotificationResponse'),
+          )).thenAnswer((_) async => true);
+
+      await service.initialize();
+
+      verify(() => mockPlugin.initialize(
+            any(),
+            onDidReceiveNotificationResponse:
+                any(named: 'onDidReceiveNotificationResponse'),
+          )).called(1);
+    });
+
+    test('onDidReceiveNotificationResponse callback works', () async {
+      registerFallbackValue((NotificationResponse response) {});
+      registerFallbackValue(const InitializationSettings());
+
+      DidReceiveNotificationResponseCallback? capturedCallback;
+      when(() => mockPlugin.initialize(
+            any(),
+            onDidReceiveNotificationResponse:
+                any(named: 'onDidReceiveNotificationResponse'),
+          )).thenAnswer((invocation) async {
+        capturedCallback =
+            invocation.namedArguments[#onDidReceiveNotificationResponse]
+                as DidReceiveNotificationResponseCallback?;
+        return true;
+      });
+
+      await service.initialize();
+      expect(capturedCallback, isNotNull);
+
+      capturedCallback!(const NotificationResponse(
+        notificationResponseType: NotificationResponseType.selectedNotification,
+        payload: 'test_payload',
+      ));
+    });
   });
 }

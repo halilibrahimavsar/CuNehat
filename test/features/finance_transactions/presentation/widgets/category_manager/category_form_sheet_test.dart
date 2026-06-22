@@ -158,7 +158,8 @@ void main() {
     expect(find.byType(CategoryFormSheet), findsOneWidget);
   });
 
-  testWidgets('renders CategoryFormSheet in edit mode and updates category successfully',
+  testWidgets(
+      'renders CategoryFormSheet in edit mode and updates category successfully',
       (WidgetTester tester) async {
     bool? result;
     const category = CategoryEntity(
@@ -212,8 +213,7 @@ void main() {
     verify(() => mockCategoryRepository.updateCategory(any())).called(1);
   });
 
-  testWidgets('can change icon using IconPicker',
-      (WidgetTester tester) async {
+  testWidgets('can change icon using IconPicker', (WidgetTester tester) async {
     await tester.pumpWidget(
       buildTestableWidget(
         const CategoryFormSheet(isExpense: true),
@@ -229,10 +229,12 @@ void main() {
 
     // Select an icon (let's tap one of the icons in the picker, e.g. food icon or whatever)
     // IconPicker shows icons using GridView. We can tap the first icon in the grid
-    final gridIconFinder = find.descendant(
-      of: find.byType(GridView),
-      matching: find.byType(GestureDetector),
-    ).first;
+    final gridIconFinder = find
+        .descendant(
+          of: find.byType(GridView),
+          matching: find.byType(GestureDetector),
+        )
+        .first;
     await tester.tap(gridIconFinder);
     await tester.pumpAndSettle();
 

@@ -45,8 +45,8 @@ void main() {
         initialCheckCompleter.complete([ConnectivityResult.wifi]);
       },
       expect: () => [
-        predicate<ConnectionMonitorState>((s) =>
-            s.status == ConnectionStatus.connected),
+        predicate<ConnectionMonitorState>(
+            (s) => s.status == ConnectionStatus.connected),
       ],
     );
 
@@ -59,8 +59,8 @@ void main() {
       },
       wait: const Duration(milliseconds: 50),
       expect: () => [
-        predicate<ConnectionMonitorState>((s) =>
-            s.status == ConnectionStatus.disconnected),
+        predicate<ConnectionMonitorState>(
+            (s) => s.status == ConnectionStatus.disconnected),
       ],
     );
 
@@ -95,8 +95,8 @@ void main() {
         await Future<void>.delayed(Duration.zero);
       },
       expect: () => [
-        predicate<ConnectionMonitorState>((s) =>
-            s.status == ConnectionStatus.checking),
+        predicate<ConnectionMonitorState>(
+            (s) => s.status == ConnectionStatus.checking),
       ],
       verify: (cubit) {
         expect(cubit.state.status, ConnectionStatus.checking);
@@ -115,8 +115,8 @@ void main() {
         streamController.add([ConnectivityResult.wifi]);
       },
       expect: () => [
-        predicate<ConnectionMonitorState>((s) =>
-            s.status == ConnectionStatus.connected),
+        predicate<ConnectionMonitorState>(
+            (s) => s.status == ConnectionStatus.connected),
       ],
     );
 
@@ -129,8 +129,8 @@ void main() {
         streamController.add([ConnectivityResult.none]);
       },
       expect: () => [
-        predicate<ConnectionMonitorState>((s) =>
-            s.status == ConnectionStatus.disconnected),
+        predicate<ConnectionMonitorState>(
+            (s) => s.status == ConnectionStatus.disconnected),
       ],
     );
   });
@@ -145,8 +145,7 @@ void main() {
 
     test('returns WiFi for ConnectivityResult.wifi', () async {
       final cubit = await createCubit();
-      expect(
-          cubit.getConnectionTypeString([ConnectivityResult.wifi]), 'WiFi');
+      expect(cubit.getConnectionTypeString([ConnectivityResult.wifi]), 'WiFi');
       await cubit.close();
     });
 
@@ -174,8 +173,7 @@ void main() {
 
     test('returns None for ConnectivityResult.none', () async {
       final cubit = await createCubit();
-      expect(
-          cubit.getConnectionTypeString([ConnectivityResult.none]), 'None');
+      expect(cubit.getConnectionTypeString([ConnectivityResult.none]), 'None');
       await cubit.close();
     });
 
@@ -196,13 +194,9 @@ void main() {
     test('equality works', () {
       final now = DateTime.now();
       final a = ConnectionMonitorState(
-          status: ConnectionStatus.connected,
-          message: 'ok',
-          lastChecked: now);
+          status: ConnectionStatus.connected, message: 'ok', lastChecked: now);
       final b = ConnectionMonitorState(
-          status: ConnectionStatus.connected,
-          message: 'ok',
-          lastChecked: now);
+          status: ConnectionStatus.connected, message: 'ok', lastChecked: now);
       final c = ConnectionMonitorState(
           status: ConnectionStatus.disconnected,
           message: 'ok',
@@ -212,8 +206,7 @@ void main() {
     });
 
     test('copyWith preserves values', () {
-      const state =
-          ConnectionMonitorState(status: ConnectionStatus.checking);
+      const state = ConnectionMonitorState(status: ConnectionStatus.checking);
       final copied = state.copyWith(status: ConnectionStatus.connected);
       expect(copied.status, ConnectionStatus.connected);
       expect(copied.message, isNull);

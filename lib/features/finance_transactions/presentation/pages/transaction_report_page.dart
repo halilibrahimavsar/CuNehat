@@ -545,7 +545,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 ),
                 Text(
                   context.l10n.formatMoneyItemTotalamountPercent(
-                      formatMoney(item.totalAmount), percent.toStringAsFixed(0)),
+                      formatMoney(item.totalAmount),
+                      percent.toStringAsFixed(0)),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: scheme.onSurfaceVariant,

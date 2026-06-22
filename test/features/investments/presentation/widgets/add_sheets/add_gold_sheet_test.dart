@@ -63,7 +63,8 @@ void main() {
     quantity: 1.0,
   );
 
-  testWidgets('renders AddGoldSheet in create mode and saves with computed price',
+  testWidgets(
+      'renders AddGoldSheet in create mode and saves with computed price',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -75,8 +76,9 @@ void main() {
     InvestmentEntity? savedInvestment;
     final completer = Completer<Either<Failure, LivePriceQuote>>();
 
-    when(() => mockGetLiveQuoteUseCase(symbol: 'gram-altin', type: InvestmentType.gold))
-        .thenAnswer((_) => completer.future);
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold)).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -93,8 +95,7 @@ void main() {
 
     // Locate quantity textfield (hint: 'Adet')
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'Adet');
     expect(quantityFinder, findsOneWidget);
     await tester.enterText(quantityFinder, '2.0');
 
@@ -116,11 +117,11 @@ void main() {
 
     // Verify currentValue and amount TextFields have auto-filled '3000'
     // currentValue: has hintText: '0'
-    final currentValueFinder = find.byWidgetPredicate((w) =>
-        w is TextField &&
-        w.decoration?.hintText == '0');
+    final currentValueFinder = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0');
     expect(currentValueFinder, findsOneWidget);
-    expect(tester.widget<TextField>(currentValueFinder).controller?.text, '3000');
+    expect(
+        tester.widget<TextField>(currentValueFinder).controller?.text, '3000');
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
@@ -131,7 +132,8 @@ void main() {
     // Enter name
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Düğün Altınları');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Düğün Altınları');
     expect(nameFinder, findsOneWidget);
     await tester.enterText(nameFinder, 'Yeni Birikim');
 
@@ -156,8 +158,8 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    when(() => mockGetLiveQuoteUseCase(symbol: 'gram-altin', type: InvestmentType.gold))
-        .thenAnswer(
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin', type: InvestmentType.gold)).thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
 
@@ -183,7 +185,7 @@ void main() {
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
     await tester.enterText(amountFinder, '1000');
-    
+
     // Tap Save again, now it fails on currentValue being invalid
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
@@ -191,8 +193,7 @@ void main() {
 
     // Now test Live Price fetch failure
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'Adet');
     await tester.enterText(quantityFinder, '1.5');
     await tester.tap(find.text('Hesapla'));
     await tester.pumpAndSettle();
@@ -201,7 +202,8 @@ void main() {
     expect(find.text('Fiyat alınamadı.'), findsOneWidget);
   });
 
-  testWidgets('renders AddGoldSheet in edit mode, displays correct details and updates',
+  testWidgets(
+      'renders AddGoldSheet in edit mode, displays correct details and updates',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -229,8 +231,10 @@ void main() {
     // Verify initial values in TextFields
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Düğün Altınları');
-    expect(tester.widget<TextField>(nameFinder).controller?.text, 'Yastık Altı Altın');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Düğün Altınları');
+    expect(tester.widget<TextField>(nameFinder).controller?.text,
+        'Yastık Altı Altın');
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
@@ -238,7 +242,10 @@ void main() {
     expect(tester.widget<TextField>(amountFinder).controller?.text, '2000');
 
     // Goal category warning should be rendered
-    expect(find.text('Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'), findsOneWidget);
+    expect(
+        find.text(
+            'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
+        findsOneWidget);
 
     // Enter a target amount to trigger goal category selection
     final targetFinder = find.byWidgetPredicate((widget) =>
@@ -256,8 +263,7 @@ void main() {
 
     // Tap color option circle to change color (e.g. Colors.blue)
     final colorFinders = find.byWidgetPredicate((widget) =>
-        widget is GestureDetector &&
-        widget.child is AnimatedContainer);
+        widget is GestureDetector && widget.child is AnimatedContainer);
     expect(colorFinders, findsNWidgets(8));
     await tester.tap(colorFinders.at(3)); // index 3 is Colors.blue
     await tester.pumpAndSettle();

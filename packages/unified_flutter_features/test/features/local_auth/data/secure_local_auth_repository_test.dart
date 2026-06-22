@@ -9,7 +9,9 @@ import 'package:unified_flutter_features/features/local_auth/data/secure_local_a
 import 'package:unified_flutter_features/features/local_auth/presentation/constants/local_auth_constants.dart';
 
 class _MockPrefs extends Mock implements SharedPreferences {}
+
 class _MockSecureStorage extends Mock implements FlutterSecureStorage {}
+
 class _MockLocalAuth extends Mock implements LocalAuthentication {}
 
 void main() {
@@ -125,18 +127,20 @@ void main() {
   group('savePin', () {
     test('writes salt and hash to secure storage', () async {
       when(() => secureStorage.write(
-          key: LocalAuthConstants.pinSaltKey, value: any(named: 'value')))
-          .thenAnswer((_) async => {});
+          key: LocalAuthConstants.pinSaltKey,
+          value: any(named: 'value'))).thenAnswer((_) async => {});
       when(() => secureStorage.write(
-          key: LocalAuthConstants.pinHashKey, value: any(named: 'value')))
-          .thenAnswer((_) async => {});
+          key: LocalAuthConstants.pinHashKey,
+          value: any(named: 'value'))).thenAnswer((_) async => {});
 
       await repository.savePin('123456');
 
       verify(() => secureStorage.write(
-          key: LocalAuthConstants.pinSaltKey, value: any(named: 'value'))).called(1);
+          key: LocalAuthConstants.pinSaltKey,
+          value: any(named: 'value'))).called(1);
       verify(() => secureStorage.write(
-          key: LocalAuthConstants.pinHashKey, value: any(named: 'value'))).called(1);
+          key: LocalAuthConstants.pinHashKey,
+          value: any(named: 'value'))).called(1);
     });
   });
 
@@ -225,12 +229,14 @@ void main() {
     });
 
     test('setPrivacyGuardEnabled writes to prefs', () async {
-      when(() => prefs.setBool(LocalAuthConstants.privacyGuardEnabledKey, false))
+      when(() =>
+              prefs.setBool(LocalAuthConstants.privacyGuardEnabledKey, false))
           .thenAnswer((_) async => true);
 
       await repository.setPrivacyGuardEnabled(false);
 
-      verify(() => prefs.setBool(LocalAuthConstants.privacyGuardEnabledKey, false))
+      verify(() =>
+              prefs.setBool(LocalAuthConstants.privacyGuardEnabledKey, false))
           .called(1);
     });
   });
@@ -250,7 +256,8 @@ void main() {
 
       await repository.setBackgroundLockTimeoutSeconds(30);
 
-      verify(() => prefs.setInt(LocalAuthConstants.backgroundLockTimeoutKey, 30))
+      verify(() =>
+              prefs.setInt(LocalAuthConstants.backgroundLockTimeoutKey, 30))
           .called(1);
     });
   });
@@ -272,7 +279,8 @@ void main() {
 
       await repository.clearLastBackgroundTime();
 
-      verify(() => prefs.remove(LocalAuthConstants.lastBackgroundAtKey)).called(1);
+      verify(() => prefs.remove(LocalAuthConstants.lastBackgroundAtKey))
+          .called(1);
     });
   });
 
@@ -293,8 +301,10 @@ void main() {
 
       await repository.saveLockoutState(1, 1000);
 
-      verify(() => prefs.setInt(LocalAuthConstants.lockoutLevelKey, 1)).called(1);
-      verify(() => prefs.setInt(LocalAuthConstants.lockoutEndKey, 1000)).called(1);
+      verify(() => prefs.setInt(LocalAuthConstants.lockoutLevelKey, 1))
+          .called(1);
+      verify(() => prefs.setInt(LocalAuthConstants.lockoutEndKey, 1000))
+          .called(1);
     });
 
     test('clearLockoutState removes both keys', () async {
@@ -320,10 +330,12 @@ void main() {
           .thenReturn('legacy-hash');
       when(() => prefs.getString(LocalAuthConstants.pinSaltKey))
           .thenReturn('legacy-salt');
-      when(() => secureStorage.write(key: LocalAuthConstants.pinHashKey, value: 'legacy-hash'))
-          .thenAnswer((_) async => {});
-      when(() => secureStorage.write(key: LocalAuthConstants.pinSaltKey, value: 'legacy-salt'))
-          .thenAnswer((_) async => {});
+      when(() => secureStorage.write(
+          key: LocalAuthConstants.pinHashKey,
+          value: 'legacy-hash')).thenAnswer((_) async => {});
+      when(() => secureStorage.write(
+          key: LocalAuthConstants.pinSaltKey,
+          value: 'legacy-salt')).thenAnswer((_) async => {});
       when(() => prefs.remove(LocalAuthConstants.pinHashKey))
           .thenAnswer((_) async => true);
       when(() => prefs.remove(LocalAuthConstants.pinSaltKey))

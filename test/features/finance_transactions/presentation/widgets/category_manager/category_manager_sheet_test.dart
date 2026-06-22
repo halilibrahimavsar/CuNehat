@@ -206,7 +206,8 @@ void main() {
     expect(find.text('Kategori Düzenle'), findsOneWidget);
   });
 
-  testWidgets('swipes right-to-left and deletes custom category on confirmation',
+  testWidgets(
+      'swipes right-to-left and deletes custom category on confirmation',
       (WidgetTester tester) async {
     when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
       (_) async => [
@@ -248,7 +249,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify delete calls were executed
-    verify(() => mockCategoryRepository.deleteCategory('Market', true)).called(1);
+    verify(() => mockCategoryRepository.deleteCategory('Market', true))
+        .called(1);
     verify(() => mockDeleteBudgetUsecase.call('Market')).called(1);
   });
 
@@ -289,7 +291,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify it handles error and doesn't crash
-    verify(() => mockCategoryRepository.deleteCategory('Market', true)).called(1);
+    verify(() => mockCategoryRepository.deleteCategory('Market', true))
+        .called(1);
   });
 
   testWidgets('showCategoryManager helper function displays the sheet',
@@ -303,7 +306,8 @@ void main() {
         Builder(
           builder: (context) {
             return ElevatedButton(
-              onPressed: () => showCategoryManager(context: context, isExpense: true),
+              onPressed: () =>
+                  showCategoryManager(context: context, isExpense: true),
               child: const Text('Open'),
             );
           },
@@ -317,9 +321,11 @@ void main() {
     expect(find.byType(CategoryManagerSheet), findsOneWidget);
   });
 
-  testWidgets('tapping Edit on a default category opens Form and reloads list on save',
+  testWidgets(
+      'tapping Edit on a default category opens Form and reloads list on save',
       (WidgetTester tester) async {
-    registerFallbackValue(const CategoryEntity(id: '', iconName: '', isExpense: true));
+    registerFallbackValue(
+        const CategoryEntity(id: '', iconName: '', isExpense: true));
 
     when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
       (_) async => [
@@ -332,7 +338,8 @@ void main() {
       ],
     );
 
-    when(() => mockCategoryRepository.updateCategory(any())).thenAnswer((_) async {});
+    when(() => mockCategoryRepository.updateCategory(any()))
+        .thenAnswer((_) async {});
 
     await tester.pumpWidget(
       buildTestableWidget(

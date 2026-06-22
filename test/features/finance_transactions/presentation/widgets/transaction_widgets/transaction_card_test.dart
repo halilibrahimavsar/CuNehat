@@ -297,7 +297,8 @@ void main() {
     expect(find.text('Güncelle'), findsOneWidget);
   });
 
-  testWidgets('long press delete non-system transaction and cancel does nothing',
+  testWidgets(
+      'long press delete non-system transaction and cancel does nothing',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: false, id: 'tx_123');
     final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
@@ -338,7 +339,8 @@ void main() {
     verifyNever(() => mockTransactionBloc.add(any()));
   });
 
-  testWidgets('long press delete non-system transaction and confirm dispatches DeleteTransactionEvent',
+  testWidgets(
+      'long press delete non-system transaction and confirm dispatches DeleteTransactionEvent',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: false, id: 'tx_123');
     final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
@@ -380,6 +382,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify DeleteTransactionEvent was dispatched
-    verify(() => mockTransactionBloc.add(const DeleteTransactionEvent('tx_123'))).called(1);
+    verify(() =>
+            mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
+        .called(1);
   });
 }

@@ -26,7 +26,8 @@ void main() {
       );
     }
 
-    testWidgets('renders all GoalCategory options', (WidgetTester tester) async {
+    testWidgets('renders all GoalCategory options',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
           GoalCategorySelector(

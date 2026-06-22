@@ -165,8 +165,10 @@ void main() {
     });
 
     test('UpdateReceivableEvent props', () {
-      final e1 = UpdateReceivableEvent(receivable: receivable, prevAmount: 1000.0);
-      final e2 = UpdateReceivableEvent(receivable: receivable, prevAmount: 1000.0);
+      final e1 =
+          UpdateReceivableEvent(receivable: receivable, prevAmount: 1000.0);
+      final e2 =
+          UpdateReceivableEvent(receivable: receivable, prevAmount: 1000.0);
       expect(e1, e2);
       expect(e1.props, [receivable, 1000.0]);
     });
@@ -288,8 +290,10 @@ void main() {
     });
 
     test('CreateInvestmentEvent props', () {
-      final e1 = CreateInvestmentEvent(investment: investment, userId: 'u1', walletId: 'w1');
-      final e2 = CreateInvestmentEvent(investment: investment, userId: 'u1', walletId: 'w1');
+      final e1 = CreateInvestmentEvent(
+          investment: investment, userId: 'u1', walletId: 'w1');
+      final e2 = CreateInvestmentEvent(
+          investment: investment, userId: 'u1', walletId: 'w1');
       expect(e1, e2);
       expect(e1.props, [investment, 'u1', 'w1']);
     });
@@ -314,8 +318,10 @@ void main() {
     });
 
     test('RefreshPricesEvent props', () {
-      const e1 = RefreshPricesEvent(userId: 'u1', walletId: 'w1', investmentId: 'i1');
-      const e2 = RefreshPricesEvent(userId: 'u1', walletId: 'w1', investmentId: 'i1');
+      const e1 =
+          RefreshPricesEvent(userId: 'u1', walletId: 'w1', investmentId: 'i1');
+      const e2 =
+          RefreshPricesEvent(userId: 'u1', walletId: 'w1', investmentId: 'i1');
       expect(e1, e2);
       expect(e1.props, ['u1', 'w1', 'i1']);
     });

@@ -88,8 +88,8 @@ void main() {
       expect: () => [
         predicate<LocalAuthLoginState>(
             (s) => s.loadStatus == LoginLoadStatus.loading),
-        predicate<LocalAuthLoginState>((s) =>
-            s.loadStatus == LoginLoadStatus.success),
+        predicate<LocalAuthLoginState>(
+            (s) => s.loadStatus == LoginLoadStatus.success),
         predicate<LocalAuthLoginState>((s) =>
             s.authStatus == AuthStatus.lockedOut &&
             s.lockoutEndTime == 9999999999999),
@@ -103,8 +103,7 @@ void main() {
       build: () {
         when(() => repository.verifyPin('123456'))
             .thenAnswer((_) async => true);
-        when(() => repository.clearLockoutState())
-            .thenAnswer((_) async => {});
+        when(() => repository.clearLockoutState()).thenAnswer((_) async => {});
         return LocalAuthLoginBloc(repository: repository);
       },
       act: (bloc) async {
@@ -124,8 +123,7 @@ void main() {
       build: () {
         when(() => repository.verifyPin('wrong'))
             .thenAnswer((_) async => false);
-        when(() => repository.getLockoutLevel())
-            .thenAnswer((_) async => 0);
+        when(() => repository.getLockoutLevel()).thenAnswer((_) async => 0);
         return LocalAuthLoginBloc(repository: repository);
       },
       act: (bloc) async {
@@ -147,8 +145,7 @@ void main() {
       build: () {
         when(() => repository.verifyPin('wrong'))
             .thenAnswer((_) async => false);
-        when(() => repository.getLockoutLevel())
-            .thenAnswer((_) async => 0);
+        when(() => repository.getLockoutLevel()).thenAnswer((_) async => 0);
         when(() => repository.saveLockoutState(1, any()))
             .thenAnswer((_) async => {});
         return LocalAuthLoginBloc(repository: repository);
@@ -159,9 +156,8 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 200));
       },
       expect: () => [
-        predicate<LocalAuthLoginState>((s) =>
-            s.authStatus == AuthStatus.loading &&
-            s.failedAttempts == 2),
+        predicate<LocalAuthLoginState>(
+            (s) => s.authStatus == AuthStatus.loading && s.failedAttempts == 2),
         predicate<LocalAuthLoginState>((s) =>
             s.authStatus == AuthStatus.lockedOut &&
             s.failedAttempts == 0 &&
@@ -211,12 +207,11 @@ void main() {
       'emits authenticated on successful biometric',
       build: () {
         when(() => repository.authenticateWithBiometrics(
-            reason: any(named: 'reason'),
-            signInTitle: any(named: 'signInTitle'),
-            cancelButton: any(named: 'cancelButton')))
+                reason: any(named: 'reason'),
+                signInTitle: any(named: 'signInTitle'),
+                cancelButton: any(named: 'cancelButton')))
             .thenAnswer((_) async => true);
-        when(() => repository.clearLockoutState())
-            .thenAnswer((_) async => {});
+        when(() => repository.clearLockoutState()).thenAnswer((_) async => {});
         return LocalAuthLoginBloc(repository: repository);
       },
       act: (bloc) => bloc.add(const BiometricAuthLoginEvent()),
@@ -230,9 +225,9 @@ void main() {
       'does nothing when biometric fails',
       build: () {
         when(() => repository.authenticateWithBiometrics(
-            reason: any(named: 'reason'),
-            signInTitle: any(named: 'signInTitle'),
-            cancelButton: any(named: 'cancelButton')))
+                reason: any(named: 'reason'),
+                signInTitle: any(named: 'signInTitle'),
+                cancelButton: any(named: 'cancelButton')))
             .thenAnswer((_) async => false);
         return LocalAuthLoginBloc(repository: repository);
       },
@@ -273,17 +268,14 @@ void main() {
     blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
       'clears lockout when expired',
       build: () {
-        when(() => repository.getLockoutEndTime())
-            .thenAnswer((_) async => 0);
-        when(() => repository.clearLockoutState())
-            .thenAnswer((_) async => {});
+        when(() => repository.getLockoutEndTime()).thenAnswer((_) async => 0);
+        when(() => repository.clearLockoutState()).thenAnswer((_) async => {});
         return LocalAuthLoginBloc(repository: repository);
       },
       act: (bloc) => bloc.add(CheckLockoutEvent()),
       expect: () => [
-        predicate<LocalAuthLoginState>((s) =>
-            s.authStatus == AuthStatus.initial &&
-            s.failedAttempts == 0),
+        predicate<LocalAuthLoginState>(
+            (s) => s.authStatus == AuthStatus.initial && s.failedAttempts == 0),
       ],
     );
 

@@ -62,9 +62,8 @@ void main() {
     expect(find.text('Yeni Özel Yatırım Ekle'), findsOneWidget);
 
     // Enter currentValue
-    final currentValueFinder = find.byWidgetPredicate((w) =>
-        w is TextField &&
-        w.decoration?.hintText == '0');
+    final currentValueFinder = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0');
     expect(currentValueFinder, findsOneWidget);
     await tester.enterText(currentValueFinder, '4500');
 
@@ -78,7 +77,8 @@ void main() {
     // Enter name
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz');
     expect(nameFinder, findsOneWidget);
     await tester.enterText(nameFinder, 'Kripto Sepetim');
 
@@ -124,16 +124,15 @@ void main() {
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
     await tester.enterText(amountFinder, '2000');
-    
+
     // Tap Save again, now it fails on currentValue being invalid
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
     expect(find.text('Geçerli bir mevcut değer girin'), findsOneWidget);
 
     // Enter valid currentValue
-    final currentValueFinder = find.byWidgetPredicate((w) =>
-        w is TextField &&
-        w.decoration?.hintText == '0');
+    final currentValueFinder = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0');
     await tester.enterText(currentValueFinder, '2200');
 
     // Enter invalid targetAmount to trigger targetAmount validation error
@@ -146,7 +145,8 @@ void main() {
     expect(find.text('Geçerli bir hedef tutar girin'), findsOneWidget);
   });
 
-  testWidgets('renders AddCustomSheet in edit mode, displays correct details and updates',
+  testWidgets(
+      'renders AddCustomSheet in edit mode, displays correct details and updates',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -174,8 +174,10 @@ void main() {
     // Verify initial values in TextFields
     final nameFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
-        widget.decoration?.hintText == 'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz');
-    expect(tester.widget<TextField>(nameFinder).controller?.text, 'Bireysel Emeklilik');
+        widget.decoration?.hintText ==
+            'Not (İsteğe bağlı) · örn. Arsa, Kripto, Döviz');
+    expect(tester.widget<TextField>(nameFinder).controller?.text,
+        'Bireysel Emeklilik');
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
@@ -183,7 +185,10 @@ void main() {
     expect(tester.widget<TextField>(amountFinder).controller?.text, '3000');
 
     // Goal category warning should be rendered
-    expect(find.text('Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'), findsOneWidget);
+    expect(
+        find.text(
+            'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
+        findsOneWidget);
 
     // Enter a target amount to trigger goal category selection
     final targetFinder = find.byWidgetPredicate((widget) =>
@@ -201,8 +206,7 @@ void main() {
 
     // Tap color option circle to change color (e.g. index 5 is Teal)
     final colorFinders = find.byWidgetPredicate((widget) =>
-        widget is GestureDetector &&
-        widget.child is AnimatedContainer);
+        widget is GestureDetector && widget.child is AnimatedContainer);
     expect(colorFinders, findsNWidgets(8));
     await tester.tap(colorFinders.at(5));
     await tester.pumpAndSettle();

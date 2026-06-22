@@ -15,23 +15,23 @@ void main() {
 
     test('returns true when pin set, bio enabled, and bio available', () async {
       when(() => repository.isPinSet()).thenAnswer((_) async => true);
-      when(() => repository.isBiometricEnabled())
-          .thenAnswer((_) async => true);
+      when(() => repository.isBiometricEnabled()).thenAnswer((_) async => true);
       when(() => repository.isBiometricAvailable())
           .thenAnswer((_) async => true);
 
-      final result = await LocalAuthUtils.validateBiometricRequirements(repository);
+      final result =
+          await LocalAuthUtils.validateBiometricRequirements(repository);
       expect(result, isTrue);
     });
 
     test('returns false when pin not set', () async {
       when(() => repository.isPinSet()).thenAnswer((_) async => false);
-      when(() => repository.isBiometricEnabled())
-          .thenAnswer((_) async => true);
+      when(() => repository.isBiometricEnabled()).thenAnswer((_) async => true);
       when(() => repository.isBiometricAvailable())
           .thenAnswer((_) async => true);
 
-      final result = await LocalAuthUtils.validateBiometricRequirements(repository);
+      final result =
+          await LocalAuthUtils.validateBiometricRequirements(repository);
       expect(result, isFalse);
     });
 
@@ -42,18 +42,19 @@ void main() {
       when(() => repository.isBiometricAvailable())
           .thenAnswer((_) async => true);
 
-      final result = await LocalAuthUtils.validateBiometricRequirements(repository);
+      final result =
+          await LocalAuthUtils.validateBiometricRequirements(repository);
       expect(result, isFalse);
     });
 
     test('returns false when bio not available', () async {
       when(() => repository.isPinSet()).thenAnswer((_) async => true);
-      when(() => repository.isBiometricEnabled())
-          .thenAnswer((_) async => true);
+      when(() => repository.isBiometricEnabled()).thenAnswer((_) async => true);
       when(() => repository.isBiometricAvailable())
           .thenAnswer((_) async => false);
 
-      final result = await LocalAuthUtils.validateBiometricRequirements(repository);
+      final result =
+          await LocalAuthUtils.validateBiometricRequirements(repository);
       expect(result, isFalse);
     });
   });
@@ -67,8 +68,7 @@ void main() {
 
     test('disables biometric when pin not set but bio enabled', () async {
       when(() => repository.isPinSet()).thenAnswer((_) async => false);
-      when(() => repository.isBiometricEnabled())
-          .thenAnswer((_) async => true);
+      when(() => repository.isBiometricEnabled()).thenAnswer((_) async => true);
       when(() => repository.setBiometricEnabled(false))
           .thenAnswer((_) async => {});
 
@@ -79,8 +79,7 @@ void main() {
 
     test('does nothing when pin set and bio enabled', () async {
       when(() => repository.isPinSet()).thenAnswer((_) async => true);
-      when(() => repository.isBiometricEnabled())
-          .thenAnswer((_) async => true);
+      when(() => repository.isBiometricEnabled()).thenAnswer((_) async => true);
 
       await LocalAuthUtils.ensureBiometricConsistency(repository);
 

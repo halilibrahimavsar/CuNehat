@@ -8,13 +8,17 @@ import 'package:unified_flutter_features/features/slider_2d_navigation/models/sl
 void main() {
   group('getStateFromValue', () {
     test('returns first state when totalStates <= 1', () {
-      expect(SliderStateHelper.getStateFromValue(0.0, 1), SliderState.savedMoney);
-      expect(SliderStateHelper.getStateFromValue(0.5, 1), SliderState.savedMoney);
-      expect(SliderStateHelper.getStateFromValue(1.0, 0), SliderState.savedMoney);
+      expect(
+          SliderStateHelper.getStateFromValue(0.0, 1), SliderState.savedMoney);
+      expect(
+          SliderStateHelper.getStateFromValue(0.5, 1), SliderState.savedMoney);
+      expect(
+          SliderStateHelper.getStateFromValue(1.0, 0), SliderState.savedMoney);
     });
 
     test('returns savedMoney at value 0.0 for 3 states', () {
-      expect(SliderStateHelper.getStateFromValue(0.0, 3), SliderState.savedMoney);
+      expect(
+          SliderStateHelper.getStateFromValue(0.0, 3), SliderState.savedMoney);
     });
 
     test('returns debt at value 1.0 for 3 states', () {
@@ -22,25 +26,34 @@ void main() {
     });
 
     test('returns transactions at value 0.5 for 3 states', () {
-      expect(SliderStateHelper.getStateFromValue(0.5, 3), SliderState.transactions);
+      expect(SliderStateHelper.getStateFromValue(0.5, 3),
+          SliderState.transactions);
     });
 
     test('transitions around boundaries for 3 states', () {
-      expect(SliderStateHelper.getStateFromValue(0.24, 3), SliderState.savedMoney);
-      expect(SliderStateHelper.getStateFromValue(0.26, 3), SliderState.transactions);
-      expect(SliderStateHelper.getStateFromValue(0.74, 3), SliderState.transactions);
+      expect(
+          SliderStateHelper.getStateFromValue(0.24, 3), SliderState.savedMoney);
+      expect(SliderStateHelper.getStateFromValue(0.26, 3),
+          SliderState.transactions);
+      expect(SliderStateHelper.getStateFromValue(0.74, 3),
+          SliderState.transactions);
       expect(SliderStateHelper.getStateFromValue(0.76, 3), SliderState.debt);
     });
 
     test('works for 2 states (on/off)', () {
-      expect(SliderStateHelper.getStateFromValue(0.0, 2), SliderState.savedMoney);
-      expect(SliderStateHelper.getStateFromValue(0.49, 2), SliderState.savedMoney);
-      expect(SliderStateHelper.getStateFromValue(0.5, 2), SliderState.transactions);
-      expect(SliderStateHelper.getStateFromValue(1.0, 2), SliderState.transactions);
+      expect(
+          SliderStateHelper.getStateFromValue(0.0, 2), SliderState.savedMoney);
+      expect(
+          SliderStateHelper.getStateFromValue(0.49, 2), SliderState.savedMoney);
+      expect(SliderStateHelper.getStateFromValue(0.5, 2),
+          SliderState.transactions);
+      expect(SliderStateHelper.getStateFromValue(1.0, 2),
+          SliderState.transactions);
     });
 
     test('clamps value out of bounds', () {
-      expect(SliderStateHelper.getStateFromValue(-0.5, 3), SliderState.savedMoney);
+      expect(
+          SliderStateHelper.getStateFromValue(-0.5, 3), SliderState.savedMoney);
       expect(SliderStateHelper.getStateFromValue(1.5, 3), SliderState.debt);
     });
   });
@@ -56,7 +69,8 @@ void main() {
     });
 
     test('returns 0.5 for transactions at 3 states', () {
-      expect(SliderStateHelper.getTargetValue(SliderState.transactions, 3), 0.5);
+      expect(
+          SliderStateHelper.getTargetValue(SliderState.transactions, 3), 0.5);
     });
 
     test('returns 1.0 for debt at 3 states', () {

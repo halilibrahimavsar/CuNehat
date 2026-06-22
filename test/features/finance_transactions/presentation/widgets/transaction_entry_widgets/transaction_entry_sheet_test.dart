@@ -30,7 +30,9 @@ class MockSaveRecurringTransactionUsecase extends Mock
     implements SaveRecurringTransactionUsecase {}
 
 class FakeTransactionEvent extends Fake implements TransactionEvent {}
+
 class FakeTransactionEntity extends Fake implements TransactionEntity {}
+
 class FakeRecurringTransactionEntity extends Fake
     implements RecurringTransactionEntity {}
 
@@ -112,7 +114,8 @@ void main() {
     );
   }
 
-  testWidgets('TransactionSheetHandler.showSheet opens sheet and closes on cancel',
+  testWidgets(
+      'TransactionSheetHandler.showSheet opens sheet and closes on cancel',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       buildTestableWidget(
@@ -148,7 +151,8 @@ void main() {
     expect(find.text('Kaydet'), findsNothing);
   });
 
-  testWidgets('Submitting form for new transaction dispatches AddTransactionEvent',
+  testWidgets(
+      'Submitting form for new transaction dispatches AddTransactionEvent',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       buildTestableWidget(
@@ -196,7 +200,8 @@ void main() {
     expect(find.text('Kaydet'), findsNothing); // Sheet is closed
   });
 
-  testWidgets('Submitting form for updating transaction dispatches UpdateTransactionEvent',
+  testWidgets(
+      'Submitting form for updating transaction dispatches UpdateTransactionEvent',
       (WidgetTester tester) async {
     final initialTx = TransactionEntity(
       id: 'tx_old',
@@ -252,12 +257,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify UpdateTransactionEvent is dispatched
-    verify(() => mockTransactionBloc.add(any(that: isA<UpdateTransactionEvent>())))
+    verify(() =>
+            mockTransactionBloc.add(any(that: isA<UpdateTransactionEvent>())))
         .called(1);
     expect(find.text('Kaydet'), findsNothing); // Sheet is closed
   });
 
-  testWidgets('Submitting form with recurring frequency dispatches AddTransactionEvent and calls SaveRecurringTransactionUsecase',
+  testWidgets(
+      'Submitting form with recurring frequency dispatches AddTransactionEvent and calls SaveRecurringTransactionUsecase',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       buildTestableWidget(

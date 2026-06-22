@@ -47,7 +47,8 @@ void main() {
     expect(find.byIcon(Icons.sync_rounded), findsOneWidget);
   });
 
-  testWidgets('renders TransactionPendingPage with AppBar when showAppBar is true',
+  testWidgets(
+      'renders TransactionPendingPage with AppBar when showAppBar is true',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       buildTestableWidget(

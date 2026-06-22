@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBinaryReader extends Mock implements BinaryReader {}
+
 class MockBinaryWriter extends Mock implements BinaryWriter {}
 
 void main() {

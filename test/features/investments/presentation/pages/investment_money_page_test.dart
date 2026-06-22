@@ -145,7 +145,8 @@ void main() {
 
     // Verify SummaryCard rendering
     expect(find.text('TOPLAM PORTFÖY DEĞERİ'), findsOneWidget);
-    expect(find.text('₺3.250'), findsOneWidget); // totalCurrentValue = 1250 + 2000 = 3250
+    expect(find.text('₺3.250'),
+        findsOneWidget); // totalCurrentValue = 1250 + 2000 = 3250
     expect(find.text('₺3.000'), findsOneWidget); // totalInvestment = 3000
 
     // Verify Portföyüm header
@@ -187,10 +188,12 @@ void main() {
     await tester.tap(refreshFinder);
     await tester.pumpAndSettle();
 
-    verify(() => mockInvestmentBloc.add(any(that: isA<RefreshPricesEvent>()))).called(1);
+    verify(() => mockInvestmentBloc.add(any(that: isA<RefreshPricesEvent>())))
+        .called(1);
   });
 
-  testWidgets('tapping investment card and choosing contribute opens ContributeSheet',
+  testWidgets(
+      'tapping investment card and choosing contribute opens ContributeSheet',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -215,10 +218,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap on the investment card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     expect(cardFinder, findsOneWidget);
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
@@ -238,7 +243,8 @@ void main() {
     expect(find.text('Gram Altın · Varlık Ekle'), findsOneWidget);
   });
 
-  testWidgets('tapping sell option shows confirmation dialog and dispatches DeleteInvestmentEvent with recordSale: true',
+  testWidgets(
+      'tapping sell option shows confirmation dialog and dispatches DeleteInvestmentEvent with recordSale: true',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -263,10 +269,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -295,7 +303,8 @@ void main() {
         ))).called(1);
   });
 
-  testWidgets('tapping delete option shows confirmation dialog and dispatches DeleteInvestmentEvent with recordSale: false',
+  testWidgets(
+      'tapping delete option shows confirmation dialog and dispatches DeleteInvestmentEvent with recordSale: false',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -320,10 +329,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -373,7 +384,8 @@ void main() {
     // Verify snackbar/success text is shown
     expect(find.text('İşlem başarıyla tamamlandı'), findsOneWidget);
     // Verify reload was triggered
-    verify(() => mockInvestmentBloc.add(any(that: isA<GetInvestmentsEvent>()))).called(2);
+    verify(() => mockInvestmentBloc.add(any(that: isA<GetInvestmentsEvent>())))
+        .called(2);
   });
 
   testWidgets('renders error message when state is InvestmentError',
@@ -422,10 +434,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -442,7 +456,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify no delete event is dispatched
-    verifyNever(() => mockInvestmentBloc.add(any(that: isA<DeleteInvestmentEvent>())));
+    verifyNever(
+        () => mockInvestmentBloc.add(any(that: isA<DeleteInvestmentEvent>())));
   });
 
   testWidgets('tapping cancel on delete dialog does not trigger dispatch',
@@ -470,10 +485,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -490,7 +507,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify no delete event is dispatched
-    verifyNever(() => mockInvestmentBloc.add(any(that: isA<DeleteInvestmentEvent>())));
+    verifyNever(
+        () => mockInvestmentBloc.add(any(that: isA<DeleteInvestmentEvent>())));
   });
 
   testWidgets('re-loads investments when wallet changes in didUpdateWidget',
@@ -505,7 +523,8 @@ void main() {
     );
 
     // Verify initial load event dispatched
-    verify(() => mockInvestmentBloc.add(any(that: isA<GetInvestmentsEvent>()))).called(1);
+    verify(() => mockInvestmentBloc.add(any(that: isA<GetInvestmentsEvent>())))
+        .called(1);
 
     // Re-pump with a different wallet
     final walletB = WalletEntity(
@@ -558,10 +577,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap on card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Bireysel Emeklilik'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Bireysel Emeklilik'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -599,10 +620,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap on card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -654,10 +677,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap on card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Türk Hava Yolları'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Türk Hava Yolları'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();
@@ -670,7 +695,8 @@ void main() {
     expect(find.text('Hisse Yatırımını Düzenle'), findsOneWidget);
   });
 
-  testWidgets('tapping refresh price on gold investment in action sheet dispatches RefreshPricesEvent with investmentId',
+  testWidgets(
+      'tapping refresh price on gold investment in action sheet dispatches RefreshPricesEvent with investmentId',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -695,10 +721,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap card
-    final cardFinder = find.descendant(
-      of: find.byType(InvestmentCard),
-      matching: find.text('Gram Altın'),
-    ).first;
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
     await tester.ensureVisible(cardFinder);
     await tester.tap(cardFinder);
     await tester.pumpAndSettle();

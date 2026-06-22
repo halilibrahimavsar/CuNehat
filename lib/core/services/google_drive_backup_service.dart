@@ -110,7 +110,8 @@ class GoogleDriveBackupService {
   /// Serialize all local Hive databases to a single JSON string
   Future<String> _serializeDatabase() async {
     final walletBox = await _hive.openBox<WalletModel>('wallets');
-    final transactionBox = await _hive.openBox<TransactionModel>('transactions');
+    final transactionBox =
+        await _hive.openBox<TransactionModel>('transactions');
     final investmentBox =
         await _hive.openBox<InvestmentModel>('investments_box');
     final debtBox = await _hive.openBox<DebtModel>('debts');
@@ -266,7 +267,8 @@ class GoogleDriveBackupService {
 
     // Kutuları aç ve mevcut veriyi bellekte snapshot'la (rollback için).
     final walletBox = await _hive.openBox<WalletModel>('wallets');
-    final transactionBox = await _hive.openBox<TransactionModel>('transactions');
+    final transactionBox =
+        await _hive.openBox<TransactionModel>('transactions');
     final investmentBox =
         await _hive.openBox<InvestmentModel>('investments_box');
     final debtBox = await _hive.openBox<DebtModel>('debts');
