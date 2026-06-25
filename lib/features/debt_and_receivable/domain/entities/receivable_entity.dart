@@ -1,4 +1,6 @@
-class ReceivableEntity {
+import 'package:equatable/equatable.dart';
+
+class ReceivableEntity extends Equatable {
   final String? id;
   final String userId;
   final String walletId;
@@ -8,7 +10,7 @@ class ReceivableEntity {
   final bool isPaid;
   final String? notes;
 
-  ReceivableEntity({
+  const ReceivableEntity({
     this.id,
     required this.userId,
     required this.walletId,
@@ -40,4 +42,16 @@ class ReceivableEntity {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  List<Object?> get props => [
+        id,
+        userId,
+        walletId,
+        debtorName,
+        amount,
+        dueDate,
+        isPaid,
+        notes,
+      ];
 }

@@ -715,6 +715,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grafikIcinYeterliVeri => 'Not enough data for chart';
 
   @override
+  String get cizgiGrafikIcinEnAzIkiGun =>
+      'At least two different days of transactions are required for the line chart.';
+
+  @override
   String get detayGosterilecekIslemYok => 'No Transaction to Show Detail';
 
   @override

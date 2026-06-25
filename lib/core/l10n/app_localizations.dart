@@ -1372,6 +1372,12 @@ abstract class AppLocalizations {
   /// **'Grafik için yeterli veri yok'**
   String get grafikIcinYeterliVeri;
 
+  /// No description provided for @cizgiGrafikIcinEnAzIkiGun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır'**
+  String get cizgiGrafikIcinEnAzIkiGun;
+
   /// No description provided for @detayGosterilecekIslemYok.
   ///
   /// In tr, this message translates to:

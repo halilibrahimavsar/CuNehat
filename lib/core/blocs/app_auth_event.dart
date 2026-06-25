@@ -1,27 +1,30 @@
 import 'package:cunehat/core/models/local_user.dart';
+import 'package:equatable/equatable.dart';
 
 /// App-level auth events for lock/unlock functionality.
-abstract class AppAuthEvent {
+abstract class AppAuthEvent extends Equatable {
   const AppAuthEvent();
+
+  @override
+  List<Object?> get props => [];
 }
 
-/// User successfully unlocked (PIN/biometric).
 class AppAuthUnlockRequested extends AppAuthEvent {
   final LocalUser user;
   const AppAuthUnlockRequested(this.user);
+
+  @override
+  List<Object?> get props => [user];
 }
 
-/// App resumed from background — check if lock is needed.
 class AppAuthAppResumed extends AppAuthEvent {
   const AppAuthAppResumed();
 }
 
-/// Request app lock manually.
 class AppAuthLockRequested extends AppAuthEvent {
   const AppAuthLockRequested();
 }
 
-/// Check and initialize local auth state on startup.
 class AppAuthInitializeRequested extends AppAuthEvent {
   const AppAuthInitializeRequested();
 }

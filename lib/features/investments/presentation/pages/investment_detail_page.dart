@@ -1,12 +1,13 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
-import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
-import 'package:cunehat/features/investments/presentation/widgets/investment_card.dart';
-import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
-import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,8 +26,8 @@ class InvestmentDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<InvestmentBloc>()
-        ..add(GetInvestmentsEvent(userId: userId, walletId: walletId)),
+      create: (_) => getIt<TransactionBloc>()
+        ..add(GetTransactionsEvent(userId: userId, walletId: walletId)),
       child: _InvestmentDetailView(showAppBar: showAppBar),
     );
   }
@@ -46,27 +47,32 @@ class _InvestmentDetailView extends StatelessWidget {
               centerTitle: true,
             )
           : null,
-      body: BlocBuilder<InvestmentBloc, InvestmentState>(
+      body: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
-          if (state is InvestmentLoading) {
+          final allTransactions = state.currentTransactions;
+
+          if (state is TransactionLoading && allTransactions.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final investments = state is InvestmentLoaded
-              ? state.investments
-              : <InvestmentEntity>[];
+          // Sadece otomatik oluşturulan yatırım hareketlerini filtrele
+          final investmentTransactions = allTransactions.where((t) {
+            return t.isSystem &&
+                (t.tag == CashMovementTags.investmentBuy ||
+                    t.tag == CashMovementTags.investmentSell ||
+                    t.tag == CashMovementTags.investmentCorrection);
+          }).toList();
 
-          final totalInvestment =
-              investments.fold(0.0, (sum, item) => sum + item.amount);
-          final totalCurrentValue =
-              investments.fold(0.0, (sum, item) => sum + item.currentValue);
-          final totalProfit = totalCurrentValue - totalInvestment;
-          final totalProfitPercentage =
-              totalInvestment > 0 ? (totalProfit / totalInvestment) * 100 : 0.0;
-
-          if (investments.isEmpty) {
+          if (investmentTransactions.isEmpty) {
             return _buildEmptyState(context);
           }
+
+          // TransactionCard beklentisi olan TransactionWithBalance sınıfına çevir
+          // Bakiye takibi bu sayfada görünür olmadığından currentBalance: 0
+          final withBalanceList = buildLedgerView(
+            allTransactions: investmentTransactions,
+            currentBalance: 0,
+          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -74,30 +80,16 @@ class _InvestmentDetailView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.birikimDetayi,
+                  context.l10n.gecmis,
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 12),
-                SummaryCard(
-                  totalInvestment: totalInvestment,
-                  totalCurrentValue: totalCurrentValue,
-                  totalProfit: totalProfit,
-                  totalProfitPercentage: totalProfitPercentage,
-                ),
-                const SizedBox(height: 24),
-                InvestmentChart(investments: investments),
-                const SizedBox(height: 24),
-                Text(
-                  context.l10n.portfoyDetayi,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ...investments.map(
-                  (investment) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: InvestmentCard(investment: investment),
+                const SizedBox(height: 16),
+                ...withBalanceList.map(
+                  (item) => TransactionCard(
+                    context: context,
+                    item: item,
+                    isListView: true,
                   ),
                 ),
               ],
@@ -128,7 +120,7 @@ class _InvestmentDetailView extends StatelessWidget {
                   color: scheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.savings_outlined,
+                child: Icon(Icons.history_rounded,
                     size: 48, color: scheme.primary),
               ),
               const SizedBox(height: 16),
@@ -141,7 +133,7 @@ class _InvestmentDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                context.l10n.yatirimlariniziEklediktenSonraDetayli,
+                'Yatırım geçmişiniz burada listelenecektir.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

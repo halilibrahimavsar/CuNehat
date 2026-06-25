@@ -150,14 +150,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i528.TransactionFilterCubit>(
         () => _i528.TransactionFilterCubit());
     gh.factory<_i460.ThemeBloc>(() => _i460.ThemeBloc());
+    gh.factory<_i570.LanguageBloc>(() => _i570.LanguageBloc());
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => appModule.prefs,
       preResolve: true,
     );
-    gh.factory<_i570.LanguageBloc>(() => _i570.LanguageBloc());
     gh.singleton<_i1002.CategoryService>(() => _i1002.CategoryService());
     gh.singleton<_i934.TransactionHiveDataSource>(
-        () => _i934.TransactionHiveDataSource());
+        () => _i934.TransactionHiveDataSource.create());
     gh.singleton<_i648.InvestmentLocalDatasource>(
         () => _i648.InvestmentLocalDatasource());
     gh.singleton<_i19.DebtLocalDatasource>(() => _i19.DebtLocalDatasource());
@@ -167,6 +167,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i175.WalletLocalDataSource());
     gh.lazySingleton<_i186.GoogleDriveBackupService>(
         () => _i186.GoogleDriveBackupService());
+    gh.lazySingleton<_i777.TransactionsChangedNotifier>(
+      () => _i777.TransactionsChangedNotifier(),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i530.CsvService>(() => _i530.CsvService());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
@@ -174,10 +178,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
     gh.lazySingleton<_i163.FlutterLocalNotificationsPlugin>(
         () => appModule.flutterLocalNotificationsPlugin);
-    gh.lazySingleton<_i777.TransactionsChangedNotifier>(
-      () => _i777.TransactionsChangedNotifier(),
-      dispose: (i) => i.dispose(),
-    );
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i329.ReceivableRepository>(() =>

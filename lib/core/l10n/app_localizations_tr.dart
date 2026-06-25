@@ -719,6 +719,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get grafikIcinYeterliVeri => 'Grafik için yeterli veri yok';
 
   @override
+  String get cizgiGrafikIcinEnAzIkiGun =>
+      'Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır';
+
+  @override
   String get detayGosterilecekIslemYok => 'Detay Gösterilecek İşlem Yok';
 
   @override

@@ -17,11 +17,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// bilinçli kabul (soyut arayüz post-1.0 notu).
 @lazySingleton
 class GoogleDriveBackupService {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'https://www.googleapis.com/auth/drive.appdata',
-    ],
-  );
+  final GoogleSignIn _googleSignIn;
+  final http.Client _httpClient;
+  final HiveInterface _hive;
+
+  GoogleDriveBackupService({
+    GoogleSignIn? googleSignIn,
+    http.Client? httpClient,
+    HiveInterface? hive,
+  })  : _googleSignIn = googleSignIn ??
+            GoogleSignIn(
+              scopes: [
+                'https://www.googleapis.com/auth/drive.appdata',
+              ],
+            ),
+        _httpClient = httpClient ?? http.Client(),
+        _hive = hive ?? Hive;
 
   GoogleSignInAccount? _currentUser;
   GoogleSignInAccount? get currentUser => _currentUser;
@@ -60,7 +71,7 @@ class GoogleDriveBackupService {
     final url = Uri.parse(
       'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name=%27cunehat_backup.json%27%20and%20trashed=false',
     );
-    final response = await http.get(url, headers: headers);
+    final response = await _httpClient.get(url, headers: headers);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -76,7 +87,7 @@ class GoogleDriveBackupService {
   /// Returns the file ID.
   Future<String> _createBackupFile(Map<String, String> headers) async {
     final url = Uri.parse('https://www.googleapis.com/drive/v3/files');
-    final response = await http.post(
+    final response = await _httpClient.post(
       url,
       headers: {
         ...headers,
@@ -98,13 +109,14 @@ class GoogleDriveBackupService {
 
   /// Serialize all local Hive databases to a single JSON string
   Future<String> _serializeDatabase() async {
-    final walletBox = await Hive.openBox<WalletModel>('wallets');
-    final transactionBox = await Hive.openBox<TransactionModel>('transactions');
+    final walletBox = await _hive.openBox<WalletModel>('wallets');
+    final transactionBox =
+        await _hive.openBox<TransactionModel>('transactions');
     final investmentBox =
-        await Hive.openBox<InvestmentModel>('investments_box');
-    final debtBox = await Hive.openBox<DebtModel>('debts');
-    final receivableBox = await Hive.openBox<ReceivableModel>('receivables');
-    final userBox = await Hive.openBox<Map>('users');
+        await _hive.openBox<InvestmentModel>('investments_box');
+    final debtBox = await _hive.openBox<DebtModel>('debts');
+    final receivableBox = await _hive.openBox<ReceivableModel>('receivables');
+    final userBox = await _hive.openBox<Map>('users');
 
     final wallets = walletBox.values.map((w) => w.toJson()).toList();
     final transactions = transactionBox.values.map((t) => t.toJson()).toList();
@@ -159,7 +171,7 @@ class GoogleDriveBackupService {
         'https://www.googleapis.com/upload/drive/v3/files/$fileId?uploadType=media',
       );
 
-      final response = await http.patch(
+      final response = await _httpClient.patch(
         patchUrl,
         headers: {
           ...headers,
@@ -203,7 +215,7 @@ class GoogleDriveBackupService {
       final downloadUrl = Uri.parse(
         'https://www.googleapis.com/drive/v3/files/$fileId?alt=media',
       );
-      final response = await http.get(downloadUrl, headers: headers);
+      final response = await _httpClient.get(downloadUrl, headers: headers);
       if (response.statusCode != 200) return false;
 
       final backupData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -254,13 +266,14 @@ class GoogleDriveBackupService {
     }
 
     // Kutuları aç ve mevcut veriyi bellekte snapshot'la (rollback için).
-    final walletBox = await Hive.openBox<WalletModel>('wallets');
-    final transactionBox = await Hive.openBox<TransactionModel>('transactions');
+    final walletBox = await _hive.openBox<WalletModel>('wallets');
+    final transactionBox =
+        await _hive.openBox<TransactionModel>('transactions');
     final investmentBox =
-        await Hive.openBox<InvestmentModel>('investments_box');
-    final debtBox = await Hive.openBox<DebtModel>('debts');
-    final receivableBox = await Hive.openBox<ReceivableModel>('receivables');
-    final userBox = await Hive.openBox<Map>('users');
+        await _hive.openBox<InvestmentModel>('investments_box');
+    final debtBox = await _hive.openBox<DebtModel>('debts');
+    final receivableBox = await _hive.openBox<ReceivableModel>('receivables');
+    final userBox = await _hive.openBox<Map>('users');
 
     final prefs = await SharedPreferences.getInstance();
     final categorySnapshot = <String, String?>{

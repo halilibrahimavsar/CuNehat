@@ -36,7 +36,7 @@ class ReceivableModel extends ReceivableEntity {
   @HiveField(7)
   String? get notes;
 
-  ReceivableModel({
+  const ReceivableModel({
     required super.id,
     required super.userId,
     required super.walletId,

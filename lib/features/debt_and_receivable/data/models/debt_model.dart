@@ -69,7 +69,7 @@ class DebtModel extends DebtEntity {
   @HiveField(18) // Yeni alan
   double? get expectedTotalAmount;
 
-  DebtModel({
+  const DebtModel({
     required super.id,
     required super.userId,
     required super.walletId,
@@ -250,7 +250,7 @@ class PaymentModel extends Payment {
   @HiveField(2)
   String? get notes => super.notes;
 
-  PaymentModel({required super.date, required super.amount, super.notes});
+  const PaymentModel({required super.date, required super.amount, super.notes});
 
   // Entity'den Model'e çevirici
   factory PaymentModel.fromEntity(Payment payment) {
