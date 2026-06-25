@@ -128,7 +128,10 @@ void main() {
     expect(find.text('Gelir'), findsOneWidget);
     expect(find.text('Gider'), findsOneWidget);
     expect(find.text('Net'), findsOneWidget);
-    expect(find.text('Grafik için yeterli veri yok'), findsOneWidget);
+    expect(
+        find.text(
+            'Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır'),
+        findsOneWidget);
   });
 
   testWidgets(

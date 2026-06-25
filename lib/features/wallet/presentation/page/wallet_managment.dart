@@ -39,15 +39,17 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     return BlocConsumer<WalletBloc, WalletState>(
       listener: (context, state) {
         if (state is WalletLoadedSt) {
-          if (state.message != null) {
-            IboSnackbar.showSuccess(context, state.message!);
+          if (state.messageType != null) {
+            IboSnackbar.showSuccess(
+                context, _getLocalizedMessage(context, state.messageType!));
           }
           if (state.error != null) {
             IboSnackbar.showError(context, state.error!);
           }
         } else if (state is NoWalletSt) {
-          if (state.message != null) {
-            IboSnackbar.showSuccess(context, state.message!);
+          if (state.messageType != null) {
+            IboSnackbar.showSuccess(
+                context, _getLocalizedMessage(context, state.messageType!));
           }
           if (state.error != null) {
             IboSnackbar.showError(context, state.error!);
@@ -316,6 +318,29 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
     if (confirmed == true && context.mounted) {
       context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
+    }
+  }
+
+  String _getLocalizedMessage(BuildContext context, WalletMessageType type) {
+    switch (type) {
+      case WalletMessageType.created:
+        return context.l10n.cuzdanOlusturuldu;
+      case WalletMessageType.updated:
+        return context.l10n.cuzdanGuncellendi;
+      case WalletMessageType.deleted:
+        return context.l10n.cuzdanSilindi;
+      case WalletMessageType.selected:
+        return context.l10n.cuzdanSecildi;
+      case WalletMessageType.createFailed:
+        return context.l10n.cuzdanOlusturulamadi;
+      case WalletMessageType.updateFailed:
+        return context.l10n.beklenmeyenDurum; // Fallback
+      case WalletMessageType.deleteFailed:
+        return context.l10n.beklenmeyenDurum; // Fallback
+      case WalletMessageType.selectFailed:
+        return context.l10n.beklenmeyenDurum; // Fallback
+      case WalletMessageType.activeSetFailed:
+        return context.l10n.beklenmeyenDurum; // Fallback
     }
   }
 }

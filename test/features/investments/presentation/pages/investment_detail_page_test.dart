@@ -1,30 +1,33 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
-import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
-import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
-class MockInvestmentBloc extends MockBloc<InvestmentEvent, InvestmentState>
-    implements InvestmentBloc {}
+class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
+    implements TransactionBloc {}
 
 void main() {
-  late MockInvestmentBloc mockInvestmentBloc;
+  late MockTransactionBloc mockTransactionBloc;
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(
-      GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123'),
-    );
   });
 
   setUp(() {
-    mockInvestmentBloc = MockInvestmentBloc();
-    getIt.registerSingleton<InvestmentBloc>(mockInvestmentBloc);
+    mockTransactionBloc = MockTransactionBloc();
+    getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
   });
 
   tearDown(() {
@@ -44,39 +47,41 @@ void main() {
         Locale('en'),
       ],
       locale: const Locale('tr'),
-      home: child,
+      home: BlocProvider<AmountVisibilityCubit>(
+        create: (_) => AmountVisibilityCubit(),
+        child: child,
+      ),
     );
   }
 
-  final testInvestment1 = InvestmentEntity(
-    id: 'inv_1',
+  final testTransaction1 = TransactionEntity(
+    id: 'tx_1',
     userId: 'user_123',
     walletId: 'wallet_123',
-    name: 'Gram Altın',
+    title: 'Altın Alındı',
+    tag: CashMovementTags.investmentBuy,
     amount: 1000.0,
-    currentValue: 1250.0,
-    type: InvestmentType.gold,
-    color: Colors.amber,
-    dateAdded: DateTime(2026, 1, 1),
-    symbol: 'XAU',
-    quantity: 1.0,
+    date: DateTime(2026, 1, 1),
+    type: TransactionTypeModel.expense,
+    isSystem: true,
   );
 
-  final testInvestment2 = InvestmentEntity(
-    id: 'inv_2',
+  final testTransaction2 = TransactionEntity(
+    id: 'tx_2',
     userId: 'user_123',
     walletId: 'wallet_123',
-    name: 'Bireysel Emeklilik',
-    amount: 2000.0,
-    currentValue: 2000.0,
-    type: InvestmentType.custom,
-    color: Colors.teal,
-    dateAdded: DateTime(2026, 1, 1),
+    title: 'Normal Gider',
+    tag: 'Food',
+    amount: 200.0,
+    date: DateTime(2026, 1, 2),
+    type: TransactionTypeModel.expense,
+    isSystem: false,
   );
 
   testWidgets('renders CircularProgressIndicator when loading',
       (WidgetTester tester) async {
-    when(() => mockInvestmentBloc.state).thenReturn(InvestmentLoading());
+    when(() => mockTransactionBloc.state)
+        .thenReturn(const TransactionLoading(previousTransactions: []));
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -90,10 +95,17 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('renders empty state when there are no investments',
+  testWidgets('renders empty state when there are no investment transactions',
       (WidgetTester tester) async {
-    when(() => mockInvestmentBloc.state).thenReturn(
-      const InvestmentLoaded([], totalAmount: 0.0),
+    // There is a non-investment transaction, so the list isn't completely empty,
+    // but investment filtered list is empty.
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {
+          testTransaction2.date: [testTransaction2]
+        },
+        allTransactions: [testTransaction2],
+      ),
     );
 
     await tester.pumpWidget(
@@ -109,18 +121,20 @@ void main() {
 
     expect(find.text('Henüz Yatırım Kaydı Yok'), findsOneWidget);
     expect(
-      find.text(
-          'Yatırımlarınızı ekledikten sonra detaylı analizler burada görünecektir.'),
+      find.text('Yatırım geçmişiniz burada listelenecektir.'),
       findsOneWidget,
     );
   });
 
-  testWidgets('renders details, summary card, chart and list when loaded',
+  testWidgets('renders list of investment transactions when loaded',
       (WidgetTester tester) async {
-    when(() => mockInvestmentBloc.state).thenReturn(
-      InvestmentLoaded(
-        [testInvestment1, testInvestment2],
-        totalAmount: 3000.0,
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {
+          testTransaction1.date: [testTransaction1],
+          testTransaction2.date: [testTransaction2],
+        },
+        allTransactions: [testTransaction1, testTransaction2],
       ),
     );
 
@@ -136,19 +150,16 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify AppBar or Header title is present
-    expect(find.text('Birikim Detayı'), findsWidgets);
+    // Verify AppBar title is present
+    expect(find.text('Birikim Detayı'), findsOneWidget);
 
-    // Verify SummaryCard fields
-    expect(find.text('TOPLAM PORTFÖY DEĞERİ'), findsOneWidget);
-    expect(find.text('₺3.250'), findsOneWidget);
-    expect(find.text('₺3.000'), findsOneWidget);
+    // Verify header exists
+    expect(find.text('Geçmiş'), findsOneWidget);
 
-    // Verify Portfolio details list header
-    expect(find.text('Portföy Detayı'), findsOneWidget);
+    // Verify the investment transaction is shown
+    expect(find.text('Altın Alındı'), findsWidgets);
 
-    // Verify list items exist
-    expect(find.text('Gram Altın'), findsWidgets);
-    expect(find.text('Bireysel Emeklilik'), findsWidgets);
+    // Verify the normal transaction is NOT shown (filtered out)
+    expect(find.text('Normal Gider'), findsNothing);
   });
 }
