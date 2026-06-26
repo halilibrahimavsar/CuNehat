@@ -10,7 +10,9 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_calendar_view.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_filter_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
@@ -60,6 +62,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// Kategori adı (tag) → ikon. İşlem kartlarında gerçek kategori glyph'i için.
   Map<String, IconData> _categoryIcons = {};
 
+  /// Liste ↔ Takvim görünüm modu (saf sunum; filtre cubit'ine taşımaya gerek yok).
+  _ViewMode _viewMode = _ViewMode.list;
+
   @override
   void initState() {
     super.initState();
@@ -102,7 +107,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
   }
 
   List<TransactionWithBalance> _getFilteredData(
-      List<TransactionEntity> allTransactions, CombinedFilter filter) {
+      List<TransactionEntity> allTransactions, CombinedFilter filter,
+      {bool applyDateWindow = true}) {
     // 0. Guard: cüzdan geçişi sırasında bloc state'i kısa süre ESKİ cüzdanın
     //    listesini taşıyabilir (TransactionLoading.previousTransactions).
     //    Yabancı cüzdan satırları yeni bakiyeye çapalanmasın.
@@ -113,8 +119,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
     final withBalance = buildLedgerView(
       allTransactions: walletTransactions,
       currentBalance: widget.wallet.balance,
-      start: filter.viewFilter.startDate,
-      end: filter.viewFilter.endDate,
+      start: applyDateWindow ? filter.viewFilter.startDate : null,
+      end: applyDateWindow ? filter.viewFilter.endDate : null,
     );
 
     // 2. Görüntü filtrelerini TransactionWithBalance listesine uygula.
@@ -166,8 +172,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
       );
     }
   }
-
-
 
   void _showFilterSheet(
       BuildContext parentContext, TransactionFilterCubit cubit) {
@@ -244,56 +248,79 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _FilterBarDelegate(
-                        child: TransactionFilterBar(
-                          currentMode: filterState.viewFilter.financeMode,
-                          startDate: filterState.viewFilter.startDate,
-                          endDate: filterState.viewFilter.endDate,
-                          dataFilter: filterState.dataFilter,
-                          onModeChanged: (mode) {
-                            context.read<TransactionFilterCubit>().updateFilter(
-                                  filterState.copyWith(
-                                    viewFilter: filterState.viewFilter
-                                        .copyWith(financeMode: mode),
-                                    dataFilter: filterState.dataFilter
-                                        .copyWith(clearCategories: true),
-                                  ),
-                                );
-                          },
-                          onDateTap: () => _pickDateRange(context, filterState),
-                          onFilterTap: () => _showFilterSheet(
-                            context,
-                            context.read<TransactionFilterCubit>(),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TransactionFilterBar(
+                                currentMode: filterState.viewFilter.financeMode,
+                                startDate: filterState.viewFilter.startDate,
+                                endDate: filterState.viewFilter.endDate,
+                                dataFilter: filterState.dataFilter,
+                                onModeChanged: (mode) {
+                                  context
+                                      .read<TransactionFilterCubit>()
+                                      .updateFilter(
+                                        filterState.copyWith(
+                                          viewFilter: filterState.viewFilter
+                                              .copyWith(financeMode: mode),
+                                          dataFilter: filterState.dataFilter
+                                              .copyWith(clearCategories: true),
+                                        ),
+                                      );
+                                },
+                                onDateTap: () =>
+                                    _pickDateRange(context, filterState),
+                                onFilterTap: () => _showFilterSheet(
+                                  context,
+                                  context.read<TransactionFilterCubit>(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _ViewModeToggle(
+                              mode: _viewMode,
+                              onChanged: (m) => setState(() => _viewMode = m),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // 2. Salt-veri özet kartı (yalnız liste modunda)
+                    if (_viewMode == _ViewMode.list)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: TransactionHeader(
+                            // Liste ile aynı süzülmüş veriden besle: kategori/fiyat
+                            // filtreleri de kart toplamlarına yansısın.
+                            allTransactions:
+                                filteredData.map((e) => e.transaction).toList(),
+                            mode: filterState.viewFilter.financeMode,
+                            currentFilter: filterState,
                           ),
                         ),
                       ),
-                    ),
-                    // 2. Salt-veri özet kartı (kaydırılabilir)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: TransactionHeader(
-                          // Liste ile aynı süzülmüş veriden besle: kategori/fiyat
-                          // filtreleri de kart toplamlarına yansısın.
-                          allTransactions:
-                              filteredData.map((e) => e.transaction).toList(),
-                          mode: filterState.viewFilter.financeMode,
-                          currentFilter: filterState,
-                        ),
-                      ),
-                    ),
                   ];
                 },
-                // 3. Transaction List (Ana Gövde)
+                // 3. Ana gövde: liste ya da takvim görünümü
                 body: isLoading && isEmpty
                     ? const TransactionListSkeleton()
-                    : filteredData.isEmpty
-                        ? _buildEmptyState(filterState.viewFilter.financeMode)
-                        : DetailedListView(
-                            transactions: filteredData,
-                            mode: filterState.viewFilter.financeMode,
+                    : _viewMode == _ViewMode.calendar
+                        ? TransactionCalendarView(
+                            transactions: _getFilteredData(
+                                allTransactions, filterState,
+                                applyDateWindow: false),
                             categoryIcons: _categoryIcons,
-                          ),
+                          )
+                        : filteredData.isEmpty
+                            ? _buildEmptyState(
+                                filterState.viewFilter.financeMode)
+                            : DetailedListView(
+                                transactions: filteredData,
+                                mode: filterState.viewFilter.financeMode,
+                                categoryIcons: _categoryIcons,
+                              ),
               ),
             );
           },
@@ -390,4 +417,63 @@ class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _FilterBarDelegate oldDelegate) =>
       oldDelegate.child != child;
+}
+
+/// İşlemler ekranının ana gövde modu.
+enum _ViewMode { list, calendar }
+
+/// Filtre çubuğunun sağındaki kompakt Liste ↔ Takvim geçişi.
+class _ViewModeToggle extends StatelessWidget {
+  final _ViewMode mode;
+  final ValueChanged<_ViewMode> onChanged;
+
+  const _ViewModeToggle({required this.mode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.onSurface.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.all(2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _segment(context, _ViewMode.list, Icons.view_agenda_rounded,
+              context.l10n.gorunumListe),
+          _segment(context, _ViewMode.calendar, Icons.calendar_month_rounded,
+              context.l10n.gorunumTakvim),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(
+      BuildContext context, _ViewMode m, IconData icon, String tooltip) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = mode == m;
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: () => onChanged(m),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected ? AppGradients.transactions : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: selected
+                ? Colors.white
+                : scheme.onSurfaceVariant.withValues(alpha: 0.8),
+          ),
+        ),
+      ),
+    );
+  }
 }

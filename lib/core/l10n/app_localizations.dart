@@ -1547,6 +1547,36 @@ abstract class AppLocalizations {
   /// **'Net: {net}'**
   String netNetAppformattersCurrency(Object net);
 
+  /// No description provided for @gorunumListe.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get gorunumListe;
+
+  /// No description provided for @gorunumTakvim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim'**
+  String get gorunumTakvim;
+
+  /// No description provided for @takvimAy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ay'**
+  String get takvimAy;
+
+  /// No description provided for @takvimHafta.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta'**
+  String get takvimHafta;
+
+  /// No description provided for @buGuneAitIslemYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu güne ait işlem yok'**
+  String get buGuneAitIslemYok;
+
   /// No description provided for @dataFilterSelectedcategoriesLengthKategori.
   ///
   /// In tr, this message translates to:

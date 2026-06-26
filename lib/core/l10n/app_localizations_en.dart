@@ -785,6 +785,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get gorunumListe => 'List';
+
+  @override
+  String get gorunumTakvim => 'Calendar';
+
+  @override
+  String get takvimAy => 'Month';
+
+  @override
+  String get takvimHafta => 'Week';
+
+  @override
+  String get buGuneAitIslemYok => 'No transactions on this day';
+
+  @override
   String dataFilterSelectedcategoriesLengthKategori(Object length) {
     return '$length Categories';
   }
