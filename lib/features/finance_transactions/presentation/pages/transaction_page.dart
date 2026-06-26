@@ -63,7 +63,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
   Map<String, IconData> _categoryIcons = {};
 
   /// Liste ↔ Takvim görünüm modu (saf sunum; filtre cubit'ine taşımaya gerek yok).
-  _ViewMode _viewMode = _ViewMode.list;
+  /// Varsayılan Takvim: uygulama açılışta İşlemler (orta) görünümüne geldiğinden
+  /// kullanıcı doğrudan takvimi görür.
+  _ViewMode _viewMode = _ViewMode.calendar;
 
   @override
   void initState() {
@@ -244,7 +246,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
               body: NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
-                    // 1. İnce sticky kontrol çubuğu (mod + tarih + filtre)
+                    // 1. İnce sticky kontrol çubuğu (mod + filtre)
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _FilterBarDelegate(
@@ -253,8 +255,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
                             Expanded(
                               child: TransactionFilterBar(
                                 currentMode: filterState.viewFilter.financeMode,
-                                startDate: filterState.viewFilter.startDate,
-                                endDate: filterState.viewFilter.endDate,
                                 dataFilter: filterState.dataFilter,
                                 onModeChanged: (mode) {
                                   context
@@ -268,8 +268,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
                                         ),
                                       );
                                 },
-                                onDateTap: () =>
-                                    _pickDateRange(context, filterState),
                                 onFilterTap: () => _showFilterSheet(
                                   context,
                                   context.read<TransactionFilterCubit>(),
@@ -395,7 +393,7 @@ class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
 
   _FilterBarDelegate({required this.child});
 
-  static const double _height = 56;
+  static const double _height = 62;
 
   @override
   double get minExtent => _height;
