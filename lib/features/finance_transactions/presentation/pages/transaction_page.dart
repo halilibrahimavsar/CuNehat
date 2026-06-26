@@ -11,6 +11,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
+import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_filter_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
@@ -151,7 +152,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
         start: currentFilter.viewFilter.startDate,
         end: currentFilter.viewFilter.endDate,
       ),
-      quickOptions: _buildDateRangeQuickOptions(),
+      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(),
     );
 
     if (dateRange != null) {
@@ -166,37 +167,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
   }
 
-  List<IboDateRangeQuickOption> _buildDateRangeQuickOptions() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final startOfNextMonth = (now.month == 12)
-        ? DateTime(now.year + 1, 1, 1)
-        : DateTime(now.year, now.month + 1, 1);
-    final endOfMonth = startOfNextMonth.subtract(const Duration(days: 1));
-    final startOfLastMonth = (now.month == 1)
-        ? DateTime(now.year - 1, 12, 1)
-        : DateTime(now.year, now.month - 1, 1);
-    final endOfLastMonth = startOfMonth.subtract(const Duration(days: 1));
 
-    return [
-      IboDateRangeQuickOption(
-        label: 'Son 7 Gün',
-        range: DateTimeRange(
-          start: today.subtract(const Duration(days: 6)),
-          end: today,
-        ),
-      ),
-      IboDateRangeQuickOption(
-        label: 'Bu Ay',
-        range: DateTimeRange(start: startOfMonth, end: endOfMonth),
-      ),
-      IboDateRangeQuickOption(
-        label: 'Geçen Ay',
-        range: DateTimeRange(start: startOfLastMonth, end: endOfLastMonth),
-      ),
-    ];
-  }
 
   void _showFilterSheet(
       BuildContext parentContext, TransactionFilterCubit cubit) {

@@ -660,5 +660,33 @@
   "detailLabelTur": "Tür",
   "detailLabelGelir": "Gelir",
   "detailLabelGider": "Gider",
-  "detailLabelIslemSonrasiBakiye": "İşlem sonrası bakiye"
+  "detailLabelIslemSonrasiBakiye": "İşlem sonrası bakiye",
+  "akilliIcgoruler": "Akıllı İçgörüler",
+  "gunlukOrtalamaHarcama": "Günlük ortalama harcama",
+  "enCokHarcananGun": "En çok harcadığınız gün",
+  "enCokHarcananKategori": "En çok harcanan kategori",
+  "enBuyukHarcama": "En büyük harcama",
+  "birikimOrani": "Birikim oranı",
+  "buDonemdeIslemYok": "Bu dönemde işlem yok",
+  "tekrarlayanOdemeler": "Tekrarlayan ödemeler",
+  "tekrarlayanTespitOzeti": "{count} olası düzenli ödeme tespit ettik",
+  "@tekrarlayanTespitOzeti": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "kezTekrarlandi": "{count} kez tekrarlandı",
+  "@kezTekrarlandi": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "duzenliOdemeOlarakEkle": "Düzenli Ödeme olarak ekle",
+  "duzenliOdemeEklendi": "'{title}' düzenli ödemelere eklendi",
+  "@duzenliOdemeEklendi": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "duzenliOdemeEklenemedi": "Düzenli ödeme eklenemedi"
 }

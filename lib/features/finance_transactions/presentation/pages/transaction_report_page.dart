@@ -16,7 +16,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-
+import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/utils/date_range_helper.dart';
 class TransactionReportPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -52,6 +53,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   late DateTimeRange _range;
   int _touchedExpenseIndex = -1;
   int _touchedIncomeIndex = -1;
+  bool _showExpenseBarChart = false;
+  bool _showIncomeBarChart = false;
 
   Map<String, IconData> _categoryIcons = {};
 
@@ -83,11 +86,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   Future<void> _pickDateRange() async {
-    final picked = await showDateRangePicker(
-      context: context,
+    final picked = await IboDateRangePicker.pickDateRange(
+      context,
       initialDateRange: _range,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(),
     );
     if (picked != null) {
       setState(() {
@@ -139,7 +141,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           final totals = _calculateTotals(filteredTransactions);
           final expenseData = _buildCategoryData(filteredTransactions, true);
           final incomeData = _buildCategoryData(filteredTransactions, false);
-          final weeklyNet = _buildWeeklyNetPoints(filteredTransactions);
+
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -165,7 +167,16 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildBarChartCard(context, weeklyNet),
+                _buildGroupedBarChartCard(context, filteredTransactions),
+                const SizedBox(height: 24),
+                Text(
+                  'Bakiye Trendi',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildCumulativeBalanceChartCard(context, filteredTransactions),
                 const SizedBox(height: 24),
                 Text(
                   context.l10n.kategoriDagilimi,
@@ -274,6 +285,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       );
     });
 
+    final isBarChart = isExpense ? _showExpenseBarChart : _showIncomeBarChart;
+
     return AppCard(
       section: AppSection.transactions,
       padding: const EdgeInsets.all(20),
@@ -289,88 +302,208 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                formatMoney(total),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isExpense ? Colors.redAccent : Colors.green,
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.pie_chart, color: !isBarChart ? scheme.primary : scheme.onSurfaceVariant),
+                    onPressed: () {
+                      setState(() {
+                        if (isExpense) {
+                          _showExpenseBarChart = false;
+                        } else {
+                          _showIncomeBarChart = false;
+                        }
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(Icons.bar_chart, color: isBarChart ? scheme.primary : scheme.onSurfaceVariant),
+                    onPressed: () {
+                      setState(() {
+                        if (isExpense) {
+                          _showExpenseBarChart = true;
+                        } else {
+                          _showIncomeBarChart = true;
+                        }
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    formatMoney(total),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isExpense ? Colors.redAccent : Colors.green,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 24),
-          SizedBox(
-            height: 200,
-            child: PieChart(
-              PieChartData(
-                pieTouchData: PieTouchData(
-                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                    final isTapUp = event is FlTapUpEvent;
-                    int? tappedIndex;
+          isBarChart 
+              ? _buildCategoryBarChart(context, categoryData, isExpense)
+              : SizedBox(
+                  height: 200,
+                  child: PieChart(
+                    PieChartData(
+                      pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                          final isTapUp = event is FlTapUpEvent;
+                          int? tappedIndex;
 
-                    setState(() {
-                      if (!event.isInterestedForInteractions ||
-                          pieTouchResponse == null ||
-                          pieTouchResponse.touchedSection == null) {
-                        final touchIndex = pieTouchResponse
-                                ?.touchedSection?.touchedSectionIndex ??
-                            -1;
-                        final currentIndex = isExpense
-                            ? _touchedExpenseIndex
-                            : _touchedIncomeIndex;
-                        final actualIndex =
-                            touchIndex != -1 ? touchIndex : currentIndex;
+                          setState(() {
+                            if (!event.isInterestedForInteractions ||
+                                pieTouchResponse == null ||
+                                pieTouchResponse.touchedSection == null) {
+                              final touchIndex = pieTouchResponse
+                                      ?.touchedSection?.touchedSectionIndex ??
+                                  -1;
+                              final currentIndex = isExpense
+                                  ? _touchedExpenseIndex
+                                  : _touchedIncomeIndex;
+                              final actualIndex =
+                                  touchIndex != -1 ? touchIndex : currentIndex;
 
-                        if (isTapUp &&
-                            actualIndex != -1 &&
-                            actualIndex < categoryData.length) {
-                          tappedIndex = actualIndex;
-                        }
+                              if (isTapUp &&
+                                  actualIndex != -1 &&
+                                  actualIndex < categoryData.length) {
+                                tappedIndex = actualIndex;
+                              }
 
-                        if (isExpense) {
-                          _touchedExpenseIndex = -1;
-                        } else {
-                          _touchedIncomeIndex = -1;
-                        }
-                        return;
-                      }
+                              if (isExpense) {
+                                _touchedExpenseIndex = -1;
+                              } else {
+                                _touchedIncomeIndex = -1;
+                              }
+                              return;
+                            }
 
-                      final newIndex =
-                          pieTouchResponse.touchedSection!.touchedSectionIndex;
+                            final newIndex =
+                                pieTouchResponse.touchedSection!.touchedSectionIndex;
 
-                      if (isExpense) {
-                        _touchedExpenseIndex = newIndex;
-                      } else {
-                        _touchedIncomeIndex = newIndex;
-                      }
+                            if (isExpense) {
+                              _touchedExpenseIndex = newIndex;
+                            } else {
+                              _touchedIncomeIndex = newIndex;
+                            }
 
-                      if (isTapUp &&
-                          newIndex != -1 &&
-                          newIndex < categoryData.length) {
-                        tappedIndex = newIndex;
-                      }
-                    });
+                            if (isTapUp &&
+                                newIndex != -1 &&
+                                newIndex < categoryData.length) {
+                              tappedIndex = newIndex;
+                            }
+                          });
 
-                    if (tappedIndex != null) {
-                      _showCategoryDetailsBottomSheet(
-                        context,
-                        categoryData[tappedIndex!],
-                        isExpense,
-                      );
-                    }
-                  },
+                          if (tappedIndex != null) {
+                            _showCategoryDetailsBottomSheet(
+                              context,
+                              categoryData[tappedIndex!],
+                              isExpense,
+                            );
+                          }
+                        },
+                      ),
+                      sections: sections,
+                      sectionsSpace: 3,
+                      centerSpaceRadius: 40,
+                      borderData: FlBorderData(show: false),
+                    ),
+                  ),
                 ),
-                sections: sections,
-                sectionsSpace: 3,
-                centerSpaceRadius: 40,
-                borderData: FlBorderData(show: false),
-              ),
-            ),
-          ),
           const SizedBox(height: 24),
           _buildLegend(context, theme, categoryData, total, isExpense),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategoryBarChart(
+      BuildContext context, List<_CategoryData> categoryData, bool isExpense) {
+    if (categoryData.isEmpty) return const SizedBox();
+
+    double maxY = 0;
+    for (final c in categoryData) {
+      if (c.totalAmount > maxY) maxY = c.totalAmount;
+    }
+    if (maxY == 0) maxY = 10;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minWidth = categoryData.length * 50.0;
+        final width = minWidth > constraints.maxWidth ? minWidth : constraints.maxWidth;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: SizedBox(
+            height: 200,
+            width: width,
+            child: BarChart(
+              BarChartData(
+                minY: 0,
+                maxY: maxY * 1.2,
+                barGroups: List.generate(categoryData.length, (i) {
+                  final cat = categoryData[i];
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: cat.totalAmount,
+                        color: cat.color,
+                        width: 28,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      ),
+                    ],
+                  );
+                }),
+                titlesData: const FlTitlesData(
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                barTouchData: BarTouchData(
+                  touchCallback: (FlTouchEvent event, barTouchResponse) {
+                    if (event is FlTapUpEvent &&
+                        barTouchResponse != null &&
+                        barTouchResponse.spot != null) {
+                      final index = barTouchResponse.spot!.touchedBarGroupIndex;
+                      if (index >= 0 && index < categoryData.length) {
+                        _showCategoryDetailsBottomSheet(
+                          context,
+                          categoryData[index],
+                          isExpense,
+                        );
+                      }
+                    }
+                  },
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final cat = categoryData[group.x];
+                      return BarTooltipItem(
+                        '${cat.name}\n${formatMoney(rod.toY)}',
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -494,6 +627,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                   ? FinanceMode.expense
                                   : FinanceMode.income,
                               categoryIcons: _categoryIcons,
+                              showDayEndBalance: false,
                             ),
                     ),
                   ],
@@ -560,33 +694,31 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildBarChartCard(BuildContext context, List<_ChartPoint> points) {
+  Widget _buildGroupedBarChartCard(BuildContext context, List<TransactionEntity> transactions) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    if (points.isEmpty) {
-      return AppCard(
-        section: AppSection.transactions,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.grafikIcinYeterliVeri,
-                style: TextStyle(color: scheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
+    if (transactions.isEmpty) return const SizedBox();
+
+    final Map<DateTime, _TransactionTotals> dailyTotals = {};
+    for (final t in transactions) {
+      final day = DateTime(t.date.year, t.date.month, t.date.day);
+      final current = dailyTotals[day] ?? const _TransactionTotals(totalIncome: 0, totalExpense: 0, net: 0);
+      dailyTotals[day] = _TransactionTotals(
+        totalIncome: current.totalIncome + (t.isIncome ? t.amount : 0),
+        totalExpense: current.totalExpense + (t.isExpense ? t.amount : 0),
+        net: 0,
       );
     }
 
-    final maxAbs = points
-        .map((p) => p.value.abs())
-        .fold<double>(0.0, (prev, v) => v > prev ? v : prev);
-    final maxY = maxAbs == 0 ? 1.0 : maxAbs * 1.2;
+    final entries = dailyTotals.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    if (entries.isEmpty) return const SizedBox();
+
+    final maxVal = entries.fold<double>(0.0, (prev, e) {
+      final m = e.value.totalIncome > e.value.totalExpense ? e.value.totalIncome : e.value.totalExpense;
+      return m > prev ? m : prev;
+    });
+    final maxY = maxVal == 0 ? 1.0 : maxVal * 1.2;
 
     return AppCard(
       section: AppSection.transactions,
@@ -595,32 +727,152 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         height: 220,
         child: BarChart(
           BarChartData(
-            minY: -maxY,
             maxY: maxY,
-            barGroups: List.generate(points.length, (index) {
-              final value = points[index].value;
+            minY: 0,
+            barGroups: List.generate(entries.length, (index) {
+              final totals = entries[index].value;
               return BarChartGroupData(
                 x: index,
                 barRods: [
                   BarChartRodData(
-                    toY: value,
-                    color: value >= 0 ? Colors.green : Colors.redAccent,
-                    width: 14,
-                    borderRadius: BorderRadius.circular(6),
+                    toY: totals.totalIncome,
+                    color: Colors.green,
+                    width: 10,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  BarChartRodData(
+                    toY: totals.totalExpense,
+                    color: Colors.redAccent,
+                    width: 10,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ],
               );
             }),
             titlesData: FlTitlesData(
-              rightTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
                   reservedSize: 44,
                   interval: maxY / 2,
+                  getTitlesWidget: (value, meta) {
+                    if (value == maxY || value == 0) return const SizedBox.shrink();
+                    return Text(
+                      value.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.toInt();
+                    if (index < 0 || index >= entries.length) return const SizedBox.shrink();
+                    final label = DateFormat('dd MMM').format(entries[index].key);
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              getDrawingHorizontalLine: (value) => FlLine(
+                color: scheme.onSurface.withValues(alpha: 0.1),
+                strokeWidth: 1,
+              ),
+            ),
+            borderData: FlBorderData(show: false),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCumulativeBalanceChartCard(BuildContext context, List<TransactionEntity> transactions) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    if (transactions.isEmpty) return const SizedBox();
+
+    final Map<DateTime, double> dailyNet = {};
+    for (final t in transactions) {
+      final day = DateTime(t.date.year, t.date.month, t.date.day);
+      final signed = t.isIncome ? t.amount : -t.amount;
+      dailyNet[day] = (dailyNet[day] ?? 0) + signed;
+    }
+
+    final entries = dailyNet.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    if (entries.isEmpty) return const SizedBox();
+
+    List<FlSpot> spots = [];
+    double cumulative = 0;
+    double minY = 0;
+    double maxY = 0;
+
+    for (int i = 0; i < entries.length; i++) {
+      cumulative += entries[i].value;
+      spots.add(FlSpot(i.toDouble(), cumulative));
+      if (cumulative < minY) minY = cumulative;
+      if (cumulative > maxY) maxY = cumulative;
+    }
+
+    if (minY == maxY) {
+       minY -= 10;
+       maxY += 10;
+    }
+
+    final yInterval = (maxY - minY).abs() / 2;
+
+    return AppCard(
+      section: AppSection.transactions,
+      padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
+      child: SizedBox(
+        height: 220,
+        child: LineChart(
+          LineChartData(
+            minY: minY * 1.1,
+            maxY: maxY * 1.1,
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                color: scheme.primary,
+                barWidth: 3,
+                isStrokeCapRound: true,
+                dotData: FlDotData(show: true),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: scheme.primary.withValues(alpha: 0.1),
+                ),
+              ),
+            ],
+            titlesData: FlTitlesData(
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 44,
+                  interval: yInterval > 0 ? yInterval : 1,
                   getTitlesWidget: (value, meta) {
                     return Text(
                       value.toStringAsFixed(0),
@@ -639,11 +891,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   interval: 1,
                   getTitlesWidget: (value, meta) {
                     final index = value.toInt();
-                    if (index < 0 || index >= points.length) {
-                      return const SizedBox.shrink();
-                    }
-                    final label =
-                        DateFormat('dd MMM').format(points[index].date);
+                    if (index < 0 || index >= entries.length) return const SizedBox.shrink();
+                    final label = DateFormat('dd MMM').format(entries[index].key);
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
                       child: Text(
@@ -776,24 +1025,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  List<_ChartPoint> _buildWeeklyNetPoints(
-      List<TransactionEntity> transactions) {
-    final Map<DateTime, double> weeklyNet = {};
-
-    for (final t in transactions) {
-      final day = DateTime(t.date.year, t.date.month, t.date.day);
-      final weekStart = day.subtract(Duration(days: day.weekday - 1));
-      final signed = t.isIncome ? t.amount : -t.amount;
-      weeklyNet[weekStart] = (weeklyNet[weekStart] ?? 0) + signed;
-    }
-
-    final entries = weeklyNet.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-
-    return entries
-        .map((entry) => _ChartPoint(date: entry.key, value: entry.value))
-        .toList();
-  }
 
   List<_CategoryData> _buildCategoryData(
     List<TransactionEntity> transactions,
@@ -827,31 +1058,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     }).toList()
       ..sort((a, b) => b.value.key.compareTo(a.value.key));
 
-    final topEntries = entries.take(4).toList();
-    final remaining = entries.skip(4).toList();
-
     List<_CategoryData> result = [];
-    for (int i = 0; i < topEntries.length; i++) {
+    for (int i = 0; i < entries.length; i++) {
       result.add(_CategoryData(
-        topEntries[i].key,
-        topEntries[i].value.key,
-        topEntries[i].value.value,
+        entries[i].key,
+        entries[i].value.key,
+        entries[i].value.value,
         colors[i % colors.length],
-      ));
-    }
-
-    if (remaining.isNotEmpty) {
-      double otherSum = 0;
-      List<TransactionEntity> otherTransactions = [];
-      for (final e in remaining) {
-        otherSum += e.value.key;
-        otherTransactions.addAll(e.value.value);
-      }
-      result.add(_CategoryData(
-        'Diğer',
-        otherSum,
-        otherTransactions,
-        colors[result.length % colors.length],
       ));
     }
 
@@ -965,12 +1178,6 @@ class _SummaryTile extends StatelessWidget {
   }
 }
 
-class _ChartPoint {
-  final DateTime date;
-  final double value;
-
-  const _ChartPoint({required this.date, required this.value});
-}
 
 class _TransactionTotals {
   final double totalIncome;

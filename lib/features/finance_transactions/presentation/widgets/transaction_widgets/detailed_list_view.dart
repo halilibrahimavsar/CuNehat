@@ -16,12 +16,14 @@ class DetailedListView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final FinanceMode mode;
   final Map<String, IconData> categoryIcons;
+  final bool showDayEndBalance;
 
   const DetailedListView({
     super.key,
     required this.transactions,
     this.mode = FinanceMode.compare,
     this.categoryIcons = const {},
+    this.showDayEndBalance = true,
   });
 
   @override
@@ -73,7 +75,7 @@ class _DetailedListViewState extends State<DetailedListView> {
             item: items[j],
             isLastDate: isLastDate,
             isLastItem: isLastItem,
-            dayEndBalance: isLastItem ? dayEndBalance : null,
+            dayEndBalance: (isLastItem && widget.showDayEndBalance) ? dayEndBalance : null,
           ));
         }
       } else {

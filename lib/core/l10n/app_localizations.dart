@@ -62,8 +62,7 @@ import 'app_localizations_tr.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -570,8 +567,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{checkFailedPrefix}: {error}'**
-  String msgTextsCheckfailedprefixETostring(
-      Object checkFailedPrefix, Object error);
+  String msgTextsCheckfailedprefixETostring(Object checkFailedPrefix, Object error);
 
   /// No description provided for @msgPINVerificationFailedE.
   ///
@@ -1195,8 +1191,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{toStringAsFixed} {currencySymbol}'**
-  String valueTostringasfixedCurrencysymbol(
-      Object toStringAsFixed, Object currencySymbol);
+  String valueTostringasfixedCurrencysymbol(Object toStringAsFixed, Object currencySymbol);
 
   /// No description provided for @butcePlanlama.
   ///
@@ -1442,8 +1437,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{totalAmount} (%{toStringAsFixed})'**
-  String formatMoneyItemTotalamountPercent(
-      Object totalAmount, Object toStringAsFixed);
+  String formatMoneyItemTotalamountPercent(Object totalAmount, Object toStringAsFixed);
 
   /// No description provided for @buDonemIcinHenuz.
   ///
@@ -1533,8 +1527,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{startDate} - {endDate}'**
-  String appFormattersDateshortFormatStartdate(
-      Object startDate, Object endDate);
+  String appFormattersDateshortFormatStartdate(Object startDate, Object endDate);
 
   /// No description provided for @filterSelectedcategoriesLengthKategori.
   ///
@@ -1708,8 +1701,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{isProfit}{toStringAsFixed}%'**
-  String isProfitTotalprofitpercentageTostringasfixed(
-      Object isProfit, Object toStringAsFixed);
+  String isProfitTotalprofitpercentageTostringasfixed(Object isProfit, Object toStringAsFixed);
 
   /// No description provided for @templateTitleDuzenliIslemi.
   ///
@@ -2369,8 +2361,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'Güncel Fiyat: {price} {currency} (≈{priceTl} ₺)'**
-  String guncelFiyatFormatForeign(
-      Object price, Object currency, Object priceTl);
+  String guncelFiyatFormatForeign(Object price, Object currency, Object priceTl);
 
   /// No description provided for @gecerliYatirimMiktariGirin.
   ///
@@ -3199,10 +3190,87 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İşlem sonrası bakiye'**
   String get detailLabelIslemSonrasiBakiye;
+
+  /// No description provided for @akilliIcgoruler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı İçgörüler'**
+  String get akilliIcgoruler;
+
+  /// No description provided for @gunlukOrtalamaHarcama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük ortalama harcama'**
+  String get gunlukOrtalamaHarcama;
+
+  /// No description provided for @enCokHarcananGun.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok harcadığınız gün'**
+  String get enCokHarcananGun;
+
+  /// No description provided for @enCokHarcananKategori.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok harcanan kategori'**
+  String get enCokHarcananKategori;
+
+  /// No description provided for @enBuyukHarcama.
+  ///
+  /// In tr, this message translates to:
+  /// **'En büyük harcama'**
+  String get enBuyukHarcama;
+
+  /// No description provided for @birikimOrani.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikim oranı'**
+  String get birikimOrani;
+
+  /// No description provided for @buDonemdeIslemYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönemde işlem yok'**
+  String get buDonemdeIslemYok;
+
+  /// No description provided for @tekrarlayanOdemeler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrarlayan ödemeler'**
+  String get tekrarlayanOdemeler;
+
+  /// No description provided for @tekrarlayanTespitOzeti.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} olası düzenli ödeme tespit ettik'**
+  String tekrarlayanTespitOzeti(int count);
+
+  /// No description provided for @kezTekrarlandi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kez tekrarlandı'**
+  String kezTekrarlandi(int count);
+
+  /// No description provided for @duzenliOdemeOlarakEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli Ödeme olarak ekle'**
+  String get duzenliOdemeOlarakEkle;
+
+  /// No description provided for @duzenliOdemeEklendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'\'{title}\' düzenli ödemelere eklendi'**
+  String duzenliOdemeEklendi(String title);
+
+  /// No description provided for @duzenliOdemeEklenemedi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli ödeme eklenemedi'**
+  String get duzenliOdemeEklenemedi;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3211,25 +3279,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'tr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'tr':
-      return AppLocalizationsTr();
+    case 'en': return AppLocalizationsEn();
+    case 'tr': return AppLocalizationsTr();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

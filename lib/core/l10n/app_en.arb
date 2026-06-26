@@ -660,5 +660,18 @@
   "detailLabelTur": "Type",
   "detailLabelGelir": "Income",
   "detailLabelGider": "Expense",
-  "detailLabelIslemSonrasiBakiye": "Balance after transaction"
+  "detailLabelIslemSonrasiBakiye": "Balance after transaction",
+  "akilliIcgoruler": "Smart Insights",
+  "gunlukOrtalamaHarcama": "Daily average spending",
+  "enCokHarcananGun": "Your top spending day",
+  "enCokHarcananKategori": "Top spending category",
+  "enBuyukHarcama": "Largest expense",
+  "birikimOrani": "Savings rate",
+  "buDonemdeIslemYok": "No transactions in this period",
+  "tekrarlayanOdemeler": "Recurring payments",
+  "tekrarlayanTespitOzeti": "We detected {count} possible recurring payments",
+  "kezTekrarlandi": "Repeated {count} times",
+  "duzenliOdemeOlarakEkle": "Add as recurring",
+  "duzenliOdemeEklendi": "'{title}' added to recurring payments",
+  "duzenliOdemeEklenemedi": "Couldn't add recurring payment"
 }
