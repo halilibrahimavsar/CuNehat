@@ -181,6 +181,13 @@ void main() {
 
   testWidgets('opens DateRangePickerDialog on Değiştir tap',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     final now = DateTime.now();
     final tx = TransactionEntity(
       id: 'tx_dummy',
@@ -215,6 +222,10 @@ void main() {
 
     // Tap Değiştir button
     await tester.tap(find.text('Değiştir'));
+    await tester.pumpAndSettle();
+
+    // Tap Choose from calendar in the quick options sheet to open the dialog
+    await tester.tap(find.text('Choose from calendar'));
     await tester.pumpAndSettle();
 
     // Verify DateRangePickerDialog is shown

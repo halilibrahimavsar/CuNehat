@@ -4,7 +4,7 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
 

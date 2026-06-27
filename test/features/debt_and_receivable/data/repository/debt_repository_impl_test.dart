@@ -1,7 +1,7 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
-import 'package:cunehat/features/debt_and_receivable/data/repository/debt_repository_impl.dart';
+import 'package:cunehat/features/debt_and_receivable/data/repositories/debt_repository_impl.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';

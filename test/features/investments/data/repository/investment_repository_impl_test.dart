@@ -2,7 +2,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_local_datasource.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_remote_datasource.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
-import 'package:cunehat/features/investments/data/repository/investment_repository_impl.dart';
+import 'package:cunehat/features/investments/data/repositories/investment_repository_impl.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 import 'package:dartz/dartz.dart';

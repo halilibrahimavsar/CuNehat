@@ -2,7 +2,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
-import 'package:cunehat/features/debt_and_receivable/domain/repository/debt_repository.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 

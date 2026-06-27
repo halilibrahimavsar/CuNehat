@@ -1,7 +1,7 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 

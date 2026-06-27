@@ -45,14 +45,39 @@ void main() {
 
     test('toplamları, kategori/gün kırılımını ve en büyük gideri hesaplar', () {
       final txs = [
-        _tx(title: 'Maaş', tag: 'Maaş', amount: 1000, date: DateTime(2026, 6, 1), type: TransactionTypeModel.income),
-        _tx(title: 'Market', tag: 'Market', amount: 300, date: DateTime(2026, 6, 5)),
+        _tx(
+            title: 'Maaş',
+            tag: 'Maaş',
+            amount: 1000,
+            date: DateTime(2026, 6, 1),
+            type: TransactionTypeModel.income),
+        _tx(
+            title: 'Market',
+            tag: 'Market',
+            amount: 300,
+            date: DateTime(2026, 6, 5)),
         // 06-12, 06-05 ile aynı haftanın günü (7 gün arayla).
-        _tx(title: 'Market', tag: 'Market', amount: 300, date: DateTime(2026, 6, 12)),
-        _tx(title: 'Kira', tag: 'Fatura', amount: 500, date: DateTime(2026, 6, 10)),
+        _tx(
+            title: 'Market',
+            tag: 'Market',
+            amount: 300,
+            date: DateTime(2026, 6, 12)),
+        _tx(
+            title: 'Kira',
+            tag: 'Fatura',
+            amount: 500,
+            date: DateTime(2026, 6, 10)),
         // Aralık dışı — elenmel.
-        _tx(title: 'Eski', tag: 'Market', amount: 9999, date: DateTime(2026, 5, 30)),
-        _tx(title: 'Gelecek', tag: 'Market', amount: 9999, date: DateTime(2026, 7, 2)),
+        _tx(
+            title: 'Eski',
+            tag: 'Market',
+            amount: 9999,
+            date: DateTime(2026, 5, 30)),
+        _tx(
+            title: 'Gelecek',
+            tag: 'Market',
+            amount: 9999,
+            date: DateTime(2026, 7, 2)),
       ];
 
       final r = service.analyze(txs, rangeStart: start, rangeEnd: end);
@@ -80,8 +105,17 @@ void main() {
 
     test('birikim oranı = net / gelir (pozitif)', () {
       final txs = [
-        _tx(title: 'Maaş', tag: 'Maaş', amount: 1000, date: DateTime(2026, 6, 3), type: TransactionTypeModel.income),
-        _tx(title: 'Market', tag: 'Market', amount: 250, date: DateTime(2026, 6, 4)),
+        _tx(
+            title: 'Maaş',
+            tag: 'Maaş',
+            amount: 1000,
+            date: DateTime(2026, 6, 3),
+            type: TransactionTypeModel.income),
+        _tx(
+            title: 'Market',
+            tag: 'Market',
+            amount: 250,
+            date: DateTime(2026, 6, 4)),
       ];
 
       final r = service.analyze(txs, rangeStart: start, rangeEnd: end);

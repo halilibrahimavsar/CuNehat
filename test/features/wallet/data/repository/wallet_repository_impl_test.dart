@@ -1,7 +1,7 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
-import 'package:cunehat/features/wallet/data/repository/wallet_repository_impl.dart';
+import 'package:cunehat/features/wallet/data/repositories/wallet_repository_impl.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';

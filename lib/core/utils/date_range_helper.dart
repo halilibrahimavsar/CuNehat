@@ -16,9 +16,9 @@ class DateRangeHelper {
         ? DateTime(now.year - 1, 12, 1)
         : DateTime(now.year, now.month - 1, 1);
     final endOfLastMonth = startOfMonth.subtract(const Duration(days: 1));
-    
+
     final startOfLast3Months = DateTime(now.year, now.month - 2, 1);
-    
+
     final startOfYear = DateTime(now.year, 1, 1);
     final endOfYear = DateTime(now.year, 12, 31);
 

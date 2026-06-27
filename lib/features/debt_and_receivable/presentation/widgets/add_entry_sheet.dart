@@ -7,8 +7,10 @@ import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/debt_form_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,6 +47,8 @@ class AddEntrySheet extends StatefulWidget {
 }
 
 class _AddEntrySheetState extends State<AddEntrySheet> {
+  static const _calc = DebtRepaymentCalculator();
+
   bool _isDebt = true;
   bool _isEditing = false;
   bool _isBankLoanMonthly = true;
@@ -170,55 +174,52 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final amount = _parsedAmount!;
 
     if (_isDebt) {
-      int term = 1;
-      double interest = 0;
-      double overdue = 0;
-      double? expectedTotal;
+      final rawInterest = parseAmount(_interestController.text) ?? 0;
+      final monthlyInstallment = parseAmount(_installmentController.text) ?? 0;
+      final parsedTerm = int.tryParse(_termController.text.trim()) ?? 1;
 
-      if (_selectedDebtType == DebtType.personalDebt) {
-        term = 1;
-        expectedTotal = amount; // Tutar == Toplam Tutar
-      } else if (_selectedDebtType == DebtType.installmentDebt) {
-        term = int.tryParse(_termController.text.trim()) ?? 1;
-        interest = parseAmount(_interestController.text) ?? 0;
-        if (_isInstallmentAmortized) {
-          expectedTotal = DebtEntity.calculateAmortizedTotal(
-            principal: amount,
-            monthlyInterestRate: interest,
-            termMonths: term,
-            includeTaxes: false,
-          );
-        } else {
-          expectedTotal = amount + (amount * interest / 100);
-          // Proxy sentinel: interestRate = 0 → restore'da basit vade farkı modu olduğu anlaşılır
-          interest = 0;
-        }
-      } else if (_selectedDebtType == DebtType.bankLoan) {
-        term = int.tryParse(_termController.text.trim()) ?? 1;
-        if (_isBankLoanMonthly) {
-          final monthly = parseAmount(_installmentController.text) ?? 0;
-          expectedTotal = monthly * term;
-        } else {
-          interest = parseAmount(_interestController.text) ?? 0;
+      int term = 1;
+      double interest = 0; // kalıcı değer; bazı modlarda proxy sentinel (0)
+      double overdue = 0;
+
+      switch (_selectedDebtType) {
+        case DebtType.personalDebt:
+          term = 1;
+          break;
+        case DebtType.installmentDebt:
+          term = parsedTerm;
+          // Amortisman: faizi sakla. Basit vade farkı: sentinel 0
+          // (restore'da "basit vade farkı" modu buradan anlaşılır).
+          interest = _isInstallmentAmortized ? rawInterest : 0;
+          break;
+        case DebtType.bankLoan:
+          term = parsedTerm;
+          if (!_isBankLoanMonthly) {
+            interest = rawInterest;
+            overdue = parseAmount(_overdueController.text) ?? 0;
+          }
+          // Aylık taksit modunda interest/overdue 0 kalır (proxy).
+          break;
+        case DebtType.otherDebt:
+          term = parsedTerm;
+          interest = rawInterest;
           overdue = parseAmount(_overdueController.text) ?? 0;
-          expectedTotal = DebtEntity.calculateAmortizedTotal(
-            principal: amount,
-            monthlyInterestRate: interest,
-            termMonths: term,
-            includeTaxes: _includeBankTaxes,
-          );
-        }
-      } else {
-        // otherDebt
-        term = int.tryParse(_termController.text.trim()) ?? 1;
-        interest = parseAmount(_interestController.text) ?? 0;
-        overdue = parseAmount(_overdueController.text) ?? 0;
-        expectedTotal = DebtEntity.calculateTotalDebt(
-          principal: amount,
-          interestRate: interest,
-          termMonths: term,
-        );
+          break;
       }
+
+      // Önizleme ile aynı hesaplayıcı → kaydedilen tutar önizlenenle birebir.
+      final expectedTotal = _calc
+          .compute(
+            type: _selectedDebtType,
+            principal: amount,
+            termMonths: term,
+            interestRate: rawInterest,
+            monthlyInstallment: monthlyInstallment,
+            isInstallmentAmortized: _isInstallmentAmortized,
+            isBankLoanMonthly: _isBankLoanMonthly,
+            includeBankTaxes: _includeBankTaxes,
+          )
+          .expectedTotal;
 
       final dueDate = addMonthsClamped(_selectedDate, term);
 
@@ -316,7 +317,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       if (_isDebt) ...[
                         _sectionLabel(context.l10n.borcTuruLabel, cs),
                         const SizedBox(height: 10),
-                        _buildDebtTypeChips(cs),
+                        DebtTypeChips(
+                          selected: _selectedDebtType,
+                          accent: _accent,
+                          onSelected: (t) =>
+                              setState(() => _selectedDebtType = t),
+                        ),
                         const SizedBox(height: 20),
                         _filledField(
                           controller: _titleController,
@@ -342,22 +348,42 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           ),
                           const SizedBox(height: 14),
                         ],
-                        _buildDatePill(cs),
+                        DueDatePill(
+                          isDebt: _isDebt,
+                          accent: _accent,
+                          date: _selectedDate,
+                          onTap: _pickDate,
+                        ),
                         if (_selectedDebtType != DebtType.personalDebt) ...[
                           const SizedBox(height: 20),
                           _sectionLabel(context.l10n.vadeVeDetaylarLabel, cs),
                           const SizedBox(height: 10),
                           if (_selectedDebtType == DebtType.bankLoan) ...[
-                            _buildBankLoanToggle(cs),
+                            BankLoanModeToggle(
+                              isMonthly: _isBankLoanMonthly,
+                              accent: _accent,
+                              onChanged: (v) =>
+                                  setState(() => _isBankLoanMonthly = v),
+                            ),
                             const SizedBox(height: 10),
                             if (!_isBankLoanMonthly) ...[
-                              _buildTaxSwitch(cs),
+                              BankTaxSwitch(
+                                value: _includeBankTaxes,
+                                accent: _accent,
+                                onChanged: (v) =>
+                                    setState(() => _includeBankTaxes = v),
+                              ),
                               const SizedBox(height: 10),
                             ],
                           ],
                           if (_selectedDebtType ==
                               DebtType.installmentDebt) ...[
-                            _buildInstallmentTypeToggle(cs),
+                            InstallmentTypeToggle(
+                              isAmortized: _isInstallmentAmortized,
+                              accent: _accent,
+                              onChanged: (v) =>
+                                  setState(() => _isInstallmentAmortized = v),
+                            ),
                             const SizedBox(height: 10),
                           ],
                           _buildDynamicDetails(cs),
@@ -370,7 +396,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           cs: cs,
                         ),
                         const SizedBox(height: 14),
-                        _buildDatePill(cs),
+                        DueDatePill(
+                          isDebt: _isDebt,
+                          accent: _accent,
+                          date: _selectedDate,
+                          onTap: _pickDate,
+                        ),
                       ],
                       if (_error != null) ...[
                         const SizedBox(height: 16),
@@ -559,51 +590,20 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         final term = int.tryParse(_termController.text.trim()) ?? 0;
         final hasData = principal > 0;
 
-        double total = principal;
-        double monthly = 0;
-        double totalInterest = 0;
-
-        if (_selectedDebtType == DebtType.installmentDebt) {
-          final interest = parseAmount(_interestController.text) ?? 0;
-          if (_isInstallmentAmortized) {
-            total = DebtEntity.calculateAmortizedTotal(
-              principal: principal,
-              monthlyInterestRate: interest,
-              termMonths: term,
-              includeTaxes: false,
-            );
-          } else {
-            // Basit Vade Farkı (AnaPara + %Faiz)
-            total = principal + (principal * interest / 100);
-          }
-          totalInterest = total - principal;
-          monthly = term > 0 ? total / term : 0;
-        } else if (_selectedDebtType == DebtType.bankLoan &&
-            _isBankLoanMonthly) {
-          monthly = parseAmount(_installmentController.text) ?? 0;
-          total = monthly * term;
-          totalInterest = total > principal ? total - principal : 0;
-        } else if (_selectedDebtType == DebtType.bankLoan &&
-            !_isBankLoanMonthly) {
-          final interest = parseAmount(_interestController.text) ?? 0;
-          total = DebtEntity.calculateAmortizedTotal(
-            principal: principal,
-            monthlyInterestRate: interest,
-            termMonths: term,
-            includeTaxes: _includeBankTaxes,
-          );
-          totalInterest = total - principal;
-          monthly = term > 0 ? total / term : 0;
-        } else {
-          final interest = parseAmount(_interestController.text) ?? 0;
-          total = DebtEntity.calculateTotalDebt(
-            principal: principal,
-            interestRate: interest,
-            termMonths: term,
-          );
-          totalInterest = total - principal;
-          monthly = term > 0 ? total / term : 0;
-        }
+        // Önizleme ve kaydetme aynı hesaplayıcıyı paylaşır → tutarlar eşittir.
+        final breakdown = _calc.compute(
+          type: _selectedDebtType,
+          principal: principal,
+          termMonths: term,
+          interestRate: parseAmount(_interestController.text) ?? 0,
+          monthlyInstallment: parseAmount(_installmentController.text) ?? 0,
+          isInstallmentAmortized: _isInstallmentAmortized,
+          isBankLoanMonthly: _isBankLoanMonthly,
+          includeBankTaxes: _includeBankTaxes,
+        );
+        final total = breakdown.expectedTotal;
+        final monthly = breakdown.monthlyPayment;
+        final totalInterest = breakdown.totalInterest;
 
         return Column(
           children: [
@@ -654,258 +654,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           ],
         );
       },
-    );
-  }
-
-  // -------------------------------------------------------- Debt type chips
-
-  static const Map<DebtType, (String, IconData)> _debtTypeMeta = {
-    DebtType.bankLoan: ('Banka Kredisi', Icons.account_balance_rounded),
-    DebtType.installmentDebt: ('Taksitli', Icons.credit_card_rounded),
-    DebtType.personalDebt: ('Kişisel', Icons.handshake_rounded),
-    DebtType.otherDebt: ('Diğer', Icons.more_horiz_rounded),
-  };
-
-  String _getDebtTypeLabel(BuildContext context, DebtType type) {
-    return switch (type) {
-      DebtType.bankLoan => context.l10n.debtTypeBankLoan,
-      DebtType.installmentDebt => context.l10n.debtTypeInstallment,
-      DebtType.personalDebt => context.l10n.debtTypePersonal,
-      DebtType.otherDebt => context.l10n.debtTypeOther,
-    };
-  }
-
-  Widget _buildDebtTypeChips(ColorScheme cs) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: DebtType.values.map((type) {
-        final meta = _debtTypeMeta[type]!;
-        final selected = _selectedDebtType == type;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedDebtType = type),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: selected
-                  ? _accent.withValues(alpha: 0.12)
-                  : cs.onSurface.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? _accent : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(meta.$2,
-                    size: 17, color: selected ? _accent : cs.onSurfaceVariant),
-                const SizedBox(width: 7),
-                Text(
-                  _getDebtTypeLabel(context, type),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? _accent : cs.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ------------------------------------------------------------ Debt details
-
-  Widget _buildBankLoanToggle(ColorScheme cs) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isBankLoanMonthly = true),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: _isBankLoanMonthly ? cs.surface : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: _isBankLoanMonthly
-                      ? [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 4)
-                        ]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(context.l10n.aylikTaksitiBiliyorum,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: _isBankLoanMonthly
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _isBankLoanMonthly
-                            ? _accent
-                            : cs.onSurfaceVariant)),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isBankLoanMonthly = false),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: !_isBankLoanMonthly ? cs.surface : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: !_isBankLoanMonthly
-                      ? [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 4)
-                        ]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(context.l10n.faizOraniIle,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: !_isBankLoanMonthly
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: !_isBankLoanMonthly
-                            ? _accent
-                            : cs.onSurfaceVariant)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTaxSwitch(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.l10n.kKDFVeBsmvVergilerini,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface),
-                ),
-              ),
-              Switch(
-                value: _includeBankTaxes,
-                onChanged: (val) => setState(() => _includeBankTaxes = val),
-                activeColor: _accent,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.l10n.tuketiciKredilerindeFaizeYasal,
-            style: TextStyle(
-                fontSize: 11.5, color: cs.onSurfaceVariant, height: 1.3),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInstallmentTypeToggle(ColorScheme cs) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isInstallmentAmortized = true),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color:
-                      _isInstallmentAmortized ? cs.surface : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: _isInstallmentAmortized
-                      ? [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 4)
-                        ]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(context.l10n.esitTaksitAmortisman,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: _isInstallmentAmortized
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _isInstallmentAmortized
-                            ? _accent
-                            : cs.onSurfaceVariant)),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isInstallmentAmortized = false),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: !_isInstallmentAmortized
-                      ? cs.surface
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: !_isInstallmentAmortized
-                      ? [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 4)
-                        ]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(context.l10n.basitVadeFarki,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: !_isInstallmentAmortized
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: !_isInstallmentAmortized
-                            ? _accent
-                            : cs.onSurfaceVariant)),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1003,45 +751,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           ),
         ),
       ],
-    );
-  }
-
-  // ---------------------------------------------------------------- Date
-
-  Widget _buildDatePill(ColorScheme cs) {
-    return Material(
-      color: cs.onSurface.withValues(alpha: 0.04),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: _pickDate,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Icon(Icons.calendar_today_rounded, size: 18, color: _accent),
-              const SizedBox(width: 12),
-              Text(
-                _isDebt ? context.l10n.baslangicLabel : context.l10n.vadeLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                AppFormatters.dateLong.format(_selectedDate),
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

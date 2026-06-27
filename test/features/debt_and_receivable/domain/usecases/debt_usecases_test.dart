@@ -1,7 +1,7 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
-import 'package:cunehat/features/debt_and_receivable/domain/repository/debt_repository.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';

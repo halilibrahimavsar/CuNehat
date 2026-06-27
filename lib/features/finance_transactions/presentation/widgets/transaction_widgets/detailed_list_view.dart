@@ -75,7 +75,8 @@ class _DetailedListViewState extends State<DetailedListView> {
             item: items[j],
             isLastDate: isLastDate,
             isLastItem: isLastItem,
-            dayEndBalance: (isLastItem && widget.showDayEndBalance) ? dayEndBalance : null,
+            dayEndBalance:
+                (isLastItem && widget.showDayEndBalance) ? dayEndBalance : null,
           ));
         }
       } else {

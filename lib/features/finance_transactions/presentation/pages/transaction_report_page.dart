@@ -6,6 +6,7 @@ import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
@@ -18,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
+
 class TransactionReportPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -35,15 +37,22 @@ class TransactionReportPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<TransactionBloc>()
         ..add(GetTransactionsEvent(userId: userId, walletId: walletId)),
-      child: _TransactionReportView(showAppBar: showAppBar),
+      child: _TransactionReportView(
+        showAppBar: showAppBar,
+        categoryRepository: getIt<CategoryRepository>(),
+      ),
     );
   }
 }
 
 class _TransactionReportView extends StatefulWidget {
   final bool showAppBar;
+  final CategoryRepository categoryRepository;
 
-  const _TransactionReportView({required this.showAppBar});
+  const _TransactionReportView({
+    required this.showAppBar,
+    required this.categoryRepository,
+  });
 
   @override
   State<_TransactionReportView> createState() => _TransactionReportViewState();
@@ -58,6 +67,21 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   Map<String, IconData> _categoryIcons = {};
 
+  static const _reportService = TransactionReportService();
+
+  static const _expensePalette = [
+    Colors.redAccent,
+    Colors.orangeAccent,
+    Colors.deepOrangeAccent,
+    Colors.amberAccent,
+  ];
+  static const _incomePalette = [
+    Colors.greenAccent,
+    Colors.tealAccent,
+    Colors.blueAccent,
+    Colors.indigoAccent,
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +94,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   Future<void> _loadCategoryIcons() async {
-    final service = getIt<CategoryRepository>();
+    final service = widget.categoryRepository;
     final results = await Future.wait([
       service.getExpenseCategories(),
       service.getIncomeCategories(),
@@ -138,10 +162,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             );
           }
 
-          final totals = _calculateTotals(filteredTransactions);
+          final totals = _reportService.calculateTotals(filteredTransactions);
           final expenseData = _buildCategoryData(filteredTransactions, true);
           final incomeData = _buildCategoryData(filteredTransactions, false);
-
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -305,7 +328,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.pie_chart, color: !isBarChart ? scheme.primary : scheme.onSurfaceVariant),
+                    icon: Icon(Icons.pie_chart,
+                        color: !isBarChart
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant),
                     onPressed: () {
                       setState(() {
                         if (isExpense) {
@@ -320,7 +346,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: Icon(Icons.bar_chart, color: isBarChart ? scheme.primary : scheme.onSurfaceVariant),
+                    icon: Icon(Icons.bar_chart,
+                        color: isBarChart
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant),
                     onPressed: () {
                       setState(() {
                         if (isExpense) {
@@ -346,7 +375,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             ],
           ),
           const SizedBox(height: 24),
-          isBarChart 
+          isBarChart
               ? _buildCategoryBarChart(context, categoryData, isExpense)
               : SizedBox(
                   height: 200,
@@ -384,8 +413,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                               return;
                             }
 
-                            final newIndex =
-                                pieTouchResponse.touchedSection!.touchedSectionIndex;
+                            final newIndex = pieTouchResponse
+                                .touchedSection!.touchedSectionIndex;
 
                             if (isExpense) {
                               _touchedExpenseIndex = newIndex;
@@ -436,7 +465,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final minWidth = categoryData.length * 50.0;
-        final width = minWidth > constraints.maxWidth ? minWidth : constraints.maxWidth;
+        final width =
+            minWidth > constraints.maxWidth ? minWidth : constraints.maxWidth;
 
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -457,16 +487,21 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         toY: cat.totalAmount,
                         color: cat.color,
                         width: 28,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(4)),
                       ),
                     ],
                   );
                 }),
                 titlesData: const FlTitlesData(
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: const FlGridData(show: false),
                 borderData: FlBorderData(show: false),
@@ -694,28 +729,33 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildGroupedBarChartCard(BuildContext context, List<TransactionEntity> transactions) {
+  Widget _buildGroupedBarChartCard(
+      BuildContext context, List<TransactionEntity> transactions) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
     if (transactions.isEmpty) return const SizedBox();
 
-    final Map<DateTime, _TransactionTotals> dailyTotals = {};
+    final Map<DateTime, ReportTotals> dailyTotals = {};
     for (final t in transactions) {
       final day = DateTime(t.date.year, t.date.month, t.date.day);
-      final current = dailyTotals[day] ?? const _TransactionTotals(totalIncome: 0, totalExpense: 0, net: 0);
-      dailyTotals[day] = _TransactionTotals(
+      final current = dailyTotals[day] ??
+          const ReportTotals(totalIncome: 0, totalExpense: 0, net: 0);
+      dailyTotals[day] = ReportTotals(
         totalIncome: current.totalIncome + (t.isIncome ? t.amount : 0),
         totalExpense: current.totalExpense + (t.isExpense ? t.amount : 0),
         net: 0,
       );
     }
 
-    final entries = dailyTotals.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    final entries = dailyTotals.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
     if (entries.isEmpty) return const SizedBox();
 
     final maxVal = entries.fold<double>(0.0, (prev, e) {
-      final m = e.value.totalIncome > e.value.totalExpense ? e.value.totalIncome : e.value.totalExpense;
+      final m = e.value.totalIncome > e.value.totalExpense
+          ? e.value.totalIncome
+          : e.value.totalExpense;
       return m > prev ? m : prev;
     });
     final maxY = maxVal == 0 ? 1.0 : maxVal * 1.2;
@@ -750,15 +790,19 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               );
             }),
             titlesData: FlTitlesData(
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
                   reservedSize: 44,
                   interval: maxY / 2,
                   getTitlesWidget: (value, meta) {
-                    if (value == maxY || value == 0) return const SizedBox.shrink();
+                    if (value == maxY || value == 0) {
+                      return const SizedBox.shrink();
+                    }
                     return Text(
                       value.toStringAsFixed(0),
                       style: TextStyle(
@@ -775,8 +819,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   showTitles: true,
                   getTitlesWidget: (value, meta) {
                     final index = value.toInt();
-                    if (index < 0 || index >= entries.length) return const SizedBox.shrink();
-                    final label = DateFormat('dd MMM').format(entries[index].key);
+                    if (index < 0 || index >= entries.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final label =
+                        DateFormat('dd MMM').format(entries[index].key);
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
                       child: Text(
@@ -807,7 +854,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildCumulativeBalanceChartCard(BuildContext context, List<TransactionEntity> transactions) {
+  Widget _buildCumulativeBalanceChartCard(
+      BuildContext context, List<TransactionEntity> transactions) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -820,7 +868,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       dailyNet[day] = (dailyNet[day] ?? 0) + signed;
     }
 
-    final entries = dailyNet.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    final entries = dailyNet.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
     if (entries.isEmpty) return const SizedBox();
 
     List<FlSpot> spots = [];
@@ -836,8 +885,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     }
 
     if (minY == maxY) {
-       minY -= 10;
-       maxY += 10;
+      minY -= 10;
+      maxY += 10;
     }
 
     final yInterval = (maxY - minY).abs() / 2;
@@ -866,8 +915,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               ),
             ],
             titlesData: FlTitlesData(
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles:
+                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -891,8 +942,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   interval: 1,
                   getTitlesWidget: (value, meta) {
                     final index = value.toInt();
-                    if (index < 0 || index >= entries.length) return const SizedBox.shrink();
-                    final label = DateFormat('dd MMM').format(entries[index].key);
+                    if (index < 0 || index >= entries.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final label =
+                        DateFormat('dd MMM').format(entries[index].key);
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
                       child: Text(
@@ -923,7 +977,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildSummaryCards(_TransactionTotals totals) {
+  Widget _buildSummaryCards(ReportTotals totals) {
     final savingsRate =
         totals.totalIncome == 0 ? 0 : (totals.net / totals.totalIncome) * 100;
 
@@ -988,87 +1042,53 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   List<TransactionEntity> _filterTransactionsByRange(
       List<TransactionEntity> transactions) {
-    final start = DateTime(
-      _range.start.year,
-      _range.start.month,
-      _range.start.day,
-    );
-    // Gün sonu yerine "ertesi gün 00:00'dan önce": 23:59:59.999'dan sonraki
-    // mikrosaniyeli kayıtlar da bitiş gününe dahil kalır.
-    final endExclusive = DateTime(
-      _range.end.year,
-      _range.end.month,
-      _range.end.day + 1,
-    );
-
-    return transactions
-        .where((t) => !t.date.isBefore(start) && t.date.isBefore(endExclusive))
-        .toList();
+    return _reportService.filterByRange(transactions, _range.start, _range.end);
   }
-
-  _TransactionTotals _calculateTotals(List<TransactionEntity> transactions) {
-    double income = 0;
-    double expense = 0;
-
-    for (final t in transactions) {
-      if (t.isIncome) {
-        income += t.amount;
-      } else {
-        expense += t.amount;
-      }
-    }
-
-    return _TransactionTotals(
-      totalIncome: income,
-      totalExpense: expense,
-      net: income - expense,
-    );
-  }
-
 
   List<_CategoryData> _buildCategoryData(
     List<TransactionEntity> transactions,
     bool isExpense,
   ) {
-    final Map<String, List<TransactionEntity>> grouped = {};
-    for (final t in transactions) {
-      if (t.isExpense != isExpense) continue;
-      grouped.putIfAbsent(t.tag, () => []).add(t);
-    }
+    final breakdowns = _reportService.buildCategoryBreakdown(
+      transactions,
+      isExpense: isExpense,
+    );
+    final palette = isExpense ? _expensePalette : _incomePalette;
 
-    if (grouped.isEmpty) return [];
-
-    final colors = isExpense
-        ? [
-            Colors.redAccent,
-            Colors.orangeAccent,
-            Colors.deepOrangeAccent,
-            Colors.amberAccent
-          ]
-        : [
-            Colors.greenAccent,
-            Colors.tealAccent,
-            Colors.blueAccent,
-            Colors.indigoAccent
-          ];
-
-    final entries = grouped.entries.map((e) {
-      final sum = e.value.fold<double>(0.0, (prev, t) => prev + t.amount);
-      return MapEntry(e.key, MapEntry(sum, e.value));
-    }).toList()
-      ..sort((a, b) => b.value.key.compareTo(a.value.key));
-
-    List<_CategoryData> result = [];
-    for (int i = 0; i < entries.length; i++) {
+    if (breakdowns.length > 4) {
+      final result = <_CategoryData>[];
+      for (int i = 0; i < 3; i++) {
+        result.add(_CategoryData(
+          breakdowns[i].name,
+          breakdowns[i].totalAmount,
+          breakdowns[i].transactions,
+          palette[i],
+        ));
+      }
+      double otherTotal = 0;
+      final otherTx = <TransactionEntity>[];
+      for (int i = 3; i < breakdowns.length; i++) {
+        otherTotal += breakdowns[i].totalAmount;
+        otherTx.addAll(breakdowns[i].transactions);
+      }
       result.add(_CategoryData(
-        entries[i].key,
-        entries[i].value.key,
-        entries[i].value.value,
-        colors[i % colors.length],
+        'Diğer',
+        otherTotal,
+        otherTx,
+        palette[3],
       ));
+      return result;
     }
 
-    return result;
+    return [
+      for (int i = 0; i < breakdowns.length; i++)
+        _CategoryData(
+          breakdowns[i].name,
+          breakdowns[i].totalAmount,
+          breakdowns[i].transactions,
+          palette[i % palette.length],
+        ),
+    ];
   }
 
   Widget _buildEmptyState(BuildContext context, {String? message}) {
@@ -1176,19 +1196,6 @@ class _SummaryTile extends StatelessWidget {
       ),
     );
   }
-}
-
-
-class _TransactionTotals {
-  final double totalIncome;
-  final double totalExpense;
-  final double net;
-
-  const _TransactionTotals({
-    required this.totalIncome,
-    required this.totalExpense,
-    required this.net,
-  });
 }
 
 class _CategoryData {

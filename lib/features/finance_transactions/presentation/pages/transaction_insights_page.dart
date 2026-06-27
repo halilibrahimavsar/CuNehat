@@ -212,8 +212,8 @@ class _InsightsViewState extends State<_InsightsView> {
         i.savingsRate >= 0 ? AppGradients.savings : AppGradients.debt;
     return Row(
       children: [
-        _statTile(context, context.l10n.menuIncome,
-            formatMoney(i.totalIncome), AppGradients.savings),
+        _statTile(context, context.l10n.menuIncome, formatMoney(i.totalIncome),
+            AppGradients.savings),
         const SizedBox(width: 10),
         _statTile(context, context.l10n.menuExpense,
             formatMoney(i.totalExpense), AppGradients.debt),
@@ -262,8 +262,7 @@ class _InsightsViewState extends State<_InsightsView> {
     );
   }
 
-  List<Widget> _buildInsightCards(
-      BuildContext context, TransactionInsights i) {
+  List<Widget> _buildInsightCards(BuildContext context, TransactionInsights i) {
     final l10n = context.l10n;
     final cards = <Widget>[
       _insightCard(
@@ -280,7 +279,7 @@ class _InsightsViewState extends State<_InsightsView> {
         Icons.event_rounded,
         l10n.enCokHarcananGun,
         '${_weekdayName(context, i.topExpenseWeekday!)} '
-            '(${formatMoney(i.topExpenseWeekdayAmount)})',
+        '(${formatMoney(i.topExpenseWeekdayAmount)})',
       ));
     }
 
@@ -517,11 +516,23 @@ class _InsightsViewState extends State<_InsightsView> {
   String _weekdayName(BuildContext context, int weekday) {
     final isTr = Localizations.localeOf(context).languageCode == 'tr';
     const tr = [
-      '', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi',
+      '',
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
       'Pazar'
     ];
     const en = [
-      '', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+      '',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
       'Sunday'
     ];
     final names = isTr ? tr : en;

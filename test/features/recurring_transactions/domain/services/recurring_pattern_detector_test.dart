@@ -27,10 +27,26 @@ TransactionEntity _tx({
 }
 
 List<TransactionEntity> _monthlySpotify() => [
-      _tx(title: 'Spotify', tag: 'Eğlence', amount: 49.99, date: DateTime(2026, 1, 15)),
-      _tx(title: 'Spotify', tag: 'Eğlence', amount: 49.99, date: DateTime(2026, 2, 15)),
-      _tx(title: 'Spotify', tag: 'Eğlence', amount: 49.99, date: DateTime(2026, 3, 15)),
-      _tx(title: 'Spotify', tag: 'Eğlence', amount: 49.99, date: DateTime(2026, 4, 15)),
+      _tx(
+          title: 'Spotify',
+          tag: 'Eğlence',
+          amount: 49.99,
+          date: DateTime(2026, 1, 15)),
+      _tx(
+          title: 'Spotify',
+          tag: 'Eğlence',
+          amount: 49.99,
+          date: DateTime(2026, 2, 15)),
+      _tx(
+          title: 'Spotify',
+          tag: 'Eğlence',
+          amount: 49.99,
+          date: DateTime(2026, 3, 15)),
+      _tx(
+          title: 'Spotify',
+          tag: 'Eğlence',
+          amount: 49.99,
+          date: DateTime(2026, 4, 15)),
     ];
 
 void main() {
@@ -38,7 +54,9 @@ void main() {
   final now = DateTime(2026, 6, 26);
 
   group('RecurringPatternDetector.detect', () {
-    test('aylık sabit-tutarlı örüntüyü tespit eder ve sonraki tarihi geleceğe taşır', () {
+    test(
+        'aylık sabit-tutarlı örüntüyü tespit eder ve sonraki tarihi geleceğe taşır',
+        () {
       final result = detector.detect(_monthlySpotify(), now: now);
 
       expect(result, hasLength(1));
@@ -93,9 +111,8 @@ void main() {
     });
 
     test('sistem (otomatik) işlemleri yok sayar', () {
-      final txs = _monthlySpotify()
-          .map((t) => t.copyWith(isSystem: true))
-          .toList();
+      final txs =
+          _monthlySpotify().map((t) => t.copyWith(isSystem: true)).toList();
 
       final result = detector.detect(txs, now: now);
 

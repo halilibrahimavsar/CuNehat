@@ -153,9 +153,7 @@ class RecurringPatternDetector {
     if (values.isEmpty) return 0;
     final sorted = [...values]..sort();
     final n = sorted.length;
-    return n.isOdd
-        ? sorted[n ~/ 2]
-        : (sorted[n ~/ 2 - 1] + sorted[n ~/ 2]) / 2;
+    return n.isOdd ? sorted[n ~/ 2] : (sorted[n ~/ 2 - 1] + sorted[n ~/ 2]) / 2;
   }
 }
 

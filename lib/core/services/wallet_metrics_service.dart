@@ -1,12 +1,12 @@
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
-import 'package:cunehat/features/debt_and_receivable/domain/repository/debt_repository.dart';
-import 'package:cunehat/features/debt_and_receivable/domain/repository/receivable_repository.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/repositories/receivable_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 

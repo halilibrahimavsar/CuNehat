@@ -2,7 +2,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/wallet/data/datasource/wallet_local_datasource.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 

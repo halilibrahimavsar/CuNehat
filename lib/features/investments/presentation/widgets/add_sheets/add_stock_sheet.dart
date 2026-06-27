@@ -1,17 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class AddStockSheet extends StatefulWidget {
   final String walletId;
@@ -52,6 +50,8 @@ class AddStockSheet extends StatefulWidget {
 }
 
 class _AddStockSheetState extends State<AddStockSheet> {
+  static const _accent = Colors.blue;
+
   bool _isEditing = false;
   bool _isLoading = false;
   String? _error;
@@ -276,49 +276,75 @@ class _AddStockSheetState extends State<AddStockSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHandleAndHeader(cs),
+                InvestmentSheetHeader(
+                  accent: _accent,
+                  icon: Icons.trending_up_rounded,
+                  title: _isEditing
+                      ? context.l10n.hisseYatiriminiDuzenle
+                      : context.l10n.yeniHisseEkle,
+                  onClose: () {
+                    FocusScope.of(context).unfocus();
+                    Navigator.pop(context);
+                  },
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildAmountCard(cs),
+                      InvestmentAmountCard(
+                        accent: _accent,
+                        valueColor: Colors.indigo,
+                        controller: _currentValueController,
+                        onChanged: _clearError,
+                      ),
                       const SizedBox(height: 20),
-                      _sectionLabel(context.l10n.hisseSenediBul, cs),
+                      InvestmentSectionLabel(context.l10n.hisseSenediBul),
                       const SizedBox(height: 10),
                       _buildSymbolSearch(cs),
                       const SizedBox(height: 14),
-                      _buildQuantityAndFetch(cs),
+                      InvestmentQuantityAndFetch(
+                        accent: _accent,
+                        quantityController: _quantityController,
+                        onQuantityChanged: _clearError,
+                        isLoading: _isLoading,
+                        fetchedMessage: _fetchedPriceMessage,
+                        fetchedColor: _fetchedPriceColor,
+                        onFetch: _fetchLivePrice,
+                      ),
                       const SizedBox(height: 20),
-                      _sectionLabel(context.l10n.yatirimDetaylari, cs),
+                      InvestmentSectionLabel(context.l10n.yatirimDetaylari),
                       const SizedBox(height: 10),
-                      _filledField(
+                      InvestmentFilledField(
                         controller: _nameController,
                         hint: context.l10n.hisseNotHint,
                         icon: Icons.notes_rounded,
-                        cs: cs,
+                        accent: _accent,
+                        onChanged: _clearError,
                       ),
                       const SizedBox(height: 14),
-                      _filledField(
+                      InvestmentFilledField(
                         controller: _amountController,
                         hint: context.l10n.maliyetYatirilanAnaPara,
                         icon: Icons.payments_rounded,
-                        cs: cs,
+                        accent: _accent,
+                        onChanged: _clearError,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                       ),
                       const SizedBox(height: 14),
-                      _filledField(
+                      InvestmentFilledField(
                         controller: _targetAmountController,
                         hint: context.l10n.hedefTutarIstegeBagli,
                         icon: Icons.flag_rounded,
-                        cs: cs,
+                        accent: _accent,
+                        onChanged: _clearError,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                       ),
                       if (_targetAmountController.text.trim().isNotEmpty) ...[
                         const SizedBox(height: 14),
-                        _sectionLabel(context.l10n.hedefKategorisi, cs),
+                        InvestmentSectionLabel(context.l10n.hedefKategorisi),
                         const SizedBox(height: 10),
                         GoalCategorySelector(
                           selectedKey: _selectedGoalCategory,
@@ -329,18 +355,27 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       ],
                       if (_isEditing) ...[
                         const SizedBox(height: 14),
-                        _buildCostEditWarning(cs),
+                        const InvestmentCostEditWarning(),
                       ],
                       const SizedBox(height: 20),
-                      _sectionLabel(context.l10n.renkSecimi, cs),
+                      InvestmentSectionLabel(context.l10n.renkSecimi),
                       const SizedBox(height: 10),
-                      _buildColorSelector(),
+                      InvestmentColorSelector(
+                        options: _colorOptions,
+                        selected: _selectedColor,
+                        onSelected: (c) => setState(() => _selectedColor = c),
+                      ),
                       if (_error != null) ...[
                         const SizedBox(height: 16),
-                        _buildErrorBanner(),
+                        InvestmentErrorBanner(_error!),
                       ],
                       const SizedBox(height: 22),
-                      _buildSaveButton(surface.radius),
+                      InvestmentSaveButton(
+                        accent: _accent,
+                        radius: surface.radius,
+                        isEditing: _isEditing,
+                        onSave: _save,
+                      ),
                     ],
                   ),
                 ),
@@ -348,144 +383,6 @@ class _AddStockSheetState extends State<AddStockSheet> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildHandleAndHeader(ColorScheme cs) {
-    final title = _isEditing
-        ? context.l10n.hisseYatiriminiDuzenle
-        : context.l10n.yeniHisseEkle;
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 12, bottom: 12),
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: cs.onSurface.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.14),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.trending_up_rounded,
-                  color: Colors.blue,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  Navigator.pop(context);
-                },
-                visualDensity: VisualDensity.compact,
-                icon: Icon(Icons.close_rounded,
-                    color: cs.onSurface.withValues(alpha: 0.5)),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAmountCard(ColorScheme cs) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue.withValues(alpha: 0.15),
-            Colors.indigo.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.mevcutDeger,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: cs.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Flexible(
-                child: TextField(
-                  controller: _currentValueController,
-                  textAlign: TextAlign.right,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  ],
-                  onChanged: (_) => _clearError(),
-                  cursorColor: Colors.blue,
-                  style: const TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.indigo,
-                    height: 1.0,
-                  ),
-                  decoration: InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: '0',
-                    hintStyle: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.blue.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 3),
-                child: Text(
-                  AppConstants.currency,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.blue.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -568,254 +465,6 @@ class _AddStockSheetState extends State<AddStockSheet> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildQuantityAndFetch(ColorScheme cs) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: _filledField(
-            controller: _quantityController,
-            hint: context.l10n.adet,
-            icon: Icons.numbers_rounded,
-            cs: cs,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 56, // Match _filledField height
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _fetchLivePrice,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.refresh_rounded),
-                  label: Text(
-                    context.l10n.hesapla,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                ),
-              ),
-              if (_fetchedPriceMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 4),
-                  child: Text(
-                    _fetchedPriceMessage!,
-                    style: TextStyle(
-                      color: _fetchedPriceColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildColorSelector() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: _colorOptions.map((color) {
-        final isSelected = _selectedColor == color;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedColor = color),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
-                  : null,
-              border: isSelected
-                  ? Border.all(color: Colors.white, width: 3)
-                  : Border.all(color: Colors.transparent, width: 3),
-            ),
-            child: isSelected
-                ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
-                : null,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _sectionLabel(String text, ColorScheme cs) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: cs.onSurfaceVariant,
-        letterSpacing: 0.2,
-      ),
-    );
-  }
-
-  Widget _filledField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    required ColorScheme cs,
-    TextInputType? keyboardType,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textCapitalization: keyboardType == null
-          ? TextCapitalization.sentences
-          : TextCapitalization.none,
-      onChanged: (_) => _clearError(),
-      style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-            color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-            fontWeight: FontWeight.w400),
-        prefixIcon: Icon(icon,
-            size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
-        filled: true,
-        fillColor: cs.onSurface.withValues(alpha: 0.04),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.blue, width: 1.6),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCostEditWarning(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline_rounded,
-              size: 16, color: Colors.orange),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              context.l10n.maliyetiDegistirirsenizFarkCuzdana,
-              style: TextStyle(
-                color: cs.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorBanner() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline_rounded, size: 18, color: Colors.red),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _error!,
-              style: const TextStyle(
-                  color: Colors.red, fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSaveButton(double radius) {
-    final br = BorderRadius.circular(radius.clamp(16, 20));
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: br,
-          onTap: _save,
-          child: Ink(
-            decoration: BoxDecoration(
-              gradient: AppGradients.vivid(Colors.blue.shade600),
-              borderRadius: br,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(_isEditing ? Icons.check_rounded : Icons.add_rounded,
-                      color: Colors.white, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isEditing ? context.l10n.guncelle : context.l10n.kaydet,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

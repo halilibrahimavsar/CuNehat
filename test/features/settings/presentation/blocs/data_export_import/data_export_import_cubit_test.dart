@@ -9,7 +9,7 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/transa
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_state.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
-import 'package:cunehat/features/wallet/domain/repository/wallet_repository.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
