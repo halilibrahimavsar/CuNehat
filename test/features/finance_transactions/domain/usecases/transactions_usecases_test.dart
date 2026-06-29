@@ -1,7 +1,4 @@
 import 'package:cunehat/core/error/failure.dart';
-import 'package:cunehat/core/notifications/notification_service.dart';
-import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
-import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
@@ -14,14 +11,8 @@ import 'package:mocktail/mocktail.dart';
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
 
-class MockBudgetRepository extends Mock implements BudgetRepository {}
-
-class MockNotificationService extends Mock implements NotificationService {}
-
 void main() {
   late MockTransactionsRepository mockRepo;
-  late MockBudgetRepository mockBudgetRepo;
-  late MockNotificationService mockNotificationService;
 
   late AddTransactionUseCase addUseCase;
   late DeleteTransactionUseCase deleteUseCase;
@@ -47,11 +38,8 @@ void main() {
 
   setUp(() {
     mockRepo = MockTransactionsRepository();
-    mockBudgetRepo = MockBudgetRepository();
-    mockNotificationService = MockNotificationService();
 
-    addUseCase = AddTransactionUseCase(
-        mockRepo, mockBudgetRepo, mockNotificationService);
+    addUseCase = AddTransactionUseCase(mockRepo);
     deleteUseCase = DeleteTransactionUseCase(mockRepo);
     getGroupedUseCase = GetTransactionsGroupedUseCase(mockRepo);
     getUseCase = GetTransactionsUseCase(mockRepo);
@@ -71,23 +59,19 @@ void main() {
   );
 
   group('AddTransactionUseCase', () {
-    test(
-        'should assign v7 ID and save transaction, then check budget and show NO notification when under 80%',
-        () async {
+    // Not: Bütçe-aşım uyarısı artık BudgetsBloc + BudgetAlertService'te
+    // (bkz. budget_alert_service_test.dart). Bu usecase yalnız deftere yazar.
+    test('should assign v7 ID when id is null and save transaction', () async {
       final txWithoutId = TransactionEntity(
         id: null,
         userId: 'user_123',
         walletId: 'wallet_123',
         title: 'Grocery',
         tag: 'Food',
-        amount:
-            50.0, // 50 spend + 10 spent before = 60. Limit is 100. Ratio = 0.6 (< 0.8)
+        amount: 50.0,
         date: DateTime(2026, 6, 13),
         type: TransactionTypeModel.expense,
       );
-
-      final budget = const BudgetEntity(
-          categoryId: 'Food', limitAmount: 100.0, spentAmount: 10.0);
 
       String? capturedId;
       when(() => mockRepo.addTransaction(any())).thenAnswer((inv) async {
@@ -96,109 +80,25 @@ void main() {
         return Right(tx.id!);
       });
 
-      when(() => mockBudgetRepo.getBudgets())
-          .thenAnswer((_) async => Right([budget]));
-
       final result = await addUseCase(txWithoutId);
-
-      // Yield to let the fire-and-forget async budget check run
-      await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(result, Right<Failure, String>(capturedId!));
       expect(capturedId, isNotNull);
       expect(capturedId, isNotEmpty);
       verify(() => mockRepo.addTransaction(any())).called(1);
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
-      verifyZeroInteractions(mockNotificationService);
     });
 
-    test(
-        'should show warning notification when expense pushes budget to >= 80% and < 100%',
-        () async {
-      final tx = TransactionEntity(
-        id: 'tx_123',
-        userId: 'user_123',
-        walletId: 'wallet_123',
-        title: 'Grocery',
-        tag: 'Food',
-        amount:
-            70.0, // 70 spend + 10 spent before = 80. Limit is 100. Ratio = 0.8 (Warning)
-        date: DateTime(2026, 6, 13),
-        type: TransactionTypeModel.expense,
-      );
-
-      final budget = const BudgetEntity(
-          categoryId: 'Food', limitAmount: 100.0, spentAmount: 10.0);
-
-      when(() => mockRepo.addTransaction(tx))
+    test('should keep provided id and save transaction', () async {
+      when(() => mockRepo.addTransaction(testTransaction))
           .thenAnswer((_) async => const Right('tx_123'));
-      when(() => mockBudgetRepo.getBudgets())
-          .thenAnswer((_) async => Right([budget]));
-      when(() => mockNotificationService.showNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async {});
 
-      final result = await addUseCase(tx);
-
-      // Yield to let the fire-and-forget async budget check run
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+      final result = await addUseCase(testTransaction);
 
       expect(result, const Right<Failure, String>('tx_123'));
-      verify(() => mockRepo.addTransaction(tx)).called(1);
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
-      verify(() => mockNotificationService.showNotification(
-            id: 'Food'.hashCode,
-            title: 'Bütçe Uyarısı',
-            body: 'Dikkat: Bütçenizin %80\'ine ulaştınız.',
-          )).called(1);
+      verify(() => mockRepo.addTransaction(testTransaction)).called(1);
     });
 
-    test(
-        'should show exceeded notification when expense pushes budget to >= 100%',
-        () async {
-      final tx = TransactionEntity(
-        id: 'tx_123',
-        userId: 'user_123',
-        walletId: 'wallet_123',
-        title: 'Grocery',
-        tag: 'Food',
-        amount:
-            95.0, // 95 spend + 10 spent before = 105. Limit is 100. Exceeded!
-        date: DateTime(2026, 6, 13),
-        type: TransactionTypeModel.expense,
-      );
-
-      final budget = const BudgetEntity(
-          categoryId: 'Food', limitAmount: 100.0, spentAmount: 10.0);
-
-      when(() => mockRepo.addTransaction(tx))
-          .thenAnswer((_) async => const Right('tx_123'));
-      when(() => mockBudgetRepo.getBudgets())
-          .thenAnswer((_) async => Right([budget]));
-      when(() => mockNotificationService.showNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async {});
-
-      final result = await addUseCase(tx);
-
-      // Yield to let the fire-and-forget async budget check run
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-
-      expect(result, const Right<Failure, String>('tx_123'));
-      verify(() => mockRepo.addTransaction(tx)).called(1);
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
-      verify(() => mockNotificationService.showNotification(
-            id: 'Food'.hashCode,
-            title: 'Bütçe Aşıldı!',
-            body: 'Dikkat: Bütçenizi aştınız!',
-          )).called(1);
-    });
-
-    test('should return Left(Failure) when repository fail', () async {
+    test('should return Left(Failure) when repository fails', () async {
       const failure = ServerFailure('Database error');
       when(() => mockRepo.addTransaction(testTransaction))
           .thenAnswer((_) async => const Left(failure));
@@ -207,27 +107,6 @@ void main() {
 
       expect(result, const Left<Failure, String>(failure));
       verify(() => mockRepo.addTransaction(testTransaction)).called(1);
-      verifyZeroInteractions(mockBudgetRepo);
-      verifyZeroInteractions(mockNotificationService);
-    });
-
-    test(
-        'should return Right(String) but not crash/notify when budget list loading fails',
-        () async {
-      when(() => mockRepo.addTransaction(testTransaction))
-          .thenAnswer((_) async => const Right('tx_123'));
-      when(() => mockBudgetRepo.getBudgets()).thenAnswer(
-          (_) async => const Left(ServerFailure('Failed loading budgets')));
-
-      final result = await addUseCase(testTransaction);
-
-      // Yield to let the fire-and-forget async budget check run
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-
-      expect(result, const Right<Failure, String>('tx_123'));
-      verify(() => mockRepo.addTransaction(testTransaction)).called(1);
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
-      verifyZeroInteractions(mockNotificationService);
     });
   });
 

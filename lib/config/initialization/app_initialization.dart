@@ -17,6 +17,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
+import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
 import 'package:cunehat/features/investments/presentation/widgets/color_adapter.dart';
 import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_bloc.dart';
 import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart';
@@ -45,6 +46,11 @@ class AppInitialization {
 
       // Initialize NotificationService
       await getIt<NotificationService>().initialize();
+
+      // Bütçe uyarı monitörünü erken canlandır: app-ömürlü olarak işlem
+      // defteri değişimlerini dinler ve eşik aşımında bildirim atar (Budgets
+      // sayfası açık olmasa da). lazySingleton olduğundan bir kez touch edilir.
+      getIt<BudgetAlertMonitor>();
 
       // Kendi-kendini onarım: yanlış userId'li kayıtları cüzdan sahibine
       // çeker (idempotent; hata açılışı bloklamaz — servis içinde yutulur).

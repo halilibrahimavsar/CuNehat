@@ -23,7 +23,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
   /// Defter değiştiğinde aynı sorguyu yenileyebilmek için son yükleme eventi.
   GetTransactionsEvent? _lastQuery;
-  StreamSubscription<void>? _changedSubscription;
+  StreamSubscription<TransactionsChange>? _changedSubscription;
 
   TransactionBloc({
     required this.getTransactionsGroupedUseCase,
@@ -115,7 +115,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           transactions: currentData,
           warning: synced ? null : _syncWarning,
         ));
-        transactionsChangedNotifier.notify();
+        transactionsChangedNotifier.notify(
+          userId: event.transaction.userId,
+          walletId: event.transaction.walletId,
+        );
       },
     );
   }
@@ -154,7 +157,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           transactions: currentData,
           warning: synced ? null : _syncWarning,
         ));
-        transactionsChangedNotifier.notify();
+        transactionsChangedNotifier.notify(
+          userId: event.newTransaction.userId,
+          walletId: event.newTransaction.walletId,
+        );
       },
     );
   }
@@ -204,7 +210,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
               transactions: currentData,
               warning: synced ? null : _syncWarning,
             ));
-            transactionsChangedNotifier.notify();
+            transactionsChangedNotifier.notify(
+              userId: transaction.userId,
+              walletId: transaction.walletId,
+            );
           },
         );
       },

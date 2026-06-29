@@ -15,7 +15,7 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
   final SaveBudgetUsecase _saveBudgetUsecase;
   final DeleteBudgetUsecase _deleteBudgetUsecase;
 
-  StreamSubscription<void>? _transactionsChangedSubscription;
+  StreamSubscription<TransactionsChange>? _transactionsChangedSubscription;
 
   BudgetsBloc(
     this._getBudgetsUsecase,
@@ -28,6 +28,7 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     on<DeleteBudgetEvent>(_onDeleteBudget);
 
     // İşlem defteri değişince harcanan tutarlar bayatlamasın diye yenile.
+    // (Bütçe-aşım uyarısı BudgetAlertMonitor'da; o app-ömürlüdür.)
     _transactionsChangedSubscription =
         transactionsChangedNotifier.stream.listen((_) {
       if (_currentUserId != null && _currentWalletId != null) {

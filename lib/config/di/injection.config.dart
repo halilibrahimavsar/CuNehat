@@ -11,6 +11,8 @@
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
 import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
+import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart'
+    as _iBudgetMon;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
 import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
@@ -171,6 +173,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i777.TransactionsChangedNotifier(),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_iBudgetMon.BudgetAlertMonitor>(
+      () => _iBudgetMon.BudgetAlertMonitor(
+        gh<_i21.GetBudgetsUsecase>(),
+        gh<_i551.NotificationService>(),
+        gh<_i777.TransactionsChangedNotifier>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i530.CsvService>(() => _i530.CsvService());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
@@ -312,11 +322,8 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i551.NotificationService>(),
             ));
-    gh.factory<_i257.AddTransactionUseCase>(() => _i257.AddTransactionUseCase(
-          gh<_i543.TransactionsRepository>(),
-          gh<_i94.BudgetRepository>(),
-          gh<_i551.NotificationService>(),
-        ));
+    gh.factory<_i257.AddTransactionUseCase>(() =>
+        _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.lazySingleton<_i239.WalletMetricsService>(() =>
         _i239.WalletMetricsService(
           walletRepository: gh<_i254.WalletRepository>(),
