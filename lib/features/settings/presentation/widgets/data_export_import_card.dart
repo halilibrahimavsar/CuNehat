@@ -45,6 +45,18 @@ class _DataExportImportCardContent extends StatelessWidget {
                   ? '${l.verilerIceAktarildi} ${l.satirAtlandi(state.skippedRows)}'
                   : l.verilerIceAktarildi;
               IboSnackbar.showSuccess(context, msg);
+            case DataExportMessageType.fullBackupExportSuccess:
+              IboSnackbar.showSuccess(context, l.fullBackupSaved);
+            case DataExportMessageType.fullBackupImportSuccess:
+              final userId = _currentUserId(context);
+              if (userId != null) {
+                context.read<WalletBloc>().add(GetWalletsEvent(userId));
+              }
+              IboSnackbar.showSuccess(context, l.fullBackupRestored);
+            case DataExportMessageType.fullBackupShareSuccess:
+              IboSnackbar.showSuccess(context, l.fullBackupShared);
+            case DataExportMessageType.fullBackupCancelled:
+              IboSnackbar.showInfo(context, l.fullBackupCancelled);
           }
         } else if (state is DataExportImportError) {
           IboSnackbar.showError(context, state.message);
@@ -97,6 +109,108 @@ class _DataExportImportCardContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
+              Text(
+                context.l10n.fullBackup,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          context
+                              .read<DataExportImportCubit>()
+                              .exportFullBackupToDevice();
+                        },
+                  icon: const Icon(Icons.save_alt_rounded),
+                  label: Text(context.l10n.saveFullBackupToDevice),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final confirmed = await IboDialog.showConfirmation(
+                            context,
+                            context.l10n.restoreFullBackupTitle,
+                            context.l10n.restoreFullBackupDesc,
+                            confirmText: context.l10n.geriYukle,
+                            cancelText: context.l10n.cancelLabel,
+                            style: IboDialogStyle(
+                              confirmButtonStyle: TextButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          );
+                          if (confirmed != true || !context.mounted) return;
+
+                          context
+                              .read<DataExportImportCubit>()
+                              .importFullBackupFromDevice(
+                                userId: _currentUserId(context),
+                              );
+                        },
+                  icon: const Icon(Icons.restore_rounded),
+                  label: Text(context.l10n.restoreFullBackupFromDevice),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(color: colorScheme.outline),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          context.read<DataExportImportCubit>().shareFullBackup(
+                                shareText: context.l10n.fullBackupShareText,
+                              );
+                        },
+                  icon: const Icon(Icons.ios_share_rounded),
+                  label: Text(context.l10n.shareFullBackup),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(color: colorScheme.outline),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Divider(color: colorScheme.outlineVariant),
+              const SizedBox(height: 14),
+              Text(
+                context.l10n.transactionCsv,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
@@ -104,14 +218,7 @@ class _DataExportImportCardContent extends StatelessWidget {
                       onPressed: isLoading
                           ? null
                           : () {
-                              final appAuthState =
-                                  context.read<AppAuthBloc>().state;
-                              String? userId;
-                              if (appAuthState is AppAuthenticated) {
-                                userId = appAuthState.user.uid;
-                              } else if (appAuthState is AppAuthLocked) {
-                                userId = appAuthState.user.uid;
-                              }
+                              final userId = _currentUserId(context);
 
                               if (userId != null) {
                                 context
@@ -136,14 +243,7 @@ class _DataExportImportCardContent extends StatelessWidget {
                       onPressed: isLoading
                           ? null
                           : () {
-                              final appAuthState =
-                                  context.read<AppAuthBloc>().state;
-                              String? userId;
-                              if (appAuthState is AppAuthenticated) {
-                                userId = appAuthState.user.uid;
-                              } else if (appAuthState is AppAuthLocked) {
-                                userId = appAuthState.user.uid;
-                              }
+                              final userId = _currentUserId(context);
 
                               final walletState =
                                   context.read<WalletBloc>().state;
@@ -183,5 +283,16 @@ class _DataExportImportCardContent extends StatelessWidget {
         );
       },
     );
+  }
+
+  String? _currentUserId(BuildContext context) {
+    final appAuthState = context.read<AppAuthBloc>().state;
+    if (appAuthState is AppAuthenticated) {
+      return appAuthState.user.uid;
+    }
+    if (appAuthState is AppAuthLocked) {
+      return appAuthState.user.uid;
+    }
+    return null;
   }
 }

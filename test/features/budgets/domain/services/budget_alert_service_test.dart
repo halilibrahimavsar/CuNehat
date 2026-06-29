@@ -84,7 +84,11 @@ void main() {
 
     test('birden çok bütçe: yalnız geçiş yapanlar bildirilir', () {
       final alerts = service.detectCrossings(
-        previous: [budget('a', 100, 50), budget('b', 100, 85), budget('c', 100, 95)],
+        previous: [
+          budget('a', 100, 50),
+          budget('b', 100, 85),
+          budget('c', 100, 95)
+        ],
         current: [
           budget('a', 100, 85), // 50→85 warning
           budget('b', 100, 90), // 85→90 zaten band → yok

@@ -62,7 +62,8 @@ import 'app_localizations_tr.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,7 +84,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -567,7 +570,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{checkFailedPrefix}: {error}'**
-  String msgTextsCheckfailedprefixETostring(Object checkFailedPrefix, Object error);
+  String msgTextsCheckfailedprefixETostring(
+      Object checkFailedPrefix, Object error);
 
   /// No description provided for @msgPINVerificationFailedE.
   ///
@@ -1154,14 +1158,86 @@ abstract class AppLocalizations {
   /// No description provided for @dataExportImport.
   ///
   /// In tr, this message translates to:
-  /// **'İşlem Dışa / İçe Aktar'**
+  /// **'Cihaz Yedeği / CSV'**
   String get dataExportImport;
 
   /// No description provided for @dataExportImportDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Tüm işlemlerinizi standart CSV formatında dışa aktararak diğer uygulamalarda kullanabilir veya yedekleyebilirsiniz.'**
+  /// **'Tam uygulama yedeği kaydedip geri yükleyin veya mevcut cüzdan işlemleri için CSV kullanın.'**
   String get dataExportImportDesc;
+
+  /// No description provided for @fullBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam yedek'**
+  String get fullBackup;
+
+  /// No description provided for @saveFullBackupToDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam Yedeği Cihaza Kaydet'**
+  String get saveFullBackupToDevice;
+
+  /// No description provided for @restoreFullBackupFromDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam Yedeği Cihazdan Geri Yükle'**
+  String get restoreFullBackupFromDevice;
+
+  /// No description provided for @shareFullBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam Yedeği Paylaş'**
+  String get shareFullBackup;
+
+  /// No description provided for @transactionCsv.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem CSV'**
+  String get transactionCsv;
+
+  /// No description provided for @restoreFullBackupTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam yedek geri yüklensin mi?'**
+  String get restoreFullBackupTitle;
+
+  /// No description provided for @restoreFullBackupDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu işlem bu cihazdaki cüzdanları, işlemleri, birikimleri, borçları, alacakları, bütçeleri, tekrar eden işlem şablonlarını, kullanıcıları ve kategorileri değiştirir.'**
+  String get restoreFullBackupDesc;
+
+  /// No description provided for @fullBackupSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam yedek başarıyla kaydedildi.'**
+  String get fullBackupSaved;
+
+  /// No description provided for @fullBackupRestored.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam yedek başarıyla geri yüklendi.'**
+  String get fullBackupRestored;
+
+  /// No description provided for @fullBackupShared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam yedek başarıyla paylaşıldı.'**
+  String get fullBackupShared;
+
+  /// No description provided for @fullBackupCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekleme işlemi iptal edildi.'**
+  String get fullBackupCancelled;
+
+  /// No description provided for @fullBackupShareText.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat tam yedeği'**
+  String get fullBackupShareText;
 
   /// No description provided for @activeWalletRequiredForExport.
   ///
@@ -1191,7 +1267,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{toStringAsFixed} {currencySymbol}'**
-  String valueTostringasfixedCurrencysymbol(Object toStringAsFixed, Object currencySymbol);
+  String valueTostringasfixedCurrencysymbol(
+      Object toStringAsFixed, Object currencySymbol);
 
   /// No description provided for @butcePlanlama.
   ///
@@ -1437,7 +1514,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{totalAmount} (%{toStringAsFixed})'**
-  String formatMoneyItemTotalamountPercent(Object totalAmount, Object toStringAsFixed);
+  String formatMoneyItemTotalamountPercent(
+      Object totalAmount, Object toStringAsFixed);
 
   /// No description provided for @buDonemIcinHenuz.
   ///
@@ -1527,7 +1605,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{startDate} - {endDate}'**
-  String appFormattersDateshortFormatStartdate(Object startDate, Object endDate);
+  String appFormattersDateshortFormatStartdate(
+      Object startDate, Object endDate);
 
   /// No description provided for @filterSelectedcategoriesLengthKategori.
   ///
@@ -1731,7 +1810,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{isProfit}{toStringAsFixed}%'**
-  String isProfitTotalprofitpercentageTostringasfixed(Object isProfit, Object toStringAsFixed);
+  String isProfitTotalprofitpercentageTostringasfixed(
+      Object isProfit, Object toStringAsFixed);
 
   /// No description provided for @templateTitleDuzenliIslemi.
   ///
@@ -2391,7 +2471,8 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'Güncel Fiyat: {price} {currency} (≈{priceTl} ₺)'**
-  String guncelFiyatFormatForeign(Object price, Object currency, Object priceTl);
+  String guncelFiyatFormatForeign(
+      Object price, Object currency, Object priceTl);
 
   /// No description provided for @gecerliYatirimMiktariGirin.
   ///
@@ -3300,7 +3381,8 @@ abstract class AppLocalizations {
   String get duzenliOdemeEklenemedi;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3309,25 +3391,25 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'tr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en': return AppLocalizationsEn();
-    case 'tr': return AppLocalizationsTr();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'tr':
+      return AppLocalizationsTr();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

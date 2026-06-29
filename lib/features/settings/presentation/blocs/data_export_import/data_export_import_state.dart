@@ -4,6 +4,10 @@ import 'package:equatable/equatable.dart';
 enum DataExportMessageType {
   exportSuccess,
   importSuccess,
+  fullBackupExportSuccess,
+  fullBackupImportSuccess,
+  fullBackupShareSuccess,
+  fullBackupCancelled,
   noTransactionsToExport,
   noValidTransactionsInCsv,
 }

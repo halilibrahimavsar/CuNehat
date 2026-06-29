@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/csv_service.dart';
+import 'package:cunehat/core/services/local_backup_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
@@ -13,6 +14,7 @@ import 'data_export_import_state.dart';
 @injectable
 class DataExportImportCubit extends Cubit<DataExportImportState> {
   final CsvService csvService;
+  final LocalBackupService localBackupService;
   final TransactionsRepository transactionsRepository;
   final WalletRepository walletRepository;
   final WalletMetricsService walletMetricsService;
@@ -20,11 +22,42 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
 
   DataExportImportCubit({
     required this.csvService,
+    required this.localBackupService,
     required this.transactionsRepository,
     required this.walletRepository,
     required this.walletMetricsService,
     required this.transactionsChangedNotifier,
   }) : super(DataExportImportInitial());
+
+  Future<void> exportFullBackupToDevice() async {
+    emit(DataExportImportLoading());
+    final result = await localBackupService.exportToDevice();
+    _emitLocalBackupResult(
+      result,
+      successType: DataExportMessageType.fullBackupExportSuccess,
+    );
+  }
+
+  Future<void> shareFullBackup({String? shareText}) async {
+    emit(DataExportImportLoading());
+    final result = await localBackupService.shareBackup(shareText: shareText);
+    _emitLocalBackupResult(
+      result,
+      successType: DataExportMessageType.fullBackupShareSuccess,
+    );
+  }
+
+  Future<void> importFullBackupFromDevice({String? userId}) async {
+    emit(DataExportImportLoading());
+    final result = await localBackupService.importFromDevice();
+    if (result.isSuccess) {
+      transactionsChangedNotifier.notify(userId: userId);
+    }
+    _emitLocalBackupResult(
+      result,
+      successType: DataExportMessageType.fullBackupImportSuccess,
+    );
+  }
 
   Future<void> exportTransactions(String userId, String walletId,
       {String? shareText}) async {
@@ -110,6 +143,26 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
       });
     } catch (e) {
       emit(DataExportImportError(e.toString()));
+    }
+  }
+
+  void _emitLocalBackupResult(
+    LocalBackupResult result, {
+    required DataExportMessageType successType,
+  }) {
+    switch (result.status) {
+      case LocalBackupStatus.success:
+        emit(DataExportImportSuccess(successType));
+        return;
+      case LocalBackupStatus.cancelled:
+        emit(const DataExportImportSuccess(
+          DataExportMessageType.fullBackupCancelled,
+        ));
+        return;
+      case LocalBackupStatus.failure:
+        emit(DataExportImportError(
+            result.error?.toString() ?? 'Yedekleme işlemi tamamlanamadı.'));
+        return;
     }
   }
 }

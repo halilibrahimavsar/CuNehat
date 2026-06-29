@@ -11,10 +11,13 @@ import 'package:cunehat/features/settings/presentation/blocs/data_export_import/
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:cunehat/core/services/local_backup_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCsvService extends Mock implements CsvService {}
+
+class MockLocalBackupService extends Mock implements LocalBackupService {}
 
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
@@ -28,6 +31,7 @@ void main() {
   late MockTransactionsRepository mockTxRepo;
   late MockWalletRepository mockWalletRepo;
   late MockWalletMetricsService mockMetricsService;
+  late MockLocalBackupService mockLocalBackupService;
   late TransactionsChangedNotifier changedNotifier;
   late DataExportImportCubit cubit;
 
@@ -65,10 +69,12 @@ void main() {
     mockTxRepo = MockTransactionsRepository();
     mockWalletRepo = MockWalletRepository();
     mockMetricsService = MockWalletMetricsService();
+    mockLocalBackupService = MockLocalBackupService();
     changedNotifier = TransactionsChangedNotifier();
 
     cubit = DataExportImportCubit(
       csvService: mockCsvService,
+      localBackupService: mockLocalBackupService,
       transactionsRepository: mockTxRepo,
       walletRepository: mockWalletRepo,
       walletMetricsService: mockMetricsService,

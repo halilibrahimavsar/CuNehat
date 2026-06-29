@@ -53,6 +53,42 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'walletId': walletId,
+      'title': title,
+      'tag': tag,
+      'amount': amount,
+      'type': type.name,
+      'frequency': frequency.name,
+      'nextExecutionDate': nextExecutionDate.toIso8601String(),
+      'isActive': isActive,
+    };
+  }
+
+  factory RecurringTransactionModel.fromJson(Map<String, dynamic> json) {
+    return RecurringTransactionModel(
+      id: json['id'] as String,
+      userId: json['userId'] as String? ?? 'local_user',
+      walletId: json['walletId'] as String,
+      title: json['title'] as String? ?? '',
+      tag: json['tag'] as String? ?? '',
+      amount: (json['amount'] as num? ?? 0).toDouble(),
+      type: TransactionTypeModel.values.firstWhere(
+        (type) => type.name == json['type'],
+        orElse: () => TransactionTypeModel.expense,
+      ),
+      frequency: RecurringFrequency.values.firstWhere(
+        (frequency) => frequency.name == json['frequency'],
+        orElse: () => RecurringFrequency.monthly,
+      ),
+      nextExecutionDate: DateTime.parse(json['nextExecutionDate'] as String),
+      isActive: json['isActive'] as bool? ?? true,
+    );
+  }
+
   @override
   @HiveField(0)
   String get id => super.id;

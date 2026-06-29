@@ -4,6 +4,10 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/google_drive_backup_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class GoogleDriveBackupCard extends StatefulWidget {
@@ -123,6 +127,19 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
     final success = await _backupService.restore();
     if (success) {
       if (mounted) {
+        final authState = context.read<AppAuthBloc>().state;
+        String? userId;
+        if (authState is AppAuthenticated) {
+          userId = authState.user.uid;
+        } else if (authState is AppAuthLocked) {
+          userId = authState.user.uid;
+        }
+
+        getIt<TransactionsChangedNotifier>().notify(userId: userId);
+        if (userId != null) {
+          context.read<WalletBloc>().add(GetWalletsEvent(userId));
+        }
+
         _showSnackBar(
           context.l10n.dataRestoredSuccess,
           Colors.green,

@@ -33,4 +33,18 @@ class BudgetModel extends HiveObject {
       limitAmount: limitAmount,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'categoryId': categoryId,
+      'limitAmount': limitAmount,
+    };
+  }
+
+  factory BudgetModel.fromJson(Map<String, dynamic> json) {
+    return BudgetModel(
+      categoryId: json['categoryId'] as String? ?? '',
+      limitAmount: (json['limitAmount'] as num? ?? 0).toDouble(),
+    );
+  }
 }
