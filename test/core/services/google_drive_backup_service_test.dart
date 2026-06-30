@@ -339,4 +339,80 @@ void main() {
       expect(result, false);
     });
   });
+
+  group('deleteBackup', () {
+    void setupAuth() {
+      final mockAccount = MockGoogleSignInAccount();
+      when(() => mockGoogleSignIn.signIn())
+          .thenAnswer((_) async => mockAccount);
+      when(() => mockAccount.authHeaders)
+          .thenAnswer((_) async => {'Authorization': 'Bearer test'});
+    }
+
+    test('returns false when signIn fails', () async {
+      when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
+
+      final result = await service.deleteBackup();
+
+      expect(result, false);
+    });
+
+    test('deletes the file and returns true when backup exists', () async {
+      setupAuth();
+      when(() => mockHttpClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer(
+        (_) async => http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ],
+          }),
+          200,
+        ),
+      );
+      when(() => mockHttpClient.delete(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => http.Response('', 204));
+
+      final result = await service.deleteBackup();
+
+      expect(result, true);
+      verify(() => mockHttpClient.delete(any(), headers: any(named: 'headers')))
+          .called(1);
+    });
+
+    test('returns true (no-op) and does not call delete when no backup exists',
+        () async {
+      setupAuth();
+      when(() => mockHttpClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer(
+              (_) async => http.Response(jsonEncode({'files': []}), 200));
+
+      final result = await service.deleteBackup();
+
+      expect(result, true);
+      verifyNever(
+          () => mockHttpClient.delete(any(), headers: any(named: 'headers')));
+    });
+
+    test('returns false when delete request fails', () async {
+      setupAuth();
+      when(() => mockHttpClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer(
+        (_) async => http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ],
+          }),
+          200,
+        ),
+      );
+      when(() => mockHttpClient.delete(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => http.Response('', 500));
+
+      final result = await service.deleteBackup();
+
+      expect(result, false);
+    });
+  });
 }

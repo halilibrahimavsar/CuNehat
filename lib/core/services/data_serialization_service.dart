@@ -69,6 +69,28 @@ class DataSerializationService {
   @visibleForTesting
   DataSerializationService.withHive(this._hive);
 
+  /// Tüm yerel veriyi siler: tüm Hive kutuları (cüzdan/işlem/yatırım/borç/
+  /// alacak/bütçe/tekrarlayan/kullanıcı) + yedeklenebilir kategori tercihleri.
+  /// "Tüm veriyi sil" gizlilik özelliği içindir. GERİ ALINAMAZ; çağıran onay
+  /// almalıdır. Boş yedeği geri yüklemekle aynı temizleme yolunu kullanır.
+  Future<void> clearAllLocalData() async {
+    await (await _hive.openBox<WalletModel>('wallets')).clear();
+    await (await _hive.openBox<TransactionModel>('transactions')).clear();
+    await (await _hive.openBox<InvestmentModel>('investments_box')).clear();
+    await (await _hive.openBox<DebtModel>('debts')).clear();
+    await (await _hive.openBox<ReceivableModel>('receivables')).clear();
+    await (await _hive.openBox<BudgetModel>('budgets_box')).clear();
+    await (await _hive
+            .openBox<RecurringTransactionModel>('recurring_transactions_box'))
+        .clear();
+    await (await _hive.openBox<Map>('users')).clear();
+
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in CategoryService.backupKeys) {
+      await prefs.remove(key);
+    }
+  }
+
   Future<String> exportDataToJson() async {
     final walletBox = await _hive.openBox<WalletModel>('wallets');
     final transactionBox =

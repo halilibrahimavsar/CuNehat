@@ -9,6 +9,7 @@ import 'package:cunehat/features/settings/presentation/widgets/language_selector
 import 'package:cunehat/features/settings/presentation/widgets/user_profile_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/google_drive_backup_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/data_export_import_card.dart';
+import 'package:cunehat/features/settings/presentation/widgets/data_privacy_card.dart';
 
 /// Main settings page, styled with premium, theme-aware AppCards.
 class SettingsPage extends StatelessWidget {
@@ -83,6 +84,10 @@ class SettingsPage extends StatelessWidget {
                   const GoogleDriveBackupCard(),
                   const SizedBox(height: 16),
                   const DataExportImportCard(),
+                  const SizedBox(height: 24),
+                  SettingsHeader(title: 'Gizlilik & Veri'),
+                  const SizedBox(height: 8),
+                  const DataPrivacyCard(),
                   const SizedBox(height: 24),
                   SettingsHeader(title: context.l10n.about),
                   const SizedBox(height: 8),

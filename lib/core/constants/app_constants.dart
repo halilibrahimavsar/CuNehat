@@ -91,4 +91,5 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String budgets = '/budgets';
   static const String recurringTemplates = '/recurring-templates';
+  static const String privacyPolicy = '/privacy-policy';
 }

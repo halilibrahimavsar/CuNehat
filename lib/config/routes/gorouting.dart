@@ -5,6 +5,7 @@ import 'package:cunehat/core/shared/animations/page_transitions_views.dart';
 import 'package:cunehat/features/main_feature/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/local_auth_settings_page.dart';
+import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -110,6 +111,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           return CubeInTransition(
             key: state.pageKey,
             child: const LocalAuthSettingsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.privacyPolicy,
+        pageBuilder: (context, state) {
+          return CubeInTransition(
+            key: state.pageKey,
+            child: const PrivacyPolicyPage(),
           );
         },
       ),

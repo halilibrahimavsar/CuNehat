@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -291,8 +292,7 @@ class DebtListSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      NumberFormat.currency(symbol: '₺')
-                          .format(debt.remainingAmount),
+                      AppFormatters.currency.format(debt.remainingAmount),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: Colors.redAccent,
@@ -583,7 +583,7 @@ class ReceivableListSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  NumberFormat.currency(symbol: '₺').format(receivable.amount),
+                  AppFormatters.currency.format(receivable.amount),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,

@@ -60,6 +60,33 @@ class GoogleDriveBackupService {
     _currentUser = null;
   }
 
+  /// Kullanıcının Drive'ındaki yedek dosyasını (cunehat_backup.json) siler.
+  /// Dosya zaten yoksa silinecek bir şey olmadığından `true` döner.
+  /// Hata bacağında `false`, fırlatmaz.
+  Future<bool> deleteBackup() async {
+    if (_currentUser == null) {
+      final signedIn = await signIn();
+      if (!signedIn) return false;
+    }
+
+    try {
+      final headers = await _currentUser!.authHeaders;
+      final fileId = await _findBackupFileId(headers);
+      if (fileId == null) return true; // yedek yok → no-op başarı
+
+      final deleteUrl = Uri.parse(
+        'https://www.googleapis.com/drive/v3/files/$fileId',
+      );
+      final response = await _httpClient.delete(deleteUrl, headers: headers);
+
+      // 204 No Content = başarılı silme; 200 de kabul edilir.
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e, st) {
+      debugPrint('GoogleDriveBackupService.deleteBackup error: $e\n$st');
+      return false;
+    }
+  }
+
   /// Search for cunehat_backup.json in the AppData folder of user's Google Drive.
   /// Returns the file ID if found, otherwise null.
   Future<String?> _findBackupFileId(Map<String, String> headers) async {

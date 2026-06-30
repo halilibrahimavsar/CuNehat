@@ -23,6 +23,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// HomePage with vertical list navigation
 ///
@@ -60,6 +62,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     // Bildirim izinlerini iste
     _requestNotificationPermissions();
+
+    // İlk açılışta gizlilik bilgilendirmesi/onamı (yalnız bir kez).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowPrivacyConsent();
+    });
   }
 
   Future<void> _requestNotificationPermissions() async {
@@ -68,6 +75,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     } catch (e) {
       debugPrint('Failed to request notification permissions: $e');
     }
+  }
+
+  static const String _privacyConsentKey = 'privacy_consent_shown';
+
+  Future<void> _maybeShowPrivacyConsent() async {
+    final prefs = getIt<SharedPreferences>();
+    if (prefs.getBool(_privacyConsentKey) ?? false) return;
+    if (!mounted) return;
+    await showPrivacyConsentDialog(context);
+    await prefs.setBool(_privacyConsentKey, true);
   }
 
   /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in

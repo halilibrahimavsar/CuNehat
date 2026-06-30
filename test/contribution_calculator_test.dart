@@ -37,6 +37,15 @@ void main() {
       expect(updated.currentValue, 50000);
       expect(updated.profit, 5000); // 45000-40000 → korunur
     });
+
+    test('ondalık katkıda kâr değişmezi tolerans içinde korunur', () {
+      final base = _inv(amount: 40000.1, currentValue: 45000.2, symbol: null);
+      final originalProfit = base.profit;
+      final updated = applyCashContribution(base, 0.1);
+      expect(updated.amount, closeTo(40000.2, 1e-9));
+      expect(updated.currentValue, closeTo(45000.3, 1e-9));
+      expect(updated.profit, closeTo(originalProfit, 1e-9));
+    });
   });
 
   group('applyAssetPurchase (Mod B)', () {

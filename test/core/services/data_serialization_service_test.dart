@@ -133,6 +133,42 @@ void main() {
         'custom-cats');
   });
 
+  test('clearAllLocalData tüm kutuları ve kategori tercihlerini temizler',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(CategoryService.backupKeys.first, 'custom-cats');
+
+    await Hive.box<WalletModel>('wallets').put('w1', _wallet());
+    await Hive.box<TransactionModel>('transactions').put('t1', _transaction());
+    await Hive.box<InvestmentModel>('investments_box').put('i1', _investment());
+    await Hive.box<DebtModel>('debts').put('d1', _debt());
+    await Hive.box<ReceivableModel>('receivables').put('r1', _receivable());
+    await Hive.box<BudgetModel>('budgets_box').put(
+      'food',
+      BudgetModel(categoryId: 'food', limitAmount: 1200),
+    );
+    await Hive.box<RecurringTransactionModel>('recurring_transactions_box').put(
+      'rec1',
+      _recurring(),
+    );
+    await Hive.box<Map>('users').put('u1', {'activeWalletId': 'w1'});
+
+    await service.clearAllLocalData();
+
+    expect(Hive.box<WalletModel>('wallets').values, isEmpty);
+    expect(Hive.box<TransactionModel>('transactions').values, isEmpty);
+    expect(Hive.box<InvestmentModel>('investments_box').values, isEmpty);
+    expect(Hive.box<DebtModel>('debts').values, isEmpty);
+    expect(Hive.box<ReceivableModel>('receivables').values, isEmpty);
+    expect(Hive.box<BudgetModel>('budgets_box').values, isEmpty);
+    expect(
+      Hive.box<RecurringTransactionModel>('recurring_transactions_box').values,
+      isEmpty,
+    );
+    expect(Hive.box<Map>('users').values, isEmpty);
+    expect(prefs.getString(CategoryService.backupKeys.first), isNull);
+  });
+
   test('restores old backups with missing v3 sections as empty data', () async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(CategoryService.backupKeys.first, 'old-cats');

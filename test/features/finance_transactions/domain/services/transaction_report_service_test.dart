@@ -146,4 +146,45 @@ void main() {
       expect(incomes.map((c) => c.name), ['inc']);
     });
   });
+
+  // `double` toplama mikro sapma üretir (ör. 0.1+0.2 = 0.30000000000000004),
+  // ama tolerans içinde kalır ve 2-hane gösterimde doğru yuvarlanır. Bu grup
+  // finansal toplamların kullanıcıya doğru yansıdığını sabitler.
+  group('calculateTotals — kayan-nokta sağlamlığı', () {
+    test('ondalık gelir/gider toplamı tolerans içinde ve 2-hane gösterimde doğru',
+        () {
+      final t = service.calculateTotals([
+        tx(DateTime(2026, 6, 1), 0.1, TransactionTypeModel.income),
+        tx(DateTime(2026, 6, 1), 0.2, TransactionTypeModel.income),
+        tx(DateTime(2026, 6, 1), 0.3, TransactionTypeModel.income),
+        tx(DateTime(2026, 6, 2), 0.1, TransactionTypeModel.expense),
+      ]);
+      expect(t.totalIncome, closeTo(0.6, 1e-9));
+      expect(t.totalExpense, closeTo(0.1, 1e-9));
+      expect(t.net, closeTo(0.5, 1e-9));
+      expect(t.net.toStringAsFixed(2), '0.50');
+    });
+
+    test('1000 kuruşluk gider toplamı 2-hane gösterimde sapmaz', () {
+      final txns = List.generate(
+        1000,
+        (_) => tx(DateTime(2026, 6, 1), 0.01, TransactionTypeModel.expense),
+      );
+      final t = service.calculateTotals(txns);
+      expect(t.totalExpense, closeTo(10.0, 1e-6)); // ham ~9.999999999999831
+      expect(t.totalExpense.toStringAsFixed(2), '10.00');
+    });
+
+    test('kategori dağılımı ondalık toplamı tolerans içinde', () {
+      final result = service.buildCategoryBreakdown(
+        [
+          tx(DateTime(2026, 6, 1), 0.1, TransactionTypeModel.expense, tag: 'a'),
+          tx(DateTime(2026, 6, 2), 0.2, TransactionTypeModel.expense, tag: 'a'),
+        ],
+        isExpense: true,
+      );
+      expect(result.single.totalAmount, closeTo(0.3, 1e-9));
+      expect(result.single.totalAmount.toStringAsFixed(2), '0.30');
+    });
+  });
 }

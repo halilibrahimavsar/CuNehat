@@ -153,6 +153,38 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
     setState(() => _isLoading = false);
   }
 
+  Future<void> _deleteBackup() async {
+    final confirm = await IboDialog.showConfirmation(
+      context,
+      context.l10n.deleteBackup,
+      context.l10n.deleteBackupDesc,
+      confirmText: context.l10n.deleteBackup,
+      cancelText: context.l10n.cancelLabel,
+      style: IboDialogStyle(
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.error,
+        ),
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+    final success = await _backupService.deleteBackup();
+    if (success) {
+      await _prefs.remove(_lastBackupKey);
+      if (mounted) {
+        setState(() => _lastBackup = null);
+        _showSnackBar(context.l10n.backupDeleted, Colors.green);
+      }
+    } else {
+      if (mounted) {
+        _showSnackBar(context.l10n.deleteBackupFailed, Colors.red);
+      }
+    }
+    if (mounted) setState(() => _isLoading = false);
+  }
+
   String _formatDateTime(DateTime dt) {
     return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
@@ -324,6 +356,21 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
               ],
             ),
             const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: _isLoading ? null : _deleteBackup,
+                icon: const Icon(Icons.delete_outline_rounded,
+                    color: Colors.redAccent),
+                label: Text(
+                  context.l10n.deleteBackup,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
             SizedBox(
               width: double.infinity,
               child: TextButton.icon(

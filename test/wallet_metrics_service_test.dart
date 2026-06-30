@@ -1025,4 +1025,72 @@ void main() {
       expect(results, [true, true]);
     });
   });
+
+  group('kayan-nokta / çoklu para birimi sağlamlığı', () {
+    test('ondalık nakit hareketleri sonrası bakiye 2-hane gösterimde doğru',
+        () async {
+      wallets.store['w'] = _wallet(id: 'w', balance: 0, openingBalance: 0);
+
+      for (var i = 0; i < 10; i++) {
+        await service.recordCashMovement(
+          walletId: 'w',
+          userId: 'u',
+          amount: 0.1,
+          isIncome: true,
+          title: 'x',
+          tag: 't',
+        );
+      }
+
+      final b = wallets.store['w']!.balance;
+      expect(b, closeTo(1.0, 1e-9)); // ham toplam ~0.9999999999999999
+      expect(b.toStringAsFixed(2), '1.00');
+    });
+
+    test(
+        'syncInvestment farklı currency etiketli yatırımları currentValue (TL) '
+        'üzerinden toplar', () async {
+      final investments = FakeInvestmentRepository();
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: investments,
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+
+      wallets.store['w'] = _wallet(id: 'w');
+      // currency yalnız fiyat-kaynağı etiketi; currentValue daima TL.
+      investments.store.add(InvestmentEntity(
+        id: 'usd',
+        userId: 'u',
+        walletId: 'w',
+        name: 'Apple',
+        amount: 1000,
+        currentValue: 2500, // TL karşılığı
+        type: InvestmentType.stock,
+        color: const Color(0xFF000000),
+        dateAdded: DateTime(2026, 1, 1),
+        currency: 'USD',
+      ));
+      investments.store.add(InvestmentEntity(
+        id: 'try',
+        userId: 'u',
+        walletId: 'w',
+        name: 'Altın',
+        amount: 5000,
+        currentValue: 5200,
+        type: InvestmentType.gold,
+        color: const Color(0xFF000000),
+        dateAdded: DateTime(2026, 1, 1),
+        currency: 'TRY',
+      ));
+
+      await svc.syncInvestment('w');
+
+      // Toplam currency'den bağımsız: 2500 + 5200 = 7700 (TL).
+      expect(wallets.store['w']!.investment, 7700);
+    });
+  });
 }
