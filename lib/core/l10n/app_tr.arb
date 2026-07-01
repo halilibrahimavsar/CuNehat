@@ -709,5 +709,17 @@
       "title": { "type": "String" }
     }
   },
-  "duzenliOdemeEklenemedi": "Düzenli ödeme eklenemedi"
+  "duzenliOdemeEklenemedi": "Düzenli ödeme eklenemedi",
+  "borcBakiyeyeEklenecekBaslik": "Borç bakiyene eklenecek",
+  "borcBakiyeyeEklenecekGovde": "Bu borcun ana parası ({tutar}) cüzdan bakiyene gelir olarak eklenir. Geri ödemelerini ve harcamalarını manuel ekleyebilirsin.",
+  "@borcBakiyeyeEklenecekGovde": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+  "devamEt": "Devam et",
+  "bugun": "Bugün",
+  "islemBuguneAyarliIpucu": "Tarih bugüne ayarlı — başka bir güne eklemek için tarihe dokun.",
+  "mevcutDegerAciklama": "Yatırımın bugünkü piyasa değeri; 'Hesapla' ile güncel fiyattan güncellenir.",
+  "toplamMaliyetAciklama": "Bu yatırıma ödediğin toplam tutar (maliyetin). 'Hesapla' bunu değiştirmez; kâr/zarar bununla hesaplanır."
 }

@@ -151,7 +151,8 @@ void main() {
   // ama tolerans içinde kalır ve 2-hane gösterimde doğru yuvarlanır. Bu grup
   // finansal toplamların kullanıcıya doğru yansıdığını sabitler.
   group('calculateTotals — kayan-nokta sağlamlığı', () {
-    test('ondalık gelir/gider toplamı tolerans içinde ve 2-hane gösterimde doğru',
+    test(
+        'ondalık gelir/gider toplamı tolerans içinde ve 2-hane gösterimde doğru',
         () {
       final t = service.calculateTotals([
         tx(DateTime(2026, 6, 1), 0.1, TransactionTypeModel.income),

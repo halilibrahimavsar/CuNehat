@@ -339,6 +339,41 @@ class InvestmentCostEditWarning extends StatelessWidget {
   }
 }
 
+/// Bir alanın altında gösterilen küçük açıklama metni (info ikon + metin).
+/// "Mevcut Değer" / "Toplam Maliyet" gibi alanların ne anlama geldiğini
+/// kullanıcıya açıklamak için kullanılır.
+class InvestmentHintCaption extends StatelessWidget {
+  final String text;
+
+  const InvestmentHintCaption(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded,
+              size: 13, color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.3,
+                color: cs.onSurfaceVariant.withValues(alpha: 0.9),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Hata şeridi. Türden bağımsız.
 class InvestmentErrorBanner extends StatelessWidget {
   final String error;

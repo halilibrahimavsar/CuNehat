@@ -270,6 +270,19 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         controller: _currentValueController,
                         onChanged: _clearError,
                       ),
+                      InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
+                      const SizedBox(height: 14),
+                      // Toplam Maliyet: Mevcut Değer'in hemen altında durur.
+                      InvestmentFilledField(
+                        controller: _amountController,
+                        hint: context.l10n.maliyetYatirilanAnaPara,
+                        icon: Icons.payments_rounded,
+                        accent: _accent,
+                        onChanged: _clearError,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                      ),
+                      InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(
                           context.l10n.altinTuruVeOtomatikFiyat),
@@ -294,16 +307,6 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         icon: Icons.notes_rounded,
                         accent: _accent,
                         onChanged: _clearError,
-                      ),
-                      const SizedBox(height: 14),
-                      InvestmentFilledField(
-                        controller: _amountController,
-                        hint: context.l10n.maliyetYatirilanAnaPara,
-                        icon: Icons.payments_rounded,
-                        accent: _accent,
-                        onChanged: _clearError,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
                       ),
                       const SizedBox(height: 14),
                       InvestmentFilledField(

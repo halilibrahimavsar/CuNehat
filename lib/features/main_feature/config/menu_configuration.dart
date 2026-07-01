@@ -115,14 +115,14 @@ class MenuConfigs {
       sliderState: SliderState.debt,
       miniButtons: [
         MiniButtonConfig(
-          label: 'Borç',
-          icon: Icons.trending_down,
-          actionType: 'add_debt',
-        ),
-        MiniButtonConfig(
           label: 'Alacak',
           icon: Icons.trending_up,
           actionType: 'add_receivable',
+        ),
+        MiniButtonConfig(
+          label: 'Borç',
+          icon: Icons.trending_down,
+          actionType: 'add_debt',
         ),
       ],
       subMenus: [

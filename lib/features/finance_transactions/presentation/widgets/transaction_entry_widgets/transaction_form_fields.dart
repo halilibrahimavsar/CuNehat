@@ -157,6 +157,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                       ),
                       const SizedBox(height: 22),
                       WhenRow(controller: _c, accent: _accent),
+                      if (!_isEdit) _TodayDateHint(controller: _c),
                       const SizedBox(height: 22),
                       _RecurringRow(
                           controller: _c, accent: _accent, isEdit: _isEdit),
@@ -241,6 +242,51 @@ class _TitleField extends StatelessWidget {
           borderSide: BorderSide(color: accent, width: 1.6),
         ),
       ),
+    );
+  }
+}
+
+// ============================================================ Date hint
+
+/// Yeni işlem formunda, tarih bugüne ayarlıyken gösterilen küçük ipucu.
+/// Kullanıcı takvimde başka bir gün seçili sanıp yanılmasın diye uyarır;
+/// tarih değiştirilince (bugün değilse) otomatik gizlenir.
+class _TodayDateHint extends StatelessWidget {
+  final TransactionFormController controller;
+
+  const _TodayDateHint({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<DateTime>(
+      valueListenable: controller.dateTime,
+      builder: (context, when, _) {
+        final now = DateTime.now();
+        final isToday = when.year == now.year &&
+            when.month == now.month &&
+            when.day == now.day;
+        if (!isToday) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline_rounded,
+                  size: 14, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  context.l10n.islemBuguneAyarliIpucu,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.9),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

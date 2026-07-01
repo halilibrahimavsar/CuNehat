@@ -36,7 +36,8 @@ void main() {
   // tarihler de doğru hesaplanır.
   group('addMonthsClamped — negatif ay', () {
     test('Mart 15 − 2 ay → Ocak 15', () {
-      expect(addMonthsClamped(DateTime(2026, 3, 15), -2), DateTime(2026, 1, 15));
+      expect(
+          addMonthsClamped(DateTime(2026, 3, 15), -2), DateTime(2026, 1, 15));
     });
 
     test('Ocak 15 − 1 ay → önceki yıl Aralık 15 (yıl alt-taşması)', () {
@@ -45,11 +46,13 @@ void main() {
     });
 
     test('31 Mart − 1 ay → 28 Şubat (geriye giderken de kenetlenir)', () {
-      expect(addMonthsClamped(DateTime(2026, 3, 31), -1), DateTime(2026, 2, 28));
+      expect(
+          addMonthsClamped(DateTime(2026, 3, 31), -1), DateTime(2026, 2, 28));
     });
 
     test('31 Mart − 1 ay → 29 Şubat (artık yıl)', () {
-      expect(addMonthsClamped(DateTime(2028, 3, 31), -1), DateTime(2028, 2, 29));
+      expect(
+          addMonthsClamped(DateTime(2028, 3, 31), -1), DateTime(2028, 2, 29));
     });
 
     test('Haziran 10 − 12 ay → önceki yıl Haziran 10', () {

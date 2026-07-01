@@ -191,6 +191,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap save
+    await tester.ensureVisible(find.text('Kaydet'));
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
 
@@ -313,6 +314,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap save
+    await tester.ensureVisible(find.text('Kaydet'));
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
 

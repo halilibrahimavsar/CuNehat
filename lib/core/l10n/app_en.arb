@@ -694,5 +694,17 @@
   "kezTekrarlandi": "Repeated {count} times",
   "duzenliOdemeOlarakEkle": "Add as recurring",
   "duzenliOdemeEklendi": "'{title}' added to recurring payments",
-  "duzenliOdemeEklenemedi": "Couldn't add recurring payment"
+  "duzenliOdemeEklenemedi": "Couldn't add recurring payment",
+  "borcBakiyeyeEklenecekBaslik": "Debt will be added to your balance",
+  "borcBakiyeyeEklenecekGovde": "This debt's principal ({tutar}) will be added to your wallet balance as income. You can add your repayments and expenses manually.",
+  "@borcBakiyeyeEklenecekGovde": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+  "devamEt": "Continue",
+  "bugun": "Today",
+  "islemBuguneAyarliIpucu": "The date is set to today — tap the date to add it to another day.",
+  "mevcutDegerAciklama": "The investment's current market value; updated from the live price with 'Calculate'.",
+  "toplamMaliyetAciklama": "The total you paid for this investment (your cost). 'Calculate' doesn't change it; profit/loss is computed from it."
 }

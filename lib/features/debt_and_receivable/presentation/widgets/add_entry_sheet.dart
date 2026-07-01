@@ -162,7 +162,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     return null;
   }
 
-  void _save() {
+  Future<void> _save() async {
     final err = _validate();
     if (err != null) {
       setState(() => _error = err);
@@ -253,7 +253,13 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           dueDate: dueDate,
           expectedTotalAmount: expectedTotal,
         );
+        // Borç ana parası cüzdan bakiyesine gelir olarak yansır; kullanıcı
+        // bunu beklemeyebileceğinden kaydetmeden önce bilgilendirip onay al.
+        final confirmed = await _confirmDebtToBalance(amount);
+        if (!mounted || !confirmed) return;
         context.read<DebtBloc>().add(AddDebtEvent(debt));
+        Navigator.pop(context);
+        return;
       }
     } else {
       if (_isEditing && widget.receivableToEdit != null) {
@@ -282,6 +288,34 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
+  }
+
+  /// Yeni borç kaydedilmeden önce, ana paranın cüzdan bakiyesine gelir olarak
+  /// ekleneceğini açıklayan onay diyaloğu. Onaylanırsa `true` döner.
+  Future<bool> _confirmDebtToBalance(double amount) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.borcBakiyeyeEklenecekBaslik),
+        content: Text(
+          context.l10n.borcBakiyeyeEklenecekGovde(
+            AppFormatters.currency.format(amount),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.vazgec),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: _accent),
+            child: Text(context.l10n.devamEt),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   @override
@@ -315,6 +349,44 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       _buildAmountCard(cs),
                       const SizedBox(height: 20),
                       if (_isDebt) ...[
+                        // Vade ve Detaylar: borç türüne göre değişen tür-özel
+                        // alanlar. Tutar kartının canlı geri ödeme özeti zaten
+                        // tür-bağımlı olduğundan bu bölüm de tür seçiminin
+                        // üstünde tutarlı durur; personalDebt'te gizlenir.
+                        if (_selectedDebtType != DebtType.personalDebt) ...[
+                          _sectionLabel(context.l10n.vadeVeDetaylarLabel, cs),
+                          const SizedBox(height: 10),
+                          if (_selectedDebtType == DebtType.bankLoan) ...[
+                            BankLoanModeToggle(
+                              isMonthly: _isBankLoanMonthly,
+                              accent: _accent,
+                              onChanged: (v) =>
+                                  setState(() => _isBankLoanMonthly = v),
+                            ),
+                            const SizedBox(height: 10),
+                            if (!_isBankLoanMonthly) ...[
+                              BankTaxSwitch(
+                                value: _includeBankTaxes,
+                                accent: _accent,
+                                onChanged: (v) =>
+                                    setState(() => _includeBankTaxes = v),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                          ],
+                          if (_selectedDebtType ==
+                              DebtType.installmentDebt) ...[
+                            InstallmentTypeToggle(
+                              isAmortized: _isInstallmentAmortized,
+                              accent: _accent,
+                              onChanged: (v) =>
+                                  setState(() => _isInstallmentAmortized = v),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          _buildDynamicDetails(cs),
+                          const SizedBox(height: 20),
+                        ],
                         _sectionLabel(context.l10n.borcTuruLabel, cs),
                         const SizedBox(height: 10),
                         DebtTypeChips(
@@ -354,40 +426,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           date: _selectedDate,
                           onTap: _pickDate,
                         ),
-                        if (_selectedDebtType != DebtType.personalDebt) ...[
-                          const SizedBox(height: 20),
-                          _sectionLabel(context.l10n.vadeVeDetaylarLabel, cs),
-                          const SizedBox(height: 10),
-                          if (_selectedDebtType == DebtType.bankLoan) ...[
-                            BankLoanModeToggle(
-                              isMonthly: _isBankLoanMonthly,
-                              accent: _accent,
-                              onChanged: (v) =>
-                                  setState(() => _isBankLoanMonthly = v),
-                            ),
-                            const SizedBox(height: 10),
-                            if (!_isBankLoanMonthly) ...[
-                              BankTaxSwitch(
-                                value: _includeBankTaxes,
-                                accent: _accent,
-                                onChanged: (v) =>
-                                    setState(() => _includeBankTaxes = v),
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                          ],
-                          if (_selectedDebtType ==
-                              DebtType.installmentDebt) ...[
-                            InstallmentTypeToggle(
-                              isAmortized: _isInstallmentAmortized,
-                              accent: _accent,
-                              onChanged: (v) =>
-                                  setState(() => _isInstallmentAmortized = v),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                          _buildDynamicDetails(cs),
-                        ],
                       ] else ...[
                         _filledField(
                           controller: _titleController,

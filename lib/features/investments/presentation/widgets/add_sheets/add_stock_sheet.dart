@@ -298,6 +298,20 @@ class _AddStockSheetState extends State<AddStockSheet> {
                         controller: _currentValueController,
                         onChanged: _clearError,
                       ),
+                      InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
+                      const SizedBox(height: 14),
+                      // Toplam Maliyet: Mevcut Değer'in hemen altında durur ki
+                      // "ne ödedim / bugün ne ediyor" yan yana okunabilsin.
+                      InvestmentFilledField(
+                        controller: _amountController,
+                        hint: context.l10n.maliyetYatirilanAnaPara,
+                        icon: Icons.payments_rounded,
+                        accent: _accent,
+                        onChanged: _clearError,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                      ),
+                      InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.hisseSenediBul),
                       const SizedBox(height: 10),
@@ -321,16 +335,6 @@ class _AddStockSheetState extends State<AddStockSheet> {
                         icon: Icons.notes_rounded,
                         accent: _accent,
                         onChanged: _clearError,
-                      ),
-                      const SizedBox(height: 14),
-                      InvestmentFilledField(
-                        controller: _amountController,
-                        hint: context.l10n.maliyetYatirilanAnaPara,
-                        icon: Icons.payments_rounded,
-                        accent: _accent,
-                        onChanged: _clearError,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
                       ),
                       const SizedBox(height: 14),
                       InvestmentFilledField(

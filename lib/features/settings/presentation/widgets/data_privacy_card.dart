@@ -72,8 +72,7 @@ class DataPrivacyCard extends StatelessWidget {
                 color: scheme.onSurface,
               ),
             ),
-            trailing:
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            trailing: Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
             onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
           Divider(height: 1, color: scheme.outline.withValues(alpha: 0.1)),

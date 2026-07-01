@@ -65,13 +65,13 @@ void main() {
 
       // Verify mini buttons
       expect(config.miniButtons.length, 2);
-      expect(config.miniButtons[0].label, 'Borç');
-      expect(config.miniButtons[0].actionType, 'add_debt');
-      expect(config.miniButtons[0].icon, Icons.trending_down);
+      expect(config.miniButtons[0].label, 'Alacak');
+      expect(config.miniButtons[0].actionType, 'add_receivable');
+      expect(config.miniButtons[0].icon, Icons.trending_up);
 
-      expect(config.miniButtons[1].label, 'Alacak');
-      expect(config.miniButtons[1].actionType, 'add_receivable');
-      expect(config.miniButtons[1].icon, Icons.trending_up);
+      expect(config.miniButtons[1].label, 'Borç');
+      expect(config.miniButtons[1].actionType, 'add_debt');
+      expect(config.miniButtons[1].icon, Icons.trending_down);
 
       // Verify submenus
       expect(config.subMenus.length, 1);

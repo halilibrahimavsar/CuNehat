@@ -127,7 +127,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipTarihAraligi => 'Date Range';
 
   @override
-  String get msgSecilenTarihAraligindaIslem => 'No transaction in selected date range';
+  String get msgSecilenTarihAraligindaIslem =>
+      'No transaction in selected date range';
 
   @override
   String get degistir => 'Change';
@@ -240,16 +241,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get beklenmeyenDurum => 'Unexpected situation';
 
   @override
-  String get aktifCuzdaniniziDegistirmekIcin => '• Click on a wallet to change your active wallet.';
+  String get aktifCuzdaniniziDegistirmekIcin =>
+      '• Click on a wallet to change your active wallet.';
 
   @override
-  String get cuzdanBakiyeleriOtomatikOlarak => '• Wallet balances are updated automatically.';
+  String get cuzdanBakiyeleriOtomatikOlarak =>
+      '• Wallet balances are updated automatically.';
 
   @override
-  String get herCuzdaninKendiGelir => '• Each wallet has its own income/expense records.';
+  String get herCuzdaninKendiGelir =>
+      '• Each wallet has its own income/expense records.';
 
   @override
-  String msgTextsCheckfailedprefixETostring(Object checkFailedPrefix, Object error) {
+  String msgTextsCheckfailedprefixETostring(
+      Object checkFailedPrefix, Object error) {
     return '$checkFailedPrefix: $error';
   }
 
@@ -262,10 +267,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get msgCreateAPinFirst => 'Create a PIN first';
 
   @override
-  String get msgBiometricAuthenticationIsNot => 'Biometric authentication is not supported';
+  String get msgBiometricAuthenticationIsNot =>
+      'Biometric authentication is not supported';
 
   @override
-  String get msgBiometricAuthenticationFailed => 'Biometric authentication failed';
+  String get msgBiometricAuthenticationFailed =>
+      'Biometric authentication failed';
 
   @override
   String get msgBiometricLoginEnabled => 'Biometric login enabled';
@@ -274,7 +281,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get msgBiometricLoginDisabled => 'Biometric login disabled';
 
   @override
-  String get msgPINAlreadyExistsUse => 'PIN already exists, use change PIN instead';
+  String get msgPINAlreadyExistsUse =>
+      'PIN already exists, use change PIN instead';
 
   @override
   String get msgPINsDoNotMatch => 'PINs do not match';
@@ -295,7 +303,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get msgPINRemoved => 'PIN removed';
 
   @override
-  String get msgBackgroundLockAndPrivacy => 'Background lock and Privacy Guard enabled';
+  String get msgBackgroundLockAndPrivacy =>
+      'Background lock and Privacy Guard enabled';
 
   @override
   String get securitySettings => 'Security Settings';
@@ -313,10 +322,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removePin => 'Remove PIN';
 
   @override
-  String get msgBiometricAuthenticationCannotBe => 'Biometric authentication cannot be used on this device.';
+  String get msgBiometricAuthenticationCannotBe =>
+      'Biometric authentication cannot be used on this device.';
 
   @override
-  String get msgCreateAPinFirst2 => 'Create a PIN first to enable biometric login.';
+  String get msgCreateAPinFirst2 =>
+      'Create a PIN first to enable biometric login.';
 
   @override
   String get unifiedFeaturesDemo => 'Unified Features Demo';
@@ -382,7 +393,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyPinTitle => 'Verify PIN';
 
   @override
-  String get deletePinConfirmMessage => 'Removing PIN will also disable biometric login. Continue?';
+  String get deletePinConfirmMessage =>
+      'Removing PIN will also disable biometric login. Continue?';
 
   @override
   String get saveLabel => 'Save';
@@ -415,7 +427,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biometricLoginTitle => 'Biometric Login';
 
   @override
-  String get biometricNotAvailableSubtitle => 'Biometric authentication is not available on this device';
+  String get biometricNotAvailableSubtitle =>
+      'Biometric authentication is not available on this device';
 
   @override
   String get biometricEnabledSubtitle => 'Biometric login enabled';
@@ -427,7 +440,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biometricAuthTileTitle => 'Biometric Authentication';
 
   @override
-  String get biometricAuthTileSubtitleOn => 'On - Sign in with fingerprint or face recognition';
+  String get biometricAuthTileSubtitleOn =>
+      'On - Sign in with fingerprint or face recognition';
 
   @override
   String get biometricAuthTileSubtitleOff => 'Off';
@@ -445,7 +459,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get screenProtectionTileTitle => 'Screen Protection';
 
   @override
-  String get screenProtectionTileSubtitleOn => 'On - Hide content while app is in background';
+  String get screenProtectionTileSubtitleOn =>
+      'On - Hide content while app is in background';
 
   @override
   String get screenProtectionTileSubtitleOff => 'Off';
@@ -460,13 +475,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundLockSubtitleOff => 'Off';
 
   @override
-  String get backgroundLockTileTitle => 'Require authentication when app stays in background';
+  String get backgroundLockTileTitle =>
+      'Require authentication when app stays in background';
 
   @override
-  String get backgroundLockTileSubtitle => 'To enable background lock, set a PIN or enable biometric login.';
+  String get backgroundLockTileSubtitle =>
+      'To enable background lock, set a PIN or enable biometric login.';
 
   @override
-  String get backgroundLockTileInfo => 'Note: Authentication screen appears when returning to app.';
+  String get backgroundLockTileInfo =>
+      'Note: Authentication screen appears when returning to app.';
 
   @override
   String msgIncorrectPinRemainingTries(Object newAttempts) {
@@ -492,7 +510,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleDriveBackup => 'Google Drive Backup';
 
   @override
-  String get googleDriveBackupDesc => 'Back up your data to your personal Google Drive account for safety.';
+  String get googleDriveBackupDesc =>
+      'Back up your data to your personal Google Drive account for safety.';
 
   @override
   String get connectGoogleDrive => 'Connect to Google Drive';
@@ -510,7 +529,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteBackup => 'Delete Backup';
 
   @override
-  String get deleteBackupDesc => 'The backup file on Google Drive will be permanently deleted. Your local data is not affected.';
+  String get deleteBackupDesc =>
+      'The backup file on Google Drive will be permanently deleted. Your local data is not affected.';
 
   @override
   String get backupDeleted => 'Backup deleted.';
@@ -531,7 +551,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreDataTitle => 'Restore Data?';
 
   @override
-  String get restoreDataDesc => 'Your cloud data will overwrite the existing data on your device. This operation cannot be undone.';
+  String get restoreDataDesc =>
+      'Your cloud data will overwrite the existing data on your device. This operation cannot be undone.';
 
   @override
   String get googleDriveConnected => 'Successfully connected to Google Drive.';
@@ -543,13 +564,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleDriveDisconnected => 'Google Drive disconnected.';
 
   @override
-  String get dataBackedUpSuccess => 'Data successfully backed up to Google Drive.';
+  String get dataBackedUpSuccess =>
+      'Data successfully backed up to Google Drive.';
 
   @override
   String get backupFailed => 'Backup failed.';
 
   @override
-  String get dataRestoredSuccess => 'Data successfully restored. Please restart the app for changes to take effect.';
+  String get dataRestoredSuccess =>
+      'Data successfully restored. Please restart the app for changes to take effect.';
 
   @override
   String get restoreFailedNoBackup => 'Restore failed. No backup file found.';
@@ -564,7 +587,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataExportImport => 'Device Backup / CSV';
 
   @override
-  String get dataExportImportDesc => 'Save or restore a full app backup, or use CSV for current-wallet transaction transfers.';
+  String get dataExportImportDesc =>
+      'Save or restore a full app backup, or use CSV for current-wallet transaction transfers.';
 
   @override
   String get fullBackup => 'Full backup';
@@ -585,7 +609,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreFullBackupTitle => 'Restore full backup?';
 
   @override
-  String get restoreFullBackupDesc => 'This will replace wallets, transactions, investments, debts, receivables, budgets, recurring templates, users, and categories on this device.';
+  String get restoreFullBackupDesc =>
+      'This will replace wallets, transactions, investments, debts, receivables, budgets, recurring templates, users, and categories on this device.';
 
   @override
   String get fullBackupSaved => 'Full backup saved successfully.';
@@ -603,19 +628,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullBackupShareText => 'CuNehat full backup';
 
   @override
-  String get activeWalletRequiredForExport => 'An active wallet is required for exporting.';
+  String get activeWalletRequiredForExport =>
+      'An active wallet is required for exporting.';
 
   @override
   String get uygulamaBaslatilamadi => 'App could not start';
 
   @override
-  String get verilerinizSilinmediTekrarDeneyin => 'Your data was not deleted. Try again; if the problem persists ';
+  String get verilerinizSilinmediTekrarDeneyin =>
+      'Your data was not deleted. Try again; if the problem persists ';
 
   @override
   String get ikonBulunamadi => 'Icon not found';
 
   @override
-  String valueTostringasfixedCurrencysymbol(Object toStringAsFixed, Object currencySymbol) {
+  String valueTostringasfixedCurrencysymbol(
+      Object toStringAsFixed, Object currencySymbol) {
     return '$toStringAsFixed $currencySymbol';
   }
 
@@ -626,7 +654,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get henuzButceYok => 'No budgets yet';
 
   @override
-  String get kategorilerinizeAylikHarcamaLimiti => 'Set a monthly spending limit for your categories,\ntrack your spending here.';
+  String get kategorilerinizeAylikHarcamaLimiti =>
+      'Set a monthly spending limit for your categories,\ntrack your spending here.';
 
   @override
   String get bUAyToplamHarcama => 'TOTAL SPENDING THIS MONTH';
@@ -652,7 +681,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get buKategorininButcesiVar => 'This category has a budget; limit will be updated.';
+  String get buKategorininButcesiVar =>
+      'This category has a budget; limit will be updated.';
 
   @override
   String get finansalTakip => 'Financial Tracking';
@@ -674,7 +704,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get msgOdemesiTamamlanipKapatilanBorclarinizin => 'The history of your paid and closed debts will be displayed here.';
+  String get msgOdemesiTamamlanipKapatilanBorclarinizin =>
+      'The history of your paid and closed debts will be displayed here.';
 
   @override
   String paidDebtsLengthBorcKapandi(Object length) {
@@ -682,7 +713,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get msgOdendiOlarakIsaretlenenAlacaklarinizin => 'The history of your receivables marked as paid will be displayed here.';
+  String get msgOdendiOlarakIsaretlenenAlacaklarinizin =>
+      'The history of your receivables marked as paid will be displayed here.';
 
   @override
   String paidReceivablesLengthAlacakTahsil(Object length) {
@@ -696,7 +728,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kKDFVeBsmvVergilerini => 'Include KKDF and BSMV taxes (30%)';
 
   @override
-  String get tuketiciKredilerindeFaizeYasal => 'In consumer loans, 15% KKDF and 15% BSMV are legally added to the interest. In housing etc. loans, these taxes can be 0%. Activate accordingly.';
+  String get tuketiciKredilerindeFaizeYasal =>
+      'In consumer loans, 15% KKDF and 15% BSMV are legally added to the interest. In housing etc. loans, these taxes can be 0%. Activate accordingly.';
 
   @override
   String iTaksitAppformattersDateshort(Object i, Object scheduledDate) {
@@ -722,7 +755,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otomatikIslem => 'Automatic transaction';
 
   @override
-  String get buIslemOtomatikOlusturuldu => 'This transaction was created automatically. Edit or delete it from the corresponding debt/investment/receivable record.';
+  String get buIslemOtomatikOlusturuldu =>
+      'This transaction was created automatically. Edit or delete it from the corresponding debt/investment/receivable record.';
 
   @override
   String get nakitAkisi => 'Cash Flow';
@@ -731,25 +765,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grafikIcinYeterliVeri => 'Not enough data for chart';
 
   @override
-  String get cizgiGrafikIcinEnAzIkiGun => 'At least two different days of transactions are required for the line chart.';
+  String get cizgiGrafikIcinEnAzIkiGun =>
+      'At least two different days of transactions are required for the line chart.';
 
   @override
   String get detayGosterilecekIslemYok => 'No Transaction to Show Detail';
 
   @override
-  String get gelirVeyaGiderKaydettikten => 'Analysis details will be listed here after you save income or expense.';
+  String get gelirVeyaGiderKaydettikten =>
+      'Analysis details will be listed here after you save income or expense.';
 
   @override
   String get henuzIslemYok => 'No transactions yet';
 
   @override
-  String get buDonemIcinKayit => 'No records for this period.\nUse the slider button to add a new transaction.';
+  String get buDonemIcinKayit =>
+      'No records for this period.\nUse the slider button to add a new transaction.';
 
   @override
   String get tumIslemlerinizGuncel => 'All Your Transactions Are Up To Date';
 
   @override
-  String get bekleyenCevrimdisiIslemBulunmuyor => 'No pending offline transactions. Synchronization triggers automatically when your device connects to the internet or new data is entered.';
+  String get bekleyenCevrimdisiIslemBulunmuyor =>
+      'No pending offline transactions. Synchronization triggers automatically when your device connects to the internet or new data is entered.';
 
   @override
   String get haftalikNetAkis => 'Weekly Net Flow';
@@ -763,15 +801,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get buKategoriyeAitIslem => 'There are no transactions belonging to this category.';
+  String get buKategoriyeAitIslem =>
+      'There are no transactions belonging to this category.';
 
   @override
-  String formatMoneyItemTotalamountPercent(Object totalAmount, Object toStringAsFixed) {
+  String formatMoneyItemTotalamountPercent(
+      Object totalAmount, Object toStringAsFixed) {
     return '$totalAmount ($toStringAsFixed%)';
   }
 
   @override
-  String get buDonemIcinHenuz => 'No transaction data found for this period yet. Reports will be compiled after data is entered.';
+  String get buDonemIcinHenuz =>
+      'No transaction data found for this period yet. Reports will be compiled after data is entered.';
 
   @override
   String get ikonSecin => 'Select Icon';
@@ -785,7 +826,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get asagidakiButondanEkleyebilirsiniz => 'You can add from the button below';
+  String get asagidakiButondanEkleyebilirsiniz =>
+      'You can add from the button below';
 
   @override
   String get varsayilan => 'Default';
@@ -815,7 +857,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yeni => 'New';
 
   @override
-  String appFormattersDateshortFormatStartdate(Object startDate, Object endDate) {
+  String appFormattersDateshortFormatStartdate(
+      Object startDate, Object endDate) {
     return '$startDate - $endDate';
   }
 
@@ -864,7 +907,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get henuzYatirimKaydiYok => 'No Investment Record Yet';
 
   @override
-  String get yatirimlariniziEklediktenSonraDetayli => 'Detailed analyses will appear here after you add your investments.';
+  String get yatirimlariniziEklediktenSonraDetayli =>
+      'Detailed analyses will appear here after you add your investments.';
 
   @override
   String guncelDegerFormatmoneyInvestment(Object currentValue) {
@@ -888,7 +932,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mevcutDeger => 'Current Value';
 
   @override
-  String get maliyetiDegistirirsenizFarkCuzdana => 'If you change the cost, the difference will be processed as a correction transaction to the wallet.';
+  String get maliyetiDegistirirsenizFarkCuzdana =>
+      'If you change the cost, the difference will be processed as a correction transaction to the wallet.';
 
   @override
   String get hesapla => 'Calculate';
@@ -943,7 +988,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kAZANCZarar => 'PROFIT / LOSS';
 
   @override
-  String isProfitTotalprofitpercentageTostringasfixed(Object isProfit, Object toStringAsFixed) {
+  String isProfitTotalprofitpercentageTostringasfixed(
+      Object isProfit, Object toStringAsFixed) {
     return '$isProfit$toStringAsFixed%';
   }
 
@@ -959,13 +1005,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get henuzDuzenliIslemYok => 'No recurring transactions yet';
 
   @override
-  String get islemEklerkenTekrarSikligi => 'If you select repeat frequency while adding a transaction\nthe template appears here.';
+  String get islemEklerkenTekrarSikligi =>
+      'If you select repeat frequency while adding a transaction\nthe template appears here.';
 
   @override
   String get bekleyenDuzenliIslemler => 'Pending Recurring Transactions';
 
   @override
-  String get vadesiGelmisIslemlerinizVar => 'You have transactions whose maturity has arrived. You can approve them to be recorded in the ledger.';
+  String get vadesiGelmisIslemlerinizVar =>
+      'You have transactions whose maturity has arrived. You can approve them to be recorded in the ledger.';
 
   @override
   String titleTarihDatestrNtutarTx(Object dateStr, Object amount) {
@@ -991,7 +1039,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otomatikHesaplananDegerler => 'Automatically calculated values:';
 
   @override
-  String get borcAlacakYatirimKayitlarindan => 'Derived from debt/receivable/investment records; cannot be edited here.';
+  String get borcAlacakYatirimKayitlarindan =>
+      'Derived from debt/receivable/investment records; cannot be edited here.';
 
   @override
   String get renkSecin => 'Select Color:';
@@ -1026,13 +1075,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aktif => 'Active';
 
   @override
-  String get aktifOlanCuzdanSilinemez => '• Active wallet cannot be deleted. To delete, first make another wallet active.';
+  String get aktifOlanCuzdanSilinemez =>
+      '• Active wallet cannot be deleted. To delete, first make another wallet active.';
 
   @override
-  String get cuzdanlarinizaAitBorcAlacak => '• You can manually manage Debt, Receivable, and Savings amounts of your wallets from the edit page.';
+  String get cuzdanlarinizaAitBorcAlacak =>
+      '• You can manually manage Debt, Receivable, and Savings amounts of your wallets from the edit page.';
 
   @override
-  String get msgPINOrBiometricLogin => 'PIN or biometric login is required for background lock';
+  String get msgPINOrBiometricLogin =>
+      'PIN or biometric login is required for background lock';
 
   @override
   String get sharedFeatures => 'Shared Features';
@@ -1173,7 +1225,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iceAktarilanCuzdanPrefix => 'Imported Wallet';
 
   @override
-  String get verilerIceAktarildi => 'Data imported successfully. New wallet created and selected.';
+  String get verilerIceAktarildi =>
+      'Data imported successfully. New wallet created and selected.';
 
   @override
   String get cuzdanOlusturulamadi => 'Failed to create wallet';
@@ -1289,7 +1342,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String guncelFiyatFormatForeign(Object price, Object currency, Object priceTl) {
+  String guncelFiyatFormatForeign(
+      Object price, Object currency, Object priceTl) {
     return 'Current Price: $price $currency (≈$priceTl ₺)';
   }
 
@@ -1375,16 +1429,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paraEkle => 'Add Money';
 
   @override
-  String get yeniAlimMiktarVeOdenenTutar => 'New purchase: amount and paid value';
+  String get yeniAlimMiktarVeOdenenTutar =>
+      'New purchase: amount and paid value';
 
   @override
-  String get maliyeteVeDegereEklenir => 'Added to cost and value, deducted from wallet';
+  String get maliyeteVeDegereEklenir =>
+      'Added to cost and value, deducted from wallet';
 
   @override
   String get fiyatiGuncelle => 'Update Price';
 
   @override
-  String get canliFiyatGuncellemeAciklamasi => 'Current value = quantity × live price; does not affect balance';
+  String get canliFiyatGuncellemeAciklamasi =>
+      'Current value = quantity × live price; does not affect balance';
 
   @override
   String get duzenleYatirimSubtitle => 'Name, cost, target and other details';
@@ -1393,7 +1450,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get satSubtitle => 'Current value is processed as income to wallet';
 
   @override
-  String get kaydiSilSubtitle => 'Incorrect entry correction; purchase expense is refunded';
+  String get kaydiSilSubtitle =>
+      'Incorrect entry correction; purchase expense is refunded';
 
   @override
   String varlikEkleTitle(Object name) {
@@ -1563,7 +1621,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cuzdanAdiBosOlamaz => 'Wallet name cannot be empty';
 
   @override
-  String get cuzdanAdiEnAz2Karakter => 'Wallet name must be at least 2 characters';
+  String get cuzdanAdiEnAz2Karakter =>
+      'Wallet name must be at least 2 characters';
 
   @override
   String get bakiyeLabel => 'Balance *';
@@ -1759,4 +1818,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get duzenliOdemeEklenemedi => 'Couldn\'t add recurring payment';
+
+  @override
+  String get borcBakiyeyeEklenecekBaslik =>
+      'Debt will be added to your balance';
+
+  @override
+  String borcBakiyeyeEklenecekGovde(String tutar) {
+    return 'This debt\'s principal ($tutar) will be added to your wallet balance as income. You can add your repayments and expenses manually.';
+  }
+
+  @override
+  String get devamEt => 'Continue';
+
+  @override
+  String get bugun => 'Today';
+
+  @override
+  String get islemBuguneAyarliIpucu =>
+      'The date is set to today — tap the date to add it to another day.';
+
+  @override
+  String get mevcutDegerAciklama =>
+      'The investment\'s current market value; updated from the live price with \'Calculate\'.';
+
+  @override
+  String get toplamMaliyetAciklama =>
+      'The total you paid for this investment (your cost). \'Calculate\' doesn\'t change it; profit/loss is computed from it.';
 }

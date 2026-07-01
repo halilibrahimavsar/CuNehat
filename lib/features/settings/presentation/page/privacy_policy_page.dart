@@ -60,8 +60,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           const _Section(
             title: 'Veri paylaşımı',
-            body:
-                'Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla '
+            body: 'Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla '
                 'paylaşmayız. Uygulamada analitik, çökme-raporlama, reklam veya '
                 'izleme SDK\'sı yoktur. Google API\'lerinden alınan bilgilerin '
                 'kullanımı Google API Hizmetleri Kullanıcı Verileri '
@@ -69,16 +68,14 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           const _Section(
             title: 'Güvenlik',
-            body:
-                'Yerel veri uygulamanın özel depolama alanında tutulur. '
+            body: 'Yerel veri uygulamanın özel depolama alanında tutulur. '
                 'Yetkisiz erişimi önlemek için biyometrik / PIN kilidi '
                 'desteklenir ve uygulama arka plana alındığında içerik '
                 'bulanıklaştırılır. Tüm ağ iletişimi HTTPS kullanır.',
           ),
           const _Section(
             title: 'Veri saklama ve silme',
-            body:
-                'Verileriniz üzerinde tam kontrol sizdedir. Tüm yerel veriyi '
+            body: 'Verileriniz üzerinde tam kontrol sizdedir. Tüm yerel veriyi '
                 'Ayarlar → Gizlilik & Veri → "Tüm veriyi sil" ile silebilirsiniz. '
                 'Drive yedeğini Ayarlar → Yedekleme bölümünden silebilir veya '
                 'hesabınızın bağlantısını kesebilirsiniz.',

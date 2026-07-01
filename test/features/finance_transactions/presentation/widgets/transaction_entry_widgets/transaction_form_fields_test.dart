@@ -105,6 +105,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Click save when amount is empty
+    await tester.ensureVisible(find.text('Kaydet'));
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
 
@@ -165,6 +166,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap save button
+    await tester.ensureVisible(find.text('Kaydet'));
     await tester.tap(find.text('Kaydet'));
     await tester.pump(const Duration(milliseconds: 100));
 

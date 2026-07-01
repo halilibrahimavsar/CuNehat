@@ -1,6 +1,7 @@
 // transaction_form_fields.dart'tan bölündü (v1 temizliği): davranış aynı.
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 
 // ============================================================ Date & time
@@ -52,12 +53,22 @@ class WhenRow extends StatelessWidget {
     return ValueListenableBuilder<DateTime>(
       valueListenable: controller.dateTime,
       builder: (context, when, _) {
+        // Yeni işlem varsayılan olarak bugüne düşer; takvimde başka bir gün
+        // seçili olsa bile. Kullanıcı yanılmasın diye tarih bugünse etikette
+        // "Bugün" öneki gösterilir.
+        final now = DateTime.now();
+        final isToday = when.year == now.year &&
+            when.month == now.month &&
+            when.day == now.day;
+        final dateLabel = isToday
+            ? '${context.l10n.bugun} · ${AppFormatters.dateLong.format(when)}'
+            : AppFormatters.dateLong.format(when);
         return Row(
           children: [
             Expanded(
               child: _WhenPill(
                 icon: Icons.calendar_today_rounded,
-                label: AppFormatters.dateLong.format(when),
+                label: dateLabel,
                 accent: accent,
                 onTap: () => _pickDate(context),
               ),
