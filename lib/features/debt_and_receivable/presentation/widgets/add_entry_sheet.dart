@@ -55,6 +55,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   bool _includeBankTaxes = false;
   bool _isInstallmentAmortized = true;
 
+  /// "Aylık taksit biliyorum" modunda taksit alanını kullanıcı elle değiştirdi
+  /// mi. True ise vade/tutar değişse de otomatik öneri ezmez.
+  bool _installmentEdited = false;
+
+  /// Otomatik doldurma sırasında taksit listener'ının "elle düzenlendi"
+  /// işaretini tetiklememesi için koruma bayrağı.
+  bool _suppressInstallmentListener = false;
+
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _counterpartyController = TextEditingController();
@@ -109,6 +117,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _selectedDate = r.dueDate;
       _originalAmount = r.amount;
     }
+
+    // Düzenlemede yüklenen taksit değerini koru; yalnız yeni kayıtta öner.
+    _installmentEdited = _isEditing;
+    _amountController.addListener(_maybeAutoFillInstallment);
+    _termController.addListener(_maybeAutoFillInstallment);
+    _installmentController.addListener(_onInstallmentChanged);
   }
 
   @override
@@ -126,7 +140,36 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   String _fmt(double v) =>
       v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
+  /// Otomatik taksit önerisi için biçim (tam sayıda ondalıksız, aksi 2 hane).
+  String _fmtMoney(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+
   double? get _parsedAmount => parseAmount(_amountController.text);
+
+  void _onInstallmentChanged() {
+    if (_suppressInstallmentListener) return;
+    _installmentEdited = true;
+  }
+
+  /// "Aylık taksit biliyorum" modunda, kullanıcı taksiti elle değiştirmediyse
+  /// taksiti "kredi tutarı ÷ vade" olarak önerir (faizsiz başlangıç). Kullanıcı
+  /// üzerine yazınca [_installmentEdited] true olur ve öneri bir daha ezmez.
+  void _maybeAutoFillInstallment() {
+    if (!_isDebt) return;
+    if (_selectedDebtType != DebtType.bankLoan || !_isBankLoanMonthly) return;
+    if (_installmentEdited) return;
+    final principal = _parsedAmount;
+    final term = int.tryParse(_termController.text.trim()) ?? 0;
+    if (principal == null || principal <= 0 || term <= 0) return;
+    _setInstallmentText(_fmtMoney(principal / term));
+  }
+
+  void _setInstallmentText(String text) {
+    if (_installmentController.text == text) return;
+    _suppressInstallmentListener = true;
+    _installmentController.text = text;
+    _suppressInstallmentListener = false;
+  }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -154,8 +197,16 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       final t = int.tryParse(_termController.text.trim()) ?? 0;
       if (t <= 0) return context.l10n.vadeEnAz1Olmali;
       if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
-        if (parseAmount(_installmentController.text) == null) {
+        final installment = parseAmount(_installmentController.text);
+        if (installment == null) {
           return context.l10n.aylikTaksitTutariniGirin;
+        }
+        // Toplam geri ödeme (taksit × vade) kredi tutarının altında kalamaz;
+        // aksi halde borçtan az geri ödeme gibi imkânsız bir sonuç doğar.
+        // ±1 ₺ tolerans otomatik önerideki yuvarlamayı soğurur.
+        final principal = _parsedAmount ?? 0;
+        if (installment * t < principal - 1.0) {
+          return context.l10n.aylikTaksitKrediTutarindanKucuk;
         }
       }
     }
@@ -354,14 +405,16 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         // tür-bağımlı olduğundan bu bölüm de tür seçiminin
                         // üstünde tutarlı durur; personalDebt'te gizlenir.
                         if (_selectedDebtType != DebtType.personalDebt) ...[
-                          _sectionLabel(context.l10n.vadeVeDetaylarLabel, cs),
+                          _vadeDetaylarLabel(cs),
                           const SizedBox(height: 10),
                           if (_selectedDebtType == DebtType.bankLoan) ...[
                             BankLoanModeToggle(
                               isMonthly: _isBankLoanMonthly,
                               accent: _accent,
-                              onChanged: (v) =>
-                                  setState(() => _isBankLoanMonthly = v),
+                              onChanged: (v) {
+                                setState(() => _isBankLoanMonthly = v);
+                                _maybeAutoFillInstallment();
+                              },
                             ),
                             const SizedBox(height: 10),
                             if (!_isBankLoanMonthly) ...[
@@ -392,8 +445,10 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         DebtTypeChips(
                           selected: _selectedDebtType,
                           accent: _accent,
-                          onSelected: (t) =>
-                              setState(() => _selectedDebtType = t),
+                          onSelected: (t) {
+                            setState(() => _selectedDebtType = t);
+                            _maybeAutoFillInstallment();
+                          },
                         ),
                         const SizedBox(height: 20),
                         _filledField(
@@ -709,7 +764,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               Expanded(
                 child: _filledField(
                   controller: _termController,
-                  hint: context.l10n.vadeAyHint,
+                  label: context.l10n.vadeAyHint,
+                  hint: '',
                   icon: Icons.event_repeat_rounded,
                   cs: cs,
                   keyboardType: TextInputType.number,
@@ -722,7 +778,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                 Expanded(
                   child: _filledField(
                     controller: _installmentController,
-                    hint: context.l10n.aylikTaksitHint,
+                    label: context.l10n.aylikTaksitHint,
+                    hint: '',
                     icon: Icons.payments_rounded,
                     cs: cs,
                     keyboardType:
@@ -735,10 +792,11 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                 Expanded(
                   child: _filledField(
                     controller: _interestController,
-                    hint: _selectedDebtType == DebtType.installmentDebt &&
+                    label: _selectedDebtType == DebtType.installmentDebt &&
                             !_isInstallmentAmortized
                         ? context.l10n.vadeFarkiYuzdeHint
                         : context.l10n.aylikFaizYuzdeHint,
+                    hint: '',
                     icon: Icons.percent_rounded,
                     cs: cs,
                     keyboardType:
@@ -755,7 +813,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             const SizedBox(height: 10),
             _filledField(
               controller: _overdueController,
-              hint: context.l10n.gecikmeFaiziYuzdeHint,
+              label: context.l10n.gecikmeFaiziYuzdeHint,
+              hint: '',
               icon: Icons.running_with_errors_rounded,
               cs: cs,
               keyboardType:
@@ -806,6 +865,51 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     );
   }
 
+  /// bankLoan'da "Vade & detaylar" başlığının yanında, iki hesaplama modunu ve
+  /// otomatik taksit önerisini açıklayan dokunulabilir info ikonu gösterir.
+  Widget _vadeDetaylarLabel(ColorScheme cs) {
+    final label = _sectionLabel(context.l10n.vadeVeDetaylarLabel, cs);
+    if (_selectedDebtType != DebtType.bankLoan) return label;
+    return Row(
+      children: [
+        label,
+        const SizedBox(width: 6),
+        InkWell(
+          onTap: _showBankLoanInfo,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 16,
+              color: _accent.withValues(alpha: 0.9),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showBankLoanInfo() {
+    final cs = Theme.of(context).colorScheme;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.krediHesaplamaInfoBaslik),
+        content: Text(
+          context.l10n.krediHesaplamaInfoGovde,
+          style: TextStyle(color: cs.onSurfaceVariant, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.tamam),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _filledField({
     required TextEditingController controller,
     required String hint,
@@ -813,6 +917,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     required ColorScheme cs,
     TextInputType? keyboardType,
     bool dense = false,
+    String? label,
   }) {
     return TextField(
       controller: controller,
@@ -823,6 +928,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       onChanged: (_) => _clearError(),
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
+        // Kalıcı (floating) etiket: yazınca kaybolan hint'in aksine alanın
+        // anlamı ("Aylık Faiz %", "Aylık Taksit" …) hep görünür kalır.
+        labelText: label,
+        labelStyle: TextStyle(
+            color: cs.onSurfaceVariant.withValues(alpha: 0.9),
+            fontWeight: FontWeight.w500),
+        floatingLabelStyle:
+            TextStyle(color: _accent, fontWeight: FontWeight.w600),
         hintText: hint,
         hintStyle: TextStyle(
             color: cs.onSurfaceVariant.withValues(alpha: 0.7),

@@ -21,6 +21,10 @@ class AppCard extends StatelessWidget {
   final VoidCallback? onLongPress;
   final bool elevated;
 
+  /// Seçili/aktif durumu görsel olarak vurgular: accent renginde daha kalın
+  /// çerçeve + hafif glow. Örn. aktif cüzdan kartı. Accent yoksa etkisizdir.
+  final bool selected;
+
   const AppCard({
     super.key,
     required this.child,
@@ -31,6 +35,7 @@ class AppCard extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.elevated = true,
+    this.selected = false,
   });
 
   @override
@@ -58,9 +63,13 @@ class AppCard extends StatelessWidget {
 
   BoxDecoration _decoration(AppSurface s, Color? acc, BorderRadius radius) {
     final useGradient = s.gradientFill && acc != null;
-    final borderColor = acc != null
+    final baseBorderColor = acc != null
         ? acc.withValues(alpha: s.gradientFill ? 0.22 : 0.45)
         : s.borderColor;
+    // Seçili durumda accent'li, daha kalın çerçeve ile vurgula (tüm temalarda
+    // görünsün diye ayrıca hafif accent glow ekleriz).
+    final highlight = selected && acc != null;
+    final borderColor = highlight ? acc.withValues(alpha: 0.9) : baseBorderColor;
 
     return BoxDecoration(
       color: useGradient ? null : s.baseColor,
@@ -68,7 +77,7 @@ class AppCard extends StatelessWidget {
           ? AppGradients.accentSurface(acc, s.brightness, s.accentFill)
           : null,
       borderRadius: radius,
-      border: Border.all(color: borderColor),
+      border: Border.all(color: borderColor, width: highlight ? 2.2 : 1.0),
       boxShadow: [
         if (elevated) ...s.ambientShadow,
         if (elevated && acc != null && s.glow > 0)
@@ -77,6 +86,12 @@ class AppCard extends StatelessWidget {
             blurRadius: 24,
             spreadRadius: -6,
             offset: const Offset(0, 10),
+          ),
+        if (highlight)
+          BoxShadow(
+            color: acc.withValues(alpha: 0.28),
+            blurRadius: 18,
+            spreadRadius: -2,
           ),
       ],
     );

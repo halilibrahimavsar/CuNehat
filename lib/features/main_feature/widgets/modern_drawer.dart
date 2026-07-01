@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/models/local_user.dart';
 import 'package:cunehat/core/services/google_drive_backup_service.dart';
@@ -338,7 +339,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        WalletIcons.getIcon(wallet.iconName),
+                        AppIcons.getIconData(wallet.iconName),
                         color: walletColor,
                         size: 16,
                       ),

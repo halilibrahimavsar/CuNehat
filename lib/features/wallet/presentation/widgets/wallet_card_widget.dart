@@ -1,5 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ class WalletCardWidget extends StatelessWidget {
 
     return AppCard(
       accent: color,
+      selected: wallet.isActive,
       margin: const EdgeInsets.only(bottom: 12),
       onTap: onTap,
       child: Column(
@@ -42,7 +44,7 @@ class WalletCardWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
-                  WalletIcons.getIcon(wallet.iconName),
+                  AppIcons.getIconData(wallet.iconName),
                   color: color,
                   size: 28,
                 ),

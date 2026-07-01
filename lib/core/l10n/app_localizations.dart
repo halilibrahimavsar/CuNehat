@@ -62,8 +62,7 @@ import 'app_localizations_tr.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -570,8 +567,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{checkFailedPrefix}: {error}'**
-  String msgTextsCheckfailedprefixETostring(
-      Object checkFailedPrefix, Object error);
+  String msgTextsCheckfailedprefixETostring(Object checkFailedPrefix, Object error);
 
   /// No description provided for @msgPINVerificationFailedE.
   ///
@@ -1291,8 +1287,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{toStringAsFixed} {currencySymbol}'**
-  String valueTostringasfixedCurrencysymbol(
-      Object toStringAsFixed, Object currencySymbol);
+  String valueTostringasfixedCurrencysymbol(Object toStringAsFixed, Object currencySymbol);
 
   /// No description provided for @butcePlanlama.
   ///
@@ -1538,8 +1533,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{totalAmount} (%{toStringAsFixed})'**
-  String formatMoneyItemTotalamountPercent(
-      Object totalAmount, Object toStringAsFixed);
+  String formatMoneyItemTotalamountPercent(Object totalAmount, Object toStringAsFixed);
 
   /// No description provided for @buDonemIcinHenuz.
   ///
@@ -1629,8 +1623,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{startDate} - {endDate}'**
-  String appFormattersDateshortFormatStartdate(
-      Object startDate, Object endDate);
+  String appFormattersDateshortFormatStartdate(Object startDate, Object endDate);
 
   /// No description provided for @filterSelectedcategoriesLengthKategori.
   ///
@@ -1834,8 +1827,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'{isProfit}{toStringAsFixed}%'**
-  String isProfitTotalprofitpercentageTostringasfixed(
-      Object isProfit, Object toStringAsFixed);
+  String isProfitTotalprofitpercentageTostringasfixed(Object isProfit, Object toStringAsFixed);
 
   /// No description provided for @templateTitleDuzenliIslemi.
   ///
@@ -2495,8 +2487,7 @@ abstract class AppLocalizations {
   ///
   /// In tr, this message translates to:
   /// **'Güncel Fiyat: {price} {currency} (≈{priceTl} ₺)'**
-  String guncelFiyatFormatForeign(
-      Object price, Object currency, Object priceTl);
+  String guncelFiyatFormatForeign(Object price, Object currency, Object priceTl);
 
   /// No description provided for @gecerliYatirimMiktariGirin.
   ///
@@ -2785,6 +2776,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aylık taksit tutarını girin'**
   String get aylikTaksitTutariniGirin;
+
+  /// No description provided for @aylikTaksitKrediTutarindanKucuk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık taksit × vade, kredi tutarından küçük olamaz'**
+  String get aylikTaksitKrediTutarindanKucuk;
+
+  /// No description provided for @krediHesaplamaInfoBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka kredisi hesaplaması'**
+  String get krediHesaplamaInfoBaslik;
+
+  /// No description provided for @krediHesaplamaInfoGovde.
+  ///
+  /// In tr, this message translates to:
+  /// **'• Aylık taksiti biliyorum: Bankanın söylediği aylık taksiti yazın. Toplam geri ödeme = aylık taksit × vade. Kolaylık için alan, faizsiz bir başlangıç olarak kredi tutarı ÷ vade değerini önerir; kendi taksitinize göre değiştirin.\n\n• Faiz oranı ile: Bankanın aylık faiz oranını yazın. Taksit ve toplam, eşit taksitli kredi (amortisman) yöntemiyle hesaplanır.'**
+  String get krediHesaplamaInfoGovde;
 
   /// No description provided for @borcTuruLabel.
   ///
@@ -3447,8 +3456,7 @@ abstract class AppLocalizations {
   String get toplamMaliyetAciklama;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3457,25 +3465,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'tr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'tr':
-      return AppLocalizationsTr();
+    case 'en': return AppLocalizationsEn();
+    case 'tr': return AppLocalizationsTr();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

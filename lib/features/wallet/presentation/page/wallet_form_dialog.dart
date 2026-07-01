@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
@@ -10,12 +12,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-import 'package:unified_flutter_features/unified_flutter_features.dart';
-
-/// **Cüzdan Oluşturma/Düzenleme Dialog'unu Göster**
+/// **Cüzdan Oluşturma/Düzenleme Sayfasını Göster**
 ///
 /// [wallet] null ise → Yeni Cüzdan Oluştur
 /// [wallet] dolu ise → Mevcut Cüzdanı Düzenle
+///
+/// İşlem/borç ekleme sheet'leriyle aynı tema-duyarlı dil: alttan açılan,
+/// accent'li (cüzdan rengi) modern bottom sheet.
 Future<void> showCreateEditDialog({
   required BuildContext context,
   required String userId,
@@ -23,12 +26,11 @@ Future<void> showCreateEditDialog({
   required VoidCallback onSuccess,
   required Function(String error) onError,
 }) async {
-  await IboDialog.showCustomDialog(
-    context,
-    title: wallet != null
-        ? context.l10n.cuzdanDuzenleTitle
-        : context.l10n.yeniCuzdanEkleTitle,
-    content: BlocProvider.value(
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => BlocProvider.value(
       value: context.read<WalletBloc>(),
       child: _WalletFormDialog(
         userId: userId,
@@ -40,7 +42,7 @@ Future<void> showCreateEditDialog({
   );
 }
 
-/// **Cüzdan Form Dialog Widget**
+/// **Cüzdan Form Sheet Widget**
 class _WalletFormDialog extends StatefulWidget {
   final String userId;
   final WalletEntity? wallet;
@@ -72,6 +74,13 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   // ========== GETTERS ==========
   bool get isEditMode => widget.wallet != null;
 
+  /// Seçili cüzdan rengi = form accent'i (başlık, alanlar, buton canlı önizleme).
+  Color get _accent => WalletColors.hexToColor(_selectedColorHex);
+
+  /// Seçili renk preset'lerden biri değilse "özel renk" aktiftir.
+  bool get _isCustomColor => !WalletColors.presetColors
+      .any((c) => WalletColors.colorToHex(c) == _selectedColorHex);
+
   @override
   void initState() {
     super.initState();
@@ -79,17 +88,13 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     _initializeState();
   }
 
-  /// Controller'ları başlat
   void _initializeControllers() {
-    _nameController = TextEditingController(
-      text: widget.wallet?.name ?? '',
-    );
+    _nameController = TextEditingController(text: widget.wallet?.name ?? '');
     _balanceController = TextEditingController(
       text: widget.wallet?.balance.toStringAsFixed(2) ?? '0.00',
     );
   }
 
-  /// State değerlerini başlat
   void _initializeState() {
     _selectedColorHex = widget.wallet?.colorHex ?? '0xFF2196F3';
     _selectedIconName = widget.wallet?.iconName ?? 'wallet';
@@ -107,49 +112,149 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   Widget build(BuildContext context) {
     return BlocListener<WalletBloc, WalletState>(
       listener: _handleBlocState,
-      child: _buildForm(),
+      child: _buildSheet(context),
     );
   }
 
-  /// Form içeriği
-  Widget _buildForm() {
-    return SingleChildScrollView(
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildNameField(),
-            const SizedBox(height: 16),
-            _buildBalanceField(),
-            if (isEditMode) ...[
-              const SizedBox(height: 16),
-              _buildDerivedMetricsSummary(),
-            ],
-            const SizedBox(height: 16),
-            _buildColorPicker(),
-            const SizedBox(height: 16),
-            _buildIconPicker(),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: _buildActions(),
+  Widget _buildSheet(BuildContext context) {
+    final surface =
+        Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHandleAndHeader(cs),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildNameField(cs),
+                        const SizedBox(height: 14),
+                        _buildBalanceField(cs),
+                        if (isEditMode) ...[
+                          const SizedBox(height: 18),
+                          _buildDerivedMetricsSummary(cs),
+                        ],
+                        const SizedBox(height: 20),
+                        _sectionLabel(context.l10n.renkSecin, cs),
+                        const SizedBox(height: 12),
+                        _buildColorPicker(cs),
+                        const SizedBox(height: 20),
+                        _sectionLabel(context.l10n.ikonSecin2, cs),
+                        const SizedBox(height: 12),
+                        _buildIconPicker(cs),
+                        const SizedBox(height: 24),
+                        _buildSaveButton(surface.radius),
+                        const SizedBox(height: 4),
+                        _buildCancelButton(cs),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  /// İsim alanı
-  Widget _buildNameField() {
+  // ---------------------------------------------------------------- Header
+
+  Widget _buildHandleAndHeader(ColorScheme cs) {
+    final title = isEditMode
+        ? context.l10n.cuzdanDuzenleTitle
+        : context.l10n.yeniCuzdanEkleTitle;
+
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 12, bottom: 12),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: cs.onSurface.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _accent.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  AppIcons.getIconData(_selectedIconName),
+                  color: _accent,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        FocusScope.of(context).unfocus();
+                        Navigator.pop(context);
+                      },
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.close_rounded,
+                    color: cs.onSurface.withValues(alpha: 0.5)),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ------------------------------------------------------------ Form fields
+
+  Widget _buildNameField(ColorScheme cs) {
     return TextFormField(
       controller: _nameController,
-      decoration: InputDecoration(
-        labelText: context.l10n.labelCuzdanAdi,
-        hintText: context.l10n.hintOrnAnaCuzdanTatil,
-        border: const OutlineInputBorder(),
+      textCapitalization: TextCapitalization.words,
+      maxLength: 30,
+      buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
+          null,
+      style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
+      decoration: _filledDecoration(
+        cs,
+        label: context.l10n.labelCuzdanAdi,
+        hint: context.l10n.hintOrnAnaCuzdanTatil,
+        icon: Icons.account_balance_wallet_rounded,
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -160,24 +265,23 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         }
         return null;
       },
-      textCapitalization: TextCapitalization.words,
-      maxLength: 30,
     );
   }
 
-  /// Bakiye alanı
-  Widget _buildBalanceField() {
+  Widget _buildBalanceField(ColorScheme cs) {
     return TextFormField(
       controller: _balanceController,
-      decoration: InputDecoration(
-        labelText: isEditMode
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
+      decoration: _filledDecoration(
+        cs,
+        label: isEditMode
             ? context.l10n.bakiyeLabel
             : context.l10n.baslangicBakiyesiLabel,
-        hintText: '0.00',
-        border: const OutlineInputBorder(),
+        hint: '0.00',
+        icon: Icons.payments_rounded,
         suffixText: '₺',
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
           return context.l10n.bakiyeBosOlamaz;
@@ -196,224 +300,297 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   }
 
   /// Türetilmiş metrikler — kayıtlardan OTOMATİK hesaplanır, düzenlenemez.
-  /// (Eskiden elle girilebiliyordu; sonraki sync değerleri ezip kafa
-  /// karıştırıyordu.)
-  Widget _buildDerivedMetricsSummary() {
+  Widget _buildDerivedMetricsSummary(ColorScheme cs) {
     final w = widget.wallet!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.otomatikHesaplananDegerler,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          context.l10n.borcAlacakYatirimKayitlarindan,
-          style: TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-        const SizedBox(height: 12),
-        _derivedRow(
-            context.l10n.borcLabel, w.debt, Icons.arrow_downward, Colors.red),
-        _derivedRow(context.l10n.alacakLabel, w.credit, Icons.arrow_upward,
-            Colors.green),
-        _derivedRow(context.l10n.birikimLabel, w.investment, Icons.savings,
-            Colors.orange),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.otomatikHesaplananDegerler,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            context.l10n.borcAlacakYatirimKayitlarindan,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 12),
+          _derivedRow(cs, context.l10n.borcLabel, w.debt,
+              Icons.arrow_downward_rounded, AppGradients.debt),
+          _derivedRow(cs, context.l10n.alacakLabel, w.credit,
+              Icons.arrow_upward_rounded, AppGradients.savings),
+          _derivedRow(cs, context.l10n.birikimLabel, w.investment,
+              Icons.savings_rounded, AppGradients.transactions),
+        ],
+      ),
     );
   }
 
-  Widget _derivedRow(String label, double value, IconData icon, Color color) {
+  Widget _derivedRow(
+      ColorScheme cs, String label, double value, IconData icon, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 14)),
+          Text(label,
+              style: TextStyle(fontSize: 14, color: cs.onSurface)),
           const Spacer(),
           Text(
             AppFormatters.currency.format(value),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// Renk seçici
-  Widget _buildColorPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.renkSecin,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            ...WalletColors.presetColors.map((color) {
-              final hex = WalletColors.colorToHex(color);
-              final isSelected = _selectedColorHex == hex;
+  // ------------------------------------------------------------ Color picker
 
-              return GestureDetector(
-                onTap: () => setState(() => _selectedColorHex = hex),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? Colors.black : Colors.grey.shade300,
-                      width: isSelected ? 3 : 1,
-                    ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: color.withOpacity(0.4),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            )
-                          ]
-                        : null,
-                  ),
-                  child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 20,
-                        )
-                      : null,
-                ),
-              );
-            }),
-            // Özel renk seçici
-            GestureDetector(
-              onTap: _showCustomColorPicker,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: WalletColors.hexToColor(_selectedColorHex),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: !WalletColors.presetColors.any(
-                      (c) => WalletColors.colorToHex(c) == _selectedColorHex,
-                    )
-                        ? Colors.black
-                        : Colors.grey.shade300,
-                    width: !WalletColors.presetColors.any(
-                      (c) => WalletColors.colorToHex(c) == _selectedColorHex,
-                    )
-                        ? 3
-                        : 1,
-                  ),
-                  boxShadow: !WalletColors.presetColors.any(
-                    (c) => WalletColors.colorToHex(c) == _selectedColorHex,
-                  )
-                      ? [
-                          BoxShadow(
-                            color: WalletColors.hexToColor(_selectedColorHex)
-                                .withOpacity(0.4),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          )
-                        ]
-                      : null,
-                ),
-                child: const Icon(
-                  Icons.palette,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
+  Widget _buildColorPicker(ColorScheme cs) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        ...WalletColors.presetColors.map((color) {
+          final hex = WalletColors.colorToHex(color);
+          final isSelected = _selectedColorHex == hex;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedColorHex = hex),
+            child: _swatch(
+              cs,
+              color,
+              isSelected,
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                  : null,
             ),
-          ],
+          );
+        }),
+        // Özel renk seçici
+        GestureDetector(
+          onTap: _showCustomColorPicker,
+          child: _swatch(
+            cs,
+            WalletColors.hexToColor(_selectedColorHex),
+            _isCustomColor,
+            child: const Icon(Icons.palette, color: Colors.white, size: 20),
+          ),
         ),
       ],
     );
   }
 
-  /// İkon seçici
-  Widget _buildIconPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.ikonSecin2,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  Widget _swatch(ColorScheme cs, Color color, bool selected, {Widget? child}) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? cs.onSurface : cs.onSurface.withValues(alpha: 0.15),
+          width: selected ? 3 : 1,
         ),
-        const SizedBox(height: 12),
-        Container(
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                )
+              ]
+            : null,
+      ),
+      child: child,
+    );
+  }
+
+  // ------------------------------------------------------------- Icon picker
+
+  Widget _buildIconPicker(ColorScheme cs) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: _showIconPickerDialog,
+        child: Container(
           width: double.infinity,
-          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: WalletColors.hexToColor(_selectedColorHex).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: _accent.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: WalletColors.hexToColor(_selectedColorHex),
-              width: 2,
+              color: _accent.withValues(alpha: 0.5),
+              width: 1.4,
             ),
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: _showIconPickerDialog,
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      AppIcons.getIconData(_selectedIconName),
-                      color: WalletColors.hexToColor(_selectedColorHex),
-                      size: 28,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      context.l10n.ikonDegistir,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+          child: Row(
+            children: [
+              Icon(AppIcons.getIconData(_selectedIconName),
+                  color: _accent, size: 26),
+              const SizedBox(width: 12),
+              Text(
+                context.l10n.ikonDegistir,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
                 ),
               ),
-            ),
+              const Spacer(),
+              Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
-  /// Dialog aksiyonları (butonlar)
-  List<Widget> _buildActions() {
-    return [
-      TextButton(
+  // --------------------------------------------------------------- Buttons
+
+  Widget _buildSaveButton(double radius) {
+    final br = BorderRadius.circular(radius.clamp(16, 20));
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: br,
+          onTap: _isLoading ? null : _handleSubmit,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: AppGradients.vivid(_accent),
+              borderRadius: br,
+              boxShadow: [
+                BoxShadow(
+                  color: _accent.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Center(
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                            isEditMode
+                                ? Icons.check_rounded
+                                : Icons.add_rounded,
+                            color: Colors.white,
+                            size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          isEditMode
+                              ? context.l10n.kaydet
+                              : context.l10n.olustur,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCancelButton(ColorScheme cs) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: TextButton(
         onPressed: _isLoading ? null : () => Navigator.pop(context),
-        child: Text(context.l10n.iptal),
+        child: Text(
+          context.l10n.iptal,
+          style: TextStyle(
+            color: cs.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      ElevatedButton(
-        onPressed: _isLoading ? null : _handleSubmit,
-        child: _isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(isEditMode ? context.l10n.kaydet : context.l10n.olustur),
+    );
+  }
+
+  // ------------------------------------------------------------ Shared bits
+
+  Widget _sectionLabel(String text, ColorScheme cs) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: cs.onSurfaceVariant,
+        letterSpacing: 0.2,
       ),
-    ];
+    );
+  }
+
+  InputDecoration _filledDecoration(
+    ColorScheme cs, {
+    required String label,
+    required String hint,
+    required IconData icon,
+    String? suffixText,
+  }) {
+    OutlineInputBorder line(Color c, double w) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c, width: w),
+        );
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      suffixText: suffixText,
+      labelStyle: TextStyle(color: cs.onSurfaceVariant),
+      floatingLabelStyle:
+          TextStyle(color: _accent, fontWeight: FontWeight.w600),
+      hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
+      prefixIcon:
+          Icon(icon, size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+      filled: true,
+      fillColor: cs.onSurface.withValues(alpha: 0.04),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      border: line(Colors.transparent, 0),
+      enabledBorder: line(Colors.transparent, 0),
+      focusedBorder: line(_accent, 1.6),
+      errorBorder: line(cs.error, 1.2),
+      focusedErrorBorder: line(cs.error, 1.6),
+    );
   }
 
   // ========== ACTIONS ==========
 
-  /// Form gönderimini işle
   void _handleSubmit() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -455,8 +632,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     }
   }
 
-  /// İkon seçici dialog'unu göster
+  /// İkon seçici alt-sayfasını göster
   void _showIconPickerDialog() {
+    FocusScope.of(context).unfocus();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -471,39 +649,39 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     );
   }
 
-  /// Özel renk seçici dialog'unu göster
+  /// Özel renk seçici diyaloğunu göster (temaya uyumlu AlertDialog)
   void _showCustomColorPicker() {
     Color selectedColor = WalletColors.hexToColor(_selectedColorHex);
 
-    IboDialog.showCustomDialog(
-      context,
-      title: context.l10n.ozelRenkSecin,
-      content: SingleChildScrollView(
-        child: ColorPicker(
-          pickerColor: selectedColor,
-          onColorChanged: (color) {
-            selectedColor = color;
-          },
-          enableAlpha: false,
-          displayThumbColor: true,
-          showLabel: true,
-          pickerAreaHeightPercent: 0.8,
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.ozelRenkSecin),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: selectedColor,
+            onColorChanged: (color) => selectedColor = color,
+            enableAlpha: false,
+            displayThumbColor: true,
+            showLabel: true,
+            pickerAreaHeightPercent: 0.8,
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.iptal),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() =>
+                  _selectedColorHex = WalletColors.colorToHex(selectedColor));
+              Navigator.pop(dialogContext);
+            },
+            child: Text(context.l10n.tamam),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.iptal),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            setState(() =>
-                _selectedColorHex = WalletColors.colorToHex(selectedColor));
-            Navigator.pop(context);
-          },
-          child: Text(context.l10n.tamam),
-        ),
-      ],
     );
   }
 
