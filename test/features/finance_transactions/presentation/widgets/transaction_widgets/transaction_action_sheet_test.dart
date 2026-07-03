@@ -50,6 +50,18 @@ void main() {
     isSystem: false,
   );
 
+  final txSystem = TransactionEntity(
+    id: 'tx_789',
+    userId: 'user_123',
+    walletId: 'wallet_123',
+    title: 'Borç Ödemesi',
+    tag: 'Borç Ödemesi',
+    amount: 300.0,
+    date: DateTime(2026, 6, 13),
+    type: TransactionTypeModel.expense,
+    isSystem: true,
+  );
+
   testWidgets('renders TransactionActionSheet with correct details for expense',
       (WidgetTester tester) async {
     await tester.pumpWidget(
@@ -88,6 +100,32 @@ void main() {
 
     // Verify income indicator icon (arrow_upward_rounded)
     expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
+  });
+
+  testWidgets(
+      'renders read-only notice instead of Edit/Delete for system transaction',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        TransactionActionSheet(
+          transaction: txSystem,
+          accent: Colors.red,
+        ),
+      ),
+    );
+
+    // Verify title is still rendered
+    expect(find.text('Borç Ödemesi'), findsWidgets);
+
+    // Düzenle/Sil dokunulabilir satırları hiç render edilmemeli.
+    expect(find.text('Düzenle'), findsNothing);
+    expect(find.text('İşlemi Sil'), findsNothing);
+
+    // Bunun yerine bilgi notu görünmeli (detay sayfasıyla aynı l10n metni).
+    expect(
+      find.textContaining('Bu işlem otomatik oluşturuldu'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('tapping Edit option pops with TransactionAction.edit',

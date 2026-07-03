@@ -312,7 +312,10 @@ void main() {
       expect(txCaptured.tag, testTemplate.tag);
       expect(txCaptured.type, testTemplate.type);
       expect(txCaptured.date, testTemplate.nextExecutionDate);
-      expect(txCaptured.isSystem, true);
+      // Kuplajlı (borç/yatırım/alacak) işlemlerin aksine, onaylanan düzenli
+      // işlemin izlenecek bir kaynak kaydı yok; kilitlenmemeli (bkz.
+      // isSystem alanının dokümantasyonu — sadece nakit kuplajı içindir).
+      expect(txCaptured.isSystem, false);
 
       // Verify template save with advanced execution date (June 20 -> July 20)
       final tempCaptured =

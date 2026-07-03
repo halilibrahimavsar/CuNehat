@@ -43,8 +43,44 @@ class DataRepairService {
 
   DataRepairService(this.walletMetricsService);
 
+  /// Gerçek nakit kuplajı (borç/yatırım/alacak) SADECE [CashMovementTags]
+  /// sabitlerini `tag` olarak kullanır (bkz. wallet_metrics_service.dart
+  /// `recordCashMovement` — tüm çağıranlar tek tek doğrulandı). Bu kümenin
+  /// dışında bir tag'le `isSystem=true` olan kayıt, düzenli işlem onayının
+  /// eski bir hatasından (bkz. `ApproveRecurringTransactionUsecase`) ya da
+  /// CSV içe aktarmadan (bkz. `CsvService`) kalma yanlış kilitli bir
+  /// kayıttır; güvenle kilidi açılabilir.
+  static const _knownCashMovementTags = {
+    CashMovementTags.debt,
+    CashMovementTags.debtPayment,
+    CashMovementTags.receivable,
+    CashMovementTags.receivableCollection,
+    CashMovementTags.investmentBuy,
+    CashMovementTags.investmentSell,
+    CashMovementTags.investmentCorrection,
+    CashMovementTags.transfer,
+  };
+
+  /// Yanlışlıkla `isSystem=true` işaretlenmiş işlemleri onarır. Bakiyeyi
+  /// etkilemez (`syncBalance` `isSystem` ayrımı yapmadan toplar), o yüzden
+  /// resync gerekmez; wallet verisinden bağımsız çalışır.
+  Future<void> _repairMislockedSystemTransactions() async {
+    final box = await _box<TransactionModel>('transactions');
+    for (final key in box.keys.toList()) {
+      final t = box.get(key);
+      if (t == null) continue;
+      if (t.isSystem && !_knownCashMovementTags.contains(t.tag)) {
+        await box.put(key, t.copyWith(isSystem: false));
+        debugPrint(
+            'DataRepair: transactions[$key] isSystem=false (tag: ${t.tag})');
+      }
+    }
+  }
+
   Future<void> run() async {
     try {
+      await _repairMislockedSystemTransactions();
+
       final walletBox = await _box<WalletModel>('wallets');
       final walletUserIds = <String, String>{
         for (final w in walletBox.values)

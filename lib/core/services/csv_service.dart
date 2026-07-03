@@ -90,7 +90,6 @@ class CsvService {
                 : parseMoney(row[2].toString());
             final date = parseDate(row[3].toString());
             final typeStr = row[4].toString();
-            final isSystemStr = row[5].toString().toLowerCase();
 
             // Tutar/tarih çözülemiyorsa satırı sessizce bugünün tarihiyle
             // veya 0 tutarla eklemek veri bozar; atla ve say.
@@ -102,8 +101,12 @@ class CsvService {
             final type = typeStr == 'income'
                 ? TransactionTypeModel.income
                 : TransactionTypeModel.expense;
-            final isSystem = isSystemStr == 'true';
 
+            // CSV'deki IsSystem sütununa GÜVENME: içe aktarım her zaman yeni
+            // bir cüzdana yazar ve o cüzdanda karşılık gelen borç/yatırım/
+            // alacak kaydı asla olamaz. isSystem=true'yu olduğu gibi
+            // taşımak, UI'dan asla düzenlenemeyen/silinemeyen kalıcı
+            // "hayalet" kilitli işlemler üretir.
             importedTransactions.add(
               TransactionEntity(
                 id: _uuid.v4(),
@@ -114,7 +117,7 @@ class CsvService {
                 amount: amount,
                 date: date,
                 type: type,
-                isSystem: isSystem,
+                isSystem: false,
               ),
             );
           } catch (e) {

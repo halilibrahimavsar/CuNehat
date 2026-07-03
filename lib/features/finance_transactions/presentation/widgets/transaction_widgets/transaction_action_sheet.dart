@@ -87,25 +87,61 @@ class TransactionActionSheet extends StatelessWidget {
                 ],
               ),
             ),
-            _tile(
-              context,
-              icon: Icons.edit_rounded,
-              color: Colors.blueGrey,
-              title: context.l10n.duzenle,
-              subtitle: context.l10n.duzenleSubtitle,
-              action: TransactionAction.edit,
-            ),
-            _tile(
-              context,
-              icon: Icons.delete_outline_rounded,
-              color: Colors.red,
-              title: context.l10n.islemiSil,
-              subtitle: context.l10n.silSubtitle,
-              action: TransactionAction.delete,
-            ),
+            if (transaction.isSystem)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                child: _systemNotice(context, cs),
+              )
+            else ...[
+              _tile(
+                context,
+                icon: Icons.edit_rounded,
+                color: Colors.blueGrey,
+                title: context.l10n.duzenle,
+                subtitle: context.l10n.duzenleSubtitle,
+                action: TransactionAction.edit,
+              ),
+              _tile(
+                context,
+                icon: Icons.delete_outline_rounded,
+                color: Colors.red,
+                title: context.l10n.islemiSil,
+                subtitle: context.l10n.silSubtitle,
+                action: TransactionAction.delete,
+              ),
+            ],
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Detay sayfasındaki (`single_transaction_detail_page.dart`) bilgi
+  /// notuyla aynı görsel dil: kilitli işlemlerde Düzenle/Sil yerine gösterilir.
+  Widget _systemNotice(BuildContext context, ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.onSurfaceVariant.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurfaceVariant.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, size: 18, color: cs.onSurfaceVariant),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.buIslemOtomatikOlusturuldu,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

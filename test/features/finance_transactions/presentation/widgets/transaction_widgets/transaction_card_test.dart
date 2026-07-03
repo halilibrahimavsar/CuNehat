@@ -180,7 +180,8 @@ void main() {
     expect(find.byType(SingleTransactionDetailPage), findsOneWidget);
   });
 
-  testWidgets('long press edit system transaction shows warning snackbar',
+  testWidgets(
+      'long press system transaction shows read-only notice instead of edit/delete',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: true, id: 'tx_123');
     final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
@@ -209,55 +210,20 @@ void main() {
     await tester.longPress(find.text('Sistem İşlemi'));
     await tester.pumpAndSettle();
 
-    // Tap Düzenle
-    await tester.tap(find.text('Düzenle'));
-    await tester.pumpAndSettle();
+    // Düzenle/Sil dokunulabilir satırları hiç render edilmemeli (proaktif
+    // kilit — kullanıcı yanlışlıkla "işe yarayacak" bir eylem denemesin).
+    expect(find.text('Düzenle'), findsNothing);
+    expect(find.text('İşlemi Sil'), findsNothing);
 
-    // Verify Warning SnackBar is shown
-    expect(
-      find.textContaining('Otomatik işlem düzenlenemez'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('long press delete system transaction shows warning snackbar',
-      (WidgetTester tester) async {
-    final tx = createTx(isSystem: true, id: 'tx_123');
-    final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
-
-    when(() => mockTransactionBloc.state).thenReturn(
-      TransactionLoaded(
-        groupedTransactions: {
-          testDate: [tx]
-        },
-        allTransactions: [tx],
-      ),
-    );
-
-    await tester.pumpWidget(
-      buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
-      ),
-    );
-
-    await tester.longPress(find.text('Sistem İşlemi'));
-    await tester.pumpAndSettle();
-
-    // Tap İşlemi Sil
-    await tester.tap(find.text('İşlemi Sil'));
-    await tester.pumpAndSettle();
-
-    // Verify Warning SnackBar is shown
+    // Bunun yerine detay sayfasındakiyle aynı bilgi notu görünmeli.
     expect(
       find.textContaining('Bu işlem otomatik oluşturuldu'),
       findsOneWidget,
     );
+
+    // Sheet'te dokunulacak bir aksiyon olmadığından hiçbir bloc event'i
+    // tetiklenmemeli.
+    verifyNever(() => mockTransactionBloc.add(any()));
   });
 
   testWidgets('long press edit non-system transaction opens edit sheet',

@@ -41,13 +41,11 @@ class TransactionCard extends StatelessWidget {
     );
     if (action == null || !context.mounted) return;
 
+    // Kilitli (isSystem) işlemler için TransactionActionSheet zaten
+    // Düzenle/Sil yerine bir bilgi notu gösterir; bu action'lar hiç
+    // dönmez, o yüzden burada tekrar isSystem kontrolüne gerek yok.
     switch (action) {
       case TransactionAction.edit:
-        if (t.isSystem) {
-          _systemSnack(context,
-              'Otomatik işlem düzenlenemez. İlgili borç/yatırım/alacak kaydından değiştirin.');
-          return;
-        }
         TransactionSheetHandler.showSheet(
           context: context,
           userId: t.userId,
@@ -57,11 +55,6 @@ class TransactionCard extends StatelessWidget {
         );
         break;
       case TransactionAction.delete:
-        if (t.isSystem) {
-          _systemSnack(context,
-              'Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından silin.');
-          return;
-        }
         final confirmed = await IboDialog.showConfirmation(
           context,
           'İşlem Sil',
@@ -223,7 +216,4 @@ class TransactionCard extends StatelessWidget {
     );
   }
 
-  void _systemSnack(BuildContext context, String message) {
-    IboSnackbar.showWarning(context, message);
-  }
 }

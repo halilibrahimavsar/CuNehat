@@ -186,6 +186,9 @@ void main() {
 
     test('imports valid transactions and skips invalid rows', () async {
       final tempFile = File('${Directory.systemTemp.path}/test_import.csv');
+      // "Rent" satırı IsSystem=true taşıyor: bu, kuplajlı bir işlemin geçmiş
+      // export'undan gelmiş olabilir. İçe aktarım her zaman yeni bir cüzdana
+      // yazdığından (borç/yatırım kaydı olmayan), bu sütuna güvenilmemeli.
       final csvContent = 'Title,Tag,Amount,Date,Type,IsSystem\r\n'
           'Salary,Work,5000,2024-01-01,income,false\r\n'
           'Rent,Home,1500,02/01/2024,expense,true\r\n'
@@ -219,7 +222,10 @@ void main() {
       expect(t2.title, 'Rent');
       expect(t2.amount, 1500.0);
       expect(t2.type, TransactionTypeModel.expense);
-      expect(t2.isSystem, isTrue);
+      // CSV'de IsSystem=true yazsa bile içe aktarım bu değeri asla dikkate
+      // almaz; aksi halde bu cüzdanda hiçbir kaynak kaydı olmayan kalıcı
+      // kilitli hayalet bir işlem oluşurdu.
+      expect(t2.isSystem, isFalse);
 
       // Clean up
       if (tempFile.existsSync()) {

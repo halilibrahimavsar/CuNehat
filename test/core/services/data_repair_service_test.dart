@@ -231,6 +231,65 @@ void main() {
       verify(() => mockWalletMetricsService.syncInvestment('w1')).called(1);
     });
 
+    test(
+        'should unlock system transactions whose tag is not a real cash-coupling tag',
+        () async {
+      final walletBox = Hive.box<WalletModel>('wallets');
+      await walletBox.put(
+          'w1',
+          WalletModel(
+            id: 'w1',
+            userId: 'u1',
+            name: 'W1',
+            balance: 100,
+            debt: 0,
+            credit: 0,
+            investment: 0,
+            colorHex: '#000000',
+            iconName: 'wallet',
+            createdAt: DateTime.now(),
+          ));
+
+      final txBox = Hive.box<TransactionModel>('transactions');
+      // Gerçek borç kuplajı (CashMovementTags.debtPayment) — kilitli kalmalı.
+      await txBox.put(
+          'legit',
+          TransactionModel(
+            id: 'legit',
+            userId: 'u1',
+            walletId: 'w1',
+            title: 'Borç Ödemesi',
+            tag: CashMovementTags.debtPayment,
+            amount: 50,
+            date: DateTime.now(),
+            type: TransactionTypeModel.expense,
+            isSystem: true,
+          ));
+      // Düzenli işlem onayından (veya CSV içe aktarmadan) kalma yanlış
+      // kilit: tag gerçek bir CashMovementTags değeri değil — açılmalı.
+      await txBox.put(
+          'mislocked',
+          TransactionModel(
+            id: 'mislocked',
+            userId: 'u1',
+            walletId: 'w1',
+            title: 'Kira',
+            tag: 'Kira',
+            amount: 1000,
+            date: DateTime.now(),
+            type: TransactionTypeModel.expense,
+            isSystem: true,
+          ));
+
+      await service.run();
+
+      expect(txBox.get('legit')!.isSystem, isTrue);
+      expect(txBox.get('mislocked')!.isSystem, isFalse);
+      // isSystem onarımı bakiyeyi etkilemez; ek bir metrik senkronizasyonu
+      // tetiklenmemeli.
+      verifyNoMoreInteractions(mockWalletMetricsService);
+    });
+
     test('should not crash if exception is thrown', () async {
       await Hive.close();
       await expectLater(service.run(), completes);
