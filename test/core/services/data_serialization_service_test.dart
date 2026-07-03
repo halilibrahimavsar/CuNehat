@@ -203,6 +203,40 @@ void main() {
     expect(prefs.getString(CategoryService.backupKeys.first), isNull);
   });
 
+  test('cüzdan para birimi export/import round-trip ile korunur', () async {
+    await Hive.box<WalletModel>('wallets')
+        .put('w1', _wallet().copyWith(currency: 'USD'));
+
+    final jsonString = await service.exportDataToJson();
+    final data = jsonDecode(jsonString) as Map<String, dynamic>;
+    expect((data['wallets'] as List).single['currency'], 'USD');
+
+    await service.clearAllLocalData();
+    final result = await service.importDataFromJson(jsonString);
+
+    expect(result.isSuccess, true);
+    expect(Hive.box<WalletModel>('wallets').get('w1')?.currency, 'USD');
+  });
+
+  test('currency anahtarı olmayan eski yedek TRY olarak geri yüklenir',
+      () async {
+    final walletJson = _wallet().toJson()..remove('currency');
+    final legacyBackup = jsonEncode({
+      'version': 3,
+      'wallets': [walletJson],
+      'transactions': [],
+      'investments': [],
+      'debts': [],
+      'receivables': [],
+      'users': {},
+    });
+
+    final result = await service.importDataFromJson(legacyBackup);
+
+    expect(result.isSuccess, true);
+    expect(Hive.box<WalletModel>('wallets').get('w1')?.currency, 'TRY');
+  });
+
   test('rejects malformed JSON without touching current data', () async {
     await Hive.box<WalletModel>('wallets').put('w1', _wallet());
 

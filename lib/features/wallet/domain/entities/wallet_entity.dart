@@ -20,6 +20,11 @@ class WalletEntity extends Equatable {
   /// olabilir (lazy geri-doldurulur).
   final double? openingBalance;
 
+  /// Cüzdanın para birimi ('TRY' | 'USD' | 'EUR'). Tüm tutarlar (balance,
+  /// işlemler) bu birimde tutulur; işlem geçmişi oluştuktan sonra
+  /// değiştirilemez (geçmiş tutarların anlamı bozulur).
+  final String currency;
+
   const WalletEntity({
     required this.id,
     required this.userId,
@@ -34,6 +39,7 @@ class WalletEntity extends Equatable {
     this.isActive = false,
     this.sortOrder = 0,
     this.openingBalance,
+    this.currency = 'TRY',
   });
 
   WalletEntity copyWith({
@@ -50,6 +56,7 @@ class WalletEntity extends Equatable {
     bool? isActive,
     int? sortOrder,
     double? openingBalance,
+    String? currency,
   }) {
     return WalletEntity(
       id: id ?? this.id,
@@ -65,6 +72,7 @@ class WalletEntity extends Equatable {
       isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
       openingBalance: openingBalance ?? this.openingBalance,
+      currency: currency ?? this.currency,
     );
   }
 
@@ -83,5 +91,6 @@ class WalletEntity extends Equatable {
         isActive,
         sortOrder,
         openingBalance,
+        currency,
       ];
 }

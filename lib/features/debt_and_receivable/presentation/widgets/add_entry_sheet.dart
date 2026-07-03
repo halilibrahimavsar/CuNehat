@@ -5,6 +5,7 @@ import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
@@ -144,7 +145,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   String _fmtMoney(double v) =>
       v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
 
-  double? get _parsedAmount => parseAmount(_amountController.text);
+  double? get _parsedAmount => parseMoney(_amountController.text);
 
   void _onInstallmentChanged() {
     if (_suppressInstallmentListener) return;
@@ -197,7 +198,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       final t = int.tryParse(_termController.text.trim()) ?? 0;
       if (t <= 0) return context.l10n.vadeEnAz1Olmali;
       if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
-        final installment = parseAmount(_installmentController.text);
+        final installment = parseMoney(_installmentController.text);
         if (installment == null) {
           return context.l10n.aylikTaksitTutariniGirin;
         }
@@ -225,8 +226,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final amount = _parsedAmount!;
 
     if (_isDebt) {
+      // Faiz ORAN'dır, yuvarlanmaz; taksit para tutarıdır.
       final rawInterest = parseAmount(_interestController.text) ?? 0;
-      final monthlyInstallment = parseAmount(_installmentController.text) ?? 0;
+      final monthlyInstallment = parseMoney(_installmentController.text) ?? 0;
       final parsedTerm = int.tryParse(_termController.text.trim()) ?? 1;
 
       int term = 1;
@@ -259,7 +261,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       }
 
       // Önizleme ile aynı hesaplayıcı → kaydedilen tutar önizlenenle birebir.
-      final expectedTotal = _calc
+      // Kaydedilen toplam kuruşa yuvarlanır; "Tümü" ödemesi bu değerle eşleşir.
+      final expectedTotal = roundToCents(_calc
           .compute(
             type: _selectedDebtType,
             principal: amount,
@@ -270,7 +273,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             isBankLoanMonthly: _isBankLoanMonthly,
             includeBankTaxes: _includeBankTaxes,
           )
-          .expectedTotal;
+          .expectedTotal);
 
       final dueDate = addMonthsClamped(_selectedDate, term);
 
@@ -689,7 +692,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           principal: principal,
           termMonths: term,
           interestRate: parseAmount(_interestController.text) ?? 0,
-          monthlyInstallment: parseAmount(_installmentController.text) ?? 0,
+          monthlyInstallment: parseMoney(_installmentController.text) ?? 0,
           isInstallmentAmortized: _isInstallmentAmortized,
           isBankLoanMonthly: _isBankLoanMonthly,
           includeBankTaxes: _includeBankTaxes,

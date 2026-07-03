@@ -1,4 +1,5 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
@@ -173,8 +174,38 @@ class SliderButtonView extends StatelessWidget {
     );
   }
 
+  /// v1 kısıtı: borç/alacak ve yatırım akışları TL'ye bağlı (değerleme ve
+  /// nakit kuplajı TL varsayar); döviz cüzdanında mesajla engellenir.
+  /// Gelir/gider serbesttir — tutar cüzdanın kendi birimindedir.
+  bool _blockIfNonTry(
+      BuildContext context, dynamic activeWallet, String message) {
+    if (activeWallet.currency == kDefaultCurrency) return false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+    return true;
+  }
+
   void _handleAction(
       String actionType, BuildContext context, dynamic activeWallet) {
+    switch (actionType) {
+      case 'add_gold_investment':
+      case 'add_stock_investment':
+      case 'add_custom_investment':
+        if (_blockIfNonTry(
+            context, activeWallet, context.l10n.sadeceTlCuzdanYatirim)) {
+          return;
+        }
+        break;
+      case 'add_debt':
+      case 'add_receivable':
+        if (_blockIfNonTry(
+            context, activeWallet, context.l10n.sadeceTlCuzdanBorc)) {
+          return;
+        }
+        break;
+    }
+
     switch (actionType) {
       case 'add_gold_investment':
         _showAddGoldSheet(context, activeWallet);

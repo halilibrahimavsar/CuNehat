@@ -1,5 +1,6 @@
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/receivable_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -19,6 +20,7 @@ class CashMovementTags {
   static const String investmentBuy = 'Yatırım Alımı';
   static const String investmentSell = 'Yatırım Satışı';
   static const String investmentCorrection = 'Yatırım Düzeltmesi';
+  static const String transfer = 'Transfer';
 }
 
 /// Kasıtlı cross-feature orkestratör: cüzdan defteri (balance/debt/credit/
@@ -106,7 +108,9 @@ class WalletMetricsService {
       walletId: walletId,
       title: title,
       tag: tag,
-      amount: amount,
+      // Kuplajla gelen tutarlar (borç farkı, satış bedeli vb.) hesaplanmış
+      // olabilir; deftere her zaman kuruş-temiz yazılır.
+      amount: roundToCents(amount),
       date: date ?? DateTime.now(),
       type:
           isIncome ? TransactionTypeModel.income : TransactionTypeModel.expense,
@@ -167,17 +171,19 @@ class WalletMetricsService {
             return false;
           },
           (txs) async {
-            final txSum = txs.fold<double>(
+            final txSum = roundToCents(txs.fold<double>(
               0.0,
               (sum, t) => sum + (t.isIncome ? t.amount : -t.amount),
-            );
+            ));
 
-            final opening = wallet.openingBalance ?? (wallet.balance - txSum);
-            final newBalance = opening + txSum;
+            // Null-backfill semantiği aynen: yalnız aritmetik sonucu yuvarlanır.
+            final opening = wallet.openingBalance ??
+                roundToCents(wallet.balance - txSum);
+            final newBalance = roundToCents(opening + txSum);
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
             if (wallet.openingBalance != null &&
-                (wallet.balance - newBalance).abs() < 0.001) {
+                moneyEquals(wallet.balance, newBalance)) {
               return true;
             }
 
@@ -221,9 +227,9 @@ class WalletMetricsService {
     await debtsResult.fold(
       (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (debts) async {
-        final totalDebt = debts
+        final totalDebt = roundToCents(debts
             .where((debt) => !debt.isPaid)
-            .fold<double>(0.0, (sum, debt) => sum + debt.remainingAmount);
+            .fold<double>(0.0, (sum, debt) => sum + debt.remainingAmount));
 
         // Cüzdanı toplamadan SONRA, yazmadan hemen önce oku: kuyruk dışı
         // yazımların (balance/opening) üzerine bayat kopya yazılmasın.
@@ -233,7 +239,7 @@ class WalletMetricsService {
               debugPrint('WalletMetricsService: ${failure.message}'),
           (wallet) async {
             if (wallet == null) return;
-            if ((wallet.debt - totalDebt).abs() >= 0.001) {
+            if (!moneyEquals(wallet.debt, totalDebt)) {
               await walletRepository
                   .updateWallet(wallet.copyWith(debt: totalDebt));
             }
@@ -252,9 +258,9 @@ class WalletMetricsService {
     await receivablesResult.fold(
       (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
       (receivables) async {
-        final totalCredit = receivables
+        final totalCredit = roundToCents(receivables
             .where((r) => !r.isPaid)
-            .fold<double>(0.0, (sum, r) => sum + r.amount);
+            .fold<double>(0.0, (sum, r) => sum + r.amount));
 
         // Bkz. _syncDebtImpl: yazmadan hemen önce taze oku.
         final result = await walletRepository.getWalletById(walletId);
@@ -263,7 +269,7 @@ class WalletMetricsService {
               debugPrint('WalletMetricsService: ${failure.message}'),
           (wallet) async {
             if (wallet == null) return;
-            if ((wallet.credit - totalCredit).abs() >= 0.001) {
+            if (!moneyEquals(wallet.credit, totalCredit)) {
               await walletRepository
                   .updateWallet(wallet.copyWith(credit: totalCredit));
             }
@@ -290,10 +296,10 @@ class WalletMetricsService {
 
         final totalInvestment = invResult.fold(
           (failure) => 0.0,
-          (investments) => investments.fold<double>(
+          (investments) => roundToCents(investments.fold<double>(
             0.0,
             (sum, item) => sum + item.currentValue,
-          ),
+          )),
         );
 
         // Bkz. _syncDebtImpl: yazmadan hemen önce taze oku (ilk okuma
@@ -304,7 +310,7 @@ class WalletMetricsService {
               debugPrint('WalletMetricsService: ${failure.message}'),
           (fresh) async {
             final target = fresh ?? wallet;
-            if ((target.investment - totalInvestment).abs() >= 0.001) {
+            if (!moneyEquals(target.investment, totalInvestment)) {
               await walletRepository
                   .updateWallet(target.copyWith(investment: totalInvestment));
             }

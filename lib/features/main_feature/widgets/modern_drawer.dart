@@ -367,13 +367,14 @@ class _ModernDrawerState extends State<ModernDrawer>
                     height: 1),
                 const SizedBox(height: 12),
                 _buildDrawerMetricRow(context.l10n.drawerBalance,
-                    wallet.balance, Colors.white, theme),
+                    wallet.balance, Colors.white, theme, wallet.currency),
                 const SizedBox(height: 8),
                 _buildDrawerMetricRow(context.l10n.drawerInvestment,
-                    wallet.investment, Colors.greenAccent, theme),
+                    wallet.investment, Colors.greenAccent, theme,
+                    wallet.currency),
                 const SizedBox(height: 8),
                 _buildDrawerMetricRow(context.l10n.drawerDebt, wallet.debt,
-                    Colors.redAccent, theme),
+                    Colors.redAccent, theme, wallet.currency),
               ],
             ),
           ),
@@ -382,8 +383,8 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
-  Widget _buildDrawerMetricRow(
-      String label, double amount, Color amountColor, ThemeData theme) {
+  Widget _buildDrawerMetricRow(String label, double amount, Color amountColor,
+      ThemeData theme, String currencyCode) {
     final isDark = theme.brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -398,7 +399,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           ),
         ),
         Text(
-          AppFormatters.currency.format(amount),
+          AppFormatters.currencyFor(currencyCode).format(amount),
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,

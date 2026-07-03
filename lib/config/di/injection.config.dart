@@ -14,11 +14,15 @@ import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
 import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/data_serialization_service.dart' as _i348;
+import 'package:cunehat/core/services/exchange_rate_service.dart' as _i500;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
     as _i186;
 import 'package:cunehat/core/services/local_backup_service.dart' as _i266;
+import 'package:cunehat/core/services/money_normalization_service.dart'
+    as _i338;
 import 'package:cunehat/core/services/transactions_changed_notifier.dart'
     as _i777;
+import 'package:cunehat/core/services/transfer_service.dart' as _i625;
 import 'package:cunehat/core/services/wallet_metrics_service.dart' as _i239;
 import 'package:cunehat/features/budgets/data/datasources/local/budget_local_datasource.dart'
     as _i828;
@@ -192,6 +196,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i855.GetDebtsUseCase(gh<_i198.DebtRepository>()));
     gh.singleton<_i896.CategoryRepository>(
         () => _i20.CategoryRepositoryImpl(gh<_i1002.CategoryService>()));
+    gh.lazySingleton<_i500.ExchangeRateService>(() => _i500.ExchangeRateService(
+          client: gh<_i519.Client>(),
+          prefs: gh<_i460.SharedPreferences>(),
+        ));
     gh.lazySingleton<_i648.RecurringTransactionLocalDataSource>(
         () => _i648.RecurringTransactionLocalDataSourceImpl());
     gh.lazySingleton<_i543.TransactionsRepository>(() =>
@@ -223,6 +231,11 @@ extension GetItInjectableX on _i174.GetIt {
         () => appModule.localAuthLoginBloc(gh<_i698.LocalAuthRepository>()));
     gh.factory<_i698.LocalAuthSettingsBloc>(
         () => appModule.localAuthSettingsBloc(gh<_i698.LocalAuthRepository>()));
+    gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
+        () => _i29.InvestmentRemoteDataSourceImpl(
+              client: gh<_i519.Client>(),
+              exchangeRateService: gh<_i500.ExchangeRateService>(),
+            ));
     gh.factory<_i855.AddDebtUseCase>(() => _i855.AddDebtUseCase(
           gh<_i198.DebtRepository>(),
           gh<_i551.NotificationService>(),
@@ -239,8 +252,6 @@ extension GetItInjectableX on _i174.GetIt {
         _i186.GoogleDriveBackupService(gh<_i348.DataSerializationService>()));
     gh.lazySingleton<_i266.LocalBackupService>(
         () => _i266.LocalBackupService(gh<_i348.DataSerializationService>()));
-    gh.lazySingleton<_i29.InvestmentRemoteDataSource>(
-        () => _i29.InvestmentRemoteDataSourceImpl(client: gh<_i519.Client>()));
     gh.lazySingleton<_i94.BudgetRepository>(
         () => _i626.BudgetRepositoryImpl(gh<_i828.BudgetLocalDataSource>()));
     gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
@@ -341,6 +352,10 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i551.NotificationService>(),
             ));
+    gh.lazySingleton<_i625.TransferService>(() => _i625.TransferService(
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+          exchangeRateService: gh<_i500.ExchangeRateService>(),
+        ));
     gh.lazySingleton<_i222.BudgetAlertMonitor>(
       () => _i222.BudgetAlertMonitor(
         gh<_i21.GetBudgetsUsecase>(),
@@ -370,6 +385,8 @@ extension GetItInjectableX on _i174.GetIt {
             ));
     gh.lazySingleton<_i816.DataRepairService>(
         () => _i816.DataRepairService(gh<_i239.WalletMetricsService>()));
+    gh.lazySingleton<_i338.MoneyNormalizationService>(() =>
+        _i338.MoneyNormalizationService(gh<_i239.WalletMetricsService>()));
     gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
           csvService: gh<_i530.CsvService>(),
           localBackupService: gh<_i266.LocalBackupService>(),

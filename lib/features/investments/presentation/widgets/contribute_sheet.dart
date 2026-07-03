@@ -61,7 +61,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
 
   bool get _isAssetMode => widget.investment.symbol != null;
 
-  double? get _parsedAmount => parseAmount(_amountController.text);
+  double? get _parsedAmount => parseMoney(_amountController.text);
   double? get _parsedQuantity => parseAmount(_quantityController.text);
 
   @override

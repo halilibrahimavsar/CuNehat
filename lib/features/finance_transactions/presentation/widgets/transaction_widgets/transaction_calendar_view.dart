@@ -7,6 +7,7 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/daily_spending_summary_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -420,9 +421,10 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
   }
 
   /// [DetailedListView]'deki günlük özet satırıyla aynı dil: ↑gelir ↓gider +
-  /// net rozeti. Tutarlar mevcut [AppFormatters.currency] ile (liste ile birebir).
+  /// net rozeti. Tutarlar aktif cüzdan birimiyle (liste ile birebir).
   Widget _buildSummaryRow(DaySummary s) {
     final scheme = Theme.of(context).colorScheme;
+    final money = AppFormatters.currencyFor(context.activeWalletCurrency);
     final netColor = s.net >= 0 ? AppGradients.savings : AppGradients.debt;
 
     return Row(
@@ -433,7 +435,7 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
               size: 11, color: AppGradients.savings.withValues(alpha: 0.85)),
           const SizedBox(width: 2),
           Text(
-            AppFormatters.currency.format(s.income),
+            money.format(s.income),
             style: TextStyle(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
               fontSize: 10.5,
@@ -447,7 +449,7 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
               size: 11, color: AppGradients.debt.withValues(alpha: 0.85)),
           const SizedBox(width: 2),
           Text(
-            AppFormatters.currency.format(s.expense),
+            money.format(s.expense),
             style: TextStyle(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
               fontSize: 10.5,
@@ -468,7 +470,7 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
           ),
           child: Text(
             context.l10n.netNetAppformattersCurrency(
-                '${s.net >= 0 ? "+" : ""}${AppFormatters.currency.format(s.net)}'),
+                '${s.net >= 0 ? "+" : ""}${money.format(s.net)}'),
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:csv/csv.dart';
@@ -85,8 +86,8 @@ class CsvService {
             final title = row[0].toString();
             final tag = row[1].toString();
             final amount = row[2] is num
-                ? (row[2] as num).toDouble()
-                : parseAmount(row[2].toString());
+                ? roundToCents((row[2] as num).toDouble())
+                : parseMoney(row[2].toString());
             final date = parseDate(row[3].toString());
             final typeStr = row[4].toString();
             final isSystemStr = row[5].toString().toLowerCase();

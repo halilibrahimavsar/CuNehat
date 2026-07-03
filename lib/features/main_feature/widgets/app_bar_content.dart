@@ -1,7 +1,12 @@
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
@@ -195,6 +200,23 @@ class _AppBarContentState extends State<AppBarContent> {
             _buildWalletNameBadge(context, state.activeWallet, valueName, st),
             const SizedBox(height: 2),
             _buildAmountDisplay(value),
+            // Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı;
+            // kur yoksa satır gizlenir.
+            if (st == SliderState.transactions &&
+                state.activeWallet != null &&
+                state.activeWallet!.currency != kDefaultCurrency)
+              if (getIt<ExchangeRateService>()
+                      .cachedRateToTry(state.activeWallet!.currency)
+                  case final double rate)
+                Text(
+                  context.l10n
+                      .yaklasikKarsilikFormat(formatMoney(value * rate)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.white.withValues(alpha: 0.75),
+                  ),
+                ),
           ],
         ),
       ),
@@ -245,6 +267,7 @@ class _AppBarContentState extends State<AppBarContent> {
       builder: (context, isVisible) {
         return AmountDisplay(
           amount: value,
+          currencySymbol: context.activeWalletCurrencySymbol,
           animationCurve: Curves.decelerate,
           obscureMode: AmountObscureMode.blur,
           alignment: Alignment.center,

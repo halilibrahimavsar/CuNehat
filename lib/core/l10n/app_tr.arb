@@ -724,5 +724,34 @@
   "bugun": "Bugün",
   "islemBuguneAyarliIpucu": "Tarih bugüne ayarlı — başka bir güne eklemek için tarihe dokun.",
   "mevcutDegerAciklama": "Yatırımın bugünkü piyasa değeri; 'Hesapla' ile güncel fiyattan güncellenir.",
-  "toplamMaliyetAciklama": "Bu yatırıma ödediğin toplam tutar (maliyetin). 'Hesapla' bunu değiştirmez; kâr/zarar bununla hesaplanır."
+  "toplamMaliyetAciklama": "Bu yatırıma ödediğin toplam tutar (maliyetin). 'Hesapla' bunu değiştirmez; kâr/zarar bununla hesaplanır.",
+  "paraBirimiLabel": "Para Birimi",
+  "paraBirimiKilitliHint": "İşlem geçmişi olan cüzdanın para birimi değiştirilemez",
+  "sadeceTlCuzdanBorc": "Borç/alacak takibi şimdilik yalnız TL cüzdanlarda kullanılabilir",
+  "sadeceTlCuzdanYatirim": "Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir",
+  "yaklasikKarsilikFormat": "≈ {tutar}",
+  "@yaklasikKarsilikFormat": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+  "toplamTlKarsilikFormat": "Toplam ≈ {tutar}",
+  "@toplamTlKarsilikFormat": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+  "cuzdanlarArasiTransfer": "Cüzdanlar Arası Transfer",
+  "transferEt": "Transfer Et",
+  "transferHedefCuzdan": "Hedef cüzdan",
+  "transferOnizlemeFormat": "Hedefe ≈ {tutar} geçecek",
+  "@transferOnizlemeFormat": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+  "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin",
+  "transferBasarili": "Transfer tamamlandı",
+  "transferBasarisiz": "Transfer başarısız oldu",
+  "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli"
 }

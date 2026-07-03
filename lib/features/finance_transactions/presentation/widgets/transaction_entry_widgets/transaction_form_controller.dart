@@ -60,7 +60,7 @@ class TransactionFormController {
     }
   }
 
-  double? get parsedAmount => parseAmount(amountController.text);
+  double? get parsedAmount => parseMoney(amountController.text);
 
   /// Geçerliyse `null`, değilse hata mesajını döndürür.
   String? validate() {

@@ -1,3 +1,5 @@
+import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -219,6 +221,12 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
 
   @override
   Widget build(BuildContext context) {
+    // v1 kısıtı: yatırım değerlemesi ve nakit kuplajı TL varsayar.
+    if (widget.activeWallet.currency != kDefaultCurrency) {
+      return Scaffold(
+        body: TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanYatirim),
+      );
+    }
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
         if (state is InvestmentActionSuccess) {

@@ -1,5 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
@@ -118,7 +119,8 @@ class CompactFilterInfo extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_buildInfoChip(
         icon: isLightMode ? Icons.attach_money_rounded : Icons.attach_money,
-        text: filter.priceRange.toString(),
+        text: filter.priceRange!
+            .label(symbol: context.activeWalletCurrencySymbol),
         backgroundColor: isLightMode
             ? Colors.green.shade400.withValues(alpha: 0.9)
             : Colors.green.shade100,

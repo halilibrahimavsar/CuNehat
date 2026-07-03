@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cunehat/core/error/exceptions.dart';
+import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/utils/tr_price_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
@@ -18,8 +19,12 @@ abstract class InvestmentRemoteDataSource {
 @LazySingleton(as: InvestmentRemoteDataSource)
 class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
   final http.Client client;
+  final ExchangeRateService exchangeRateService;
 
-  InvestmentRemoteDataSourceImpl({required this.client});
+  InvestmentRemoteDataSourceImpl({
+    required this.client,
+    required this.exchangeRateService,
+  });
 
   static const _truncgilUrl = 'https://finans.truncgil.com/today.json';
 
@@ -73,16 +78,16 @@ class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
     );
   }
 
-  /// 1 birim [currency] için TL kuru (truncgil 'Satış').
+  /// 1 birim [currency] için TL kuru. Ortak (önbellekli) kur servisine
+  /// delege eder; sözleşme aynı — desteklenmeyen birim ya da kur yoksa
+  /// ServerException (portföye karışık birim değer yazılmasın).
   Future<double> getFxRateToTry(String currency) async {
     final key = _fxKeys[currency.toUpperCase()];
     if (key == null) {
       throw ServerException('Desteklenmeyen para birimi: $currency');
     }
 
-    final data = await _fetchTruncgil();
-    final entry = data[key];
-    final rate = parseTrPrice(entry is Map ? entry['Satış'] : null);
+    final rate = await exchangeRateService.rateToTry(key);
     if (rate == null || rate <= 0) {
       throw ServerException('Kur alınamadı: $currency');
     }

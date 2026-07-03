@@ -5,6 +5,7 @@ import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
@@ -70,6 +71,9 @@ class _InsightsView extends StatefulWidget {
 class _InsightsViewState extends State<_InsightsView> {
   static const _analytics = TransactionAnalyticsService();
   static const _detector = RecurringPatternDetector();
+
+  /// Sayfadaki tüm tutarlar aktif cüzdanın biriminde gösterilir.
+  String _money(double v) => formatMoney(v, currency: context.activeWalletCurrency);
 
   final _quickOptions = DateRangeHelper.buildDateRangeQuickOptions();
 
@@ -212,11 +216,11 @@ class _InsightsViewState extends State<_InsightsView> {
         i.savingsRate >= 0 ? AppGradients.savings : AppGradients.debt;
     return Row(
       children: [
-        _statTile(context, context.l10n.menuIncome, formatMoney(i.totalIncome),
+        _statTile(context, context.l10n.menuIncome, _money(i.totalIncome),
             AppGradients.savings),
         const SizedBox(width: 10),
         _statTile(context, context.l10n.menuExpense,
-            formatMoney(i.totalExpense), AppGradients.debt),
+            _money(i.totalExpense), AppGradients.debt),
         const SizedBox(width: 10),
         _statTile(context, context.l10n.birikimOrani,
             '${(i.savingsRate * 100).toStringAsFixed(0)}%', savingsColor),
@@ -269,7 +273,7 @@ class _InsightsViewState extends State<_InsightsView> {
         context,
         Icons.calendar_today_rounded,
         l10n.gunlukOrtalamaHarcama,
-        formatMoney(i.dailyAverageExpense),
+        _money(i.dailyAverageExpense),
       ),
     ];
 
@@ -279,7 +283,7 @@ class _InsightsViewState extends State<_InsightsView> {
         Icons.event_rounded,
         l10n.enCokHarcananGun,
         '${_weekdayName(context, i.topExpenseWeekday!)} '
-        '(${formatMoney(i.topExpenseWeekdayAmount)})',
+        '(${_money(i.topExpenseWeekdayAmount)})',
       ));
     }
 
@@ -291,7 +295,7 @@ class _InsightsViewState extends State<_InsightsView> {
         context,
         Icons.category_rounded,
         l10n.enCokHarcananKategori,
-        '$cat (${formatMoney(i.topExpenseCategoryAmount)})',
+        '$cat (${_money(i.topExpenseCategoryAmount)})',
       ));
     }
 
@@ -300,7 +304,7 @@ class _InsightsViewState extends State<_InsightsView> {
         context,
         Icons.north_east_rounded,
         l10n.enBuyukHarcama,
-        '${i.largestExpense!.title} (${formatMoney(i.largestExpense!.amount)})',
+        '${i.largestExpense!.title} (${_money(i.largestExpense!.amount)})',
         accent: AppGradients.debt,
       ));
     }
@@ -422,7 +426,7 @@ class _InsightsViewState extends State<_InsightsView> {
                   ),
                 ),
                 Text(
-                  formatMoney(s.amount),
+                  _money(s.amount),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: accent,

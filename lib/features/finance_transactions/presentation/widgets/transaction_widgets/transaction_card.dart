@@ -7,6 +7,7 @@ import 'package:cunehat/features/finance_transactions/presentation/pages/single_
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -171,6 +172,7 @@ class TransactionCard extends StatelessWidget {
           SignedAmountDisplay(
             amount: t.amount,
             isExpense: t.isExpense,
+            currencySymbol: context.activeWalletCurrencySymbol,
             style: TextStyle(
               color: accent,
               fontWeight: FontWeight.w900,

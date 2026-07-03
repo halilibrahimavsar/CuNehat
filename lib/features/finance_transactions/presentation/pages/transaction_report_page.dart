@@ -1,4 +1,5 @@
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -59,6 +60,9 @@ class _TransactionReportView extends StatefulWidget {
 }
 
 class _TransactionReportViewState extends State<_TransactionReportView> {
+  /// Sayfadaki tüm tutarlar aktif cüzdanın biriminde gösterilir.
+  String _money(double v) => formatMoney(v, currency: context.activeWalletCurrency);
+
   late DateTimeRange _range;
   int _touchedExpenseIndex = -1;
   int _touchedIncomeIndex = -1;
@@ -254,7 +258,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ),
                 ),
                 Text(
-                  formatMoney(0),
+                  _money(0),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: scheme.onSurfaceVariant,
@@ -364,7 +368,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    formatMoney(total),
+                    _money(total),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isExpense ? Colors.redAccent : Colors.green,
@@ -524,7 +528,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final cat = categoryData[group.x];
                       return BarTooltipItem(
-                        '${cat.name}\n${formatMoney(rod.toY)}',
+                        '${cat.name}\n${_money(rod.toY)}',
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -631,7 +635,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                                 ),
                               ),
                               Text(
-                                formatMoney(updatedCategory.totalAmount),
+                                _money(updatedCategory.totalAmount),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: isExpense
@@ -714,7 +718,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 ),
                 Text(
                   context.l10n.formatMoneyItemTotalamountPercent(
-                      formatMoney(item.totalAmount),
+                      _money(item.totalAmount),
                       percent.toStringAsFixed(0)),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
@@ -1174,7 +1178,7 @@ class _SummaryTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              formatMoney(amount),
+              formatMoney(amount, currency: context.activeWalletCurrency),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,

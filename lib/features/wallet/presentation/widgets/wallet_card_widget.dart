@@ -1,5 +1,9 @@
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
@@ -66,12 +70,27 @@ class WalletCardWidget extends StatelessWidget {
                     const SizedBox(height: 4),
                     AmountDisplay(
                       amount: wallet.balance,
+                      currencySymbol: currencySymbol(wallet.currency),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: wallet.balance >= 0 ? Colors.green : Colors.red,
                       ),
                     ),
+                    // Döviz cüzdanında son bilinen kurla TL karşılığı;
+                    // kur hiç yoksa satır gizlenir (yanıltıcı 0 yazmayız).
+                    if (wallet.currency != kDefaultCurrency)
+                      if (getIt<ExchangeRateService>()
+                              .cachedRateToTry(wallet.currency)
+                          case final double rate)
+                        Text(
+                          context.l10n.yaklasikKarsilikFormat(
+                              formatMoney(wallet.balance * rate)),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
                     Text(
                       context.l10n.olusturulmaAppformattersDateshortFormat(
                           AppFormatters.dateShort.format(wallet.createdAt)),
@@ -217,6 +236,7 @@ class WalletCardWidget extends StatelessWidget {
         const SizedBox(height: 2),
         AmountDisplay(
           amount: amount,
+          currencySymbol: currencySymbol(wallet.currency),
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,

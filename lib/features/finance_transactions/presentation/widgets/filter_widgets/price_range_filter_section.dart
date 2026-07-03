@@ -1,5 +1,6 @@
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,7 +50,7 @@ class PriceRangeFilterSection extends StatelessWidget {
                 decoration: InputDecoration(
                   labelText: context.l10n.labelMin,
                   hintText: '0',
-                  suffixText: '₺',
+                  suffixText: context.activeWalletCurrencySymbol,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -83,7 +84,7 @@ class PriceRangeFilterSection extends StatelessWidget {
                 decoration: InputDecoration(
                   labelText: context.l10n.labelMax,
                   hintText: '∞',
-                  suffixText: '₺',
+                  suffixText: context.activeWalletCurrencySymbol,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -143,7 +144,8 @@ class PriceRangeFilterSection extends StatelessWidget {
                     color: Colors.green.shade700, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  filter.dataFilter.priceRange.toString(),
+                  filter.dataFilter.priceRange!
+                      .label(symbol: context.activeWalletCurrencySymbol),
                   style: TextStyle(
                     color: Colors.green.shade900,
                     fontWeight: FontWeight.w600,

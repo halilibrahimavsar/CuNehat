@@ -1,11 +1,15 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +73,12 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   // ========== STATE ==========
   late String _selectedColorHex;
   late String _selectedIconName;
+  late String _selectedCurrency;
+
+  /// Düzenlemede birim kilidi: işlem geçmişi ya da türetilmiş metrik varsa
+  /// birim değiştirilemez (geçmiş tutarların anlamı bozulur). Kontrol asenkron
+  /// tamamlanana dek kilitli kalır (güvenli varsayılan).
+  bool _currencyLocked = false;
   bool _isLoading = false;
 
   // ========== GETTERS ==========
@@ -98,6 +108,31 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   void _initializeState() {
     _selectedColorHex = widget.wallet?.colorHex ?? '0xFF2196F3';
     _selectedIconName = widget.wallet?.iconName ?? 'wallet';
+    _selectedCurrency = widget.wallet?.currency ?? kDefaultCurrency;
+    if (isEditMode) {
+      _currencyLocked = true;
+      _resolveCurrencyLock();
+    }
+  }
+
+  /// Boş cüzdanda (işlem yok + metrikler sıfır) birim serbestçe değişebilir.
+  /// Metrik kontrolü, işlemi silinmiş ama borcu kalmış kenar durumunu da yakalar.
+  Future<void> _resolveCurrencyLock() async {
+    final w = widget.wallet!;
+    final hasMetrics = !moneyEquals(w.debt, 0) ||
+        !moneyEquals(w.credit, 0) ||
+        !moneyEquals(w.investment, 0);
+    if (hasMetrics || w.id == null) return; // kilitli kalır
+
+    final result = await getIt<TransactionsRepository>()
+        .getTransactions(userId: w.userId, walletId: w.id!);
+    if (!mounted) return;
+    result.fold(
+      (_) {}, // okunamadıysa güvenli taraf: kilitli kal
+      (txs) {
+        if (txs.isEmpty) setState(() => _currencyLocked = false);
+      },
+    );
   }
 
   @override
@@ -148,6 +183,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
                         _buildNameField(cs),
                         const SizedBox(height: 14),
                         _buildBalanceField(cs),
+                        const SizedBox(height: 20),
+                        _sectionLabel(context.l10n.paraBirimiLabel, cs),
+                        const SizedBox(height: 12),
+                        _buildCurrencyPicker(cs),
                         if (isEditMode) ...[
                           const SizedBox(height: 18),
                           _buildDerivedMetricsSummary(cs),
@@ -280,7 +319,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             : context.l10n.baslangicBakiyesiLabel,
         hint: '0.00',
         icon: Icons.payments_rounded,
-        suffixText: '₺',
+        // Seçili birimle canlı: TRY→₺, USD→$, EUR→€
+        suffixText: currencySymbol(_selectedCurrency),
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -296,6 +336,92 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         }
         return null;
       },
+    );
+  }
+
+  /// Para birimi seçici (3 çip). Düzenlemede kilitliyse soluk gösterilir ve
+  /// altında açıklama yer alır.
+  Widget _buildCurrencyPicker(ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            for (final code in kSupportedCurrencies) ...[
+              Expanded(
+                child: GestureDetector(
+                  onTap: _currencyLocked || _isLoading
+                      ? null
+                      : () => setState(() => _selectedCurrency = code),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _selectedCurrency == code
+                          ? _accent.withValues(alpha: 0.14)
+                          : cs.onSurface.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _selectedCurrency == code
+                            ? _accent
+                            : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Opacity(
+                      opacity: _currencyLocked && _selectedCurrency != code
+                          ? 0.4
+                          : 1,
+                      child: Column(
+                        children: [
+                          Text(
+                            currencySymbol(code),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: _selectedCurrency == code
+                                  ? _accent
+                                  : cs.onSurface,
+                            ),
+                          ),
+                          Text(
+                            code,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (code != kSupportedCurrencies.last) const SizedBox(width: 10),
+            ],
+          ],
+        ),
+        if (_currencyLocked) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.lock_rounded,
+                  size: 13, color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  context.l10n.paraBirimiKilitliHint,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -597,7 +723,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     setState(() => _isLoading = true);
 
     final name = _nameController.text.trim();
-    final balance = parseAmount(_balanceController.text) ?? 0.0;
+    final balance = parseMoney(_balanceController.text) ?? 0.0;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
     final createdAt = DateTime.now();
@@ -611,6 +737,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         balance: balance,
         colorHex: colorHex,
         iconName: iconName,
+        // Kilitliyken mevcut birim korunur (copyWith null = koru).
+        currency: _currencyLocked ? null : _selectedCurrency,
       );
       context.read<WalletBloc>().add(UpdateWalletEvent(wallet));
     } else {
@@ -627,6 +755,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         createdAt: createdAt,
         sortOrder: sortOrder,
         isActive: false, // Başlangıçta false
+        currency: _selectedCurrency,
       );
       context.read<WalletBloc>().add(CreateWalletEvent(wallet));
     }

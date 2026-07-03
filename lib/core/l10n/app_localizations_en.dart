@@ -1791,4 +1791,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toplamMaliyetAciklama => 'The total you paid for this investment (your cost). \'Calculate\' doesn\'t change it; profit/loss is computed from it.';
+
+  @override
+  String get paraBirimiLabel => 'Currency';
+
+  @override
+  String get paraBirimiKilitliHint => 'The currency of a wallet with transaction history can\'t be changed';
+
+  @override
+  String get sadeceTlCuzdanBorc => 'Debt & receivable tracking is only available in TRY wallets for now';
+
+  @override
+  String get sadeceTlCuzdanYatirim => 'Investment tracking is only available in TRY wallets for now';
+
+  @override
+  String yaklasikKarsilikFormat(String tutar) {
+    return '≈ $tutar';
+  }
+
+  @override
+  String toplamTlKarsilikFormat(String tutar) {
+    return 'Total ≈ $tutar';
+  }
+
+  @override
+  String get cuzdanlarArasiTransfer => 'Transfer Between Wallets';
+
+  @override
+  String get transferEt => 'Transfer';
+
+  @override
+  String get transferHedefCuzdan => 'Target wallet';
+
+  @override
+  String transferOnizlemeFormat(String tutar) {
+    return 'Target will receive ≈ $tutar';
+  }
+
+  @override
+  String get transferKurYok => 'Couldn\'t get the exchange rate — try again when online';
+
+  @override
+  String get transferBasarili => 'Transfer completed';
+
+  @override
+  String get transferBasarisiz => 'Transfer failed';
+
+  @override
+  String get transferIcinIkiCuzdanGerekli => 'You need at least two wallets to transfer';
 }

@@ -1,6 +1,7 @@
 import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
@@ -98,7 +99,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     // anapara 500'e indirilirse). isPaid yeniden hesaplanmazsa borç ne aktif
     // listede (remaining ≤ 0) ne geçmişte (isPaid=false) görünür.
     final debt = event.debt.copyWith(
-      isPaid: event.debt.totalPaidAmount >= event.debt.totalDebtAmount - 0.005,
+      isPaid: moneyGte(event.debt.totalPaidAmount, event.debt.totalDebtAmount),
     );
     final result = await updateDebtUseCase(debt);
 

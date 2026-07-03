@@ -1043,8 +1043,26 @@ void main() {
       }
 
       final b = wallets.store['w']!.balance;
-      expect(b, closeTo(1.0, 1e-9)); // ham toplam ~0.9999999999999999
+      // syncBalance kuruşa yuvarlar; 10 × 0.1 artık tam 1.0 yazılır.
+      expect(b, 1.0);
       expect(b.toStringAsFixed(2), '1.00');
+    });
+
+    test('recordCashMovement tutarı ve bakiyeyi kuruş-temiz yazar', () async {
+      wallets.store['w'] = _wallet(id: 'w', balance: 0, openingBalance: 0);
+
+      // Hesaplanmış "kirli" tutar (0.1 + 0.2 = 0.30000000000000004).
+      await service.recordCashMovement(
+        walletId: 'w',
+        userId: 'u',
+        amount: 0.1 + 0.2,
+        isIncome: true,
+        title: 'x',
+        tag: 't',
+      );
+
+      expect(txs.store.single.amount, 0.3);
+      expect(wallets.store['w']!.balance, 0.3);
     });
 
     test(

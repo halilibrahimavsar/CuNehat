@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:equatable/equatable.dart';
 
 enum DebtType { bankLoan, installmentDebt, personalDebt, otherDebt }
@@ -103,8 +104,9 @@ class DebtEntity extends Equatable {
 
   // --- Hesaplama Metodları ---
 
-  /// Toplam Ödenen Tutar
-  double get totalPaidAmount => payments.fold(0, (sum, p) => sum + p.amount);
+  /// Toplam Ödenen Tutar (kuruşa yuvarlı; FP birikimi kullanıcıya sızmaz)
+  double get totalPaidAmount =>
+      roundToCents(payments.fold(0, (sum, p) => sum + p.amount));
 
   /// Basit faiz formülü
   static double calculateTotalDebt({
@@ -139,17 +141,18 @@ class DebtEntity extends Equatable {
     return monthlyPayment * termMonths;
   }
 
-  /// Toplam Borç Tutarı
-  double get totalDebtAmount =>
-      expectedTotalAmount ??
-      calculateTotalDebt(
-        principal: principalAmount,
-        interestRate: interestRate,
-        termMonths: termMonths,
+  /// Toplam Borç Tutarı (kuruşa yuvarlı; faiz formülü çok basamak üretebilir)
+  double get totalDebtAmount => roundToCents(
+        expectedTotalAmount ??
+            calculateTotalDebt(
+              principal: principalAmount,
+              interestRate: interestRate,
+              termMonths: termMonths,
+            ),
       );
 
-  /// Kalan Borç
-  double get remainingAmount => totalDebtAmount - totalPaidAmount;
+  /// Kalan Borç (kuruşa yuvarlı; "Tümü" prefill'i bu değerle birebir eşleşir)
+  double get remainingAmount => roundToCents(totalDebtAmount - totalPaidAmount);
 
   /// Ödeme İlerlemesi (0.0 - 1.0 arası)
   double get progress =>

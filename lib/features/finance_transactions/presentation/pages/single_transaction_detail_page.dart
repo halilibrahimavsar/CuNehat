@@ -8,6 +8,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -110,6 +111,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                       SignedAmountDisplay(
                         amount: t.amount,
                         isExpense: t.isExpense,
+                        currencySymbol: context.activeWalletCurrencySymbol,
                         style: TextStyle(
                           color: accent,
                           fontWeight: FontWeight.w900,
@@ -172,6 +174,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                           label: context.l10n.detailLabelIslemSonrasiBakiye,
                           valueWidget: AmountDisplay(
                             amount: item.balanceAfter,
+                            currencySymbol: context.activeWalletCurrencySymbol,
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 14,

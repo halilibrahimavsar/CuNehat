@@ -34,17 +34,21 @@ class PriceRangeFilter extends Equatable {
   @override
   List<Object?> get props => [minPrice, maxPrice];
 
-  @override
-  String toString() {
+  /// Rozet/çip etiketi; cüzdan kapsamlı görünümler aktif birim sembolünü
+  /// geçer (varsayılan ₺ eski davranışı korur).
+  String label({String symbol = '₺'}) {
     if (minPrice != null && maxPrice != null) {
-      return '${minPrice!.toStringAsFixed(0)}₺ - ${maxPrice!.toStringAsFixed(0)}₺';
+      return '${minPrice!.toStringAsFixed(0)}$symbol - ${maxPrice!.toStringAsFixed(0)}$symbol';
     } else if (minPrice != null) {
-      return '${minPrice!.toStringAsFixed(0)}₺+';
+      return '${minPrice!.toStringAsFixed(0)}$symbol+';
     } else if (maxPrice != null) {
-      return '${maxPrice!.toStringAsFixed(0)}₺\'ye kadar';
+      return '${maxPrice!.toStringAsFixed(0)}$symbol\'ye kadar';
     }
     return '';
   }
+
+  @override
+  String toString() => label();
 
   PriceRangeFilter copyWith({
     double? minPrice,

@@ -2,6 +2,9 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
+import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -17,8 +20,17 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 class DebtAndReceivablePage extends StatefulWidget {
   final String userId;
   final String walletId;
-  const DebtAndReceivablePage(
-      {super.key, required this.userId, required this.walletId});
+
+  /// Aktif cüzdanın para birimi; TL değilse özellik bilgilendirmeyle kapalı
+  /// (v1 kısıtı — nakit kuplajı TL varsayar).
+  final String walletCurrency;
+
+  const DebtAndReceivablePage({
+    super.key,
+    required this.userId,
+    required this.walletId,
+    this.walletCurrency = kDefaultCurrency,
+  });
 
   @override
   State<DebtAndReceivablePage> createState() => _DebtAndReceivablePageState();
@@ -56,6 +68,11 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.walletCurrency != kDefaultCurrency) {
+      return Scaffold(
+        body: TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanBorc),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
@@ -117,7 +134,8 @@ class DebtListSection extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         } else if (state is DebtLoaded) {
           final activeDebts = state.debts
-              .where((debt) => !debt.isPaid && debt.remainingAmount > 0)
+              .where((debt) =>
+                  !debt.isPaid && moneyIsPositive(debt.remainingAmount))
               .toList();
 
           if (activeDebts.isEmpty) {

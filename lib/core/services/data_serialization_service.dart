@@ -60,7 +60,9 @@ class _ParsedBackup {
 
 @lazySingleton
 class DataSerializationService {
-  static const int schemaVersion = 3;
+  /// v4: cüzdanlara opsiyonel 'currency' anahtarı eklendi (yoksa TRY).
+  /// Restore sürüm kapısı içermez; eski yedekler varsayılanlarla açılır.
+  static const int schemaVersion = 4;
 
   final HiveInterface _hive;
 

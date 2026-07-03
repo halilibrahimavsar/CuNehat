@@ -8,6 +8,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/usecases/delete_recurring_transaction_usecase.dart';
 import '../../domain/usecases/get_all_recurring_templates_usecase.dart';
@@ -305,7 +306,9 @@ class _TemplateCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  formatMoney(template.amount),
+                  // Şablon tutarı, bağlı cüzdanın (aktif) biriminde tutulur.
+                  formatMoney(template.amount,
+                      currency: context.activeWalletCurrency),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: accent,

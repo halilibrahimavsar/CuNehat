@@ -305,6 +305,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         key: ValueKey('debt-${activeWallet.id}'),
         userId: userId,
         walletId: activeWallet.id!,
+        walletCurrency: activeWallet.currency,
       ),
     );
 

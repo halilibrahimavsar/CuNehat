@@ -101,9 +101,9 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   String _fmt(double v) =>
       v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
 
-  double? get _parsedAmount => parseAmount(_amountController.text);
-  double? get _parsedCurrentValue => parseAmount(_currentValueController.text);
-  double? get _parsedTargetAmount => parseAmount(_targetAmountController.text);
+  double? get _parsedAmount => parseMoney(_amountController.text);
+  double? get _parsedCurrentValue => parseMoney(_currentValueController.text);
+  double? get _parsedTargetAmount => parseMoney(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);

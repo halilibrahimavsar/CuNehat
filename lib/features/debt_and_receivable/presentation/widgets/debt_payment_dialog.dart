@@ -3,6 +3,7 @@
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -78,11 +79,14 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   bool _showPaymentHistory = false;
 
   void _applyQuickPay(double amount) {
-    final v = amount == amount.roundToDouble()
-        ? amount.toStringAsFixed(0)
-        : amount.toStringAsFixed(2);
+    // Önce kuruşa yuvarla: metin, seçili chip ve kaydedilecek tutar
+    // birebir aynı değer olsun (314.5599… → 314.56).
+    final r = roundToCents(amount);
+    final v = r == r.roundToDouble()
+        ? r.toStringAsFixed(0)
+        : r.toStringAsFixed(2);
     setState(() {
-      _activeQuickPay = amount;
+      _activeQuickPay = r;
       _amountController.text = v;
     });
   }
@@ -97,7 +101,13 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   void _handlePayment() {
     if (!_formKey.currentState!.validate()) return;
 
-    final amount = parseAmount(_amountController.text)!;
+    var amount = parseMoney(_amountController.text)!;
+    // Yarım kuruş içindeki fazlalığı kalana kıskaçla: kayıtlı ödemeler
+    // toplamı borcu asla aşmasın (negatif kalan oluşmasın).
+    final remaining = widget.debt.remainingAmount;
+    if (amount > remaining && !moneyGreaterThan(amount, remaining)) {
+      amount = remaining;
+    }
 
     final newPayment = Payment(
       date: _paymentDate,
@@ -114,7 +124,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       0.0,
       (sum, payment) => sum + payment.amount,
     );
-    final isPaid = totalPaid >= widget.debt.totalDebtAmount - 0.005;
+    final isPaid = moneyGte(totalPaid, widget.debt.totalDebtAmount);
 
     final updatedDebt = widget.debt.copyWith(
       payments: updatedPayments,
@@ -221,14 +231,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   helperText: context.l10n
                       .maksimumFormatmoneyRemaining(formatMoney(remaining)),
                 ),
-                validator: (value) {
-                  final base = validateAmount(value ?? '');
-                  if (base != null) return base;
-                  if (parseAmount(value!)! > remaining) {
-                    return context.l10n.kalanTutardanFazlaOlamaz;
-                  }
-                  return null;
-                },
+                validator: (value) => validateAmount(
+                  value ?? '',
+                  max: remaining,
+                  maxExceededMessage: context.l10n.kalanTutardanFazlaOlamaz,
+                ),
               ),
 
               const SizedBox(height: 16),
@@ -466,13 +473,17 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
 
     final options = <({String label, double amount})>[
       if (monthly != null) ...[
-        (label: context.l10n.taksit1, amount: monthly.clamp(0, remaining)),
+        (
+          label: context.l10n.taksit1,
+          amount: roundToCents(monthly.clamp(0, remaining).toDouble()),
+        ),
         if (remaining > monthly * 1.5)
           (
             label: context.l10n.taksit2,
-            amount: (monthly * 2).clamp(0, remaining),
+            amount: roundToCents((monthly * 2).clamp(0, remaining).toDouble()),
           ),
       ],
+      // remaining getter'ı zaten kuruşa yuvarlı
       (label: context.l10n.tamaminiOde, amount: remaining),
     ];
 

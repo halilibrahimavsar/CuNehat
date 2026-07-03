@@ -1791,4 +1791,52 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get toplamMaliyetAciklama => 'Bu yatırıma ödediğin toplam tutar (maliyetin). \'Hesapla\' bunu değiştirmez; kâr/zarar bununla hesaplanır.';
+
+  @override
+  String get paraBirimiLabel => 'Para Birimi';
+
+  @override
+  String get paraBirimiKilitliHint => 'İşlem geçmişi olan cüzdanın para birimi değiştirilemez';
+
+  @override
+  String get sadeceTlCuzdanBorc => 'Borç/alacak takibi şimdilik yalnız TL cüzdanlarda kullanılabilir';
+
+  @override
+  String get sadeceTlCuzdanYatirim => 'Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir';
+
+  @override
+  String yaklasikKarsilikFormat(String tutar) {
+    return '≈ $tutar';
+  }
+
+  @override
+  String toplamTlKarsilikFormat(String tutar) {
+    return 'Toplam ≈ $tutar';
+  }
+
+  @override
+  String get cuzdanlarArasiTransfer => 'Cüzdanlar Arası Transfer';
+
+  @override
+  String get transferEt => 'Transfer Et';
+
+  @override
+  String get transferHedefCuzdan => 'Hedef cüzdan';
+
+  @override
+  String transferOnizlemeFormat(String tutar) {
+    return 'Hedefe ≈ $tutar geçecek';
+  }
+
+  @override
+  String get transferKurYok => 'Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin';
+
+  @override
+  String get transferBasarili => 'Transfer tamamlandı';
+
+  @override
+  String get transferBasarisiz => 'Transfer başarısız oldu';
+
+  @override
+  String get transferIcinIkiCuzdanGerekli => 'Transfer için en az iki cüzdan gerekli';
 }

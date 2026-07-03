@@ -37,6 +37,7 @@ void main() {
       'isActive': true,
       'sortOrder': 1,
       'openingBalance': 800.0,
+      'currency': 'TRY',
     };
 
     test('fromEntity and toEntity should match correctly', () {
@@ -54,6 +55,7 @@ void main() {
       expect(model.isActive, entity.isActive);
       expect(model.sortOrder, entity.sortOrder);
       expect(model.openingBalance, entity.openingBalance);
+      expect(model.currency, entity.currency);
 
       final mappedEntity = model.toEntity();
       expect(mappedEntity, entity);
@@ -74,6 +76,18 @@ void main() {
       expect(model.isActive, true);
       expect(model.sortOrder, 1);
       expect(model.openingBalance, 800.0);
+    });
+
+    test('fromJson eski yedekte (currency anahtarı yok) TRY varsayar', () {
+      final legacyJson = Map<String, dynamic>.from(json)..remove('currency');
+      final model = WalletModel.fromJson('wallet_1', legacyJson);
+      expect(model.currency, 'TRY');
+    });
+
+    test('fromJson currency anahtarını okur', () {
+      final usdJson = Map<String, dynamic>.from(json)..['currency'] = 'USD';
+      final model = WalletModel.fromJson('wallet_1', usdJson);
+      expect(model.currency, 'USD');
     });
 
     test('fromJson defaults null createdAt to now', () {
@@ -152,13 +166,15 @@ void main() {
 
       adapter.write(writer, model);
 
-      verify(() => writer.writeByte(13)).called(1);
+      // Alan sayısı: 14 (0-13, 13 = currency)
+      verify(() => writer.writeByte(14)).called(1);
 
       // Verify that write was called for each generic type
       verify(() => writer.write<String?>(any(),
           writeTypeId: any(named: 'writeTypeId'))).called(1);
+      // name, colorHex, iconName, userId + currency
       verify(() => writer.write<String>(any(),
-          writeTypeId: any(named: 'writeTypeId'))).called(4);
+          writeTypeId: any(named: 'writeTypeId'))).called(5);
       verify(() => writer.write<double>(any(),
           writeTypeId: any(named: 'writeTypeId'))).called(4);
       verify(() => writer.write<DateTime>(any(),
@@ -173,7 +189,7 @@ void main() {
           writeTypeId: any(named: 'writeTypeId'))).called(1);
 
       // Verify all writeBytes are called sequentially
-      for (int i = 0; i <= 12; i++) {
+      for (int i = 0; i <= 13; i++) {
         verify(() => writer.writeByte(i)).called(1);
       }
     });
@@ -217,6 +233,39 @@ void main() {
       expect(result.isActive, true);
       expect(result.sortOrder, 1);
       expect(result.openingBalance, 800.0);
+      // currency'den önce yazılmış kayıt (alan 13 yok) → TRY
+      expect(result.currency, 'TRY');
+    });
+
+    test('read parses currency field (14 alanlı yeni kayıt)', () {
+      final adapter = WalletModelAdapter();
+      final reader = MockBinaryReader();
+
+      final byteAnswers = [14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+      when(() => reader.readByte()).thenAnswer((_) => byteAnswers.removeAt(0));
+
+      final readAnswers = [
+        'wallet_1', // id
+        'user_1', // userId
+        'Dolar Hesabı', // name
+        1000.0, // balance
+        0.0, // debt
+        0.0, // credit
+        0.0, // investment
+        '0xFF4CAF50', // colorHex
+        'money', // iconName
+        createdDate, // createdAt
+        true, // isActive
+        1, // sortOrder
+        800.0, // openingBalance
+        'USD', // currency
+      ];
+      when(() => reader.read()).thenAnswer((_) => readAnswers.removeAt(0));
+
+      final result = adapter.read(reader);
+
+      expect(result.currency, 'USD');
+      expect(result.balance, 1000.0);
     });
 
     test('read parses old schema format correctly', () {
@@ -254,6 +303,7 @@ void main() {
       expect(result.isActive, true);
       expect(result.sortOrder, 1);
       expect(result.openingBalance, isNull);
+      expect(result.currency, 'TRY');
     });
 
     test('read parses null values safely and defaults them', () {

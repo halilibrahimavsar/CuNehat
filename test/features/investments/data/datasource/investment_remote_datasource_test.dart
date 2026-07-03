@@ -1,14 +1,18 @@
 import 'dart:convert';
 import 'package:cunehat/core/error/exceptions.dart';
+import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/features/investments/data/datasource/investment_remote_datasource.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockHttpClient extends Mock implements http.Client {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late InvestmentRemoteDataSourceImpl dataSource;
   late MockHttpClient mockClient;
 
@@ -16,9 +20,17 @@ void main() {
     registerFallbackValue(Uri());
   });
 
-  setUp(() {
+  setUp(() async {
     mockClient = MockHttpClient();
-    dataSource = InvestmentRemoteDataSourceImpl(client: mockClient);
+    // Kur servisi aynı mock http istemcisini kullanır; prefs temiz başlar
+    // ki bayat-önbellek yedeği testlere sızmasın.
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    dataSource = InvestmentRemoteDataSourceImpl(
+      client: mockClient,
+      exchangeRateService:
+          ExchangeRateService(client: mockClient, prefs: prefs),
+    );
   });
 
   group('InvestmentRemoteDataSourceImpl', () {

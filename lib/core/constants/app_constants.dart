@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_surface_theme.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -73,9 +74,13 @@ class AppFormatters {
       DateFormat('dd.MM.yyyy HH:mm', Intl.defaultLocale);
   static DateFormat get time => DateFormat('HH:mm', Intl.defaultLocale);
 
-  static NumberFormat get currency => NumberFormat.currency(
+  static NumberFormat get currency => currencyFor(kDefaultCurrency);
+
+  /// Cüzdan birimine göre binlik ayraçlı para formatlayıcı; cüzdan
+  /// kapsamlı görünümler aktif birimi geçer.
+  static NumberFormat currencyFor(String code) => NumberFormat.currency(
         locale: Intl.defaultLocale,
-        symbol: AppConstants.currency,
+        symbol: currencySymbol(code),
         decimalDigits: 2,
       );
 }

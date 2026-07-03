@@ -15,6 +15,7 @@ class WalletModel {
   final bool isActive;
   final int sortOrder;
   final double? openingBalance;
+  final String currency;
 
   const WalletModel({
     required this.id,
@@ -30,6 +31,7 @@ class WalletModel {
     this.isActive = false,
     this.sortOrder = 0,
     this.openingBalance,
+    this.currency = 'TRY',
   });
 
   /// Creates Wallet from JSON Map
@@ -50,6 +52,8 @@ class WalletModel {
       isActive: json['isActive'] ?? false,
       sortOrder: json['sortOrder'] ?? 0,
       openingBalance: (json['openingBalance'] as num?)?.toDouble(),
+      // Eski yedeklerde anahtar yok → TRY (geriye uyumluluk).
+      currency: json['currency'] as String? ?? 'TRY',
     );
   }
 
@@ -68,6 +72,7 @@ class WalletModel {
       isActive: entity.isActive,
       sortOrder: entity.sortOrder,
       openingBalance: entity.openingBalance,
+      currency: entity.currency,
     );
   }
 
@@ -86,6 +91,7 @@ class WalletModel {
       isActive: isActive,
       sortOrder: sortOrder,
       openingBalance: openingBalance,
+      currency: currency,
     );
   }
 
@@ -105,6 +111,7 @@ class WalletModel {
       'isActive': isActive,
       'sortOrder': sortOrder,
       'openingBalance': openingBalance,
+      'currency': currency,
     };
   }
 
@@ -123,6 +130,7 @@ class WalletModel {
     DateTime? createdAt,
     int? sortOrder,
     double? openingBalance,
+    String? currency,
   }) {
     return WalletModel(
       id: id ?? this.id,
@@ -138,6 +146,7 @@ class WalletModel {
       isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
       openingBalance: openingBalance ?? this.openingBalance,
+      currency: currency ?? this.currency,
     );
   }
 
@@ -182,6 +191,7 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
     final bool isActive;
     final int sortOrder;
     final double? openingBalance;
+    final String currency;
 
     if (isOldSchema) {
       debt = 0.0;
@@ -194,6 +204,7 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       isActive = fields[7] is bool ? fields[7] as bool : false;
       sortOrder = fields[8] is int ? fields[8] as int : 0;
       openingBalance = null;
+      currency = 'TRY';
     } else {
       debt = parseDouble(fields[4]);
       credit = parseDouble(fields[5]);
@@ -205,6 +216,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       isActive = fields[10] is bool ? fields[10] as bool : false;
       sortOrder = fields[11] is int ? fields[11] as int : 0;
       openingBalance = fields[12] != null ? parseDouble(fields[12]) : null;
+      // Alan 13 currency'den önce yazılmış kayıtlarda yok → TRY.
+      currency = fields[13] is String ? fields[13] as String : 'TRY';
     }
 
     return WalletModel(
@@ -221,13 +234,14 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       isActive: isActive,
       sortOrder: sortOrder,
       openingBalance: openingBalance,
+      currency: currency,
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletModel obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -253,6 +267,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(11)
       ..write(obj.sortOrder)
       ..writeByte(12)
-      ..write(obj.openingBalance);
+      ..write(obj.openingBalance)
+      ..writeByte(13)
+      ..write(obj.currency);
   }
 }

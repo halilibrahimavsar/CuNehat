@@ -1,9 +1,16 @@
+import 'dart:async';
+
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +39,25 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     if (bloc.state is WalletInitialSt || bloc.state is WalletErrorSt) {
       bloc.add(WatchWalletsEvent(widget.userId));
     }
+    // Kur tazeleme (sheet açılışında): döviz cüzdanlarının ≈₺ satırı ve
+    // TL genel toplam güncel kurla gelsin. Tek çağrı tüm kurları alır;
+    // hata sessizce bayat önbelleğe düşer.
+    unawaited(getIt<ExchangeRateService>().rateToTry('USD').then((_) {
+      if (mounted) setState(() {});
+    }));
+  }
+
+  /// Tüm cüzdanların TL karşılığı toplamı; herhangi bir döviz cüzdanının
+  /// kuru yoksa null (yanıltıcı eksik toplam göstermeyiz).
+  double? _tlTotal(List<WalletEntity> wallets) {
+    final fx = getIt<ExchangeRateService>();
+    var total = 0.0;
+    for (final w in wallets) {
+      final rate = fx.cachedRateToTry(w.currency);
+      if (rate == null) return null;
+      total += w.balance * rate;
+    }
+    return total;
   }
 
   @override
@@ -151,18 +177,43 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  context.l10n.cuzdanlariniziYonetin,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
+                // Döviz cüzdanı varsa ve tüm kurlar biliniyorsa TL toplamı;
+                // aksi halde standart alt başlık.
+                if (state is WalletLoadedSt &&
+                    state.wallets
+                        .any((w) => w.currency != kDefaultCurrency) &&
+                    _tlTotal(state.wallets) != null)
+                  Text(
+                    context.l10n.toplamTlKarsilikFormat(
+                        formatMoney(_tlTotal(state.wallets)!)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  )
+                else
+                  Text(
+                    context.l10n.cuzdanlariniziYonetin,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
 
           // Actions
+          IconButton(
+            icon: const Icon(Icons.swap_horiz_rounded),
+            onPressed: () => _openTransferSheet(context, state),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              foregroundColor: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => WalletInfoDialog.show(context),
@@ -288,6 +339,18 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   // ========================================
   // 🔧 HELPER METHODS
   // ========================================
+
+  void _openTransferSheet(BuildContext context, WalletState state) {
+    if (state is! WalletLoadedSt || state.wallets.length < 2) {
+      IboSnackbar.showError(context, context.l10n.transferIcinIkiCuzdanGerekli);
+      return;
+    }
+    TransferSheet.show(
+      context,
+      wallets: state.wallets,
+      initialFrom: state.activeWallet ?? state.wallets.first,
+    );
+  }
 
   void _createWallet(BuildContext context) {
     showCreateEditDialog(

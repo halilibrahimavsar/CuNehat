@@ -3,6 +3,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
@@ -161,6 +162,7 @@ class _DetailedListViewState extends State<DetailedListView> {
           ),
           AmountDisplay(
             amount: balance,
+            currencySymbol: context.activeWalletCurrencySymbol,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -264,6 +266,7 @@ class _DetailedListViewState extends State<DetailedListView> {
   ) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final money = AppFormatters.currencyFor(context.activeWalletCurrency);
     final netColor = net >= 0 ? AppGradients.savings : AppGradients.debt;
 
     return Row(
@@ -273,7 +276,7 @@ class _DetailedListViewState extends State<DetailedListView> {
               size: 11, color: AppGradients.savings.withValues(alpha: 0.8)),
           const SizedBox(width: 2),
           Text(
-            AppFormatters.currency.format(income),
+            money.format(income),
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               fontSize: 10.5,
@@ -287,7 +290,7 @@ class _DetailedListViewState extends State<DetailedListView> {
               size: 11, color: AppGradients.debt.withValues(alpha: 0.8)),
           const SizedBox(width: 2),
           Text(
-            AppFormatters.currency.format(expense),
+            money.format(expense),
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               fontSize: 10.5,
@@ -308,7 +311,7 @@ class _DetailedListViewState extends State<DetailedListView> {
           ),
           child: Text(
             context.l10n.netNetAppformattersCurrency(
-                '${net >= 0 ? "+" : ""}${AppFormatters.currency.format(net)}'),
+                '${net >= 0 ? "+" : ""}${money.format(net)}'),
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,

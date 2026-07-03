@@ -3454,6 +3454,90 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu yatırıma ödediğin toplam tutar (maliyetin). \'Hesapla\' bunu değiştirmez; kâr/zarar bununla hesaplanır.'**
   String get toplamMaliyetAciklama;
+
+  /// No description provided for @paraBirimiLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para Birimi'**
+  String get paraBirimiLabel;
+
+  /// No description provided for @paraBirimiKilitliHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem geçmişi olan cüzdanın para birimi değiştirilemez'**
+  String get paraBirimiKilitliHint;
+
+  /// No description provided for @sadeceTlCuzdanBorc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç/alacak takibi şimdilik yalnız TL cüzdanlarda kullanılabilir'**
+  String get sadeceTlCuzdanBorc;
+
+  /// No description provided for @sadeceTlCuzdanYatirim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir'**
+  String get sadeceTlCuzdanYatirim;
+
+  /// No description provided for @yaklasikKarsilikFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'≈ {tutar}'**
+  String yaklasikKarsilikFormat(String tutar);
+
+  /// No description provided for @toplamTlKarsilikFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam ≈ {tutar}'**
+  String toplamTlKarsilikFormat(String tutar);
+
+  /// No description provided for @cuzdanlarArasiTransfer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlar Arası Transfer'**
+  String get cuzdanlarArasiTransfer;
+
+  /// No description provided for @transferEt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer Et'**
+  String get transferEt;
+
+  /// No description provided for @transferHedefCuzdan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef cüzdan'**
+  String get transferHedefCuzdan;
+
+  /// No description provided for @transferOnizlemeFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefe ≈ {tutar} geçecek'**
+  String transferOnizlemeFormat(String tutar);
+
+  /// No description provided for @transferKurYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin'**
+  String get transferKurYok;
+
+  /// No description provided for @transferBasarili.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer tamamlandı'**
+  String get transferBasarili;
+
+  /// No description provided for @transferBasarisiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer başarısız oldu'**
+  String get transferBasarisiz;
+
+  /// No description provided for @transferIcinIkiCuzdanGerekli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer için en az iki cüzdan gerekli'**
+  String get transferIcinIkiCuzdanGerekli;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

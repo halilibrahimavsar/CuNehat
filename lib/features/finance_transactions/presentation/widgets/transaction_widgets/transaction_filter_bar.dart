@@ -1,5 +1,6 @@
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
@@ -72,7 +73,8 @@ class TransactionFilterBar extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_Chip(
         icon: Icons.attach_money_rounded,
-        text: dataFilter.priceRange.toString(),
+        text: dataFilter.priceRange!
+            .label(symbol: context.activeWalletCurrencySymbol),
         onTap: onFilterTap,
         background: Colors.green.shade400.withValues(alpha: 0.15),
         borderColor: Colors.green.shade400.withValues(alpha: 0.4),
