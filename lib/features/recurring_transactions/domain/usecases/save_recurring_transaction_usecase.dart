@@ -22,11 +22,11 @@ class SaveRecurringTransactionUsecase {
     result.fold(
       (failure) => null,
       (_) {
-        final id = template.id.hashCode;
-        notificationService.cancelNotification(id);
+        final notifId = 'recurring_${template.id}'.hashCode;
+        notificationService.cancelNotification(notifId);
 
         notificationService.scheduleNotification(
-          id: id,
+          id: notifId,
           title: 'Düzenli İşlem Yaklaşıyor',
           body: '${template.title} başlıklı işleminizin zamanı yaklaştı.',
           scheduledDate:

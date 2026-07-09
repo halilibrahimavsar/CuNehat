@@ -133,18 +133,34 @@ class NotificationServiceImpl implements NotificationService {
         return;
       }
 
+      final androidImpl = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      AndroidScheduleMode scheduleMode;
+      if (Platform.isAndroid && androidImpl != null) {
+        final canScheduleExact =
+            await androidImpl.canScheduleExactNotifications() ?? false;
+        scheduleMode = canScheduleExact
+            ? AndroidScheduleMode.exactAllowWhileIdle
+            : AndroidScheduleMode.inexactAllowWhileIdle;
+      } else {
+        scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+      }
+
       await _flutterLocalNotificationsPlugin.zonedSchedule(
         id,
         title,
         body,
         tz.TZDateTime.from(scheduledDate, tz.local),
         _getNotificationDetails(),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
-      debugPrint('Scheduled notification $id at $scheduledDate');
+      debugPrint(
+          'Scheduled notification $id at $scheduledDate (mode: $scheduleMode)');
     } catch (e) {
       debugPrint('Error scheduling notification: $e');
     }

@@ -18,7 +18,7 @@ class DeleteRecurringTransactionUsecase {
     final result = await repository.deleteTemplate(id);
     result.fold(
       (failure) => null,
-      (_) => notificationService.cancelNotification(id.hashCode),
+      (_) => notificationService.cancelNotification('recurring_$id'.hashCode),
     );
     return result;
   }

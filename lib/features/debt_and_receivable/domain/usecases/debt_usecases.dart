@@ -33,9 +33,11 @@ class AddDebtUseCase {
       (failure) => null,
       (_) {
         if (debt.dueDate != null && !debt.isPaid) {
-          final id = debt.id.hashCode;
+          final baseIdStr = 'debt_${debt.id}';
+          final id1 = '${baseIdStr}_1'.hashCode;
+          final id2 = '${baseIdStr}_2'.hashCode;
           notificationService.scheduleNotification(
-            id: id,
+            id: id1,
             title: 'Borç Hatırlatması',
             body:
                 '${debt.title} başlıklı borcunuzun son ödeme tarihi yaklaştı.',
@@ -43,7 +45,7 @@ class AddDebtUseCase {
           );
 
           notificationService.scheduleNotification(
-            id: id + 1, // Farklı bir ID ile tam gününde
+            id: id2,
             title: 'Borç Son Ödeme Tarihi!',
             body: '${debt.title} başlıklı borcunuzun son ödeme tarihi bugün.',
             scheduledDate: debt.dueDate!,
@@ -73,15 +75,17 @@ class UpdateDebtUseCase {
     result.fold(
       (failure) => null,
       (_) {
-        final id = debt.id.hashCode;
+        final baseIdStr = 'debt_${debt.id}';
+        final id1 = '${baseIdStr}_1'.hashCode;
+        final id2 = '${baseIdStr}_2'.hashCode;
         // Önce eskileri iptal et
-        notificationService.cancelNotification(id);
-        notificationService.cancelNotification(id + 1);
+        notificationService.cancelNotification(id1);
+        notificationService.cancelNotification(id2);
 
         // Eğer ödenmediyse ve tarihi varsa tekrar kur
         if (debt.dueDate != null && !debt.isPaid) {
           notificationService.scheduleNotification(
-            id: id,
+            id: id1,
             title: 'Borç Hatırlatması',
             body:
                 '${debt.title} başlıklı borcunuzun son ödeme tarihi yaklaştı.',
@@ -89,7 +93,7 @@ class UpdateDebtUseCase {
           );
 
           notificationService.scheduleNotification(
-            id: id + 1,
+            id: id2,
             title: 'Borç Son Ödeme Tarihi!',
             body: '${debt.title} başlıklı borcunuzun son ödeme tarihi bugün.',
             scheduledDate: debt.dueDate!,
@@ -113,9 +117,11 @@ class DeleteDebtUseCase {
     result.fold(
       (failure) => null,
       (_) {
-        final notifId = id.hashCode;
-        notificationService.cancelNotification(notifId);
-        notificationService.cancelNotification(notifId + 1);
+        final baseIdStr = 'debt_$id';
+        final id1 = '${baseIdStr}_1'.hashCode;
+        final id2 = '${baseIdStr}_2'.hashCode;
+        notificationService.cancelNotification(id1);
+        notificationService.cancelNotification(id2);
       },
     );
     return result;
