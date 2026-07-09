@@ -220,7 +220,8 @@ class _BudgetSummaryCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              AppFormatters.currencyFor(context.activeWalletCurrency).format(totalSpent),
+              AppFormatters.currencyFor(context.activeWalletCurrency)
+                  .format(totalSpent),
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: -1,
@@ -231,7 +232,8 @@ class _BudgetSummaryCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             context.l10n.toplamLimitAppformattersCurrency(
-                AppFormatters.currencyFor(context.activeWalletCurrency).format(totalLimit)),
+                AppFormatters.currencyFor(context.activeWalletCurrency)
+                    .format(totalLimit)),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -335,7 +337,8 @@ class _BudgetListItem extends StatelessWidget {
             children: [
               Text(
                 context.l10n.harcananAppformattersCurrencyFormat(
-                    AppFormatters.currencyFor(context.activeWalletCurrency).format(budget.spentAmount)),
+                    AppFormatters.currencyFor(context.activeWalletCurrency)
+                        .format(budget.spentAmount)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: budget.isExceeded ? Colors.red : scheme.onSurface,
                   fontWeight:
@@ -344,7 +347,8 @@ class _BudgetListItem extends StatelessWidget {
               ),
               Text(
                 context.l10n.limitAppformattersCurrencyFormat(
-                    AppFormatters.currencyFor(context.activeWalletCurrency).format(budget.limitAmount)),
+                    AppFormatters.currencyFor(context.activeWalletCurrency)
+                        .format(budget.limitAmount)),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),
@@ -450,7 +454,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: InputDecoration(
                 labelText: context.l10n.labelKategori,
                 border: const OutlineInputBorder(),

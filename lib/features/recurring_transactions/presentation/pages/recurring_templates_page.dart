@@ -322,7 +322,7 @@ class _TemplateCard extends StatelessWidget {
             children: [
               Switch(
                 value: template.isActive,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
                 onChanged: (_) => onToggle(template),
               ),
               IconButton(

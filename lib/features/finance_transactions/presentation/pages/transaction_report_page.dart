@@ -1,8 +1,11 @@
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -13,6 +16,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_segment.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -61,15 +65,18 @@ class _TransactionReportView extends StatefulWidget {
 
 class _TransactionReportViewState extends State<_TransactionReportView> {
   /// Sayfadaki tüm tutarlar aktif cüzdanın biriminde gösterilir.
-  String _money(double v) => formatMoney(v, currency: context.activeWalletCurrency);
+  String _money(double v) =>
+      formatMoney(v, currency: context.activeWalletCurrency);
 
   late DateTimeRange _range;
   int _touchedExpenseIndex = -1;
   int _touchedIncomeIndex = -1;
   bool _showExpenseBarChart = false;
   bool _showIncomeBarChart = false;
+  FinanceMode _categoryMode = FinanceMode.compare;
 
   Map<String, IconData> _categoryIcons = {};
+  List<BudgetEntity> _budgets = [];
 
   static const _reportService = TransactionReportService();
 
@@ -86,6 +93,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     Colors.indigoAccent,
   ];
 
+  /// Kalıcı paletin dışına taşan kategoriler için ayrılan, kategori
+  /// renkleriyle çakışmayacak sabit "Diğer" rengi.
+  static const _otherColor = Colors.blueGrey;
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +106,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       end: now,
     );
     _loadCategoryIcons();
+    _loadBudgets();
   }
 
   Future<void> _loadCategoryIcons() async {
@@ -113,6 +125,39 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     setState(() => _categoryIcons = map);
   }
 
+  /// Bütçe limitlerini yükler. `spentAmount` burada kullanılmaz — rapor
+  /// sayfası kendi seçilebilir [_range]'ına göre harcamayı ayrıca hesaplar
+  /// (bkz. [_budgetProgressFor]), çünkü [BudgetRepository] yalnızca limitleri
+  /// döner ve "bu ay" varsayımı taşımaz.
+  Future<void> _loadBudgets() async {
+    final result = await getIt<BudgetRepository>().getBudgets();
+    if (!mounted) return;
+    result.fold(
+      (_) {},
+      (budgets) => setState(() => _budgets = budgets),
+    );
+  }
+
+  /// [tag] kategorisi için, o an görüntülenen [_range]'a göre bütçe
+  /// ilerlemesini hesaplar. Bütçe tanımlı değilse null döner.
+  ({double progress, bool isExceeded, double limit})? _budgetProgressFor(
+    String tag,
+    double spentInRange,
+  ) {
+    for (final b in _budgets) {
+      if (b.categoryId == tag) {
+        if (b.limitAmount <= 0) return null;
+        final progress = (spentInRange / b.limitAmount).clamp(0.0, 1.0);
+        return (
+          progress: progress,
+          isExceeded: spentInRange > b.limitAmount,
+          limit: b.limitAmount,
+        );
+      }
+    }
+    return null;
+  }
+
   Future<void> _pickDateRange() async {
     final picked = await IboDateRangePicker.pickDateRange(
       context,
@@ -128,6 +173,32 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     }
   }
 
+  /// Seçili [_range] ile aynı gün sayısına sahip, hemen öncesindeki dönemin
+  /// toplamlarını hesaplar (dönemsel değişim rozetleri için).
+  ReportTotals _previousPeriodTotals(List<TransactionEntity> allTransactions) {
+    final dayCount = _range.end.difference(_range.start).inDays + 1;
+    final previousEnd = _range.start.subtract(const Duration(days: 1));
+    final previousStart = previousEnd.subtract(Duration(days: dayCount - 1));
+    final previousTransactions = _reportService.filterByRange(
+      allTransactions,
+      previousStart,
+      previousEnd,
+    );
+    return _reportService.calculateTotals(previousTransactions);
+  }
+
+  Future<void> _shareReport() async {
+    final state = context.read<TransactionBloc>().state;
+    final filtered = _filterTransactionsByRange(state.currentTransactions);
+    if (filtered.isEmpty) return;
+    final rangeLabel = '${DateFormat('dd MMM yyyy').format(_range.start)} - '
+        '${DateFormat('dd MMM yyyy').format(_range.end)}';
+    await getIt<CsvService>().exportTransactionsToCSV(
+      filtered,
+      shareText: '${context.l10n.islemRaporu} ($rangeLabel)',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -138,6 +209,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               title: Text(context.l10n.islemRaporu),
               centerTitle: true,
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.ios_share_rounded),
+                  onPressed: _shareReport,
+                  tooltip: context.l10n.raporuPaylas,
+                ),
                 IconButton(
                   icon: const Icon(Icons.date_range),
                   onPressed: _pickDateRange,
@@ -167,8 +243,16 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           }
 
           final totals = _reportService.calculateTotals(filteredTransactions);
-          final expenseData = _buildCategoryData(filteredTransactions, true);
-          final incomeData = _buildCategoryData(filteredTransactions, false);
+          final previousTotals = _previousPeriodTotals(transactions);
+          final expenseFull =
+              _buildFullCategoryData(filteredTransactions, true);
+          final incomeFull =
+              _buildFullCategoryData(filteredTransactions, false);
+          final expensePie = _buildPieCategoryData(context, expenseFull, true);
+          final incomePie = _buildPieCategoryData(context, incomeFull, false);
+
+          final showExpense = _categoryMode != FinanceMode.income;
+          final showIncome = _categoryMode != FinanceMode.expense;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -185,7 +269,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 const SizedBox(height: 12),
                 _buildRangeHeader(theme),
                 const SizedBox(height: 16),
-                _buildSummaryCards(totals),
+                _buildSummaryCards(totals, previousTotals),
                 const SizedBox(height: 24),
                 Text(
                   context.l10n.haftalikNetAkis,
@@ -205,26 +289,39 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 const SizedBox(height: 12),
                 _buildCumulativeBalanceChartCard(context, filteredTransactions),
                 const SizedBox(height: 24),
-                Text(
-                  context.l10n.kategoriDagilimi,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      context.l10n.kategoriDagilimi,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    FinanceModeSegment(
+                      currentMode: _categoryMode,
+                      onModeChanged: (m) => setState(() => _categoryMode = m),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
-                _buildChartCard(
-                  context: context,
-                  title: 'Giderler',
-                  categoryData: expenseData,
-                  isExpense: true,
-                ),
-                const SizedBox(height: 16),
-                _buildChartCard(
-                  context: context,
-                  title: 'Gelirler',
-                  categoryData: incomeData,
-                  isExpense: false,
-                ),
+                if (showExpense)
+                  _buildChartCard(
+                    context: context,
+                    title: 'Giderler',
+                    fullData: expenseFull,
+                    pieData: expensePie,
+                    isExpense: true,
+                  ),
+                if (showExpense && showIncome) const SizedBox(height: 16),
+                if (showIncome)
+                  _buildChartCard(
+                    context: context,
+                    title: 'Gelirler',
+                    fullData: incomeFull,
+                    pieData: incomePie,
+                    isExpense: false,
+                  ),
               ],
             ),
           );
@@ -236,13 +333,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Widget _buildChartCard({
     required BuildContext context,
     required String title,
-    required List<_CategoryData> categoryData,
+    required List<_CategoryData> fullData,
+    required List<_CategoryData> pieData,
     required bool isExpense,
   }) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    if (categoryData.isEmpty) {
+    if (fullData.isEmpty) {
       return AppCard(
         section: AppSection.transactions,
         padding: const EdgeInsets.all(24),
@@ -284,13 +382,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       );
     }
 
+    // Toplam her zaman tam listeden hesaplanır — pasta eşiklemesi toplamı
+    // değiştirmez, sadece dilimleri yeniden gruplar.
     final total =
-        categoryData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
+        fullData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
     final touchedIndex = isExpense ? _touchedExpenseIndex : _touchedIncomeIndex;
 
-    final sections =
-        List<PieChartSectionData>.generate(categoryData.length, (i) {
-      final item = categoryData[i];
+    final sections = List<PieChartSectionData>.generate(pieData.length, (i) {
+      final item = pieData[i];
       final percent = total == 0 ? 0 : (item.totalAmount / total) * 100;
       final isTouched = i == touchedIndex;
       final radius = isTouched ? 75.0 : 66.0;
@@ -313,6 +412,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     });
 
     final isBarChart = isExpense ? _showExpenseBarChart : _showIncomeBarChart;
+    final activeData = isBarChart ? fullData : pieData;
 
     return AppCard(
       section: AppSection.transactions,
@@ -380,7 +480,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           ),
           const SizedBox(height: 24),
           isBarChart
-              ? _buildCategoryBarChart(context, categoryData, isExpense)
+              ? _buildCategoryBarChart(context, fullData, isExpense)
               : SizedBox(
                   height: 200,
                   child: PieChart(
@@ -405,7 +505,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
                               if (isTapUp &&
                                   actualIndex != -1 &&
-                                  actualIndex < categoryData.length) {
+                                  actualIndex < pieData.length) {
                                 tappedIndex = actualIndex;
                               }
 
@@ -428,7 +528,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
                             if (isTapUp &&
                                 newIndex != -1 &&
-                                newIndex < categoryData.length) {
+                                newIndex < pieData.length) {
                               tappedIndex = newIndex;
                             }
                           });
@@ -436,8 +536,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                           if (tappedIndex != null) {
                             _showCategoryDetailsBottomSheet(
                               context,
-                              categoryData[tappedIndex!],
+                              pieData[tappedIndex!],
                               isExpense,
+                              useFullData: false,
                             );
                           }
                         },
@@ -450,7 +551,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ),
                 ),
           const SizedBox(height: 24),
-          _buildLegend(context, theme, categoryData, total, isExpense),
+          _buildLegend(
+              context, theme, activeData, total, isExpense, isBarChart),
         ],
       ),
     );
@@ -520,6 +622,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                           context,
                           categoryData[index],
                           isExpense,
+                          useFullData: true,
                         );
                       }
                     }
@@ -528,7 +631,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final cat = categoryData[group.x];
                       return BarTooltipItem(
-                        '${cat.name}\n${_money(rod.toY)}',
+                        '${context.translateCategory(cat.name)}\n${_money(rod.toY)}',
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -547,7 +650,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   void _showCategoryDetailsBottomSheet(
-      BuildContext context, _CategoryData initialCategory, bool isExpense) {
+    BuildContext context,
+    _CategoryData initialCategory,
+    bool isExpense, {
+    required bool useFullData,
+  }) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final transactionBloc = context.read<TransactionBloc>();
@@ -564,14 +671,29 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               final allTransactions = state.currentTransactions;
               final filteredTransactions =
                   _filterTransactionsByRange(allTransactions);
-              final categoryDataList =
-                  _buildCategoryData(filteredTransactions, isExpense);
+              final fullList =
+                  _buildFullCategoryData(filteredTransactions, isExpense);
+              final categoryDataList = useFullData
+                  ? fullList
+                  : _buildPieCategoryData(context, fullList, isExpense);
 
               final updatedCategory = categoryDataList.firstWhere(
-                (c) => c.name == initialCategory.name,
+                (c) =>
+                    c.name == initialCategory.name &&
+                    c.isOther == initialCategory.isOther,
                 orElse: () => _CategoryData(
-                    initialCategory.name, 0, [], initialCategory.color),
+                  initialCategory.name,
+                  0,
+                  [],
+                  initialCategory.color,
+                  isOther: initialCategory.isOther,
+                ),
               );
+
+              final budgetInfo = isExpense
+                  ? _budgetProgressFor(
+                      updatedCategory.name, updatedCategory.totalAmount)
+                  : null;
 
               final transactionsWithBalance = updatedCategory.transactions
                   .map((t) =>
@@ -628,7 +750,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  updatedCategory.name,
+                                  context
+                                      .translateCategory(updatedCategory.name),
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -645,6 +768,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                               ),
                             ],
                           ),
+                          if (budgetInfo != null) ...[
+                            const SizedBox(height: 12),
+                            _buildBudgetIndicator(theme, budgetInfo),
+                          ],
                         ],
                       ),
                     ),
@@ -685,51 +812,110 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     List<_CategoryData> data,
     double total,
     bool isExpense,
+    bool useFullData,
   ) {
     final scheme = theme.colorScheme;
     return Column(
       children: data.map((item) {
         final percent = total == 0 ? 0 : (item.totalAmount / total) * 100;
+        final budgetInfo =
+            isExpense ? _budgetProgressFor(item.name, item.totalAmount) : null;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () =>
-                _showCategoryDetailsBottomSheet(context, item, isExpense),
-            child: Row(
+            onTap: () => _showCategoryDetailsBottomSheet(
+                context, item, isExpense,
+                useFullData: useFullData),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: item.color,
-                    shape: BoxShape.circle,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: item.color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        context.translateCategory(item.name),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      context.l10n.formatMoneyItemTotalamountPercent(
+                          _money(item.totalAmount), percent.toStringAsFixed(0)),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurface,
+                if (budgetInfo != null) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 24),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: budgetInfo.progress,
+                        minHeight: 4,
+                        backgroundColor:
+                            scheme.onSurface.withValues(alpha: 0.08),
+                        valueColor: AlwaysStoppedAnimation(
+                          budgetInfo.isExceeded
+                              ? Colors.redAccent
+                              : Colors.green,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  context.l10n.formatMoneyItemTotalamountPercent(
-                      _money(item.totalAmount),
-                      percent.toStringAsFixed(0)),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+                ],
               ],
             ),
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildBudgetIndicator(
+    ThemeData theme,
+    ({double progress, bool isExceeded, double limit}) budget,
+  ) {
+    final scheme = theme.colorScheme;
+    final color = budget.isExceeded ? Colors.redAccent : Colors.green;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: budget.progress,
+            minHeight: 6,
+            backgroundColor: scheme.onSurface.withValues(alpha: 0.08),
+            valueColor: AlwaysStoppedAnimation(color),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '%${(budget.progress * 100).toStringAsFixed(0)} / ${_money(budget.limit)}',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
@@ -981,7 +1167,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
   }
 
-  Widget _buildSummaryCards(ReportTotals totals) {
+  Widget _buildSummaryCards(ReportTotals totals, ReportTotals previousTotals) {
     final savingsRate =
         totals.totalIncome == 0 ? 0 : (totals.net / totals.totalIncome) * 100;
 
@@ -991,12 +1177,22 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           title: 'Gelir',
           amount: totals.totalIncome,
           color: Colors.green,
+          change: _periodChange(
+            totals.totalIncome,
+            previousTotals.totalIncome,
+            increaseIsGood: true,
+          ),
         ),
         const SizedBox(width: 12),
         _SummaryTile(
           title: 'Gider',
           amount: totals.totalExpense,
           color: Colors.redAccent,
+          change: _periodChange(
+            totals.totalExpense,
+            previousTotals.totalExpense,
+            increaseIsGood: false,
+          ),
         ),
         const SizedBox(width: 12),
         _SummaryTile(
@@ -1007,6 +1203,21 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         ),
       ],
     );
+  }
+
+  /// [current]/[previous] dönem karşılaştırmasını hesaplar. İkisi de sıfırsa
+  /// (karşılaştıracak bir şey yok) null döner — rozet hiç gösterilmez.
+  _PeriodChange? _periodChange(
+    double current,
+    double previous, {
+    required bool increaseIsGood,
+  }) {
+    if (current == 0 && previous == 0) return null;
+    if (previous == 0) {
+      return _PeriodChange(percent: null, increaseIsGood: increaseIsGood);
+    }
+    final percent = ((current - previous) / previous) * 100;
+    return _PeriodChange(percent: percent, increaseIsGood: increaseIsGood);
   }
 
   Widget _buildRangeHeader(ThemeData theme) {
@@ -1049,7 +1260,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     return _reportService.filterByRange(transactions, _range.start, _range.end);
   }
 
-  List<_CategoryData> _buildCategoryData(
+  /// Bir dönemin TÜM kategorilerini, hiçbir kısıtlama olmadan döner. Çubuk
+  /// grafiğe ve onun lejantına gider — kullanıcı her zaman tüm kategorilerini
+  /// (yatay kaydırarak) görebilir.
+  List<_CategoryData> _buildFullCategoryData(
     List<TransactionEntity> transactions,
     bool isExpense,
   ) {
@@ -1057,32 +1271,6 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       transactions,
       isExpense: isExpense,
     );
-    final palette = isExpense ? _expensePalette : _incomePalette;
-
-    if (breakdowns.length > 4) {
-      final result = <_CategoryData>[];
-      for (int i = 0; i < 3; i++) {
-        result.add(_CategoryData(
-          breakdowns[i].name,
-          breakdowns[i].totalAmount,
-          breakdowns[i].transactions,
-          palette[i],
-        ));
-      }
-      double otherTotal = 0;
-      final otherTx = <TransactionEntity>[];
-      for (int i = 3; i < breakdowns.length; i++) {
-        otherTotal += breakdowns[i].totalAmount;
-        otherTx.addAll(breakdowns[i].transactions);
-      }
-      result.add(_CategoryData(
-        'Diğer',
-        otherTotal,
-        otherTx,
-        palette[3],
-      ));
-      return result;
-    }
 
     return [
       for (int i = 0; i < breakdowns.length; i++)
@@ -1090,9 +1278,73 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           breakdowns[i].name,
           breakdowns[i].totalAmount,
           breakdowns[i].transactions,
-          palette[i % palette.length],
+          _colorForIndex(i, isExpense),
         ),
     ];
+  }
+
+  /// [fullData] (zaten azalan sıralı) üzerinden, toplamın %3'ünden azını tek
+  /// bir "Diğer" dilimine indirger. Pasta grafiği ve onun lejantı için
+  /// kullanılır. Renkler [fullData]'daki atamalarla birebir aynı kalır ki
+  /// bar/pasta arasında geçişte kategori rengi tutarlı kalsın.
+  List<_CategoryData> _buildPieCategoryData(
+    BuildContext context,
+    List<_CategoryData> fullData,
+    bool isExpense,
+  ) {
+    if (fullData.isEmpty) return fullData;
+
+    final total =
+        fullData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
+    if (total <= 0) return fullData;
+
+    const thresholdPercent = 3.0;
+    final major = <_CategoryData>[];
+    double otherTotal = 0;
+    final otherTx = <TransactionEntity>[];
+
+    for (final item in fullData) {
+      final percent = (item.totalAmount / total) * 100;
+      if (percent >= thresholdPercent) {
+        major.add(item);
+      } else {
+        otherTotal += item.totalAmount;
+        otherTx.addAll(item.transactions);
+      }
+    }
+
+    if (otherTx.isEmpty) return major;
+
+    return [
+      ...major,
+      _CategoryData(
+        context.l10n.categoryDiger,
+        otherTotal,
+        otherTx,
+        _otherColor,
+        isOther: true,
+      ),
+    ];
+  }
+
+  /// İlk 4 kategori için elle seçilmiş renkleri kullanır; ötesinde HSL ton
+  /// döndürmesiyle ek renkler üretir (gider: kırmızı-turuncu bandı, gelir:
+  /// yeşil-mavi bandı) — böylece çubuk grafik kaç kategori gelirse gelsin
+  /// görsel olarak ayırt edilebilir kalır.
+  Color _colorForIndex(int i, bool isExpense) {
+    final palette = isExpense ? _expensePalette : _incomePalette;
+    if (i < palette.length) return palette[i];
+
+    final overflow = i - palette.length;
+    const stepsPerCycle = 8;
+    final hueStart = isExpense ? 0.0 : 95.0;
+    final hueWidth = isExpense ? 45.0 : 150.0;
+    final hue =
+        (hueStart + (overflow % stepsPerCycle) * (hueWidth / stepsPerCycle)) %
+            360;
+    final cycle = overflow ~/ stepsPerCycle;
+    final lightness = (0.42 + (cycle % 3) * 0.12).clamp(0.3, 0.72);
+    return HSLColor.fromAHSL(1, hue, 0.65, lightness).toColor();
   }
 
   Widget _buildEmptyState(BuildContext context, {String? message}) {
@@ -1143,17 +1395,28 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 }
 
+/// Bir özet kartının önceki döneme göre değişimi. [percent] null ise önceki
+/// dönem toplamı sıfırdı — karşılaştırma yerine "Yeni" rozeti gösterilir.
+class _PeriodChange {
+  final double? percent;
+  final bool increaseIsGood;
+
+  const _PeriodChange({required this.percent, required this.increaseIsGood});
+}
+
 class _SummaryTile extends StatelessWidget {
   final String title;
   final double amount;
   final Color color;
   final String? subtitle;
+  final _PeriodChange? change;
 
   const _SummaryTile({
     required this.title,
     required this.amount,
     required this.color,
     this.subtitle,
+    this.change,
   });
 
   @override
@@ -1195,9 +1458,63 @@ class _SummaryTile extends StatelessWidget {
                 ),
               ),
             ],
+            if (change != null) ...[
+              const SizedBox(height: 4),
+              _buildChangeBadge(context, scheme, change!),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildChangeBadge(
+    BuildContext context,
+    ColorScheme scheme,
+    _PeriodChange change,
+  ) {
+    if (change.percent == null) {
+      return Text(
+        context.l10n.yeni,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      );
+    }
+
+    final percent = change.percent!;
+    final isIncrease = percent > 0;
+    final isNeutral = percent == 0;
+    final isGood = isIncrease == change.increaseIsGood;
+    final badgeColor = isNeutral
+        ? scheme.onSurfaceVariant.withValues(alpha: 0.6)
+        : (isGood ? Colors.green : Colors.redAccent);
+    final icon = isNeutral
+        ? Icons.remove_rounded
+        : (isIncrease
+            ? Icons.arrow_upward_rounded
+            : Icons.arrow_downward_rounded);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 10, color: badgeColor),
+        const SizedBox(width: 2),
+        Flexible(
+          child: Text(
+            context.l10n
+                .oncekiDonemeGorePercent(percent.abs().toStringAsFixed(0)),
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: badgeColor,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1208,5 +1525,12 @@ class _CategoryData {
   final List<TransactionEntity> transactions;
   final Color color;
 
-  _CategoryData(this.name, this.totalAmount, this.transactions, this.color);
+  /// Sentetik "Diğer" kovası mı, yoksa gerçek bir kategori mi. Kullanıcı
+  /// gerçek bir kategoriyi "Diğer" olarak adlandırmış olsa bile, isim eşleşmesi
+  /// bu iki kaydı birbirine karıştırmasın diye eklendi (bkz.
+  /// _showCategoryDetailsBottomSheet'teki arama).
+  final bool isOther;
+
+  _CategoryData(this.name, this.totalAmount, this.transactions, this.color,
+      {this.isOther = false});
 }

@@ -202,9 +202,8 @@ class _TransferSheetState extends State<TransferSheet> {
                     value: _to,
                     label: context.l10n.transferHedefCuzdan,
                     icon: Icons.download_rounded,
-                    items: widget.wallets
-                        .where((w) => w.id != _from.id)
-                        .toList(),
+                    items:
+                        widget.wallets.where((w) => w.id != _from.id).toList(),
                     onChanged: (w) {
                       if (w == null) return;
                       setState(() {
@@ -311,7 +310,7 @@ class _TransferSheetState extends State<TransferSheet> {
     return DropdownButtonFormField<WalletEntity>(
       // Aynı cüzdanın farklı örnekleri eşit sayılmaz (Equatable balance
       // içerir); id üzerinden mevcut örneği bul.
-      value: items.firstWhere(
+      initialValue: items.firstWhere(
         (w) => w.id == value.id,
         orElse: () => items.first,
       ),

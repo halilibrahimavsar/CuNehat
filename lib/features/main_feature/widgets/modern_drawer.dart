@@ -369,8 +369,11 @@ class _ModernDrawerState extends State<ModernDrawer>
                 _buildDrawerMetricRow(context.l10n.drawerBalance,
                     wallet.balance, Colors.white, theme, wallet.currency),
                 const SizedBox(height: 8),
-                _buildDrawerMetricRow(context.l10n.drawerInvestment,
-                    wallet.investment, Colors.greenAccent, theme,
+                _buildDrawerMetricRow(
+                    context.l10n.drawerInvestment,
+                    wallet.investment,
+                    Colors.greenAccent,
+                    theme,
                     wallet.currency),
                 const SizedBox(height: 8),
                 _buildDrawerMetricRow(context.l10n.drawerDebt, wallet.debt,

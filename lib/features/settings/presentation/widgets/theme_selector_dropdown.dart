@@ -39,7 +39,7 @@ class ThemeSelectorDropdown extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            value: state.name, // BLoC'tan gelen mevcut tema adı
+            initialValue: state.name, // BLoC'tan gelen mevcut tema adı
             items: state.names // Mevcut tema isimleriniz
                 .map(
                   (k, v) {

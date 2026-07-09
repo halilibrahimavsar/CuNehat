@@ -240,7 +240,7 @@ class BankTaxSwitch extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: accent,
+                activeThumbColor: accent,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],

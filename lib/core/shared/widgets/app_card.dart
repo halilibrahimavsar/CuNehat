@@ -69,7 +69,8 @@ class AppCard extends StatelessWidget {
     // Seçili durumda accent'li, daha kalın çerçeve ile vurgula (tüm temalarda
     // görünsün diye ayrıca hafif accent glow ekleriz).
     final highlight = selected && acc != null;
-    final borderColor = highlight ? acc.withValues(alpha: 0.9) : baseBorderColor;
+    final borderColor =
+        highlight ? acc.withValues(alpha: 0.9) : baseBorderColor;
 
     return BoxDecoration(
       color: useGradient ? null : s.baseColor,

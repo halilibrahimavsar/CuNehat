@@ -177,8 +177,8 @@ class WalletMetricsService {
             ));
 
             // Null-backfill semantiği aynen: yalnız aritmetik sonucu yuvarlanır.
-            final opening = wallet.openingBalance ??
-                roundToCents(wallet.balance - txSum);
+            final opening =
+                wallet.openingBalance ?? roundToCents(wallet.balance - txSum);
             final newBalance = roundToCents(opening + txSum);
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).

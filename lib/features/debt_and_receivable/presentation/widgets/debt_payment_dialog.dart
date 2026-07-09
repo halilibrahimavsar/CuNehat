@@ -82,9 +82,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     // Önce kuruşa yuvarla: metin, seçili chip ve kaydedilecek tutar
     // birebir aynı değer olsun (314.5599… → 314.56).
     final r = roundToCents(amount);
-    final v = r == r.roundToDouble()
-        ? r.toStringAsFixed(0)
-        : r.toStringAsFixed(2);
+    final v =
+        r == r.roundToDouble() ? r.toStringAsFixed(0) : r.toStringAsFixed(2);
     setState(() {
       _activeQuickPay = r;
       _amountController.text = v;

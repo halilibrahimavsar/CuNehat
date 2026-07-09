@@ -88,8 +88,7 @@ ReceivableModel normalizeReceivableMoney(ReceivableModel m) {
 InvestmentModel normalizeInvestmentMoney(InvestmentModel m) {
   final amount = roundToCents(m.amount);
   final currentValue = roundToCents(m.currentValue);
-  final target =
-      m.targetAmount == null ? null : roundToCents(m.targetAmount!);
+  final target = m.targetAmount == null ? null : roundToCents(m.targetAmount!);
   if (amount == m.amount &&
       currentValue == m.currentValue &&
       target == m.targetAmount) {
@@ -109,8 +108,7 @@ BudgetModel normalizeBudgetMoney(BudgetModel m) {
       : BudgetModel(categoryId: m.categoryId, limitAmount: limit);
 }
 
-RecurringTransactionModel normalizeRecurringMoney(
-    RecurringTransactionModel m) {
+RecurringTransactionModel normalizeRecurringMoney(RecurringTransactionModel m) {
   final amount = roundToCents(m.amount);
   if (amount == m.amount) return m;
   return RecurringTransactionModel(

@@ -4,7 +4,8 @@ import 'package:cunehat/core/utils/currencies.dart';
 /// (binlik ayraç yok); tr_TR NumberFormat'a geçiş post-1.0 işi —
 /// o zaman yalnız bu fonksiyon değişir. Cüzdan kapsamlı görünümler
 /// [currency] ile cüzdanın birimini geçer.
-String formatMoney(double amount, {int decimals = 2, String currency = kDefaultCurrency}) =>
+String formatMoney(double amount,
+        {int decimals = 2, String currency = kDefaultCurrency}) =>
     '${amount.toStringAsFixed(decimals)} ${currencySymbol(currency)}';
 
 /// Dar alanlar (takvim hücreleri, rozetler) için kısaltılmış para metni.

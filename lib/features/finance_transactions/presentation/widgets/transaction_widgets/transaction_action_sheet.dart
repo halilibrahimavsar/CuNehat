@@ -129,7 +129,8 @@ class TransactionActionSheet extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, size: 18, color: cs.onSurfaceVariant),
+          Icon(Icons.info_outline_rounded,
+              size: 18, color: cs.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

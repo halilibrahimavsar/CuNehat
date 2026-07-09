@@ -215,5 +215,4 @@ class TransactionCard extends StatelessWidget {
       ),
     );
   }
-
 }

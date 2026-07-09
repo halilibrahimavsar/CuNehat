@@ -73,7 +73,8 @@ class _InsightsViewState extends State<_InsightsView> {
   static const _detector = RecurringPatternDetector();
 
   /// Sayfadaki tüm tutarlar aktif cüzdanın biriminde gösterilir.
-  String _money(double v) => formatMoney(v, currency: context.activeWalletCurrency);
+  String _money(double v) =>
+      formatMoney(v, currency: context.activeWalletCurrency);
 
   final _quickOptions = DateRangeHelper.buildDateRangeQuickOptions();
 
@@ -219,8 +220,8 @@ class _InsightsViewState extends State<_InsightsView> {
         _statTile(context, context.l10n.menuIncome, _money(i.totalIncome),
             AppGradients.savings),
         const SizedBox(width: 10),
-        _statTile(context, context.l10n.menuExpense,
-            _money(i.totalExpense), AppGradients.debt),
+        _statTile(context, context.l10n.menuExpense, _money(i.totalExpense),
+            AppGradients.debt),
         const SizedBox(width: 10),
         _statTile(context, context.l10n.birikimOrani,
             '${(i.savingsRate * 100).toStringAsFixed(0)}%', savingsColor),

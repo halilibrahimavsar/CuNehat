@@ -180,8 +180,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                 // Döviz cüzdanı varsa ve tüm kurlar biliniyorsa TL toplamı;
                 // aksi halde standart alt başlık.
                 if (state is WalletLoadedSt &&
-                    state.wallets
-                        .any((w) => w.currency != kDefaultCurrency) &&
+                    state.wallets.any((w) => w.currency != kDefaultCurrency) &&
                     _tlTotal(state.wallets) != null)
                   Text(
                     context.l10n.toplamTlKarsilikFormat(

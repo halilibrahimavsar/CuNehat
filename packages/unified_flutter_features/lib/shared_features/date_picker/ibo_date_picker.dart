@@ -291,7 +291,7 @@ class IboDatePicker {
     );
     return base.copyWith(
       colorScheme: scheme,
-      dialogTheme: const DialogTheme(
+      dialogTheme: const DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(18)),
         ),

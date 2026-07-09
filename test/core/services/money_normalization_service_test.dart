@@ -82,8 +82,7 @@ void main() {
       );
     }
 
-    test('anapara/beklenen toplam/ödemeler yuvarlanır; ORANLAR dokunulmaz',
-        () {
+    test('anapara/beklenen toplam/ödemeler yuvarlanır; ORANLAR dokunulmaz', () {
       final m = debtModel(
         principal: dirty,
         expected: 400.999999999999,

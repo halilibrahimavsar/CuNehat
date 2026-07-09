@@ -24,7 +24,7 @@ class LanguageSelectorDropdown extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            value: state.languageCode,
+            initialValue: state.languageCode,
             items: [
               DropdownMenuItem(
                 value: 'tr',

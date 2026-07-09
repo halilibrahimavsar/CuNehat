@@ -286,8 +286,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       controller: _nameController,
       textCapitalization: TextCapitalization.words,
       maxLength: 30,
-      buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
-          null,
+      buildCounter:
+          (_, {required currentLength, required isFocused, maxLength}) => null,
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: _filledDecoration(
         cs,
@@ -470,8 +470,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(label,
-              style: TextStyle(fontSize: 14, color: cs.onSurface)),
+          Text(label, style: TextStyle(fontSize: 14, color: cs.onSurface)),
           const Spacer(),
           Text(
             AppFormatters.currency.format(value),
@@ -701,12 +700,11 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       floatingLabelStyle:
           TextStyle(color: _accent, fontWeight: FontWeight.w600),
       hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
-      prefixIcon:
-          Icon(icon, size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
+      prefixIcon: Icon(icon,
+          size: 20, color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
       filled: true,
       fillColor: cs.onSurface.withValues(alpha: 0.04),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       border: line(Colors.transparent, 0),
       enabledBorder: line(Colors.transparent, 0),
       focusedBorder: line(_accent, 1.6),
