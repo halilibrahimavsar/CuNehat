@@ -203,7 +203,7 @@ class LocalAuthSwitchTile extends StatelessWidget {
                 Switch.adaptive(
                   value: value,
                   onChanged: onChanged,
-                  activeColor: style.switchActiveColor,
+                  activeThumbColor: style.switchActiveColor,
                   inactiveThumbColor: style.switchInactiveColor,
                   activeTrackColor: style.switchTrackColor,
                 ),

@@ -84,7 +84,8 @@ class HorizontalCubeAnimationView extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   transform: _perspective()
                     ..rotateY(outgoingRotation)
-                    ..scale(outgoingScale),
+                    ..scaleByDouble(
+                        outgoingScale, outgoingScale, outgoingScale, 1.0),
                   child: Opacity(
                     opacity: outgoingOpacity.clamp(0.0, 1.0),
                     child: outgoingWidget,
@@ -100,7 +101,8 @@ class HorizontalCubeAnimationView extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   transform: _perspective()
                     ..rotateY(incomingRotation)
-                    ..scale(incomingScale),
+                    ..scaleByDouble(
+                        incomingScale, incomingScale, incomingScale, 1.0),
                   child: Opacity(
                     opacity: incomingOpacity.clamp(0.0, 1.0),
                     child: incomingWidget,
