@@ -78,7 +78,6 @@ class NotificationServiceImpl implements NotificationService {
               AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
         await androidImplementation.requestNotificationsPermission();
-        await androidImplementation.requestExactAlarmsPermission();
       }
     }
   }

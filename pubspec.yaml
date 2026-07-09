@@ -91,8 +91,8 @@ dependencies:
     path: packages/unified_flutter_features
   confetti: ^0.8.0
   csv: ^6.0.0
-  share_plus: ^12.0.2
-  file_picker: ^11.0.2
+  share_plus: ^13.2.0
+  file_picker: ^12.0.0-beta.7
   timezone: ^0.9.4
   flutter_local_notifications: ^17.2.4
   table_calendar: ^3.1.3
