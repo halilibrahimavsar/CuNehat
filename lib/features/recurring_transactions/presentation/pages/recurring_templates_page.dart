@@ -3,8 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -36,6 +40,19 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
   void initState() {
     super.initState();
     _loadTemplates();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [OnboardingKeys.recurringTemplatesBody];
+    coordinator.registerKeys(OnboardingFlow.recurringTemplates, keys);
+    if (coordinator.isSeen(OnboardingFlow.recurringTemplates)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.recurringTemplates);
   }
 
   Future<void> _loadTemplates() async {
@@ -92,7 +109,11 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      body: RefreshIndicator(
+      body: Showcase(
+        key: OnboardingKeys.recurringTemplatesBody,
+        title: context.l10n.onboardingRecurringTemplatesTitle,
+        description: context.l10n.onboardingRecurringTemplatesDesc,
+        child: RefreshIndicator(
         onRefresh: _loadTemplates,
         child: CustomScrollView(
           slivers: [
@@ -127,6 +148,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
             ),
             _buildContent(),
           ],
+        ),
         ),
       ),
     );

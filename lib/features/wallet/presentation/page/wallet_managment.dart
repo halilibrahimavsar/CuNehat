@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -15,6 +18,7 @@ import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class WalletSheetContent extends StatefulWidget {
@@ -45,6 +49,19 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     unawaited(getIt<ExchangeRateService>().rateToTry('USD').then((_) {
       if (mounted) setState(() {});
     }));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [OnboardingKeys.walletManagementAddButton];
+    coordinator.registerKeys(OnboardingFlow.walletManagement, keys);
+    if (coordinator.isSeen(OnboardingFlow.walletManagement)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.walletManagement);
   }
 
   /// Tüm cüzdanların TL karşılığı toplamı; herhangi bir döviz cüzdanının
@@ -311,22 +328,27 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
         child: SizedBox(
           width: double.infinity,
           height: 54,
-          child: ElevatedButton.icon(
-            onPressed: () => _createWallet(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          child: Showcase(
+            key: OnboardingKeys.walletManagementAddButton,
+            title: context.l10n.onboardingWalletManagementTitle,
+            description: context.l10n.onboardingWalletManagementDesc,
+            child: ElevatedButton.icon(
+              onPressed: () => _createWallet(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-            ),
-            icon: const Icon(Icons.add, size: 22),
-            label: Text(
-              context.l10n.yeniCuzdanOlustur,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+              icon: const Icon(Icons.add, size: 22),
+              label: Text(
+                context.l10n.yeniCuzdanOlustur,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

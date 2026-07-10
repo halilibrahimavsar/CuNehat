@@ -15,7 +15,12 @@ import 'package:cunehat/features/debt_and_receivable/presentation/widgets/debt_p
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class DebtAndReceivablePage extends StatefulWidget {
   final String userId;
@@ -40,11 +45,31 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
+  final GlobalKey _tabBarKey = GlobalKey(debugLabel: 'onboarding_debt_tabbar');
+
+  List<GlobalKey> get _tourKeys =>
+      [_tabBarKey, OnboardingKeys.addActionSlider];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    // v1 kısıtı: TL dışı cüzdanda bu sayfa TryOnlyFeatureView gösterir,
+    // showcase hedefleri hiç mount olmaz — bayrağı erken işaretlemeyelim.
+    if (widget.walletCurrency != kDefaultCurrency) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    coordinator.registerKeys(OnboardingFlow.debt, _tourKeys);
+    if (coordinator.isSeen(OnboardingFlow.debt)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(_tourKeys);
+    await coordinator.markSeen(OnboardingFlow.debt);
   }
 
   @override
@@ -73,6 +98,18 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
         body: TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanBorc),
       );
     }
+    final tabBar = TabBar(
+      controller: _tabController,
+      indicatorWeight: 4,
+      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      tabs: [
+        Tab(icon: const Icon(Icons.outbound), text: context.l10n.borclarim),
+        Tab(
+            icon: const Icon(Icons.call_received),
+            text: context.l10n.alacaklarim),
+      ],
+    );
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
@@ -84,17 +121,14 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
               ),
         ),
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorWeight: 4,
-          labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          tabs: [
-            Tab(icon: const Icon(Icons.outbound), text: context.l10n.borclarim),
-            Tab(
-                icon: const Icon(Icons.call_received),
-                text: context.l10n.alacaklarim),
-          ],
+        bottom: PreferredSize(
+          preferredSize: tabBar.preferredSize,
+          child: Showcase(
+            key: _tabBarKey,
+            title: context.l10n.onboardingDebtTabsTitle,
+            description: context.l10n.onboardingDebtTabsDesc,
+            child: tabBar,
+          ),
         ),
       ),
       body: TabBarView(

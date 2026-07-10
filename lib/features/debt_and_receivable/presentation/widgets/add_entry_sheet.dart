@@ -1,11 +1,16 @@
 // lib/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart
 
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_math.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
@@ -124,6 +129,22 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _amountController.addListener(_maybeAutoFillInstallment);
     _termController.addListener(_maybeAutoFillInstallment);
     _installmentController.addListener(_onInstallmentChanged);
+
+    if (!_isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+    }
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [OnboardingKeys.debtAddForm];
+    coordinator.registerKeys(OnboardingFlow.debtAdd, keys);
+    if (coordinator.isSeen(OnboardingFlow.debtAdd)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.debtAdd);
   }
 
   @override
@@ -400,7 +421,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildAmountCard(cs),
+                      Showcase(
+                        key: OnboardingKeys.debtAddForm,
+                        title: context.l10n.onboardingDebtAddTitle,
+                        description: context.l10n.onboardingDebtAddDesc,
+                        child: _buildAmountCard(cs),
+                      ),
                       const SizedBox(height: 20),
                       if (_isDebt) ...[
                         // Vade ve Detaylar: borç türüne göre değişen tür-özel

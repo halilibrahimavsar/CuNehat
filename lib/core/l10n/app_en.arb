@@ -741,5 +741,62 @@
   "transferKurYok": "Couldn't get the exchange rate — try again when online",
   "transferBasarili": "Transfer completed",
   "transferBasarisiz": "Transfer failed",
-  "transferIcinIkiCuzdanGerekli": "You need at least two wallets to transfer"
+  "transferIcinIkiCuzdanGerekli": "You need at least two wallets to transfer",
+
+  "yardimVeTurlar": "Help & Tours",
+  "genelTanitimiTekrarGoster": "Replay Privacy & Notification Intro",
+  "yatirimBirikimTuru": "Investments/Savings Tour",
+  "islemlerTuru": "Transactions Tour",
+  "borcAlacakTuru": "Debts & Receivables Tour",
+
+  "onboardingInvestmentSummaryTitle": "Your Total Savings",
+  "onboardingInvestmentSummaryDesc": "See your total investment, current value, and profit/loss at a glance here.",
+  "onboardingInvestmentPortfolioTitle": "Your Portfolio",
+  "onboardingInvestmentPortfolioDesc": "Your gold, stock, and custom investments are listed here. Tap a card to contribute, sell, edit, or delete.",
+
+  "onboardingTransactionsFilterTitle": "Mode & Filters",
+  "onboardingTransactionsFilterDesc": "Switch between Income/Expense mode and filter by category, date, or amount.",
+  "onboardingTransactionsViewToggleTitle": "List / Calendar",
+  "onboardingTransactionsViewToggleDesc": "Browse your transactions in a list or calendar view.",
+
+  "onboardingDebtTabsTitle": "My Debts / My Receivables",
+  "onboardingDebtTabsDesc": "Track what you owe and what's owed to you in separate tabs here.",
+
+  "onboardingNavHintHeader": "How to Navigate",
+  "onboardingNavHintSwipeTitle": "Swipe Left / Right",
+  "onboardingNavHintSwipeDesc": "Switch between the Investments, Transactions, and Debts screens.",
+  "onboardingNavHintDragTitle": "Drag Upward",
+  "onboardingNavHintDragDesc": "Reach sub-pages like Details, Report, Pending, and History.",
+  "onboardingNavHintAddTitle": "Tap an Icon",
+  "onboardingNavHintAddDesc": "Add a new income, expense, investment, debt, or receivable.",
+
+  "onboardingInvestmentDetailTitle": "Savings Detail",
+  "onboardingInvestmentDetailDesc": "See all buy/sell activity for your investments here, in chronological order.",
+  "onboardingTransactionsInsightsTitle": "Smart Insights",
+  "onboardingTransactionsInsightsDesc": "Automatic observations about your spending habits and possible recurring payments appear here.",
+  "onboardingTransactionsReportTitle": "Transaction Report",
+  "onboardingTransactionsReportDesc": "Explore income/expense breakdowns with charts for your selected date range, and export them.",
+  "onboardingDebtHistoryTitle": "History",
+  "onboardingDebtHistoryDesc": "The full history of paid-off debts and collected receivables is kept here.",
+
+  "tumTurlariSifirla": "Reset All Tours",
+  "tumTurlariSifirlaAciklama": "Including sub-page tours — they'll show again as you revisit each screen.",
+  "tumTurlarSifirlandi": "Tours reset",
+
+  "onboardingAppBarMenuTitle": "Menu",
+  "onboardingAppBarMenuDesc": "Access budgets, recurring transactions, profile, and settings from here.",
+  "onboardingAppBarWalletTitle": "Your Wallet",
+  "onboardingAppBarWalletDesc": "The active wallet's name and balance show here. Tap to switch between wallets or add a new one.",
+  "onboardingWalletManagementTitle": "Add a New Wallet",
+  "onboardingWalletManagementDesc": "Create a new wallet here for a different account or currency.",
+  "onboardingTransactionsAddTitle": "Enter the Amount",
+  "onboardingTransactionsAddDesc": "Type the amount, then pick a category and date, and save. You can also set a repeat frequency.",
+  "onboardingDebtAddTitle": "Enter the Amount",
+  "onboardingDebtAddDesc": "Choose the debt/receivable amount and type; fill in details like due date and installments below.",
+  "onboardingInvestmentAddTitle": "Current Value",
+  "onboardingInvestmentAddDesc": "Enter the investment's current value. Fill in details like quantity, type, and an optional target below.",
+  "onboardingBudgetsTitle": "Add a New Budget",
+  "onboardingBudgetsDesc": "Pick a category and set a monthly spending limit; you'll be notified if you exceed it.",
+  "onboardingRecurringTemplatesTitle": "Recurring Transactions",
+  "onboardingRecurringTemplatesDesc": "Templates created from the repeat option when adding income/expense are listed here; pause or delete them."
 }

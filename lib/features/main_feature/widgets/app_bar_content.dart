@@ -1,10 +1,14 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart';
@@ -34,6 +38,22 @@ class AppBarContent extends StatefulWidget {
 
 class _AppBarContentState extends State<AppBarContent> {
   WalletLoadedSt? _cachedLoadedState;
+  bool _tourScheduled = false;
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [
+      OnboardingKeys.appBarMenuButton,
+      OnboardingKeys.appBarWalletArea,
+    ];
+    coordinator.registerKeys(OnboardingFlow.appBar, keys);
+    if (coordinator.isSeen(OnboardingFlow.appBar)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.appBar);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,21 +70,26 @@ class _AppBarContentState extends State<AppBarContent> {
   }
 
   Widget _buildMenuButton(BuildContext context) {
-    return ScaleTransition(
-      scale: widget.scaleAnimation,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(AppBorderRadius.medium),
-        ),
-        child: IconButton(
-          onPressed: () {
-            final scaffoldState =
-                context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
-            scaffoldState?.openDrawer();
-          },
-          icon: const Icon(Icons.grid_view_rounded,
-              color: AppColors.white, size: AppSizes.buttonSize),
+    return Showcase(
+      key: OnboardingKeys.appBarMenuButton,
+      title: context.l10n.onboardingAppBarMenuTitle,
+      description: context.l10n.onboardingAppBarMenuDesc,
+      child: ScaleTransition(
+        scale: widget.scaleAnimation,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(AppBorderRadius.medium),
+          ),
+          child: IconButton(
+            onPressed: () {
+              final scaffoldState = context
+                  .findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+              scaffoldState?.openDrawer();
+            },
+            icon: const Icon(Icons.grid_view_rounded,
+                color: AppColors.white, size: AppSizes.buttonSize),
+          ),
         ),
       ),
     );
@@ -175,49 +200,62 @@ class _AppBarContentState extends State<AppBarContent> {
       }
     }
 
-    return GestureDetector(
-      onTap: () {
-        final scaffoldState =
-            context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
-        final authState = context.read<AppAuthBloc>().state;
-        final userId = authState is AppAuthenticated
-            ? authState.user.uid
-            : (authState is AppAuthLocked ? authState.user.uid : 'local_user');
+    if (!_tourScheduled) {
+      _tourScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+    }
 
-        scaffoldState?.openWalletDialog(
-          WalletSheetContent(
-            scrollController: ScrollController(),
-            userId: userId,
-          ),
-        );
-      },
-      child: Container(
-        color: AppColors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildWalletNameBadge(context, state.activeWallet, valueName, st),
-            const SizedBox(height: 2),
-            _buildAmountDisplay(value),
-            // Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı;
-            // kur yoksa satır gizlenir.
-            if (st == SliderState.transactions &&
-                state.activeWallet != null &&
-                state.activeWallet!.currency != kDefaultCurrency)
-              if (getIt<ExchangeRateService>()
-                      .cachedRateToTry(state.activeWallet!.currency)
-                  case final double rate)
-                Text(
-                  context.l10n
-                      .yaklasikKarsilikFormat(formatMoney(value * rate)),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.white.withValues(alpha: 0.75),
+    return Showcase(
+      key: OnboardingKeys.appBarWalletArea,
+      title: context.l10n.onboardingAppBarWalletTitle,
+      description: context.l10n.onboardingAppBarWalletDesc,
+      child: GestureDetector(
+        onTap: () {
+          final scaffoldState =
+              context.findAncestorStateOfType<AnimatedScaffoldWrapperState>();
+          final authState = context.read<AppAuthBloc>().state;
+          final userId = authState is AppAuthenticated
+              ? authState.user.uid
+              : (authState is AppAuthLocked
+                  ? authState.user.uid
+                  : 'local_user');
+
+          scaffoldState?.openWalletDialog(
+            WalletSheetContent(
+              scrollController: ScrollController(),
+              userId: userId,
+            ),
+          );
+        },
+        child: Container(
+          color: AppColors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildWalletNameBadge(
+                  context, state.activeWallet, valueName, st),
+              const SizedBox(height: 2),
+              _buildAmountDisplay(value),
+              // Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı;
+              // kur yoksa satır gizlenir.
+              if (st == SliderState.transactions &&
+                  state.activeWallet != null &&
+                  state.activeWallet!.currency != kDefaultCurrency)
+                if (getIt<ExchangeRateService>()
+                        .cachedRateToTry(state.activeWallet!.currency)
+                    case final double rate)
+                  Text(
+                    context.l10n
+                        .yaklasikKarsilikFormat(formatMoney(value * rate)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.white.withValues(alpha: 0.75),
+                    ),
                   ),
-                ),
-          ],
+            ],
+          ),
         ),
       ),
     );

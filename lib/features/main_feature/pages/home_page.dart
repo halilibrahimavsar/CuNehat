@@ -20,9 +20,15 @@ import 'package:cunehat/features/recurring_transactions/presentation/widgets/pen
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/notifications/notification_permission_dialog.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/features/main_feature/widgets/onboarding_navigation_hint_card.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,13 +66,48 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // Bekleyen işlemleri yükle
     context.read<PendingRecurringBloc>().add(LoadPendingTransactionsEvent());
 
-    // Bildirim izinlerini iste
-    _requestNotificationPermissions();
+    final coordinator = getIt<OnboardingCoordinator>();
+    coordinator.addListener(_onOnboardingCoordinatorChanged);
+    // Drawer/cüzdan diyaloğu geçiş animasyonu sürerken hedef widget'ların
+    // konumu kayar; turlar bu bittiğinde başlamalı (bkz. waitUntilStable).
+    coordinator.isBlocked = () => _scaffoldKey.currentState?.isTransforming ?? false;
 
-    // İlk açılışta gizlilik bilgilendirmesi/onamı (yalnız bir kez).
+    // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
+    // Tek postFrameCallback'te sıralı çalıştırılır ki sistem izin promptu
+    // gizlilik diyaloğuyla çakışmasın.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowPrivacyConsent();
+      _runFirstLaunchOnboarding();
     });
+  }
+
+  static const String _privacyConsentKey = 'privacy_consent_shown';
+  static const String _notificationRationaleKey =
+      'notification_permission_explained';
+
+  Future<void> _runFirstLaunchOnboarding() async {
+    await _maybeShowPrivacyConsent();
+    if (!mounted) return;
+    await _maybeRequestNotificationPermission();
+  }
+
+  Future<void> _maybeShowPrivacyConsent() async {
+    final prefs = getIt<SharedPreferences>();
+    if (prefs.getBool(_privacyConsentKey) ?? false) return;
+    if (!mounted) return;
+    await showPrivacyConsentDialog(context);
+    await prefs.setBool(_privacyConsentKey, true);
+  }
+
+  Future<void> _maybeRequestNotificationPermission() async {
+    final prefs = getIt<SharedPreferences>();
+    if (prefs.getBool(_notificationRationaleKey) ?? false) return;
+    if (!mounted) return;
+    await prefs.setBool(_notificationRationaleKey, true);
+    if (!mounted) return;
+    final granted = await showNotificationPermissionRationale(context);
+    if (granted) {
+      await _requestNotificationPermissions();
+    }
   }
 
   Future<void> _requestNotificationPermissions() async {
@@ -77,14 +118,46 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  static const String _privacyConsentKey = 'privacy_consent_shown';
+  /// Ayarlar'dan tetiklenen "turu tekrar göster" isteğini karşılar: slider'ı
+  /// ilgili ekrana taşır, sayfa (yeniden) mount olduktan sonra showcase'i
+  /// başlatır. Settings `context.push` ile açıldığından HomePage state'i
+  /// canlı kalır; bu yüzden initState'e değil bu listener'a ihtiyaç var.
+  void _onOnboardingCoordinatorChanged() {
+    final flow = getIt<OnboardingCoordinator>().pendingFlow;
+    if (flow == null) return;
+    _startFlowTour(flow);
+  }
 
-  Future<void> _maybeShowPrivacyConsent() async {
-    final prefs = getIt<SharedPreferences>();
-    if (prefs.getBool(_privacyConsentKey) ?? false) return;
+  Future<void> _startFlowTour(OnboardingFlow flow) async {
+    final coordinator = getIt<OnboardingCoordinator>();
+    // Yalnızca ana 3 ekran Ayarlar'dan doğrudan tekrar oynatılabilir; alt
+    // sayfa akışları (Detay/İçgörü/Rapor/Geçmiş) o sayfaya gidildiğinde
+    // kendiliğinden tetiklenir, buraya pendingFlow olarak hiç gelmezler.
+    final targetValue = switch (flow) {
+      OnboardingFlow.investment => 0.0,
+      OnboardingFlow.transactions => 0.5,
+      OnboardingFlow.debt => 1.0,
+      _ => null,
+    };
+    if (targetValue == null) {
+      coordinator.consumePendingFlow();
+      return;
+    }
+    if ((_navController.horizontalController.value - targetValue).abs() >
+        0.01) {
+      await _navController.horizontalController.animateTo(targetValue);
+    }
     if (!mounted) return;
-    await showPrivacyConsentDialog(context);
-    await prefs.setBool(_privacyConsentKey, true);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await coordinator.waitUntilStable();
+      if (!mounted) return;
+      final keys = coordinator.keysFor(flow);
+      if (keys.isNotEmpty) {
+        await coordinator.requestStartShowCase(keys);
+      }
+      coordinator.consumePendingFlow();
+    });
   }
 
   /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in
@@ -110,6 +183,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     _navController.horizontalController
         .removeListener(_onSliderStateMaybeChanged);
+    final coordinator = getIt<OnboardingCoordinator>();
+    coordinator.removeListener(_onOnboardingCoordinatorChanged);
+    coordinator.isBlocked = null;
     _navController.dispose();
     super.dispose();
   }
@@ -257,12 +333,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // tetiklenir ve knob carousel'i ekranla senkron kalır.
           AnimatedBuilder(
             animation: _navController,
-            builder: (context, _) => SliderButtonView(
-              controller: _navController.horizontalController,
-              navigationController: _navController,
-              userId: userId,
-              walletState: walletState,
-              subViewFactory: _subViewFactory!,
+            builder: (context, _) => Showcase.withWidget(
+              key: OnboardingKeys.addActionSlider,
+              container: const OnboardingNavigationHintCard(),
+              targetShapeBorder: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: SliderButtonView(
+                controller: _navController.horizontalController,
+                navigationController: _navController,
+                userId: userId,
+                walletState: walletState,
+                subViewFactory: _subViewFactory!,
+              ),
             ),
           ),
       ],

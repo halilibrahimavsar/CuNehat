@@ -2,12 +2,16 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class AddGoldSheet extends StatefulWidget {
   final String walletId;
@@ -119,6 +123,22 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     }
     // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
     _targetAmountController.addListener(() => setState(() {}));
+
+    if (!_isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+    }
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [OnboardingKeys.investmentAddForm];
+    coordinator.registerKeys(OnboardingFlow.investmentAdd, keys);
+    if (coordinator.isSeen(OnboardingFlow.investmentAdd)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.investmentAdd);
   }
 
   @override
@@ -265,11 +285,16 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      InvestmentAmountCard(
-                        accent: _accent,
-                        valueColor: Colors.orange,
-                        controller: _currentValueController,
-                        onChanged: _clearError,
+                      Showcase(
+                        key: OnboardingKeys.investmentAddForm,
+                        title: context.l10n.onboardingInvestmentAddTitle,
+                        description: context.l10n.onboardingInvestmentAddDesc,
+                        child: InvestmentAmountCard(
+                          accent: _accent,
+                          valueColor: Colors.orange,
+                          controller: _currentValueController,
+                          onChanged: _clearError,
+                        ),
                       ),
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
                       const SizedBox(height: 14),

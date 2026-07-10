@@ -1917,4 +1917,172 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transferIcinIkiCuzdanGerekli =>
       'You need at least two wallets to transfer';
+
+  @override
+  String get yardimVeTurlar => 'Help & Tours';
+
+  @override
+  String get genelTanitimiTekrarGoster => 'Replay Privacy & Notification Intro';
+
+  @override
+  String get yatirimBirikimTuru => 'Investments/Savings Tour';
+
+  @override
+  String get islemlerTuru => 'Transactions Tour';
+
+  @override
+  String get borcAlacakTuru => 'Debts & Receivables Tour';
+
+  @override
+  String get onboardingInvestmentSummaryTitle => 'Your Total Savings';
+
+  @override
+  String get onboardingInvestmentSummaryDesc =>
+      'See your total investment, current value, and profit/loss at a glance here.';
+
+  @override
+  String get onboardingInvestmentPortfolioTitle => 'Your Portfolio';
+
+  @override
+  String get onboardingInvestmentPortfolioDesc =>
+      'Your gold, stock, and custom investments are listed here. Tap a card to contribute, sell, edit, or delete.';
+
+  @override
+  String get onboardingTransactionsFilterTitle => 'Mode & Filters';
+
+  @override
+  String get onboardingTransactionsFilterDesc =>
+      'Switch between Income/Expense mode and filter by category, date, or amount.';
+
+  @override
+  String get onboardingTransactionsViewToggleTitle => 'List / Calendar';
+
+  @override
+  String get onboardingTransactionsViewToggleDesc =>
+      'Browse your transactions in a list or calendar view.';
+
+  @override
+  String get onboardingDebtTabsTitle => 'My Debts / My Receivables';
+
+  @override
+  String get onboardingDebtTabsDesc =>
+      'Track what you owe and what\'s owed to you in separate tabs here.';
+
+  @override
+  String get onboardingNavHintHeader => 'How to Navigate';
+
+  @override
+  String get onboardingNavHintSwipeTitle => 'Swipe Left / Right';
+
+  @override
+  String get onboardingNavHintSwipeDesc =>
+      'Switch between the Investments, Transactions, and Debts screens.';
+
+  @override
+  String get onboardingNavHintDragTitle => 'Drag Upward';
+
+  @override
+  String get onboardingNavHintDragDesc =>
+      'Reach sub-pages like Details, Report, Pending, and History.';
+
+  @override
+  String get onboardingNavHintAddTitle => 'Tap an Icon';
+
+  @override
+  String get onboardingNavHintAddDesc =>
+      'Add a new income, expense, investment, debt, or receivable.';
+
+  @override
+  String get onboardingInvestmentDetailTitle => 'Savings Detail';
+
+  @override
+  String get onboardingInvestmentDetailDesc =>
+      'See all buy/sell activity for your investments here, in chronological order.';
+
+  @override
+  String get onboardingTransactionsInsightsTitle => 'Smart Insights';
+
+  @override
+  String get onboardingTransactionsInsightsDesc =>
+      'Automatic observations about your spending habits and possible recurring payments appear here.';
+
+  @override
+  String get onboardingTransactionsReportTitle => 'Transaction Report';
+
+  @override
+  String get onboardingTransactionsReportDesc =>
+      'Explore income/expense breakdowns with charts for your selected date range, and export them.';
+
+  @override
+  String get onboardingDebtHistoryTitle => 'History';
+
+  @override
+  String get onboardingDebtHistoryDesc =>
+      'The full history of paid-off debts and collected receivables is kept here.';
+
+  @override
+  String get tumTurlariSifirla => 'Reset All Tours';
+
+  @override
+  String get tumTurlariSifirlaAciklama =>
+      'Including sub-page tours — they\'ll show again as you revisit each screen.';
+
+  @override
+  String get tumTurlarSifirlandi => 'Tours reset';
+
+  @override
+  String get onboardingAppBarMenuTitle => 'Menu';
+
+  @override
+  String get onboardingAppBarMenuDesc =>
+      'Access budgets, recurring transactions, profile, and settings from here.';
+
+  @override
+  String get onboardingAppBarWalletTitle => 'Your Wallet';
+
+  @override
+  String get onboardingAppBarWalletDesc =>
+      'The active wallet\'s name and balance show here. Tap to switch between wallets or add a new one.';
+
+  @override
+  String get onboardingWalletManagementTitle => 'Add a New Wallet';
+
+  @override
+  String get onboardingWalletManagementDesc =>
+      'Create a new wallet here for a different account or currency.';
+
+  @override
+  String get onboardingTransactionsAddTitle => 'Enter the Amount';
+
+  @override
+  String get onboardingTransactionsAddDesc =>
+      'Type the amount, then pick a category and date, and save. You can also set a repeat frequency.';
+
+  @override
+  String get onboardingDebtAddTitle => 'Enter the Amount';
+
+  @override
+  String get onboardingDebtAddDesc =>
+      'Choose the debt/receivable amount and type; fill in details like due date and installments below.';
+
+  @override
+  String get onboardingInvestmentAddTitle => 'Current Value';
+
+  @override
+  String get onboardingInvestmentAddDesc =>
+      'Enter the investment\'s current value. Fill in details like quantity, type, and an optional target below.';
+
+  @override
+  String get onboardingBudgetsTitle => 'Add a New Budget';
+
+  @override
+  String get onboardingBudgetsDesc =>
+      'Pick a category and set a monthly spending limit; you\'ll be notified if you exceed it.';
+
+  @override
+  String get onboardingRecurringTemplatesTitle => 'Recurring Transactions';
+
+  @override
+  String get onboardingRecurringTemplatesDesc =>
+      'Templates created from the repeat option when adding income/expense are listed here; pause or delete them.';
 }

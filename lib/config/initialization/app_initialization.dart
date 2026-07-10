@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
@@ -25,6 +26,7 @@ import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_b
 import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 
 class AppInitialization {
   static Future<AppInitializationResult> initialize() async {
@@ -45,6 +47,18 @@ class AppInitialization {
       if (!getIt.isRegistered<AppAuthBloc>()) {
         await configureDependencies();
       }
+
+      // Ekranlardaki interaktif turlar (Showcase) için global kayıt. v5
+      // API'si artık widget ağacında bir üst (ShowcaseWidget) gerektirmiyor;
+      // herhangi bir yerdeki Showcase, ShowcaseView.get() ile bu kayda
+      // bağlanır. onFinish/onDismiss, OnboardingCoordinator'ın kuyruğunu
+      // (aynı anda birden çok ekranın kendi turunu tetiklemesi durumunda
+      // sırayla oynatılmasını sağlayan mekanizma) serbest bırakır — bu
+      // yüzden getIt hazır olduktan SONRA kayıt yapılır.
+      ShowcaseView.register(
+        onFinish: () => getIt<OnboardingCoordinator>().handleShowcaseIdle(),
+        onDismiss: (_) => getIt<OnboardingCoordinator>().handleShowcaseIdle(),
+      );
 
       // Initialize NotificationService
       await getIt<NotificationService>().initialize();

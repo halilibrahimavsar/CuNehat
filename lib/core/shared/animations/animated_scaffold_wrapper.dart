@@ -42,6 +42,13 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final bool _isWalletOpen = false;
 
+  /// Drawer veya cüzdan diyaloğu açılış/kapanış dönüşümü (translate/scale/
+  /// rotate) sürüyor mu. İçerik bu sırada ekranda kaymış görünür; bu yüzden
+  /// interaktif turlar (Showcase) hedef konumunu bu değer false olana kadar
+  /// beklemelidir — aksi halde overlay yanlış konumda çizilir.
+  bool get isTransforming =>
+      _drawerController.value != 0.0 || _walletController.value != 0.0;
+
   @override
   void initState() {
     super.initState();

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,46 +36,51 @@ class BudgetsPage extends StatelessWidget {
 
     final scheme = Theme.of(context).colorScheme;
 
-    return BlocProvider(
-      create: (context) => getIt<BudgetsBloc>()
-        ..add(LoadBudgetsEvent(userId: userId, walletId: walletId)),
-      child: Scaffold(
-        backgroundColor: scheme.surface,
-        body: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 120,
-              pinned: true,
-              backgroundColor: scheme.primary,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                onPressed: () => context.pop(),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  context.l10n.butcePlanlama,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return OnboardingAutoTourTrigger(
+      flow: OnboardingFlow.budgets,
+      keysBuilder: () => [OnboardingKeys.budgetsAddButton],
+      child: BlocProvider(
+        create: (context) => getIt<BudgetsBloc>()
+          ..add(LoadBudgetsEvent(userId: userId, walletId: walletId)),
+        child: Scaffold(
+          backgroundColor: scheme.surface,
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 120,
+                pinned: true,
+                backgroundColor: scheme.primary,
+                leading: IconButton(
+                  icon:
+                      const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                  onPressed: () => context.pop(),
                 ),
-                centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [scheme.primary, scheme.secondary],
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    context.l10n.butcePlanlama,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [scheme.primary, scheme.secondary],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const _BudgetsBody(),
-          ],
+              const _BudgetsBody(),
+            ],
+          ),
+          floatingActionButton: _AddBudgetButton(),
         ),
-        floatingActionButton: _AddBudgetButton(),
       ),
     );
   }
@@ -363,19 +372,25 @@ class _BudgetListItem extends StatelessWidget {
 class _AddBudgetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () {
-        final bloc = context.read<BudgetsBloc>();
-        final state = bloc.state;
-        showDialog(
-          context: context,
-          builder: (ctx) => _AddBudgetDialog(
-            bloc: bloc,
-            existingBudgets: state is BudgetsLoaded ? state.budgets : const [],
-          ),
-        );
-      },
-      child: const Icon(Icons.add),
+    return Showcase(
+      key: OnboardingKeys.budgetsAddButton,
+      title: context.l10n.onboardingBudgetsTitle,
+      description: context.l10n.onboardingBudgetsDesc,
+      child: FloatingActionButton(
+        onPressed: () {
+          final bloc = context.read<BudgetsBloc>();
+          final state = bloc.state;
+          showDialog(
+            context: context,
+            builder: (ctx) => _AddBudgetDialog(
+              bloc: bloc,
+              existingBudgets:
+                  state is BudgetsLoaded ? state.budgets : const [],
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

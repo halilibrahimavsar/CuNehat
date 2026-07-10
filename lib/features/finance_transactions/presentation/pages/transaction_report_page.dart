@@ -24,6 +24,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
+import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class TransactionReportPage extends StatelessWidget {
   final String userId;
@@ -203,26 +207,33 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: widget.showAppBar
-          ? AppBar(
-              title: Text(context.l10n.islemRaporu),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.ios_share_rounded),
-                  onPressed: _shareReport,
-                  tooltip: context.l10n.raporuPaylas,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.date_range),
-                  onPressed: _pickDateRange,
-                  tooltip: context.l10n.tooltipTarihAraligi,
-                ),
-              ],
-            )
-          : null,
-      body: BlocBuilder<TransactionBloc, TransactionState>(
+    return OnboardingAutoTourTrigger(
+      flow: OnboardingFlow.transactionsReport,
+      keysBuilder: () => [OnboardingKeys.transactionsReportBody],
+      child: Scaffold(
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: Text(context.l10n.islemRaporu),
+                centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.ios_share_rounded),
+                    onPressed: _shareReport,
+                    tooltip: context.l10n.raporuPaylas,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.date_range),
+                    onPressed: _pickDateRange,
+                    tooltip: context.l10n.tooltipTarihAraligi,
+                  ),
+                ],
+              )
+            : null,
+        body: Showcase(
+          key: OnboardingKeys.transactionsReportBody,
+          title: context.l10n.onboardingTransactionsReportTitle,
+          description: context.l10n.onboardingTransactionsReportDesc,
+          child: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
           final transactions = state.currentTransactions;
           if (state is TransactionLoading && transactions.isEmpty) {
@@ -326,6 +337,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             ),
           );
         },
+          ),
+        ),
       ),
     );
   }

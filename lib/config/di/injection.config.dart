@@ -11,6 +11,7 @@
 import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
 import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart' as _i371;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
 import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/data_serialization_service.dart' as _i348;
@@ -173,19 +174,19 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i366.ReceivableLocalDatasource());
     gh.singleton<_i175.WalletLocalDataSource>(
         () => _i175.WalletLocalDataSource());
+    gh.lazySingleton<_i530.CsvService>(() => _i530.CsvService());
+    gh.lazySingleton<_i348.DataSerializationService>(
+        () => _i348.DataSerializationService());
     gh.lazySingleton<_i777.TransactionsChangedNotifier>(
       () => _i777.TransactionsChangedNotifier(),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i530.CsvService>(() => _i530.CsvService());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
     gh.lazySingleton<_i163.FlutterLocalNotificationsPlugin>(
         () => appModule.flutterLocalNotificationsPlugin);
-    gh.lazySingleton<_i348.DataSerializationService>(
-        () => _i348.DataSerializationService());
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(
@@ -194,6 +195,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i828.BudgetLocalDataSourceImpl());
     gh.factory<_i855.GetDebtsUseCase>(
         () => _i855.GetDebtsUseCase(gh<_i198.DebtRepository>()));
+    gh.lazySingleton<_i371.OnboardingCoordinator>(
+        () => _i371.OnboardingCoordinator(gh<_i460.SharedPreferences>()));
     gh.singleton<_i896.CategoryRepository>(
         () => _i20.CategoryRepositoryImpl(gh<_i1002.CategoryService>()));
     gh.lazySingleton<_i500.ExchangeRateService>(() => _i500.ExchangeRateService(

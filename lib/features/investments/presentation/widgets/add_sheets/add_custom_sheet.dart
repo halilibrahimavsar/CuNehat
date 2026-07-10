@@ -1,10 +1,15 @@
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class AddCustomSheet extends StatefulWidget {
@@ -87,6 +92,22 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
     }
     // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
     _targetAmountController.addListener(() => setState(() {}));
+
+    if (!_isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+    }
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [OnboardingKeys.investmentAddForm];
+    coordinator.registerKeys(OnboardingFlow.investmentAdd, keys);
+    if (coordinator.isSeen(OnboardingFlow.investmentAdd)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.investmentAdd);
   }
 
   @override
@@ -194,11 +215,16 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      InvestmentAmountCard(
-                        accent: _accent,
-                        valueColor: Colors.deepPurple,
-                        controller: _currentValueController,
-                        onChanged: _clearError,
+                      Showcase(
+                        key: OnboardingKeys.investmentAddForm,
+                        title: context.l10n.onboardingInvestmentAddTitle,
+                        description: context.l10n.onboardingInvestmentAddDesc,
+                        child: InvestmentAmountCard(
+                          accent: _accent,
+                          valueColor: Colors.deepPurple,
+                          controller: _currentValueController,
+                          onChanged: _clearError,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.yatirimDetaylari),

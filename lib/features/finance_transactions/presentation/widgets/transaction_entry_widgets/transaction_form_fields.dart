@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -75,7 +80,20 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _routeAnimation = null;
     if (!mounted) return;
     _c.loadCategories();
-    if (!_isEdit) _amountFocus.requestFocus();
+    if (!_isEdit) {
+      _amountFocus.requestFocus();
+      _maybeShowTour();
+    }
+  }
+
+  Future<void> _maybeShowTour() async {
+    final coordinator = getIt<OnboardingCoordinator>();
+    final keys = [OnboardingKeys.transactionAddForm];
+    coordinator.registerKeys(OnboardingFlow.transactionsAdd, keys);
+    if (coordinator.isSeen(OnboardingFlow.transactionsAdd)) return;
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(keys);
+    await coordinator.markSeen(OnboardingFlow.transactionsAdd);
   }
 
   @override
@@ -135,13 +153,18 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const _DragHandle(),
-                AmountHero(
-                  controller: _c,
-                  accent: _accent,
-                  isExpense: widget.isExpense,
-                  isEdit: _isEdit,
-                  focusNode: _amountFocus,
-                  onClose: widget.onCancel,
+                Showcase(
+                  key: OnboardingKeys.transactionAddForm,
+                  title: context.l10n.onboardingTransactionsAddTitle,
+                  description: context.l10n.onboardingTransactionsAddDesc,
+                  child: AmountHero(
+                    controller: _c,
+                    accent: _accent,
+                    isExpense: widget.isExpense,
+                    isEdit: _isEdit,
+                    focusNode: _amountFocus,
+                    onClose: widget.onCancel,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),

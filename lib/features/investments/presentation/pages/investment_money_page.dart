@@ -14,9 +14,14 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confetti/confetti.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'dart:math' as math;
 
 class InvestmentMoneyPage extends StatefulWidget {
@@ -30,6 +35,14 @@ class InvestmentMoneyPage extends StatefulWidget {
 
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   late ConfettiController _confettiController;
+
+  final GlobalKey _summaryCardKey =
+      GlobalKey(debugLabel: 'onboarding_investment_summary');
+  final GlobalKey _portfolioHeaderKey =
+      GlobalKey(debugLabel: 'onboarding_investment_portfolio_header');
+
+  List<GlobalKey> get _tourKeys =>
+      [_summaryCardKey, _portfolioHeaderKey, OnboardingKeys.addActionSlider];
 
   /// Satış onayı: güncel değer cüzdana gelir olarak işlenir.
   Future<bool?> _confirmSell(InvestmentEntity investment) {
@@ -81,6 +94,21 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
     _loadInvestments();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    // v1 kısıtı: TL dışı cüzdanda bu sayfa TryOnlyFeatureView gösterir,
+    // showcase hedefleri hiç mount olmaz — bayrağı erken işaretlemeyelim.
+    if (widget.activeWallet.currency != kDefaultCurrency) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    coordinator.registerKeys(OnboardingFlow.investment, _tourKeys);
+    if (coordinator.isSeen(OnboardingFlow.investment)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(_tourKeys);
+    await coordinator.markSeen(OnboardingFlow.investment);
   }
 
   @override
@@ -263,11 +291,18 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SummaryCard(
-                              totalInvestment: totalInvestment,
-                              totalCurrentValue: totalCurrentValue,
-                              totalProfit: totalProfit,
-                              totalProfitPercentage: totalProfitPercentage,
+                            Showcase(
+                              key: _summaryCardKey,
+                              title: context
+                                  .l10n.onboardingInvestmentSummaryTitle,
+                              description: context
+                                  .l10n.onboardingInvestmentSummaryDesc,
+                              child: SummaryCard(
+                                totalInvestment: totalInvestment,
+                                totalCurrentValue: totalCurrentValue,
+                                totalProfit: totalProfit,
+                                totalProfitPercentage: totalProfitPercentage,
+                              ),
                             ),
 
                             const SizedBox(height: 24),
@@ -279,47 +314,56 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                             const SizedBox(height: 24),
 
                             // Portföy Başlığı
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  context.l10n.portfoyum,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      context.l10n.investmentsLengthYatirim(
-                                          investments.length),
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
+                            Showcase(
+                              key: _portfolioHeaderKey,
+                              title: context
+                                  .l10n.onboardingInvestmentPortfolioTitle,
+                              description: context
+                                  .l10n.onboardingInvestmentPortfolioDesc,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    context.l10n.portfoyum,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    if (investments
-                                        .any((i) => i.canRefreshPrice))
-                                      IconButton(
-                                        tooltip: context
-                                            .l10n.tooltipFiyatlariGuncelle,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () => context
-                                            .read<InvestmentBloc>()
-                                            .add(RefreshPricesEvent(
-                                              userId:
-                                                  widget.activeWallet.userId,
-                                              walletId: widget.activeWallet.id!,
-                                            )),
-                                        icon: const Icon(
-                                          Icons.refresh_rounded,
-                                          size: 20,
-                                          color: Colors.teal,
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        context.l10n.investmentsLengthYatirim(
+                                            investments.length),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
                                         ),
                                       ),
-                                  ],
-                                ),
-                              ],
+                                      if (investments
+                                          .any((i) => i.canRefreshPrice))
+                                        IconButton(
+                                          tooltip: context
+                                              .l10n.tooltipFiyatlariGuncelle,
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () => context
+                                              .read<InvestmentBloc>()
+                                              .add(RefreshPricesEvent(
+                                                userId: widget
+                                                    .activeWallet.userId,
+                                                walletId:
+                                                    widget.activeWallet.id!,
+                                              )),
+                                          icon: const Icon(
+                                            Icons.refresh_rounded,
+                                            size: 20,
+                                            color: Colors.teal,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
 
                             const SizedBox(height: 16),

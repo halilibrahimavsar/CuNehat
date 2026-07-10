@@ -6,9 +6,13 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
+import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
 class DebtHistoryPage extends StatelessWidget {
@@ -45,39 +49,48 @@ class _DebtHistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: showAppBar
-            ? AppBar(
-                title: Text(context.l10n.gecmis),
-                centerTitle: true,
-              )
-            : null,
-        body: Column(
-          children: [
-            TabBar(
-              indicatorWeight: 4,
-              labelStyle:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              tabs: [
-                Tab(
-                    icon: const Icon(Icons.outbound),
-                    text: context.l10n.borcGecmisi),
-                Tab(
-                    icon: const Icon(Icons.call_received),
-                    text: context.l10n.alacakGecmisi),
+    return OnboardingAutoTourTrigger(
+      flow: OnboardingFlow.debtHistory,
+      keysBuilder: () => [OnboardingKeys.debtHistoryBody],
+      child: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: showAppBar
+              ? AppBar(
+                  title: Text(context.l10n.gecmis),
+                  centerTitle: true,
+                )
+              : null,
+          body: Showcase(
+            key: OnboardingKeys.debtHistoryBody,
+            title: context.l10n.onboardingDebtHistoryTitle,
+            description: context.l10n.onboardingDebtHistoryDesc,
+            child: Column(
+              children: [
+                TabBar(
+                  indicatorWeight: 4,
+                  labelStyle: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                  tabs: [
+                    Tab(
+                        icon: const Icon(Icons.outbound),
+                        text: context.l10n.borcGecmisi),
+                    Tab(
+                        icon: const Icon(Icons.call_received),
+                        text: context.l10n.alacakGecmisi),
+                  ],
+                ),
+                const Expanded(
+                  child: TabBarView(
+                    children: [
+                      _DebtHistoryTab(),
+                      _ReceivableHistoryTab(),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  _DebtHistoryTab(),
-                  _ReceivableHistoryTab(),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

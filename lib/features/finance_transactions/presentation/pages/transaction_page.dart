@@ -20,7 +20,11 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class TransactionsPage extends StatelessWidget {
@@ -67,11 +71,31 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// kullanıcı doğrudan takvimi görür.
   _ViewMode _viewMode = _ViewMode.calendar;
 
+  final GlobalKey _filterBarKey =
+      GlobalKey(debugLabel: 'onboarding_tx_filter_bar');
+  final GlobalKey _viewToggleKey =
+      GlobalKey(debugLabel: 'onboarding_tx_view_toggle');
+
+  List<GlobalKey> get _tourKeys =>
+      [_filterBarKey, _viewToggleKey, OnboardingKeys.addActionSlider];
+
   @override
   void initState() {
     super.initState();
     _loadData();
     _loadCategoryIcons();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    final coordinator = getIt<OnboardingCoordinator>();
+    coordinator.registerKeys(OnboardingFlow.transactions, _tourKeys);
+    if (coordinator.isSeen(OnboardingFlow.transactions)) return;
+    await coordinator.waitUntilStable();
+    if (!mounted) return;
+    await coordinator.requestStartShowCase(_tourKeys);
+    await coordinator.markSeen(OnboardingFlow.transactions);
   }
 
   Future<void> _loadCategoryIcons() async {
@@ -253,31 +277,48 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: TransactionFilterBar(
-                                currentMode: filterState.viewFilter.financeMode,
-                                dataFilter: filterState.dataFilter,
-                                onModeChanged: (mode) {
-                                  context
-                                      .read<TransactionFilterCubit>()
-                                      .updateFilter(
-                                        filterState.copyWith(
-                                          viewFilter: filterState.viewFilter
-                                              .copyWith(financeMode: mode),
-                                          dataFilter: filterState.dataFilter
-                                              .copyWith(clearCategories: true),
-                                        ),
-                                      );
-                                },
-                                onFilterTap: () => _showFilterSheet(
-                                  context,
-                                  context.read<TransactionFilterCubit>(),
+                              child: Showcase(
+                                key: _filterBarKey,
+                                title: context
+                                    .l10n.onboardingTransactionsFilterTitle,
+                                description: context
+                                    .l10n.onboardingTransactionsFilterDesc,
+                                child: TransactionFilterBar(
+                                  currentMode:
+                                      filterState.viewFilter.financeMode,
+                                  dataFilter: filterState.dataFilter,
+                                  onModeChanged: (mode) {
+                                    context
+                                        .read<TransactionFilterCubit>()
+                                        .updateFilter(
+                                          filterState.copyWith(
+                                            viewFilter: filterState.viewFilter
+                                                .copyWith(financeMode: mode),
+                                            dataFilter: filterState.dataFilter
+                                                .copyWith(
+                                                    clearCategories: true),
+                                          ),
+                                        );
+                                  },
+                                  onFilterTap: () => _showFilterSheet(
+                                    context,
+                                    context.read<TransactionFilterCubit>(),
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _ViewModeToggle(
-                              mode: _viewMode,
-                              onChanged: (m) => setState(() => _viewMode = m),
+                            Showcase(
+                              key: _viewToggleKey,
+                              title: context
+                                  .l10n.onboardingTransactionsViewToggleTitle,
+                              description: context
+                                  .l10n.onboardingTransactionsViewToggleDesc,
+                              child: _ViewModeToggle(
+                                mode: _viewMode,
+                                onChanged: (m) =>
+                                    setState(() => _viewMode = m),
+                              ),
                             ),
                           ],
                         ),

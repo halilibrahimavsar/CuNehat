@@ -8,8 +8,12 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
+import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class InvestmentDetailPage extends StatelessWidget {
   final String userId;
@@ -40,14 +44,21 @@ class _InvestmentDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: showAppBar
-          ? AppBar(
-              title: Text(context.l10n.birikimDetayi),
-              centerTitle: true,
-            )
-          : null,
-      body: BlocBuilder<TransactionBloc, TransactionState>(
+    return OnboardingAutoTourTrigger(
+      flow: OnboardingFlow.investmentDetail,
+      keysBuilder: () => [OnboardingKeys.investmentDetailBody],
+      child: Scaffold(
+        appBar: showAppBar
+            ? AppBar(
+                title: Text(context.l10n.birikimDetayi),
+                centerTitle: true,
+              )
+            : null,
+        body: Showcase(
+          key: OnboardingKeys.investmentDetailBody,
+          title: context.l10n.onboardingInvestmentDetailTitle,
+          description: context.l10n.onboardingInvestmentDetailDesc,
+          child: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
           final allTransactions = state.currentTransactions;
 
@@ -96,6 +107,8 @@ class _InvestmentDetailView extends StatelessWidget {
             ),
           );
         },
+          ),
+        ),
       ),
     );
   }

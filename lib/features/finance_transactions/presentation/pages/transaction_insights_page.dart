@@ -16,8 +16,12 @@ import 'package:cunehat/features/recurring_transactions/domain/entities/recurrin
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_pattern_detector.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/get_all_recurring_templates_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
+import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 /// "Akıllı İçgörüler" — transactions sekmesinin ilk swipe sayfası.
 ///
@@ -141,11 +145,19 @@ class _InsightsViewState extends State<_InsightsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: widget.showAppBar
-          ? AppBar(title: Text(context.l10n.akilliIcgoruler), centerTitle: true)
-          : null,
-      body: BlocBuilder<TransactionBloc, TransactionState>(
+    return OnboardingAutoTourTrigger(
+      flow: OnboardingFlow.transactionsInsights,
+      keysBuilder: () => [OnboardingKeys.transactionsInsightsBody],
+      child: Scaffold(
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: Text(context.l10n.akilliIcgoruler), centerTitle: true)
+            : null,
+        body: Showcase(
+          key: OnboardingKeys.transactionsInsightsBody,
+          title: context.l10n.onboardingTransactionsInsightsTitle,
+          description: context.l10n.onboardingTransactionsInsightsDesc,
+          child: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
           final all = state.currentTransactions;
 
@@ -189,6 +201,8 @@ class _InsightsViewState extends State<_InsightsView> {
             ),
           );
         },
+          ),
+        ),
       ),
     );
   }

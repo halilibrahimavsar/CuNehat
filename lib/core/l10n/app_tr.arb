@@ -756,5 +756,62 @@
   "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin",
   "transferBasarili": "Transfer tamamlandı",
   "transferBasarisiz": "Transfer başarısız oldu",
-  "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli"
+  "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli",
+
+  "yardimVeTurlar": "Yardım & Turlar",
+  "genelTanitimiTekrarGoster": "Gizlilik ve Bildirim Tanıtımını Tekrar Göster",
+  "yatirimBirikimTuru": "Yatırım/Birikim Turu",
+  "islemlerTuru": "İşlemler Turu",
+  "borcAlacakTuru": "Borç & Alacak Turu",
+
+  "onboardingInvestmentSummaryTitle": "Toplam Birikiminiz",
+  "onboardingInvestmentSummaryDesc": "Toplam yatırım, güncel değer ve kâr/zararınızı burada tek bakışta görürsünüz.",
+  "onboardingInvestmentPortfolioTitle": "Portföyünüz",
+  "onboardingInvestmentPortfolioDesc": "Altın, hisse ve özel yatırımlarınızın listesi burada. Bir karta dokunarak katkı, satış, düzenleme ve silme işlemlerine ulaşabilirsiniz.",
+
+  "onboardingTransactionsFilterTitle": "Mod ve Filtreler",
+  "onboardingTransactionsFilterDesc": "Gelir/Gider modunu değiştirin ve kategoriye, tarihe veya tutara göre filtreleyin.",
+  "onboardingTransactionsViewToggleTitle": "Liste / Takvim",
+  "onboardingTransactionsViewToggleDesc": "İşlemlerinizi liste veya takvim görünümünde inceleyebilirsiniz.",
+
+  "onboardingDebtTabsTitle": "Borçlarım / Alacaklarım",
+  "onboardingDebtTabsDesc": "Verdiğiniz ve aldığınız borçları buradan sekmeler halinde takip edersiniz.",
+
+  "onboardingNavHintHeader": "Nasıl Gezinilir?",
+  "onboardingNavHintSwipeTitle": "Sağa / Sola Kaydırın",
+  "onboardingNavHintSwipeDesc": "Yatırım, İşlemler ve Borç ekranları arasında geçiş yapın.",
+  "onboardingNavHintDragTitle": "Yukarı Sürükleyin",
+  "onboardingNavHintDragDesc": "Detay, Rapor, Bekleyen ve Geçmiş gibi alt sayfalara ulaşın.",
+  "onboardingNavHintAddTitle": "Simgelere Dokunun",
+  "onboardingNavHintAddDesc": "Yeni gelir, gider, yatırım, borç veya alacak ekleyin.",
+
+  "onboardingInvestmentDetailTitle": "Birikim Detayı",
+  "onboardingInvestmentDetailDesc": "Yatırımlarınızla ilgili tüm alım/satım hareketlerini burada kronolojik olarak görürsünüz.",
+  "onboardingTransactionsInsightsTitle": "Akıllı İçgörüler",
+  "onboardingTransactionsInsightsDesc": "Harcama alışkanlıklarınızla ilgili otomatik tespitler ve olası tekrarlayan ödemeler burada gösterilir.",
+  "onboardingTransactionsReportTitle": "İşlem Raporu",
+  "onboardingTransactionsReportDesc": "Seçtiğiniz tarih aralığı için gelir/gider dağılımını grafiklerle inceleyin, dışa aktarın.",
+  "onboardingDebtHistoryTitle": "Geçmiş",
+  "onboardingDebtHistoryDesc": "Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.",
+
+  "tumTurlariSifirla": "Tüm Turları Sıfırla",
+  "tumTurlariSifirlaAciklama": "Alt sayfa turları da dahil, tüm ekranları ziyaret ettiğinizde tekrar gösterilir.",
+  "tumTurlarSifirlandi": "Turlar sıfırlandı",
+
+  "onboardingAppBarMenuTitle": "Menü",
+  "onboardingAppBarMenuDesc": "Buradan bütçe, düzenli işlemler, profil ve ayarlara ulaşabilirsiniz.",
+  "onboardingAppBarWalletTitle": "Cüzdanınız",
+  "onboardingAppBarWalletDesc": "Aktif cüzdanın adı ve bakiyesi burada görünür. Dokunarak cüzdanlar arasında geçiş yapabilir veya yeni cüzdan ekleyebilirsiniz.",
+  "onboardingWalletManagementTitle": "Yeni Cüzdan Ekle",
+  "onboardingWalletManagementDesc": "Farklı hesaplarınız veya döviz cüzdanlarınız için buradan yeni bir cüzdan oluşturabilirsiniz.",
+  "onboardingTransactionsAddTitle": "Tutarı Girin",
+  "onboardingTransactionsAddDesc": "Tutarı yazın, ardından kategori ve tarih seçip kaydedin. İsterseniz tekrar sıklığı da ayarlayabilirsiniz.",
+  "onboardingDebtAddTitle": "Tutarı Girin",
+  "onboardingDebtAddDesc": "Borç/alacak tutarını ve türünü seçin; vade tarihi ve taksit gibi detayları aşağıda tamamlayın.",
+  "onboardingInvestmentAddTitle": "Mevcut Değer",
+  "onboardingInvestmentAddDesc": "Yatırımın güncel değerini girin. Aşağıda miktar, tür ve isteğe bağlı hedef tutar gibi detayları tamamlayabilirsiniz.",
+  "onboardingBudgetsTitle": "Yeni Bütçe Ekle",
+  "onboardingBudgetsDesc": "Bir kategori seçip aylık harcama limiti belirleyin; limit aşıldığında bilgilendirilirsiniz.",
+  "onboardingRecurringTemplatesTitle": "Düzenli İşlemler",
+  "onboardingRecurringTemplatesDesc": "Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz."
 }

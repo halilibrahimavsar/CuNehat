@@ -1919,4 +1919,173 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get transferIcinIkiCuzdanGerekli =>
       'Transfer için en az iki cüzdan gerekli';
+
+  @override
+  String get yardimVeTurlar => 'Yardım & Turlar';
+
+  @override
+  String get genelTanitimiTekrarGoster =>
+      'Gizlilik ve Bildirim Tanıtımını Tekrar Göster';
+
+  @override
+  String get yatirimBirikimTuru => 'Yatırım/Birikim Turu';
+
+  @override
+  String get islemlerTuru => 'İşlemler Turu';
+
+  @override
+  String get borcAlacakTuru => 'Borç & Alacak Turu';
+
+  @override
+  String get onboardingInvestmentSummaryTitle => 'Toplam Birikiminiz';
+
+  @override
+  String get onboardingInvestmentSummaryDesc =>
+      'Toplam yatırım, güncel değer ve kâr/zararınızı burada tek bakışta görürsünüz.';
+
+  @override
+  String get onboardingInvestmentPortfolioTitle => 'Portföyünüz';
+
+  @override
+  String get onboardingInvestmentPortfolioDesc =>
+      'Altın, hisse ve özel yatırımlarınızın listesi burada. Bir karta dokunarak katkı, satış, düzenleme ve silme işlemlerine ulaşabilirsiniz.';
+
+  @override
+  String get onboardingTransactionsFilterTitle => 'Mod ve Filtreler';
+
+  @override
+  String get onboardingTransactionsFilterDesc =>
+      'Gelir/Gider modunu değiştirin ve kategoriye, tarihe veya tutara göre filtreleyin.';
+
+  @override
+  String get onboardingTransactionsViewToggleTitle => 'Liste / Takvim';
+
+  @override
+  String get onboardingTransactionsViewToggleDesc =>
+      'İşlemlerinizi liste veya takvim görünümünde inceleyebilirsiniz.';
+
+  @override
+  String get onboardingDebtTabsTitle => 'Borçlarım / Alacaklarım';
+
+  @override
+  String get onboardingDebtTabsDesc =>
+      'Verdiğiniz ve aldığınız borçları buradan sekmeler halinde takip edersiniz.';
+
+  @override
+  String get onboardingNavHintHeader => 'Nasıl Gezinilir?';
+
+  @override
+  String get onboardingNavHintSwipeTitle => 'Sağa / Sola Kaydırın';
+
+  @override
+  String get onboardingNavHintSwipeDesc =>
+      'Yatırım, İşlemler ve Borç ekranları arasında geçiş yapın.';
+
+  @override
+  String get onboardingNavHintDragTitle => 'Yukarı Sürükleyin';
+
+  @override
+  String get onboardingNavHintDragDesc =>
+      'Detay, Rapor, Bekleyen ve Geçmiş gibi alt sayfalara ulaşın.';
+
+  @override
+  String get onboardingNavHintAddTitle => 'Simgelere Dokunun';
+
+  @override
+  String get onboardingNavHintAddDesc =>
+      'Yeni gelir, gider, yatırım, borç veya alacak ekleyin.';
+
+  @override
+  String get onboardingInvestmentDetailTitle => 'Birikim Detayı';
+
+  @override
+  String get onboardingInvestmentDetailDesc =>
+      'Yatırımlarınızla ilgili tüm alım/satım hareketlerini burada kronolojik olarak görürsünüz.';
+
+  @override
+  String get onboardingTransactionsInsightsTitle => 'Akıllı İçgörüler';
+
+  @override
+  String get onboardingTransactionsInsightsDesc =>
+      'Harcama alışkanlıklarınızla ilgili otomatik tespitler ve olası tekrarlayan ödemeler burada gösterilir.';
+
+  @override
+  String get onboardingTransactionsReportTitle => 'İşlem Raporu';
+
+  @override
+  String get onboardingTransactionsReportDesc =>
+      'Seçtiğiniz tarih aralığı için gelir/gider dağılımını grafiklerle inceleyin, dışa aktarın.';
+
+  @override
+  String get onboardingDebtHistoryTitle => 'Geçmiş';
+
+  @override
+  String get onboardingDebtHistoryDesc =>
+      'Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.';
+
+  @override
+  String get tumTurlariSifirla => 'Tüm Turları Sıfırla';
+
+  @override
+  String get tumTurlariSifirlaAciklama =>
+      'Alt sayfa turları da dahil, tüm ekranları ziyaret ettiğinizde tekrar gösterilir.';
+
+  @override
+  String get tumTurlarSifirlandi => 'Turlar sıfırlandı';
+
+  @override
+  String get onboardingAppBarMenuTitle => 'Menü';
+
+  @override
+  String get onboardingAppBarMenuDesc =>
+      'Buradan bütçe, düzenli işlemler, profil ve ayarlara ulaşabilirsiniz.';
+
+  @override
+  String get onboardingAppBarWalletTitle => 'Cüzdanınız';
+
+  @override
+  String get onboardingAppBarWalletDesc =>
+      'Aktif cüzdanın adı ve bakiyesi burada görünür. Dokunarak cüzdanlar arasında geçiş yapabilir veya yeni cüzdan ekleyebilirsiniz.';
+
+  @override
+  String get onboardingWalletManagementTitle => 'Yeni Cüzdan Ekle';
+
+  @override
+  String get onboardingWalletManagementDesc =>
+      'Farklı hesaplarınız veya döviz cüzdanlarınız için buradan yeni bir cüzdan oluşturabilirsiniz.';
+
+  @override
+  String get onboardingTransactionsAddTitle => 'Tutarı Girin';
+
+  @override
+  String get onboardingTransactionsAddDesc =>
+      'Tutarı yazın, ardından kategori ve tarih seçip kaydedin. İsterseniz tekrar sıklığı da ayarlayabilirsiniz.';
+
+  @override
+  String get onboardingDebtAddTitle => 'Tutarı Girin';
+
+  @override
+  String get onboardingDebtAddDesc =>
+      'Borç/alacak tutarını ve türünü seçin; vade tarihi ve taksit gibi detayları aşağıda tamamlayın.';
+
+  @override
+  String get onboardingInvestmentAddTitle => 'Mevcut Değer';
+
+  @override
+  String get onboardingInvestmentAddDesc =>
+      'Yatırımın güncel değerini girin. Aşağıda miktar, tür ve isteğe bağlı hedef tutar gibi detayları tamamlayabilirsiniz.';
+
+  @override
+  String get onboardingBudgetsTitle => 'Yeni Bütçe Ekle';
+
+  @override
+  String get onboardingBudgetsDesc =>
+      'Bir kategori seçip aylık harcama limiti belirleyin; limit aşıldığında bilgilendirilirsiniz.';
+
+  @override
+  String get onboardingRecurringTemplatesTitle => 'Düzenli İşlemler';
+
+  @override
+  String get onboardingRecurringTemplatesDesc =>
+      'Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.';
 }
