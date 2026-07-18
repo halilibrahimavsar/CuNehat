@@ -45,6 +45,14 @@ class DebtEntity extends Equatable {
   final String? notes;
   final double? expectedTotalAmount;
 
+  /// Ana para cüzdana nakit olarak girdi mi?
+  /// true  → borç alınırken para ele geçti; anapara bakiyeye gelir yazılır
+  ///         (silmede geri alınır).
+  /// false → borç karşılığında ürün/hizmet alındı; nakit ele geçmedi, bakiye
+  ///         değişmez. Yalnız taksit/ödemeler gider olarak deftere düşer.
+  /// Eski kayıtlar için varsayılan true (eski davranış nakit kuplajıydı).
+  final bool principalToWallet;
+
   const DebtEntity({
     this.id,
     required this.userId,
@@ -62,6 +70,7 @@ class DebtEntity extends Equatable {
     this.isPaid = false,
     this.notes,
     this.expectedTotalAmount,
+    this.principalToWallet = true,
   });
 
   DebtEntity copyWith({
@@ -81,6 +90,7 @@ class DebtEntity extends Equatable {
     bool? isPaid,
     String? notes,
     double? expectedTotalAmount,
+    bool? principalToWallet,
   }) {
     return DebtEntity(
       id: id ?? this.id,
@@ -99,6 +109,7 @@ class DebtEntity extends Equatable {
       isPaid: isPaid ?? this.isPaid,
       notes: notes ?? this.notes,
       expectedTotalAmount: expectedTotalAmount ?? this.expectedTotalAmount,
+      principalToWallet: principalToWallet ?? this.principalToWallet,
     );
   }
 
@@ -176,5 +187,6 @@ class DebtEntity extends Equatable {
         isPaid,
         notes,
         expectedTotalAmount,
+        principalToWallet,
       ];
 }

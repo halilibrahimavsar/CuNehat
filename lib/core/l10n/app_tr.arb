@@ -716,13 +716,17 @@
     }
   },
   "duzenliOdemeEklenemedi": "Düzenli ödeme eklenemedi",
-  "borcBakiyeyeEklenecekBaslik": "Borç bakiyene eklenecek",
-  "borcBakiyeyeEklenecekGovde": "Bu borcun ana parası ({tutar}) cüzdan bakiyene gelir olarak eklenir. Geri ödemelerini ve harcamalarını manuel ekleyebilirsin.",
-  "@borcBakiyeyeEklenecekGovde": {
+  "borcNakitEtkiBaslik": "Bu borç karşılığında ne aldın?",
+  "borcNakitEtkiAciklama": "Seçimine göre cüzdan bakiyen otomatik güncellenir; ayrıca elle işlem eklemen gerekmez.",
+  "borcNakitSecenekBaslik": "Nakit aldım",
+  "borcNakitSecenekGovde": "{tutar} cüzdan bakiyene gelir olarak eklenir. Yaptığın geri ödemeler bakiyeden gider olarak düşülür.",
+  "@borcNakitSecenekGovde": {
     "placeholders": {
       "tutar": { "type": "String" }
     }
   },
+  "borcUrunSecenekBaslik": "Ürün / hizmet aldım",
+  "borcUrunSecenekGovde": "Para eline geçmediği için bakiyen değişmez. Taksit ve geri ödemelerin bakiyeden gider olarak düşülür.",
   "devamEt": "Devam et",
   "bugun": "Bugün",
   "islemBuguneAyarliIpucu": "Tarih bugüne ayarlı — başka bir güne eklemek için tarihe dokun.",

@@ -69,6 +69,11 @@ class DebtModel extends DebtEntity {
   @HiveField(18) // Yeni alan
   double? get expectedTotalAmount;
 
+  // Eski kayıtlarda alan yoktur; defaultValue true = eski nakit-kuplaj davranışı.
+  @override
+  @HiveField(19, defaultValue: true)
+  bool get principalToWallet;
+
   const DebtModel({
     required super.id,
     required super.userId,
@@ -86,6 +91,7 @@ class DebtModel extends DebtEntity {
     super.isPaid = false,
     super.notes,
     super.expectedTotalAmount,
+    super.principalToWallet = true,
   });
 
   factory DebtModel.fromEntity(DebtEntity entity) {
@@ -106,6 +112,7 @@ class DebtModel extends DebtEntity {
       isPaid: entity.isPaid,
       notes: entity.notes,
       expectedTotalAmount: entity.expectedTotalAmount,
+      principalToWallet: entity.principalToWallet,
     );
   }
 
@@ -131,6 +138,7 @@ class DebtModel extends DebtEntity {
       isPaid: isPaid,
       notes: notes,
       expectedTotalAmount: expectedTotalAmount,
+      principalToWallet: principalToWallet,
     );
   }
 
@@ -152,6 +160,7 @@ class DebtModel extends DebtEntity {
     bool? isPaid,
     String? notes,
     double? expectedTotalAmount,
+    bool? principalToWallet,
   }) {
     return DebtModel(
       id: id ?? this.id,
@@ -170,6 +179,7 @@ class DebtModel extends DebtEntity {
       isPaid: isPaid ?? this.isPaid,
       notes: notes ?? this.notes,
       expectedTotalAmount: expectedTotalAmount ?? this.expectedTotalAmount,
+      principalToWallet: principalToWallet ?? this.principalToWallet,
     );
   }
 
@@ -192,6 +202,7 @@ class DebtModel extends DebtEntity {
       'isPaid': isPaid,
       'notes': notes,
       'expectedTotalAmount': expectedTotalAmount,
+      'principalToWallet': principalToWallet,
     };
   }
 
@@ -223,6 +234,8 @@ class DebtModel extends DebtEntity {
       isPaid: json['isPaid'] as bool? ?? false,
       notes: json['notes'] as String?,
       expectedTotalAmount: (json['expectedTotalAmount'] as num?)?.toDouble(),
+      // Eski yedeklerde alan yok → true (eski davranış nakit kuplajıydı).
+      principalToWallet: json['principalToWallet'] as bool? ?? true,
     );
   }
 }

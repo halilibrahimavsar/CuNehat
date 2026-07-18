@@ -1842,12 +1842,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get duzenliOdemeEklenemedi => 'Düzenli ödeme eklenemedi';
 
   @override
-  String get borcBakiyeyeEklenecekBaslik => 'Borç bakiyene eklenecek';
+  String get borcNakitEtkiBaslik => 'Bu borç karşılığında ne aldın?';
 
   @override
-  String borcBakiyeyeEklenecekGovde(String tutar) {
-    return 'Bu borcun ana parası ($tutar) cüzdan bakiyene gelir olarak eklenir. Geri ödemelerini ve harcamalarını manuel ekleyebilirsin.';
+  String get borcNakitEtkiAciklama =>
+      'Seçimine göre cüzdan bakiyen otomatik güncellenir; ayrıca elle işlem eklemen gerekmez.';
+
+  @override
+  String get borcNakitSecenekBaslik => 'Nakit aldım';
+
+  @override
+  String borcNakitSecenekGovde(String tutar) {
+    return '$tutar cüzdan bakiyene gelir olarak eklenir. Yaptığın geri ödemeler bakiyeden gider olarak düşülür.';
   }
+
+  @override
+  String get borcUrunSecenekBaslik => 'Ürün / hizmet aldım';
+
+  @override
+  String get borcUrunSecenekGovde =>
+      'Para eline geçmediği için bakiyen değişmez. Taksit ve geri ödemelerin bakiyeden gider olarak düşülür.';
 
   @override
   String get devamEt => 'Devam et';

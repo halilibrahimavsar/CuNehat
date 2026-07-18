@@ -589,4 +589,158 @@ void main() {
       ],
     );
   });
+
+  // Ürün/hizmet karşılığı borç (principalToWallet=false): anapara nakit olarak
+  // ele geçmediği için bakiyeye hiç yazılmaz; yalnız ödemeler gider düşer.
+  group('principalToWallet=false (ürün borcu)', () {
+    final productDebt = testDebt.copyWith(principalToWallet: false);
+
+    blocTest<DebtBloc, DebtState>(
+      'AddDebtEvent does NOT record principal as income',
+      build: () {
+        when(() => mockAddUseCase(productDebt))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([productDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(AddDebtEvent(productDebt)),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç başarıyla eklendi.'),
+        DebtLoading(),
+        DebtLoaded([productDebt]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            ));
+        verify(() => mockMetricsService.syncDebt('wallet_123')).called(1);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'UpdateDebtEvent does NOT record principal diff as cash',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([productDebt]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtEvent(
+        productDebt.copyWith(principalAmount: 1200.0),
+        prevPrincipal: 1000.0,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç güncellendi.'),
+        DebtLoading(),
+        DebtLoaded([productDebt]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            ));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'DeleteDebtEvent reverses only payments (income of paid amount)',
+      build: () {
+        // Ürün borcunda anapara hiç bakiyeye girmedi; geri alma yalnız
+        // ödemeleri iade eder: reversal = 300 - 0 = +300 → gelir.
+        when(() => mockDeleteUseCase('debt_123'))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: 'wallet_123',
+              userId: 'user_123',
+              amount: 300.0,
+              isIncome: true,
+              title: 'Borç silindi',
+              tag: CashMovementTags.debt,
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Right([]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteDebtEvent(
+        id: 'debt_123',
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        principalAmount: 1000.0,
+        totalPaidAmount: 300.0,
+        principalToWallet: false,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç silindi.'),
+        DebtLoading(),
+        const DebtLoaded([]),
+      ],
+      verify: (_) {
+        verify(() => mockMetricsService.recordCashMovement(
+              walletId: 'wallet_123',
+              userId: 'user_123',
+              amount: 300.0,
+              isIncome: true,
+              title: 'Borç silindi',
+              tag: CashMovementTags.debt,
+            )).called(1);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'DeleteDebtEvent with no payments records no cash movement',
+      build: () {
+        when(() => mockDeleteUseCase('debt_123'))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Right([]));
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(const DeleteDebtEvent(
+        id: 'debt_123',
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        principalAmount: 1000.0,
+        totalPaidAmount: 0.0,
+        principalToWallet: false,
+      )),
+      expect: () => [
+        DebtLoading(),
+        const DebtOperationSuccess('Borç silindi.'),
+        DebtLoading(),
+        const DebtLoaded([]),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+            ));
+      },
+    );
+  });
 }

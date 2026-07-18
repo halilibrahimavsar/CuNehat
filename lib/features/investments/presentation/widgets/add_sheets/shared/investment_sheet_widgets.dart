@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -134,9 +135,7 @@ class InvestmentAmountCard extends StatelessWidget {
                   textAlign: TextAlign.right,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  ],
+                  inputFormatters: [AmountInputFormatter()],
                   onChanged: (_) => onChanged(),
                   cursorColor: accent,
                   style: TextStyle(
@@ -205,6 +204,7 @@ class InvestmentFilledField extends StatelessWidget {
   final IconData icon;
   final MaterialColor accent;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final VoidCallback onChanged;
 
   const InvestmentFilledField({
@@ -215,6 +215,7 @@ class InvestmentFilledField extends StatelessWidget {
     required this.accent,
     required this.onChanged,
     this.keyboardType,
+    this.inputFormatters,
   });
 
   @override
@@ -223,6 +224,7 @@ class InvestmentFilledField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       textCapitalization: keyboardType == null
           ? TextCapitalization.sentences
           : TextCapitalization.none,
@@ -505,6 +507,8 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
             accent: accent,
             onChanged: onQuantityChanged,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            // Adet para değildir; 0,125 gr gibi hassas girişe izin ver.
+            inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
           ),
         ),
         const SizedBox(width: 10),

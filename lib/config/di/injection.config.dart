@@ -296,6 +296,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i613.SaveBudgetUsecase(gh<_i94.BudgetRepository>()));
     gh.factory<_i691.DeleteBudgetUsecase>(
         () => _i691.DeleteBudgetUsecase(gh<_i94.BudgetRepository>()));
+    gh.factory<_i691.DeleteBudgetsForCategoryUsecase>(() =>
+        _i691.DeleteBudgetsForCategoryUsecase(gh<_i94.BudgetRepository>()));
+    gh.factory<_i691.DeleteBudgetsForWalletUsecase>(
+        () => _i691.DeleteBudgetsForWalletUsecase(gh<_i94.BudgetRepository>()));
     gh.lazySingleton<_i239.WalletMetricsService>(() =>
         _i239.WalletMetricsService(
           walletRepository: gh<_i504.WalletRepository>(),
@@ -374,6 +378,17 @@ extension GetItInjectableX on _i174.GetIt {
           deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
+    gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
+          getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
+          watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
+          createWalletUseCase: gh<_i207.WalletCreateUseCase>(),
+          updateWalletUseCase: gh<_i207.WalletUpdateUseCase>(),
+          deleteWalletUseCase: gh<_i207.WalletDeleteUseCase>(),
+          setActiveWalletUseCase: gh<_i207.WalletSetActiveUseCase>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+          deleteBudgetsForWalletUsecase:
+              gh<_i691.DeleteBudgetsForWalletUsecase>(),
+        ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),
           addReceivableUseCase: gh<_i866.AddReceivableUseCase>(),
@@ -404,15 +419,6 @@ extension GetItInjectableX on _i174.GetIt {
           updateInvestmentUseCase: gh<_i420.UpdateInvestmentUseCase>(),
           deleteInvestmentUseCase: gh<_i318.DeleteInvestmentUseCase>(),
           getLiveQuoteUseCase: gh<_i362.GetLiveQuoteUseCase>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-        ));
-    gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
-          getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
-          watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
-          createWalletUseCase: gh<_i207.WalletCreateUseCase>(),
-          updateWalletUseCase: gh<_i207.WalletUpdateUseCase>(),
-          deleteWalletUseCase: gh<_i207.WalletDeleteUseCase>(),
-          setActiveWalletUseCase: gh<_i207.WalletSetActiveUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
         ));
     gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(

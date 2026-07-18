@@ -14,9 +14,10 @@ class BudgetRepositoryImpl implements BudgetRepository {
   BudgetRepositoryImpl(this.localDataSource);
 
   @override
-  Future<Either<Failure, List<BudgetEntity>>> getBudgets() async {
+  Future<Either<Failure, List<BudgetEntity>>> getBudgets(
+      String walletId) async {
     try {
-      final models = await localDataSource.getBudgets();
+      final models = await localDataSource.getBudgets(walletId);
       final entities = models.map((m) => m.toEntity()).toList();
       return Right(entities);
     } catch (e, st) {
@@ -38,12 +39,36 @@ class BudgetRepositoryImpl implements BudgetRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteBudget(String categoryId) async {
+  Future<Either<Failure, void>> deleteBudget(
+      String walletId, String categoryId) async {
     try {
-      await localDataSource.deleteBudget(categoryId);
+      await localDataSource.deleteBudget(walletId, categoryId);
       return const Right(null);
     } catch (e, st) {
       debugPrint('Budget delete error: $e\n$st');
+      return const Left(CacheFailure('Bütçe silinemedi.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteBudgetsForCategory(
+      String categoryId) async {
+    try {
+      await localDataSource.deleteBudgetsForCategory(categoryId);
+      return const Right(null);
+    } catch (e, st) {
+      debugPrint('Budget delete-for-category error: $e\n$st');
+      return const Left(CacheFailure('Bütçe silinemedi.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteBudgetsForWallet(String walletId) async {
+    try {
+      await localDataSource.deleteBudgetsForWallet(walletId);
+      return const Right(null);
+    } catch (e, st) {
+      debugPrint('Budget delete-for-wallet error: $e\n$st');
       return const Left(CacheFailure('Bütçe silinemedi.'));
     }
   }

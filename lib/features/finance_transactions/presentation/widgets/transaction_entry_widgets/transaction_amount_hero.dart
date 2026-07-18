@@ -1,8 +1,8 @@
 // transaction_form_fields.dart'tan bölündü (v1 temizliği): davranış aynı.
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // ============================================================ Amount hero
 
@@ -93,9 +93,7 @@ class AmountHero extends StatelessWidget {
                     textAlign: TextAlign.right,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                    ],
+                    inputFormatters: [AmountInputFormatter()],
                     onChanged: (_) {
                       if (controller.error.value != null) {
                         controller.error.value = null;

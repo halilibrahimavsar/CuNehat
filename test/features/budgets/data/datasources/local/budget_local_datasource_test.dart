@@ -33,14 +33,16 @@ void main() {
   });
 
   group('BudgetLocalDataSourceImpl', () {
-    final testModel1 = BudgetModel(categoryId: 'Food', limitAmount: 1000.0);
-    final testModel2 = BudgetModel(categoryId: 'Drinks', limitAmount: 500.0);
+    final testModel1 = BudgetModel(
+        categoryId: 'Food', limitAmount: 1000.0, walletId: 'wallet-1');
+    final testModel2 = BudgetModel(
+        categoryId: 'Drinks', limitAmount: 500.0, walletId: 'wallet-1');
 
     test('should save and get budgets successfully', () async {
       await dataSource.saveBudget(testModel1);
       await dataSource.saveBudget(testModel2);
 
-      final result = await dataSource.getBudgets();
+      final result = await dataSource.getBudgets('wallet-1');
 
       expect(result.length, 2);
       expect(
@@ -51,12 +53,34 @@ void main() {
           true);
     });
 
-    test('should overwrite budget when saving with same categoryId', () async {
+    test('should not return budgets of other wallets', () async {
       await dataSource.saveBudget(testModel1);
-      final updatedModel = BudgetModel(categoryId: 'Food', limitAmount: 1200.0);
+
+      final result = await dataSource.getBudgets('wallet-2');
+
+      expect(result, isEmpty);
+    });
+
+    test('should keep same category as separate budgets per wallet', () async {
+      await dataSource.saveBudget(testModel1);
+      await dataSource.saveBudget(BudgetModel(
+          categoryId: 'Food', limitAmount: 250.0, walletId: 'wallet-2'));
+
+      final wallet1 = await dataSource.getBudgets('wallet-1');
+      final wallet2 = await dataSource.getBudgets('wallet-2');
+
+      expect(wallet1.single.limitAmount, 1000.0);
+      expect(wallet2.single.limitAmount, 250.0);
+    });
+
+    test('should overwrite budget when saving with same wallet+categoryId',
+        () async {
+      await dataSource.saveBudget(testModel1);
+      final updatedModel = BudgetModel(
+          categoryId: 'Food', limitAmount: 1200.0, walletId: 'wallet-1');
       await dataSource.saveBudget(updatedModel);
 
-      final result = await dataSource.getBudgets();
+      final result = await dataSource.getBudgets('wallet-1');
 
       expect(result.length, 1);
       expect(result.first.limitAmount, 1200.0);
@@ -66,12 +90,43 @@ void main() {
       await dataSource.saveBudget(testModel1);
       await dataSource.saveBudget(testModel2);
 
-      await dataSource.deleteBudget('Food');
+      await dataSource.deleteBudget('wallet-1', 'Food');
 
-      final result = await dataSource.getBudgets();
+      final result = await dataSource.getBudgets('wallet-1');
 
       expect(result.length, 1);
       expect(result.first.categoryId, 'Drinks');
+    });
+
+    test('deleteBudgetsForCategory should clear category on all wallets',
+        () async {
+      await dataSource.saveBudget(testModel1);
+      await dataSource.saveBudget(BudgetModel(
+          categoryId: 'Food', limitAmount: 250.0, walletId: 'wallet-2'));
+      await dataSource.saveBudget(testModel2);
+
+      await dataSource.deleteBudgetsForCategory('Food');
+
+      expect(await dataSource.getBudgets('wallet-1'), hasLength(1));
+      expect(await dataSource.getBudgets('wallet-2'), isEmpty);
+    });
+
+    test('should migrate legacy (walletId-less) budgets to requesting wallet',
+        () async {
+      // Eski kayıt: çıplak categoryId anahtarı, walletId null.
+      final box = await Hive.openBox<BudgetModel>('budgets_box');
+      await box.put(
+          'Food', BudgetModel(categoryId: 'Food', limitAmount: 750.0));
+
+      final migrated = await dataSource.getBudgets('wallet-1');
+
+      expect(migrated.single.walletId, 'wallet-1');
+      expect(migrated.single.limitAmount, 750.0);
+      // Anahtar bileşik forma taşındı; eski anahtar kalmadı.
+      expect(box.get('Food'), isNull);
+      expect(box.get('wallet-1::Food'), isNotNull);
+      // Başka cüzdan artık bu bütçeyi devralamaz.
+      expect(await dataSource.getBudgets('wallet-2'), isEmpty);
     });
   });
 }

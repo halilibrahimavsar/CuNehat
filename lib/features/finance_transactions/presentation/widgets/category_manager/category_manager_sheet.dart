@@ -377,8 +377,9 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
       try {
         await _categoryService.deleteCategory(category.id, widget.isExpense);
         if (widget.isExpense) {
-          // Kategorinin bütçesi kalmasın (hayalet bütçe önlemi)
-          await getIt<DeleteBudgetUsecase>()(category.id);
+          // Kategorinin bütçesi kalmasın (hayalet bütçe önlemi);
+          // bütçeler cüzdan bazlı olduğundan tüm cüzdanlarda temizlenir.
+          await getIt<DeleteBudgetsForCategoryUsecase>()(category.id);
         }
         _loadCategories();
         if (mounted) {

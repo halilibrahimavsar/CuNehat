@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
+import 'package:cunehat/core/utils/amount_parser.dart';
 import '../bloc/pending_recurring_bloc.dart';
 import '../bloc/pending_recurring_event.dart';
 import '../bloc/pending_recurring_state.dart';
@@ -158,7 +160,8 @@ class PendingRecurringDialog extends StatelessWidget {
 
 void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
   final bloc = context.read<PendingRecurringBloc>();
-  final amountController = TextEditingController(text: tx.amount.toString());
+  final amountController =
+      TextEditingController(text: formatAmountForInput(tx.amount));
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -167,6 +170,7 @@ void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
         controller: amountController,
         decoration: InputDecoration(labelText: context.l10n.labelYeniTutar),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [AmountInputFormatter()],
       ),
       actions: [
         TextButton(
@@ -175,8 +179,7 @@ void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
         ),
         FilledButton(
           onPressed: () {
-            final val = amountController.text.replaceAll(',', '.');
-            final newAmount = double.tryParse(val) ?? tx.amount;
+            final newAmount = parseMoneyInput(amountController.text) ?? tx.amount;
             if (newAmount > 0) {
               // Tutar yalnızca bu vade için geçerli; şablon değişmez.
               bloc.add(ApproveTransactionEvent(tx, overrideAmount: newAmount));

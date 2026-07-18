@@ -1,5 +1,6 @@
 // lib/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart
 
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -82,11 +83,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     // Önce kuruşa yuvarla: metin, seçili chip ve kaydedilecek tutar
     // birebir aynı değer olsun (314.5599… → 314.56).
     final r = roundToCents(amount);
-    final v =
-        r == r.roundToDouble() ? r.toStringAsFixed(0) : r.toStringAsFixed(2);
     setState(() {
       _activeQuickPay = r;
-      _amountController.text = v;
+      _amountController.text = formatAmountForInput(r);
     });
   }
 
@@ -100,7 +99,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   void _handlePayment() {
     if (!_formKey.currentState!.validate()) return;
 
-    var amount = parseMoney(_amountController.text)!;
+    var amount = parseMoneyInput(_amountController.text)!;
     // Yarım kuruş içindeki fazlalığı kalana kıskaçla: kayıtlı ödemeler
     // toplamı borcu asla aşmasın (negatif kalan oluşmasın).
     final remaining = widget.debt.remainingAmount;
@@ -215,6 +214,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 controller: _amountController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [AmountInputFormatter()],
                 onChanged: (_) {
                   if (_activeQuickPay != null) {
                     setState(() => _activeQuickPay = null);
@@ -222,7 +222,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                 },
                 decoration: InputDecoration(
                   labelText: context.l10n.labelOdemeTutari,
-                  hintText: '0.00',
+                  hintText: '0,00',
                   prefixIcon: const Icon(Icons.attach_money),
                   suffixText: '₺',
                   border: OutlineInputBorder(
@@ -230,7 +230,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   helperText: context.l10n
                       .maksimumFormatmoneyRemaining(formatMoney(remaining)),
                 ),
-                validator: (value) => validateAmount(
+                validator: (value) => validateAmountInput(
                   value ?? '',
                   max: remaining,
                   maxExceededMessage: context.l10n.kalanTutardanFazlaOlamaz,

@@ -113,7 +113,8 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'saves budget and triggers reload if credentials are set',
       build: () {
-        when(() => mockSaveUseCase(testBudget))
+        // Bloc, walletId'si boş bütçeye aktif cüzdanı damgalayarak kaydeder.
+        when(() => mockSaveUseCase(testBudget.copyWith(walletId: 'wallet_123')))
             .thenAnswer((_) async => const Right(null));
         when(() => mockGetUseCase('user_123', 'wallet_123'))
             .thenAnswer((_) async => Right([testBudget]));
@@ -133,7 +134,9 @@ void main() {
         BudgetsLoaded([testBudget]),
       ],
       verify: (_) {
-        verify(() => mockSaveUseCase(testBudget)).called(1);
+        verify(() =>
+                mockSaveUseCase(testBudget.copyWith(walletId: 'wallet_123')))
+            .called(1);
         verify(() => mockGetUseCase('user_123', 'wallet_123')).called(2);
       },
     );
@@ -156,14 +159,14 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'deletes budget and does NOT reload if credentials are not set',
       build: () {
-        when(() => mockDeleteUseCase('Food'))
+        when(() => mockDeleteUseCase('', 'Food'))
             .thenAnswer((_) async => const Right(null));
         return budgetsBloc;
       },
       act: (bloc) => bloc.add(const DeleteBudgetEvent('Food')),
       expect: () => [],
       verify: (_) {
-        verify(() => mockDeleteUseCase('Food')).called(1);
+        verify(() => mockDeleteUseCase('', 'Food')).called(1);
         verifyNever(() => mockGetUseCase(any(), any()));
       },
     );
@@ -171,7 +174,7 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'deletes budget and triggers reload if credentials are set',
       build: () {
-        when(() => mockDeleteUseCase('Food'))
+        when(() => mockDeleteUseCase('wallet_123', 'Food'))
             .thenAnswer((_) async => const Right(null));
         when(() => mockGetUseCase('user_123', 'wallet_123'))
             .thenAnswer((_) async => const Right([]));
@@ -190,7 +193,7 @@ void main() {
         const BudgetsLoaded([]),
       ],
       verify: (_) {
-        verify(() => mockDeleteUseCase('Food')).called(1);
+        verify(() => mockDeleteUseCase('wallet_123', 'Food')).called(1);
         verify(() => mockGetUseCase('user_123', 'wallet_123')).called(2);
       },
     );
@@ -198,7 +201,7 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'emits BudgetsError when delete fails',
       build: () {
-        when(() => mockDeleteUseCase('Food'))
+        when(() => mockDeleteUseCase('', 'Food'))
             .thenAnswer((_) async => const Left(ServerFailure('Delete fail')));
         return budgetsBloc;
       },

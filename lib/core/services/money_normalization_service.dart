@@ -105,7 +105,11 @@ BudgetModel normalizeBudgetMoney(BudgetModel m) {
   final limit = roundToCents(m.limitAmount);
   return limit == m.limitAmount
       ? m
-      : BudgetModel(categoryId: m.categoryId, limitAmount: limit);
+      : BudgetModel(
+          categoryId: m.categoryId,
+          limitAmount: limit,
+          walletId: m.walletId,
+        );
 }
 
 RecurringTransactionModel normalizeRecurringMoney(RecurringTransactionModel m) {

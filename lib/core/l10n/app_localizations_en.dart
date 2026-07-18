@@ -1839,13 +1839,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get duzenliOdemeEklenemedi => 'Couldn\'t add recurring payment';
 
   @override
-  String get borcBakiyeyeEklenecekBaslik =>
-      'Debt will be added to your balance';
+  String get borcNakitEtkiBaslik => 'What did you receive for this debt?';
 
   @override
-  String borcBakiyeyeEklenecekGovde(String tutar) {
-    return 'This debt\'s principal ($tutar) will be added to your wallet balance as income. You can add your repayments and expenses manually.';
+  String get borcNakitEtkiAciklama =>
+      'Your wallet balance is updated automatically based on your choice; no manual transaction needed.';
+
+  @override
+  String get borcNakitSecenekBaslik => 'I received cash';
+
+  @override
+  String borcNakitSecenekGovde(String tutar) {
+    return '$tutar is added to your wallet balance as income. Your repayments are deducted from the balance as expenses.';
   }
+
+  @override
+  String get borcUrunSecenekBaslik => 'I bought a product / service';
+
+  @override
+  String get borcUrunSecenekGovde =>
+      'Since no cash reached you, your balance doesn\'t change. Your installments and repayments are deducted as expenses.';
 
   @override
   String get devamEt => 'Continue';

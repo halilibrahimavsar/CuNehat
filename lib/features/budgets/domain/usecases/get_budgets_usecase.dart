@@ -15,7 +15,7 @@ class GetBudgetsUsecase {
 
   Future<Either<Failure, List<BudgetEntity>>> call(
       String userId, String walletId) async {
-    final budgetsResult = await budgetRepository.getBudgets();
+    final budgetsResult = await budgetRepository.getBudgets(walletId);
 
     return budgetsResult.fold(
       (failure) => Left(failure),

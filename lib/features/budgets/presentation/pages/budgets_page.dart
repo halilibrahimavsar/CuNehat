@@ -9,6 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_bloc.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
@@ -440,14 +442,13 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
     final existing =
         widget.existingBudgets.where((b) => b.categoryId == value).toList();
     if (existing.isNotEmpty) {
-      _limitController.text = existing.first.limitAmount.toString();
+      _limitController.text = formatAmountForInput(existing.first.limitAmount);
     }
   }
 
   void _save() {
     if (_formKey.currentState!.validate()) {
-      final limitStr = _limitController.text.trim().replaceAll(',', '.');
-      final limit = double.tryParse(limitStr) ?? 0;
+      final limit = parseMoneyInput(_limitController.text) ?? 0;
 
       if (_selectedCategory != null && limit > 0) {
         widget.bloc.add(SaveBudgetEvent(BudgetEntity(
@@ -497,17 +498,8 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Tutar boş olamaz';
-                }
-                final parsedStr = value.replaceAll(',', '.');
-                final parsed = double.tryParse(parsedStr);
-                if (parsed == null || parsed <= 0) {
-                  return 'Geçerli bir tutar girin';
-                }
-                return null;
-              },
+              inputFormatters: [AmountInputFormatter()],
+              validator: (value) => validateAmountInput(value ?? ''),
             ),
           ],
         ),

@@ -7,6 +7,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_math.dart';
@@ -51,6 +52,11 @@ class AddEntrySheet extends StatefulWidget {
   @override
   State<AddEntrySheet> createState() => _AddEntrySheetState();
 }
+
+/// Borç eklenirken kullanıcının seçtiği bakiye etkisi:
+/// [cash] = nakit ele geçti (anapara gelir yazılır),
+/// [product] = ürün/hizmet alındı (bakiye değişmez).
+enum _DebtCashImpact { cash, product }
 
 class _AddEntrySheetState extends State<AddEntrySheet> {
   static const _calc = DebtRepaymentCalculator();
@@ -97,8 +103,11 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _selectedDate = d.startDate;
       _counterpartyController.text = d.counterparty;
       _termController.text = d.termMonths.toString();
-      _interestController.text = _fmt(d.interestRate);
-      _overdueController.text = _fmt(d.overdueInterestRate);
+      // Oranlar para değildir; kayıtlı hassasiyeti kırpmamak için 4 hane.
+      _interestController.text =
+          formatAmountForInput(d.interestRate, decimalDigits: 4);
+      _overdueController.text =
+          formatAmountForInput(d.overdueInterestRate, decimalDigits: 4);
       _selectedDebtType = d.type;
       _originalAmount = d.principalAmount;
       if (d.type == DebtType.bankLoan) {
@@ -159,14 +168,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     super.dispose();
   }
 
-  String _fmt(double v) =>
-      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
+  String _fmt(double v) => formatAmountForInput(v);
 
-  /// Otomatik taksit önerisi için biçim (tam sayıda ondalıksız, aksi 2 hane).
-  String _fmtMoney(double v) =>
-      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
-
-  double? get _parsedAmount => parseMoney(_amountController.text);
+  double? get _parsedAmount => parseMoneyInput(_amountController.text);
 
   void _onInstallmentChanged() {
     if (_suppressInstallmentListener) return;
@@ -183,7 +187,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final principal = _parsedAmount;
     final term = int.tryParse(_termController.text.trim()) ?? 0;
     if (principal == null || principal <= 0 || term <= 0) return;
-    _setInstallmentText(_fmtMoney(principal / term));
+    _setInstallmentText(formatAmountForInput(principal / term));
   }
 
   void _setInstallmentText(String text) {
@@ -212,14 +216,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     if (_isDebt && _counterpartyController.text.trim().isEmpty) {
       return context.l10n.kurumKisiGirin;
     }
-    final amountError = validateAmount(_amountController.text);
+    final amountError = validateAmountInput(_amountController.text);
     if (amountError != null) return amountError;
 
     if (_isDebt && _selectedDebtType != DebtType.personalDebt) {
       final t = int.tryParse(_termController.text.trim()) ?? 0;
       if (t <= 0) return context.l10n.vadeEnAz1Olmali;
       if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
-        final installment = parseMoney(_installmentController.text);
+        final installment = parseMoneyInput(_installmentController.text);
         if (installment == null) {
           return context.l10n.aylikTaksitTutariniGirin;
         }
@@ -248,8 +252,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
     if (_isDebt) {
       // Faiz ORAN'dır, yuvarlanmaz; taksit para tutarıdır.
-      final rawInterest = parseAmount(_interestController.text) ?? 0;
-      final monthlyInstallment = parseMoney(_installmentController.text) ?? 0;
+      final rawInterest = parseAmountInput(_interestController.text) ?? 0;
+      final monthlyInstallment =
+          parseMoneyInput(_installmentController.text) ?? 0;
       final parsedTerm = int.tryParse(_termController.text.trim()) ?? 1;
 
       int term = 1;
@@ -270,14 +275,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           term = parsedTerm;
           if (!_isBankLoanMonthly) {
             interest = rawInterest;
-            overdue = parseAmount(_overdueController.text) ?? 0;
+            overdue = parseAmountInput(_overdueController.text) ?? 0;
           }
           // Aylık taksit modunda interest/overdue 0 kalır (proxy).
           break;
         case DebtType.otherDebt:
           term = parsedTerm;
           interest = rawInterest;
-          overdue = parseAmount(_overdueController.text) ?? 0;
+          overdue = parseAmountInput(_overdueController.text) ?? 0;
           break;
       }
 
@@ -328,11 +333,13 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           dueDate: dueDate,
           expectedTotalAmount: expectedTotal,
         );
-        // Borç ana parası cüzdan bakiyesine gelir olarak yansır; kullanıcı
-        // bunu beklemeyebileceğinden kaydetmeden önce bilgilendirip onay al.
-        final confirmed = await _confirmDebtToBalance(amount);
-        if (!mounted || !confirmed) return;
-        context.read<DebtBloc>().add(AddDebtEvent(debt));
+        // Borç karşılığı nakit mi ürün mü alındığı bakiye kuplajını belirler;
+        // kullanıcıya iki seçeneğin etkisi açıklanarak sorulur.
+        final impact = await _askDebtCashImpact(amount);
+        if (!mounted || impact == null) return;
+        context.read<DebtBloc>().add(AddDebtEvent(debt.copyWith(
+              principalToWallet: impact == _DebtCashImpact.cash,
+            )));
         Navigator.pop(context);
         return;
       }
@@ -365,32 +372,112 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     if (_error != null) setState(() => _error = null);
   }
 
-  /// Yeni borç kaydedilmeden önce, ana paranın cüzdan bakiyesine gelir olarak
-  /// ekleneceğini açıklayan onay diyaloğu. Onaylanırsa `true` döner.
-  Future<bool> _confirmDebtToBalance(double amount) async {
-    final result = await showDialog<bool>(
+  /// Yeni borç kaydedilmeden önce sorulur: borç karşılığında nakit mi alındı
+  /// (anapara bakiyeye gelir yazılır) yoksa ürün/hizmet mi (bakiye değişmez,
+  /// yalnız ödemeler gider düşer). Vazgeçilirse `null` döner.
+  Future<_DebtCashImpact?> _askDebtCashImpact(double amount) {
+    final cs = Theme.of(context).colorScheme;
+    return showDialog<_DebtCashImpact>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.borcBakiyeyeEklenecekBaslik),
-        content: Text(
-          context.l10n.borcBakiyeyeEklenecekGovde(
-            AppFormatters.currency.format(amount),
-          ),
+        title: Text(context.l10n.borcNakitEtkiBaslik),
+        contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.borcNakitEtkiAciklama,
+              style: TextStyle(
+                fontSize: 13,
+                color: cs.onSurfaceVariant,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 14),
+            _cashImpactOption(
+              dialogContext: dialogContext,
+              cs: cs,
+              impact: _DebtCashImpact.cash,
+              icon: Icons.payments_rounded,
+              title: context.l10n.borcNakitSecenekBaslik,
+              body: context.l10n.borcNakitSecenekGovde(
+                AppFormatters.currency.format(amount),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _cashImpactOption(
+              dialogContext: dialogContext,
+              cs: cs,
+              impact: _DebtCashImpact.product,
+              icon: Icons.shopping_bag_rounded,
+              title: context.l10n.borcUrunSecenekBaslik,
+              body: context.l10n.borcUrunSecenekGovde,
+            ),
+          ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(context.l10n.vazgec),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: _accent),
-            child: Text(context.l10n.devamEt),
           ),
         ],
       ),
     );
-    return result ?? false;
+  }
+
+  Widget _cashImpactOption({
+    required BuildContext dialogContext,
+    required ColorScheme cs,
+    required _DebtCashImpact impact,
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.pop(dialogContext, impact),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _accent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _accent.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 22, color: _accent),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    body,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: cs.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -654,9 +741,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                   textAlign: TextAlign.right,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  ],
+                  inputFormatters: [AmountInputFormatter()],
                   onChanged: (_) => _clearError(),
                   cursorColor: _accent,
                   style: TextStyle(
@@ -717,8 +802,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           type: _selectedDebtType,
           principal: principal,
           termMonths: term,
-          interestRate: parseAmount(_interestController.text) ?? 0,
-          monthlyInstallment: parseMoney(_installmentController.text) ?? 0,
+          interestRate: parseAmountInput(_interestController.text) ?? 0,
+          monthlyInstallment: parseMoneyInput(_installmentController.text) ?? 0,
           isInstallmentAmortized: _isInstallmentAmortized,
           isBankLoanMonthly: _isBankLoanMonthly,
           includeBankTaxes: _includeBankTaxes,
@@ -798,6 +883,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                   icon: Icons.event_repeat_rounded,
                   cs: cs,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   dense: true,
                 ),
               ),
@@ -813,6 +899,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                     cs: cs,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [AmountInputFormatter()],
                     dense: true,
                   ),
                 ),
@@ -830,6 +917,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                     cs: cs,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    // Oran alanı: kayıtlı hassasiyetle uyumlu 4 hane.
+                    inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
                     dense: true,
                   ),
                 ),
@@ -848,6 +937,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
               cs: cs,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
               dense: true,
             ),
           ],
@@ -945,12 +1035,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     required IconData icon,
     required ColorScheme cs,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     bool dense = false,
     String? label,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       textCapitalization: keyboardType == null
           ? TextCapitalization.sentences
           : TextCapitalization.none,

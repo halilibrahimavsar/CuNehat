@@ -3434,17 +3434,41 @@ abstract class AppLocalizations {
   /// **'Düzenli ödeme eklenemedi'**
   String get duzenliOdemeEklenemedi;
 
-  /// No description provided for @borcBakiyeyeEklenecekBaslik.
+  /// No description provided for @borcNakitEtkiBaslik.
   ///
   /// In tr, this message translates to:
-  /// **'Borç bakiyene eklenecek'**
-  String get borcBakiyeyeEklenecekBaslik;
+  /// **'Bu borç karşılığında ne aldın?'**
+  String get borcNakitEtkiBaslik;
 
-  /// No description provided for @borcBakiyeyeEklenecekGovde.
+  /// No description provided for @borcNakitEtkiAciklama.
   ///
   /// In tr, this message translates to:
-  /// **'Bu borcun ana parası ({tutar}) cüzdan bakiyene gelir olarak eklenir. Geri ödemelerini ve harcamalarını manuel ekleyebilirsin.'**
-  String borcBakiyeyeEklenecekGovde(String tutar);
+  /// **'Seçimine göre cüzdan bakiyen otomatik güncellenir; ayrıca elle işlem eklemen gerekmez.'**
+  String get borcNakitEtkiAciklama;
+
+  /// No description provided for @borcNakitSecenekBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakit aldım'**
+  String get borcNakitSecenekBaslik;
+
+  /// No description provided for @borcNakitSecenekGovde.
+  ///
+  /// In tr, this message translates to:
+  /// **'{tutar} cüzdan bakiyene gelir olarak eklenir. Yaptığın geri ödemeler bakiyeden gider olarak düşülür.'**
+  String borcNakitSecenekGovde(String tutar);
+
+  /// No description provided for @borcUrunSecenekBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ürün / hizmet aldım'**
+  String get borcUrunSecenekBaslik;
+
+  /// No description provided for @borcUrunSecenekGovde.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para eline geçmediği için bakiyen değişmez. Taksit ve geri ödemelerin bakiyeden gider olarak düşülür.'**
+  String get borcUrunSecenekGovde;
 
   /// No description provided for @devamEt.
   ///

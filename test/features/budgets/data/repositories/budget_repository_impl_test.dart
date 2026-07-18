@@ -31,28 +31,28 @@ void main() {
     test(
         'should return Right(List<BudgetEntity>) when local call is successful',
         () async {
-      when(() => mockLocalDataSource.getBudgets())
+      when(() => mockLocalDataSource.getBudgets('wallet_123'))
           .thenAnswer((_) async => [testModel]);
 
-      final result = await repository.getBudgets();
+      final result = await repository.getBudgets('wallet_123');
 
       expect(result.isRight(), true);
       expect(
           (result as Right<Failure, List<BudgetEntity>>).value, [testEntity]);
-      verify(() => mockLocalDataSource.getBudgets()).called(1);
+      verify(() => mockLocalDataSource.getBudgets('wallet_123')).called(1);
     });
 
     test('should return Left(CacheFailure) when local call fails', () async {
-      when(() => mockLocalDataSource.getBudgets())
+      when(() => mockLocalDataSource.getBudgets('wallet_123'))
           .thenThrow(Exception('DB Error'));
 
-      final result = await repository.getBudgets();
+      final result = await repository.getBudgets('wallet_123');
 
       expect(
           result,
           const Left<Failure, List<BudgetEntity>>(
               CacheFailure('Bütçeler yüklenemedi.')));
-      verify(() => mockLocalDataSource.getBudgets()).called(1);
+      verify(() => mockLocalDataSource.getBudgets('wallet_123')).called(1);
     });
   });
 
@@ -81,24 +81,24 @@ void main() {
 
   group('deleteBudget', () {
     test('should return Right(null) when delete is successful', () async {
-      when(() => mockLocalDataSource.deleteBudget('Food'))
+      when(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food'))
           .thenAnswer((_) async => {});
 
-      final result = await repository.deleteBudget('Food');
+      final result = await repository.deleteBudget('wallet_123', 'Food');
 
       expect(result, const Right<Failure, void>(null));
-      verify(() => mockLocalDataSource.deleteBudget('Food')).called(1);
+      verify(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food')).called(1);
     });
 
     test('should return Left(CacheFailure) when delete fails', () async {
-      when(() => mockLocalDataSource.deleteBudget('Food'))
+      when(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food'))
           .thenThrow(Exception('DB Error'));
 
-      final result = await repository.deleteBudget('Food');
+      final result = await repository.deleteBudget('wallet_123', 'Food');
 
       expect(
           result, const Left<Failure, void>(CacheFailure('Bütçe silinemedi.')));
-      verify(() => mockLocalDataSource.deleteBudget('Food')).called(1);
+      verify(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food')).called(1);
     });
   });
 }

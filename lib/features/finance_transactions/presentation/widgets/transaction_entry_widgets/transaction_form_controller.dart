@@ -35,7 +35,7 @@ class TransactionFormController {
 
   void initialize(TransactionEntity t) {
     titleController.text = t.title;
-    amountController.text = _formatAmount(t.amount);
+    amountController.text = formatAmountForInput(t.amount);
     categoryId.value = t.tag;
     dateTime.value = t.date;
   }
@@ -60,12 +60,12 @@ class TransactionFormController {
     }
   }
 
-  double? get parsedAmount => parseMoney(amountController.text);
+  double? get parsedAmount => parseMoneyInput(amountController.text);
 
   /// Geçerliyse `null`, değilse hata mesajını döndürür.
   String? validate() {
     // Not (title) zorunluluğu kaldırıldı
-    final amountError = validateAmount(amountController.text);
+    final amountError = validateAmountInput(amountController.text);
     if (amountError != null) return amountError;
     if (categoryId.value == null) return 'Bir kategori seçin';
     return null;
@@ -82,10 +82,5 @@ class TransactionFormController {
     recurringFrequency.dispose();
     submitting.dispose();
     error.dispose();
-  }
-
-  String _formatAmount(double v) {
-    if (v == v.roundToDouble()) return v.toStringAsFixed(0);
-    return v.toString().replaceAll('.', ',');
   }
 }

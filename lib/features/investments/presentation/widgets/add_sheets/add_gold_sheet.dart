@@ -5,6 +5,7 @@ import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
@@ -113,7 +114,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
         _targetAmountController.text = _fmt(item.targetAmount!);
       }
       if (item.quantity != null) {
-        _quantityController.text = _fmt(item.quantity!);
+        // Adet hassas kalır (0,125 gr); paradan farklı olarak 4 hane.
+        _quantityController.text =
+            formatAmountForInput(item.quantity!, decimalDigits: 4);
       }
       _selectedGoalCategory = item.goalCategory;
       _selectedColor = item.color;
@@ -151,14 +154,15 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     super.dispose();
   }
 
-  String _fmt(double v) =>
-      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  String _fmt(double v) => formatAmountForInput(v);
 
   // Para alanları kuruşa yuvarlanır; adet (quantity) hassas kalır.
-  double? get _parsedAmount => parseMoney(_amountController.text);
-  double? get _parsedQuantity => parseAmount(_quantityController.text);
-  double? get _parsedCurrentValue => parseMoney(_currentValueController.text);
-  double? get _parsedTargetAmount => parseMoney(_targetAmountController.text);
+  double? get _parsedAmount => parseMoneyInput(_amountController.text);
+  double? get _parsedQuantity => parseAmountInput(_quantityController.text);
+  double? get _parsedCurrentValue =>
+      parseMoneyInput(_currentValueController.text);
+  double? get _parsedTargetAmount =>
+      parseMoneyInput(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
@@ -307,6 +311,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         onChanged: _clearError,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       const SizedBox(height: 20),
@@ -343,6 +348,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         onChanged: _clearError,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
                       if (_targetAmountController.text.trim().isNotEmpty) ...[
                         const SizedBox(height: 14),

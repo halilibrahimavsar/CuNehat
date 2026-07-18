@@ -4,6 +4,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_math.dart';
@@ -101,7 +102,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   void _initializeControllers() {
     _nameController = TextEditingController(text: widget.wallet?.name ?? '');
     _balanceController = TextEditingController(
-      text: widget.wallet?.balance.toStringAsFixed(2) ?? '0.00',
+      text: widget.wallet != null
+          ? formatAmountForInput(widget.wallet!.balance)
+          : '0',
     );
   }
 
@@ -311,13 +314,15 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     return TextFormField(
       controller: _balanceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      // Bakiye eksiye düşmüş hesabı temsil edebilir; '-' girişine izin ver.
+      inputFormatters: [AmountInputFormatter(allowNegative: true)],
       style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500),
       decoration: _filledDecoration(
         cs,
         label: isEditMode
             ? context.l10n.bakiyeLabel
             : context.l10n.baslangicBakiyesiLabel,
-        hint: '0.00',
+        hint: '0,00',
         icon: Icons.payments_rounded,
         // Seçili birimle canlı: TRY→₺, USD→$, EUR→€
         suffixText: currencySymbol(_selectedCurrency),
@@ -326,7 +331,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         if (value == null || value.trim().isEmpty) {
           return context.l10n.bakiyeBosOlamaz;
         }
-        final amount = parseAmount(value);
+        final amount = parseAmountInput(value);
         if (amount == null) {
           return context.l10n.gecerliBirSayiGirin;
         }
@@ -721,7 +726,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     setState(() => _isLoading = true);
 
     final name = _nameController.text.trim();
-    final balance = parseMoney(_balanceController.text) ?? 0.0;
+    final balance = parseMoneyInput(_balanceController.text) ?? 0.0;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
     final createdAt = DateTime.now();

@@ -13,11 +13,12 @@ import 'package:mocktail/mocktail.dart';
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
-class MockDeleteBudgetUsecase extends Mock implements DeleteBudgetUsecase {}
+class MockDeleteBudgetsForCategoryUsecase extends Mock
+    implements DeleteBudgetsForCategoryUsecase {}
 
 void main() {
   late MockCategoryRepository mockCategoryRepository;
-  late MockDeleteBudgetUsecase mockDeleteBudgetUsecase;
+  late MockDeleteBudgetsForCategoryUsecase mockDeleteBudgetUsecase;
 
   setUpAll(() {
     getIt.allowReassignment = true;
@@ -25,10 +26,11 @@ void main() {
 
   setUp(() {
     mockCategoryRepository = MockCategoryRepository();
-    mockDeleteBudgetUsecase = MockDeleteBudgetUsecase();
+    mockDeleteBudgetUsecase = MockDeleteBudgetsForCategoryUsecase();
 
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
-    getIt.registerSingleton<DeleteBudgetUsecase>(mockDeleteBudgetUsecase);
+    getIt.registerSingleton<DeleteBudgetsForCategoryUsecase>(
+        mockDeleteBudgetUsecase);
   });
 
   tearDown(() {

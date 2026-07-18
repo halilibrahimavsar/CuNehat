@@ -33,13 +33,14 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       isPaid: fields[15] as bool,
       notes: fields[16] as String?,
       expectedTotalAmount: fields[18] as double?,
+      principalToWallet: fields[19] == null ? true : fields[19] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, DebtModel obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -71,7 +72,9 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       ..writeByte(16)
       ..write(obj.notes)
       ..writeByte(18)
-      ..write(obj.expectedTotalAmount);
+      ..write(obj.expectedTotalAmount)
+      ..writeByte(19)
+      ..write(obj.principalToWallet);
   }
 
   @override

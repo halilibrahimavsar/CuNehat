@@ -51,12 +51,17 @@ class DeleteDebtEvent extends DebtEvent {
   // Mutabakat için: net nakit etkisi = principal - totalPaid (geri alınır).
   final double principalAmount;
   final double totalPaidAmount;
+
+  /// Anapara eklenirken bakiyeye gelir yazıldı mı (ürün borcunda false);
+  /// geri alma hesabı buna göre anaparayı sayar ya da saymaz.
+  final bool principalToWallet;
   const DeleteDebtEvent(
       {required this.id,
       required this.userId,
       required this.walletId,
       required this.principalAmount,
-      required this.totalPaidAmount});
+      required this.totalPaidAmount,
+      this.principalToWallet = true});
 
   @override
   List<Object?> get props => [id, walletId];

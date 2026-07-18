@@ -89,7 +89,7 @@ void main() {
         ),
       ];
 
-      when(() => mockBudgetRepo.getBudgets())
+      when(() => mockBudgetRepo.getBudgets('wallet_123'))
           .thenAnswer((_) async => Right([testBudget]));
       when(() => mockTransactionsRepo.getTransactions(
             userId: 'user_123',
@@ -108,7 +108,7 @@ void main() {
       expect(result.isRight(), true);
       final rightValue = (result as Right<Failure, List<BudgetEntity>>).value;
       expect(rightValue, expectedBudgets);
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
+      verify(() => mockBudgetRepo.getBudgets('wallet_123')).called(1);
       verify(() => mockTransactionsRepo.getTransactions(
             userId: 'user_123',
             walletId: 'wallet_123',
@@ -120,13 +120,13 @@ void main() {
 
     test('should return Left(Failure) when getBudgets fails', () async {
       const failure = ServerFailure('DB error');
-      when(() => mockBudgetRepo.getBudgets())
+      when(() => mockBudgetRepo.getBudgets('wallet_123'))
           .thenAnswer((_) async => const Left(failure));
 
       final result = await getUseCase('user_123', 'wallet_123');
 
       expect(result, const Left<Failure, List<BudgetEntity>>(failure));
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
+      verify(() => mockBudgetRepo.getBudgets('wallet_123')).called(1);
       verifyZeroInteractions(mockTransactionsRepo);
     });
 
@@ -136,7 +136,7 @@ void main() {
       final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
       const failure = ServerFailure('Network error');
 
-      when(() => mockBudgetRepo.getBudgets())
+      when(() => mockBudgetRepo.getBudgets('wallet_123'))
           .thenAnswer((_) async => Right([testBudget]));
       when(() => mockTransactionsRepo.getTransactions(
             userId: 'user_123',
@@ -149,7 +149,7 @@ void main() {
       final result = await getUseCase('user_123', 'wallet_123');
 
       expect(result, const Left<Failure, List<BudgetEntity>>(failure));
-      verify(() => mockBudgetRepo.getBudgets()).called(1);
+      verify(() => mockBudgetRepo.getBudgets('wallet_123')).called(1);
       verify(() => mockTransactionsRepo.getTransactions(
             userId: 'user_123',
             walletId: 'wallet_123',
@@ -174,13 +174,13 @@ void main() {
 
   group('DeleteBudgetUsecase', () {
     test('should delete budget successfully', () async {
-      when(() => mockBudgetRepo.deleteBudget('Food'))
+      when(() => mockBudgetRepo.deleteBudget('wallet_123', 'Food'))
           .thenAnswer((_) async => const Right(null));
 
-      final result = await deleteUseCase('Food');
+      final result = await deleteUseCase('wallet_123', 'Food');
 
       expect(result, const Right<Failure, void>(null));
-      verify(() => mockBudgetRepo.deleteBudget('Food')).called(1);
+      verify(() => mockBudgetRepo.deleteBudget('wallet_123', 'Food')).called(1);
     });
   });
 }

@@ -115,17 +115,20 @@ void main() {
       expect(capturedId, isNotNull);
       expect(capturedId, isNotEmpty);
 
-      final notifId = capturedId.hashCode;
+      // Üretim şeması (bildirim ID çakışması düzeltmesi sonrası):
+      // 'debt_<id>_1' ve 'debt_<id>_2' hashCode'ları.
+      final id1 = 'debt_${capturedId}_1'.hashCode;
+      final id2 = 'debt_${capturedId}_2'.hashCode;
       verify(() => mockRepo.addDebt(any())).called(1);
       verify(() => mockNotificationService.scheduleNotification(
-            id: notifId,
+            id: id1,
             title: 'Borç Hatırlatması',
             body: 'Friend Loan başlıklı borcunuzun son ödeme tarihi yaklaştı.',
             scheduledDate: testDueDate.subtract(const Duration(days: 1)),
           )).called(1);
 
       verify(() => mockNotificationService.scheduleNotification(
-            id: notifId + 1,
+            id: id2,
             title: 'Borç Son Ödeme Tarihi!',
             body: 'Friend Loan başlıklı borcunuzun son ödeme tarihi bugün.',
             scheduledDate: testDueDate,
@@ -202,20 +205,19 @@ void main() {
 
       expect(result, const Right<Failure, void>(null));
 
-      final notifId = testDebt.id.hashCode;
+      final id1 = 'debt_${testDebt.id}_1'.hashCode;
+      final id2 = 'debt_${testDebt.id}_2'.hashCode;
       verify(() => mockRepo.updateDebt(testDebt)).called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId))
-          .called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId + 1))
-          .called(1);
+      verify(() => mockNotificationService.cancelNotification(id1)).called(1);
+      verify(() => mockNotificationService.cancelNotification(id2)).called(1);
       verify(() => mockNotificationService.scheduleNotification(
-            id: notifId,
+            id: id1,
             title: 'Borç Hatırlatması',
             body: 'Bank Loan başlıklı borcunuzun son ödeme tarihi yaklaştı.',
             scheduledDate: testDueDate.subtract(const Duration(days: 1)),
           )).called(1);
       verify(() => mockNotificationService.scheduleNotification(
-            id: notifId + 1,
+            id: id2,
             title: 'Borç Son Ödeme Tarihi!',
             body: 'Bank Loan başlıklı borcunuzun son ödeme tarihi bugün.',
             scheduledDate: testDueDate,
@@ -234,12 +236,11 @@ void main() {
 
       expect(result, const Right<Failure, void>(null));
 
-      final notifId = 'debt_123'.hashCode;
+      final id1 = 'debt_debt_123_1'.hashCode;
+      final id2 = 'debt_debt_123_2'.hashCode;
       verify(() => mockRepo.deleteDebt('debt_123')).called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId))
-          .called(1);
-      verify(() => mockNotificationService.cancelNotification(notifId + 1))
-          .called(1);
+      verify(() => mockNotificationService.cancelNotification(id1)).called(1);
+      verify(() => mockNotificationService.cancelNotification(id2)).called(1);
     });
   });
 }

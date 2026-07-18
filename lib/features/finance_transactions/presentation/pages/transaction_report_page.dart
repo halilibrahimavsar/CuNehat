@@ -49,6 +49,7 @@ class TransactionReportPage extends StatelessWidget {
       child: _TransactionReportView(
         showAppBar: showAppBar,
         categoryRepository: getIt<CategoryRepository>(),
+        walletId: walletId,
       ),
     );
   }
@@ -58,9 +59,13 @@ class _TransactionReportView extends StatefulWidget {
   final bool showAppBar;
   final CategoryRepository categoryRepository;
 
+  /// Bütçeler cüzdan bazlı yüklendiği için görünümün cüzdanı bilmesi gerekir.
+  final String walletId;
+
   const _TransactionReportView({
     required this.showAppBar,
     required this.categoryRepository,
+    required this.walletId,
   });
 
   @override
@@ -134,7 +139,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// (bkz. [_budgetProgressFor]), çünkü [BudgetRepository] yalnızca limitleri
   /// döner ve "bu ay" varsayımı taşımaz.
   Future<void> _loadBudgets() async {
-    final result = await getIt<BudgetRepository>().getBudgets();
+    // Bütçeler cüzdan bazlı; rapor da tek cüzdanın işlemlerini gösterir.
+    final result = await getIt<BudgetRepository>().getBudgets(widget.walletId);
     if (!mounted) return;
     result.fold(
       (_) {},

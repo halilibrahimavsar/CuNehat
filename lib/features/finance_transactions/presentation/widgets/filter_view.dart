@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -74,15 +75,15 @@ class _FilterViewState extends State<FilterView> {
     // Sadece filtre nesnesi değiştiyse güncelle (kullanıcı yazarken ezmemek için)
     if (widget.filter.dataFilter.priceRange !=
         oldWidget.filter.dataFilter.priceRange) {
+      final minPrice = widget.filter.dataFilter.priceRange?.minPrice;
       final newMin =
-          widget.filter.dataFilter.priceRange?.minPrice?.toStringAsFixed(0) ??
-              '';
+          minPrice == null ? '' : formatAmountForInput(minPrice, decimalDigits: 0);
       if (_minPriceController.text != newMin) {
         _minPriceController.text = newMin;
       }
+      final maxPrice = widget.filter.dataFilter.priceRange?.maxPrice;
       final newMax =
-          widget.filter.dataFilter.priceRange?.maxPrice?.toStringAsFixed(0) ??
-              '';
+          maxPrice == null ? '' : formatAmountForInput(maxPrice, decimalDigits: 0);
       if (_maxPriceController.text != newMax) {
         _maxPriceController.text = newMax;
       }

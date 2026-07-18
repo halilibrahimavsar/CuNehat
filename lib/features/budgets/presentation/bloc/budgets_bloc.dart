@@ -67,7 +67,11 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     SaveBudgetEvent event,
     Emitter<BudgetsState> emit,
   ) async {
-    final result = await _saveBudgetUsecase(event.budget);
+    // Bütçeler cüzdan bazlı: UI walletId doldurmadıysa aktif cüzdan damgalanır.
+    final budget = event.budget.walletId.isEmpty && _currentWalletId != null
+        ? event.budget.copyWith(walletId: _currentWalletId)
+        : event.budget;
+    final result = await _saveBudgetUsecase(budget);
     result.fold(
       (failure) => emit(BudgetsError(failure)),
       (_) {
@@ -86,7 +90,8 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     DeleteBudgetEvent event,
     Emitter<BudgetsState> emit,
   ) async {
-    final result = await _deleteBudgetUsecase(event.categoryId);
+    final result =
+        await _deleteBudgetUsecase(_currentWalletId ?? '', event.categoryId);
     result.fold(
       (failure) => emit(BudgetsError(failure)),
       (_) {

@@ -4,6 +4,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/services/transfer_service.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -93,7 +94,7 @@ class _TransferSheetState extends State<TransferSheet> {
   }
 
   double? get _converted {
-    final amount = parseMoney(_amountController.text);
+    final amount = parseMoneyInput(_amountController.text);
     if (amount == null || !_rateReady) return null;
     if (!_crossCurrency) return amount;
     return TransferService.convertForTransfer(
@@ -107,7 +108,7 @@ class _TransferSheetState extends State<TransferSheet> {
     if (!_formKey.currentState!.validate() || !_rateReady) return;
     setState(() => _submitting = true);
 
-    final amount = parseMoney(_amountController.text)!;
+    final amount = parseMoneyInput(_amountController.text)!;
     final result = await getIt<TransferService>().transfer(
       from: _from,
       to: _to,
@@ -219,17 +220,18 @@ class _TransferSheetState extends State<TransferSheet> {
                     controller: _amountController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [AmountInputFormatter()],
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       labelText: context.l10n.labelOdemeTutari,
-                      hintText: '0.00',
+                      hintText: '0,00',
                       prefixIcon: const Icon(Icons.payments_rounded),
                       suffixText: currencySymbol(_from.currency),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    validator: (v) => validateAmount(v ?? ''),
+                    validator: (v) => validateAmountInput(v ?? ''),
                   ),
                   const SizedBox(height: 10),
                   // Önizleme / kur durumu (yalnız çapraz birimde anlamlı)

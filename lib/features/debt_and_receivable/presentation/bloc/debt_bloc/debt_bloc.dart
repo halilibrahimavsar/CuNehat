@@ -48,15 +48,20 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     await result.fold(
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
-        // Nakit kuplajı: borç alındı → anapara kadar gelir.
-        final cashOk = await walletMetricsService.recordCashMovement(
-          walletId: event.debt.walletId,
-          userId: event.debt.userId,
-          amount: event.debt.principalAmount,
-          isIncome: true,
-          title: event.debt.title,
-          tag: CashMovementTags.debt,
-        );
+        // Nakit kuplajı: borç NAKİT alındıysa anapara kadar gelir yazılır.
+        // Ürün/hizmet karşılığı borçta (principalToWallet=false) para hiç ele
+        // geçmedi → bakiye değişmez; yalnız ödemeler gider olarak düşer.
+        var cashOk = true;
+        if (event.debt.principalToWallet) {
+          cashOk = await walletMetricsService.recordCashMovement(
+            walletId: event.debt.walletId,
+            userId: event.debt.userId,
+            amount: event.debt.principalAmount,
+            isIncome: true,
+            title: event.debt.title,
+            tag: CashMovementTags.debt,
+          );
+        }
         await _safeSyncDebt(event.debt.walletId);
 
         emit(DebtOperationSuccess(
@@ -107,7 +112,10 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
         // Mutabakat: anapara değişimi kadar nakit (borç arttıysa gelir).
-        final diff = event.debt.principalAmount - event.prevPrincipal;
+        // Ürün borcunda anapara hiç bakiyeye girmedi → değişimi de girmez.
+        final diff = event.debt.principalToWallet
+            ? event.debt.principalAmount - event.prevPrincipal
+            : 0.0;
         var cashOk = true;
         if (diff != 0) {
           cashOk = await walletMetricsService.recordCashMovement(
@@ -137,8 +145,11 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
         // Mutabakat: borcun net nakit etkisini geri al.
-        // net = +principal (alındı) − Σödeme → geri alma = Σödeme − principal.
-        final reversal = event.totalPaidAmount - event.principalAmount;
+        // net = +principal (nakit alındıysa) − Σödeme
+        //   → geri alma = Σödeme − principal (ürün borcunda principal 0 sayılır).
+        final coupledPrincipal =
+            event.principalToWallet ? event.principalAmount : 0.0;
+        final reversal = event.totalPaidAmount - coupledPrincipal;
         var cashOk = true;
         if (reversal != 0) {
           cashOk = await walletMetricsService.recordCashMovement(

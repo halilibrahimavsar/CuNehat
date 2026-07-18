@@ -1,9 +1,9 @@
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// filter_view.dart'tan bölündü (v1 temizliği): davranış aynı.
 class PriceRangeFilterSection extends StatelessWidget {
@@ -44,7 +44,7 @@ class PriceRangeFilterSection extends StatelessWidget {
               child: TextField(
                 controller: minController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [AmountInputFormatter(decimalDigits: 0)],
                 style:
                     TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
@@ -78,7 +78,7 @@ class PriceRangeFilterSection extends StatelessWidget {
               child: TextField(
                 controller: maxController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [AmountInputFormatter(decimalDigits: 0)],
                 style:
                     TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
@@ -102,8 +102,8 @@ class PriceRangeFilterSection extends StatelessWidget {
             // Uygula Butonu
             InkWell(
               onTap: () {
-                final min = parseAmount(minController.text);
-                final max = parseAmount(maxController.text);
+                final min = parseAmountInput(minController.text);
+                final max = parseAmountInput(maxController.text);
                 onPriceRangeChanged(
                   PriceRangeFilter(minPrice: min, maxPrice: max),
                 );

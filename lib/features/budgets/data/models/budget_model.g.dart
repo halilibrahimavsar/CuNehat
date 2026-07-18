@@ -19,17 +19,20 @@ class BudgetModelAdapter extends TypeAdapter<BudgetModel> {
     return BudgetModel(
       categoryId: fields[0] as String,
       limitAmount: fields[1] as double,
+      walletId: fields[2] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, BudgetModel obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.categoryId)
       ..writeByte(1)
-      ..write(obj.limitAmount);
+      ..write(obj.limitAmount)
+      ..writeByte(2)
+      ..write(obj.walletId);
   }
 
   @override

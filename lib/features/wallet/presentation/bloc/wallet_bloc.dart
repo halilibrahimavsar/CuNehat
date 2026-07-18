@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:dartz/dartz.dart';
@@ -21,6 +22,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletSetActiveUseCase setActiveWalletUseCase;
   final WalletMetricsService walletMetricsService;
 
+  /// Cüzdan silinirken cüzdana bağlı bütçeleri temizler (bütçeler cüzdan
+  /// bazlıdır; purgeWalletData işlem/borç/alacak/yatırımı siler, bütçeyi değil).
+  final DeleteBudgetsForWalletUsecase deleteBudgetsForWalletUsecase;
+
   WalletBloc({
     required this.getWalletsUseCase,
     required this.watchWalletsUseCase,
@@ -29,6 +34,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     required this.deleteWalletUseCase,
     required this.setActiveWalletUseCase,
     required this.walletMetricsService,
+    required this.deleteBudgetsForWalletUsecase,
   }) : super(const WalletInitialSt()) {
     on<GetWalletsEvent>((event, emit) async {
       if (state is! WalletLoadedSt) {
@@ -161,6 +167,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           }
         }
       }
+      // Cüzdanın bütçeleri de gitsin; başarısızlık silmeyi bloklamaz.
+      await deleteBudgetsForWalletUsecase(event.walletId);
       final result = await deleteWalletUseCase.call(event.walletId);
       result.fold(
         (failure) => _emitError(emit, 'Cüzdan silinemedi: ${failure.message}'),

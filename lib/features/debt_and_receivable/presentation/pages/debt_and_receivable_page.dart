@@ -265,7 +265,8 @@ class DebtListSection extends StatelessWidget {
               userId: debt.userId,
               walletId: debt.walletId,
               principalAmount: debt.principalAmount,
-              totalPaidAmount: debt.totalPaidAmount));
+              totalPaidAmount: debt.totalPaidAmount,
+              principalToWallet: debt.principalToWallet));
         }
       },
       child: AppCard(

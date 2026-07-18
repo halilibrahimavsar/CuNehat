@@ -1,4 +1,5 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -61,8 +62,8 @@ class _ContributeSheetState extends State<ContributeSheet> {
 
   bool get _isAssetMode => widget.investment.symbol != null;
 
-  double? get _parsedAmount => parseMoney(_amountController.text);
-  double? get _parsedQuantity => parseAmount(_quantityController.text);
+  double? get _parsedAmount => parseMoneyInput(_amountController.text);
+  double? get _parsedQuantity => parseAmountInput(_quantityController.text);
 
   @override
   void dispose() {
@@ -71,8 +72,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
     super.dispose();
   }
 
-  String _fmt(double v) =>
-      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  String _fmt(double v) => formatAmountForInput(v);
 
   Future<void> _fetchLivePrice() async {
     setState(() {
@@ -222,6 +222,10 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       autofocus: true,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      // Adet para değildir; 0,125 gr gibi hassas girişe izin.
+                      inputFormatters: [
+                        AmountInputFormatter(decimalDigits: 4)
+                      ],
                       decoration: _inputDecoration(
                         cs,
                         accent,
@@ -278,6 +282,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       controller: _amountController,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [AmountInputFormatter()],
                       decoration: _inputDecoration(
                         cs,
                         accent,
@@ -294,6 +299,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       autofocus: true,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [AmountInputFormatter()],
                       decoration: _inputDecoration(
                         cs,
                         accent,

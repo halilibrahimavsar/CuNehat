@@ -4,6 +4,7 @@ import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
@@ -119,12 +120,13 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
     super.dispose();
   }
 
-  String _fmt(double v) =>
-      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  String _fmt(double v) => formatAmountForInput(v);
 
-  double? get _parsedAmount => parseMoney(_amountController.text);
-  double? get _parsedCurrentValue => parseMoney(_currentValueController.text);
-  double? get _parsedTargetAmount => parseMoney(_targetAmountController.text);
+  double? get _parsedAmount => parseMoneyInput(_amountController.text);
+  double? get _parsedCurrentValue =>
+      parseMoneyInput(_currentValueController.text);
+  double? get _parsedTargetAmount =>
+      parseMoneyInput(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
@@ -245,6 +247,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                         onChanged: _clearError,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
                       const SizedBox(height: 14),
                       InvestmentFilledField(
@@ -255,6 +258,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                         onChanged: _clearError,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
+                        inputFormatters: [AmountInputFormatter()],
                       ),
                       if (_targetAmountController.text.trim().isNotEmpty) ...[
                         const SizedBox(height: 14),

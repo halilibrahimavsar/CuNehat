@@ -5,6 +5,10 @@ class BudgetEntity extends Equatable {
   /// Bütçenin ait olduğu kategori ID'si (genellikle kategorinin kendi adı).
   final String categoryId;
 
+  /// Bütçenin bağlı olduğu cüzdan. Boş string = henüz atanmamış; kalıcı
+  /// katmana inmeden önce bloc aktif cüzdanı damgalar.
+  final String walletId;
+
   /// Bu kategori için belirlenen aylık üst limit.
   final double limitAmount;
 
@@ -13,17 +17,20 @@ class BudgetEntity extends Equatable {
 
   const BudgetEntity({
     required this.categoryId,
+    this.walletId = '',
     required this.limitAmount,
     this.spentAmount = 0.0,
   });
 
   BudgetEntity copyWith({
     String? categoryId,
+    String? walletId,
     double? limitAmount,
     double? spentAmount,
   }) {
     return BudgetEntity(
       categoryId: categoryId ?? this.categoryId,
+      walletId: walletId ?? this.walletId,
       limitAmount: limitAmount ?? this.limitAmount,
       spentAmount: spentAmount ?? this.spentAmount,
     );
@@ -34,5 +41,5 @@ class BudgetEntity extends Equatable {
   bool get isExceeded => spentAmount > limitAmount;
 
   @override
-  List<Object?> get props => [categoryId, limitAmount, spentAmount];
+  List<Object?> get props => [categoryId, walletId, limitAmount, spentAmount];
 }

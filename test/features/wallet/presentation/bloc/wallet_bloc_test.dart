@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -23,6 +24,9 @@ class MockWalletSetActiveUseCase extends Mock
 
 class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 
+class MockDeleteBudgetsForWalletUsecase extends Mock
+    implements DeleteBudgetsForWalletUsecase {}
+
 void main() {
   late MockWalletGetUseCase mockGetUseCase;
   late MockWalletWatchUseCase mockWatchUseCase;
@@ -31,6 +35,7 @@ void main() {
   late MockWalletDeleteUseCase mockDeleteUseCase;
   late MockWalletSetActiveUseCase mockSetActiveUseCase;
   late MockWalletMetricsService mockMetricsService;
+  late MockDeleteBudgetsForWalletUsecase mockDeleteBudgetsForWallet;
   late WalletBloc walletBloc;
 
   setUpAll(() {
@@ -58,6 +63,10 @@ void main() {
     mockDeleteUseCase = MockWalletDeleteUseCase();
     mockSetActiveUseCase = MockWalletSetActiveUseCase();
     mockMetricsService = MockWalletMetricsService();
+    mockDeleteBudgetsForWallet = MockDeleteBudgetsForWalletUsecase();
+    // Cüzdan silme testleri: bütçe temizliği varsayılan olarak başarılı.
+    when(() => mockDeleteBudgetsForWallet(any()))
+        .thenAnswer((_) async => const Right(null));
 
     walletBloc = WalletBloc(
       getWalletsUseCase: mockGetUseCase,
@@ -67,6 +76,7 @@ void main() {
       deleteWalletUseCase: mockDeleteUseCase,
       setActiveWalletUseCase: mockSetActiveUseCase,
       walletMetricsService: mockMetricsService,
+      deleteBudgetsForWalletUsecase: mockDeleteBudgetsForWallet,
     );
   });
 
