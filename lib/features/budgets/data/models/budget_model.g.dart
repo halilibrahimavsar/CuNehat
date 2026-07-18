@@ -19,7 +19,7 @@ class BudgetModelAdapter extends TypeAdapter<BudgetModel> {
     return BudgetModel(
       categoryId: fields[0] as String,
       limitAmount: fields[1] as double,
-      walletId: fields[2] as String?,
+      walletId: fields[2] as String,
     );
   }
 

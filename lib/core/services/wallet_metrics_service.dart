@@ -117,11 +117,6 @@ class WalletMetricsService {
       isSystem: true,
     );
     try {
-      // openingBalance null olan eski cüzdanı YENİ işlemi eklemeden önce
-      // geri doldur; yoksa sonraki sync yeni hareketi opening'e yutar
-      // (bakiye değişmez görünür).
-      await _syncBalanceImpl(walletId);
-
       final addResult = await transactionsRepository.addTransaction(tx);
       final added = addResult.fold(
         (failure) {
@@ -144,8 +139,6 @@ class WalletMetricsService {
 
   /// Bakiyeyi işlemlerden yeniden hesaplar; cüzdan bakiyesinin TEK yazım yolu.
   /// `balance = openingBalance + Σ signed(tüm işlemler)`.
-  /// Eski cüzdanlarda `openingBalance` null ise mevcut bakiyeyi koruyacak
-  /// şekilde (balance - Σtx) geri doldurulur.
   /// Başarı ya da no-op'ta `true`, herhangi bir hata bacağında `false` döner.
   Future<bool> syncBalance(String walletId) =>
       _serialized(walletId, () => _syncBalanceImpl(walletId));
@@ -176,14 +169,10 @@ class WalletMetricsService {
               (sum, t) => sum + (t.isIncome ? t.amount : -t.amount),
             ));
 
-            // Null-backfill semantiği aynen: yalnız aritmetik sonucu yuvarlanır.
-            final opening =
-                wallet.openingBalance ?? roundToCents(wallet.balance - txSum);
-            final newBalance = roundToCents(opening + txSum);
+            final newBalance = roundToCents(wallet.openingBalance + txSum);
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
-            if (wallet.openingBalance != null &&
-                moneyEquals(wallet.balance, newBalance)) {
+            if (moneyEquals(wallet.balance, newBalance)) {
               return true;
             }
 
@@ -201,7 +190,7 @@ class WalletMetricsService {
               (fresh) async {
                 final target = fresh ?? wallet;
                 final writeResult = await walletRepository.updateWallet(
-                  target.copyWith(openingBalance: opening, balance: newBalance),
+                  target.copyWith(balance: newBalance),
                 );
                 return writeResult.fold(
                   (failure) {

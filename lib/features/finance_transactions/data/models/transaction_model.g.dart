@@ -25,7 +25,7 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       amount: fields[5] as double,
       date: fields[6] as DateTime,
       type: fields[7] as TransactionTypeModel,
-      isSystem: fields[8] == null ? false : fields[8] as bool,
+      isSystem: fields[8] as bool,
     );
   }
 

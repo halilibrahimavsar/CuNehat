@@ -71,21 +71,15 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
   factory RecurringTransactionModel.fromJson(Map<String, dynamic> json) {
     return RecurringTransactionModel(
       id: json['id'] as String,
-      userId: json['userId'] as String? ?? 'local_user',
+      userId: json['userId'] as String,
       walletId: json['walletId'] as String,
-      title: json['title'] as String? ?? '',
-      tag: json['tag'] as String? ?? '',
-      amount: (json['amount'] as num? ?? 0).toDouble(),
-      type: TransactionTypeModel.values.firstWhere(
-        (type) => type.name == json['type'],
-        orElse: () => TransactionTypeModel.expense,
-      ),
-      frequency: RecurringFrequency.values.firstWhere(
-        (frequency) => frequency.name == json['frequency'],
-        orElse: () => RecurringFrequency.monthly,
-      ),
+      title: json['title'] as String,
+      tag: json['tag'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      type: TransactionTypeModel.values.byName(json['type'] as String),
+      frequency: RecurringFrequency.values.byName(json['frequency'] as String),
       nextExecutionDate: DateTime.parse(json['nextExecutionDate'] as String),
-      isActive: json['isActive'] as bool? ?? true,
+      isActive: json['isActive'] as bool,
     );
   }
 

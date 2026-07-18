@@ -27,23 +27,21 @@ class InvestmentModel extends InvestmentEntity {
   factory InvestmentModel.fromJson(String id, Map<String, dynamic> json) {
     return InvestmentModel(
       id: id,
-      userId: json['userId'] ?? '',
-      walletId: json['walletId'] ?? '',
-      name: json['name'] ?? '',
-      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      currentValue: (json['currentValue'] as num?)?.toDouble() ?? 0.0,
-      type: InvestmentType.values.firstWhere(
-        (type) => type.toString() == json['type'],
-        orElse: () => InvestmentType.stock,
-      ),
-      color: Color(json['color'] ?? 0xFF000000),
-      dateAdded: DateTime.parse(json['dateAdded']),
-      symbol: json['symbol'],
-      returnRate: (json['returnRate'] as num?)?.toDouble() ?? 0.0,
+      userId: json['userId'] as String,
+      walletId: json['walletId'] as String,
+      name: json['name'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      currentValue: (json['currentValue'] as num).toDouble(),
+      type: InvestmentType.values
+          .firstWhere((type) => type.toString() == json['type']),
+      color: Color(json['color'] as int),
+      dateAdded: DateTime.parse(json['dateAdded'] as String),
+      symbol: json['symbol'] as String?,
+      returnRate: (json['returnRate'] as num?)?.toDouble(),
       targetAmount: (json['targetAmount'] as num?)?.toDouble(),
       quantity: (json['quantity'] as num?)?.toDouble(),
-      goalCategory: json['goalCategory'],
-      currency: json['currency'],
+      goalCategory: json['goalCategory'] as String?,
+      currency: json['currency'] as String?,
     );
   }
 

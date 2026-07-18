@@ -26,6 +26,7 @@ void main() {
         colorHex: '0xFF4CAF50',
         iconName: 'money',
         createdAt: DateTime(2026, 6, 1),
+        openingBalance: 1000.0,
       ),
     );
   });

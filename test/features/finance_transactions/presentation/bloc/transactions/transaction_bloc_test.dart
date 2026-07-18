@@ -162,7 +162,7 @@ void main() {
 
   group('AddTransactionEvent', () {
     blocTest<TransactionBloc, TransactionState>(
-      'pre-syncs, adds transaction, post-syncs, emits success and triggers notifier',
+      'adds transaction, syncs balance, emits success and triggers notifier',
       build: () {
         when(() => mockMetricsService.syncBalance('wallet_123'))
             .thenAnswer((_) async => true);
@@ -176,7 +176,7 @@ void main() {
             transactions: []),
       ],
       verify: (_) {
-        verify(() => mockMetricsService.syncBalance('wallet_123')).called(2);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
         verify(() => mockAddUseCase(testTransaction)).called(1);
       },
     );
@@ -184,13 +184,8 @@ void main() {
     blocTest<TransactionBloc, TransactionState>(
       'emits success with a warning when post-sync fails',
       build: () {
-        // Pre-sync succeeds, post-sync fails
-        var callCount = 0;
         when(() => mockMetricsService.syncBalance('wallet_123'))
-            .thenAnswer((_) async {
-          callCount++;
-          return callCount == 1; // True first, false second
-        });
+            .thenAnswer((_) async => false);
         when(() => mockAddUseCase(testTransaction))
             .thenAnswer((_) async => const Right('tx_123'));
         return transactionBloc;
@@ -280,7 +275,7 @@ void main() {
             transactions: []),
       ],
       verify: (_) {
-        verify(() => mockMetricsService.syncBalance('wallet_123')).called(2);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
         verify(() => mockUpdateUseCase(testTransaction)).called(1);
       },
     );
@@ -288,12 +283,8 @@ void main() {
     blocTest<TransactionBloc, TransactionState>(
       'emits success with warning when post-sync fails',
       build: () {
-        var callCount = 0;
         when(() => mockMetricsService.syncBalance('wallet_123'))
-            .thenAnswer((_) async {
-          callCount++;
-          return callCount == 1;
-        });
+            .thenAnswer((_) async => false);
         when(() => mockUpdateUseCase(testTransaction))
             .thenAnswer((_) async => const Right(null));
         return transactionBloc;
@@ -380,7 +371,7 @@ void main() {
         const TransactionActionSuccess('Grocery silindi', transactions: []),
       ],
       verify: (_) {
-        verify(() => mockMetricsService.syncBalance('wallet_123')).called(2);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
         verify(() => mockDeleteUseCase('tx_123')).called(1);
       },
     );
@@ -408,12 +399,8 @@ void main() {
       build: () {
         when(() => mockGetByIdUseCase('tx_123'))
             .thenAnswer((_) async => Right(testTransaction));
-        var callCount = 0;
         when(() => mockMetricsService.syncBalance('wallet_123'))
-            .thenAnswer((_) async {
-          callCount++;
-          return callCount == 1;
-        });
+            .thenAnswer((_) async => false);
         when(() => mockDeleteUseCase('tx_123'))
             .thenAnswer((_) async => const Right(null));
         return transactionBloc;

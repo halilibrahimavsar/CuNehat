@@ -50,7 +50,6 @@ class DebtEntity extends Equatable {
   ///         (silmede geri alınır).
   /// false → borç karşılığında ürün/hizmet alındı; nakit ele geçmedi, bakiye
   ///         değişmez. Yalnız taksit/ödemeler gider olarak deftere düşer.
-  /// Eski kayıtlar için varsayılan true (eski davranış nakit kuplajıydı).
   final bool principalToWallet;
 
   const DebtEntity({

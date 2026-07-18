@@ -48,6 +48,7 @@ void main() {
         colorHex: '0xFF000000',
         iconName: 'wallet',
         createdAt: DateTime(2026, 1, 1),
+        openingBalance: 0.0,
       ),
     );
     registerFallbackValue(

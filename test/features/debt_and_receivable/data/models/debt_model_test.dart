@@ -195,6 +195,8 @@ void main() {
         'isPaid': false,
         'notes': 'No comments',
         'expectedTotalAmount': 11200.0,
+        'overdueInterestRate': 0.0,
+        'principalToWallet': true,
       };
 
       final model = DebtModel.fromJson(json);
@@ -205,7 +207,8 @@ void main() {
       expect(model.payments.first is PaymentModel, true);
     });
 
-    test('fromJson falls back to otherDebt for unknown type', () {
+    test('fromJson bilinmeyen türde fırlatır (sıkı şema, sessiz düşme yok)',
+        () {
       final json = {
         'id': 'debt_1',
         'userId': 'user_1',
@@ -219,8 +222,7 @@ void main() {
         'startDate': startDate.toIso8601String(),
       };
 
-      final model = DebtModel.fromJson(json);
-      expect(model.type, DebtType.otherDebt);
+      expect(() => DebtModel.fromJson(json), throwsA(isA<Object>()));
     });
   });
 }

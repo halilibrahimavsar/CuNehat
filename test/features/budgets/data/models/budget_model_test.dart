@@ -21,6 +21,7 @@ void main() {
       final model = BudgetModel(
         categoryId: 'Drinks',
         limitAmount: 500.0,
+        walletId: 'wallet_123',
       );
 
       final entity = model.toEntity();

@@ -69,9 +69,8 @@ class DebtModel extends DebtEntity {
   @HiveField(18) // Yeni alan
   double? get expectedTotalAmount;
 
-  // Eski kayıtlarda alan yoktur; defaultValue true = eski nakit-kuplaj davranışı.
   @override
-  @HiveField(19, defaultValue: true)
+  @HiveField(19)
   bool get principalToWallet;
 
   const DebtModel({
@@ -209,33 +208,26 @@ class DebtModel extends DebtEntity {
   factory DebtModel.fromJson(Map<String, dynamic> json) {
     return DebtModel(
       id: json['id'] as String?,
-      userId: json['userId'] as String? ?? 'local_user',
+      userId: json['userId'] as String,
       walletId: json['walletId'] as String,
       title: json['title'] as String,
-      counterparty: json['counterparty'] as String? ?? '',
-      // byName bilinmeyen adda fırlatır ve tek bozuk kayıt tüm restore'u
-      // düşürür; bilinmeyen tür otherDebt'e düşsün.
-      type: DebtType.values.firstWhere(
-        (t) => t.name == json['type'],
-        orElse: () => DebtType.otherDebt,
-      ),
+      counterparty: json['counterparty'] as String,
+      type: DebtType.values.byName(json['type'] as String),
       principalAmount: (json['principalAmount'] as num).toDouble(),
       interestRate: (json['interestRate'] as num).toDouble(),
       termMonths: json['termMonths'] as int,
-      overdueInterestRate:
-          (json['overdueInterestRate'] as num? ?? 0.0).toDouble(),
+      overdueInterestRate: (json['overdueInterestRate'] as num).toDouble(),
       startDate: DateTime.parse(json['startDate'] as String),
       dueDate: json['dueDate'] != null
           ? DateTime.parse(json['dueDate'] as String)
           : null,
-      payments: (json['payments'] as List<dynamic>? ?? [])
+      payments: (json['payments'] as List<dynamic>)
           .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      isPaid: json['isPaid'] as bool? ?? false,
+      isPaid: json['isPaid'] as bool,
       notes: json['notes'] as String?,
       expectedTotalAmount: (json['expectedTotalAmount'] as num?)?.toDouble(),
-      // Eski yedeklerde alan yok → true (eski davranış nakit kuplajıydı).
-      principalToWallet: json['principalToWallet'] as bool? ?? true,
+      principalToWallet: json['principalToWallet'] as bool,
     );
   }
 }

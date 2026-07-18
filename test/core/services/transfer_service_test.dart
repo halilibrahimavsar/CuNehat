@@ -25,6 +25,7 @@ void main() {
         colorHex: '0xFF2196F3',
         iconName: 'wallet',
         createdAt: DateTime(2026, 1, 1),
+        openingBalance: 1000,
         currency: currency,
       );
 

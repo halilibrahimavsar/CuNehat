@@ -87,6 +87,7 @@ void main() {
     colorHex: '#123456',
     iconName: 'wallet',
     createdAt: DateTime(2026, 1, 1),
+    openingBalance: 5000.0,
   );
 
   final testInvestment1 = InvestmentEntity(
@@ -538,6 +539,7 @@ void main() {
       colorHex: '#654321',
       iconName: 'wallet',
       createdAt: DateTime(2026, 1, 1),
+      openingBalance: 1000.0,
     );
 
     await tester.pumpWidget(

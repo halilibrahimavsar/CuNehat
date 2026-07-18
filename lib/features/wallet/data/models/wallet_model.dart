@@ -14,7 +14,7 @@ class WalletModel {
   final DateTime createdAt;
   final bool isActive;
   final int sortOrder;
-  final double? openingBalance;
+  final double openingBalance;
   final String currency;
 
   const WalletModel({
@@ -30,7 +30,7 @@ class WalletModel {
     required this.createdAt,
     this.isActive = false,
     this.sortOrder = 0,
-    this.openingBalance,
+    required this.openingBalance,
     this.currency = 'TRY',
   });
 
@@ -38,22 +38,19 @@ class WalletModel {
   factory WalletModel.fromJson(String id, Map<String, dynamic> json) {
     return WalletModel(
       id: id,
-      userId: json['userId'] ?? '',
-      name: json['name'] ?? 'Cüzdan',
-      balance: (json['balance'] as num? ?? 0.0).toDouble(),
-      debt: (json['debt'] as num? ?? 0.0).toDouble(),
-      credit: (json['credit'] as num? ?? 0.0).toDouble(),
-      investment: (json['save'] as num? ?? 0.0).toDouble(),
-      colorHex: json['colorHex'] ?? '0xFF2196F3',
-      iconName: json['iconName'] ?? 'wallet',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : DateTime.now(),
-      isActive: json['isActive'] ?? false,
-      sortOrder: json['sortOrder'] ?? 0,
-      openingBalance: (json['openingBalance'] as num?)?.toDouble(),
-      // Eski yedeklerde anahtar yok → TRY (geriye uyumluluk).
-      currency: json['currency'] as String? ?? 'TRY',
+      userId: json['userId'] as String,
+      name: json['name'] as String,
+      balance: (json['balance'] as num).toDouble(),
+      debt: (json['debt'] as num).toDouble(),
+      credit: (json['credit'] as num).toDouble(),
+      investment: (json['investment'] as num).toDouble(),
+      colorHex: json['colorHex'] as String,
+      iconName: json['iconName'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      isActive: json['isActive'] as bool,
+      sortOrder: json['sortOrder'] as int,
+      openingBalance: (json['openingBalance'] as num).toDouble(),
+      currency: json['currency'] as String,
     );
   }
 
@@ -104,7 +101,7 @@ class WalletModel {
       'balance': balance,
       'debt': debt,
       'credit': credit,
-      'save': investment,
+      'investment': investment,
       'colorHex': colorHex,
       'iconName': iconName,
       'createdAt': createdAt.toIso8601String(),
@@ -167,74 +164,21 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
 
-    double parseDouble(dynamic value) {
-      if (value == null) return 0.0;
-      if (value is num) return value.toDouble();
-      if (value is String) return double.tryParse(value) ?? 0.0;
-      return 0.0;
-    }
-
-    final isOldSchema = !fields.containsKey(9);
-
-    final String? id = fields[0] is String ? fields[0] as String : null;
-    final String userId =
-        fields[1] is String ? fields[1] as String : 'local_user';
-    final String name = fields[2] is String ? fields[2] as String : '';
-    final double balance = parseDouble(fields[3]);
-
-    final double debt;
-    final double credit;
-    final double investment;
-    final String colorHex;
-    final String iconName;
-    final DateTime createdAt;
-    final bool isActive;
-    final int sortOrder;
-    final double? openingBalance;
-    final String currency;
-
-    if (isOldSchema) {
-      debt = 0.0;
-      credit = 0.0;
-      investment = 0.0;
-      colorHex = fields[4] is String ? fields[4] as String : '0xFF2196F3';
-      iconName = fields[5] is String ? fields[5] as String : 'wallet';
-      createdAt =
-          fields[6] is DateTime ? fields[6] as DateTime : DateTime.now();
-      isActive = fields[7] is bool ? fields[7] as bool : false;
-      sortOrder = fields[8] is int ? fields[8] as int : 0;
-      openingBalance = null;
-      currency = 'TRY';
-    } else {
-      debt = parseDouble(fields[4]);
-      credit = parseDouble(fields[5]);
-      investment = parseDouble(fields[6]);
-      colorHex = fields[7] is String ? fields[7] as String : '0xFF2196F3';
-      iconName = fields[8] is String ? fields[8] as String : 'wallet';
-      createdAt =
-          fields[9] is DateTime ? fields[9] as DateTime : DateTime.now();
-      isActive = fields[10] is bool ? fields[10] as bool : false;
-      sortOrder = fields[11] is int ? fields[11] as int : 0;
-      openingBalance = fields[12] != null ? parseDouble(fields[12]) : null;
-      // Alan 13 currency'den önce yazılmış kayıtlarda yok → TRY.
-      currency = fields[13] is String ? fields[13] as String : 'TRY';
-    }
-
     return WalletModel(
-      id: id,
-      userId: userId,
-      name: name,
-      balance: balance,
-      debt: debt,
-      credit: credit,
-      investment: investment,
-      colorHex: colorHex,
-      iconName: iconName,
-      createdAt: createdAt,
-      isActive: isActive,
-      sortOrder: sortOrder,
-      openingBalance: openingBalance,
-      currency: currency,
+      id: fields[0] as String?,
+      userId: fields[1] as String,
+      name: fields[2] as String,
+      balance: (fields[3] as num).toDouble(),
+      debt: (fields[4] as num).toDouble(),
+      credit: (fields[5] as num).toDouble(),
+      investment: (fields[6] as num).toDouble(),
+      colorHex: fields[7] as String,
+      iconName: fields[8] as String,
+      createdAt: fields[9] as DateTime,
+      isActive: fields[10] as bool,
+      sortOrder: fields[11] as int,
+      openingBalance: (fields[12] as num).toDouble(),
+      currency: fields[13] as String,
     );
   }
 

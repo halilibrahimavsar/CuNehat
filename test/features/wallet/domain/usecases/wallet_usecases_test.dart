@@ -32,6 +32,7 @@ void main() {
         colorHex: '#000000',
         iconName: 'wallet',
         createdAt: DateTime(2026, 1, 1),
+        openingBalance: 0,
       ),
     );
   });
@@ -90,6 +91,7 @@ void main() {
         colorHex: '#000000',
         iconName: 'wallet',
         createdAt: DateTime(2026, 6, 13),
+        openingBalance: 0,
       );
 
       String? capturedId;
@@ -236,6 +238,7 @@ void main() {
         colorHex: '#000000',
         iconName: 'wallet',
         createdAt: DateTime(2026, 6, 13),
+        openingBalance: 0,
       );
 
       final result = await updateUseCase(walletWithNullId);

@@ -112,12 +112,12 @@ class ReceivableModel extends ReceivableEntity {
   factory ReceivableModel.fromJson(Map<String, dynamic> json) {
     return ReceivableModel(
       id: json['id'] as String?,
-      userId: json['userId'] as String? ?? 'local_user',
+      userId: json['userId'] as String,
       walletId: json['walletId'] as String,
       debtorName: json['debtorName'] as String,
       amount: (json['amount'] as num).toDouble(),
       dueDate: DateTime.parse(json['dueDate'] as String),
-      isPaid: json['isPaid'] as bool? ?? false,
+      isPaid: json['isPaid'] as bool,
       notes: json['notes'] as String?,
     );
   }

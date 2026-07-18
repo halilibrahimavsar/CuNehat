@@ -8,11 +8,11 @@ abstract class BudgetLocalDataSource {
   Future<void> deleteBudget(String walletId, String categoryId);
 
   /// Kategori silinirken çağrılır: kategorinin TÜM cüzdanlardaki bütçelerini
-  /// (henüz migrasyonlanmamış eski kayıt dahil) temizler.
+  /// temizler.
   Future<void> deleteBudgetsForCategory(String categoryId);
 
   /// Cüzdan silinirken çağrılır: cüzdana ait tüm bütçeleri temizler
-  /// (yetim bütçe kalmasın). Legacy (cüzdansız) kayıtlara dokunmaz.
+  /// (yetim bütçe kalmasın).
   Future<void> deleteBudgetsForWallet(String walletId);
 }
 
@@ -30,31 +30,7 @@ class BudgetLocalDataSourceImpl implements BudgetLocalDataSource {
   @override
   Future<List<BudgetModel>> getBudgets(String walletId) async {
     final box = await _box;
-    await _migrateLegacyBudgets(box, walletId);
     return box.values.where((b) => b.walletId == walletId).toList();
-  }
-
-  /// walletId öncesi kayıtları (walletId == null, anahtar = çıplak categoryId)
-  /// ilk isteyen cüzdana devreder. Eski davranışta bütçeler fiilen "aktif
-  /// cüzdanın bütçesi" gibi görünüyordu; ilk yükleme aktif cüzdandan geldiği
-  /// için sahiplik oraya geçer. İdempotenttir: ikinci koşuda legacy kayıt kalmaz.
-  Future<void> _migrateLegacyBudgets(
-      Box<BudgetModel> box, String walletId) async {
-    if (walletId.isEmpty) return;
-    final legacyKeys = box.keys
-        .where((key) => box.get(key)?.walletId == null)
-        .toList(growable: false);
-    for (final key in legacyKeys) {
-      final legacy = box.get(key);
-      if (legacy == null) continue;
-      final migrated = BudgetModel(
-        categoryId: legacy.categoryId,
-        limitAmount: legacy.limitAmount,
-        walletId: walletId,
-      );
-      await box.delete(key);
-      await box.put(migrated.storageKey, migrated);
-    }
   }
 
   @override
@@ -83,7 +59,6 @@ class BudgetLocalDataSourceImpl implements BudgetLocalDataSource {
 
   @override
   Future<void> deleteBudgetsForWallet(String walletId) async {
-    if (walletId.isEmpty) return;
     final box = await _box;
     final keys = box.keys
         .where((key) => box.get(key)?.walletId == walletId)

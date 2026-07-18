@@ -311,9 +311,10 @@ WalletEntity _wallet({
       credit: 0,
       investment: 0,
       colorHex: '0xFF000000',
-      iconName: 'wallet',
+      iconName: 'account_balance_wallet',
       createdAt: DateTime(2026, 1, 1),
-      openingBalance: openingBalance,
+      // Oluşturma semantiğiyle aynı: opening verilmezse balance.
+      openingBalance: openingBalance ?? balance,
     );
 
 TransactionEntity _income(String walletId, double amount) => TransactionEntity(
@@ -473,18 +474,6 @@ void main() {
   });
 
   group('syncBalance', () {
-    test('eski cüzdanda openingBalance geri doldurulur, bakiye korunur',
-        () async {
-      wallets.store['w'] = _wallet(id: 'w', balance: 120, openingBalance: null);
-      txs.store.add(_income('w', 20));
-
-      await service.syncBalance('w');
-
-      final w = wallets.store['w']!;
-      expect(w.openingBalance, 100); // 120 - 20
-      expect(w.balance, 120); // opening + sum
-    });
-
     test('sapan bakiyeyi onarır', () async {
       wallets.store['w'] = _wallet(id: 'w', balance: 999, openingBalance: 100);
       txs.store.add(_income('w', 20));

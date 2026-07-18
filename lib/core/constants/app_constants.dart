@@ -17,27 +17,6 @@ class ThemeNames {
   };
 }
 
-// ============ WALLET ICONS ============
-
-class WalletIcons {
-  static const Map<String, IconData> icons = {
-    'wallet': Icons.account_balance_wallet,
-    'savings': Icons.savings,
-    'emergency': Icons.emergency,
-    'card': Icons.credit_card,
-    'cash': Icons.attach_money,
-    'bank': Icons.account_balance,
-    'investment': Icons.trending_up,
-    'shopping': Icons.shopping_bag,
-    'travel': Icons.flight,
-    'home': Icons.home,
-  };
-
-  static IconData getIcon(String name) {
-    return icons[name] ?? Icons.account_balance_wallet;
-  }
-}
-
 // ============ WALLET COLORS ============
 
 class WalletColors {

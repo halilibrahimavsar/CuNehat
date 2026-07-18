@@ -29,6 +29,7 @@ void main() {
       colorHex: '#123456',
       iconName: 'wallet',
       createdAt: DateTime(2026, 1, 1),
+      openingBalance: 100,
     );
 
     test('GetWalletsEvent props', () {

@@ -95,10 +95,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   ) async {
     final currentData = state.currentTransactions;
 
-    // openingBalance null olan eski cüzdanı işlem yazılmadan ÖNCE geri doldur;
-    // yoksa sonraki sync yeni işlemi opening'e yutar (bakiye değişmez görünür).
-    await _safeSyncBalance(event.transaction.walletId);
-
     final result = await addTransactionUseCase(
         event.transaction); // Usecase ID'yi halleder.
 
@@ -138,9 +134,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       ));
       return;
     }
-
-    // Bkz. _onAddTransaction: mutasyon öncesi opening geri doldurma.
-    await _safeSyncBalance(event.newTransaction.walletId);
 
     final result = await updateTransactionUseCase(event.newTransaction);
 
@@ -188,9 +181,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           ));
           return;
         }
-
-        // Bkz. _onAddTransaction: mutasyon öncesi opening geri doldurma.
-        await _safeSyncBalance(transaction.walletId);
 
         // 2. Delete from database
         final deleteResult =

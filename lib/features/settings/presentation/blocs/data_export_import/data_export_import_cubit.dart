@@ -111,8 +111,9 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
         credit: 0,
         investment: 0,
         colorHex: "0xFF4CAF50",
-        iconName: "wallet",
+        iconName: "account_balance_wallet",
         createdAt: DateTime.now(),
+        openingBalance: 0,
       );
 
       final walletResult = await walletRepository.createWallet(newWallet);

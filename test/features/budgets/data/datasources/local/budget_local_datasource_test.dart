@@ -110,23 +110,5 @@ void main() {
       expect(await dataSource.getBudgets('wallet-1'), hasLength(1));
       expect(await dataSource.getBudgets('wallet-2'), isEmpty);
     });
-
-    test('should migrate legacy (walletId-less) budgets to requesting wallet',
-        () async {
-      // Eski kayıt: çıplak categoryId anahtarı, walletId null.
-      final box = await Hive.openBox<BudgetModel>('budgets_box');
-      await box.put(
-          'Food', BudgetModel(categoryId: 'Food', limitAmount: 750.0));
-
-      final migrated = await dataSource.getBudgets('wallet-1');
-
-      expect(migrated.single.walletId, 'wallet-1');
-      expect(migrated.single.limitAmount, 750.0);
-      // Anahtar bileşik forma taşındı; eski anahtar kalmadı.
-      expect(box.get('Food'), isNull);
-      expect(box.get('wallet-1::Food'), isNotNull);
-      // Başka cüzdan artık bu bütçeyi devralamaz.
-      expect(await dataSource.getBudgets('wallet-2'), isEmpty);
-    });
   });
 }

@@ -21,7 +21,8 @@ class InvestmentEntity extends Equatable {
   final double? returnRate;
   final double? targetAmount;
 
-  /// Toplam birim (gram/lot/adet). null = miktar takibi olmayan eski kayıt.
+  /// Toplam birim (gram/lot/adet). null = miktar takibi olmayan yatırım
+  /// (ör. özel varlık).
   final double? quantity;
 
   /// Hedef kategorisi anahtarı (ev, dugun, araba, acil_fon, egitim, diger).

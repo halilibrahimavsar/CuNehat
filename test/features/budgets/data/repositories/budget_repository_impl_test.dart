@@ -14,8 +14,8 @@ void main() {
   late MockBudgetLocalDataSource mockLocalDataSource;
 
   setUpAll(() {
-    registerFallbackValue(
-        BudgetModel(categoryId: 'fallback', limitAmount: 0.0));
+    registerFallbackValue(BudgetModel(
+        categoryId: 'fallback', limitAmount: 0.0, walletId: 'fallback'));
   });
 
   setUp(() {
@@ -23,9 +23,10 @@ void main() {
     repository = BudgetRepositoryImpl(mockLocalDataSource);
   });
 
-  final testModel = BudgetModel(categoryId: 'Food', limitAmount: 1000.0);
-  final testEntity =
-      const BudgetEntity(categoryId: 'Food', limitAmount: 1000.0);
+  final testModel = BudgetModel(
+      categoryId: 'Food', limitAmount: 1000.0, walletId: 'wallet_123');
+  final testEntity = const BudgetEntity(
+      categoryId: 'Food', limitAmount: 1000.0, walletId: 'wallet_123');
 
   group('getBudgets', () {
     test(

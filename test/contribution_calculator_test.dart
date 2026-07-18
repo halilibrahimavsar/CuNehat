@@ -110,21 +110,5 @@ void main() {
       expect(back.targetAmount, 100000);
     });
 
-    test('eski doküman (alanlar yok) null döner, çökmez', () {
-      final old = InvestmentModel.fromJson('inv-1', {
-        'userId': 'u1',
-        'walletId': 'w1',
-        'name': 'Eski Kayıt',
-        'amount': 100,
-        'currentValue': 120,
-        'type': 'InvestmentType.gold',
-        'color': 0xFF000000,
-        'dateAdded': '2025-01-01T00:00:00.000',
-      });
-      expect(old.quantity, isNull);
-      expect(old.goalCategory, isNull);
-      expect(old.currency, isNull);
-      expect(old.profit, 20);
-    });
   });
 }

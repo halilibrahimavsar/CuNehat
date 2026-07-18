@@ -25,14 +25,9 @@ class WalletLocalDataSource {
 
   Future<String> createWallet(WalletModel wallet) async {
     final box = await _getWalletBox();
-
-    // Açılış bakiyesini sakla (sapma onarımı / syncBalance için referans).
-    final toSave = wallet.openingBalance == null
-        ? wallet.copyWith(openingBalance: wallet.balance)
-        : wallet;
     await box.put(
-        toSave.id, toSave); // Firestore'daki kaydedilen document ID gibi
-    return toSave.id!;
+        wallet.id, wallet); // Firestore'daki kaydedilen document ID gibi
+    return wallet.id!;
   }
 
   Future<void> deleteWallet(String walletId) async {

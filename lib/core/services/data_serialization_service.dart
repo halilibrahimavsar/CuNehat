@@ -60,11 +60,11 @@ class _ParsedBackup {
 
 @lazySingleton
 class DataSerializationService {
-  /// v4: cüzdanlara opsiyonel 'currency' anahtarı eklendi (yoksa TRY).
-  /// v5: bütçelere opsiyonel 'walletId', borçlara opsiyonel 'principalToWallet'
-  /// eklendi (yoksa: bütçe migrasyonla aktif cüzdana, borç nakit-kuplajlı kabul).
-  /// Restore sürüm kapısı içermez; eski yedekler varsayılanlarla açılır.
-  static const int schemaVersion = 5;
+  /// Yayın öncesi politika: geriye uyumluluk YOK. Yedek şeması v1'e
+  /// sıfırlandı (2026-07-19 temizliği); tüm alanlar zorunlu yazılır ve
+  /// restore sürümü birebir eşleşmeyen yedeği reddeder. Şema değişirse
+  /// sürümü artır — eski yedek desteklenmez, açıkça hata verir.
+  static const int schemaVersion = 1;
 
   final HiveInterface _hive;
 
@@ -209,8 +209,6 @@ class DataSerializationService {
         await receivableBox.put(id, model);
       }
       for (final model in parsedBackup.budgets) {
-        // walletId'li bütçe bileşik anahtar alır; eski yedekte walletId yoktur,
-        // çıplak categoryId anahtarı kalır ve açılışta cüzdana migrasyonlanır.
         await budgetBox.put(model.storageKey, model);
       }
       for (final model in parsedBackup.recurringTransactions) {
@@ -262,6 +260,13 @@ class DataSerializationService {
     final decoded = jsonDecode(jsonString);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Backup root must be a JSON object');
+    }
+
+    // Sürüm kapısı: farklı şema sessizce yanlış yorumlanmasın, açıkça reddet.
+    final version = decoded['version'];
+    if (version != schemaVersion) {
+      throw FormatException(
+          'Desteklenmeyen yedek sürümü: $version (beklenen: $schemaVersion)');
     }
 
     final users = <String, Map>{};

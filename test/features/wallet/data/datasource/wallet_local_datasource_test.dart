@@ -53,6 +53,7 @@ void main() {
       createdAt: DateTime(2026, 6, 1),
       isActive: false,
       sortOrder: 1,
+      openingBalance: 1000.0,
     );
 
     test('should save and get wallet successfully', () async {

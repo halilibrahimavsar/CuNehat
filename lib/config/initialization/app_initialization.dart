@@ -7,9 +7,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
-import 'package:cunehat/core/services/data_repair_service.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
-import 'package:cunehat/core/services/money_normalization_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
@@ -71,15 +69,6 @@ class AppInitialization {
       // Kur ısıtması: tek çağrı USD+EUR'u önbelleğe alır; açılışı bloklamaz,
       // hata durumunda servis sessizce bayat önbelleğe/null'a düşer.
       unawaited(getIt<ExchangeRateService>().rateToTry('USD'));
-
-      // Para normalizasyonu ÖNCE: eski verideki yuvarlanmamış tutarları
-      // kuruşa çeker; ardından gelen onarım/sync'ler temiz veriyle çalışır
-      // (idempotent; hata açılışı bloklamaz — servis içinde yutulur).
-      await getIt<MoneyNormalizationService>().run();
-
-      // Kendi-kendini onarım: yanlış userId'li kayıtları cüzdan sahibine
-      // çeker (idempotent; hata açılışı bloklamaz — servis içinde yutulur).
-      await getIt<DataRepairService>().run();
 
       final authBloc = getIt<AppAuthBloc>();
       final router = createAppRouter(authBloc);

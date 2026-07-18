@@ -110,7 +110,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
 
   void _initializeState() {
     _selectedColorHex = widget.wallet?.colorHex ?? '0xFF2196F3';
-    _selectedIconName = widget.wallet?.iconName ?? 'wallet';
+    _selectedIconName = widget.wallet?.iconName ?? 'account_balance_wallet';
     _selectedCurrency = widget.wallet?.currency ?? kDefaultCurrency;
     if (isEditMode) {
       _currencyLocked = true;
@@ -758,6 +758,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         createdAt: createdAt,
         sortOrder: sortOrder,
         isActive: false, // Başlangıçta false
+        // Defter değişmezinin çapası: balance = opening + Σtx (henüz işlem yok).
+        openingBalance: balance,
         currency: _selectedCurrency,
       );
       context.read<WalletBloc>().add(CreateWalletEvent(wallet));

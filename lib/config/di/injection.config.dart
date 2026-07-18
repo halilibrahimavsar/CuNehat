@@ -13,14 +13,11 @@ import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
 import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart' as _i371;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
-import 'package:cunehat/core/services/data_repair_service.dart' as _i816;
 import 'package:cunehat/core/services/data_serialization_service.dart' as _i348;
 import 'package:cunehat/core/services/exchange_rate_service.dart' as _i500;
 import 'package:cunehat/core/services/google_drive_backup_service.dart'
     as _i186;
 import 'package:cunehat/core/services/local_backup_service.dart' as _i266;
-import 'package:cunehat/core/services/money_normalization_service.dart'
-    as _i338;
 import 'package:cunehat/core/services/transactions_changed_notifier.dart'
     as _i777;
 import 'package:cunehat/core/services/transfer_service.dart' as _i625;
@@ -401,10 +398,6 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i543.TransactionsRepository>(),
             ));
-    gh.lazySingleton<_i816.DataRepairService>(
-        () => _i816.DataRepairService(gh<_i239.WalletMetricsService>()));
-    gh.lazySingleton<_i338.MoneyNormalizationService>(() =>
-        _i338.MoneyNormalizationService(gh<_i239.WalletMetricsService>()));
     gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
           csvService: gh<_i530.CsvService>(),
           localBackupService: gh<_i266.LocalBackupService>(),

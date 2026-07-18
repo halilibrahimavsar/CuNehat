@@ -140,8 +140,8 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       if (current is WalletLoadedSt) {
         for (final old in current.wallets) {
           if (old.id == event.wallet.id) {
-            final newOpening = (old.openingBalance ?? old.balance) +
-                (event.wallet.balance - old.balance);
+            final newOpening =
+                old.openingBalance + (event.wallet.balance - old.balance);
             toWrite = event.wallet.copyWith(openingBalance: newOpening);
             break;
           }

@@ -14,11 +14,9 @@ class WalletEntity extends Equatable {
   final bool isActive;
   final int sortOrder;
 
-  /// Cüzdanın açılış (başlangıç) bakiyesi. `balance` artımlı delta'larla
-  /// güncellendiği için sapma onarımında referans olarak kullanılır:
-  /// `balance = openingBalance + Σ signed(işlemler)`. Eski kayıtlarda null
-  /// olabilir (lazy geri-doldurulur).
-  final double? openingBalance;
+  /// Cüzdanın açılış (başlangıç) bakiyesi; oluşturulurken atanır.
+  /// Defter değişmezi: `balance = openingBalance + Σ signed(işlemler)`.
+  final double openingBalance;
 
   /// Cüzdanın para birimi ('TRY' | 'USD' | 'EUR'). Tüm tutarlar (balance,
   /// işlemler) bu birimde tutulur; işlem geçmişi oluştuktan sonra
@@ -38,7 +36,7 @@ class WalletEntity extends Equatable {
     required this.createdAt,
     this.isActive = false,
     this.sortOrder = 0,
-    this.openingBalance,
+    required this.openingBalance,
     this.currency = 'TRY',
   });
 

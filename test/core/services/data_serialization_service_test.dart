@@ -109,7 +109,7 @@ void main() {
     await Hive.box<ReceivableModel>('receivables').put('r1', _receivable());
     await Hive.box<BudgetModel>('budgets_box').put(
       'food',
-      BudgetModel(categoryId: 'food', limitAmount: 1200),
+      BudgetModel(categoryId: 'food', limitAmount: 1200, walletId: 'w1'),
     );
     await Hive.box<RecurringTransactionModel>('recurring_transactions_box').put(
       'rec1',
@@ -145,7 +145,7 @@ void main() {
     await Hive.box<ReceivableModel>('receivables').put('r1', _receivable());
     await Hive.box<BudgetModel>('budgets_box').put(
       'food',
-      BudgetModel(categoryId: 'food', limitAmount: 1200),
+      BudgetModel(categoryId: 'food', limitAmount: 1200, walletId: 'w1'),
     );
     await Hive.box<RecurringTransactionModel>('recurring_transactions_box').put(
       'rec1',
@@ -169,21 +169,12 @@ void main() {
     expect(prefs.getString(CategoryService.backupKeys.first), isNull);
   });
 
-  test('restores old backups with missing v3 sections as empty data', () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(CategoryService.backupKeys.first, 'old-cats');
-    await Hive.box<BudgetModel>('budgets_box').put(
-      'stale',
-      BudgetModel(categoryId: 'stale', limitAmount: 1),
-    );
-    await Hive.box<RecurringTransactionModel>('recurring_transactions_box').put(
-      'stale-rec',
-      _recurring(id: 'stale-rec'),
-    );
+  test('sürümü eşleşmeyen yedek reddedilir ve mevcut veri korunur', () async {
+    await Hive.box<WalletModel>('wallets').put('w1', _wallet());
 
     final oldBackup = jsonEncode({
-      'version': 2,
-      'wallets': [_wallet().toJson()],
+      'version': DataSerializationService.schemaVersion + 1,
+      'wallets': [],
       'transactions': [],
       'investments': [],
       'debts': [],
@@ -193,14 +184,8 @@ void main() {
 
     final result = await service.importDataFromJson(oldBackup);
 
-    expect(result.isSuccess, true);
+    expect(result.status, DataRestoreStatus.invalidFormat);
     expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
-    expect(Hive.box<BudgetModel>('budgets_box').values, isEmpty);
-    expect(
-      Hive.box<RecurringTransactionModel>('recurring_transactions_box').values,
-      isEmpty,
-    );
-    expect(prefs.getString(CategoryService.backupKeys.first), isNull);
   });
 
   test('cüzdan para birimi export/import round-trip ile korunur', () async {
@@ -216,25 +201,6 @@ void main() {
 
     expect(result.isSuccess, true);
     expect(Hive.box<WalletModel>('wallets').get('w1')?.currency, 'USD');
-  });
-
-  test('currency anahtarı olmayan eski yedek TRY olarak geri yüklenir',
-      () async {
-    final walletJson = _wallet().toJson()..remove('currency');
-    final legacyBackup = jsonEncode({
-      'version': 3,
-      'wallets': [walletJson],
-      'transactions': [],
-      'investments': [],
-      'debts': [],
-      'receivables': [],
-      'users': {},
-    });
-
-    final result = await service.importDataFromJson(legacyBackup);
-
-    expect(result.isSuccess, true);
-    expect(Hive.box<WalletModel>('wallets').get('w1')?.currency, 'TRY');
   });
 
   test('rejects malformed JSON without touching current data', () async {
@@ -291,7 +257,7 @@ void main() {
 
     final failingService = DataSerializationService.withHive(mockHive);
     final backup = jsonEncode({
-      'version': 3,
+      'version': DataSerializationService.schemaVersion,
       'wallets': [_wallet().toJson()],
       'transactions': [],
       'investments': [],
@@ -374,6 +340,7 @@ WalletModel _wallet({String id = 'w1'}) {
     iconName: 'wallet',
     createdAt: DateTime(2024, 1, 1),
     isActive: true,
+    openingBalance: 100,
   );
 }
 

@@ -38,7 +38,7 @@ class TransactionModel extends TransactionEntity {
       amount: (json['amount'] as num).toDouble(),
       date: parsedDate,
       type: _parseTransactionType(json['type'] as String),
-      isSystem: json['isSystem'] as bool? ?? false,
+      isSystem: json['isSystem'] as bool,
     );
   }
 
@@ -149,6 +149,6 @@ class TransactionModel extends TransactionEntity {
   TransactionTypeModel get type => super.type;
 
   @override
-  @HiveField(8, defaultValue: false)
+  @HiveField(8)
   bool get isSystem => super.isSystem;
 }

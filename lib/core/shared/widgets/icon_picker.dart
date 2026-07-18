@@ -212,25 +212,11 @@ class AppIcons {
     ),
   ];
 
-  /// Eski `WalletIcons` anahtarlarını güncel AppIcons adlarına eşler.
-  /// Geriye dönük uyum: eski cüzdan kayıtları ve form varsayılanı ('wallet')
-  /// bu sayede doğru ikonla çözülür (aksi halde varsayılana düşerdi).
-  static const Map<String, String> _legacyAliases = {
-    'wallet': 'account_balance_wallet',
-    'card': 'credit_card',
-    'cash': 'attach_money',
-    'bank': 'account_balance',
-    'investment': 'trending_up',
-    'shopping': 'shopping_bag',
-    'travel': 'flight',
-  };
-
   // İkon adından IconData almak için yardımcı metod
   static IconData getIconData(String iconName) {
-    final resolved = _legacyAliases[iconName] ?? iconName;
     for (var category in categories) {
       for (var icon in category.icons) {
-        if (icon.name == resolved) {
+        if (icon.name == iconName) {
           return icon.iconData;
         }
       }
