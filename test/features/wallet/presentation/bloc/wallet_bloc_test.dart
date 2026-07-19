@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
+import 'package:cunehat/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -27,6 +28,9 @@ class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 class MockDeleteBudgetsForWalletUsecase extends Mock
     implements DeleteBudgetsForWalletUsecase {}
 
+class MockDeleteRecurringTemplatesForWalletUsecase extends Mock
+    implements DeleteRecurringTemplatesForWalletUsecase {}
+
 void main() {
   late MockWalletGetUseCase mockGetUseCase;
   late MockWalletWatchUseCase mockWatchUseCase;
@@ -36,6 +40,8 @@ void main() {
   late MockWalletSetActiveUseCase mockSetActiveUseCase;
   late MockWalletMetricsService mockMetricsService;
   late MockDeleteBudgetsForWalletUsecase mockDeleteBudgetsForWallet;
+  late MockDeleteRecurringTemplatesForWalletUsecase
+      mockDeleteRecurringTemplatesForWallet;
   late WalletBloc walletBloc;
 
   setUpAll(() {
@@ -65,8 +71,12 @@ void main() {
     mockSetActiveUseCase = MockWalletSetActiveUseCase();
     mockMetricsService = MockWalletMetricsService();
     mockDeleteBudgetsForWallet = MockDeleteBudgetsForWalletUsecase();
-    // Cüzdan silme testleri: bütçe temizliği varsayılan olarak başarılı.
+    mockDeleteRecurringTemplatesForWallet =
+        MockDeleteRecurringTemplatesForWalletUsecase();
+    // Cüzdan silme testleri: bütçe/şablon temizliği varsayılan olarak başarılı.
     when(() => mockDeleteBudgetsForWallet(any()))
+        .thenAnswer((_) async => const Right(null));
+    when(() => mockDeleteRecurringTemplatesForWallet(any()))
         .thenAnswer((_) async => const Right(null));
 
     walletBloc = WalletBloc(
@@ -78,6 +88,8 @@ void main() {
       setActiveWalletUseCase: mockSetActiveUseCase,
       walletMetricsService: mockMetricsService,
       deleteBudgetsForWalletUsecase: mockDeleteBudgetsForWallet,
+      deleteRecurringTemplatesForWalletUsecase:
+          mockDeleteRecurringTemplatesForWallet,
     );
   });
 
@@ -466,6 +478,9 @@ void main() {
       verify: (_) {
         verify(() => mockMetricsService.purgeWalletData(
             'wallet_inactive', 'user_123')).called(1);
+        verify(() => mockDeleteBudgetsForWallet('wallet_inactive')).called(1);
+        verify(() => mockDeleteRecurringTemplatesForWallet('wallet_inactive'))
+            .called(1);
         verify(() => mockDeleteUseCase('wallet_inactive')).called(1);
       },
     );

@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
+import 'package:cunehat/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/usecases/wallet_usecase.dart';
 import 'package:dartz/dartz.dart';
@@ -26,6 +27,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   /// bazlıdır; purgeWalletData işlem/borç/alacak/yatırımı siler, bütçeyi değil).
   final DeleteBudgetsForWalletUsecase deleteBudgetsForWalletUsecase;
 
+  /// Cüzdan silinirken cüzdana bağlı düzenli işlem şablonlarını temizler
+  /// (yetim şablon, bekleyen onay diyaloğunda sonsuza dek görünür).
+  final DeleteRecurringTemplatesForWalletUsecase
+      deleteRecurringTemplatesForWalletUsecase;
+
   WalletBloc({
     required this.getWalletsUseCase,
     required this.watchWalletsUseCase,
@@ -35,6 +41,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     required this.setActiveWalletUseCase,
     required this.walletMetricsService,
     required this.deleteBudgetsForWalletUsecase,
+    required this.deleteRecurringTemplatesForWalletUsecase,
   }) : super(const WalletInitialSt()) {
     on<GetWalletsEvent>((event, emit) async {
       if (state is! WalletLoadedSt) {
@@ -167,8 +174,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           }
         }
       }
-      // Cüzdanın bütçeleri de gitsin; başarısızlık silmeyi bloklamaz.
+      // Cüzdanın bütçeleri ve düzenli işlem şablonları da gitsin;
+      // başarısızlık silmeyi bloklamaz.
       await deleteBudgetsForWalletUsecase(event.walletId);
+      await deleteRecurringTemplatesForWalletUsecase(event.walletId);
       final result = await deleteWalletUseCase.call(event.walletId);
       result.fold(
         (failure) => _emitError(emit, 'Cüzdan silinemedi: ${failure.message}'),

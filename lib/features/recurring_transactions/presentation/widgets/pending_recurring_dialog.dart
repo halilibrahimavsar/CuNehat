@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import '../bloc/pending_recurring_bloc.dart';
 import '../bloc/pending_recurring_event.dart';
 import '../bloc/pending_recurring_state.dart';
@@ -63,6 +66,9 @@ class PendingRecurringDialog extends StatelessWidget {
                         final tx = state.pendingTransactions[index];
                         final dateStr = DateFormat('dd MMM yyyy')
                             .format(tx.nextExecutionDate);
+                        // Diyalog tüm cüzdanların vadesi gelen işlemlerini
+                        // kapsar; kalem hangi cüzdana işlenecekse onu göster.
+                        final wallet = context.walletById(tx.walletId);
 
                         return Container(
                           padding: const EdgeInsets.all(16),
@@ -80,10 +86,37 @@ class PendingRecurringDialog extends StatelessWidget {
                                   fontSize: 16,
                                 ),
                               ),
+                              if (wallet != null) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                        Icons.account_balance_wallet_outlined,
+                                        size: 14,
+                                        color: Colors.grey.shade700),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        wallet.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade700,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               const SizedBox(height: 4),
                               Text(
                                 context.l10n.titleTarihDatestrNtutarTx(
-                                    dateStr, tx.amount.toString()),
+                                  dateStr,
+                                  formatMoney(tx.amount,
+                                      currency: wallet?.currency ??
+                                          kDefaultCurrency),
+                                ),
                                 style: TextStyle(
                                   color: Colors.grey.shade700,
                                 ),

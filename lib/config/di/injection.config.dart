@@ -356,9 +356,27 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i551.NotificationService>(),
             ));
+    gh.factory<_i817.DeleteRecurringTemplatesForWalletUsecase>(
+        () => _i817.DeleteRecurringTemplatesForWalletUsecase(
+              gh<_i788.RecurringTransactionRepository>(),
+              gh<_i551.NotificationService>(),
+            ));
     gh.lazySingleton<_i625.TransferService>(() => _i625.TransferService(
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           exchangeRateService: gh<_i500.ExchangeRateService>(),
+        ));
+    gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
+          getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
+          watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
+          createWalletUseCase: gh<_i207.WalletCreateUseCase>(),
+          updateWalletUseCase: gh<_i207.WalletUpdateUseCase>(),
+          deleteWalletUseCase: gh<_i207.WalletDeleteUseCase>(),
+          setActiveWalletUseCase: gh<_i207.WalletSetActiveUseCase>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+          deleteBudgetsForWalletUsecase:
+              gh<_i691.DeleteBudgetsForWalletUsecase>(),
+          deleteRecurringTemplatesForWalletUsecase:
+              gh<_i817.DeleteRecurringTemplatesForWalletUsecase>(),
         ));
     gh.lazySingleton<_i222.BudgetAlertMonitor>(
       () => _i222.BudgetAlertMonitor(
@@ -374,17 +392,6 @@ extension GetItInjectableX on _i174.GetIt {
           updateDebtUseCase: gh<_i855.UpdateDebtUseCase>(),
           deleteDebtUseCase: gh<_i855.DeleteDebtUseCase>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
-        ));
-    gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
-          getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
-          watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
-          createWalletUseCase: gh<_i207.WalletCreateUseCase>(),
-          updateWalletUseCase: gh<_i207.WalletUpdateUseCase>(),
-          deleteWalletUseCase: gh<_i207.WalletDeleteUseCase>(),
-          setActiveWalletUseCase: gh<_i207.WalletSetActiveUseCase>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-          deleteBudgetsForWalletUsecase:
-              gh<_i691.DeleteBudgetsForWalletUsecase>(),
         ));
     gh.factory<_i230.ReceivableBloc>(() => _i230.ReceivableBloc(
           getReceivablesUseCase: gh<_i866.GetReceivablesUseCase>(),

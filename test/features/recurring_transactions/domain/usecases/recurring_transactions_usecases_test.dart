@@ -179,10 +179,12 @@ void main() {
       // Assert
       expect(result, const Right(null));
       verify(() => mockRecurringRepo.saveTemplate(testTemplate)).called(1);
+      // Bildirim kimliği usecase'deki 'recurring_<id>' kalıbından türetilir.
       verify(() => mockNotificationService
-          .cancelNotification(testTemplate.id.hashCode)).called(1);
+              .cancelNotification('recurring_${testTemplate.id}'.hashCode))
+          .called(1);
       verify(() => mockNotificationService.scheduleNotification(
-            id: testTemplate.id.hashCode,
+            id: 'recurring_${testTemplate.id}'.hashCode,
             title: 'Düzenli İşlem Yaklaşıyor',
             body: 'Netflix Subscription başlıklı işleminizin zamanı yaklaştı.',
             scheduledDate: DateTime(2026, 6, 19),
@@ -225,9 +227,8 @@ void main() {
       // Assert
       expect(result, const Right(null));
       verify(() => mockRecurringRepo.deleteTemplate('rec_123')).called(1);
-      verify(() =>
-              mockNotificationService.cancelNotification('rec_123'.hashCode))
-          .called(1);
+      verify(() => mockNotificationService
+          .cancelNotification('recurring_rec_123'.hashCode)).called(1);
     });
 
     test(
@@ -244,6 +245,57 @@ void main() {
       // Assert
       expect(result, const Left(failure));
       verify(() => mockRecurringRepo.deleteTemplate('rec_123')).called(1);
+      verifyNever(() => mockNotificationService.cancelNotification(any()));
+    });
+  });
+
+  group('DeleteRecurringTemplatesForWalletUsecase', () {
+    late DeleteRecurringTemplatesForWalletUsecase deleteForWalletUsecase;
+
+    setUp(() {
+      deleteForWalletUsecase = DeleteRecurringTemplatesForWalletUsecase(
+          mockRecurringRepo, mockNotificationService);
+    });
+
+    test(
+        'should delete only the wallet\'s templates and cancel their notifications',
+        () async {
+      // Arrange: iki cüzdana dağılmış üç şablon
+      final otherWalletTemplate = testTemplate.copyWith(
+          id: 'rec_other', walletId: 'wallet_other');
+      final secondTemplate = testTemplate.copyWith(id: 'rec_456');
+      when(() => mockRecurringRepo.getAllTemplates()).thenAnswer(
+          (_) async =>
+              Right([testTemplate, otherWalletTemplate, secondTemplate]));
+      when(() => mockRecurringRepo.deleteTemplate(any()))
+          .thenAnswer((_) async => const Right(null));
+
+      // Act
+      final result = await deleteForWalletUsecase('wallet_123');
+
+      // Assert
+      expect(result, const Right(null));
+      verify(() => mockRecurringRepo.deleteTemplate('rec_123')).called(1);
+      verify(() => mockRecurringRepo.deleteTemplate('rec_456')).called(1);
+      verifyNever(() => mockRecurringRepo.deleteTemplate('rec_other'));
+      verify(() => mockNotificationService
+          .cancelNotification('recurring_rec_123'.hashCode)).called(1);
+      verify(() => mockNotificationService
+          .cancelNotification('recurring_rec_456'.hashCode)).called(1);
+    });
+
+    test('should return failure when template listing fails', () async {
+      // Arrange
+      const failure = ServerFailure('List error');
+      when(() => mockRecurringRepo.getAllTemplates())
+          .thenAnswer((_) async => const Left(failure));
+
+      // Act
+      final result = await deleteForWalletUsecase('wallet_123');
+
+      // Assert
+      expect(result, const Left(failure));
+      verifyNever(() => mockRecurringRepo.deleteTemplate(any()));
       verifyNever(() => mockNotificationService.cancelNotification(any()));
     });
   });

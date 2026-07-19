@@ -10,6 +10,7 @@ import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
@@ -256,6 +257,9 @@ class _TemplateCard extends StatelessWidget {
         : scheme.onSurfaceVariant;
     final dateStr =
         DateFormat('dd MMM yyyy').format(template.nextExecutionDate);
+    // Şablonlar tüm cüzdanlar için tek listede gösterilir; her kart kendi
+    // cüzdanının adını ve para birimini taşır.
+    final wallet = context.walletById(template.walletId);
 
     return AppCard(
       accent: accent,
@@ -326,11 +330,30 @@ class _TemplateCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (wallet != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.account_balance_wallet_outlined,
+                          size: 14, color: scheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          wallet.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Text(
-                  // Şablon tutarı, bağlı cüzdanın (aktif) biriminde tutulur.
+                  // Şablon tutarı, ait olduğu cüzdanın biriminde tutulur.
                   formatMoney(template.amount,
-                      currency: context.activeWalletCurrency),
+                      currency: wallet?.currency ?? kDefaultCurrency),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: accent,
