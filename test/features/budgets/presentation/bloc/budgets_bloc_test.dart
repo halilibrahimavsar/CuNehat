@@ -157,16 +157,13 @@ void main() {
 
   group('DeleteBudgetEvent', () {
     blocTest<BudgetsBloc, BudgetsState>(
-      'deletes budget and does NOT reload if credentials are not set',
-      build: () {
-        when(() => mockDeleteUseCase('', 'Food'))
-            .thenAnswer((_) async => const Right(null));
-        return budgetsBloc;
-      },
+      'cüzdan bilinmiyorken silme hiç dokunmaz (usecase çağrılmaz)',
+      build: () => budgetsBloc,
       act: (bloc) => bloc.add(const DeleteBudgetEvent('Food')),
       expect: () => [],
       verify: (_) {
-        verify(() => mockDeleteUseCase('', 'Food')).called(1);
+        // '' anahtarıyla yanlış-silme yazılmaz; bloc sessizce vazgeçer.
+        verifyNever(() => mockDeleteUseCase(any(), any()));
         verifyNever(() => mockGetUseCase(any(), any()));
       },
     );
@@ -201,12 +198,22 @@ void main() {
     blocTest<BudgetsBloc, BudgetsState>(
       'emits BudgetsError when delete fails',
       build: () {
-        when(() => mockDeleteUseCase('', 'Food'))
+        when(() => mockGetUseCase('user_123', 'wallet_123'))
+            .thenAnswer((_) async => const Right([]));
+        when(() => mockDeleteUseCase('wallet_123', 'Food'))
             .thenAnswer((_) async => const Left(ServerFailure('Delete fail')));
         return budgetsBloc;
       },
-      act: (bloc) => bloc.add(const DeleteBudgetEvent('Food')),
+      act: (bloc) async {
+        // Silme yalnız cüzdan bilinirken usecase'e iner; önce yükle.
+        bloc.add(
+            const LoadBudgetsEvent(userId: 'user_123', walletId: 'wallet_123'));
+        await bloc.stream.firstWhere((state) => state is BudgetsLoaded);
+        bloc.add(const DeleteBudgetEvent('Food'));
+      },
       expect: () => [
+        BudgetsLoading(),
+        const BudgetsLoaded([]),
         const BudgetsError(ServerFailure('Delete fail')),
       ],
     );

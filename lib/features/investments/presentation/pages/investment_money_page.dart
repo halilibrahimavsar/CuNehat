@@ -293,10 +293,10 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                           children: [
                             Showcase(
                               key: _summaryCardKey,
-                              title: context
-                                  .l10n.onboardingInvestmentSummaryTitle,
-                              description: context
-                                  .l10n.onboardingInvestmentSummaryDesc,
+                              title:
+                                  context.l10n.onboardingInvestmentSummaryTitle,
+                              description:
+                                  context.l10n.onboardingInvestmentSummaryDesc,
                               child: SummaryCard(
                                 totalInvestment: totalInvestment,
                                 totalCurrentValue: totalCurrentValue,
@@ -349,8 +349,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                           onPressed: () => context
                                               .read<InvestmentBloc>()
                                               .add(RefreshPricesEvent(
-                                                userId: widget
-                                                    .activeWallet.userId,
+                                                userId:
+                                                    widget.activeWallet.userId,
                                                 walletId:
                                                     widget.activeWallet.id!,
                                               )),

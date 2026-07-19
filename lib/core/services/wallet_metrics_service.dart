@@ -21,6 +21,27 @@ class CashMovementTags {
   static const String investmentSell = 'Yatırım Satışı';
   static const String investmentCorrection = 'Yatırım Düzeltmesi';
   static const String transfer = 'Transfer';
+
+  /// Tüm sistem etiketleri. Kategori adları bunlarla çakışamaz: bütçe
+  /// harcaması ve rapor kırılımı `tag == categoryId` ile eşleştiğinden,
+  /// aynı adlı kullanıcı kategorisi sistem hareketlerini kendine sayardı.
+  static const List<String> all = [
+    debt,
+    debtPayment,
+    receivable,
+    receivableCollection,
+    investmentBuy,
+    investmentSell,
+    investmentCorrection,
+    transfer,
+  ];
+
+  /// [name] sistem etiketlerinden biriyle (büyük/küçük harf duyarsız)
+  /// çakışıyor mu? Kategori oluşturma/yeniden adlandırma bunu reddeder.
+  static bool isReserved(String name) {
+    final n = name.trim().toLowerCase();
+    return all.any((t) => t.toLowerCase() == n);
+  }
 }
 
 /// Kasıtlı cross-feature orkestratör: cüzdan defteri (balance/debt/credit/
@@ -188,9 +209,11 @@ class WalletMetricsService {
                 return false;
               },
               (fresh) async {
-                final target = fresh ?? wallet;
+                // Cüzdan iki okuma arasında silindiyse bayat kopyayı geri
+                // yazma: put silinmiş cüzdanı diriltir. Senkron iptal edilir.
+                if (fresh == null) return false;
                 final writeResult = await walletRepository.updateWallet(
-                  target.copyWith(balance: newBalance),
+                  fresh.copyWith(balance: newBalance),
                 );
                 return writeResult.fold(
                   (failure) {
@@ -298,10 +321,11 @@ class WalletMetricsService {
           (failure) async =>
               debugPrint('WalletMetricsService: ${failure.message}'),
           (fresh) async {
-            final target = fresh ?? wallet;
-            if (!moneyEquals(target.investment, totalInvestment)) {
+            // Bkz. _syncBalanceImpl: silinmiş cüzdanı bayat kopyayla diriltme.
+            if (fresh == null) return;
+            if (!moneyEquals(fresh.investment, totalInvestment)) {
               await walletRepository
-                  .updateWallet(target.copyWith(investment: totalInvestment));
+                  .updateWallet(fresh.copyWith(investment: totalInvestment));
             }
           },
         );

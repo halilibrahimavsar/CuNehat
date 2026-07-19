@@ -223,9 +223,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       // Adet para değildir; 0,125 gr gibi hassas girişe izin.
-                      inputFormatters: [
-                        AmountInputFormatter(decimalDigits: 4)
-                      ],
+                      inputFormatters: [AmountInputFormatter(decimalDigits: 4)],
                       decoration: _inputDecoration(
                         cs,
                         accent,

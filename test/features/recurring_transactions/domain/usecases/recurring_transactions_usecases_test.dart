@@ -180,9 +180,8 @@ void main() {
       expect(result, const Right(null));
       verify(() => mockRecurringRepo.saveTemplate(testTemplate)).called(1);
       // Bildirim kimliği usecase'deki 'recurring_<id>' kalıbından türetilir.
-      verify(() => mockNotificationService
-              .cancelNotification('recurring_${testTemplate.id}'.hashCode))
-          .called(1);
+      verify(() => mockNotificationService.cancelNotification(
+          'recurring_${testTemplate.id}'.hashCode)).called(1);
       verify(() => mockNotificationService.scheduleNotification(
             id: 'recurring_${testTemplate.id}'.hashCode,
             title: 'Düzenli İşlem Yaklaşıyor',
@@ -261,12 +260,11 @@ void main() {
         'should delete only the wallet\'s templates and cancel their notifications',
         () async {
       // Arrange: iki cüzdana dağılmış üç şablon
-      final otherWalletTemplate = testTemplate.copyWith(
-          id: 'rec_other', walletId: 'wallet_other');
+      final otherWalletTemplate =
+          testTemplate.copyWith(id: 'rec_other', walletId: 'wallet_other');
       final secondTemplate = testTemplate.copyWith(id: 'rec_456');
-      when(() => mockRecurringRepo.getAllTemplates()).thenAnswer(
-          (_) async =>
-              Right([testTemplate, otherWalletTemplate, secondTemplate]));
+      when(() => mockRecurringRepo.getAllTemplates()).thenAnswer((_) async =>
+          Right([testTemplate, otherWalletTemplate, secondTemplate]));
       when(() => mockRecurringRepo.deleteTemplate(any()))
           .thenAnswer((_) async => const Right(null));
 

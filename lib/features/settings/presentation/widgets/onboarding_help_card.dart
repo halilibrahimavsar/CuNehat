@@ -23,7 +23,8 @@ class OnboardingHelpCard extends StatelessWidget {
   /// Ekran turunu sıfırlayıp HomePage'in (Settings altında canlı kalan)
   /// dinleyicisini tetikler; sonra Settings'ten geri dönülür ki tur o
   /// ekranda görünür olsun.
-  Future<void> _replayScreenTour(BuildContext context, OnboardingFlow flow) async {
+  Future<void> _replayScreenTour(
+      BuildContext context, OnboardingFlow flow) async {
     await getIt<OnboardingCoordinator>().resetAndReplay(flow);
     if (context.mounted) context.pop();
   }

@@ -23,8 +23,7 @@ class OnboardingCoordinator extends ChangeNotifier {
 
   OnboardingCoordinator(this._prefs);
 
-  static String _seenKey(OnboardingFlow flow) =>
-      'onboarding_${flow.name}_seen';
+  static String _seenKey(OnboardingFlow flow) => 'onboarding_${flow.name}_seen';
 
   final Map<OnboardingFlow, List<GlobalKey>> _registeredKeys = {};
 

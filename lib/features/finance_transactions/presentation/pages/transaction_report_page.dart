@@ -240,109 +240,115 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           title: context.l10n.onboardingTransactionsReportTitle,
           description: context.l10n.onboardingTransactionsReportDesc,
           child: BlocBuilder<TransactionBloc, TransactionState>(
-        builder: (context, state) {
-          final transactions = state.currentTransactions;
-          if (state is TransactionLoading && transactions.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            builder: (context, state) {
+              final transactions = state.currentTransactions;
+              if (state is TransactionLoading && transactions.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (transactions.isEmpty) {
-            return _buildEmptyState(context);
-          }
+              if (transactions.isEmpty) {
+                return _buildEmptyState(context);
+              }
 
-          final filteredTransactions = _filterTransactionsByRange(transactions);
+              final filteredTransactions =
+                  _filterTransactionsByRange(transactions);
 
-          if (filteredTransactions.isEmpty) {
-            return _buildEmptyState(
-              context,
-              message: context.l10n.msgSecilenTarihAraligindaIslem,
-            );
-          }
+              if (filteredTransactions.isEmpty) {
+                return _buildEmptyState(
+                  context,
+                  message: context.l10n.msgSecilenTarihAraligindaIslem,
+                );
+              }
 
-          final totals = _reportService.calculateTotals(filteredTransactions);
-          final previousTotals = _previousPeriodTotals(transactions);
-          final expenseFull =
-              _buildFullCategoryData(filteredTransactions, true);
-          final incomeFull =
-              _buildFullCategoryData(filteredTransactions, false);
-          final expensePie = _buildPieCategoryData(context, expenseFull, true);
-          final incomePie = _buildPieCategoryData(context, incomeFull, false);
+              final totals =
+                  _reportService.calculateTotals(filteredTransactions);
+              final previousTotals = _previousPeriodTotals(transactions);
+              final expenseFull =
+                  _buildFullCategoryData(filteredTransactions, true);
+              final incomeFull =
+                  _buildFullCategoryData(filteredTransactions, false);
+              final expensePie =
+                  _buildPieCategoryData(context, expenseFull, true);
+              final incomePie =
+                  _buildPieCategoryData(context, incomeFull, false);
 
-          final showExpense = _categoryMode != FinanceMode.income;
-          final showIncome = _categoryMode != FinanceMode.expense;
+              final showExpense = _categoryMode != FinanceMode.income;
+              final showIncome = _categoryMode != FinanceMode.expense;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.islemRaporu,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildRangeHeader(theme),
-                const SizedBox(height: 16),
-                _buildSummaryCards(totals, previousTotals),
-                const SizedBox(height: 24),
-                Text(
-                  context.l10n.haftalikNetAkis,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildGroupedBarChartCard(context, filteredTransactions),
-                const SizedBox(height: 24),
-                Text(
-                  'Bakiye Trendi',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildCumulativeBalanceChartCard(context, filteredTransactions),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.l10n.kategoriDagilimi,
+                      context.l10n.islemRaporu,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildRangeHeader(theme),
+                    const SizedBox(height: 16),
+                    _buildSummaryCards(totals, previousTotals),
+                    const SizedBox(height: 24),
+                    Text(
+                      context.l10n.haftalikNetAkis,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    FinanceModeSegment(
-                      currentMode: _categoryMode,
-                      onModeChanged: (m) => setState(() => _categoryMode = m),
+                    const SizedBox(height: 12),
+                    _buildGroupedBarChartCard(context, filteredTransactions),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Bakiye Trendi',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 12),
+                    _buildCumulativeBalanceChartCard(
+                        context, filteredTransactions),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.l10n.kategoriDagilimi,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        FinanceModeSegment(
+                          currentMode: _categoryMode,
+                          onModeChanged: (m) =>
+                              setState(() => _categoryMode = m),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (showExpense)
+                      _buildChartCard(
+                        context: context,
+                        title: 'Giderler',
+                        fullData: expenseFull,
+                        pieData: expensePie,
+                        isExpense: true,
+                      ),
+                    if (showExpense && showIncome) const SizedBox(height: 16),
+                    if (showIncome)
+                      _buildChartCard(
+                        context: context,
+                        title: 'Gelirler',
+                        fullData: incomeFull,
+                        pieData: incomePie,
+                        isExpense: false,
+                      ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                if (showExpense)
-                  _buildChartCard(
-                    context: context,
-                    title: 'Giderler',
-                    fullData: expenseFull,
-                    pieData: expensePie,
-                    isExpense: true,
-                  ),
-                if (showExpense && showIncome) const SizedBox(height: 16),
-                if (showIncome)
-                  _buildChartCard(
-                    context: context,
-                    title: 'Gelirler',
-                    fullData: incomeFull,
-                    pieData: incomePie,
-                    isExpense: false,
-                  ),
-              ],
-            ),
-          );
-        },
+              );
+            },
           ),
         ),
       ),

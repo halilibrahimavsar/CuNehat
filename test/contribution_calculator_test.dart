@@ -109,6 +109,5 @@ void main() {
       expect(back.currency, 'USD');
       expect(back.targetAmount, 100000);
     });
-
   });
 }

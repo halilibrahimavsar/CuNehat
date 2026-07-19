@@ -26,8 +26,7 @@ class OnboardingAutoTourTrigger extends StatefulWidget {
       _OnboardingAutoTourTriggerState();
 }
 
-class _OnboardingAutoTourTriggerState
-    extends State<OnboardingAutoTourTrigger> {
+class _OnboardingAutoTourTriggerState extends State<OnboardingAutoTourTrigger> {
   @override
   void initState() {
     super.initState();

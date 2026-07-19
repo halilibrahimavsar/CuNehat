@@ -1278,6 +1278,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enAz2KarakterOlmali => 'Must be at least 2 characters';
 
   @override
+  String get kategoriAdiRezerve =>
+      'This name is reserved for automatic system transactions';
+
+  @override
   String get kategoriOlusturuldu => 'Category created!';
 
   @override
@@ -1930,6 +1934,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transferIcinIkiCuzdanGerekli =>
       'You need at least two wallets to transfer';
+
+  @override
+  String get transferBakiyeAsimiTitle => 'Balance Exceeded';
+
+  @override
+  String transferBakiyeAsimiMesaj(String bakiye) {
+    return 'The amount exceeds the wallet balance ($bakiye). Continuing will push the balance below zero. Continue?';
+  }
 
   @override
   String get yardimVeTurlar => 'Help & Tours';

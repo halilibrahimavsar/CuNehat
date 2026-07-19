@@ -115,41 +115,42 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage> {
         title: context.l10n.onboardingRecurringTemplatesTitle,
         description: context.l10n.onboardingRecurringTemplatesDesc,
         child: RefreshIndicator(
-        onRefresh: _loadTemplates,
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 120,
-              pinned: true,
-              backgroundColor: scheme.primary,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                onPressed: () => context.pop(),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  context.l10n.duzenliIslemler,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+          onRefresh: _loadTemplates,
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 120,
+                pinned: true,
+                backgroundColor: scheme.primary,
+                leading: IconButton(
+                  icon:
+                      const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                  onPressed: () => context.pop(),
                 ),
-                centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [scheme.primary, scheme.secondary],
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    context.l10n.duzenliIslemler,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 48, bottom: 16),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [scheme.primary, scheme.secondary],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            _buildContent(),
-          ],
-        ),
+              _buildContent(),
+            ],
+          ),
         ),
       ),
     );

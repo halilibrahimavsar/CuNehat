@@ -233,8 +233,7 @@ class _AppBarContentState extends State<AppBarContent> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildWalletNameBadge(
-                  context, state.activeWallet, valueName, st),
+              _buildWalletNameBadge(context, state.activeWallet, valueName, st),
               const SizedBox(height: 2),
               _buildAmountDisplay(value),
               // Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı;

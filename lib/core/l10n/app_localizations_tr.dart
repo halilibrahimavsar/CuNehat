@@ -1283,6 +1283,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get enAz2KarakterOlmali => 'En az 2 karakter olmalı';
 
   @override
+  String get kategoriAdiRezerve =>
+      'Bu ad otomatik sistem işlemleri için ayrılmış';
+
+  @override
   String get kategoriOlusturuldu => 'Kategori oluşturuldu!';
 
   @override
@@ -1933,6 +1937,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get transferIcinIkiCuzdanGerekli =>
       'Transfer için en az iki cüzdan gerekli';
+
+  @override
+  String get transferBakiyeAsimiTitle => 'Bakiye Aşımı';
+
+  @override
+  String transferBakiyeAsimiMesaj(String bakiye) {
+    return 'Tutar, cüzdan bakiyesinden ($bakiye) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?';
+  }
 
   @override
   String get yardimVeTurlar => 'Yardım & Turlar';

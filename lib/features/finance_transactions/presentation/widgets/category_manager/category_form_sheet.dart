@@ -1,6 +1,8 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart'
+    show CashMovementTags;
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -151,6 +153,14 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
         }
         if (value.trim().length < 2) {
           return context.l10n.enAz2KarakterOlmali;
+        }
+        // Sistem etiketleri (Borç Ödemesi, Transfer...) kategori adı olamaz;
+        // bütçe/rapor `tag == categoryId` eşleşmesi otomatik hareketleri bu
+        // kategoriye sayardı. Düzenlemede DEĞİŞMEYEN ad serbest kalır
+        // (eski veriyle açılan kayıt ikon düzenlemesine kilitlenmesin).
+        final unchanged = _isEditMode && value.trim() == widget.category!.id;
+        if (!unchanged && CashMovementTags.isReserved(value)) {
+          return context.l10n.kategoriAdiRezerve;
         }
         return null;
       },

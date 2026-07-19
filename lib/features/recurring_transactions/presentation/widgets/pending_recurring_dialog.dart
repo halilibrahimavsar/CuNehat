@@ -90,10 +90,8 @@ class PendingRecurringDialog extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(
-                                        Icons.account_balance_wallet_outlined,
-                                        size: 14,
-                                        color: Colors.grey.shade700),
+                                    Icon(Icons.account_balance_wallet_outlined,
+                                        size: 14, color: Colors.grey.shade700),
                                     const SizedBox(width: 4),
                                     Flexible(
                                       child: Text(
@@ -114,8 +112,8 @@ class PendingRecurringDialog extends StatelessWidget {
                                 context.l10n.titleTarihDatestrNtutarTx(
                                   dateStr,
                                   formatMoney(tx.amount,
-                                      currency: wallet?.currency ??
-                                          kDefaultCurrency),
+                                      currency:
+                                          wallet?.currency ?? kDefaultCurrency),
                                 ),
                                 style: TextStyle(
                                   color: Colors.grey.shade700,
@@ -212,7 +210,8 @@ void _showEditDialog(BuildContext context, RecurringTransactionEntity tx) {
         ),
         FilledButton(
           onPressed: () {
-            final newAmount = parseMoneyInput(amountController.text) ?? tx.amount;
+            final newAmount =
+                parseMoneyInput(amountController.text) ?? tx.amount;
             if (newAmount > 0) {
               // Tutar yalnızca bu vade için geçerli; şablon değişmez.
               bloc.add(ApproveTransactionEvent(tx, overrideAmount: newAmount));

@@ -2371,6 +2371,12 @@ abstract class AppLocalizations {
   /// **'En az 2 karakter olmalı'**
   String get enAz2KarakterOlmali;
 
+  /// No description provided for @kategoriAdiRezerve.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ad otomatik sistem işlemleri için ayrılmış'**
+  String get kategoriAdiRezerve;
+
   /// No description provided for @kategoriOlusturuldu.
   ///
   /// In tr, this message translates to:
@@ -3583,6 +3589,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Transfer için en az iki cüzdan gerekli'**
   String get transferIcinIkiCuzdanGerekli;
+
+  /// No description provided for @transferBakiyeAsimiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye Aşımı'**
+  String get transferBakiyeAsimiTitle;
+
+  /// No description provided for @transferBakiyeAsimiMesaj.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?'**
+  String transferBakiyeAsimiMesaj(String bakiye);
 
   /// No description provided for @yardimVeTurlar.
   ///

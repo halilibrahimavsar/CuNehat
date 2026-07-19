@@ -86,6 +86,10 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   DebtType _selectedDebtType = DebtType.bankLoan;
   DateTime _selectedDate = DateTime.now();
   double? _originalAmount;
+
+  /// Düzenlemede taksit alanına yazılan prefill metni; kaydederken alan hâlâ
+  /// buna eşitse kayıtlı toplam korunur (prefill yuvarlaması toplamı kaydırmasın).
+  String? _prefilledInstallmentText;
   String? _error;
 
   Color get _accent => _isDebt ? AppGradients.debt : AppGradients.savings;
@@ -118,6 +122,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             d.expectedTotalAmount != null) {
           _installmentController.text =
               _fmt(d.expectedTotalAmount! / d.termMonths);
+          _prefilledInstallmentText = _installmentController.text;
         }
       } else if (d.type == DebtType.installmentDebt) {
         // Proxy: interestRate == 0 → "basit vade farkı" modu
@@ -288,7 +293,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
       // Önizleme ile aynı hesaplayıcı → kaydedilen tutar önizlenenle birebir.
       // Kaydedilen toplam kuruşa yuvarlanır; "Tümü" ödemesi bu değerle eşleşir.
-      final expectedTotal = roundToCents(_calc
+      var expectedTotal = roundToCents(_calc
           .compute(
             type: _selectedDebtType,
             principal: amount,
@@ -300,6 +305,21 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             includeBankTaxes: _includeBankTaxes,
           )
           .expectedTotal);
+
+      // Aylık-taksit kredisinde taksit/vade/anapara DEĞİŞMEDİYSE kayıtlı
+      // toplamı koru: taksit prefill'i kuruşa yuvarlandığından `taksit × vade`
+      // yeniden hesabı toplamı kaydırabilir (1000/3 → 333,33 × 3 = 999,99).
+      final original = widget.debtToEdit;
+      if (_isEditing &&
+          original != null &&
+          _selectedDebtType == DebtType.bankLoan &&
+          _isBankLoanMonthly &&
+          original.expectedTotalAmount != null &&
+          _installmentController.text == _prefilledInstallmentText &&
+          term == original.termMonths &&
+          amount == original.principalAmount) {
+        expectedTotal = roundToCents(original.expectedTotalAmount!);
+      }
 
       final dueDate = addMonthsClamped(_selectedDate, term);
 

@@ -11,7 +11,8 @@ abstract class BudgetRepository {
   Future<Either<Failure, void>> saveBudget(BudgetEntity budget);
 
   /// Verilen cüzdan+kategori bütçesini siler.
-  Future<Either<Failure, void>> deleteBudget(String walletId, String categoryId);
+  Future<Either<Failure, void>> deleteBudget(
+      String walletId, String categoryId);
 
   /// Kategori silinirken: kategorinin tüm cüzdanlardaki bütçelerini siler.
   Future<Either<Failure, void>> deleteBudgetsForCategory(String categoryId);

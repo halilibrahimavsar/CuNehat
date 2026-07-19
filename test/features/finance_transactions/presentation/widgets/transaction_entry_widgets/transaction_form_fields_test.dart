@@ -7,6 +7,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
@@ -40,8 +41,10 @@ void main() {
         Locale('en'),
       ],
       locale: const Locale('tr'),
-      home: Scaffold(
-        body: child,
+      home: ShowCaseWidget(
+        builder: (context) => Scaffold(
+          body: child,
+        ),
       ),
     );
   }
@@ -205,6 +208,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap calendar pill to open DatePicker
+    await tester.ensureVisible(find.byIcon(Icons.calendar_today_rounded));
     await tester.tap(find.byIcon(Icons.calendar_today_rounded));
     await tester.pumpAndSettle();
 
@@ -213,6 +217,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap schedule pill to open TimePicker
+    await tester.ensureVisible(find.byIcon(Icons.schedule_rounded));
     await tester.tap(find.byIcon(Icons.schedule_rounded));
     await tester.pumpAndSettle();
 

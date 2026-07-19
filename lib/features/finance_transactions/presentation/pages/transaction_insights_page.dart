@@ -158,49 +158,49 @@ class _InsightsViewState extends State<_InsightsView> {
           title: context.l10n.onboardingTransactionsInsightsTitle,
           description: context.l10n.onboardingTransactionsInsightsDesc,
           child: BlocBuilder<TransactionBloc, TransactionState>(
-        builder: (context, state) {
-          final all = state.currentTransactions;
+            builder: (context, state) {
+              final all = state.currentTransactions;
 
-          if (state is TransactionLoading && all.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (all.isEmpty) {
-            return _buildEmptyState(context);
-          }
+              if (state is TransactionLoading && all.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (all.isEmpty) {
+                return _buildEmptyState(context);
+              }
 
-          final insights = _analytics.analyze(
-            all,
-            rangeStart: _range.start,
-            rangeEnd: _range.end,
-          );
+              final insights = _analytics.analyze(
+                all,
+                rangeStart: _range.start,
+                rangeEnd: _range.end,
+              );
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.akilliIcgoruler,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.akilliIcgoruler,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildRangeChips(context),
+                    const SizedBox(height: 16),
+                    if (insights.isEmpty)
+                      _buildPeriodEmptyNote(context)
+                    else ...[
+                      _buildSummaryRow(context, insights),
+                      const SizedBox(height: 12),
+                      ..._buildInsightCards(context, insights),
+                    ],
+                    _buildRecurringSection(context, all),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _buildRangeChips(context),
-                const SizedBox(height: 16),
-                if (insights.isEmpty)
-                  _buildPeriodEmptyNote(context)
-                else ...[
-                  _buildSummaryRow(context, insights),
-                  const SizedBox(height: 12),
-                  ..._buildInsightCards(context, insights),
-                ],
-                _buildRecurringSection(context, all),
-              ],
-            ),
-          );
-        },
+              );
+            },
           ),
         ),
       ),

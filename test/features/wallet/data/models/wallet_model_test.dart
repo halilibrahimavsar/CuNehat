@@ -208,7 +208,6 @@ void main() {
       expect(result.currency, 'USD');
       expect(result.balance, 1000.0);
     });
-
   });
 }
 

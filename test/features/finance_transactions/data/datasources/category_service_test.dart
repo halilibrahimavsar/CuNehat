@@ -58,6 +58,27 @@ void main() {
       expect(() => service.addCategory(customExpense), throwsException);
     });
 
+    test('sistem etiketiyle aynı adlı kategori reddedilir', () async {
+      // Bütçe/rapor `tag == categoryId` ile eşleşir; "Borç Ödemesi" adlı
+      // kategori sistem hareketlerini kendine sayardı.
+      const reserved = CategoryModel(
+        id: 'Borç Ödemesi',
+        iconName: 'payment',
+        isExpense: true,
+        isDefault: false,
+      );
+      expect(() => service.addCategory(reserved), throwsException);
+
+      // Büyük/küçük harf farkı da korumayı aşamaz.
+      const reservedLower = CategoryModel(
+        id: 'transfer',
+        iconName: 'swap',
+        isExpense: true,
+        isDefault: false,
+      );
+      expect(() => service.addCategory(reservedLower), throwsException);
+    });
+
     test('should update custom category successfully', () async {
       await service.addCategory(customExpense);
 

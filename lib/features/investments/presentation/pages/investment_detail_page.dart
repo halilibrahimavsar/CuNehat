@@ -59,54 +59,54 @@ class _InvestmentDetailView extends StatelessWidget {
           title: context.l10n.onboardingInvestmentDetailTitle,
           description: context.l10n.onboardingInvestmentDetailDesc,
           child: BlocBuilder<TransactionBloc, TransactionState>(
-        builder: (context, state) {
-          final allTransactions = state.currentTransactions;
+            builder: (context, state) {
+              final allTransactions = state.currentTransactions;
 
-          if (state is TransactionLoading && allTransactions.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+              if (state is TransactionLoading && allTransactions.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          // Sadece otomatik oluşturulan yatırım hareketlerini filtrele
-          final investmentTransactions = allTransactions.where((t) {
-            return t.isSystem &&
-                (t.tag == CashMovementTags.investmentBuy ||
-                    t.tag == CashMovementTags.investmentSell ||
-                    t.tag == CashMovementTags.investmentCorrection);
-          }).toList();
+              // Sadece otomatik oluşturulan yatırım hareketlerini filtrele
+              final investmentTransactions = allTransactions.where((t) {
+                return t.isSystem &&
+                    (t.tag == CashMovementTags.investmentBuy ||
+                        t.tag == CashMovementTags.investmentSell ||
+                        t.tag == CashMovementTags.investmentCorrection);
+              }).toList();
 
-          if (investmentTransactions.isEmpty) {
-            return _buildEmptyState(context);
-          }
+              if (investmentTransactions.isEmpty) {
+                return _buildEmptyState(context);
+              }
 
-          // TransactionCard beklentisi olan TransactionWithBalance sınıfına çevir
-          // Bakiye takibi bu sayfada görünür olmadığından currentBalance: 0
-          final withBalanceList = buildLedgerView(
-            allTransactions: investmentTransactions,
-            currentBalance: 0,
-          );
+              // TransactionCard beklentisi olan TransactionWithBalance sınıfına çevir
+              // Bakiye takibi bu sayfada görünür olmadığından currentBalance: 0
+              final withBalanceList = buildLedgerView(
+                allTransactions: investmentTransactions,
+                currentBalance: 0,
+              );
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.gecmis,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.gecmis,
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    ...withBalanceList.map(
+                      (item) => TransactionCard(
+                        context: context,
+                        item: item,
+                        isListView: true,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                ...withBalanceList.map(
-                  (item) => TransactionCard(
-                    context: context,
-                    item: item,
-                    isListView: true,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+              );
+            },
           ),
         ),
       ),

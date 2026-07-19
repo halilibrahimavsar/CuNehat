@@ -47,8 +47,7 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
 
   final GlobalKey _tabBarKey = GlobalKey(debugLabel: 'onboarding_debt_tabbar');
 
-  List<GlobalKey> get _tourKeys =>
-      [_tabBarKey, OnboardingKeys.addActionSlider];
+  List<GlobalKey> get _tourKeys => [_tabBarKey, OnboardingKeys.addActionSlider];
 
   @override
   void initState() {

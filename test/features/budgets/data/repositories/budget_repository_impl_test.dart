@@ -88,7 +88,8 @@ void main() {
       final result = await repository.deleteBudget('wallet_123', 'Food');
 
       expect(result, const Right<Failure, void>(null));
-      verify(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food')).called(1);
+      verify(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food'))
+          .called(1);
     });
 
     test('should return Left(CacheFailure) when delete fails', () async {
@@ -99,7 +100,8 @@ void main() {
 
       expect(
           result, const Left<Failure, void>(CacheFailure('Bütçe silinemedi.')));
-      verify(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food')).called(1);
+      verify(() => mockLocalDataSource.deleteBudget('wallet_123', 'Food'))
+          .called(1);
     });
   });
 }

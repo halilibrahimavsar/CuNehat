@@ -1,6 +1,8 @@
 // lib/features/finance_transactions/data/datasources/category_service.dart
 
 import 'dart:convert';
+import 'package:cunehat/core/services/wallet_metrics_service.dart'
+    show CashMovementTags;
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,6 +47,12 @@ class CategoryService {
   Future<void> addCategory(CategoryModel category) async {
     if (category.isDefault) {
       throw Exception('Varsayılan kategoriler düzenlenemez');
+    }
+
+    // Sistem etiketiyle aynı adlı kategori, bütçe/rapor eşleşmesinde
+    // (tag == categoryId) otomatik hareketleri kendine sayar; reddet.
+    if (CashMovementTags.isReserved(category.id)) {
+      throw Exception('Bu ad otomatik sistem işlemleri için ayrılmış');
     }
 
     final categories = await getCategories(category.isExpense);

@@ -87,6 +87,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
   }
 
   Future<void> _maybeShowTour() async {
+    if (!getIt.isRegistered<OnboardingCoordinator>()) return;
     final coordinator = getIt<OnboardingCoordinator>();
     final keys = [OnboardingKeys.transactionAddForm];
     coordinator.registerKeys(OnboardingFlow.transactionsAdd, keys);

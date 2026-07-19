@@ -248,6 +248,22 @@ class ToggleFailingWalletRepository extends FakeWalletRepository {
   }
 }
 
+/// İlk okumada cüzdanı döndürüp sonraki okumalarda null dönen varyant:
+/// cüzdanın iki okuma arasında silinmesini simüle eder (bayat kopyayla
+/// dirilme regresyon testleri için). Store boş başlar; updateWallet çağrısı
+/// store'a yazacağından dirilme `store.isEmpty` ile yakalanır.
+class DisappearingWalletRepository extends FakeWalletRepository {
+  DisappearingWalletRepository(this._first);
+  final WalletEntity _first;
+  int _calls = 0;
+
+  @override
+  Future<Either<Failure, WalletEntity?>> getWalletById(String walletId) async {
+    _calls++;
+    return Right(_calls == 1 ? _first : null);
+  }
+}
+
 class FailingUpdateWalletRepository extends FakeWalletRepository {
   @override
   Future<Either<Failure, void>> updateWallet(WalletEntity wallet) async =>
@@ -498,6 +514,28 @@ void main() {
       expect(await service.syncBalance('yok'), false);
     });
 
+    test('cüzdan iki okuma arasında silinirse false döner ve diriltmez',
+        () async {
+      final vanishing =
+          DisappearingWalletRepository(_wallet(id: 'w', balance: 100));
+      final svc = WalletMetricsService(
+        walletRepository: vanishing,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+      // Bakiye sapması yarat ki yazma yoluna girilsin (100 + 50 ≠ 100).
+      txs.store.add(_income('w', 50));
+
+      final ok = await svc.syncBalance('w');
+
+      expect(ok, false);
+      // updateWallet hiç çağrılmadı → silinmiş cüzdan geri yazılmadı.
+      expect(vanishing.store, isEmpty);
+    });
+
     test('manuel bakiye düzenleme sonrası idempotent (opening ayarlanmışsa)',
         () async {
       // Repository impl manuel düzenlemede opening'i balance−Σtx koruyacak
@@ -620,6 +658,35 @@ void main() {
       await svc.syncInvestment('w');
 
       expect(wallets.store['w']!.investment, 330);
+    });
+
+    test('cüzdan iki okuma arasında silinirse bayat kopya yazılmaz', () async {
+      final vanishing = DisappearingWalletRepository(_wallet(id: 'w'));
+      final investments = FakeInvestmentRepository();
+      final svc = WalletMetricsService(
+        walletRepository: vanishing,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: investments,
+        transactionsRepository: txs,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+      // investment 0 → 120 sapması yarat ki yazma yoluna girilsin.
+      investments.store.add(InvestmentEntity(
+        id: 'i1',
+        userId: 'u',
+        walletId: 'w',
+        name: 'BTC',
+        amount: 100,
+        currentValue: 120,
+        type: InvestmentType.stock,
+        color: const Color(0xFF000000),
+        dateAdded: DateTime.now(),
+      ));
+
+      await svc.syncInvestment('w');
+
+      expect(vanishing.store, isEmpty);
     });
 
     test('hata aldığında cüzdanı güncellemez', () async {

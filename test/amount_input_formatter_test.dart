@@ -46,7 +46,8 @@ void main() {
       expect(_typeSequence(f, '1234,5678'), '1.234,56');
     });
 
-    test('decimalDigits: 0 iken virgül girilemez, sonraki rakam tam kısma eklenir',
+    test(
+        'decimalDigits: 0 iken virgül girilemez, sonraki rakam tam kısma eklenir',
         () {
       final f = AmountInputFormatter(decimalDigits: 0);
       expect(_typeSequence(f, '1234,5'), '12.345');
@@ -105,8 +106,7 @@ void main() {
       expect(r.text, '1.234,56');
     });
 
-    test('yapıştırma: tek nokta ondalık sayılır (üç haneli kuyruk hariç)',
-        () {
+    test('yapıştırma: tek nokta ondalık sayılır (üç haneli kuyruk hariç)', () {
       final f = AmountInputFormatter();
       final r = f.formatEditUpdate(
         const TextEditingValue(text: ''),
@@ -145,7 +145,8 @@ void main() {
       expect(parseMoneyInput('1.234,566'), 1234.57);
     });
 
-    test('validateAmountInput sıfırı reddeder, formatlı geçerli tutarı kabul eder',
+    test(
+        'validateAmountInput sıfırı reddeder, formatlı geçerli tutarı kabul eder',
         () {
       expect(validateAmountInput('0'), isNotNull);
       expect(validateAmountInput('1.234,56'), isNull);

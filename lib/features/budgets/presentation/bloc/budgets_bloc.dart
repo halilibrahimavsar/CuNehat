@@ -90,8 +90,11 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     DeleteBudgetEvent event,
     Emitter<BudgetsState> emit,
   ) async {
-    final result =
-        await _deleteBudgetUsecase(_currentWalletId ?? '', event.categoryId);
+    // Bütçeler yüklenmeden silme gelemez; yine de cüzdan bilinmiyorsa ''
+    // anahtarıyla sessiz yanlış-silme yazmak yerine hiç dokunma.
+    final walletId = _currentWalletId;
+    if (walletId == null) return;
+    final result = await _deleteBudgetUsecase(walletId, event.categoryId);
     result.fold(
       (failure) => emit(BudgetsError(failure)),
       (_) {

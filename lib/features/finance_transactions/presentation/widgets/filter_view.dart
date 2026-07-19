@@ -76,14 +76,16 @@ class _FilterViewState extends State<FilterView> {
     if (widget.filter.dataFilter.priceRange !=
         oldWidget.filter.dataFilter.priceRange) {
       final minPrice = widget.filter.dataFilter.priceRange?.minPrice;
-      final newMin =
-          minPrice == null ? '' : formatAmountForInput(minPrice, decimalDigits: 0);
+      final newMin = minPrice == null
+          ? ''
+          : formatAmountForInput(minPrice, decimalDigits: 0);
       if (_minPriceController.text != newMin) {
         _minPriceController.text = newMin;
       }
       final maxPrice = widget.filter.dataFilter.priceRange?.maxPrice;
-      final newMax =
-          maxPrice == null ? '' : formatAmountForInput(maxPrice, decimalDigits: 0);
+      final newMax = maxPrice == null
+          ? ''
+          : formatAmountForInput(maxPrice, decimalDigits: 0);
       if (_maxPriceController.text != newMax) {
         _maxPriceController.text = newMax;
       }

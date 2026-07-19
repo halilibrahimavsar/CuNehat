@@ -21,7 +21,8 @@ class OnboardingNavigationHintCard extends StatelessWidget {
         color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [
-          BoxShadow(color: Colors.black38, blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(
+              color: Colors.black38, blurRadius: 16, offset: Offset(0, 6)),
         ],
       ),
       child: Column(

@@ -316,8 +316,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                                   .l10n.onboardingTransactionsViewToggleDesc,
                               child: _ViewModeToggle(
                                 mode: _viewMode,
-                                onChanged: (m) =>
-                                    setState(() => _viewMode = m),
+                                onChanged: (m) => setState(() => _viewMode = m),
                               ),
                             ),
                           ],

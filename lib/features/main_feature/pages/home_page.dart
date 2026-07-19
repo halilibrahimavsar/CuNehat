@@ -70,7 +70,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     coordinator.addListener(_onOnboardingCoordinatorChanged);
     // Drawer/cüzdan diyaloğu geçiş animasyonu sürerken hedef widget'ların
     // konumu kayar; turlar bu bittiğinde başlamalı (bkz. waitUntilStable).
-    coordinator.isBlocked = () => _scaffoldKey.currentState?.isTransforming ?? false;
+    coordinator.isBlocked =
+        () => _scaffoldKey.currentState?.isTransforming ?? false;
 
     // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
     // Tek postFrameCallback'te sıralı çalıştırılır ki sistem izin promptu

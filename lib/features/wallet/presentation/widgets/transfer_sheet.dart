@@ -8,6 +8,7 @@ import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -106,9 +107,22 @@ class _TransferSheetState extends State<TransferSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || !_rateReady) return;
-    setState(() => _submitting = true);
 
     final amount = parseMoneyInput(_amountController.text)!;
+
+    // Bakiye aşımı sert engel değil (eksi bakiye tasarım gereği serbest),
+    // ama büyük olasılıkla yazım hatasıdır: kullanıcıya onaylat.
+    if (moneyGreaterThan(amount, _from.balance)) {
+      final confirmed = await IboDialog.showConfirmation(
+        context,
+        context.l10n.transferBakiyeAsimiTitle,
+        context.l10n.transferBakiyeAsimiMesaj(
+            formatMoney(_from.balance, currency: _from.currency)),
+      );
+      if (confirmed != true || !mounted) return;
+    }
+
+    setState(() => _submitting = true);
     final result = await getIt<TransferService>().transfer(
       from: _from,
       to: _to,

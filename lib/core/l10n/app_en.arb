@@ -478,6 +478,7 @@
   "yeniKategori": "New Category",
   "kategoriAdiBosOlamaz": "Category name cannot be empty",
   "enAz2KarakterOlmali": "Must be at least 2 characters",
+  "kategoriAdiRezerve": "This name is reserved for automatic system transactions",
   "kategoriOlusturuldu": "Category created!",
   "kategoriGuncellendi": "Category updated!",
   "kategoriSilindi": "Category deleted!",
@@ -743,6 +744,13 @@
     }
   },
   "transferKurYok": "Couldn't get the exchange rate — try again when online",
+  "transferBakiyeAsimiTitle": "Balance Exceeded",
+  "transferBakiyeAsimiMesaj": "The amount exceeds the wallet balance ({bakiye}). Continuing will push the balance below zero. Continue?",
+  "@transferBakiyeAsimiMesaj": {
+    "placeholders": {
+      "bakiye": { "type": "String" }
+    }
+  },
   "transferBasarili": "Transfer completed",
   "transferBasarisiz": "Transfer failed",
   "transferIcinIkiCuzdanGerekli": "You need at least two wallets to transfer",

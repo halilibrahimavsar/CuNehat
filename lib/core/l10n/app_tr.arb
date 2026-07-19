@@ -478,6 +478,7 @@
   "yeniKategori": "Yeni Kategori",
   "kategoriAdiBosOlamaz": "Kategori adı boş olamaz",
   "enAz2KarakterOlmali": "En az 2 karakter olmalı",
+  "kategoriAdiRezerve": "Bu ad otomatik sistem işlemleri için ayrılmış",
   "kategoriOlusturuldu": "Kategori oluşturuldu!",
   "kategoriGuncellendi": "Kategori güncellendi!",
   "kategoriSilindi": "Kategori silindi!",
@@ -761,6 +762,13 @@
   "transferBasarili": "Transfer tamamlandı",
   "transferBasarisiz": "Transfer başarısız oldu",
   "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli",
+  "transferBakiyeAsimiTitle": "Bakiye Aşımı",
+  "transferBakiyeAsimiMesaj": "Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?",
+  "@transferBakiyeAsimiMesaj": {
+    "placeholders": {
+      "bakiye": { "type": "String" }
+    }
+  },
 
   "yardimVeTurlar": "Yardım & Turlar",
   "genelTanitimiTekrarGoster": "Gizlilik ve Bildirim Tanıtımını Tekrar Göster",
