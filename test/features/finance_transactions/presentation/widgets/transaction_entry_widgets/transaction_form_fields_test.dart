@@ -17,6 +17,7 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
+    ShowcaseView.register();
   });
 
   setUp(() {
@@ -41,10 +42,8 @@ void main() {
         Locale('en'),
       ],
       locale: const Locale('tr'),
-      home: ShowCaseWidget(
-        builder: (context) => Scaffold(
-          body: child,
-        ),
+      home: Scaffold(
+        body: child,
       ),
     );
   }
