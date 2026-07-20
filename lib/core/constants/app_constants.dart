@@ -1,5 +1,6 @@
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -9,11 +10,29 @@ class ThemeNames {
 
   // Tek sefer kurulur (cached). Dropdown value/item eşleşmesi örnek kimliğine
   // dayandığı için her erişimde yeni ThemeData üretilmemeli.
+  //
+  // Sayfa geçişleri: Android'de native predictive-back (parmak takipli canlı
+  // önizleme + yaylanma), iOS/masaüstünde Cupertino kenar-swipe. Route'lar
+  // MaterialPage olduğu için bu tema builder'ları gerçekten devreye girer.
+  static const PageTransitionsTheme _pageTransitions = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+    },
+  );
+
   static final Map<String, ThemeData> all = {
     sysLight: ThemeData.light().copyWith(
-        extensions: const <ThemeExtension<dynamic>>[AppSurface.light]),
-    sysDark: ThemeData.dark()
-        .copyWith(extensions: const <ThemeExtension<dynamic>>[AppSurface.dark]),
+      pageTransitionsTheme: _pageTransitions,
+      extensions: const <ThemeExtension<dynamic>>[AppSurface.light],
+    ),
+    sysDark: ThemeData.dark().copyWith(
+      pageTransitionsTheme: _pageTransitions,
+      extensions: const <ThemeExtension<dynamic>>[AppSurface.dark],
+    ),
   };
 }
 

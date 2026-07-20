@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/core/shared/animations/page_transitions_views.dart';
 import 'package:cunehat/features/main_feature/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/local_auth_settings_page.dart';
@@ -40,7 +39,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.home,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const HomePage(),
           );
@@ -49,7 +48,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.profile,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const ProfileSettingsPage(),
           );
@@ -58,7 +57,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.settings,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const SettingsPage(),
           );
@@ -67,7 +66,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.budgets,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const BudgetsPage(),
           );
@@ -76,7 +75,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.recurringTemplates,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const RecurringTemplatesPage(),
           );
@@ -108,7 +107,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.localAuthSettings,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const LocalAuthSettingsPage(),
           );
@@ -117,7 +116,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.privacyPolicy,
         pageBuilder: (context, state) {
-          return CubeInTransition(
+          return MaterialPage(
             key: state.pageKey,
             child: const PrivacyPolicyPage(),
           );
