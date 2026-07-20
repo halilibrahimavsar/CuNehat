@@ -3895,6 +3895,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.'**
   String get onboardingRecurringTemplatesDesc;
+
+  /// No description provided for @fisEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş/fotoğraf ekle'**
+  String get fisEkle;
+
+  /// No description provided for @fisEkli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş eklendi'**
+  String get fisEkli;
+
+  /// No description provided for @fisKamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera'**
+  String get fisKamera;
+
+  /// No description provided for @fisGaleri.
+  ///
+  /// In tr, this message translates to:
+  /// **'Galeri'**
+  String get fisGaleri;
+
+  /// No description provided for @fisDegistir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değiştir'**
+  String get fisDegistir;
+
+  /// No description provided for @fisKaldir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaldır'**
+  String get fisKaldir;
+
+  /// No description provided for @fisGoruntule.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fişi görüntüle'**
+  String get fisGoruntule;
+
+  /// No description provided for @fisOcrTaraniyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş taranıyor…'**
+  String get fisOcrTaraniyor;
+
+  /// No description provided for @fisOcrDolduruldu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgiler fişten dolduruldu — lütfen kontrol edin'**
+  String get fisOcrDolduruldu;
+
+  /// No description provided for @fisCihazdaYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel bu cihazda yok'**
+  String get fisCihazdaYok;
 }
 
 class _AppLocalizationsDelegate

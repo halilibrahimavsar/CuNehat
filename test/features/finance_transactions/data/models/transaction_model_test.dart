@@ -70,6 +70,7 @@ void main() {
         'date': date.toIso8601String(),
         'type': 'expense',
         'isSystem': false,
+        'receiptFileName': null,
       });
     });
 
@@ -126,6 +127,51 @@ void main() {
       expect(updated.title, 'Dinner');
       expect(updated.amount, 300.0);
       expect(updated.id, 'tx_1');
+    });
+
+    group('receiptFileName (fiş eki)', () {
+      test('defaults to null when not provided', () {
+        final model = TransactionModel.fromEntity(entity);
+        expect(model.receiptFileName, isNull);
+      });
+
+      test('survives toJson/fromJson round-trip (yedek uyumu)', () {
+        final model = TransactionModel(
+          id: 'tx_9',
+          userId: 'user_1',
+          walletId: 'wallet_1',
+          title: 'Market',
+          tag: 'Food',
+          amount: 99.9,
+          date: date,
+          type: TransactionTypeModel.expense,
+          receiptFileName: 'abc-123.jpg',
+        );
+        final restored = TransactionModel.fromJson('tx_9', model.toJson());
+        expect(restored.receiptFileName, 'abc-123.jpg');
+      });
+
+      test('fromJson reads null receiptFileName when key absent', () {
+        final json = {
+          'userId': 'user_1',
+          'walletId': 'wallet_1',
+          'title': 'Lunch',
+          'tag': 'Food',
+          'amount': 250.0,
+          'date': date.toIso8601String(),
+          'type': 'expense',
+          'isSystem': false,
+        };
+        final model = TransactionModel.fromJson('tx_1', json);
+        expect(model.receiptFileName, isNull);
+      });
+
+      test('entity <-> model preserves receiptFileName', () {
+        final withReceipt = entity.copyWith(receiptFileName: 'r.jpg');
+        final model = TransactionModel.fromEntity(withReceipt);
+        expect(model.receiptFileName, 'r.jpg');
+        expect(model.toEntity().receiptFileName, 'r.jpg');
+      });
     });
   });
 }

@@ -2114,4 +2114,35 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingRecurringTemplatesDesc =>
       'Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.';
+
+  @override
+  String get fisEkle => 'Fiş/fotoğraf ekle';
+
+  @override
+  String get fisEkli => 'Fiş eklendi';
+
+  @override
+  String get fisKamera => 'Kamera';
+
+  @override
+  String get fisGaleri => 'Galeri';
+
+  @override
+  String get fisDegistir => 'Değiştir';
+
+  @override
+  String get fisKaldir => 'Kaldır';
+
+  @override
+  String get fisGoruntule => 'Fişi görüntüle';
+
+  @override
+  String get fisOcrTaraniyor => 'Fiş taranıyor…';
+
+  @override
+  String get fisOcrDolduruldu =>
+      'Bilgiler fişten dolduruldu — lütfen kontrol edin';
+
+  @override
+  String get fisCihazdaYok => 'Görsel bu cihazda yok';
 }

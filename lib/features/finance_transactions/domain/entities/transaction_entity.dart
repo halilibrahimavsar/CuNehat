@@ -16,6 +16,13 @@ class TransactionEntity extends Equatable {
   /// olmasın); ilgili kayıttan yönetilir.
   final bool isSystem;
 
+  /// İşleme iliştirilmiş fiş/fotoğraf görselinin dosya ADI (mutlak yol değil).
+  /// Görsel `belgelerDizini/receipts/<receiptFileName>` altında saklanır; mutlak
+  /// yol reinstall/cihaz değişince değişeceği için yalnız ad tutulur. Görsel
+  /// binary'si yedeğe girmez — yalnız bu ad taşınır (yeni cihazda dosya yoksa
+  /// "görsel bu cihazda yok" gösterilir). Ek yoksa null.
+  final String? receiptFileName;
+
   const TransactionEntity({
     required this.id,
     required this.userId,
@@ -26,6 +33,7 @@ class TransactionEntity extends Equatable {
     required this.date,
     required this.type,
     this.isSystem = false,
+    this.receiptFileName,
   });
 
   TransactionEntity copyWith({
@@ -38,6 +46,7 @@ class TransactionEntity extends Equatable {
     DateTime? date,
     TransactionTypeModel? type,
     bool? isSystem,
+    String? receiptFileName,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -49,6 +58,7 @@ class TransactionEntity extends Equatable {
       date: date ?? this.date,
       type: type ?? this.type,
       isSystem: isSystem ?? this.isSystem,
+      receiptFileName: receiptFileName ?? this.receiptFileName,
     );
   }
 
@@ -66,6 +76,7 @@ class TransactionEntity extends Equatable {
       'date': date.toIso8601String(),
       'type': type.name,
       'isSystem': isSystem,
+      'receiptFileName': receiptFileName,
     };
   }
 
@@ -80,5 +91,6 @@ class TransactionEntity extends Equatable {
         date,
         type,
         isSystem,
+        receiptFileName,
       ];
 }

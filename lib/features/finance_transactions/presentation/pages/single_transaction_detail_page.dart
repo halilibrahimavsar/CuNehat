@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/pages/receipt_viewer_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
@@ -187,6 +192,11 @@ class SingleTransactionDetailPage extends StatelessWidget {
                   ),
                 ),
 
+                if (t.receiptFileName != null) ...[
+                  const SizedBox(height: 24),
+                  _ReceiptCard(fileName: t.receiptFileName!, accent: accent),
+                ],
+
                 const SizedBox(height: 24),
 
                 // Aksiyonlar
@@ -352,6 +362,82 @@ class SingleTransactionDetailPage extends StatelessWidget {
               ),
         ],
       ),
+    );
+  }
+}
+
+/// İşleme iliştirilmiş fişin önizleme kartı. Dosya bu cihazda yoksa (geri
+/// yüklenen yedek — binary taşınmaz) "görsel bu cihazda yok" gösterir.
+class _ReceiptCard extends StatelessWidget {
+  final String fileName;
+  final Color accent;
+
+  const _ReceiptCard({required this.fileName, required this.accent});
+
+  Future<File?> _resolve() async {
+    final f = await getIt<ReceiptStorageService>().fileFor(fileName);
+    return await f.exists() ? f : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return FutureBuilder<File?>(
+      future: _resolve(),
+      builder: (context, snap) {
+        final file = snap.data;
+        final missing =
+            snap.connectionState == ConnectionState.done && file == null;
+        return AppCard(
+          accent: accent,
+          padding: const EdgeInsets.all(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: file == null
+                ? null
+                : () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ReceiptViewerPage(imageFile: file),
+                      ),
+                    ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: file != null
+                        ? Image.file(file, fit: BoxFit.cover)
+                        : ColoredBox(
+                            color: scheme.onSurface.withValues(alpha: 0.06),
+                            child: Icon(Icons.image_not_supported_rounded,
+                                color: scheme.onSurfaceVariant),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    missing
+                        ? context.l10n.fisCihazdaYok
+                        : context.l10n.fisGoruntule,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          missing ? scheme.onSurfaceVariant : scheme.onSurface,
+                    ),
+                  ),
+                ),
+                if (file != null)
+                  Icon(Icons.chevron_right_rounded,
+                      color: scheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -13,6 +13,8 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_amount_hero.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_category_picker.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_when_row.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_receipt_row.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 
 /// Gelir/gider ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
@@ -105,7 +107,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final err = _c.validate();
     if (err != null) {
       _c.error.value = err;
@@ -114,6 +116,22 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _amountFocus.unfocus();
     _c.error.value = null;
     _c.submitting.value = true;
+
+    // Fiş görselini yalnız KAYIT anında diske yaz (iptalde orphan kalmasın).
+    // Eski dosyanın temizliği (değiştirme/kaldırma) repository katmanında,
+    // eski ve yeni receiptFileName karşılaştırılarak yapılır.
+    var receiptFileName = _c.receiptFileName.value;
+    final picked = _c.pickedReceipt.value;
+    if (picked != null) {
+      try {
+        receiptFileName =
+            await getIt<ReceiptStorageService>().persist(picked.path);
+      } catch (e) {
+        debugPrint('Fiş kaydedilemedi: $e'); // Görselsiz de olsa işlemi kaydet.
+        receiptFileName = _c.receiptFileName.value;
+      }
+    }
+    if (!mounted) return;
 
     final when = _c.dateTime.value;
     final transaction = TransactionEntity(
@@ -129,6 +147,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       type: widget.isExpense
           ? TransactionTypeModel.expense
           : TransactionTypeModel.income,
+      receiptFileName: receiptFileName,
     );
     widget.onSave(transaction, _c.recurringFrequency.value);
   }
@@ -182,6 +201,8 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                       const SizedBox(height: 22),
                       WhenRow(controller: _c, accent: _accent),
                       if (!_isEdit) _TodayDateHint(controller: _c),
+                      const SizedBox(height: 22),
+                      ReceiptRow(controller: _c, accent: _accent),
                       const SizedBox(height: 22),
                       _RecurringRow(
                           controller: _c, accent: _accent, isEdit: _isEdit),

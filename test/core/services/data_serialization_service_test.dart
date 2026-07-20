@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cunehat/core/services/data_serialization_service.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
@@ -81,7 +82,8 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    service = DataSerializationService();
+    service = DataSerializationService(
+        ReceiptStorageService.withBaseDir(tempDir));
     await _openAllBoxes();
     await _clearAllBoxes();
   });
@@ -255,7 +257,8 @@ void main() {
         'recurring_transactions_box')).thenAnswer((_) async => recurringBox);
     when(() => mockHive.openBox<Map>('users')).thenAnswer((_) async => userBox);
 
-    final failingService = DataSerializationService.withHive(mockHive);
+    final failingService = DataSerializationService.withHive(
+        mockHive, ReceiptStorageService.withBaseDir(tempDir));
     final backup = jsonEncode({
       'version': DataSerializationService.schemaVersion,
       'wallets': [_wallet().toJson()],

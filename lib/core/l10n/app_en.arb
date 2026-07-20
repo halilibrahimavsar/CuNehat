@@ -810,5 +810,16 @@
   "onboardingBudgetsTitle": "Add a New Budget",
   "onboardingBudgetsDesc": "Pick a category and set a monthly spending limit; you'll be notified if you exceed it.",
   "onboardingRecurringTemplatesTitle": "Recurring Transactions",
-  "onboardingRecurringTemplatesDesc": "Templates created from the repeat option when adding income/expense are listed here; pause or delete them."
+  "onboardingRecurringTemplatesDesc": "Templates created from the repeat option when adding income/expense are listed here; pause or delete them.",
+
+  "fisEkle": "Add receipt/photo",
+  "fisEkli": "Receipt attached",
+  "fisKamera": "Camera",
+  "fisGaleri": "Gallery",
+  "fisDegistir": "Replace",
+  "fisKaldir": "Remove",
+  "fisGoruntule": "View receipt",
+  "fisOcrTaraniyor": "Scanning receipt…",
+  "fisOcrDolduruldu": "Filled from the receipt — please double-check",
+  "fisCihazdaYok": "Image not on this device"
 }

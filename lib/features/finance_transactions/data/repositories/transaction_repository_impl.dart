@@ -1,4 +1,5 @@
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -10,8 +11,12 @@ import 'package:injectable/injectable.dart';
 @LazySingleton(as: TransactionsRepository)
 class TransactionRepositoryImpl implements TransactionsRepository {
   final TransactionHiveDataSource localDatasource;
+  final ReceiptStorageService receiptStorage;
 
-  TransactionRepositoryImpl({required this.localDatasource});
+  TransactionRepositoryImpl({
+    required this.localDatasource,
+    required this.receiptStorage,
+  });
 
   @override
   Future<Either<Failure, String>> addTransaction(
@@ -29,8 +34,13 @@ class TransactionRepositoryImpl implements TransactionsRepository {
   Future<Either<Failure, void>> updateTransaction(
       TransactionEntity transaction) async {
     try {
+      // Fiş değiştirilmiş/kaldırılmışsa eski görsel dosyasını temizle.
+      final oldReceipt = await _existingReceiptFileName(transaction.id);
       await localDatasource
           .updateTransaction(TransactionModel.fromEntity(transaction));
+      if (oldReceipt != null && oldReceipt != transaction.receiptFileName) {
+        await receiptStorage.delete(oldReceipt);
+      }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('İşlem güncellenemedi: ${e.toString()}'));
@@ -40,10 +50,27 @@ class TransactionRepositoryImpl implements TransactionsRepository {
   @override
   Future<Either<Failure, void>> deleteTransaction(String id) async {
     try {
+      // İşlemin fişini de sil (varsa) — önce dosya adını al.
+      final receipt = await _existingReceiptFileName(id);
       await localDatasource.deleteTransaction(id);
+      if (receipt != null) {
+        await receiptStorage.delete(receipt);
+      }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('İşlem silinemedi: ${e.toString()}'));
+    }
+  }
+
+  /// Kayıtlı işlemin fiş dosya adını döndürür; işlem yoksa/hata olursa null
+  /// (dosya temizliği asıl işlemi bloklamamalı).
+  Future<String?> _existingReceiptFileName(String? id) async {
+    if (id == null) return null;
+    try {
+      final model = await localDatasource.getTransactionById(id);
+      return model.receiptFileName;
+    } catch (_) {
+      return null;
     }
   }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -60,18 +61,21 @@ class _ParsedBackup {
 
 @lazySingleton
 class DataSerializationService {
-  /// Yayın öncesi politika: geriye uyumluluk YOK. Yedek şeması v1'e
-  /// sıfırlandı (2026-07-19 temizliği); tüm alanlar zorunlu yazılır ve
-  /// restore sürümü birebir eşleşmeyen yedeği reddeder. Şema değişirse
-  /// sürümü artır — eski yedek desteklenmez, açıkça hata verir.
-  static const int schemaVersion = 1;
+  /// Yayın öncesi politika: geriye uyumluluk YOK. Restore sürümü birebir
+  /// eşleşmeyen yedeği reddeder; şema değişirse sürümü artır — eski yedek
+  /// desteklenmez, açıkça hata verir.
+  ///
+  /// v2 (2026-07-20): işlemlere `receiptFileName` alanı eklendi (fiş/foto eki).
+  /// Görsel binary'si yedeğe GİRMEZ — yalnız dosya adı taşınır.
+  static const int schemaVersion = 2;
 
   final HiveInterface _hive;
+  final ReceiptStorageService _receiptStorage;
 
-  DataSerializationService() : _hive = Hive;
+  DataSerializationService(this._receiptStorage) : _hive = Hive;
 
   @visibleForTesting
-  DataSerializationService.withHive(this._hive);
+  DataSerializationService.withHive(this._hive, this._receiptStorage);
 
   /// Tüm yerel veriyi siler: tüm Hive kutuları (cüzdan/işlem/yatırım/borç/
   /// alacak/bütçe/tekrarlayan/kullanıcı) + yedeklenebilir kategori tercihleri.
@@ -93,6 +97,9 @@ class DataSerializationService {
     for (final key in CategoryService.backupKeys) {
       await prefs.remove(key);
     }
+
+    // İşlemlere iliştirilmiş fiş görselleri de cihaz-yerel; onları da temizle.
+    await _receiptStorage.clearAll();
   }
 
   Future<String> exportDataToJson() async {
@@ -226,6 +233,16 @@ class DataSerializationService {
           await prefs.remove(key);
         }
       }
+
+      // Yalnız başarıda yörünge temizliği: geri yüklenen veri fiş binary'si
+      // taşımaz. Hâlâ atıfta bulunulan görseller korunur (aynı-cihaz geri
+      // yüklemede kayıp olmaz); atıfsız kalanlar silinir. (Başarısızlıkta
+      // rollback eski veriyi geri getirir, görseller de yerinde kalmalı.)
+      final keepReceipts = <String>{
+        for (final t in parsedBackup.transactions)
+          if (t.receiptFileName != null) t.receiptFileName!,
+      };
+      await _receiptStorage.pruneExcept(keepReceipts);
 
       return const DataRestoreResult.success();
     } catch (e, st) {

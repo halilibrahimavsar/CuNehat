@@ -93,6 +93,7 @@ void main() {
         'date': date.toIso8601String(),
         'type': 'expense',
         'isSystem': false,
+        'receiptFileName': null,
       });
     });
   });

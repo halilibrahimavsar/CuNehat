@@ -5,6 +5,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// İşlem formunun durum yöneticisi.
 ///
@@ -31,6 +32,20 @@ class TransactionFormController {
   final ValueNotifier<bool> submitting = ValueNotifier(false);
   final ValueNotifier<String?> error = ValueNotifier(null);
 
+  /// Kaydedilmemiş, yeni seçilen fiş görseli (image_picker'ın temp dosyası).
+  /// Diske ancak kayıt anında ([ReceiptStorageService.persist]) kopyalanır;
+  /// önizleme + OCR bu temp dosyadan yapılır (iptalde orphan kalmasın).
+  final ValueNotifier<XFile?> pickedReceipt = ValueNotifier(null);
+
+  /// Düzenlemede zaten kayıtlı fişin dosya adı; kullanıcı kaldırırsa null olur.
+  final ValueNotifier<String?> receiptFileName = ValueNotifier(null);
+
+  /// OCR taraması sürerken true (küçük yükleniyor göstergesi için).
+  final ValueNotifier<bool> ocrRunning = ValueNotifier(false);
+
+  /// OCR alanları doldurunca kısa "kontrol et" ipucunu tetikler.
+  final ValueNotifier<bool> ocrApplied = ValueNotifier(false);
+
   bool _disposed = false;
 
   void initialize(TransactionEntity t) {
@@ -38,6 +53,7 @@ class TransactionFormController {
     amountController.text = formatAmountForInput(t.amount);
     categoryId.value = t.tag;
     dateTime.value = t.date;
+    receiptFileName.value = t.receiptFileName;
   }
 
   Future<void> loadCategories() async {
@@ -82,5 +98,9 @@ class TransactionFormController {
     recurringFrequency.dispose();
     submitting.dispose();
     error.dispose();
+    pickedReceipt.dispose();
+    receiptFileName.dispose();
+    ocrRunning.dispose();
+    ocrApplied.dispose();
   }
 }

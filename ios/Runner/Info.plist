@@ -49,5 +49,9 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSCameraUsageDescription</key>
+		<string>İşlemlerinize fiş/fotoğraf eklemek için kamera kullanılır.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>İşlemlerinize galeriden fiş/fotoğraf eklemek için erişim gerekir.</string>
 	</dict>
 </plist>

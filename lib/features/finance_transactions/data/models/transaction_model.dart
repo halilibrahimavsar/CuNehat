@@ -16,6 +16,7 @@ class TransactionModel extends TransactionEntity {
     required super.date,
     required super.type,
     super.isSystem = false,
+    super.receiptFileName,
   });
 
   /// ✅ FIXED: Handle date as ISO 8601 String
@@ -39,6 +40,7 @@ class TransactionModel extends TransactionEntity {
       date: parsedDate,
       type: _parseTransactionType(json['type'] as String),
       isSystem: json['isSystem'] as bool,
+      receiptFileName: json['receiptFileName'] as String?,
     );
   }
 
@@ -54,6 +56,7 @@ class TransactionModel extends TransactionEntity {
       'date': date.toIso8601String(),
       'type': type == TransactionTypeModel.income ? 'income' : 'expense',
       'isSystem': isSystem,
+      'receiptFileName': receiptFileName,
     };
   }
 
@@ -68,6 +71,7 @@ class TransactionModel extends TransactionEntity {
       date: entity.date,
       type: entity.type,
       isSystem: entity.isSystem,
+      receiptFileName: entity.receiptFileName,
     );
   }
 
@@ -82,6 +86,7 @@ class TransactionModel extends TransactionEntity {
       date: date,
       type: type,
       isSystem: isSystem,
+      receiptFileName: receiptFileName,
     );
   }
 
@@ -102,6 +107,7 @@ class TransactionModel extends TransactionEntity {
     DateTime? date,
     TransactionTypeModel? type,
     bool? isSystem,
+    String? receiptFileName,
   }) {
     return TransactionModel(
       id: id ?? this.id, // preserve id (önceden id düşüyordu — düzeltildi)
@@ -113,6 +119,7 @@ class TransactionModel extends TransactionEntity {
       date: date ?? this.date,
       type: type ?? this.type,
       isSystem: isSystem ?? this.isSystem,
+      receiptFileName: receiptFileName ?? this.receiptFileName,
     );
   }
 
@@ -151,4 +158,8 @@ class TransactionModel extends TransactionEntity {
   @override
   @HiveField(8)
   bool get isSystem => super.isSystem;
+
+  @override
+  @HiveField(9)
+  String? get receiptFileName => super.receiptFileName;
 }

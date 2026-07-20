@@ -1,4 +1,5 @@
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/transaction_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/data/repositories/transaction_repository_impl.dart';
@@ -11,9 +12,12 @@ import 'package:mocktail/mocktail.dart';
 class MockTransactionHiveDataSource extends Mock
     implements TransactionHiveDataSource {}
 
+class MockReceiptStorageService extends Mock implements ReceiptStorageService {}
+
 void main() {
   late TransactionRepositoryImpl repository;
   late MockTransactionHiveDataSource mockLocalDatasource;
+  late MockReceiptStorageService mockReceiptStorage;
 
   setUpAll(() {
     registerFallbackValue(
@@ -32,8 +36,13 @@ void main() {
 
   setUp(() {
     mockLocalDatasource = MockTransactionHiveDataSource();
-    repository =
-        TransactionRepositoryImpl(localDatasource: mockLocalDatasource);
+    mockReceiptStorage = MockReceiptStorageService();
+    // Fiş temizliği varsayılan olarak no-op; ilgili testler ayrıca stub'lar.
+    when(() => mockReceiptStorage.delete(any())).thenAnswer((_) async {});
+    repository = TransactionRepositoryImpl(
+      localDatasource: mockLocalDatasource,
+      receiptStorage: mockReceiptStorage,
+    );
   });
 
   final date = DateTime(2026, 6, 15);

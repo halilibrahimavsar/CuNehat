@@ -825,5 +825,16 @@
   "onboardingBudgetsTitle": "Yeni Bütçe Ekle",
   "onboardingBudgetsDesc": "Bir kategori seçip aylık harcama limiti belirleyin; limit aşıldığında bilgilendirilirsiniz.",
   "onboardingRecurringTemplatesTitle": "Düzenli İşlemler",
-  "onboardingRecurringTemplatesDesc": "Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz."
+  "onboardingRecurringTemplatesDesc": "Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.",
+
+  "fisEkle": "Fiş/fotoğraf ekle",
+  "fisEkli": "Fiş eklendi",
+  "fisKamera": "Kamera",
+  "fisGaleri": "Galeri",
+  "fisDegistir": "Değiştir",
+  "fisKaldir": "Kaldır",
+  "fisGoruntule": "Fişi görüntüle",
+  "fisOcrTaraniyor": "Fiş taranıyor…",
+  "fisOcrDolduruldu": "Bilgiler fişten dolduruldu — lütfen kontrol edin",
+  "fisCihazdaYok": "Görsel bu cihazda yok"
 }

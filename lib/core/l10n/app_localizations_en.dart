@@ -2110,4 +2110,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingRecurringTemplatesDesc =>
       'Templates created from the repeat option when adding income/expense are listed here; pause or delete them.';
+
+  @override
+  String get fisEkle => 'Add receipt/photo';
+
+  @override
+  String get fisEkli => 'Receipt attached';
+
+  @override
+  String get fisKamera => 'Camera';
+
+  @override
+  String get fisGaleri => 'Gallery';
+
+  @override
+  String get fisDegistir => 'Replace';
+
+  @override
+  String get fisKaldir => 'Remove';
+
+  @override
+  String get fisGoruntule => 'View receipt';
+
+  @override
+  String get fisOcrTaraniyor => 'Scanning receipt…';
+
+  @override
+  String get fisOcrDolduruldu =>
+      'Filled from the receipt — please double-check';
+
+  @override
+  String get fisCihazdaYok => 'Image not on this device';
 }
