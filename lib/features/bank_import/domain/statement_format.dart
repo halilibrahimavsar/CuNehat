@@ -11,6 +11,12 @@ enum StatementFormat {
         StatementFormat.pdf => const ['pdf'],
       };
 
+  /// Format seçimi kullanıcıya sorulmadan tek dosya seçicide birlikte
+  /// sunulacak uzantıların birleşimi (bkz. [fromExtension]).
+  static List<String> get allExtensions => [
+        for (final f in StatementFormat.values) ...f.extensions,
+      ];
+
   static StatementFormat? fromExtension(String path) {
     final dot = path.lastIndexOf('.');
     if (dot == -1) return null;

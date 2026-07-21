@@ -2160,10 +2160,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportSetupHint =>
-      'Pick the account activity file (CSV/Excel) you exported from your bank. Transactions are shown for review first; the ones you approve are added to your wallet.';
-
-  @override
-  String get bankImportFormat => 'File format';
+      'Pick the account activity file you exported from your bank (CSV, Excel, or PDF) — we detect the format automatically. Transactions are shown for review with an auto-detected date/amount/category — this detection can be wrong, so double-check everything before approving.';
 
   @override
   String get bankImportTargetWallet => 'Target wallet';
@@ -2279,4 +2276,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String bankImportDoneMsg(int added, int skipped) {
     return '$added added, $skipped skipped.';
   }
+
+  @override
+  String get bankImportReviewWarning =>
+      'Dates, amounts, and categories were auto-detected from the file and may be wrong. Check every transaction before adding.';
+
+  @override
+  String get bankImportDoneBalanceLabel => 'Current wallet balance';
+
+  @override
+  String get bankImportDoneBalanceHint =>
+      'This balance was calculated including the imported transactions. Compare it with your bank\'s current balance — you can sync it below if they differ.';
+
+  @override
+  String get bankImportSyncButton => 'Sync balance';
+
+  @override
+  String get bankImportSyncDialogTitle => 'Sync Balance';
+
+  @override
+  String get bankImportSyncDialogHint =>
+      'Enter your bank\'s real current balance; the wallet will be adjusted to match. Past transactions stay unchanged — only the opening balance is corrected.';
+
+  @override
+  String get bankImportSyncDialogLabel => 'Real balance';
+
+  @override
+  String get bankImportSyncSuccess => 'Wallet balance synced.';
 }

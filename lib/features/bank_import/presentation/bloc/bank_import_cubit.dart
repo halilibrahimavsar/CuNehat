@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
 import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
@@ -27,6 +28,7 @@ class BankImportCubit extends Cubit<BankImportState> {
   final RawTableReader _reader;
   final ColumnMapper _mapper;
   final PdfStatementParser _pdfParser;
+  final CategoryGuesser _guesser;
   final CategoryRepository _categoryRepo;
   final TransactionsRepository _txRepo;
   final WalletMetricsService _metrics;
@@ -36,6 +38,7 @@ class BankImportCubit extends Cubit<BankImportState> {
     this._reader,
     this._mapper,
     this._pdfParser,
+    this._guesser,
     this._categoryRepo,
     this._txRepo,
     this._metrics,
@@ -51,22 +54,28 @@ class BankImportCubit extends Cubit<BankImportState> {
   String? _lastPdfRawText;
   String? get lastPdfRawText => _lastPdfRawText;
 
-  /// Dosya seç + ayrıştır. CSV/Excel → kolon eşleme; PDF → doğrudan inceleme.
+  /// Dosya seç + biçimi uzantısından otomatik algıla + ayrıştır.
+  /// CSV/Excel → kolon eşleme; PDF → doğrudan inceleme.
   Future<void> pickAndParse({
     required String userId,
     required String walletId,
-    required StatementFormat format,
   }) async {
     _userId = userId;
     _walletId = walletId;
 
     final picked = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions: format.extensions,
+      allowedExtensions: StatementFormat.allExtensions,
     );
     final path = picked?.files.single.path;
     if (path == null) {
       emit(const BankImportInitial());
+      return;
+    }
+
+    final format = StatementFormat.fromExtension(path);
+    if (format == null) {
+      emit(BankImportError('Desteklenmeyen dosya türü: $path'));
       return;
     }
 
@@ -138,7 +147,14 @@ class BankImportCubit extends Cubit<BankImportState> {
 
     var drafts = [
       for (final d in raw)
-        d.copyWith(categoryId: d.isIncome ? defInc : defExp),
+        d.copyWith(
+          categoryId: _guesser.guess(
+                description: d.description,
+                isIncome: d.isIncome,
+                candidates: d.isIncome ? _incomeCats : _expenseCats,
+              ) ??
+              (d.isIncome ? defInc : defExp),
+        ),
     ];
 
     if (drafts.isNotEmpty) {
@@ -222,7 +238,7 @@ class BankImportCubit extends Cubit<BankImportState> {
     if (s is! BankImportReview) return;
     final selected = s.drafts.where((d) => d.selected).toList();
     if (selected.isEmpty) {
-      emit(const BankImportDone(added: 0, skipped: 0));
+      emit(BankImportDone(added: 0, skipped: 0, walletId: _walletId));
       return;
     }
 
@@ -244,6 +260,10 @@ class BankImportCubit extends Cubit<BankImportState> {
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
 
-    emit(BankImportDone(added: added, skipped: s.drafts.length - added));
+    emit(BankImportDone(
+      added: added,
+      skipped: s.drafts.length - added,
+      walletId: _walletId,
+    ));
   }
 }

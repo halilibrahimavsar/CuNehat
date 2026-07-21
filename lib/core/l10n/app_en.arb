@@ -828,8 +828,7 @@
   "bankImportTitle": "Import Bank Statement",
   "bankImportParsing": "Scanning file…",
   "bankImportNoWallet": "Create a wallet first.",
-  "bankImportSetupHint": "Pick the account activity file (CSV/Excel) you exported from your bank. Transactions are shown for review first; the ones you approve are added to your wallet.",
-  "bankImportFormat": "File format",
+  "bankImportSetupHint": "Pick the account activity file you exported from your bank (CSV, Excel, or PDF) — we detect the format automatically. Transactions are shown for review with an auto-detected date/amount/category — this detection can be wrong, so double-check everything before approving.",
   "bankImportTargetWallet": "Target wallet",
   "bankImportPickFile": "Pick file & scan",
   "bankImportCommitting": "Adding…",
@@ -881,5 +880,13 @@
       "added": { "type": "int" },
       "skipped": { "type": "int" }
     }
-  }
+  },
+  "bankImportReviewWarning": "Dates, amounts, and categories were auto-detected from the file and may be wrong. Check every transaction before adding.",
+  "bankImportDoneBalanceLabel": "Current wallet balance",
+  "bankImportDoneBalanceHint": "This balance was calculated including the imported transactions. Compare it with your bank's current balance — you can sync it below if they differ.",
+  "bankImportSyncButton": "Sync balance",
+  "bankImportSyncDialogTitle": "Sync Balance",
+  "bankImportSyncDialogHint": "Enter your bank's real current balance; the wallet will be adjusted to match. Past transactions stay unchanged — only the opening balance is corrected.",
+  "bankImportSyncDialogLabel": "Real balance",
+  "bankImportSyncSuccess": "Wallet balance synced."
 }

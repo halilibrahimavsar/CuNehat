@@ -3989,14 +3989,8 @@ abstract class AppLocalizations {
   /// No description provided for @bankImportSetupHint.
   ///
   /// In tr, this message translates to:
-  /// **'Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV/Excel) seç. Hareketler önce incelemene sunulur; onayladıkların cüzdanına eklenir.'**
+  /// **'Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV, Excel ya da PDF) seç; biçimi otomatik algılarız. Hareketler tarih/tutar/kategori otomatik algılanmış olarak önce incelemene sunulur — bu algılama hatalı olabilir, onaylamadan önce mutlaka kontrol et.'**
   String get bankImportSetupHint;
-
-  /// No description provided for @bankImportFormat.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dosya biçimi'**
-  String get bankImportFormat;
 
   /// No description provided for @bankImportTargetWallet.
   ///
@@ -4213,6 +4207,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{added} işlem eklendi, {skipped} atlandı.'**
   String bankImportDoneMsg(int added, int skipped);
+
+  /// No description provided for @bankImportReviewWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih, tutar ve kategoriler dosyadan otomatik algılandı; hatalı olabilir. Eklemeden önce her hareketi kontrol et.'**
+  String get bankImportReviewWarning;
+
+  /// No description provided for @bankImportDoneBalanceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel cüzdan bakiyesi'**
+  String get bankImportDoneBalanceLabel;
+
+  /// No description provided for @bankImportDoneBalanceHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bakiye, içe aktarılan hareketler dahil hesaplandı. Banka hesabındaki güncel bakiyeyle karşılaştır; farklıysa aşağıdan eşitleyebilirsin.'**
+  String get bankImportDoneBalanceHint;
+
+  /// No description provided for @bankImportSyncButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiyeyi eşitle'**
+  String get bankImportSyncButton;
+
+  /// No description provided for @bankImportSyncDialogTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiyeyi Eşitle'**
+  String get bankImportSyncDialogTitle;
+
+  /// No description provided for @bankImportSyncDialogHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankandaki gerçek güncel bakiyeni gir; cüzdanın buna göre ayarlanır. Geçmiş hareketlerin değişmez, yalnızca başlangıç bakiyesi düzeltilir.'**
+  String get bankImportSyncDialogHint;
+
+  /// No description provided for @bankImportSyncDialogLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gerçek bakiye'**
+  String get bankImportSyncDialogLabel;
+
+  /// No description provided for @bankImportSyncSuccess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan bakiyesi eşitlendi.'**
+  String get bankImportSyncSuccess;
 }
 
 class _AppLocalizationsDelegate

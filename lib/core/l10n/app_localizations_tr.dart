@@ -2164,10 +2164,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportSetupHint =>
-      'Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV/Excel) seç. Hareketler önce incelemene sunulur; onayladıkların cüzdanına eklenir.';
-
-  @override
-  String get bankImportFormat => 'Dosya biçimi';
+      'Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV, Excel ya da PDF) seç; biçimi otomatik algılarız. Hareketler tarih/tutar/kategori otomatik algılanmış olarak önce incelemene sunulur — bu algılama hatalı olabilir, onaylamadan önce mutlaka kontrol et.';
 
   @override
   String get bankImportTargetWallet => 'Hedef cüzdan';
@@ -2283,4 +2280,31 @@ class AppLocalizationsTr extends AppLocalizations {
   String bankImportDoneMsg(int added, int skipped) {
     return '$added işlem eklendi, $skipped atlandı.';
   }
+
+  @override
+  String get bankImportReviewWarning =>
+      'Tarih, tutar ve kategoriler dosyadan otomatik algılandı; hatalı olabilir. Eklemeden önce her hareketi kontrol et.';
+
+  @override
+  String get bankImportDoneBalanceLabel => 'Güncel cüzdan bakiyesi';
+
+  @override
+  String get bankImportDoneBalanceHint =>
+      'Bu bakiye, içe aktarılan hareketler dahil hesaplandı. Banka hesabındaki güncel bakiyeyle karşılaştır; farklıysa aşağıdan eşitleyebilirsin.';
+
+  @override
+  String get bankImportSyncButton => 'Bakiyeyi eşitle';
+
+  @override
+  String get bankImportSyncDialogTitle => 'Bakiyeyi Eşitle';
+
+  @override
+  String get bankImportSyncDialogHint =>
+      'Bankandaki gerçek güncel bakiyeni gir; cüzdanın buna göre ayarlanır. Geçmiş hareketlerin değişmez, yalnızca başlangıç bakiyesi düzeltilir.';
+
+  @override
+  String get bankImportSyncDialogLabel => 'Gerçek bakiye';
+
+  @override
+  String get bankImportSyncSuccess => 'Cüzdan bakiyesi eşitlendi.';
 }

@@ -843,8 +843,7 @@
   "bankImportTitle": "Banka Ekstresi İçe Aktar",
   "bankImportParsing": "Dosya taranıyor…",
   "bankImportNoWallet": "Önce bir cüzdan oluşturun.",
-  "bankImportSetupHint": "Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV/Excel) seç. Hareketler önce incelemene sunulur; onayladıkların cüzdanına eklenir.",
-  "bankImportFormat": "Dosya biçimi",
+  "bankImportSetupHint": "Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV, Excel ya da PDF) seç; biçimi otomatik algılarız. Hareketler tarih/tutar/kategori otomatik algılanmış olarak önce incelemene sunulur — bu algılama hatalı olabilir, onaylamadan önce mutlaka kontrol et.",
   "bankImportTargetWallet": "Hedef cüzdan",
   "bankImportPickFile": "Dosya seç ve tara",
   "bankImportCommitting": "Ekleniyor…",
@@ -896,5 +895,13 @@
       "added": { "type": "int" },
       "skipped": { "type": "int" }
     }
-  }
+  },
+  "bankImportReviewWarning": "Tarih, tutar ve kategoriler dosyadan otomatik algılandı; hatalı olabilir. Eklemeden önce her hareketi kontrol et.",
+  "bankImportDoneBalanceLabel": "Güncel cüzdan bakiyesi",
+  "bankImportDoneBalanceHint": "Bu bakiye, içe aktarılan hareketler dahil hesaplandı. Banka hesabındaki güncel bakiyeyle karşılaştır; farklıysa aşağıdan eşitleyebilirsin.",
+  "bankImportSyncButton": "Bakiyeyi eşitle",
+  "bankImportSyncDialogTitle": "Bakiyeyi Eşitle",
+  "bankImportSyncDialogHint": "Bankandaki gerçek güncel bakiyeni gir; cüzdanın buna göre ayarlanır. Geçmiş hareketlerin değişmez, yalnızca başlangıç bakiyesi düzeltilir.",
+  "bankImportSyncDialogLabel": "Gerçek bakiye",
+  "bankImportSyncSuccess": "Cüzdan bakiyesi eşitlendi."
 }

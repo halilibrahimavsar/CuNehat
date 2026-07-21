@@ -58,11 +58,17 @@ class BankImportCommitting extends BankImportState {
   const BankImportCommitting({required this.done, required this.total});
 }
 
-/// Bitti: eklenen + atlanan (seçilmeyen) sayıları.
+/// Bitti: eklenen + atlanan (seçilmeyen) sayıları. [walletId], hedef cüzdanın
+/// güncel bakiyesini göstermek ve gerekirse eşitleme diyaloğu sunmak için.
 class BankImportDone extends BankImportState {
   final int added;
   final int skipped;
-  const BankImportDone({required this.added, required this.skipped});
+  final String walletId;
+  const BankImportDone({
+    required this.added,
+    required this.skipped,
+    required this.walletId,
+  });
 }
 
 class BankImportError extends BankImportState {

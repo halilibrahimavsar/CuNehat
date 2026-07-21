@@ -4,9 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/features/bank_import/domain/statement_format.dart';
+import 'package:cunehat/core/utils/amount_input_formatter.dart';
+import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_mapping_view.dart';
@@ -110,7 +113,6 @@ class _SetupStep extends StatefulWidget {
 }
 
 class _SetupStepState extends State<_SetupStep> {
-  StatementFormat _format = StatementFormat.csv;
   String? _walletId;
 
   @override
@@ -132,27 +134,6 @@ class _SetupStepState extends State<_SetupStep> {
         Text(context.l10n.bankImportSetupHint,
             style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 20),
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.bankImportFormat,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 10),
-              SegmentedButton<StatementFormat>(
-                segments: const [
-                  ButtonSegment(value: StatementFormat.csv, label: Text('CSV')),
-                  ButtonSegment(
-                      value: StatementFormat.excel, label: Text('Excel')),
-                  ButtonSegment(value: StatementFormat.pdf, label: Text('PDF')),
-                ],
-                selected: {_format},
-                onSelectionChanged: (s) => setState(() => _format = s.first),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +171,6 @@ class _SetupStepState extends State<_SetupStep> {
     context.read<BankImportCubit>().pickAndParse(
           userId: userId,
           walletId: _walletId!,
-          format: _format,
         );
   }
 
@@ -250,10 +230,20 @@ class _Done extends StatelessWidget {
   final BankImportDone state;
   const _Done({required this.state});
 
+  WalletEntity? _findWallet(BuildContext context) {
+    final walletState = context.watch<WalletBloc>().state;
+    if (walletState is! WalletLoadedSt) return null;
+    for (final w in walletState.wallets) {
+      if (w.id == state.walletId) return w;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final wallet = _findWallet(context);
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -266,6 +256,10 @@ class _Done extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            if (wallet != null) ...[
+              const SizedBox(height: 20),
+              _balanceCard(context, wallet),
+            ],
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -275,6 +269,105 @@ class _Done extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// İçe aktarım sonrası hesaplanan bakiyeyi gösterir + isteğe bağlı olarak
+  /// gerçek banka bakiyesine eşitleme diyaloğu sunar (mevcut cüzdan düzenleme
+  /// akışındaki `UpdateWalletEvent` bakiye-düzeltme mantığı yeniden kullanılır).
+  Widget _balanceCard(BuildContext context, WalletEntity wallet) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            wallet.name,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            context.l10n.bankImportDoneBalanceLabel,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AppFormatters.currencyFor(wallet.currency).format(wallet.balance),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.bankImportDoneBalanceHint,
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showSyncDialog(context, wallet),
+              icon: const Icon(Icons.sync_rounded, size: 18),
+              label: Text(context.l10n.bankImportSyncButton),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showSyncDialog(BuildContext context, WalletEntity wallet) async {
+    final controller =
+        TextEditingController(text: formatAmountForInput(wallet.balance));
+    final result = await showDialog<double>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(ctx.l10n.bankImportSyncDialogTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              ctx.l10n.bankImportSyncDialogHint,
+              style: Theme.of(ctx).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [AmountInputFormatter(allowNegative: true)],
+              decoration: InputDecoration(
+                labelText: ctx.l10n.bankImportSyncDialogLabel,
+                suffixText: currencySymbol(wallet.currency),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(ctx.l10n.iptal),
+          ),
+          FilledButton(
+            onPressed: () {
+              final val = parseMoneyInput(controller.text);
+              if (val != null) Navigator.pop(ctx, val);
+            },
+            child: Text(ctx.l10n.kaydet),
+          ),
+        ],
+      ),
+    );
+    if (result != null && context.mounted) {
+      context.read<WalletBloc>().add(UpdateWalletEvent(wallet.copyWith(balance: result)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.bankImportSyncSuccess)),
+      );
+    }
   }
 }
 

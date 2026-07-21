@@ -32,7 +32,36 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (_s.drafts.isEmpty) {
       return Center(child: Text(context.l10n.bankImportNoRows));
     }
-    return _stepper ? _buildStepper(context) : _buildList(context);
+    return Column(
+      children: [
+        _warningBanner(context),
+        Expanded(child: _stepper ? _buildStepper(context) : _buildList(context)),
+      ],
+    );
+  }
+
+  /// Otomatik algılamanın hatalı olabileceğini hatırlatan kalıcı uyarı şeridi
+  /// (bkz. kullanıcı talebi: onaydan önce açık bir uyarı gösterilmesi).
+  Widget _warningBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.orange.withValues(alpha: 0.14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              size: 18, color: Colors.orange),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.l10n.bankImportReviewWarning,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<CategoryEntity> _catsFor(bool income) =>
