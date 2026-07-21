@@ -5,6 +5,7 @@ import 'package:cunehat/features/main_feature/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/local_auth_settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
+import 'package:cunehat/features/bank_import/presentation/pages/bank_import_page.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -119,6 +120,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           return MaterialPage(
             key: state.pageKey,
             child: const PrivacyPolicyPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.bankStatementImport,
+        pageBuilder: (context, state) {
+          return MaterialPage(
+            key: state.pageKey,
+            child: const BankImportPage(),
           );
         },
       ),

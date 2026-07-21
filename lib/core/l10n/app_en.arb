@@ -821,5 +821,65 @@
   "fisGoruntule": "View receipt",
   "fisOcrTaraniyor": "Scanning receipt…",
   "fisOcrDolduruldu": "Filled from the receipt — please double-check",
-  "fisCihazdaYok": "Image not on this device"
+  "fisCihazdaYok": "Image not on this device",
+
+  "bankImportSettingsEntry": "Import bank statement",
+  "bankImportSettingsSubtitle": "Turn a CSV/Excel/PDF statement into transactions",
+  "bankImportTitle": "Import Bank Statement",
+  "bankImportParsing": "Scanning file…",
+  "bankImportNoWallet": "Create a wallet first.",
+  "bankImportSetupHint": "Pick the account activity file (CSV/Excel) you exported from your bank. Transactions are shown for review first; the ones you approve are added to your wallet.",
+  "bankImportFormat": "File format",
+  "bankImportTargetWallet": "Target wallet",
+  "bankImportPickFile": "Pick file & scan",
+  "bankImportCommitting": "Adding…",
+  "bankImportClose": "Close",
+  "bankImportRetry": "Try again",
+  "bankImportMappingTitle": "Map columns",
+  "bankImportColDate": "Date column",
+  "bankImportColDesc": "Description column",
+  "bankImportColAmount": "Amount column",
+  "bankImportColDebit": "Debit (expense)",
+  "bankImportColCredit": "Credit (income)",
+  "bankImportSignMode": "Amount sign",
+  "bankImportSignSingle": "Single column (− expense)",
+  "bankImportSignDebitCredit": "Debit / Credit",
+  "bankImportDateFormat": "Date format",
+  "bankImportDateAuto": "Auto",
+  "bankImportContinue": "Continue",
+  "bankImportNoRows": "No transactions to import.",
+  "bankImportSelectAll": "All",
+  "bankImportDeselectAll": "None",
+  "bankImportStepperMode": "One by one",
+  "bankImportDuplicate": "Possible duplicate",
+  "bankImportStepSkip": "Skip",
+  "bankImportStepAdd": "Add",
+  "bankImportStepAddRest": "Add the rest",
+  "bankImportStepCancelAll": "Cancel all",
+  "bankImportDefaultExpenseCat": "Expense:",
+  "bankImportDefaultIncomeCat": "Income:",
+  "bankImportShowRaw": "Show raw text",
+  "bankImportPdfRawTitle": "Couldn't recognize the PDF text",
+  "bankImportPdfRawHint": "We extracted the text but couldn't recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank's layout.",
+  "bankImportCopy": "Copy",
+  "bankImportCopied": "Copied",
+  "bankImportSummary": "{count} transactions · {dup} possible duplicates · {skipped} rows skipped",
+  "@bankImportSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "dup": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "bankImportAdd": "Add selected ({count})",
+  "@bankImportAdd": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "bankImportDoneMsg": "{added} added, {skipped} skipped.",
+  "@bankImportDoneMsg": {
+    "placeholders": {
+      "added": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  }
 }

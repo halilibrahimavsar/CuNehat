@@ -95,4 +95,5 @@ class AppRoutes {
   static const String budgets = '/budgets';
   static const String recurringTemplates = '/recurring-templates';
   static const String privacyPolicy = '/privacy-policy';
+  static const String bankStatementImport = '/settings/bank-import';
 }

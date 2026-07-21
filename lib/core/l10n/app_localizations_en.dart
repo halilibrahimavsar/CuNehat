@@ -2141,4 +2141,142 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fisCihazdaYok => 'Image not on this device';
+
+  @override
+  String get bankImportSettingsEntry => 'Import bank statement';
+
+  @override
+  String get bankImportSettingsSubtitle =>
+      'Turn a CSV/Excel/PDF statement into transactions';
+
+  @override
+  String get bankImportTitle => 'Import Bank Statement';
+
+  @override
+  String get bankImportParsing => 'Scanning file…';
+
+  @override
+  String get bankImportNoWallet => 'Create a wallet first.';
+
+  @override
+  String get bankImportSetupHint =>
+      'Pick the account activity file (CSV/Excel) you exported from your bank. Transactions are shown for review first; the ones you approve are added to your wallet.';
+
+  @override
+  String get bankImportFormat => 'File format';
+
+  @override
+  String get bankImportTargetWallet => 'Target wallet';
+
+  @override
+  String get bankImportPickFile => 'Pick file & scan';
+
+  @override
+  String get bankImportCommitting => 'Adding…';
+
+  @override
+  String get bankImportClose => 'Close';
+
+  @override
+  String get bankImportRetry => 'Try again';
+
+  @override
+  String get bankImportMappingTitle => 'Map columns';
+
+  @override
+  String get bankImportColDate => 'Date column';
+
+  @override
+  String get bankImportColDesc => 'Description column';
+
+  @override
+  String get bankImportColAmount => 'Amount column';
+
+  @override
+  String get bankImportColDebit => 'Debit (expense)';
+
+  @override
+  String get bankImportColCredit => 'Credit (income)';
+
+  @override
+  String get bankImportSignMode => 'Amount sign';
+
+  @override
+  String get bankImportSignSingle => 'Single column (− expense)';
+
+  @override
+  String get bankImportSignDebitCredit => 'Debit / Credit';
+
+  @override
+  String get bankImportDateFormat => 'Date format';
+
+  @override
+  String get bankImportDateAuto => 'Auto';
+
+  @override
+  String get bankImportContinue => 'Continue';
+
+  @override
+  String get bankImportNoRows => 'No transactions to import.';
+
+  @override
+  String get bankImportSelectAll => 'All';
+
+  @override
+  String get bankImportDeselectAll => 'None';
+
+  @override
+  String get bankImportStepperMode => 'One by one';
+
+  @override
+  String get bankImportDuplicate => 'Possible duplicate';
+
+  @override
+  String get bankImportStepSkip => 'Skip';
+
+  @override
+  String get bankImportStepAdd => 'Add';
+
+  @override
+  String get bankImportStepAddRest => 'Add the rest';
+
+  @override
+  String get bankImportStepCancelAll => 'Cancel all';
+
+  @override
+  String get bankImportDefaultExpenseCat => 'Expense:';
+
+  @override
+  String get bankImportDefaultIncomeCat => 'Income:';
+
+  @override
+  String get bankImportShowRaw => 'Show raw text';
+
+  @override
+  String get bankImportPdfRawTitle => 'Couldn\'t recognize the PDF text';
+
+  @override
+  String get bankImportPdfRawHint =>
+      'We extracted the text but couldn\'t recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank\'s layout.';
+
+  @override
+  String get bankImportCopy => 'Copy';
+
+  @override
+  String get bankImportCopied => 'Copied';
+
+  @override
+  String bankImportSummary(int count, int dup, int skipped) {
+    return '$count transactions · $dup possible duplicates · $skipped rows skipped';
+  }
+
+  @override
+  String bankImportAdd(int count) {
+    return 'Add selected ($count)';
+  }
+
+  @override
+  String bankImportDoneMsg(int added, int skipped) {
+    return '$added added, $skipped skipped.';
+  }
 }

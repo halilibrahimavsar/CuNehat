@@ -102,6 +102,10 @@ dependencies:
   image_picker: ^1.1.2 # Kamera + galeriden fiş görseli seçmek için
   google_mlkit_text_recognition: ^0.13.0 # Fişten tutar/tarih okumak (çevrimdışı OCR)
 
+  # BANKA EKSTRESİ İÇE AKTARMA İÇİN EKLENDİ
+  excel: ^4.0.6 # .xlsx ekstre okuma (saf Dart)
+  syncfusion_flutter_pdf: ^29.1.33 # PDF ekstre metin çıkarma (best-effort satır-sezgisel)
+
   # firebase_bloc_auth:
   #   path: /home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth
   # firebase_analytics: ^10.1.5

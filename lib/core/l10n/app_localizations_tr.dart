@@ -2145,4 +2145,142 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fisCihazdaYok => 'Görsel bu cihazda yok';
+
+  @override
+  String get bankImportSettingsEntry => 'Banka ekstresi içe aktar';
+
+  @override
+  String get bankImportSettingsSubtitle =>
+      'CSV/Excel/PDF ekstresini işlemlere dönüştür';
+
+  @override
+  String get bankImportTitle => 'Banka Ekstresi İçe Aktar';
+
+  @override
+  String get bankImportParsing => 'Dosya taranıyor…';
+
+  @override
+  String get bankImportNoWallet => 'Önce bir cüzdan oluşturun.';
+
+  @override
+  String get bankImportSetupHint =>
+      'Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV/Excel) seç. Hareketler önce incelemene sunulur; onayladıkların cüzdanına eklenir.';
+
+  @override
+  String get bankImportFormat => 'Dosya biçimi';
+
+  @override
+  String get bankImportTargetWallet => 'Hedef cüzdan';
+
+  @override
+  String get bankImportPickFile => 'Dosya seç ve tara';
+
+  @override
+  String get bankImportCommitting => 'Ekleniyor…';
+
+  @override
+  String get bankImportClose => 'Kapat';
+
+  @override
+  String get bankImportRetry => 'Tekrar dene';
+
+  @override
+  String get bankImportMappingTitle => 'Sütunları eşle';
+
+  @override
+  String get bankImportColDate => 'Tarih sütunu';
+
+  @override
+  String get bankImportColDesc => 'Açıklama sütunu';
+
+  @override
+  String get bankImportColAmount => 'Tutar sütunu';
+
+  @override
+  String get bankImportColDebit => 'Borç (gider)';
+
+  @override
+  String get bankImportColCredit => 'Alacak (gelir)';
+
+  @override
+  String get bankImportSignMode => 'Tutar işareti';
+
+  @override
+  String get bankImportSignSingle => 'Tek sütun (− gider)';
+
+  @override
+  String get bankImportSignDebitCredit => 'Borç / Alacak';
+
+  @override
+  String get bankImportDateFormat => 'Tarih biçimi';
+
+  @override
+  String get bankImportDateAuto => 'Otomatik';
+
+  @override
+  String get bankImportContinue => 'Devam';
+
+  @override
+  String get bankImportNoRows => 'İçe aktarılacak hareket bulunamadı.';
+
+  @override
+  String get bankImportSelectAll => 'Tümü';
+
+  @override
+  String get bankImportDeselectAll => 'Hiçbiri';
+
+  @override
+  String get bankImportStepperMode => 'Tek tek';
+
+  @override
+  String get bankImportDuplicate => 'Olası tekrar';
+
+  @override
+  String get bankImportStepSkip => 'Atla';
+
+  @override
+  String get bankImportStepAdd => 'Ekle';
+
+  @override
+  String get bankImportStepAddRest => 'Kalanları ekle';
+
+  @override
+  String get bankImportStepCancelAll => 'Tümünü iptal';
+
+  @override
+  String get bankImportDefaultExpenseCat => 'Gider:';
+
+  @override
+  String get bankImportDefaultIncomeCat => 'Gelir:';
+
+  @override
+  String get bankImportShowRaw => 'Ham metni göster';
+
+  @override
+  String get bankImportPdfRawTitle => 'PDF metni tanınamadı';
+
+  @override
+  String get bankImportPdfRawHint =>
+      'Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.';
+
+  @override
+  String get bankImportCopy => 'Kopyala';
+
+  @override
+  String get bankImportCopied => 'Kopyalandı';
+
+  @override
+  String bankImportSummary(int count, int dup, int skipped) {
+    return '$count hareket · $dup olası tekrar · $skipped satır atlandı';
+  }
+
+  @override
+  String bankImportAdd(int count) {
+    return 'Seçilenleri ekle ($count)';
+  }
+
+  @override
+  String bankImportDoneMsg(int added, int skipped) {
+    return '$added işlem eklendi, $skipped atlandı.';
+  }
 }

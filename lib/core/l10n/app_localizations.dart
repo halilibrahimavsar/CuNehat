@@ -3955,6 +3955,264 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görsel bu cihazda yok'**
   String get fisCihazdaYok;
+
+  /// No description provided for @bankImportSettingsEntry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka ekstresi içe aktar'**
+  String get bankImportSettingsEntry;
+
+  /// No description provided for @bankImportSettingsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'CSV/Excel/PDF ekstresini işlemlere dönüştür'**
+  String get bankImportSettingsSubtitle;
+
+  /// No description provided for @bankImportTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka Ekstresi İçe Aktar'**
+  String get bankImportTitle;
+
+  /// No description provided for @bankImportParsing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya taranıyor…'**
+  String get bankImportParsing;
+
+  /// No description provided for @bankImportNoWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce bir cüzdan oluşturun.'**
+  String get bankImportNoWallet;
+
+  /// No description provided for @bankImportSetupHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV/Excel) seç. Hareketler önce incelemene sunulur; onayladıkların cüzdanına eklenir.'**
+  String get bankImportSetupHint;
+
+  /// No description provided for @bankImportFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya biçimi'**
+  String get bankImportFormat;
+
+  /// No description provided for @bankImportTargetWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef cüzdan'**
+  String get bankImportTargetWallet;
+
+  /// No description provided for @bankImportPickFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya seç ve tara'**
+  String get bankImportPickFile;
+
+  /// No description provided for @bankImportCommitting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleniyor…'**
+  String get bankImportCommitting;
+
+  /// No description provided for @bankImportClose.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapat'**
+  String get bankImportClose;
+
+  /// No description provided for @bankImportRetry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar dene'**
+  String get bankImportRetry;
+
+  /// No description provided for @bankImportMappingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütunları eşle'**
+  String get bankImportMappingTitle;
+
+  /// No description provided for @bankImportColDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih sütunu'**
+  String get bankImportColDate;
+
+  /// No description provided for @bankImportColDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama sütunu'**
+  String get bankImportColDesc;
+
+  /// No description provided for @bankImportColAmount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar sütunu'**
+  String get bankImportColAmount;
+
+  /// No description provided for @bankImportColDebit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç (gider)'**
+  String get bankImportColDebit;
+
+  /// No description provided for @bankImportColCredit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak (gelir)'**
+  String get bankImportColCredit;
+
+  /// No description provided for @bankImportSignMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar işareti'**
+  String get bankImportSignMode;
+
+  /// No description provided for @bankImportSignSingle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek sütun (− gider)'**
+  String get bankImportSignSingle;
+
+  /// No description provided for @bankImportSignDebitCredit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç / Alacak'**
+  String get bankImportSignDebitCredit;
+
+  /// No description provided for @bankImportDateFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih biçimi'**
+  String get bankImportDateFormat;
+
+  /// No description provided for @bankImportDateAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get bankImportDateAuto;
+
+  /// No description provided for @bankImportContinue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam'**
+  String get bankImportContinue;
+
+  /// No description provided for @bankImportNoRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarılacak hareket bulunamadı.'**
+  String get bankImportNoRows;
+
+  /// No description provided for @bankImportSelectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get bankImportSelectAll;
+
+  /// No description provided for @bankImportDeselectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hiçbiri'**
+  String get bankImportDeselectAll;
+
+  /// No description provided for @bankImportStepperMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek tek'**
+  String get bankImportStepperMode;
+
+  /// No description provided for @bankImportDuplicate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Olası tekrar'**
+  String get bankImportDuplicate;
+
+  /// No description provided for @bankImportStepSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Atla'**
+  String get bankImportStepSkip;
+
+  /// No description provided for @bankImportStepAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get bankImportStepAdd;
+
+  /// No description provided for @bankImportStepAddRest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalanları ekle'**
+  String get bankImportStepAddRest;
+
+  /// No description provided for @bankImportStepCancelAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü iptal'**
+  String get bankImportStepCancelAll;
+
+  /// No description provided for @bankImportDefaultExpenseCat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider:'**
+  String get bankImportDefaultExpenseCat;
+
+  /// No description provided for @bankImportDefaultIncomeCat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir:'**
+  String get bankImportDefaultIncomeCat;
+
+  /// No description provided for @bankImportShowRaw.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ham metni göster'**
+  String get bankImportShowRaw;
+
+  /// No description provided for @bankImportPdfRawTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF metni tanınamadı'**
+  String get bankImportPdfRawTitle;
+
+  /// No description provided for @bankImportPdfRawHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.'**
+  String get bankImportPdfRawHint;
+
+  /// No description provided for @bankImportCopy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala'**
+  String get bankImportCopy;
+
+  /// No description provided for @bankImportCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalandı'**
+  String get bankImportCopied;
+
+  /// No description provided for @bankImportSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hareket · {dup} olası tekrar · {skipped} satır atlandı'**
+  String bankImportSummary(int count, int dup, int skipped);
+
+  /// No description provided for @bankImportAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilenleri ekle ({count})'**
+  String bankImportAdd(int count);
+
+  /// No description provided for @bankImportDoneMsg.
+  ///
+  /// In tr, this message translates to:
+  /// **'{added} işlem eklendi, {skipped} atlandı.'**
+  String bankImportDoneMsg(int added, int skipped);
 }
 
 class _AppLocalizationsDelegate

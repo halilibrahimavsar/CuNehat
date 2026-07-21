@@ -24,6 +24,13 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart'
     as _i777;
 import 'package:cunehat/core/services/transfer_service.dart' as _i625;
 import 'package:cunehat/core/services/wallet_metrics_service.dart' as _i239;
+import 'package:cunehat/features/bank_import/data/column_mapper.dart' as _i125;
+import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart'
+    as _i512;
+import 'package:cunehat/features/bank_import/data/raw_table_reader.dart'
+    as _i1065;
+import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart'
+    as _i21;
 import 'package:cunehat/features/budgets/data/datasources/local/budget_local_datasource.dart'
     as _i828;
 import 'package:cunehat/features/budgets/data/repositories/budget_repository_impl.dart'
@@ -178,15 +185,19 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i777.TransactionsChangedNotifier(),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_i51.ReceiptOcrService>(() => _i51.ReceiptOcrService());
+    gh.lazySingleton<_i40.ReceiptStorageService>(
+        () => _i40.ReceiptStorageService());
+    gh.lazySingleton<_i1065.RawTableReader>(() => _i1065.RawTableReader());
+    gh.lazySingleton<_i125.ColumnMapper>(() => _i125.ColumnMapper());
+    gh.lazySingleton<_i512.PdfStatementParser>(
+        () => _i512.PdfStatementParser());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i698.ConnectionCubit>(() => appModule.connectionCubit);
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
     gh.lazySingleton<_i163.FlutterLocalNotificationsPlugin>(
         () => appModule.flutterLocalNotificationsPlugin);
-    gh.lazySingleton<_i40.ReceiptStorageService>(
-        () => _i40.ReceiptStorageService());
-    gh.lazySingleton<_i51.ReceiptOcrService>(() => _i51.ReceiptOcrService());
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(
@@ -354,6 +365,15 @@ extension GetItInjectableX on _i174.GetIt {
         _i257.UpdateTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.GetTransactionByIdUseCase>(() =>
         _i257.GetTransactionByIdUseCase(gh<_i543.TransactionsRepository>()));
+    gh.factory<_i21.BankImportCubit>(() => _i21.BankImportCubit(
+          gh<_i1065.RawTableReader>(),
+          gh<_i125.ColumnMapper>(),
+          gh<_i512.PdfStatementParser>(),
+          gh<_i896.CategoryRepository>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i239.WalletMetricsService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+        ));
     gh.lazySingleton<_i625.TransferService>(() => _i625.TransferService(
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           exchangeRateService: gh<_i500.ExchangeRateService>(),

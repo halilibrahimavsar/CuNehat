@@ -836,5 +836,65 @@
   "fisGoruntule": "Fişi görüntüle",
   "fisOcrTaraniyor": "Fiş taranıyor…",
   "fisOcrDolduruldu": "Bilgiler fişten dolduruldu — lütfen kontrol edin",
-  "fisCihazdaYok": "Görsel bu cihazda yok"
+  "fisCihazdaYok": "Görsel bu cihazda yok",
+
+  "bankImportSettingsEntry": "Banka ekstresi içe aktar",
+  "bankImportSettingsSubtitle": "CSV/Excel/PDF ekstresini işlemlere dönüştür",
+  "bankImportTitle": "Banka Ekstresi İçe Aktar",
+  "bankImportParsing": "Dosya taranıyor…",
+  "bankImportNoWallet": "Önce bir cüzdan oluşturun.",
+  "bankImportSetupHint": "Bankandan dışa aktardığın hesap hareketleri dosyasını (CSV/Excel) seç. Hareketler önce incelemene sunulur; onayladıkların cüzdanına eklenir.",
+  "bankImportFormat": "Dosya biçimi",
+  "bankImportTargetWallet": "Hedef cüzdan",
+  "bankImportPickFile": "Dosya seç ve tara",
+  "bankImportCommitting": "Ekleniyor…",
+  "bankImportClose": "Kapat",
+  "bankImportRetry": "Tekrar dene",
+  "bankImportMappingTitle": "Sütunları eşle",
+  "bankImportColDate": "Tarih sütunu",
+  "bankImportColDesc": "Açıklama sütunu",
+  "bankImportColAmount": "Tutar sütunu",
+  "bankImportColDebit": "Borç (gider)",
+  "bankImportColCredit": "Alacak (gelir)",
+  "bankImportSignMode": "Tutar işareti",
+  "bankImportSignSingle": "Tek sütun (− gider)",
+  "bankImportSignDebitCredit": "Borç / Alacak",
+  "bankImportDateFormat": "Tarih biçimi",
+  "bankImportDateAuto": "Otomatik",
+  "bankImportContinue": "Devam",
+  "bankImportNoRows": "İçe aktarılacak hareket bulunamadı.",
+  "bankImportSelectAll": "Tümü",
+  "bankImportDeselectAll": "Hiçbiri",
+  "bankImportStepperMode": "Tek tek",
+  "bankImportDuplicate": "Olası tekrar",
+  "bankImportStepSkip": "Atla",
+  "bankImportStepAdd": "Ekle",
+  "bankImportStepAddRest": "Kalanları ekle",
+  "bankImportStepCancelAll": "Tümünü iptal",
+  "bankImportDefaultExpenseCat": "Gider:",
+  "bankImportDefaultIncomeCat": "Gelir:",
+  "bankImportShowRaw": "Ham metni göster",
+  "bankImportPdfRawTitle": "PDF metni tanınamadı",
+  "bankImportPdfRawHint": "Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.",
+  "bankImportCopy": "Kopyala",
+  "bankImportCopied": "Kopyalandı",
+  "bankImportSummary": "{count} hareket · {dup} olası tekrar · {skipped} satır atlandı",
+  "@bankImportSummary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "dup": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "bankImportAdd": "Seçilenleri ekle ({count})",
+  "@bankImportAdd": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "bankImportDoneMsg": "{added} işlem eklendi, {skipped} atlandı.",
+  "@bankImportDoneMsg": {
+    "placeholders": {
+      "added": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  }
 }
