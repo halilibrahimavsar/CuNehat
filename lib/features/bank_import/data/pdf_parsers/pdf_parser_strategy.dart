@@ -19,10 +19,12 @@ abstract class PdfParserStrategy {
   static final _dateRe = RegExp(r'\d{1,2}[./-]\d{1,2}[./-]\d{2,4}');
 
   /// Virgül-binlik/nokta-ondalık ("6,500.00" — İngilizce/Akbank-QNB biçimi).
-  static const _englishGroupedSrc = r'[-+(]?\s*\d{1,3}(?:,\d{3})+\.\d{2}\s*\)?\s*-?';
+  static const _englishGroupedSrc =
+      r'[-+(]?\s*\d{1,3}(?:,\d{3})+\.\d{2}\s*\)?\s*-?';
 
   /// Nokta-binlik/virgül-ondalık ("1.234,56" — TR biçimi).
-  static const _turkishGroupedSrc = r'[-+(]?\s*\d{1,3}(?:\.\d{3})+,\d{2}\s*\)?\s*-?';
+  static const _turkishGroupedSrc =
+      r'[-+(]?\s*\d{1,3}(?:\.\d{3})+,\d{2}\s*\)?\s*-?';
 
   /// Binliksiz sade ondalık ("67.00"/"90,00") — biçimden bağımsız, KESİN 2
   /// haneli ondalık aranır (açgözlü değil).
@@ -152,7 +154,8 @@ abstract class PdfParserStrategy {
 
       drafts.add(ImportDraft(
         date: date,
-        description: description.isEmpty ? emptyDescriptionFallback : description,
+        description:
+            description.isEmpty ? emptyDescriptionFallback : description,
         amount: magnitude.abs(),
         type: signOf(token, text),
       ));

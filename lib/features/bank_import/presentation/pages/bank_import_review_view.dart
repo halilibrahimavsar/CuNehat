@@ -5,6 +5,8 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
@@ -35,8 +37,74 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     return Column(
       children: [
         _warningBanner(context),
-        Expanded(child: _stepper ? _buildStepper(context) : _buildList(context)),
+        _reconcileBanner(context),
+        _currencyBanner(context),
+        Expanded(
+            child: _stepper ? _buildStepper(context) : _buildList(context)),
       ],
+    );
+  }
+
+  /// Ekstre para birimi hedef cüzdanınkinden farklıysa uyarır (tutarlar
+  /// dönüştürülmez). Yoksa hiçbir şey.
+  Widget _currencyBanner(BuildContext context) {
+    final foreign = _s.foreignCurrency;
+    final wallet = _s.walletCurrency;
+    if (foreign == null || wallet == null) return const SizedBox.shrink();
+    final color = Theme.of(context).colorScheme.error;
+    return Container(
+      width: double.infinity,
+      color: color.withValues(alpha: 0.12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.currency_exchange_rounded, size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.l10n.bankImportCurrencyMismatch(
+                currencySymbol(foreign),
+                currencySymbol(wallet),
+              ),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Bakiye sütunuyla mutabakat sonucunu gösterir: `matched` → yeşil güven
+  /// şeridi (işaretler bakiyeden doğrulandı); `mismatch` → kırmızı uyarı
+  /// (bakiye tutmadı, kullanıcı işaretleri kontrol etmeli). Yoksa hiçbir şey.
+  Widget _reconcileBanner(BuildContext context) {
+    final rec = _s.reconciliation;
+    if (rec == null || rec.status == ReconcileStatus.notAvailable) {
+      return const SizedBox.shrink();
+    }
+    final matched = rec.status == ReconcileStatus.matched;
+    final color = matched ? Colors.green : Theme.of(context).colorScheme.error;
+    return Container(
+      width: double.infinity,
+      color: color.withValues(alpha: 0.12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(matched ? Icons.verified_rounded : Icons.error_outline_rounded,
+              size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              matched
+                  ? context.l10n.bankImportReconcileMatched
+                  : context.l10n.bankImportReconcileMismatch(rec.mismatchCount),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -74,6 +142,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       children: [
         _summaryBar(context),
         _batchCategoryBar(context),
+        _batchTypeBar(context),
         Expanded(
           child: ListView.separated(
             itemCount: _s.drafts.length,
@@ -95,8 +164,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              context.l10n.bankImportSummary(
-                  _s.drafts.length, _s.duplicateCount, _s.skippedRows),
+              context.l10n.bankImportSummary(_s.drafts.length,
+                  _s.duplicateCount, _s.skippedRows, _s.uncategorizedCount),
               style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 8),
@@ -136,15 +205,15 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (!hasExpense && !hasIncome) return const SizedBox.shrink();
 
     String? currentFor(bool income) => _s.drafts
-        .firstWhere((d) => d.isIncome == income,
-            orElse: () => _s.drafts.first)
+        .firstWhere((d) => d.isIncome == income, orElse: () => _s.drafts.first)
         .categoryId;
 
     Widget picker(bool income, String label) {
       final cats = _catsFor(income);
       if (cats.isEmpty) return const SizedBox.shrink();
-      final value =
-          cats.any((c) => c.id == currentFor(income)) ? currentFor(income) : null;
+      final value = cats.any((c) => c.id == currentFor(income))
+          ? currentFor(income)
+          : null;
       return Expanded(
         child: Row(
           children: [
@@ -174,9 +243,44 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: Row(
         children: [
-          if (hasExpense) picker(false, context.l10n.bankImportDefaultExpenseCat),
+          if (hasExpense)
+            picker(false, context.l10n.bankImportDefaultExpenseCat),
           if (hasExpense && hasIncome) const SizedBox(width: 12),
           if (hasIncome) picker(true, context.l10n.bankImportDefaultIncomeCat),
+        ],
+      ),
+    );
+  }
+
+  /// Toplu tür: tek dokunuşla tüm satırları gider ya da gelir yapar. Tek
+  /// pozitif "Tutar" sütunlu (işaretsiz) ekstrelerde tüm satırlar yanlış yöne
+  /// düşerse (ör. hepsi gelir) hızlı düzeltme için.
+  Widget _batchTypeBar(BuildContext context) {
+    ButtonStyle style() => OutlinedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          Text(context.l10n.bankImportBatchTypeLabel,
+              style: const TextStyle(fontSize: 12)),
+          OutlinedButton.icon(
+            onPressed: () => _cubit.setAllType(TransactionTypeModel.expense),
+            icon: const Icon(Icons.trending_down_rounded, size: 16),
+            label: Text(context.l10n.bankImportSetAllExpense),
+            style: style(),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => _cubit.setAllType(TransactionTypeModel.income),
+            icon: const Icon(Icons.trending_up_rounded, size: 16),
+            label: Text(context.l10n.bankImportSetAllIncome),
+            style: style(),
+          ),
         ],
       ),
     );
@@ -203,7 +307,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     children: [
                       Expanded(
                         child: InkWell(
-                          onTap: () => _editDescriptionDialog(context, i, d.description),
+                          onTap: () =>
+                              _editDescriptionDialog(context, i, d.description),
                           borderRadius: BorderRadius.circular(4),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 2),
@@ -214,11 +319,15 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                                     d.description.isEmpty ? '—' : d.description,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontWeight: FontWeight.w500),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Icon(Icons.edit_outlined, size: 12, color: Theme.of(context).colorScheme.outline),
+                                Icon(Icons.edit_outlined,
+                                    size: 12,
+                                    color:
+                                        Theme.of(context).colorScheme.outline),
                               ],
                             ),
                           ),
@@ -229,7 +338,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                         onTap: () => _editAmountDialog(context, i, d.amount),
                         borderRadius: BorderRadius.circular(4),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
                           child: Row(
                             children: [
                               Text(
@@ -238,7 +348,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                                     color: accent, fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(width: 4),
-                              Icon(Icons.edit_outlined, size: 12, color: accent.withValues(alpha: 0.7)),
+                              Icon(Icons.edit_outlined,
+                                  size: 12,
+                                  color: accent.withValues(alpha: 0.7)),
                             ],
                           ),
                         ),
@@ -295,14 +407,21 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final cats = _catsFor(d.isIncome);
     if (cats.isEmpty) return const SizedBox.shrink();
     final value = cats.any((c) => c.id == d.categoryId) ? d.categoryId : null;
+    final cs = Theme.of(context).colorScheme;
     return DropdownButton<String>(
       value: value,
       isDense: true,
       underline: const SizedBox.shrink(),
       style: Theme.of(context).textTheme.bodySmall,
+      // Tahmin edilemeyen taslaklar `categoryId: null` gelir (bkz. cubit);
+      // boş dropdown yerine açık bir "seç" ipucu göster, aksi halde satır
+      // kategorisi varmış gibi yanlışlıkla boş görünür.
+      hint: Text(
+        context.l10n.bankImportPickCategoryHint,
+        style: TextStyle(color: cs.error, fontSize: 12),
+      ),
       items: [
-        for (final c in cats)
-          DropdownMenuItem(value: c.id, child: Text(c.id)),
+        for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.id)),
       ],
       onChanged: (v) => v == null ? null : _cubit.setDraftCategory(i, v),
     );
@@ -314,8 +433,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       child: SizedBox(
         width: double.infinity,
         child: FilledButton.icon(
-          onPressed:
-              _s.selectedCount == 0 ? null : () => _cubit.commit(),
+          onPressed: _s.selectedCount == 0 ? null : () => _cubit.commit(),
           icon: const Icon(Icons.playlist_add_check_rounded),
           label: Text(context.l10n.bankImportAdd(_s.selectedCount)),
           style: FilledButton.styleFrom(
@@ -349,10 +467,12 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   Text(AppFormatters.dateLong.format(d.date)),
                   const SizedBox(height: 8),
                   InkWell(
-                    onTap: () => _editDescriptionDialog(context, _step, d.description),
+                    onTap: () =>
+                        _editDescriptionDialog(context, _step, d.description),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -364,7 +484,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Icon(Icons.edit_outlined, size: 16, color: Theme.of(context).colorScheme.outline),
+                          Icon(Icons.edit_outlined,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.outline),
                         ],
                       ),
                     ),
@@ -374,7 +496,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     onTap: () => _editAmountDialog(context, _step, d.amount),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -386,7 +509,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                                 fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(width: 6),
-                          Icon(Icons.edit_outlined, size: 20, color: accent.withValues(alpha: 0.7)),
+                          Icon(Icons.edit_outlined,
+                              size: 20, color: accent.withValues(alpha: 0.7)),
                         ],
                       ),
                     ),
@@ -457,7 +581,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     }
   }
 
-  Future<void> _editDescriptionDialog(BuildContext context, int i, String current) async {
+  Future<void> _editDescriptionDialog(
+      BuildContext context, int i, String current) async {
     final controller = TextEditingController(text: current);
     final result = await showDialog<String>(
       context: context,
@@ -469,8 +594,11 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           decoration: const InputDecoration(labelText: 'Açıklama'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Kaydet')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Kaydet')),
         ],
       ),
     );
@@ -479,8 +607,10 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     }
   }
 
-  Future<void> _editAmountDialog(BuildContext context, int i, double current) async {
-    final controller = TextEditingController(text: formatAmountForInput(current));
+  Future<void> _editAmountDialog(
+      BuildContext context, int i, double current) async {
+    final controller =
+        TextEditingController(text: formatAmountForInput(current));
     final result = await showDialog<double>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -489,10 +619,12 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           controller: controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: 'Tutar', suffixText: '₺'),
+          decoration:
+              const InputDecoration(labelText: 'Tutar', suffixText: '₺'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
           FilledButton(
             onPressed: () {
               final val = parseMoneyInput(controller.text);

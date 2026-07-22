@@ -2267,8 +2267,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportCopied => 'Kopyalandı';
 
   @override
-  String bankImportSummary(int count, int dup, int skipped) {
-    return '$count hareket · $dup olası tekrar · $skipped satır atlandı';
+  String bankImportSummary(int count, int dup, int skipped, int uncategorized) {
+    return '$count hareket · $dup olası tekrar · $skipped satır atlandı · $uncategorized kategorisiz';
   }
 
   @override
@@ -2280,6 +2280,39 @@ class AppLocalizationsTr extends AppLocalizations {
   String bankImportDoneMsg(int added, int skipped) {
     return '$added işlem eklendi, $skipped atlandı.';
   }
+
+  @override
+  String get bankImportDonePastDatesHint =>
+      'Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.';
+
+  @override
+  String get bankImportReconcileMatched =>
+      'Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.';
+
+  @override
+  String bankImportReconcileMismatch(int count) {
+    return 'Bakiye uyuşmadı: $count satırda bakiye ile tutar tutmuyor. Ekstre eksik/hatalı okunmuş olabilir; işaretleri kontrol et.';
+  }
+
+  @override
+  String bankImportCurrencyMismatch(String statement, String wallet) {
+    return 'Ekstre $statement para biriminde görünüyor ama hedef cüzdan $wallet. Tutarlar dönüştürülmez; doğru cüzdana aktardığından emin ol.';
+  }
+
+  @override
+  String get bankImportUndo => 'İçe aktarımı geri al';
+
+  @override
+  String get bankImportUndoDone => 'İçe aktarım geri alındı.';
+
+  @override
+  String get bankImportBatchTypeLabel => 'Tümünü çevir:';
+
+  @override
+  String get bankImportSetAllExpense => 'Gider';
+
+  @override
+  String get bankImportSetAllIncome => 'Gelir';
 
   @override
   String get bankImportReviewWarning =>
@@ -2307,4 +2340,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportSyncSuccess => 'Cüzdan bakiyesi eşitlendi.';
+
+  @override
+  String get bankImportCategorySuggestionTitle => 'Yeni kategori önerileri';
+
+  @override
+  String get bankImportCategorySuggestionHint =>
+      'Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.';
+
+  @override
+  String get bankImportCategorySuggestionContinue => 'Devam et';
+
+  @override
+  String get bankImportPickCategoryHint => 'Kategori seç';
 }

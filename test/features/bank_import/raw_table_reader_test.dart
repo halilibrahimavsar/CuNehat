@@ -37,8 +37,8 @@ void main() {
   });
 
   test('virgül ayraçlı CSV okunur', () async {
-    final path =
-        await write('b.csv', 'Date,Description,Amount\n2026-06-15,COFFEE,-45.50\n');
+    final path = await write(
+        'b.csv', 'Date,Description,Amount\n2026-06-15,COFFEE,-45.50\n');
     final table = await reader.readCsv(path);
     expect(table.columnCount, 3);
     expect(table.rows.last, ['2026-06-15', 'COFFEE', '-45.50']);

@@ -4193,8 +4193,8 @@ abstract class AppLocalizations {
   /// No description provided for @bankImportSummary.
   ///
   /// In tr, this message translates to:
-  /// **'{count} hareket · {dup} olası tekrar · {skipped} satır atlandı'**
-  String bankImportSummary(int count, int dup, int skipped);
+  /// **'{count} hareket · {dup} olası tekrar · {skipped} satır atlandı · {uncategorized} kategorisiz'**
+  String bankImportSummary(int count, int dup, int skipped, int uncategorized);
 
   /// No description provided for @bankImportAdd.
   ///
@@ -4207,6 +4207,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{added} işlem eklendi, {skipped} atlandı.'**
   String bankImportDoneMsg(int added, int skipped);
+
+  /// No description provided for @bankImportDonePastDatesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.'**
+  String get bankImportDonePastDatesHint;
+
+  /// No description provided for @bankImportReconcileMatched.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.'**
+  String get bankImportReconcileMatched;
+
+  /// No description provided for @bankImportReconcileMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye uyuşmadı: {count} satırda bakiye ile tutar tutmuyor. Ekstre eksik/hatalı okunmuş olabilir; işaretleri kontrol et.'**
+  String bankImportReconcileMismatch(int count);
+
+  /// No description provided for @bankImportCurrencyMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstre {statement} para biriminde görünüyor ama hedef cüzdan {wallet}. Tutarlar dönüştürülmez; doğru cüzdana aktardığından emin ol.'**
+  String bankImportCurrencyMismatch(String statement, String wallet);
+
+  /// No description provided for @bankImportUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarımı geri al'**
+  String get bankImportUndo;
+
+  /// No description provided for @bankImportUndoDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçe aktarım geri alındı.'**
+  String get bankImportUndoDone;
+
+  /// No description provided for @bankImportBatchTypeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü çevir:'**
+  String get bankImportBatchTypeLabel;
+
+  /// No description provided for @bankImportSetAllExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gider'**
+  String get bankImportSetAllExpense;
+
+  /// No description provided for @bankImportSetAllIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir'**
+  String get bankImportSetAllIncome;
 
   /// No description provided for @bankImportReviewWarning.
   ///
@@ -4255,6 +4309,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Cüzdan bakiyesi eşitlendi.'**
   String get bankImportSyncSuccess;
+
+  /// No description provided for @bankImportCategorySuggestionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni kategori önerileri'**
+  String get bankImportCategorySuggestionTitle;
+
+  /// No description provided for @bankImportCategorySuggestionHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.'**
+  String get bankImportCategorySuggestionHint;
+
+  /// No description provided for @bankImportCategorySuggestionContinue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam et'**
+  String get bankImportCategorySuggestionContinue;
+
+  /// No description provided for @bankImportPickCategoryHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori seç'**
+  String get bankImportPickCategoryHint;
 }
 
 class _AppLocalizationsDelegate

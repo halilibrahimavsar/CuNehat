@@ -877,12 +877,13 @@
   "bankImportPdfRawHint": "Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.",
   "bankImportCopy": "Kopyala",
   "bankImportCopied": "Kopyalandı",
-  "bankImportSummary": "{count} hareket · {dup} olası tekrar · {skipped} satır atlandı",
+  "bankImportSummary": "{count} hareket · {dup} olası tekrar · {skipped} satır atlandı · {uncategorized} kategorisiz",
   "@bankImportSummary": {
     "placeholders": {
       "count": { "type": "int" },
       "dup": { "type": "int" },
-      "skipped": { "type": "int" }
+      "skipped": { "type": "int" },
+      "uncategorized": { "type": "int" }
     }
   },
   "bankImportAdd": "Seçilenleri ekle ({count})",
@@ -896,6 +897,24 @@
       "skipped": { "type": "int" }
     }
   },
+  "bankImportDonePastDatesHint": "Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.",
+  "bankImportReconcileMatched": "Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.",
+  "bankImportReconcileMismatch": "Bakiye uyuşmadı: {count} satırda bakiye ile tutar tutmuyor. Ekstre eksik/hatalı okunmuş olabilir; işaretleri kontrol et.",
+  "@bankImportReconcileMismatch": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "bankImportCurrencyMismatch": "Ekstre {statement} para biriminde görünüyor ama hedef cüzdan {wallet}. Tutarlar dönüştürülmez; doğru cüzdana aktardığından emin ol.",
+  "@bankImportCurrencyMismatch": {
+    "placeholders": {
+      "statement": { "type": "String" },
+      "wallet": { "type": "String" }
+    }
+  },
+  "bankImportUndo": "İçe aktarımı geri al",
+  "bankImportUndoDone": "İçe aktarım geri alındı.",
+  "bankImportBatchTypeLabel": "Tümünü çevir:",
+  "bankImportSetAllExpense": "Gider",
+  "bankImportSetAllIncome": "Gelir",
   "bankImportReviewWarning": "Tarih, tutar ve kategoriler dosyadan otomatik algılandı; hatalı olabilir. Eklemeden önce her hareketi kontrol et.",
   "bankImportDoneBalanceLabel": "Güncel cüzdan bakiyesi",
   "bankImportDoneBalanceHint": "Bu bakiye, içe aktarılan hareketler dahil hesaplandı. Banka hesabındaki güncel bakiyeyle karşılaştır; farklıysa aşağıdan eşitleyebilirsin.",
@@ -903,5 +922,9 @@
   "bankImportSyncDialogTitle": "Bakiyeyi Eşitle",
   "bankImportSyncDialogHint": "Bankandaki gerçek güncel bakiyeni gir; cüzdanın buna göre ayarlanır. Geçmiş hareketlerin değişmez, yalnızca başlangıç bakiyesi düzeltilir.",
   "bankImportSyncDialogLabel": "Gerçek bakiye",
-  "bankImportSyncSuccess": "Cüzdan bakiyesi eşitlendi."
+  "bankImportSyncSuccess": "Cüzdan bakiyesi eşitlendi.",
+  "bankImportCategorySuggestionTitle": "Yeni kategori önerileri",
+  "bankImportCategorySuggestionHint": "Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.",
+  "bankImportCategorySuggestionContinue": "Devam et",
+  "bankImportPickCategoryHint": "Kategori seç"
 }

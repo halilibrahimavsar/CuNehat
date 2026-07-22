@@ -862,12 +862,13 @@
   "bankImportPdfRawHint": "We extracted the text but couldn't recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank's layout.",
   "bankImportCopy": "Copy",
   "bankImportCopied": "Copied",
-  "bankImportSummary": "{count} transactions · {dup} possible duplicates · {skipped} rows skipped",
+  "bankImportSummary": "{count} transactions · {dup} possible duplicates · {skipped} rows skipped · {uncategorized} uncategorized",
   "@bankImportSummary": {
     "placeholders": {
       "count": { "type": "int" },
       "dup": { "type": "int" },
-      "skipped": { "type": "int" }
+      "skipped": { "type": "int" },
+      "uncategorized": { "type": "int" }
     }
   },
   "bankImportAdd": "Add selected ({count})",
@@ -881,6 +882,24 @@
       "skipped": { "type": "int" }
     }
   },
+  "bankImportDonePastDatesHint": "Some transactions are dated in earlier months. The transactions list shows the current month by default; widen the date filter to see them all.",
+  "bankImportReconcileMatched": "Verified against balance: the income/expense direction of transactions matches the bank's balance column.",
+  "bankImportReconcileMismatch": "Balance mismatch: {count} row(s) don't reconcile with the balance column. The statement may be misread; check the signs.",
+  "@bankImportReconcileMismatch": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "bankImportCurrencyMismatch": "The statement appears to be in {statement} but the target wallet is {wallet}. Amounts are not converted; make sure you're importing into the right wallet.",
+  "@bankImportCurrencyMismatch": {
+    "placeholders": {
+      "statement": { "type": "String" },
+      "wallet": { "type": "String" }
+    }
+  },
+  "bankImportUndo": "Undo import",
+  "bankImportUndoDone": "Import undone.",
+  "bankImportBatchTypeLabel": "Set all to:",
+  "bankImportSetAllExpense": "Expense",
+  "bankImportSetAllIncome": "Income",
   "bankImportReviewWarning": "Dates, amounts, and categories were auto-detected from the file and may be wrong. Check every transaction before adding.",
   "bankImportDoneBalanceLabel": "Current wallet balance",
   "bankImportDoneBalanceHint": "This balance was calculated including the imported transactions. Compare it with your bank's current balance — you can sync it below if they differ.",
@@ -888,5 +907,9 @@
   "bankImportSyncDialogTitle": "Sync Balance",
   "bankImportSyncDialogHint": "Enter your bank's real current balance; the wallet will be adjusted to match. Past transactions stay unchanged — only the opening balance is corrected.",
   "bankImportSyncDialogLabel": "Real balance",
-  "bankImportSyncSuccess": "Wallet balance synced."
+  "bankImportSyncSuccess": "Wallet balance synced.",
+  "bankImportCategorySuggestionTitle": "New category suggestions",
+  "bankImportCategorySuggestionHint": "Some transactions don't match any of your existing categories. Checked ones will be created and assigned automatically; unchecked ones won't be created and those transactions stay in the default category.",
+  "bankImportCategorySuggestionContinue": "Continue",
+  "bankImportPickCategoryHint": "Pick category"
 }

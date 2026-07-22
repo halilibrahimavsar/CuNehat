@@ -7,7 +7,8 @@ class GarantiPdfParser extends PdfParserStrategy {
   static const _keywords = ['garanti bbva', 'garanti bankası'];
 
   @override
-  bool canParse(String text) => PdfParserStrategy.keywordInHeader(text, _keywords);
+  bool canParse(String text) =>
+      PdfParserStrategy.keywordInHeader(text, _keywords);
 
   @override
   String get emptyDescriptionFallback => 'Garanti İşlemi';

@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 
+import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/data/statement_amount_parser.dart';
 import 'package:cunehat/features/bank_import/data/statement_date_parser.dart';
@@ -14,7 +15,11 @@ class MappingResult {
   /// Preamble/boş satırlar bu sayıya DAHİL DEĞİL (sessizce yok sayılır).
   final int skippedRows;
 
-  const MappingResult(this.drafts, this.skippedRows);
+  /// Bakiye sütunuyla mutabakat sonucu (varsa). İşaret bundan türetildiyse
+  /// `matched`; bakiye var ama tutmuyorsa `mismatch` → inceleme ekranında uyarı.
+  final BalanceReconciliation reconciliation;
+
+  const MappingResult(this.drafts, this.skippedRows, this.reconciliation);
 }
 
 /// CSV/Excel ham tablosunu [ImportDraft]'lara çeviren eşleyici + otomatik
@@ -32,6 +37,7 @@ class ColumnMapper {
   static const _amountKw = ['tutar', 'amount', 'miktar'];
   static const _debitKw = ['borc', 'debit', 'cikan', 'harcama', 'gider'];
   static const _creditKw = ['alacak', 'credit', 'giren', 'yatan', 'gelir'];
+  static const _balanceKw = ['bakiye', 'balance', 'kalan'];
 
   /// Başlık ve içerik sezgisiyle bir başlangıç eşlemesi üretir.
   ColumnMapping guess(RawTable table) {
@@ -45,16 +51,24 @@ class ColumnMapper {
     var amountCol = _findByKeywords(header, _amountKw);
     final debitCol = _findByKeywords(header, _debitKw);
     final creditCol = _findByKeywords(header, _creditKw);
+    final balanceCol = _findByKeywords(header, _balanceKw);
 
-    // İçerik tabanlı fallback (başlık yok ya da eksik).
+    // "Bakiye Tutarı" gibi TEK başlık hem 'bakiye' hem 'tutar' anahtarını
+    // içerebilir; bakiye sütununu yanlışlıkla tutar sanma.
+    if (amountCol >= 0 && amountCol == balanceCol) amountCol = -1;
+
+    // İçerik tabanlı fallback (başlık yok ya da eksik). Bakiye sütunu bilerek
+    // içerikten TAHMİN EDİLMEZ (running-balance ile tutar aynı derece "para"
+    // görünür; yanlış eleme riski) — yalnız başlıktan alınır.
     final dataRows = _dataRows(table, headerIdx);
     if (dateCol < 0) dateCol = _guessDateColumn(dataRows, table.columnCount);
     if (amountCol < 0 && debitCol < 0 && creditCol < 0) {
-      amountCol = _guessMoneyColumn(dataRows, table.columnCount, dateCol);
+      amountCol =
+          _guessMoneyColumn(dataRows, table.columnCount, dateCol, balanceCol);
     }
     if (descCol < 0) {
-      descCol = _guessTextColumn(
-          dataRows, table.columnCount, {dateCol, amountCol, debitCol, creditCol});
+      descCol = _guessTextColumn(dataRows, table.columnCount,
+          {dateCol, amountCol, debitCol, creditCol, balanceCol});
     }
 
     final useDebitCredit = debitCol >= 0 || creditCol >= 0;
@@ -64,6 +78,7 @@ class ColumnMapper {
       amountCol: useDebitCredit ? null : (amountCol >= 0 ? amountCol : null),
       debitCol: useDebitCredit && debitCol >= 0 ? debitCol : null,
       creditCol: useDebitCredit && creditCol >= 0 ? creditCol : null,
+      balanceCol: balanceCol >= 0 ? balanceCol : null,
       signMode:
           useDebitCredit ? SignMode.debitCreditColumns : SignMode.signedAmount,
       hasHeaderRow: headerIdx >= 0,
@@ -74,8 +89,8 @@ class ColumnMapper {
   /// olmayan satırlar (preamble/boş) sessizce atlanır; biri geçerli diğeri
   /// bozuksa "atlanan" sayılır.
   MappingResult apply(RawTable table, ColumnMapping m) {
-    final drafts = <ImportDraft>[];
     var skipped = 0;
+    final rows = <_DataRow>[];
 
     for (final row in table.rows) {
       String cell(int i) => (i >= 0 && i < row.length) ? row[i] : '';
@@ -90,16 +105,43 @@ class ColumnMapper {
         continue;
       }
 
-      drafts.add(ImportDraft(
+      final balance =
+          m.balanceCol != null ? parseSignedMoney(cell(m.balanceCol!)) : null;
+      rows.add(_DataRow(
         date: date,
         description: cell(m.descCol).trim(),
-        amount: signed.abs(),
-        type: signed < 0
-            ? TransactionTypeModel.expense
-            : TransactionTypeModel.income,
+        columnSigned: signed,
+        magnitude: signed.abs(),
+        balance: balance,
       ));
     }
-    return MappingResult(drafts, skipped);
+
+    // Bakiye sütunu varsa deltalardan işareti türet + doğrula.
+    final reconciliation = reconcileBalances(
+      magnitudes: [for (final r in rows) r.magnitude],
+      balances: [for (final r in rows) r.balance],
+    );
+    final useDerived = reconciliation.status == ReconcileStatus.matched;
+
+    final drafts = <ImportDraft>[
+      for (var i = 0; i < rows.length; i++)
+        () {
+          final r = rows[i];
+          // Bakiyeden türetilen işaret varsa onu kullan (kolon işaretini ezer);
+          // yoksa (çapa satırı / mismatch) kolondan gelen işareti koru.
+          final derived = useDerived ? reconciliation.derivedSigned[i] : null;
+          final signed = derived ?? r.columnSigned;
+          return ImportDraft(
+            date: r.date,
+            description: r.description,
+            amount: signed.abs(),
+            type: signed < 0
+                ? TransactionTypeModel.expense
+                : TransactionTypeModel.income,
+          );
+        }(),
+    ];
+    return MappingResult(drafts, skipped, reconciliation);
   }
 
   double? _signedAmount(ColumnMapping m, String Function(int) cell) {
@@ -170,11 +212,12 @@ class ColumnMapper {
     return best;
   }
 
-  int _guessMoneyColumn(List<List<String>> rows, int cols, int exclude) {
+  int _guessMoneyColumn(
+      List<List<String>> rows, int cols, int exclude, int balanceExclude) {
     var best = -1;
     var bestHits = 0;
     for (var c = 0; c < cols; c++) {
-      if (c == exclude) continue;
+      if (c == exclude || c == balanceExclude) continue;
       var hits = 0;
       for (final r in rows) {
         if (c < r.length && parseSignedMoney(r[c]) != null && _hasDigit(r[c])) {
@@ -229,4 +272,22 @@ class ColumnMapper {
       .replaceAll('ç', 'c')
       .toLowerCase()
       .trim();
+}
+
+/// Ayrıştırma sırasında kabul edilen bir veri satırının ara temsili: bakiye
+/// mutabakatı için ham büyüklük/bakiye ile birlikte taşınır, sonra taslağa
+/// (işaret türetildikten sonra) dönüşür.
+class _DataRow {
+  final DateTime date;
+  final String description;
+  final double columnSigned;
+  final double magnitude;
+  final double? balance;
+  const _DataRow({
+    required this.date,
+    required this.description,
+    required this.columnSigned,
+    required this.magnitude,
+    required this.balance,
+  });
 }

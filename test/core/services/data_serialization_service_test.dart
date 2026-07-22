@@ -82,8 +82,8 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    service = DataSerializationService(
-        ReceiptStorageService.withBaseDir(tempDir));
+    service =
+        DataSerializationService(ReceiptStorageService.withBaseDir(tempDir));
     await _openAllBoxes();
     await _clearAllBoxes();
   });

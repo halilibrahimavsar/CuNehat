@@ -2263,8 +2263,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportCopied => 'Copied';
 
   @override
-  String bankImportSummary(int count, int dup, int skipped) {
-    return '$count transactions · $dup possible duplicates · $skipped rows skipped';
+  String bankImportSummary(int count, int dup, int skipped, int uncategorized) {
+    return '$count transactions · $dup possible duplicates · $skipped rows skipped · $uncategorized uncategorized';
   }
 
   @override
@@ -2276,6 +2276,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String bankImportDoneMsg(int added, int skipped) {
     return '$added added, $skipped skipped.';
   }
+
+  @override
+  String get bankImportDonePastDatesHint =>
+      'Some transactions are dated in earlier months. The transactions list shows the current month by default; widen the date filter to see them all.';
+
+  @override
+  String get bankImportReconcileMatched =>
+      'Verified against balance: the income/expense direction of transactions matches the bank\'s balance column.';
+
+  @override
+  String bankImportReconcileMismatch(int count) {
+    return 'Balance mismatch: $count row(s) don\'t reconcile with the balance column. The statement may be misread; check the signs.';
+  }
+
+  @override
+  String bankImportCurrencyMismatch(String statement, String wallet) {
+    return 'The statement appears to be in $statement but the target wallet is $wallet. Amounts are not converted; make sure you\'re importing into the right wallet.';
+  }
+
+  @override
+  String get bankImportUndo => 'Undo import';
+
+  @override
+  String get bankImportUndoDone => 'Import undone.';
+
+  @override
+  String get bankImportBatchTypeLabel => 'Set all to:';
+
+  @override
+  String get bankImportSetAllExpense => 'Expense';
+
+  @override
+  String get bankImportSetAllIncome => 'Income';
 
   @override
   String get bankImportReviewWarning =>
@@ -2303,4 +2336,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportSyncSuccess => 'Wallet balance synced.';
+
+  @override
+  String get bankImportCategorySuggestionTitle => 'New category suggestions';
+
+  @override
+  String get bankImportCategorySuggestionHint =>
+      'Some transactions don\'t match any of your existing categories. Checked ones will be created and assigned automatically; unchecked ones won\'t be created and those transactions stay in the default category.';
+
+  @override
+  String get bankImportCategorySuggestionContinue => 'Continue';
+
+  @override
+  String get bankImportPickCategoryHint => 'Pick category';
 }

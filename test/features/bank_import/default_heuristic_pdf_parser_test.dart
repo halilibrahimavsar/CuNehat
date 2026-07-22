@@ -25,7 +25,9 @@ void main() {
       expect(drafts.single.type, TransactionTypeModel.expense);
     });
 
-    test('tarihsiz / tutarsız satırlar atlanır (taslak yoksa eklenecek yer de yok)', () {
+    test(
+        'tarihsiz / tutarsız satırlar atlanır (taslak yoksa eklenecek yer de yok)',
+        () {
       const text = 'Hesap Özeti\n'
           'Müşteri No 12345\n'
           '18.06.2026 Sadece açıklama, tutar yok\n';
@@ -112,7 +114,8 @@ Halil İbrahim Avşa Akbank T.A.Ş. 2,000.00 2,009.99
       expect(drafts[3].date, DateTime(2026, 3, 4));
       expect(drafts[3].amount, 2000.00);
       expect(drafts[3].type, TransactionTypeModel.income);
-      expect(drafts[3].description, contains('Halil İbrahim Avşa Akbank T.A.Ş.'));
+      expect(
+          drafts[3].description, contains('Halil İbrahim Avşa Akbank T.A.Ş.'));
       // Önceki gider taslağının açıklaması kirlenmemiş olmalı.
       expect(drafts[2].description, isNot(contains('Akbank')));
     });
@@ -127,7 +130,8 @@ Halil İbrahim Avşa Akbank T.A.Ş. 2,000.00 2,009.99
       // Belgede yalnız İngilizce (virgül-binlik) sayılar olduğundan artık
       // yalnız o biçim aranıyor; TR-biçim alternatifi hiç denenmediği için
       // köprü kuramaz.
-      const text = '19/07/2026 POS Kart İşlemleri - MAGAZA ISTANBUL TR Pos satış. -263.443,902.50\n'
+      const text =
+          '19/07/2026 POS Kart İşlemleri - MAGAZA ISTANBUL TR Pos satış. -263.443,902.50\n'
           '20/07/2026 POS Kart İşlemleri - BASKA MAGAZA TR Pos satış. -100.00 3,802.50\n';
       final drafts = const DefaultHeuristicPdfParser().parseLines(text).drafts;
 
@@ -137,7 +141,8 @@ Halil İbrahim Avşa Akbank T.A.Ş. 2,000.00 2,009.99
       expect(drafts[1].amount, 100.00);
     });
 
-    test('moneyPatternFor: belge TR-biçimiyse bitişik durumda da doğru ayrışır', () {
+    test('moneyPatternFor: belge TR-biçimiyse bitişik durumda da doğru ayrışır',
+        () {
       // Simetri kontrolü: belge TAMAMEN TR biçimindeyse (nokta-binlik/virgül-
       // ondalık), bitişik Tutar+Bakiye yine köprü kurmadan doğru ayrılmalı.
       const text = '19.07.2026 ISLEM ACIKLAMASI -1.234,561.890,12\n'

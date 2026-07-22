@@ -11,8 +11,7 @@ class RawTable {
   const RawTable(this.rows);
 
   bool get isEmpty => rows.isEmpty;
-  int get columnCount =>
-      rows.fold(0, (m, r) => r.length > m ? r.length : m);
+  int get columnCount => rows.fold(0, (m, r) => r.length > m ? r.length : m);
 }
 
 /// Banka ekstresi dosyalarını ham tabloya çeviren okuyucu. CSV bu fazda;
@@ -56,15 +55,15 @@ class RawTableReader {
     final bytes = await File(path).readAsBytes();
     // Satır sonlarını tek biçime indir; csv paketinin eol'ü aksi halde
     // '\n'-yalnız dosyalarda satırları bölmez (hepsini tek satır sanır).
-    final text =
-        _decode(bytes).replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+    final text = _decode(bytes).replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     if (text.trim().isEmpty) return const RawTable([]);
 
     final delimiter = _detectDelimiter(text);
     final rows = CsvToListConverter(
       fieldDelimiter: delimiter,
       eol: '\n',
-      shouldParseNumbers: false, // hücreler String kalsın (tutarı biz ayrıştırırız)
+      shouldParseNumbers:
+          false, // hücreler String kalsın (tutarı biz ayrıştırırız)
       allowInvalid: true,
     ).convert(text);
 

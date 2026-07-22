@@ -1,3 +1,4 @@
+import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
@@ -89,6 +90,66 @@ void main() {
       final r = mapper.apply(table, m);
       expect(r.drafts.length, 1);
       expect(r.skippedRows, 1);
+    });
+  });
+
+  group('bakiye sütunu + mutabakat', () {
+    test('guess normal Bakiye sütununu yakalar', () {
+      final table = RawTable([
+        ['Tarih', 'Açıklama', 'Tutar', 'Bakiye'],
+        ['15.06.2026', 'MARKET', '100,00', '900,00'],
+      ]);
+      final m = mapper.guess(table);
+      expect(m.amountCol, 2);
+      expect(m.balanceCol, 3);
+    });
+
+    test('tek "Bakiye Tutarı" başlığı tutar sanılmaz (bakiye olarak alınır)',
+        () {
+      final table = RawTable([
+        ['Tarih', 'Açıklama', 'Bakiye Tutarı'],
+        ['01.01.2026', 'X', '900,00'],
+        ['02.01.2026', 'Y', '850,00'],
+      ]);
+      final m = mapper.guess(table);
+      expect(m.balanceCol, 2);
+      expect(m.amountCol, isNull); // bakiye tutar sanılmadı
+    });
+
+    test('tek pozitif Tutar sütunu: gerçek gider bakiye deltasından türetilir',
+        () {
+      // Tüm Tutar değerleri POZİTİF (işaretsiz) → kolon hepsini gelir sanardı.
+      // Bakiye deltaları gerçek yönü açığa çıkarır.
+      final table = RawTable([
+        ['Tarih', 'Açıklama', 'Tutar', 'Bakiye'],
+        ['15.06.2026', 'DEVİR', '100,00', '900,00'], // çapa
+        ['16.06.2026', 'MARKET', '50,00', '850,00'], // bakiye düştü → gider
+        ['17.06.2026', 'MAAŞ', '200,00', '1.050,00'], // bakiye arttı → gelir
+      ]);
+      final r = mapper.apply(table, mapper.guess(table));
+      expect(r.reconciliation.status, ReconcileStatus.matched);
+      expect(r.drafts.length, 3);
+      // Çapa satırı kolon işaretini korur (pozitif → gelir).
+      expect(r.drafts[0].type, TransactionTypeModel.income);
+      // Bunlar bakiyeden türetildi: kolon "gelir" derdi ama gerçek gider.
+      expect(r.drafts[1].type, TransactionTypeModel.expense);
+      expect(r.drafts[1].amount, 50.0);
+      expect(r.drafts[2].type, TransactionTypeModel.income);
+      expect(r.drafts[2].amount, 200.0);
+    });
+
+    test('bakiye tutmuyorsa mismatch döner, işaret kolondan korunur', () {
+      final table = RawTable([
+        ['Tarih', 'Açıklama', 'Tutar', 'Bakiye'],
+        ['15.06.2026', 'A', '-100,00', '500,00'],
+        ['16.06.2026', 'B', '-50,00', '700,00'], // delta +200 ≠ 50 → tutmaz
+        ['17.06.2026', 'C', '-70,00', '640,00'], // delta -60 ≠ 70 → tutmaz
+      ]);
+      final r = mapper.apply(table, mapper.guess(table));
+      expect(r.reconciliation.status, ReconcileStatus.mismatch);
+      // Türetme yapılmadı: negatif kolon işaretleri korunur (hepsi gider).
+      expect(r.drafts.every((d) => d.type == TransactionTypeModel.expense),
+          isTrue);
     });
   });
 }

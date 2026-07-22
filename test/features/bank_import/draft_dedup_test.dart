@@ -14,7 +14,8 @@ TransactionEntity _tx(DateTime d, double a, String title,
       tag: 'Food',
       amount: a,
       date: d,
-      type: expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
+      type:
+          expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
     );
 
 ImportDraft _draft(DateTime d, double a, String desc, {bool expense = true}) =>
@@ -22,7 +23,8 @@ ImportDraft _draft(DateTime d, double a, String desc, {bool expense = true}) =>
       date: d,
       description: desc,
       amount: a,
-      type: expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
+      type:
+          expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
     );
 
 void main() {

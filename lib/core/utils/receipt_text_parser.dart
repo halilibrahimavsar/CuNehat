@@ -53,11 +53,8 @@ final _moneyToken = RegExp(r'\d[\d.,]*\d|\d');
 final _dateRe = RegExp(r'(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})');
 
 ReceiptScanResult parseReceiptText(String raw) {
-  final lines = raw
-      .split('\n')
-      .map((l) => l.trim())
-      .where((l) => l.isNotEmpty)
-      .toList();
+  final lines =
+      raw.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
 
   return ReceiptScanResult(
     amount: _extractAmount(lines),
@@ -103,7 +100,8 @@ double? _extractAmount(List<String> lines) {
 
     // Yüksek öncelikli anahtar kazanır; eşitlikte büyük tutar (toplamlar en
     // büyüktür — mükerrer TOPLAM satırlarında güvenli seçim).
-    if (score > bestScore || (score == bestScore && (best == null || value > best))) {
+    if (score > bestScore ||
+        (score == bestScore && (best == null || value > best))) {
       bestScore = score;
       best = value;
     }

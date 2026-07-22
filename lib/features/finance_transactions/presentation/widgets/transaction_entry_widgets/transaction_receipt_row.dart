@@ -39,7 +39,9 @@ class ReceiptRow extends StatelessWidget {
           valueListenable: controller.receiptFileName,
           builder: (context, savedName, _) {
             final hasImage = picked != null || savedName != null;
-            if (!hasImage) return _AddButton(accent: accent, onPick: () => _pick(context));
+            if (!hasImage) {
+              return _AddButton(accent: accent, onPick: () => _pick(context));
+            }
             return _Preview(
               controller: controller,
               accent: accent,
@@ -119,7 +121,8 @@ class ReceiptRow extends StatelessWidget {
       }
       controller.ocrApplied.value = applied;
     } catch (e) {
-      debugPrint('Fiş OCR hatası: $e'); // Ek yine de eklenir; OCR başarısızlığı akışı bozmaz.
+      debugPrint(
+          'Fiş OCR hatası: $e'); // Ek yine de eklenir; OCR başarısızlığı akışı bozmaz.
     } finally {
       controller.ocrRunning.value = false;
     }

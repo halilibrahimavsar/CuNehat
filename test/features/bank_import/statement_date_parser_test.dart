@@ -40,7 +40,8 @@ void main() {
     });
 
     test('taşan tarih reddedilir', () {
-      expect(parseStatementDate('31.02.2026', StatementDateFormat.auto), isNull);
+      expect(
+          parseStatementDate('31.02.2026', StatementDateFormat.auto), isNull);
     });
 
     test('başlık/boş null', () {

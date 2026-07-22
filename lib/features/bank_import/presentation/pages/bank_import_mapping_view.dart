@@ -21,7 +21,9 @@ class BankImportMappingView extends StatelessWidget {
       context.read<BankImportCubit>().updateMapping(m);
 
   String _colLabel(int i) {
-    if (_m.hasHeaderRow && _table.rows.isNotEmpty && i < _table.rows.first.length) {
+    if (_m.hasHeaderRow &&
+        _table.rows.isNotEmpty &&
+        i < _table.rows.first.length) {
       final h = _table.rows.first[i].trim();
       if (h.isNotEmpty) return h.length > 22 ? '${h.substring(0, 22)}…' : h;
     }
@@ -44,10 +46,18 @@ class BankImportMappingView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _dropdown(context, context.l10n.bankImportColDate, cols,
-                        _m.dateCol, (v) => _update(context, _m.copyWith(dateCol: v))),
-                    _dropdown(context, context.l10n.bankImportColDesc, cols,
-                        _m.descCol, (v) => _update(context, _m.copyWith(descCol: v))),
+                    _dropdown(
+                        context,
+                        context.l10n.bankImportColDate,
+                        cols,
+                        _m.dateCol,
+                        (v) => _update(context, _m.copyWith(dateCol: v))),
+                    _dropdown(
+                        context,
+                        context.l10n.bankImportColDesc,
+                        cols,
+                        _m.descCol,
+                        (v) => _update(context, _m.copyWith(descCol: v))),
                     const Divider(height: 24),
                     Text(context.l10n.bankImportSignMode,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -59,7 +69,8 @@ class BankImportMappingView extends StatelessWidget {
                             label: Text(context.l10n.bankImportSignSingle)),
                         ButtonSegment(
                             value: SignMode.debitCreditColumns,
-                            label: Text(context.l10n.bankImportSignDebitCredit)),
+                            label:
+                                Text(context.l10n.bankImportSignDebitCredit)),
                       ],
                       selected: {_m.signMode},
                       onSelectionChanged: (s) =>
@@ -72,21 +83,24 @@ class BankImportMappingView extends StatelessWidget {
                           context.l10n.bankImportColAmount,
                           cols,
                           _m.amountCol ?? -1,
-                          (v) => _update(context, _m.copyWith(amountCol: () => v)))
+                          (v) =>
+                              _update(context, _m.copyWith(amountCol: () => v)))
                     else ...[
                       _dropdown(
                           context,
                           context.l10n.bankImportColDebit,
                           cols,
                           _m.debitCol ?? -1,
-                          (v) => _update(context, _m.copyWith(debitCol: () => v < 0 ? null : v)),
+                          (v) => _update(context,
+                              _m.copyWith(debitCol: () => v < 0 ? null : v)),
                           allowNone: true),
                       _dropdown(
                           context,
                           context.l10n.bankImportColCredit,
                           cols,
                           _m.creditCol ?? -1,
-                          (v) => _update(context, _m.copyWith(creditCol: () => v < 0 ? null : v)),
+                          (v) => _update(context,
+                              _m.copyWith(creditCol: () => v < 0 ? null : v)),
                           allowNone: true),
                     ],
                     const Divider(height: 24),
@@ -107,8 +121,8 @@ class BankImportMappingView extends StatelessWidget {
               onPressed: _m.isValid
                   ? () => context.read<BankImportCubit>().applyMapping()
                   : null,
-              style:
-                  FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+              style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16)),
               child: Text(context.l10n.bankImportContinue),
             ),
           ),
@@ -129,10 +143,12 @@ class BankImportMappingView extends StatelessWidget {
             flex: 3,
             child: DropdownButton<int>(
               isExpanded: true,
-              value: value >= 0 && value < cols ? value : (allowNone ? -1 : null),
+              value:
+                  value >= 0 && value < cols ? value : (allowNone ? -1 : null),
               hint: const Text('—'),
               items: [
-                if (allowNone) const DropdownMenuItem(value: -1, child: Text('—')),
+                if (allowNone)
+                  const DropdownMenuItem(value: -1, child: Text('—')),
                 for (var i = 0; i < cols; i++)
                   DropdownMenuItem(value: i, child: Text(_colLabel(i))),
               ],

@@ -7,12 +7,15 @@ void main() {
     const parser = AkbankPdfParser();
 
     test('canParse: başlıkta akbank geçerse true', () {
-      expect(parser.canParse('AKBANK T.A.Ş. HESAP ÖZETİ\n25/03/2026 ...'), isTrue);
+      expect(
+          parser.canParse('AKBANK T.A.Ş. HESAP ÖZETİ\n25/03/2026 ...'), isTrue);
       expect(parser.canParse('Akbank T.A.Ş.\n25/03/2026 ...'), isTrue);
       expect(parser.canParse('Garanti BBVA\n...'), isFalse);
     });
 
-    test('canParse: başlık dışında (işlem açıklamasında) geçen banka adını YOK sayar', () {
+    test(
+        'canParse: başlık dışında (işlem açıklamasında) geçen banka adını YOK sayar',
+        () {
       // Gerçek senaryo: bir Garanti ekstresinde bir EFT açıklamasında karşı
       // tarafın bankası olarak "Akbank" geçebilir — bu, ekstrenin Akbank'a
       // ait olduğu anlamına gelmez. canParse yalnız başlığa (ilk 20 satır)
@@ -45,7 +48,8 @@ AKBANK T.A.Ş. HESAP ÖZETİ
       expect(drafts[0].date, DateTime(2026, 3, 25));
       expect(drafts[0].amount, 6500.00);
       expect(drafts[0].type, TransactionTypeModel.income);
-      expect(drafts[0].description, contains('Transfer İşlemleri - Gönderen: HALİL İBRAHİM AVŞAR'));
+      expect(drafts[0].description,
+          contains('Transfer İşlemleri - Gönderen: HALİL İBRAHİM AVŞAR'));
 
       // Row 2: Expense (-7000.00)
       expect(drafts[1].date, DateTime(2026, 3, 25));
@@ -78,7 +82,8 @@ AKBANK T.A.Ş. HESAP ÖZETİ
       expect(drafts[5].description, contains('SOK-10419'));
     });
 
-    test('satıra sarılmış (iki fiziksel satırlık) açıklama kesilmeden korunur', () {
+    test('satıra sarılmış (iki fiziksel satırlık) açıklama kesilmeden korunur',
+        () {
       // Gerçek ekran görüntüsündeki FEFT satırı: syncfusion'ın layoutText:true
       // çıktısında uzun açıklama ikinci bir görsel satıra sarar (o satırda ne
       // tarih ne tutar vardır). Devam satırı önceki taslağa eklenmeli, sessizce
@@ -97,13 +102,16 @@ Halil İbrahim Avşa Akbank T.A.Ş.
       expect(drafts[0].type, TransactionTypeModel.income);
       // Sarılan devam satırı açıklamaya EKLENMİŞ olmalı, kaybolmamalı.
       expect(drafts[0].description, contains('999/4688492'));
-      expect(drafts[0].description, contains('Halil İbrahim Avşa Akbank T.A.Ş.'));
+      expect(
+          drafts[0].description, contains('Halil İbrahim Avşa Akbank T.A.Ş.'));
       // İkinci satır kendi taslağı olarak bozulmadan devam etmeli.
       expect(drafts[1].amount, 7000.00);
       expect(drafts[1].type, TransactionTypeModel.expense);
     });
 
-    test('belge başlığından önce gelen sarılmış satır (taslak yoksa) yok sayılır', () {
+    test(
+        'belge başlığından önce gelen sarılmış satır (taslak yoksa) yok sayılır',
+        () {
       const text = '''
 Bu bir başlık devam metnidir.
 25/03/2026 FEFT Transfer 100.00 200.00

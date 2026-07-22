@@ -14,13 +14,17 @@ class DefaultHeuristicPdfParser extends PdfParserStrategy {
   /// (kullanıcı incelemede düzeltebilir).
   @override
   TransactionTypeModel signOf(String token, String fullText) {
-    if (PdfParserStrategy.isNegativeToken(token)) return TransactionTypeModel.expense;
+    if (PdfParserStrategy.isNegativeToken(token)) {
+      return TransactionTypeModel.expense;
+    }
     if (token.trim().contains('+')) return TransactionTypeModel.income;
 
     final debitsSigned = PdfParserStrategy.moneyPatternFor(fullText)
         .allMatches(fullText)
         .any((m) => PdfParserStrategy.isNegativeToken(m.group(0)!));
 
-    return debitsSigned ? TransactionTypeModel.income : TransactionTypeModel.expense;
+    return debitsSigned
+        ? TransactionTypeModel.income
+        : TransactionTypeModel.expense;
   }
 }

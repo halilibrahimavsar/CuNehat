@@ -1,9 +1,18 @@
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
+import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 CategoryEntity _cat(String id, {bool isExpense = true}) =>
     CategoryEntity(id: id, iconName: 'x', isExpense: isExpense);
+
+ImportDraft _draft(String desc, {bool income = false}) => ImportDraft(
+      date: DateTime(2026, 3, 25),
+      description: desc,
+      amount: 10,
+      type: income ? TransactionTypeModel.income : TransactionTypeModel.expense,
+    );
 
 void main() {
   final guesser = CategoryGuesser();
@@ -57,7 +66,9 @@ void main() {
     expect(result, 'Maaş');
   });
 
-  test('tahmin edilen kategori kullanıcı listesinde yoksa null döner (fuzzy düşme yok)', () {
+  test(
+      'tahmin edilen kategori kullanıcı listesinde yoksa null döner (fuzzy düşme yok)',
+      () {
     final withoutAlisveris = [_cat('Yemek'), _cat('Fatura')];
     final result = guesser.guess(
       description: 'MIGROS TIC.A.S.',
@@ -120,5 +131,129 @@ void main() {
       candidates: defaultExpenseCats,
     );
     expect(result, isNull);
+  });
+
+  // --- Gerçek Akbank ekstre örneği (bkz. akbank_pdf_parser_test.dart) ---
+  // REGRESYON: kullanıcının canlı testinde bu satırların çoğu eşleşmiyordu.
+
+  test('REGRESYON: POS satışında bitişik marka adı (jenerik "market") eşleşir',
+      () {
+    final result = guesser.guess(
+      description: '000000003598401-DEMIR MARKET ISTANBUL TR Pos satış.',
+      isIncome: false,
+      candidates: defaultExpenseCats,
+    );
+    expect(result, 'Alışveriş');
+  });
+
+  test(
+      'REGRESYON: jenerik "petrol" akaryakıt zinciri olmayan istasyonu da yakalar',
+      () {
+    final result = guesser.guess(
+      description: '000000000269480-DEMKAR PETROL ISTANBUL TR Pos satış.',
+      isIncome: false,
+      candidates: defaultExpenseCats,
+    );
+    expect(result, 'Ulaşım');
+  });
+
+  test(
+      'REGRESYON: mağaza koduna tire ile bitişik marka adı (SOK-10419) eşleşir',
+      () {
+    final result = guesser.guess(
+      description:
+          '0000000002419511-SOK-10419-USKUDAR YU ISTANBUL TR Pos satış.',
+      isIncome: false,
+      candidates: defaultExpenseCats,
+    );
+    expect(result, 'Alışveriş');
+  });
+
+  test('Midas Menkul Değerler transferi Yatırım grubuna düşer (kategori varsa)',
+      () {
+    final result = guesser.guess(
+      description:
+          'MB Transfer İşlemleri - Alıcı:Midas Menkul Değerler Anonim Şirketi-KA44QAPE4U',
+      isIncome: false,
+      candidates: [...defaultExpenseCats, _cat('Yatırım')],
+    );
+    expect(result, 'Yatırım');
+  });
+
+  test(
+      'Midas transferi varsayılan 5 kategoride Yatırım karşılığı yoksa null döner',
+      () {
+    final result = guesser.guess(
+      description:
+          'MB Transfer İşlemleri - Alıcı:Midas Menkul Değerler Anonim Şirketi-KA44QAPE4U',
+      isIncome: false,
+      candidates: defaultExpenseCats,
+    );
+    expect(result, isNull);
+  });
+
+  test('eczane açıklaması Sağlık grubuna düşer (kategori varsa)', () {
+    final result = guesser.guess(
+      description: 'ECZANESI ISTANBUL TR Pos satış.',
+      isIncome: false,
+      candidates: [...defaultExpenseCats, _cat('Sağlık')],
+    );
+    expect(result, 'Sağlık');
+  });
+
+  group('suggestNewCategories', () {
+    test('yalnız kullanıcının listesinde OLMAYAN gruplar önerilir', () {
+      final drafts = [
+        _draft('5411 MIGROS TIC.A.S.'), // Alışveriş zaten var → önerilmez
+        _draft(
+            'MB Transfer İşlemleri - Alıcı:Midas Menkul Değerler Anonim Şirketi'),
+      ];
+      final suggestions = guesser.suggestNewCategories(
+        drafts: drafts,
+        expenseCategories: defaultExpenseCats,
+        incomeCategories: defaultIncomeCats,
+      );
+      expect(suggestions.map((s) => s.name), ['Yatırım']);
+      expect(suggestions.single.isIncome, isFalse);
+    });
+
+    test('eşleşen grup yoksa boş liste döner', () {
+      final drafts = [_draft('HAVALE GELEN EFT REF 123456')];
+      final suggestions = guesser.suggestNewCategories(
+        drafts: drafts,
+        expenseCategories: defaultExpenseCats,
+        incomeCategories: defaultIncomeCats,
+      );
+      expect(suggestions, isEmpty);
+    });
+
+    test(
+        'aynı grup birden çok taslakta eşleşse de tek öneri döner (tekilleştirme)',
+        () {
+      final drafts = [
+        _draft('ECZANESI ISTANBUL'),
+        _draft('MERKEZ ECZANESI'),
+      ];
+      final suggestions = guesser.suggestNewCategories(
+        drafts: drafts,
+        expenseCategories: defaultExpenseCats,
+        incomeCategories: defaultIncomeCats,
+      );
+      expect(suggestions.length, 1);
+      expect(suggestions.single.name, 'Sağlık');
+    });
+
+    test('gelir tarafında karşılığı olmayan grup isIncome:true olarak önerilir',
+        () {
+      // Varsayılan gelir listesinde zaten "Maaş" var; karşılığı olmayan bir
+      // gelir grubu senaryosu için doğrudan boş gelir listesiyle test edilir.
+      final suggestions = guesser.suggestNewCategories(
+        drafts: [_draft('TEMMUZ MAAS ODEMESI', income: true)],
+        expenseCategories: defaultExpenseCats,
+        incomeCategories: const [],
+      );
+      expect(suggestions.single.name, 'Maaş');
+      expect(suggestions.single.isIncome, isTrue);
+    });
   });
 }

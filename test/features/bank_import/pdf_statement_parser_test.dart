@@ -5,7 +5,9 @@ void main() {
   group('PdfStatementParser (strateji seçimi)', () {
     final parser = PdfStatementParser();
 
-    test('Akbank başlığı → AkbankPdfParser seçilir (boş açıklama yedeği doğrular)', () {
+    test(
+        'Akbank başlığı → AkbankPdfParser seçilir (boş açıklama yedeği doğrular)',
+        () {
       const text = 'AKBANK T.A.Ş. HESAP ÖZETİ\n25/03/2026 100.00 200.00\n';
       final result = parser.parseText(text);
       expect(result.drafts.single.description, 'Akbank İşlemi');
@@ -24,7 +26,8 @@ void main() {
     });
 
     test('bilinmeyen banka → DefaultHeuristicPdfParser yedeğine düşer', () {
-      const text = 'BİLİNMEYEN BANKA A.Ş. HESAP ÖZETİ\n25/03/2026 100.00 200.00\n';
+      const text =
+          'BİLİNMEYEN BANKA A.Ş. HESAP ÖZETİ\n25/03/2026 100.00 200.00\n';
       final result = parser.parseText(text);
       expect(result.drafts.single.description, 'İşlem');
     });
@@ -55,14 +58,18 @@ void main() {
         buffer2.writeln('dolgu satırı $i');
       }
       buffer2
-        ..writeln('25/03/2026 FEFT Transfer - Alıcı Akbank T.A.Ş. 100.00 200.00')
+        ..writeln(
+            '25/03/2026 FEFT Transfer - Alıcı Akbank T.A.Ş. 100.00 200.00')
         ..writeln('26/03/2026 50.00 250.00'); // açıklaması boş kalacak satır
 
       final result2 = parser.parseText(buffer2.toString());
-      expect(result2.drafts[1].description, 'Garanti İşlemi'); // Akbank İşlemi DEĞİL
+      expect(result2.drafts[1].description,
+          'Garanti İşlemi'); // Akbank İşlemi DEĞİL
     });
 
-    test('boş metinde (DefaultHeuristic her zaman eşleşir ama satır yok) boş taslak listesi döner', () {
+    test(
+        'boş metinde (DefaultHeuristic her zaman eşleşir ama satır yok) boş taslak listesi döner',
+        () {
       final result = parser.parseText('');
       expect(result.drafts, isEmpty);
     });

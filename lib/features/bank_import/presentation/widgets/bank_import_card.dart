@@ -18,7 +18,8 @@ class BankImportCard extends StatelessWidget {
         leading: Icon(Icons.account_balance_outlined, color: scheme.primary),
         title: Text(
           context.l10n.bankImportSettingsEntry,
-          style: TextStyle(fontWeight: FontWeight.w600, color: scheme.onSurface),
+          style:
+              TextStyle(fontWeight: FontWeight.w600, color: scheme.onSurface),
         ),
         subtitle: Text(context.l10n.bankImportSettingsSubtitle,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),

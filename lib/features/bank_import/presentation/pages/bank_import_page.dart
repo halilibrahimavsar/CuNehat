@@ -7,6 +7,7 @@ import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -34,6 +35,8 @@ class BankImportPage extends StatelessWidget {
           builder: (context, state) => switch (state) {
             BankImportInitial() => const _SetupStep(),
             BankImportParsing() => _Busy(label: context.l10n.bankImportParsing),
+            BankImportCategorySuggestion() =>
+              _CategorySuggestionStep(state: state),
             BankImportMapping() => BankImportMappingView(state: state),
             BankImportReview() => BankImportReviewView(state: state),
             BankImportCommitting() => _Committing(state: state),
@@ -182,6 +185,84 @@ class _SetupStepState extends State<_SetupStep> {
   }
 }
 
+// ============================================================ Category suggestion
+
+/// Bilinen ama kullanıcının kategori listesinde karşılığı olmayan gruplar
+/// bulunduysa incelemeden önce onay ister. Varsayılan: hepsi işaretli (bir
+/// öneriyi reddetmek için kullanıcı işareti kaldırır) — bkz. kullanıcı talebi.
+class _CategorySuggestionStep extends StatefulWidget {
+  final BankImportCategorySuggestion state;
+  const _CategorySuggestionStep({required this.state});
+
+  @override
+  State<_CategorySuggestionStep> createState() =>
+      _CategorySuggestionStepState();
+}
+
+class _CategorySuggestionStepState extends State<_CategorySuggestionStep> {
+  late final Set<String> _approved =
+      widget.state.suggestions.map((s) => s.name).toSet();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.bankImportCategorySuggestionTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                context.l10n.bankImportCategorySuggestionHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            children: [
+              for (final s in widget.state.suggestions)
+                CheckboxListTile(
+                  value: _approved.contains(s.name),
+                  onChanged: (v) => setState(() {
+                    if (v == true) {
+                      _approved.add(s.name);
+                    } else {
+                      _approved.remove(s.name);
+                    }
+                  }),
+                  secondary: Icon(AppIcons.getIconData(s.iconName)),
+                  title: Text(s.name),
+                  subtitle: Text(s.isIncome
+                      ? context.l10n.detailLabelGelir
+                      : context.l10n.detailLabelGider),
+                ),
+            ],
+          ),
+        ),
+        SafeArea(
+          minimum: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => context
+                  .read<BankImportCubit>()
+                  .resolveCategorySuggestions(_approved),
+              child: Text(context.l10n.bankImportCategorySuggestionContinue),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // ============================================================ Simple states
 
 class _Busy extends StatelessWidget {
@@ -218,7 +299,8 @@ class _Committing extends StatelessWidget {
           children: [
             LinearProgressIndicator(value: ratio),
             const SizedBox(height: 16),
-            Text('${context.l10n.bankImportCommitting} ${state.done}/${state.total}'),
+            Text(
+                '${context.l10n.bankImportCommitting} ${state.done}/${state.total}'),
           ],
         ),
       ),
@@ -256,19 +338,57 @@ class _Done extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            if (state.hasPastMonthRows) ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 16, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      context.l10n.bankImportDonePastDatesHint,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (wallet != null) ...[
               const SizedBox(height: 20),
               _balanceCard(context, wallet),
             ],
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                _activateTargetWallet(context);
+                Navigator.of(context).pop();
+              },
               child: Text(context.l10n.bankImportClose),
             ),
+            if (state.added > 0) ...[
+              const SizedBox(height: 4),
+              TextButton.icon(
+                onPressed: () => _undo(context),
+                icon: const Icon(Icons.undo_rounded, size: 18),
+                label: Text(context.l10n.bankImportUndo),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  /// Son içe aktarımı geri alır (yalnız az önce eklenen işlemleri siler) ve
+  /// başa döner; kullanıcıya kısa bir onay gösterir.
+  Future<void> _undo(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final undoneMsg = context.l10n.bankImportUndoDone;
+    await context.read<BankImportCubit>().undoImport();
+    messenger.showSnackBar(SnackBar(content: Text(undoneMsg)));
   }
 
   /// İçe aktarım sonrası hesaplanan bakiyeyi gösterir + isteğe bağlı olarak
@@ -297,7 +417,7 @@ class _Done extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            AppFormatters.currencyFor(wallet.currency).format(wallet.balance),
+            AppFormatters.currencyFor(wallet.currency).format(state.balance),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
@@ -319,9 +439,23 @@ class _Done extends StatelessWidget {
     );
   }
 
-  Future<void> _showSyncDialog(BuildContext context, WalletEntity wallet) async {
+  /// Hedef cüzdan o an aktif değilse aktif yapar: kullanıcı geri döndüğünde
+  /// eklediği hareketleri gördüğü cüzdanda bulur (aksi halde başka cüzdana
+  /// bakıp "hiçbir şey olmadı" sanabilir). Zaten aktifse dokunmaz.
+  void _activateTargetWallet(BuildContext context) {
+    final ws = context.read<WalletBloc>().state;
+    if (ws is WalletLoadedSt && ws.activeWallet?.id != state.walletId) {
+      context.read<WalletBloc>().add(
+            SetActiveWalletEvent(
+                userId: state.userId, walletId: state.walletId),
+          );
+    }
+  }
+
+  Future<void> _showSyncDialog(
+      BuildContext context, WalletEntity wallet) async {
     final controller =
-        TextEditingController(text: formatAmountForInput(wallet.balance));
+        TextEditingController(text: formatAmountForInput(state.balance));
     final result = await showDialog<double>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -338,7 +472,8 @@ class _Done extends StatelessWidget {
             TextField(
               controller: controller,
               autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [AmountInputFormatter(allowNegative: true)],
               decoration: InputDecoration(
                 labelText: ctx.l10n.bankImportSyncDialogLabel,
@@ -363,7 +498,9 @@ class _Done extends StatelessWidget {
       ),
     );
     if (result != null && context.mounted) {
-      context.read<WalletBloc>().add(UpdateWalletEvent(wallet.copyWith(balance: result)));
+      context
+          .read<WalletBloc>()
+          .add(UpdateWalletEvent(wallet.copyWith(balance: result)));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.bankImportSyncSuccess)),
       );
