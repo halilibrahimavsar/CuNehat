@@ -1,0 +1,3 @@
+--------- beginning of main
+07-23 14:40:57.668 15982 16011 D EGL_emulation: app_time_stats: avg=12144.71ms min=6.96ms max=24282.47ms count=2
+07-23 14:41:00.025   740   955 D EGL_emulation: app_time_stats: avg=59997.88ms min=59997.88ms max=59997.88ms count=1

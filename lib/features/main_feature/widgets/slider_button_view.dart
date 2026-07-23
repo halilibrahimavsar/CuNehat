@@ -188,6 +188,7 @@ class SliderButtonView extends StatelessWidget {
 
   void _handleAction(
       String actionType, BuildContext context, dynamic activeWallet) {
+    debugPrint("DEBUG: _handleAction called with actionType=$actionType");
     switch (actionType) {
       case 'add_gold_investment':
       case 'add_stock_investment':

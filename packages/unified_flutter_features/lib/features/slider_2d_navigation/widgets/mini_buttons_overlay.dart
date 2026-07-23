@@ -91,6 +91,7 @@ class _MiniButtonsOverlayState extends State<MiniButtonsOverlay>
                   child: Opacity(
                     opacity: _controller.value,
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => widget.onButtonTap(index),
                       child: SizedBox(
                         width: 70,
