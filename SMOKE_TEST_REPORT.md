@@ -36,7 +36,7 @@
   2. Düzenlemek istediğiniz cüzdanın yanındaki "Düzenle" (Kalem) butonuna tıklayın.
   3. Cüzdan adını "Ana Cüzdan Güncel" ve bakiye ayarını değiştirip "Kaydet"e tıklayın.
 - **Beklenen Sonuç:** Değişiklikler anında cüzdan listesinde ve ana sayfada güncellenmelidir.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ### Senaryo 1.4: Cüzdan Silme ve Arşivleme (Wallet Deletion & Archiving)
 - **Hedef Bileşen:** [wallet_info_dialog.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/features/wallet/presentation/widgets/wallet_info_dialog.dart)
@@ -46,7 +46,7 @@
   2. "Arşivle" veya "Sil" seçeneğine tıklayın.
   3. Eğer cüzdanda işlemler varsa, sistemin uyarı verip vermediğini kontrol edin ve onaylayın.
 - **Beklenen Sonuç:** Silinen cüzdan listeden kalkmalı, arşivlenen cüzdan ise sadece "Arşivlenmiş Cüzdanlar" sekmesinde görünmelidir.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ### Senaryo 1.5: Cüzdanlar Arası Para Transferi (Inter-Wallet Transfer)
 - **Hedef Bileşen:** [transfer_sheet.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/features/wallet/presentation/widgets/transfer_sheet.dart)
@@ -56,7 +56,7 @@
   2. Gönderen cüzdanı "Banka", Alıcı cüzdanı "Nakit" olarak seçin.
   3. Miktar kısmına `1000` yazıp onaylayın.
 - **Beklenen Sonuç:** Banka cüzdanından 1000 ₺ düşmeli, Nakit cüzdanına 1000 ₺ eklenmeli ve işlem geçmişinde "Transfer" türünde bir kayıt oluşmalıdır.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ### Senaryo 1.6: Çoklu Para Birimi Cüzdanı ve Canlı Kur Çevrimi (Multi-Currency & Exchange Rates)
 - **Hedef Bileşen:** [wallet_currency_context.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/features/wallet/presentation/wallet_currency_context.dart)
@@ -65,7 +65,7 @@
   1. Para birimi "USD" olan yeni bir "Dolar Hesabı" cüzdanı oluşturun ve içine `100` $ ekleyin.
   2. Ana sayfaya dönün ve toplam portföy değerinin canlı kurlar üzerinden hesaplanan TRY karşılığını inceleyin.
 - **Beklenen Sonuç:** Dolar hesabı kendi birimiyle (`100,00 $`) listelenmeli, genel toplam bakiye kartında güncel kur ile TRY tutarına dönüştürülüp eklenmelidir.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ### Senaryo 1.7: Döviz Cüzdanlarında Yatırım ve Borç Kısıtlamaları (Non-TRY Wallet Feature Lock)
 - **Hedef Bileşen:** [try_only_feature_view.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/core/shared/widgets/try_only_feature_view.dart) ve [slider_button_view.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/features/main_feature/widgets/slider_button_view.dart)
@@ -75,7 +75,7 @@
   2. Hızlı eylem menüsünden "Borç/Alacak" eklemeyi deneyin.
   3. Yan menüden Yatırımlar veya Borç & Alacak sayfasına geçiş yapın.
 - **Beklenen Sonuç:** Hızlı işlem menüsü snackbar uyarısı vererek işlemi engellemeli. Sayfa geçişlerinde ise liste yerine "TL-dışı cüzdanda bu özellik kapalıdır" ibaresini içeren `TryOnlyFeatureView` gösterilmelidir.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ---
 
@@ -129,7 +129,7 @@
   2. Kategori olarak sadece "Yemek", tür olarak sadece "Gider" seçip uygulayın.
   3. Arama çubuğuna "Maaş" yazarak arama yapın.
 - **Beklenen Sonuç:** Filtreleme uygulandığında sadece Yemek giderleri listelenmeli; arama yapıldığında arama kriterine uyan işlemler anında listelenmelidir.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ### Senaryo 2.6: Yeni Kategori Oluşturma ve Yönetme (Category Management)
 - **Hedef Bileşen:** [category_manager_sheet.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart)
@@ -139,7 +139,7 @@
   2. "Yeni Kategori Ekle" butonuna basın; isim olarak "Evcil Hayvan", ikon ve renk seçip kaydedin.
   3. Eklenen kategoriyi listede görün, ardından düzenleme ve silme işlemlerini test edin.
 - **Beklenen Sonuç:** Yeni kategori sorunsuz eklenmeli, düzenlenebilmeli ve silinebilmelidir.
-- **Durum:** ⏳ Başlanmadı
+- **Durum:** ✅ Tamamlandı
 
 ### Senaryo 2.7: Fiş/Fotoğraf (OCR) ile Gider Girişi (Receipt OCR Import)
 - **Hedef Bileşen:** [receipt_viewer_page.dart](file:///home/garuda/Masaüstü/Programming/Flutterr/flutterProjects/CuNehat/lib/features/finance_transactions/presentation/pages/receipt_viewer_page.dart)
