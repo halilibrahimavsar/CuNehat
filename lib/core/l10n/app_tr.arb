@@ -45,7 +45,6 @@
   "labelNotOpsiyonel": "Not (Opsiyonel)",
   "hintOdemeIleIlgiliNotlar": "Ödeme ile ilgili notlar...",
   "islemDetayi": "İşlem Detayı",
-  "bekleyenIslemler": "Bekleyen İşlemler",
   "islemRaporu": "İşlem Raporu",
   "tooltipTarihAraligi": "Tarih Aralığı",
   "raporuPaylas": "Raporu Paylaş",
@@ -84,7 +83,7 @@
   "labelYeniTutar": "Yeni Tutar",
   "kaydetVeOnayla": "Kaydet ve Onayla",
   "guvenlikAyarlari": "Güvenlik Ayarları",
-  "iceAktarCsv": "İçe Aktar (CSV)",
+  "iceAktarCsv": "Yedekten İçe Aktar (CSV)",
   "disaAktarCsv": "Dışa Aktar (CSV)",
   "geriYukle": "Geri Yükle",
   "yedekle": "Yedekle",
@@ -212,7 +211,6 @@
   "backupFailed": "Yedekleme başarısız oldu.",
   "dataRestoredSuccess": "Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.",
   "restoreFailedNoBackup": "Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.",
-  "welcomeUser": "Hoşgeldiniz",
   "defaultUser": "Kullanıcı",
   "dataExportImport": "Cihaz Yedeği / CSV",
   "dataExportImportDesc": "Tam uygulama yedeği kaydedip geri yükleyin veya mevcut cüzdan işlemleri için CSV kullanın.",
@@ -280,8 +278,6 @@
   "gelirVeyaGiderKaydettikten": "Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.",
   "henuzIslemYok": "Henüz işlem yok",
   "buDonemIcinKayit": "Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.",
-  "tumIslemlerinizGuncel": "Tüm İşlemleriniz Güncel",
-  "bekleyenCevrimdisiIslemBulunmuyor": "Bekleyen çevrimdışı işlem bulunmuyor. Cihazınız internete bağlandığında veya yeni veriler girildiğinde senkronizasyon otomatik olarak tetiklenir.",
   "haftalikNetAkis": "Haftalık Net Akış",
   "kategoriDagilimi": "Kategori Dağılımı",
   "titleIcinVeriYok": "{title} için veri yok",
@@ -362,8 +358,6 @@
   "vadesiGelmisIslemlerinizVar": "Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.",
   "titleTarihDatestrNtutarTx": "Tarih: {dateStr}\nTutar: {amount}",
   "@titleTarihDatestrNtutarTx": { "placeholders": { "dateStr": {}, "amount": {} } },
-  "profilAyarlari": "Profil Ayarları",
-  "bilgileriGuncelle": "Bilgileri Güncelle",
   "ibo": "İbo",
   "uygulamaKilidi": "Uygulama Kilidi",
   "pINBiyometrikVeGizlilik": "PIN, Biyometrik ve Gizlilik Ayarları",
@@ -421,7 +415,6 @@
   "sliderSavings": "BİRİKİM",
   "sliderTransactions": "İŞLEMLER",
   "sliderDebt": "BORÇ",
-  "myProfile": "Profilim",
   "recurringTransactions": "Düzenli İşlemler",
   "budgetPlanning": "Bütçe Planlama",
   "drawerBalance": "Bakiye",
@@ -437,7 +430,6 @@
   "menuIncome": "Gelir",
   "menuExpense": "Gider",
   "menuReport": "Rapor",
-  "menuPending": "Bekleyen",
   "menuDebt": "Borç",
   "menuReceivable": "Alacak",
   "menuHistory": "Geçmiş",
@@ -762,7 +754,6 @@
   "transferBasarili": "Transfer tamamlandı",
   "transferBasarisiz": "Transfer başarısız oldu",
   "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli",
-  "transferBakiyeAsimiTitle": "Bakiye Aşımı",
   "transferBakiyeAsimiMesaj": "Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?",
   "@transferBakiyeAsimiMesaj": {
     "placeholders": {
@@ -926,5 +917,51 @@
   "bankImportCategorySuggestionTitle": "Yeni kategori önerileri",
   "bankImportCategorySuggestionHint": "Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.",
   "bankImportCategorySuggestionContinue": "Devam et",
-  "bankImportPickCategoryHint": "Kategori seç"
+  "bankImportPickCategoryHint": "Kategori seç",
+
+  "bankStatementSectionHeader": "BANKA EKSTRESİ",
+  "sifirla": "Sıfırla",
+  "tumTurlariSifirlaOnayMesaji": "Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?",
+  "deleteAllDataTitle": "Tüm veriyi sil",
+  "deleteAllDataMessage": "Tüm cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler ve tekrarlayan şablonlar cihazdan kalıcı olarak silinecek. Bu işlem geri alınamaz. Drive yedeğiniz (varsa) etkilenmez.",
+  "irreversibleActionTitle": "Bu İşlem Geri Alınamaz",
+  "deleteAllDataDangerMessage": "Onayladığınızda tüm yerel veriler kalıcı olarak silinir ve kurtarılamaz.",
+  "dataDeletedSuccess": "Tüm yerel veri silindi.",
+  "dataDeleteError": "Veri silinemedi. Lütfen tekrar deneyin.",
+  "deleteWalletTitle": "Cüzdan Sil",
+  "deleteWalletConfirmMessage": "{ad} cüzdanını silmek istediğinizden emin misiniz?",
+  "@deleteWalletConfirmMessage": {
+    "placeholders": {
+      "ad": { "type": "String" }
+    }
+  },
+  "deleteWalletDangerMessage": "{ad} cüzdanı ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+  "@deleteWalletDangerMessage": {
+    "placeholders": {
+      "ad": { "type": "String" }
+    }
+  },
+  "transferOnayBasligi": "Transferi Onayla",
+  "transferOnayMesaji": "{tutar} tutarını {kaynak} cüzdanından {hedef} cüzdanına transfer etmek istediğinizden emin misiniz?",
+  "@transferOnayMesaji": {
+    "placeholders": {
+      "tutar": { "type": "String" },
+      "kaynak": { "type": "String" },
+      "hedef": { "type": "String" }
+    }
+  },
+  "budgetDeleteConfirmTitle": "Bütçeyi Sil",
+  "budgetDeleteConfirmMessage": "{kategori} bütçesini silmek istediğinizden emin misiniz?",
+  "@budgetDeleteConfirmMessage": {
+    "placeholders": {
+      "kategori": { "type": "String" }
+    }
+  },
+  "islemSilBaslik": "İşlem Sil",
+  "islemSilOnayMesaji": "{baslik} işlemini silmek istediğinizden emin misiniz?",
+  "@islemSilOnayMesaji": {
+    "placeholders": {
+      "baslik": { "type": "String" }
+    }
+  }
 }

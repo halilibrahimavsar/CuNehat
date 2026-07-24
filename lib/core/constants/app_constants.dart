@@ -91,7 +91,6 @@ class AppRoutes {
   static const String investment = '/investment';
   static const String login = '/login';
   static const String register = '/register';
-  static const String profile = '/profile';
   static const String budgets = '/budgets';
   static const String recurringTemplates = '/recurring-templates';
   static const String privacyPolicy = '/privacy-policy';

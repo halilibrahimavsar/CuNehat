@@ -118,9 +118,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islemDetayi => 'Transaction Detail';
 
   @override
-  String get bekleyenIslemler => 'Pending Transactions';
-
-  @override
   String get islemRaporu => 'Transaction Report';
 
   @override
@@ -222,7 +219,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guvenlikAyarlari => 'Security Settings';
 
   @override
-  String get iceAktarCsv => 'Import (CSV)';
+  String get iceAktarCsv => 'Import from Backup (CSV)';
 
   @override
   String get disaAktarCsv => 'Export (CSV)';
@@ -586,9 +583,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreFailedNoBackup => 'Restore failed. No backup file found.';
 
   @override
-  String get welcomeUser => 'Welcome';
-
-  @override
   String get defaultUser => 'User';
 
   @override
@@ -789,13 +783,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get buDonemIcinKayit =>
       'No records for this period.\nUse the slider button to add a new transaction.';
-
-  @override
-  String get tumIslemlerinizGuncel => 'All Your Transactions Are Up To Date';
-
-  @override
-  String get bekleyenCevrimdisiIslemBulunmuyor =>
-      'No pending offline transactions. Synchronization triggers automatically when your device connects to the internet or new data is entered.';
 
   @override
   String get haftalikNetAkis => 'Weekly Net Flow';
@@ -1029,12 +1016,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profilAyarlari => 'Profile Settings';
-
-  @override
-  String get bilgileriGuncelle => 'Update Info';
-
-  @override
   String get ibo => 'Ibo';
 
   @override
@@ -1131,9 +1112,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sliderDebt => 'DEBT';
 
   @override
-  String get myProfile => 'My Profile';
-
-  @override
   String get recurringTransactions => 'Recurring Transactions';
 
   @override
@@ -1177,9 +1155,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuReport => 'Report';
-
-  @override
-  String get menuPending => 'Pending';
 
   @override
   String get menuDebt => 'Debt';
@@ -1936,9 +1911,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'You need at least two wallets to transfer';
 
   @override
-  String get transferBakiyeAsimiTitle => 'Balance Exceeded';
-
-  @override
   String transferBakiyeAsimiMesaj(String bakiye) {
     return 'The amount exceeds the wallet balance ($bakiye). Continuing will push the balance below zero. Continue?';
   }
@@ -2349,4 +2321,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportPickCategoryHint => 'Pick category';
+
+  @override
+  String get bankStatementSectionHeader => 'BANK STATEMENT';
+
+  @override
+  String get sifirla => 'Reset';
+
+  @override
+  String get tumTurlariSifirlaOnayMesaji =>
+      'All intro tours will be reset and shown again. Do you want to continue?';
+
+  @override
+  String get deleteAllDataTitle => 'Delete all data';
+
+  @override
+  String get deleteAllDataMessage =>
+      'All wallets, transactions, investments, debts, receivables, budgets, and recurring templates will be permanently deleted from this device. This action cannot be undone. Your Drive backup (if any) is not affected.';
+
+  @override
+  String get irreversibleActionTitle => 'This Action Cannot Be Undone';
+
+  @override
+  String get deleteAllDataDangerMessage =>
+      'Once you confirm, all local data will be permanently deleted and cannot be recovered.';
+
+  @override
+  String get dataDeletedSuccess => 'All local data has been deleted.';
+
+  @override
+  String get dataDeleteError => 'Data could not be deleted. Please try again.';
+
+  @override
+  String get deleteWalletTitle => 'Delete Wallet';
+
+  @override
+  String deleteWalletConfirmMessage(String ad) {
+    return 'Are you sure you want to delete the wallet $ad?';
+  }
+
+  @override
+  String deleteWalletDangerMessage(String ad) {
+    return 'Wallet $ad and its entire transaction history will be permanently deleted. This action cannot be undone.';
+  }
+
+  @override
+  String get transferOnayBasligi => 'Confirm Transfer';
+
+  @override
+  String transferOnayMesaji(String tutar, String kaynak, String hedef) {
+    return 'Are you sure you want to transfer $tutar from $kaynak to $hedef?';
+  }
+
+  @override
+  String get budgetDeleteConfirmTitle => 'Delete Budget';
+
+  @override
+  String budgetDeleteConfirmMessage(String kategori) {
+    return 'Are you sure you want to delete the budget for $kategori?';
+  }
+
+  @override
+  String get islemSilBaslik => 'Delete Transaction';
+
+  @override
+  String islemSilOnayMesaji(String baslik) {
+    return 'Are you sure you want to delete the transaction $baslik?';
+  }
 }

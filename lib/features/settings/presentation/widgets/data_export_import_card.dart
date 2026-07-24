@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_state.dart';
@@ -146,20 +147,15 @@ class _DataExportImportCardContent extends StatelessWidget {
                   onPressed: isLoading
                       ? null
                       : () async {
-                          final confirmed = await IboDialog.showConfirmation(
+                          final confirmed = await ConfirmDialog.show(
                             context,
-                            context.l10n.restoreFullBackupTitle,
-                            context.l10n.restoreFullBackupDesc,
+                            title: context.l10n.restoreFullBackupTitle,
+                            message: context.l10n.restoreFullBackupDesc,
                             confirmText: context.l10n.geriYukle,
                             cancelText: context.l10n.cancelLabel,
-                            style: IboDialogStyle(
-                              confirmButtonStyle: TextButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.error,
-                              ),
-                            ),
+                            danger: true,
                           );
-                          if (confirmed != true || !context.mounted) return;
+                          if (!confirmed || !context.mounted) return;
 
                           context
                               .read<DataExportImportCubit>()

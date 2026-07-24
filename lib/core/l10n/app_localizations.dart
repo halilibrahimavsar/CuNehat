@@ -308,12 +308,6 @@ abstract class AppLocalizations {
   /// **'İşlem Detayı'**
   String get islemDetayi;
 
-  /// No description provided for @bekleyenIslemler.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bekleyen İşlemler'**
-  String get bekleyenIslemler;
-
   /// No description provided for @islemRaporu.
   ///
   /// In tr, this message translates to:
@@ -509,7 +503,7 @@ abstract class AppLocalizations {
   /// No description provided for @iceAktarCsv.
   ///
   /// In tr, this message translates to:
-  /// **'İçe Aktar (CSV)'**
+  /// **'Yedekten İçe Aktar (CSV)'**
   String get iceAktarCsv;
 
   /// No description provided for @disaAktarCsv.
@@ -1179,12 +1173,6 @@ abstract class AppLocalizations {
   /// **'Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.'**
   String get restoreFailedNoBackup;
 
-  /// No description provided for @welcomeUser.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hoşgeldiniz'**
-  String get welcomeUser;
-
   /// No description provided for @defaultUser.
   ///
   /// In tr, this message translates to:
@@ -1509,18 +1497,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.'**
   String get buDonemIcinKayit;
-
-  /// No description provided for @tumIslemlerinizGuncel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tüm İşlemleriniz Güncel'**
-  String get tumIslemlerinizGuncel;
-
-  /// No description provided for @bekleyenCevrimdisiIslemBulunmuyor.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bekleyen çevrimdışı işlem bulunmuyor. Cihazınız internete bağlandığında veya yeni veriler girildiğinde senkronizasyon otomatik olarak tetiklenir.'**
-  String get bekleyenCevrimdisiIslemBulunmuyor;
 
   /// No description provided for @haftalikNetAkis.
   ///
@@ -1891,18 +1867,6 @@ abstract class AppLocalizations {
   /// **'Tarih: {dateStr}\nTutar: {amount}'**
   String titleTarihDatestrNtutarTx(Object dateStr, Object amount);
 
-  /// No description provided for @profilAyarlari.
-  ///
-  /// In tr, this message translates to:
-  /// **'Profil Ayarları'**
-  String get profilAyarlari;
-
-  /// No description provided for @bilgileriGuncelle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bilgileri Güncelle'**
-  String get bilgileriGuncelle;
-
   /// No description provided for @ibo.
   ///
   /// In tr, this message translates to:
@@ -2083,12 +2047,6 @@ abstract class AppLocalizations {
   /// **'BORÇ'**
   String get sliderDebt;
 
-  /// No description provided for @myProfile.
-  ///
-  /// In tr, this message translates to:
-  /// **'Profilim'**
-  String get myProfile;
-
   /// No description provided for @recurringTransactions.
   ///
   /// In tr, this message translates to:
@@ -2178,12 +2136,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Rapor'**
   String get menuReport;
-
-  /// No description provided for @menuPending.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bekleyen'**
-  String get menuPending;
 
   /// No description provided for @menuDebt.
   ///
@@ -3590,12 +3542,6 @@ abstract class AppLocalizations {
   /// **'Transfer için en az iki cüzdan gerekli'**
   String get transferIcinIkiCuzdanGerekli;
 
-  /// No description provided for @transferBakiyeAsimiTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bakiye Aşımı'**
-  String get transferBakiyeAsimiTitle;
-
   /// No description provided for @transferBakiyeAsimiMesaj.
   ///
   /// In tr, this message translates to:
@@ -4333,6 +4279,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kategori seç'**
   String get bankImportPickCategoryHint;
+
+  /// No description provided for @bankStatementSectionHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'BANKA EKSTRESİ'**
+  String get bankStatementSectionHeader;
+
+  /// No description provided for @sifirla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırla'**
+  String get sifirla;
+
+  /// No description provided for @tumTurlariSifirlaOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?'**
+  String get tumTurlariSifirlaOnayMesaji;
+
+  /// No description provided for @deleteAllDataTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm veriyi sil'**
+  String get deleteAllDataTitle;
+
+  /// No description provided for @deleteAllDataMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler ve tekrarlayan şablonlar cihazdan kalıcı olarak silinecek. Bu işlem geri alınamaz. Drive yedeğiniz (varsa) etkilenmez.'**
+  String get deleteAllDataMessage;
+
+  /// No description provided for @irreversibleActionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu İşlem Geri Alınamaz'**
+  String get irreversibleActionTitle;
+
+  /// No description provided for @deleteAllDataDangerMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onayladığınızda tüm yerel veriler kalıcı olarak silinir ve kurtarılamaz.'**
+  String get deleteAllDataDangerMessage;
+
+  /// No description provided for @dataDeletedSuccess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm yerel veri silindi.'**
+  String get dataDeletedSuccess;
+
+  /// No description provided for @dataDeleteError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veri silinemedi. Lütfen tekrar deneyin.'**
+  String get dataDeleteError;
+
+  /// No description provided for @deleteWalletTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan Sil'**
+  String get deleteWalletTitle;
+
+  /// No description provided for @deleteWalletConfirmMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{ad} cüzdanını silmek istediğinizden emin misiniz?'**
+  String deleteWalletConfirmMessage(String ad);
+
+  /// No description provided for @deleteWalletDangerMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{ad} cüzdanı ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.'**
+  String deleteWalletDangerMessage(String ad);
+
+  /// No description provided for @transferOnayBasligi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transferi Onayla'**
+  String get transferOnayBasligi;
+
+  /// No description provided for @transferOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{tutar} tutarını {kaynak} cüzdanından {hedef} cüzdanına transfer etmek istediğinizden emin misiniz?'**
+  String transferOnayMesaji(String tutar, String kaynak, String hedef);
+
+  /// No description provided for @budgetDeleteConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçeyi Sil'**
+  String get budgetDeleteConfirmTitle;
+
+  /// No description provided for @budgetDeleteConfirmMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{kategori} bütçesini silmek istediğinizden emin misiniz?'**
+  String budgetDeleteConfirmMessage(String kategori);
+
+  /// No description provided for @islemSilBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem Sil'**
+  String get islemSilBaslik;
+
+  /// No description provided for @islemSilOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} işlemini silmek istediğinizden emin misiniz?'**
+  String islemSilOnayMesaji(String baslik);
 }
 
 class _AppLocalizationsDelegate

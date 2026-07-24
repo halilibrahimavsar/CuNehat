@@ -273,7 +273,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Cancel in dialog
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.text('İptal'));
     await tester.pumpAndSettle();
 
     verifyNever(() => mockTransactionBloc.add(any()));
@@ -317,11 +317,8 @@ void main() {
     await tester.tap(find.text('Sil'));
     await tester.pumpAndSettle();
 
-    // Tap Confirm in dialog
-    final confirmButton = find.descendant(
-      of: find.byType(TextButton),
-      matching: find.text('Confirm'),
-    );
+    // Tap Confirm in dialog (ConfirmDialog onay butonu FilledButton + 'Sil')
+    final confirmButton = find.widgetWithText(FilledButton, 'Sil');
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 

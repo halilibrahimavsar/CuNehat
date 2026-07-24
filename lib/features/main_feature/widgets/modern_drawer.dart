@@ -143,25 +143,13 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                       _buildAnimatedMenuItem(
                         index: 2,
-                        icon: Icons.person_outline_rounded,
-                        title: context.l10n.myProfile,
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push(AppRoutes.profile);
-                        },
-                        delay: 150,
-                        isDark: isDark,
-                        theme: theme,
-                      ),
-                      _buildAnimatedMenuItem(
-                        index: 3,
                         icon: Icons.settings_rounded,
                         title: context.l10n.settings,
                         onTap: () {
                           Navigator.pop(context);
                           context.push(AppRoutes.settings);
                         },
-                        delay: 200,
+                        delay: 150,
                         isDark: isDark,
                         theme: theme,
                       ),
@@ -177,6 +165,14 @@ class _ModernDrawerState extends State<ModernDrawer>
   }
 
   Widget _buildAnimatedHeader(LocalUser? user, bool isDark, ThemeData theme) {
+    // Kimlik bloğu (avatar + ad + e-posta) yalnızca gerçek bir Google (Drive)
+    // hesabı bağlıyken anlamlı; yerel modda sadece placeholder olur. Yerel
+    // modda placeholder yerine, durum çubuğu boşluğunu koruyan ince bir spacer
+    // göster ki cüzdan metrikleri üste yapışmasın.
+    final driveUser = getIt<GoogleDriveBackupService>().currentUser;
+    if (driveUser == null) {
+      return const SizedBox(height: 50);
+    }
     final primary = theme.colorScheme.primary;
     return SlideTransition(
       position: _slideAnimation,

@@ -47,15 +47,12 @@ void main() {
       expect(config.miniButtons[1].icon, Icons.arrow_circle_down);
 
       // Verify submenus
-      expect(config.subMenus.length, 3);
+      expect(config.subMenus.length, 2);
       expect(config.subMenus[0].label, 'Detay');
       expect(config.subMenus[0].viewIndex, 1);
 
       expect(config.subMenus[1].label, 'Rapor');
       expect(config.subMenus[1].viewIndex, 2);
-
-      expect(config.subMenus[2].label, 'Bekleyen');
-      expect(config.subMenus[2].viewIndex, 3);
     });
 
     test('contains configuration for debt', () {

@@ -48,7 +48,10 @@ class AppCard extends StatelessWidget {
 
     Widget card = DecoratedBox(
       decoration: _decoration(surface, acc, radius),
-      child: Padding(padding: padding, child: child),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(padding: padding, child: child),
+      ),
     );
 
     if (onTap != null || onLongPress != null) {

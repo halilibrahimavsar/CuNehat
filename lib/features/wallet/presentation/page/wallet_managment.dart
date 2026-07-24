@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -18,6 +20,7 @@ import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
@@ -240,6 +243,16 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
           ),
           const SizedBox(width: 4),
           IconButton(
+            icon: const Icon(Icons.account_balance_outlined),
+            tooltip: context.l10n.bankImportSettingsEntry,
+            onPressed: () => _openBankImport(context),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              foregroundColor: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
             style: IconButton.styleFrom(
@@ -373,6 +386,14 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     );
   }
 
+  /// Sheet'i kapatıp banka ekstresi içe aktarma sayfasına yönlendirir.
+  /// BankImportPage kendi cüzdan seçim adımına sahip (aktif cüzdanı
+  /// varsayılan seçer), bu yüzden burada bir walletId iletmiyoruz.
+  void _openBankImport(BuildContext context) {
+    Navigator.of(context).pop();
+    context.push(AppRoutes.bankStatementImport);
+  }
+
   void _createWallet(BuildContext context) {
     showCreateEditDialog(
       context: context,
@@ -394,15 +415,26 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   }
 
   void _deleteWallet(BuildContext context, WalletEntity wallet) async {
-    final confirmed = await IboDialog.showConfirmation(
+    final step1 = await ConfirmDialog.show(
       context,
-      'Cüzdan Sil',
-      '${wallet.name} cüzdanını silmek istediğinizden emin misiniz?',
+      title: context.l10n.deleteWalletTitle,
+      message: context.l10n.deleteWalletConfirmMessage(wallet.name),
+      confirmText: context.l10n.sil,
     );
+    if (!step1 || !context.mounted) return;
 
-    if (confirmed == true && context.mounted) {
-      context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
-    }
+    // Geri alınamaz eylem: ikinci onay + 5sn geri sayım kapılı.
+    final step2 = await ConfirmDialog.show(
+      context,
+      title: context.l10n.irreversibleActionTitle,
+      message: context.l10n.deleteWalletDangerMessage(wallet.name),
+      confirmText: context.l10n.sil,
+      danger: true,
+      countdownSeconds: 5,
+    );
+    if (!step2 || !context.mounted) return;
+
+    context.read<WalletBloc>().add(DeleteWalletEvent(wallet.id!));
   }
 
   String _getLocalizedMessage(BuildContext context, WalletMessageType type) {

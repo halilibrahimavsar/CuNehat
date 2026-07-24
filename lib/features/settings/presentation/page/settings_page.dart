@@ -6,7 +6,6 @@ import 'package:cunehat/features/settings/presentation/widgets/security_settings
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
 import 'package:cunehat/features/settings/presentation/widgets/theme_selector_dropdown.dart';
 import 'package:cunehat/features/settings/presentation/widgets/language_selector_dropdown.dart';
-import 'package:cunehat/features/settings/presentation/widgets/user_profile_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/google_drive_backup_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/data_export_import_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/data_privacy_card.dart';
@@ -63,8 +62,6 @@ class SettingsPage extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
-                  const UserProfileCard(),
-                  const SizedBox(height: 24),
                   SettingsHeader(title: context.l10n.appearance),
                   const SizedBox(height: 8),
                   const AppCard(
@@ -86,7 +83,9 @@ class SettingsPage extends StatelessWidget {
                   const GoogleDriveBackupCard(),
                   const SizedBox(height: 16),
                   const DataExportImportCard(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  SettingsHeader(title: context.l10n.bankStatementSectionHeader),
+                  const SizedBox(height: 8),
                   const BankImportCard(),
                   const SizedBox(height: 24),
                   SettingsHeader(title: 'Gizlilik & Veri'),

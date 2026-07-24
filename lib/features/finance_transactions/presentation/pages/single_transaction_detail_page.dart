@@ -16,6 +16,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Tek bir işlemin premium detay ekranı.
@@ -257,12 +258,14 @@ class SingleTransactionDetailPage extends StatelessWidget {
   }
 
   Future<void> _delete(BuildContext context, TransactionEntity t) async {
-    final confirmed = await IboDialog.showConfirmation(
+    final confirmed = await ConfirmDialog.show(
       context,
-      'İşlem Sil',
-      '${t.title} işlemini silmek istediğinizden emin misiniz?',
+      title: context.l10n.islemSilBaslik,
+      message: context.l10n.islemSilOnayMesaji(t.title),
+      confirmText: context.l10n.sil,
+      danger: true,
     );
-    if (confirmed == true && context.mounted && t.id != null) {
+    if (confirmed && context.mounted && t.id != null) {
       context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
     }
   }

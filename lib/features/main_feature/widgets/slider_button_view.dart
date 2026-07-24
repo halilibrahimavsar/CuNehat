@@ -152,8 +152,6 @@ class SliderButtonView extends StatelessWidget {
         return context.l10n.menuDetails;
       case 'rapor':
         return context.l10n.menuReport;
-      case 'bekleyen':
-        return context.l10n.menuPending;
       case 'geçmiş':
       case 'gecmis':
         return context.l10n.menuHistory;

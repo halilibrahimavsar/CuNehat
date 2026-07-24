@@ -104,11 +104,6 @@ class MenuConfigs {
           icon: Icons.analytics,
           viewIndex: 2,
         ),
-        SubMenuConfig(
-          label: 'Bekleyen',
-          icon: Icons.pending_actions,
-          viewIndex: 3,
-        ),
       ],
     ),
     SliderState.debt: MenuConfiguration(

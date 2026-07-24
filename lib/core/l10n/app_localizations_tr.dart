@@ -118,9 +118,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get islemDetayi => 'İşlem Detayı';
 
   @override
-  String get bekleyenIslemler => 'Bekleyen İşlemler';
-
-  @override
   String get islemRaporu => 'İşlem Raporu';
 
   @override
@@ -223,7 +220,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get guvenlikAyarlari => 'Güvenlik Ayarları';
 
   @override
-  String get iceAktarCsv => 'İçe Aktar (CSV)';
+  String get iceAktarCsv => 'Yedekten İçe Aktar (CSV)';
 
   @override
   String get disaAktarCsv => 'Dışa Aktar (CSV)';
@@ -590,9 +587,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.';
 
   @override
-  String get welcomeUser => 'Hoşgeldiniz';
-
-  @override
   String get defaultUser => 'Kullanıcı';
 
   @override
@@ -793,13 +787,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get buDonemIcinKayit =>
       'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.';
-
-  @override
-  String get tumIslemlerinizGuncel => 'Tüm İşlemleriniz Güncel';
-
-  @override
-  String get bekleyenCevrimdisiIslemBulunmuyor =>
-      'Bekleyen çevrimdışı işlem bulunmuyor. Cihazınız internete bağlandığında veya yeni veriler girildiğinde senkronizasyon otomatik olarak tetiklenir.';
 
   @override
   String get haftalikNetAkis => 'Haftalık Net Akış';
@@ -1032,12 +1019,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get profilAyarlari => 'Profil Ayarları';
-
-  @override
-  String get bilgileriGuncelle => 'Bilgileri Güncelle';
-
-  @override
   String get ibo => 'İbo';
 
   @override
@@ -1134,9 +1115,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sliderDebt => 'BORÇ';
 
   @override
-  String get myProfile => 'Profilim';
-
-  @override
   String get recurringTransactions => 'Düzenli İşlemler';
 
   @override
@@ -1180,9 +1158,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get menuReport => 'Rapor';
-
-  @override
-  String get menuPending => 'Bekleyen';
 
   @override
   String get menuDebt => 'Borç';
@@ -1939,9 +1914,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Transfer için en az iki cüzdan gerekli';
 
   @override
-  String get transferBakiyeAsimiTitle => 'Bakiye Aşımı';
-
-  @override
   String transferBakiyeAsimiMesaj(String bakiye) {
     return 'Tutar, cüzdan bakiyesinden ($bakiye) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?';
   }
@@ -2353,4 +2325,71 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportPickCategoryHint => 'Kategori seç';
+
+  @override
+  String get bankStatementSectionHeader => 'BANKA EKSTRESİ';
+
+  @override
+  String get sifirla => 'Sıfırla';
+
+  @override
+  String get tumTurlariSifirlaOnayMesaji =>
+      'Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?';
+
+  @override
+  String get deleteAllDataTitle => 'Tüm veriyi sil';
+
+  @override
+  String get deleteAllDataMessage =>
+      'Tüm cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler ve tekrarlayan şablonlar cihazdan kalıcı olarak silinecek. Bu işlem geri alınamaz. Drive yedeğiniz (varsa) etkilenmez.';
+
+  @override
+  String get irreversibleActionTitle => 'Bu İşlem Geri Alınamaz';
+
+  @override
+  String get deleteAllDataDangerMessage =>
+      'Onayladığınızda tüm yerel veriler kalıcı olarak silinir ve kurtarılamaz.';
+
+  @override
+  String get dataDeletedSuccess => 'Tüm yerel veri silindi.';
+
+  @override
+  String get dataDeleteError => 'Veri silinemedi. Lütfen tekrar deneyin.';
+
+  @override
+  String get deleteWalletTitle => 'Cüzdan Sil';
+
+  @override
+  String deleteWalletConfirmMessage(String ad) {
+    return '$ad cüzdanını silmek istediğinizden emin misiniz?';
+  }
+
+  @override
+  String deleteWalletDangerMessage(String ad) {
+    return '$ad cüzdanı ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.';
+  }
+
+  @override
+  String get transferOnayBasligi => 'Transferi Onayla';
+
+  @override
+  String transferOnayMesaji(String tutar, String kaynak, String hedef) {
+    return '$tutar tutarını $kaynak cüzdanından $hedef cüzdanına transfer etmek istediğinizden emin misiniz?';
+  }
+
+  @override
+  String get budgetDeleteConfirmTitle => 'Bütçeyi Sil';
+
+  @override
+  String budgetDeleteConfirmMessage(String kategori) {
+    return '$kategori bütçesini silmek istediğinizden emin misiniz?';
+  }
+
+  @override
+  String get islemSilBaslik => 'İşlem Sil';
+
+  @override
+  String islemSilOnayMesaji(String baslik) {
+    return '$baslik işlemini silmek istediğinizden emin misiniz?';
+  }
 }

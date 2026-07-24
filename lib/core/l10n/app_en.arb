@@ -45,7 +45,6 @@
   "labelNotOpsiyonel": "Note (Optional)",
   "hintOdemeIleIlgiliNotlar": "Notes about payment...",
   "islemDetayi": "Transaction Detail",
-  "bekleyenIslemler": "Pending Transactions",
   "islemRaporu": "Transaction Report",
   "tooltipTarihAraligi": "Date Range",
   "raporuPaylas": "Share Report",
@@ -84,7 +83,7 @@
   "labelYeniTutar": "New Amount",
   "kaydetVeOnayla": "Save and Confirm",
   "guvenlikAyarlari": "Security Settings",
-  "iceAktarCsv": "Import (CSV)",
+  "iceAktarCsv": "Import from Backup (CSV)",
   "disaAktarCsv": "Export (CSV)",
   "geriYukle": "Restore",
   "yedekle": "Backup",
@@ -212,7 +211,6 @@
   "backupFailed": "Backup failed.",
   "dataRestoredSuccess": "Data successfully restored. Please restart the app for changes to take effect.",
   "restoreFailedNoBackup": "Restore failed. No backup file found.",
-  "welcomeUser": "Welcome",
   "defaultUser": "User",
   "dataExportImport": "Device Backup / CSV",
   "dataExportImportDesc": "Save or restore a full app backup, or use CSV for current-wallet transaction transfers.",
@@ -280,8 +278,6 @@
   "gelirVeyaGiderKaydettikten": "Analysis details will be listed here after you save income or expense.",
   "henuzIslemYok": "No transactions yet",
   "buDonemIcinKayit": "No records for this period.\nUse the slider button to add a new transaction.",
-  "tumIslemlerinizGuncel": "All Your Transactions Are Up To Date",
-  "bekleyenCevrimdisiIslemBulunmuyor": "No pending offline transactions. Synchronization triggers automatically when your device connects to the internet or new data is entered.",
   "haftalikNetAkis": "Weekly Net Flow",
   "kategoriDagilimi": "Category Distribution",
   "titleIcinVeriYok": "No data for {title}",
@@ -362,8 +358,6 @@
   "vadesiGelmisIslemlerinizVar": "You have transactions whose maturity has arrived. You can approve them to be recorded in the ledger.",
   "titleTarihDatestrNtutarTx": "Date: {dateStr}\nAmount: {amount}",
   "@titleTarihDatestrNtutarTx": { "placeholders": { "dateStr": {}, "amount": {} } },
-  "profilAyarlari": "Profile Settings",
-  "bilgileriGuncelle": "Update Info",
   "ibo": "Ibo",
   "uygulamaKilidi": "App Lock",
   "pINBiyometrikVeGizlilik": "PIN, Biometric and Privacy Settings",
@@ -421,7 +415,6 @@
   "sliderSavings": "SAVINGS",
   "sliderTransactions": "TRANSACTIONS",
   "sliderDebt": "DEBT",
-  "myProfile": "My Profile",
   "recurringTransactions": "Recurring Transactions",
   "budgetPlanning": "Budget Planning",
   "drawerBalance": "Balance",
@@ -437,7 +430,6 @@
   "menuIncome": "Income",
   "menuExpense": "Expense",
   "menuReport": "Report",
-  "menuPending": "Pending",
   "menuDebt": "Debt",
   "menuReceivable": "Receivable",
   "menuHistory": "History",
@@ -744,7 +736,6 @@
     }
   },
   "transferKurYok": "Couldn't get the exchange rate — try again when online",
-  "transferBakiyeAsimiTitle": "Balance Exceeded",
   "transferBakiyeAsimiMesaj": "The amount exceeds the wallet balance ({bakiye}). Continuing will push the balance below zero. Continue?",
   "@transferBakiyeAsimiMesaj": {
     "placeholders": {
@@ -911,5 +902,51 @@
   "bankImportCategorySuggestionTitle": "New category suggestions",
   "bankImportCategorySuggestionHint": "Some transactions don't match any of your existing categories. Checked ones will be created and assigned automatically; unchecked ones won't be created and those transactions stay in the default category.",
   "bankImportCategorySuggestionContinue": "Continue",
-  "bankImportPickCategoryHint": "Pick category"
+  "bankImportPickCategoryHint": "Pick category",
+
+  "bankStatementSectionHeader": "BANK STATEMENT",
+  "sifirla": "Reset",
+  "tumTurlariSifirlaOnayMesaji": "All intro tours will be reset and shown again. Do you want to continue?",
+  "deleteAllDataTitle": "Delete all data",
+  "deleteAllDataMessage": "All wallets, transactions, investments, debts, receivables, budgets, and recurring templates will be permanently deleted from this device. This action cannot be undone. Your Drive backup (if any) is not affected.",
+  "irreversibleActionTitle": "This Action Cannot Be Undone",
+  "deleteAllDataDangerMessage": "Once you confirm, all local data will be permanently deleted and cannot be recovered.",
+  "dataDeletedSuccess": "All local data has been deleted.",
+  "dataDeleteError": "Data could not be deleted. Please try again.",
+  "deleteWalletTitle": "Delete Wallet",
+  "deleteWalletConfirmMessage": "Are you sure you want to delete the wallet {ad}?",
+  "@deleteWalletConfirmMessage": {
+    "placeholders": {
+      "ad": { "type": "String" }
+    }
+  },
+  "deleteWalletDangerMessage": "Wallet {ad} and its entire transaction history will be permanently deleted. This action cannot be undone.",
+  "@deleteWalletDangerMessage": {
+    "placeholders": {
+      "ad": { "type": "String" }
+    }
+  },
+  "transferOnayBasligi": "Confirm Transfer",
+  "transferOnayMesaji": "Are you sure you want to transfer {tutar} from {kaynak} to {hedef}?",
+  "@transferOnayMesaji": {
+    "placeholders": {
+      "tutar": { "type": "String" },
+      "kaynak": { "type": "String" },
+      "hedef": { "type": "String" }
+    }
+  },
+  "budgetDeleteConfirmTitle": "Delete Budget",
+  "budgetDeleteConfirmMessage": "Are you sure you want to delete the budget for {kategori}?",
+  "@budgetDeleteConfirmMessage": {
+    "placeholders": {
+      "kategori": { "type": "String" }
+    }
+  },
+  "islemSilBaslik": "Delete Transaction",
+  "islemSilOnayMesaji": "Are you sure you want to delete the transaction {baslik}?",
+  "@islemSilOnayMesaji": {
+    "placeholders": {
+      "baslik": { "type": "String" }
+    }
+  }
 }

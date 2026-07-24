@@ -17,6 +17,7 @@ import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -324,7 +325,15 @@ class _BudgetListItem extends StatelessWidget {
               IconButton(
                 icon:
                     Icon(Icons.delete_outline, color: scheme.onSurfaceVariant),
-                onPressed: () {
+                onPressed: () async {
+                  final confirmed = await ConfirmDialog.show(
+                    context,
+                    title: context.l10n.budgetDeleteConfirmTitle,
+                    message: context.l10n
+                        .budgetDeleteConfirmMessage(budget.categoryId),
+                    confirmText: context.l10n.sil,
+                  );
+                  if (!confirmed || !context.mounted) return;
                   context
                       .read<BudgetsBloc>()
                       .add(DeleteBudgetEvent(budget.categoryId));

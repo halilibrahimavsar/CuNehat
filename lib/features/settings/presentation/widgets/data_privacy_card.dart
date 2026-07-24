@@ -1,7 +1,9 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,45 +14,38 @@ class DataPrivacyCard extends StatelessWidget {
   const DataPrivacyCard({super.key});
 
   Future<void> _confirmAndDeleteAll(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Tüm veriyi sil'),
-        content: const Text(
-          'Tüm cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler ve '
-          'tekrarlayan şablonlar cihazdan kalıcı olarak silinecek. Bu işlem geri '
-          'alınamaz. Drive yedeğiniz (varsa) etkilenmez.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+    final step1 = await ConfirmDialog.show(
+      context,
+      title: context.l10n.deleteAllDataTitle,
+      message: context.l10n.deleteAllDataMessage,
+      confirmText: context.l10n.sil,
     );
+    if (!step1 || !context.mounted) return;
 
-    if (confirmed != true) return;
+    // Geri alınamaz eylem: ikinci onay + 5sn geri sayım kapılı.
+    final step2 = await ConfirmDialog.show(
+      context,
+      title: context.l10n.irreversibleActionTitle,
+      message: context.l10n.deleteAllDataDangerMessage,
+      confirmText: context.l10n.sil,
+      danger: true,
+      countdownSeconds: 5,
+    );
+    if (!step2 || !context.mounted) return;
 
     try {
       await getIt<DataSerializationService>().clearAllLocalData();
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Veri silinemedi. Lütfen tekrar deneyin.')),
+        SnackBar(content: Text(context.l10n.dataDeleteError)),
       );
       return;
     }
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Tüm yerel veri silindi.')),
+      SnackBar(content: Text(context.l10n.dataDeletedSuccess)),
     );
     context.go(AppRoutes.home);
   }

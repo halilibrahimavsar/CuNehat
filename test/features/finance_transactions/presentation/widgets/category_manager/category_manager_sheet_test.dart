@@ -242,11 +242,9 @@ void main() {
     // Verify confirmation dialog title is displayed
     expect(find.text('Kategori Sil'), findsOneWidget);
 
-    // Tap Sil button inside TextButton to avoid ambiguity with Dismissable's 'Sil' label
-    final confirmButtonFinder = find.descendant(
-      of: find.byType(TextButton),
-      matching: find.text('Sil'),
-    );
+    // Tap Sil inside the FilledButton (ConfirmDialog onay butonu) to avoid
+    // ambiguity with the Dismissible's own 'Sil' label.
+    final confirmButtonFinder = find.widgetWithText(FilledButton, 'Sil');
     await tester.tap(confirmButtonFinder);
     await tester.pumpAndSettle();
 
@@ -285,10 +283,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Confirm
-    final confirmButtonFinder = find.descendant(
-      of: find.byType(TextButton),
-      matching: find.text('Sil'),
-    );
+    final confirmButtonFinder = find.widgetWithText(FilledButton, 'Sil');
     await tester.tap(confirmButtonFinder);
     await tester.pumpAndSettle();
 

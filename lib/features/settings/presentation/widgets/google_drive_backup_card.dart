@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class GoogleDriveBackupCard extends StatefulWidget {
@@ -108,20 +109,16 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
   }
 
   Future<void> _restore() async {
-    final confirm = await IboDialog.showConfirmation(
+    final confirm = await ConfirmDialog.show(
       context,
-      context.l10n.restoreDataTitle,
-      context.l10n.restoreDataDesc,
+      title: context.l10n.restoreDataTitle,
+      message: context.l10n.restoreDataDesc,
       confirmText: context.l10n.geriYukle,
       cancelText: context.l10n.cancelLabel,
-      style: IboDialogStyle(
-        confirmButtonStyle: TextButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.error,
-        ),
-      ),
+      danger: true,
     );
 
-    if (confirm != true) return;
+    if (!confirm) return;
 
     setState(() => _isLoading = true);
     final success = await _backupService.restore();
@@ -154,20 +151,16 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
   }
 
   Future<void> _deleteBackup() async {
-    final confirm = await IboDialog.showConfirmation(
+    final confirm = await ConfirmDialog.show(
       context,
-      context.l10n.deleteBackup,
-      context.l10n.deleteBackupDesc,
+      title: context.l10n.deleteBackup,
+      message: context.l10n.deleteBackupDesc,
       confirmText: context.l10n.deleteBackup,
       cancelText: context.l10n.cancelLabel,
-      style: IboDialogStyle(
-        confirmButtonStyle: TextButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.error,
-        ),
-      ),
+      danger: true,
     );
 
-    if (confirm != true) return;
+    if (!confirm) return;
 
     setState(() => _isLoading = true);
     final success = await _backupService.deleteBackup();

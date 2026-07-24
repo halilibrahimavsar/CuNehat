@@ -2,6 +2,7 @@ import 'package:cunehat/core/shared/widgets/dismissable_widget.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
@@ -359,21 +360,15 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
   }
 
   Future<bool> _confirmDelete(CategoryEntity category) async {
-    final confirmed = await IboDialog.showConfirmation(
+    final confirmed = await ConfirmDialog.show(
       context,
-      context.l10n.kategoriSilTitle,
-      context.l10n.kategoriSilConfirmMessage(category.id),
+      title: context.l10n.kategoriSilTitle,
+      message: context.l10n.kategoriSilConfirmMessage(category.id),
       confirmText: context.l10n.sil,
-      cancelText: context.l10n.iptal,
-      style: IboDialogStyle(
-        confirmButtonStyle: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-        ),
-      ),
+      danger: true,
     );
 
-    if (confirmed == true) {
+    if (confirmed) {
       try {
         await _categoryService.deleteCategory(category.id, widget.isExpense);
         if (widget.isExpense) {

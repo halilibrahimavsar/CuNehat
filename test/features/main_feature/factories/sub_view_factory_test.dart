@@ -1,6 +1,5 @@
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_history_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_insights_page.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_pending_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
@@ -30,7 +29,7 @@ void main() {
         'createSubViewsForState returns transaction pages for transactions state',
         () {
       final views = factory.createSubViewsForState('transactions');
-      expect(views.length, 3);
+      expect(views.length, 2);
 
       expect(views[0], isA<TransactionInsightsPage>());
       final insightsPage = views[0] as TransactionInsightsPage;
@@ -43,12 +42,6 @@ void main() {
       expect(reportPage.userId, userId);
       expect(reportPage.walletId, walletId);
       expect(reportPage.key, const ValueKey('txReport-wallet_456'));
-
-      expect(views[2], isA<TransactionPendingPage>());
-      final pendingPage = views[2] as TransactionPendingPage;
-      expect(pendingPage.userId, userId);
-      expect(pendingPage.walletId, walletId);
-      expect(pendingPage.key, const ValueKey('txPending-wallet_456'));
     });
 
     test('createSubViewsForState returns DebtHistoryPage for debt state', () {

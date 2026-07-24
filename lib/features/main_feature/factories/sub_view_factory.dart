@@ -1,6 +1,5 @@
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_history_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_insights_page.dart';
-import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_pending_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
 import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
 import 'package:flutter/material.dart';
@@ -39,10 +38,6 @@ class SubViewFactory {
               walletId: walletId),
           TransactionReportPage(
               key: ValueKey('txReport-$walletId'),
-              userId: userId,
-              walletId: walletId),
-          TransactionPendingPage(
-              key: ValueKey('txPending-$walletId'),
               userId: userId,
               walletId: walletId),
         ],

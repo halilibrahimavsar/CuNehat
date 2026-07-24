@@ -4,6 +4,7 @@ import 'package:cunehat/core/notifications/notification_permission_dialog.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -33,6 +34,14 @@ class OnboardingHelpCard extends StatelessWidget {
   /// bir replay tile'ı yok — o sayfaya gidildiğinde zaten otomatik
   /// tetikleniyor. Bu, hepsinin bayrağını tek seferde sıfırlar.
   Future<void> _resetAll(BuildContext context) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.tumTurlariSifirla,
+      message: context.l10n.tumTurlariSifirlaOnayMesaji,
+      confirmText: context.l10n.sifirla,
+    );
+    if (!confirmed || !context.mounted) return;
+
     await getIt<OnboardingCoordinator>().resetAll();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

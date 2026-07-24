@@ -4,6 +4,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/services/transfer_service.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -110,17 +111,26 @@ class _TransferSheetState extends State<TransferSheet> {
 
     final amount = parseMoneyInput(_amountController.text)!;
 
-    // Bakiye aşımı sert engel değil (eksi bakiye tasarım gereği serbest),
-    // ama büyük olasılıkla yazım hatasıdır: kullanıcıya onaylat.
+    // Her transferden önce tek onay. Bakiye aşımı sert engel değil (eksi
+    // bakiye tasarım gereği serbest, ama büyük olasılıkla yazım hatasıdır) —
+    // ayrı bir ikinci popup açmak yerine aynı onay mesajına eklenir.
+    var message = context.l10n.transferOnayMesaji(
+      formatMoney(amount, currency: _from.currency),
+      _from.name,
+      _to.name,
+    );
     if (moneyGreaterThan(amount, _from.balance)) {
-      final confirmed = await IboDialog.showConfirmation(
-        context,
-        context.l10n.transferBakiyeAsimiTitle,
-        context.l10n.transferBakiyeAsimiMesaj(
-            formatMoney(_from.balance, currency: _from.currency)),
-      );
-      if (confirmed != true || !mounted) return;
+      message = '$message\n\n${context.l10n.transferBakiyeAsimiMesaj(
+        formatMoney(_from.balance, currency: _from.currency),
+      )}';
     }
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.transferOnayBasligi,
+      message: message,
+      confirmText: context.l10n.transferEt,
+    );
+    if (!confirmed || !mounted) return;
 
     setState(() => _submitting = true);
     final result = await getIt<TransferService>().transfer(
