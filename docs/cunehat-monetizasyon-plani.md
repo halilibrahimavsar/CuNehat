@@ -117,7 +117,31 @@ Karşılaştırmalı yıllık ücretler (2025–2026, kabaca): YNAB ~$110, Monar
 
 ---
 
-## 7. Gerçekçi Gelir Beklentisi
+## 7. Neden Reklamsız — ve Ödemeyeni Nasıl Karşılıyoruz
+
+"Reklam koyup ödemeyenleri de paraya çevirsek?" sorusunun cevabı yine **maliyet yapısından** (§2) çıkıyor — dogma değil, hesap.
+
+### Reklam neden YOK — bu app'e özel 3 somut neden
+1. **Data Safety etiketi bir varlık; reklam onu yok eder.** Şu an Play "Data Safety" formunda dürüstçe **"veri paylaşımı: Hayır · reklam SDK'sı: Yok"** diyebiliyorsun (`RELEASE_GUIDE.md` §4). Veri hasadıyla dolu bu kategoride bu **nadir ve pazarlanabilir bir fark.** AdMob'u eklediğin an reklam ağı SDK'sı binary'ne girer; formda *"veriyi reklam ağlarıyla paylaşıyor"* demek zorunda kalırsın — en güçlü kozunu çöpe atarsın.
+2. **TR'de reklam getirisi mertebe olarak komik.** Türkiye eCPM'leri dünya ortalamasının çok altında; niş bir Türkçe finans app'inde on binlerce kullanıcıyla bile aylık kahve parası. Tüm mahremiyet farkını bu kadarına takas etmek en kötü değiş-tokuş. Reklam ancak yüz binlerce–milyon kullanıcıda anlam kazanır.
+3. **Reklam, fiyattan daha çok "soymak."** Şeffaf fiyat dürüsttür — kişi ne verdiğini bilir. Reklam gizli bir dikkat + veri vergisidir. "Soymak değil" ilkesi mantıken reklamdan *daha çok* kaçınmayı gerektirir.
+
+> Opt-in ödüllü reklam bile çözüm değil: SDK yine binary'de, Data Safety yine bozulur, eCPM yine düşük. **Finans + reklam ağı = kategorik olarak kötü takas.**
+
+### "Çoğu insan, hele öğrenci, ödemez" — doğru, ama sorun değil
+Kilit mantık: **Reklamın tek işlevi ödemeyen kullanıcıyı paraya çevirmektir. Ama senin ödemeyen kullanıcın (§2) sana neredeyse sıfır maliyet çıkarıyor** — doldurman gereken bir delik yok. O yüzden "çoğu ödemez" bir problem değil; bedava kullanıcı yük değil, **tohumdur.**
+
+| Kitle | Katman | Rolü |
+|---|---|---|
+| Öğrenci / dar bütçe | 🟢 Ücretsiz çekirdek | En çok ihtiyacı olan da o. Maliyeti ~sıfır. Karşılığında **ağızdan ağıza yayılım, yorum/puan, ileride kazanınca gönüllü ödeyen sadık kullanıcı.** |
+| Kazanan yetişkin (freelancer, ekstre içe aktaran, yatırımcı) | 🔵 Pro | Otomasyona (ekstre/OCR/oto-yedek) adil bir tek-seferlik ücreti seve seve öder. Parayı öğrenciden değil, **değer verenden** alırsın. |
+| Sana güvenen herkes | 💛 Bağış | Pro almasa da reklamsız indie geliştiriciyi 2–3 dolarla destekler. |
+
+**Sonuç:** Hedef ödeyen ~%2–3 ve bu yeterli — çünkü geri kalan ~%97 sana yük değil, **kitlendir.** Reklamsızlık bir zaaf değil, **manşetin:** mağaza açıklamasının ilk satırı "Reklamsız · verini satmaz · veri cihazında kalır" olmalı.
+
+---
+
+## 8. Gerçekçi Gelir Beklentisi
 
 Dürüst olmak gerekirse bu model "zengin etmez"; **"masrafı çıkarır + emeğe hak ettiği katkıyı sağlar"** hedefidir — ki bu senin değerlerinle örtüşür.
 
@@ -127,7 +151,7 @@ Dürüst olmak gerekirse bu model "zengin etmez"; **"masrafı çıkarır + emeğ
 
 ---
 
-## 8. Uygulama Adımları
+## 9. Uygulama Adımları
 
 **Teknik:**
 1. `in_app_purchase` (resmî Flutter eklentisi) ekle — hem Play Billing hem App Store'u karılar; RevenueCat şart değil (küçük ölçek + tek seferlik ürün için gereksiz bağımlılık).
@@ -142,7 +166,7 @@ Dürüst olmak gerekirse bu model "zengin etmez"; **"masrafı çıkarır + emeğ
 
 ---
 
-## 9. Özet Karar
+## 10. Özet Karar
 
 - **Şimdi:** Monetizasyon yok — temiz sayfa.
 - **Öneri:** Cömert **ücretsiz çekirdek** + **tek seferlik Pro** (ekstre içe aktarma, OCR, otomatik yedek üzerine kurulu) + isteğe bağlı **bağış**. **Reklamsız, aylık aboneliksiz.**
