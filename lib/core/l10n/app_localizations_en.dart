@@ -2018,6 +2018,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'The full history of paid-off debts and collected receivables is kept here.';
 
   @override
+  String get notificationSettings => 'Notification Settings';
+
+  @override
+  String get notificationSettingsDesc =>
+      'Manage your critical and random notification preferences.';
+
+  @override
+  String get randomReminders => 'Motivational Reminders';
+
+  @override
+  String get randomRemindersOff => 'Off';
+
+  @override
+  String get randomRemindersLow => 'Low (1/day)';
+
+  @override
+  String get randomRemindersMedium => 'Medium (2/day)';
+
+  @override
+  String get randomRemindersHigh => 'High (3/day)';
+
+  @override
+  String get criticalNotifications => 'Critical Notifications';
+
+  @override
+  String get debtReminders => 'Debt/Receivable Reminders';
+
+  @override
+  String get recurringReminders => 'Recurring Transaction Reminders';
+
+  @override
+  String get budgetAlerts => 'Budget Alerts';
+
+  @override
   String get tumTurlariSifirla => 'Reset All Tours';
 
   @override

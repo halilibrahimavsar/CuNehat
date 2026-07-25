@@ -797,6 +797,18 @@
   "onboardingDebtHistoryTitle": "Geçmiş",
   "onboardingDebtHistoryDesc": "Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.",
 
+  "notificationSettings": "Bildirim Ayarları",
+  "notificationSettingsDesc": "Kritik ve rastgele bildirim tercihlerinizi yönetin.",
+  "randomReminders": "Motive Edici Hatırlatıcılar",
+  "randomRemindersOff": "Kapalı",
+  "randomRemindersLow": "Az (Günde 1)",
+  "randomRemindersMedium": "Orta (Günde 2)",
+  "randomRemindersHigh": "Çok (Günde 3)",
+  "criticalNotifications": "Kritik Bildirimler",
+  "debtReminders": "Borç/Alacak Hatırlatıcıları",
+  "recurringReminders": "Düzenli İşlem Hatırlatıcıları",
+  "budgetAlerts": "Bütçe Uyarıları",
+
   "tumTurlariSifirla": "Tüm Turları Sıfırla",
   "tumTurlariSifirlaAciklama": "Alt sayfa turları da dahil, tüm ekranları ziyaret ettiğinizde tekrar gösterilir.",
   "tumTurlarSifirlandi": "Turlar sıfırlandı",

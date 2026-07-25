@@ -2022,6 +2022,40 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.';
 
   @override
+  String get notificationSettings => 'Bildirim Ayarları';
+
+  @override
+  String get notificationSettingsDesc =>
+      'Kritik ve rastgele bildirim tercihlerinizi yönetin.';
+
+  @override
+  String get randomReminders => 'Motive Edici Hatırlatıcılar';
+
+  @override
+  String get randomRemindersOff => 'Kapalı';
+
+  @override
+  String get randomRemindersLow => 'Az (Günde 1)';
+
+  @override
+  String get randomRemindersMedium => 'Orta (Günde 2)';
+
+  @override
+  String get randomRemindersHigh => 'Çok (Günde 3)';
+
+  @override
+  String get criticalNotifications => 'Kritik Bildirimler';
+
+  @override
+  String get debtReminders => 'Borç/Alacak Hatırlatıcıları';
+
+  @override
+  String get recurringReminders => 'Düzenli İşlem Hatırlatıcıları';
+
+  @override
+  String get budgetAlerts => 'Bütçe Uyarıları';
+
+  @override
   String get tumTurlariSifirla => 'Tüm Turları Sıfırla';
 
   @override

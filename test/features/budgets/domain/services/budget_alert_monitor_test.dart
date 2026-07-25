@@ -1,4 +1,5 @@
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
@@ -11,9 +12,13 @@ class MockGetBudgetsUsecase extends Mock implements GetBudgetsUsecase {}
 
 class MockNotificationService extends Mock implements NotificationService {}
 
+class MockNotificationSettingsService extends Mock
+    implements NotificationSettingsService {}
+
 void main() {
   late MockGetBudgetsUsecase mockGetBudgets;
   late MockNotificationService mockNotifications;
+  late MockNotificationSettingsService mockNotificationSettings;
   late TransactionsChangedNotifier notifier;
   late BudgetAlertMonitor monitor;
 
@@ -35,8 +40,12 @@ void main() {
   setUp(() {
     mockGetBudgets = MockGetBudgetsUsecase();
     mockNotifications = MockNotificationService();
+    mockNotificationSettings = MockNotificationSettingsService();
+    when(() => mockNotificationSettings.isBudgetAlertsEnabled)
+        .thenReturn(true);
     notifier = TransactionsChangedNotifier();
-    monitor = BudgetAlertMonitor(mockGetBudgets, mockNotifications, notifier);
+    monitor = BudgetAlertMonitor(
+        mockGetBudgets, mockNotifications, mockNotificationSettings, notifier);
   });
 
   tearDown(() {
@@ -80,6 +89,18 @@ void main() {
           title: 'Bütçe Aşıldı!',
           body: 'Dikkat: Bütçenizi aştınız!',
         )).called(1);
+  });
+
+  test('bütçe uyarıları ayardan kapatılınca bildirim gönderilmez', () async {
+    when(() => mockNotificationSettings.isBudgetAlertsEnabled)
+        .thenReturn(false);
+    when(() => mockGetBudgets('u', 'w'))
+        .thenAnswer((_) async => Right([b('Food', 100, 120)]));
+
+    notifier.notify(userId: 'u', walletId: 'w');
+    await settle();
+
+    verifyZeroInteractions(mockNotifications);
   });
 
   test('band içinde ikinci değişimde tekrar bildirim yok (önceki takip)',

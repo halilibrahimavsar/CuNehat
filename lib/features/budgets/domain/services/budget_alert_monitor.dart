@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_service.dart';
@@ -22,6 +23,7 @@ import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dar
 class BudgetAlertMonitor {
   final GetBudgetsUsecase _getBudgets;
   final NotificationService _notifications;
+  final NotificationSettingsService _notificationSettings;
 
   static const _alertService = BudgetAlertService();
 
@@ -33,6 +35,7 @@ class BudgetAlertMonitor {
   BudgetAlertMonitor(
     this._getBudgets,
     this._notifications,
+    this._notificationSettings,
     TransactionsChangedNotifier notifier,
   ) {
     _subscription = notifier.stream.listen(_onTransactionsChanged);
@@ -51,14 +54,16 @@ class BudgetAlertMonitor {
         previous: previous,
         current: budgets,
       )) {
-        final exceeded = alert.level == BudgetAlertLevel.exceeded;
-        _notifications.showNotification(
-          id: alert.categoryId.hashCode,
-          title: exceeded ? 'Bütçe Aşıldı!' : 'Bütçe Uyarısı',
-          body: exceeded
-              ? 'Dikkat: Bütçenizi aştınız!'
-              : 'Dikkat: Bütçenizin %80\'ine ulaştınız.',
-        );
+        if (_notificationSettings.isBudgetAlertsEnabled) {
+          final exceeded = alert.level == BudgetAlertLevel.exceeded;
+          _notifications.showNotification(
+            id: alert.categoryId.hashCode,
+            title: exceeded ? 'Bütçe Aşıldı!' : 'Bütçe Uyarısı',
+            body: exceeded
+                ? 'Dikkat: Bütçenizi aştınız!'
+                : 'Dikkat: Bütçenizin %80\'ine ulaştınız.',
+          );
+        }
       }
       _previousByWallet[walletId] = budgets;
     });

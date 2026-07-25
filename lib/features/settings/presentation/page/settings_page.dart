@@ -11,6 +11,7 @@ import 'package:cunehat/features/settings/presentation/widgets/data_export_impor
 import 'package:cunehat/features/settings/presentation/widgets/data_privacy_card.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/bank_import_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/onboarding_help_card.dart';
+import 'package:cunehat/features/settings/presentation/widgets/notification_settings_card.dart';
 
 /// Main settings page, styled with premium, theme-aware AppCards.
 class SettingsPage extends StatelessWidget {
@@ -77,6 +78,10 @@ class SettingsPage extends StatelessWidget {
                   SettingsHeader(title: context.l10n.security),
                   const SizedBox(height: 8),
                   const SecuritySettingsCard(),
+                  const SizedBox(height: 24),
+                  SettingsHeader(title: context.l10n.notificationSettings),
+                  const SizedBox(height: 8),
+                  const NotificationSettingsCard(),
                   const SizedBox(height: 24),
                   SettingsHeader(title: context.l10n.dataBackupTransfer),
                   const SizedBox(height: 8),

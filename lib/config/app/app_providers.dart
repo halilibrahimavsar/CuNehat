@@ -11,6 +11,8 @@ import 'package:cunehat/features/settings/presentation/blocs/theme_blocs/theme_b
 import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
+import 'package:cunehat/features/settings/presentation/bloc/notification_settings/notification_settings_bloc.dart';
+import 'package:cunehat/features/settings/presentation/bloc/notification_settings/notification_settings_event.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Central widget for providing all BLoCs and Cubits to the app.
@@ -46,6 +48,7 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => getIt<WalletBloc>()),
         BlocProvider(create: (_) => getIt<PendingRecurringBloc>()),
         BlocProvider(create: (_) => getIt<ConnectionCubit>()),
+        BlocProvider(create: (_) => getIt<NotificationSettingsBloc>()..add(const LoadNotificationSettings())),
 
         // Local Auth BLoCs
         BlocProvider(create: (_) => getIt<LocalAuthSettingsBloc>()),

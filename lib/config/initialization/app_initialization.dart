@@ -8,6 +8,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
+import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
@@ -59,7 +60,13 @@ class AppInitialization {
       );
 
       // Initialize NotificationService
-      await getIt<NotificationService>().initialize();
+      final notificationService = getIt<NotificationService>();
+      await notificationService.initialize();
+      
+      // Schedule random reminders based on user preference. Fire-and-forget:
+      // onlarca platform-channel çağrısı yapıyor, açılışı bloklamamalı.
+      final freq = getIt<NotificationSettingsService>().getRandomFrequency();
+      unawaited(notificationService.scheduleRandomDailyReminders(freq));
 
       // Bütçe uyarı monitörünü erken canlandır: app-ömürlü olarak işlem
       // defteri değişimlerini dinler ve eşik aşımında bildirim atar (Budgets

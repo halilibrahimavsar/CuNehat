@@ -1,5 +1,6 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
@@ -24,10 +25,14 @@ class MockTransactionsRepository extends Mock
 
 class MockNotificationService extends Mock implements NotificationService {}
 
+class MockNotificationSettingsService extends Mock
+    implements NotificationSettingsService {}
+
 void main() {
   late MockRecurringTransactionRepository mockRecurringRepo;
   late MockTransactionsRepository mockTxRepo;
   late MockNotificationService mockNotificationService;
+  late MockNotificationSettingsService mockNotificationSettingsService;
 
   late GetAllRecurringTemplatesUsecase getAllTemplatesUsecase;
   late GetPendingRecurringTransactionsUsecase getPendingUsecase;
@@ -68,12 +73,16 @@ void main() {
     mockRecurringRepo = MockRecurringTransactionRepository();
     mockTxRepo = MockTransactionsRepository();
     mockNotificationService = MockNotificationService();
+    mockNotificationSettingsService = MockNotificationSettingsService();
+
+    when(() => mockNotificationSettingsService.isRecurringRemindersEnabled)
+        .thenReturn(true);
 
     getAllTemplatesUsecase = GetAllRecurringTemplatesUsecase(mockRecurringRepo);
     getPendingUsecase =
         GetPendingRecurringTransactionsUsecase(mockRecurringRepo);
-    saveUsecase = SaveRecurringTransactionUsecase(
-        mockRecurringRepo, mockNotificationService);
+    saveUsecase = SaveRecurringTransactionUsecase(mockRecurringRepo,
+        mockNotificationService, mockNotificationSettingsService);
     deleteUsecase = DeleteRecurringTransactionUsecase(
         mockRecurringRepo, mockNotificationService);
     skipUsecase = SkipRecurringTransactionUsecase(mockRecurringRepo);
@@ -205,6 +214,27 @@ void main() {
       expect(result, const Left(failure));
       verify(() => mockRecurringRepo.saveTemplate(testTemplate)).called(1);
       verifyNever(() => mockNotificationService.cancelNotification(any()));
+      verifyNever(() => mockNotificationService.scheduleNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+          ));
+    });
+
+    test(
+        'should save template and cancel old notification but NOT reschedule when reminders are disabled',
+        () async {
+      when(() => mockNotificationSettingsService.isRecurringRemindersEnabled)
+          .thenReturn(false);
+      when(() => mockRecurringRepo.saveTemplate(any()))
+          .thenAnswer((_) async => const Right(null));
+
+      final result = await saveUsecase(testTemplate);
+
+      expect(result, const Right(null));
+      verify(() => mockNotificationService.cancelNotification(
+          'recurring_${testTemplate.id}'.hashCode)).called(1);
       verifyNever(() => mockNotificationService.scheduleNotification(
             id: any(named: 'id'),
             title: any(named: 'title'),

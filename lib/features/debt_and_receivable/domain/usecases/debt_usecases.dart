@@ -5,6 +5,7 @@ import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_re
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/notification_settings_service.dart';
 
 @injectable
 class GetDebtsUseCase {
@@ -19,8 +20,9 @@ class GetDebtsUseCase {
 class AddDebtUseCase {
   final DebtRepository repository;
   final NotificationService notificationService;
+  final NotificationSettingsService notificationSettingsService;
 
-  AddDebtUseCase(this.repository, this.notificationService);
+  AddDebtUseCase(this.repository, this.notificationService, this.notificationSettingsService);
 
   Future<Either<Failure, void>> call(DebtEntity debt) async {
     if (debt.id == null || debt.id!.isEmpty) {
@@ -32,7 +34,7 @@ class AddDebtUseCase {
     result.fold(
       (failure) => null,
       (_) {
-        if (debt.dueDate != null && !debt.isPaid) {
+        if (debt.dueDate != null && !debt.isPaid && notificationSettingsService.isDebtRemindersEnabled) {
           final baseIdStr = 'debt_${debt.id}';
           final id1 = '${baseIdStr}_1'.hashCode;
           final id2 = '${baseIdStr}_2'.hashCode;
@@ -62,8 +64,9 @@ class AddDebtUseCase {
 class UpdateDebtUseCase {
   final DebtRepository repository;
   final NotificationService notificationService;
+  final NotificationSettingsService notificationSettingsService;
 
-  UpdateDebtUseCase(this.repository, this.notificationService);
+  UpdateDebtUseCase(this.repository, this.notificationService, this.notificationSettingsService);
 
   Future<Either<Failure, void>> call(DebtEntity debt) async {
     if (debt.id == null || debt.id!.isEmpty) {
@@ -83,7 +86,7 @@ class UpdateDebtUseCase {
         notificationService.cancelNotification(id2);
 
         // Eğer ödenmediyse ve tarihi varsa tekrar kur
-        if (debt.dueDate != null && !debt.isPaid) {
+        if (debt.dueDate != null && !debt.isPaid && notificationSettingsService.isDebtRemindersEnabled) {
           notificationService.scheduleNotification(
             id: id1,
             title: 'Borç Hatırlatması',

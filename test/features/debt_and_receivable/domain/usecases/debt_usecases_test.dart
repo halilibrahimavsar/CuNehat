@@ -1,5 +1,6 @@
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
@@ -11,9 +12,13 @@ class MockDebtRepository extends Mock implements DebtRepository {}
 
 class MockNotificationService extends Mock implements NotificationService {}
 
+class MockNotificationSettingsService extends Mock
+    implements NotificationSettingsService {}
+
 void main() {
   late MockDebtRepository mockRepo;
   late MockNotificationService mockNotificationService;
+  late MockNotificationSettingsService mockNotificationSettingsService;
 
   late GetDebtsUseCase getUseCase;
   late AddDebtUseCase addUseCase;
@@ -40,10 +45,16 @@ void main() {
   setUp(() {
     mockRepo = MockDebtRepository();
     mockNotificationService = MockNotificationService();
+    mockNotificationSettingsService = MockNotificationSettingsService();
+
+    when(() => mockNotificationSettingsService.isDebtRemindersEnabled)
+        .thenReturn(true);
 
     getUseCase = GetDebtsUseCase(mockRepo);
-    addUseCase = AddDebtUseCase(mockRepo, mockNotificationService);
-    updateUseCase = UpdateDebtUseCase(mockRepo, mockNotificationService);
+    addUseCase = AddDebtUseCase(
+        mockRepo, mockNotificationService, mockNotificationSettingsService);
+    updateUseCase = UpdateDebtUseCase(
+        mockRepo, mockNotificationService, mockNotificationSettingsService);
     deleteUseCase = DeleteDebtUseCase(mockRepo, mockNotificationService);
   });
 
@@ -159,6 +170,20 @@ void main() {
 
       expect(result, const Right<Failure, void>(null));
       verify(() => mockRepo.addDebt(debtNoDueDate)).called(1);
+      verifyZeroInteractions(mockNotificationService);
+    });
+
+    test('should save debt but NOT schedule notifications if reminders are disabled',
+        () async {
+      when(() => mockNotificationSettingsService.isDebtRemindersEnabled)
+          .thenReturn(false);
+      when(() => mockRepo.addDebt(testDebt))
+          .thenAnswer((_) async => const Right(null));
+
+      final result = await addUseCase(testDebt);
+
+      expect(result, const Right<Failure, void>(null));
+      verify(() => mockRepo.addDebt(testDebt)).called(1);
       verifyZeroInteractions(mockNotificationService);
     });
   });

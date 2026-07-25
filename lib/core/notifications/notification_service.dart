@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'dart:math';
+
+import 'package:cunehat/core/enums/notification_frequency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:injectable/injectable.dart';
@@ -22,6 +25,7 @@ abstract class NotificationService {
     required DateTime scheduledDate,
     String? payload,
   });
+  Future<void> scheduleRandomDailyReminders(NotificationFrequency frequency);
   Future<void> cancelNotification(int id);
   Future<void> cancelAllNotifications();
 }
@@ -173,6 +177,75 @@ class NotificationServiceImpl implements NotificationService {
     } catch (e) {
       debugPrint('Error canceling notification: $e');
     }
+  }
+
+  @override
+  Future<void> scheduleRandomDailyReminders(NotificationFrequency frequency) async {
+    const int startId = 10000;
+    const int daysToSchedule = 7;
+    const int maxNotifications = 60; // Safe limit under iOS 64
+
+    // 1. Cancel all previously scheduled random notifications
+    for (int i = 0; i < maxNotifications; i++) {
+      await cancelNotification(startId + i);
+    }
+
+    if (frequency == NotificationFrequency.none) {
+      debugPrint('Random reminders disabled.');
+      return;
+    }
+
+    // 2. Schedule new ones
+    final int countPerDay = frequency.dailyCount;
+    final random = Random();
+    int currentId = startId;
+    
+    final messages = [
+      'Bugün hiç harcama girdin mi? Bütçeni güncel tut!',
+      'Finansal durumunu kontrol etme vakti!',
+      'Gelir ve giderlerini takip etmek bütçeni korur.',
+      'Küçük birikimler büyük hedeflere ulaştırır!',
+      'Harcamalarını gözden geçirmeyi unutma.',
+      'Bütçeni planla, rahat yaşa!'
+    ];
+
+    final now = DateTime.now();
+
+    for (int day = 0; day < daysToSchedule; day++) {
+      final scheduleDate = now.add(Duration(days: day));
+      
+      for (int c = 0; c < countPerDay; c++) {
+        if (currentId - startId >= maxNotifications) break;
+
+        // Random hour between 10 AM and 8 PM (20)
+        final hour = 10 + random.nextInt(10);
+        final minute = random.nextInt(60);
+
+        var timeToSchedule = DateTime(
+          scheduleDate.year,
+          scheduleDate.month,
+          scheduleDate.day,
+          hour,
+          minute,
+        );
+
+        if (timeToSchedule.isBefore(now)) {
+           timeToSchedule = timeToSchedule.add(const Duration(days: 1));
+        }
+
+        final msgIndex = random.nextInt(messages.length);
+
+        await scheduleNotification(
+          id: currentId,
+          title: 'CuNehat',
+          body: messages[msgIndex],
+          scheduledDate: timeToSchedule,
+        );
+
+        currentId++;
+      }
+    }
+    debugPrint('Scheduled ${currentId - startId} random reminders.');
   }
 
   @override

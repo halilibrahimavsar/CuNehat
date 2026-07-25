@@ -782,6 +782,18 @@
   "onboardingDebtHistoryTitle": "History",
   "onboardingDebtHistoryDesc": "The full history of paid-off debts and collected receivables is kept here.",
 
+  "notificationSettings": "Notification Settings",
+  "notificationSettingsDesc": "Manage your critical and random notification preferences.",
+  "randomReminders": "Motivational Reminders",
+  "randomRemindersOff": "Off",
+  "randomRemindersLow": "Low (1/day)",
+  "randomRemindersMedium": "Medium (2/day)",
+  "randomRemindersHigh": "High (3/day)",
+  "criticalNotifications": "Critical Notifications",
+  "debtReminders": "Debt/Receivable Reminders",
+  "recurringReminders": "Recurring Transaction Reminders",
+  "budgetAlerts": "Budget Alerts",
+
   "tumTurlariSifirla": "Reset All Tours",
   "tumTurlariSifirlaAciklama": "Including sub-page tours — they'll show again as you revisit each screen.",
   "tumTurlarSifirlandi": "Tours reset",

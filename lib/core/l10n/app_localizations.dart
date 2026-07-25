@@ -3728,6 +3728,72 @@ abstract class AppLocalizations {
   /// **'Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.'**
   String get onboardingDebtHistoryDesc;
 
+  /// No description provided for @notificationSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim Ayarları'**
+  String get notificationSettings;
+
+  /// No description provided for @notificationSettingsDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kritik ve rastgele bildirim tercihlerinizi yönetin.'**
+  String get notificationSettingsDesc;
+
+  /// No description provided for @randomReminders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Motive Edici Hatırlatıcılar'**
+  String get randomReminders;
+
+  /// No description provided for @randomRemindersOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get randomRemindersOff;
+
+  /// No description provided for @randomRemindersLow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Az (Günde 1)'**
+  String get randomRemindersLow;
+
+  /// No description provided for @randomRemindersMedium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta (Günde 2)'**
+  String get randomRemindersMedium;
+
+  /// No description provided for @randomRemindersHigh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok (Günde 3)'**
+  String get randomRemindersHigh;
+
+  /// No description provided for @criticalNotifications.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kritik Bildirimler'**
+  String get criticalNotifications;
+
+  /// No description provided for @debtReminders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç/Alacak Hatırlatıcıları'**
+  String get debtReminders;
+
+  /// No description provided for @recurringReminders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli İşlem Hatırlatıcıları'**
+  String get recurringReminders;
+
+  /// No description provided for @budgetAlerts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe Uyarıları'**
+  String get budgetAlerts;
+
   /// No description provided for @tumTurlariSifirla.
   ///
   /// In tr, this message translates to:
