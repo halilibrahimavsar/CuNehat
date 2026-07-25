@@ -123,6 +123,10 @@ class FakeDebtRepository implements DebtRepository {
   }
 
   @override
+  Future<Either<Failure, List<DebtEntity>>> getAllDebts() async =>
+      Right(List<DebtEntity>.of(store));
+
+  @override
   Future<Either<Failure, void>> updateDebt(DebtEntity debt) async =>
       const Right(null);
 

@@ -1,6 +1,5 @@
 import 'package:cunehat/core/error/failure.dart';
-import 'package:cunehat/core/notifications/notification_service.dart';
-import 'package:cunehat/core/services/notification_settings_service.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
@@ -23,16 +22,15 @@ class MockRecurringTransactionRepository extends Mock
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
 
-class MockNotificationService extends Mock implements NotificationService {}
+class MockReminderSyncService extends Mock implements ReminderSyncService {}
 
-class MockNotificationSettingsService extends Mock
-    implements NotificationSettingsService {}
-
+/// Hatırlatmaların hangi tarihte/kimlikle kurulduğu ReminderSyncService'in
+/// sorumluluğu ve orada test edilir (reminder_sync_service_test.dart).
+/// Burada usecase'lerin o servise doğru devrettiği doğrulanır.
 void main() {
   late MockRecurringTransactionRepository mockRecurringRepo;
   late MockTransactionsRepository mockTxRepo;
-  late MockNotificationService mockNotificationService;
-  late MockNotificationSettingsService mockNotificationSettingsService;
+  late MockReminderSyncService mockReminderSync;
 
   late GetAllRecurringTemplatesUsecase getAllTemplatesUsecase;
   late GetPendingRecurringTransactionsUsecase getPendingUsecase;
@@ -72,33 +70,26 @@ void main() {
   setUp(() {
     mockRecurringRepo = MockRecurringTransactionRepository();
     mockTxRepo = MockTransactionsRepository();
-    mockNotificationService = MockNotificationService();
-    mockNotificationSettingsService = MockNotificationSettingsService();
+    mockReminderSync = MockReminderSyncService();
 
-    when(() => mockNotificationSettingsService.isRecurringRemindersEnabled)
-        .thenReturn(true);
+    when(() => mockReminderSync.syncRecurringTemplate(any()))
+        .thenAnswer((_) async {});
+    when(() => mockReminderSync.cancelRecurringReminder(any()))
+        .thenAnswer((_) async {});
 
     getAllTemplatesUsecase = GetAllRecurringTemplatesUsecase(mockRecurringRepo);
     getPendingUsecase =
         GetPendingRecurringTransactionsUsecase(mockRecurringRepo);
-    saveUsecase = SaveRecurringTransactionUsecase(mockRecurringRepo,
-        mockNotificationService, mockNotificationSettingsService);
-    deleteUsecase = DeleteRecurringTransactionUsecase(
-        mockRecurringRepo, mockNotificationService);
-    skipUsecase = SkipRecurringTransactionUsecase(mockRecurringRepo);
+    saveUsecase =
+        SaveRecurringTransactionUsecase(mockRecurringRepo, mockReminderSync);
+    deleteUsecase =
+        DeleteRecurringTransactionUsecase(mockRecurringRepo, mockReminderSync);
+    // Onay ve atlama, vadeyi ilerletirken bildirimin de yeniden kurulması
+    // için kaydetme usecase'inden geçer; gerçek örnek verilerek bu zincir
+    // uçtan uca doğrulanır.
+    skipUsecase = SkipRecurringTransactionUsecase(saveUsecase);
     approveUsecase =
-        ApproveRecurringTransactionUsecase(mockRecurringRepo, mockTxRepo);
-
-    // Setup default mock answers for notification service since they return void
-    when(() => mockNotificationService.cancelNotification(any()))
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.scheduleNotification(
-          id: any(named: 'id'),
-          title: any(named: 'title'),
-          body: any(named: 'body'),
-          scheduledDate: any(named: 'scheduledDate'),
-          payload: any(named: 'payload'),
-        )).thenAnswer((_) async {});
+        ApproveRecurringTransactionUsecase(mockTxRepo, saveUsecase);
   });
 
   final testTemplate = RecurringTransactionEntity(
@@ -175,9 +166,7 @@ void main() {
   });
 
   group('SaveRecurringTransactionUsecase', () {
-    test(
-        'should save template and schedule notification 1 day before execution',
-        () async {
+    test('should save template and re-sync its reminder', () async {
       // Arrange
       when(() => mockRecurringRepo.saveTemplate(any()))
           .thenAnswer((_) async => const Right(null));
@@ -188,19 +177,11 @@ void main() {
       // Assert
       expect(result, const Right(null));
       verify(() => mockRecurringRepo.saveTemplate(testTemplate)).called(1);
-      // Bildirim kimliği usecase'deki 'recurring_<id>' kalıbından türetilir.
-      verify(() => mockNotificationService.cancelNotification(
-          'recurring_${testTemplate.id}'.hashCode)).called(1);
-      verify(() => mockNotificationService.scheduleNotification(
-            id: 'recurring_${testTemplate.id}'.hashCode,
-            title: 'Düzenli İşlem Yaklaşıyor',
-            body: 'Netflix Subscription başlıklı işleminizin zamanı yaklaştı.',
-            scheduledDate: DateTime(2026, 6, 19),
-          )).called(1);
+      verify(() => mockReminderSync.syncRecurringTemplate(testTemplate))
+          .called(1);
     });
 
-    test(
-        'should return failure and not cancel/schedule notification on repository failure',
+    test('should return failure and not touch reminders on repository failure',
         () async {
       // Arrange
       const failure = ServerFailure('Save error');
@@ -213,34 +194,7 @@ void main() {
       // Assert
       expect(result, const Left(failure));
       verify(() => mockRecurringRepo.saveTemplate(testTemplate)).called(1);
-      verifyNever(() => mockNotificationService.cancelNotification(any()));
-      verifyNever(() => mockNotificationService.scheduleNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            scheduledDate: any(named: 'scheduledDate'),
-          ));
-    });
-
-    test(
-        'should save template and cancel old notification but NOT reschedule when reminders are disabled',
-        () async {
-      when(() => mockNotificationSettingsService.isRecurringRemindersEnabled)
-          .thenReturn(false);
-      when(() => mockRecurringRepo.saveTemplate(any()))
-          .thenAnswer((_) async => const Right(null));
-
-      final result = await saveUsecase(testTemplate);
-
-      expect(result, const Right(null));
-      verify(() => mockNotificationService.cancelNotification(
-          'recurring_${testTemplate.id}'.hashCode)).called(1);
-      verifyNever(() => mockNotificationService.scheduleNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            scheduledDate: any(named: 'scheduledDate'),
-          ));
+      verifyNever(() => mockReminderSync.syncRecurringTemplate(any()));
     });
   });
 
@@ -256,8 +210,8 @@ void main() {
       // Assert
       expect(result, const Right(null));
       verify(() => mockRecurringRepo.deleteTemplate('rec_123')).called(1);
-      verify(() => mockNotificationService
-          .cancelNotification('recurring_rec_123'.hashCode)).called(1);
+      verify(() => mockReminderSync.cancelRecurringReminder('rec_123'))
+          .called(1);
     });
 
     test(
@@ -274,7 +228,7 @@ void main() {
       // Assert
       expect(result, const Left(failure));
       verify(() => mockRecurringRepo.deleteTemplate('rec_123')).called(1);
-      verifyNever(() => mockNotificationService.cancelNotification(any()));
+      verifyNever(() => mockReminderSync.cancelRecurringReminder(any()));
     });
   });
 
@@ -283,7 +237,7 @@ void main() {
 
     setUp(() {
       deleteForWalletUsecase = DeleteRecurringTemplatesForWalletUsecase(
-          mockRecurringRepo, mockNotificationService);
+          mockRecurringRepo, mockReminderSync);
     });
 
     test(
@@ -306,10 +260,11 @@ void main() {
       verify(() => mockRecurringRepo.deleteTemplate('rec_123')).called(1);
       verify(() => mockRecurringRepo.deleteTemplate('rec_456')).called(1);
       verifyNever(() => mockRecurringRepo.deleteTemplate('rec_other'));
-      verify(() => mockNotificationService
-          .cancelNotification('recurring_rec_123'.hashCode)).called(1);
-      verify(() => mockNotificationService
-          .cancelNotification('recurring_rec_456'.hashCode)).called(1);
+      verify(() => mockReminderSync.cancelRecurringReminder('rec_123'))
+          .called(1);
+      verify(() => mockReminderSync.cancelRecurringReminder('rec_456'))
+          .called(1);
+      verifyNever(() => mockReminderSync.cancelRecurringReminder('rec_other'));
     });
 
     test('should return failure when template listing fails', () async {
@@ -324,7 +279,7 @@ void main() {
       // Assert
       expect(result, const Left(failure));
       verifyNever(() => mockRecurringRepo.deleteTemplate(any()));
-      verifyNever(() => mockNotificationService.cancelNotification(any()));
+      verifyNever(() => mockReminderSync.cancelRecurringReminder(any()));
     });
   });
 
@@ -349,6 +304,13 @@ void main() {
               .first as RecurringTransactionEntity;
       expect(captured.nextExecutionDate, expectedNextDate);
       expect(captured.id, testTemplate.id);
+      // Atlama şablonu doğrudan repository'ye yazarsa bir SONRAKİ vadenin
+      // bildirimi hiç kurulmaz; hatırlatma zinciri orada kopuyordu.
+      final synced =
+          verify(() => mockReminderSync.syncRecurringTemplate(captureAny()))
+              .captured
+              .single as RecurringTransactionEntity;
+      expect(synced.nextExecutionDate, expectedNextDate);
     });
 
     test('should return failure when repository save fails', () async {
@@ -403,6 +365,13 @@ void main() {
               .captured
               .first as RecurringTransactionEntity;
       expect(tempCaptured.nextExecutionDate, DateTime(2026, 7, 20));
+
+      // Onaydan sonra bildirim yeni vadeye göre yeniden kurulmalı.
+      final synced =
+          verify(() => mockReminderSync.syncRecurringTemplate(captureAny()))
+              .captured
+              .single as RecurringTransactionEntity;
+      expect(synced.nextExecutionDate, DateTime(2026, 7, 20));
     });
 
     test('should add transaction with overrideAmount when provided', () async {
@@ -439,6 +408,7 @@ void main() {
       // Assert
       expect(result, const Left(failure));
       verifyNever(() => mockRecurringRepo.saveTemplate(any()));
+      verifyNever(() => mockReminderSync.syncRecurringTemplate(any()));
     });
 
     test(

@@ -9,16 +9,16 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import '../entities/recurring_transaction_entity.dart';
 import '../entities/recurring_frequency_enum.dart';
-import '../repositories/recurring_transaction_repository.dart';
+import 'save_recurring_transaction_usecase.dart';
 
 @injectable
 class ApproveRecurringTransactionUsecase {
-  final RecurringTransactionRepository recurringRepository;
   final TransactionsRepository transactionRepository;
+  final SaveRecurringTransactionUsecase saveTemplate;
 
   ApproveRecurringTransactionUsecase(
-    this.recurringRepository,
     this.transactionRepository,
+    this.saveTemplate,
   );
 
   /// [overrideAmount] yalnızca bu vadenin işlemine uygulanır; şablonun
@@ -54,8 +54,12 @@ class ApproveRecurringTransactionUsecase {
           template.frequency,
         );
 
-        final updatedTemplate = template.copyWith(nextExecutionDate: nextDate);
-        return await recurringRepository.saveTemplate(updatedTemplate);
+        // Doğrudan repository'ye değil kaydetme usecase'ine yazılır: bir
+        // sonraki vadenin hatırlatması da orada kurulur. (Bu atlandığında
+        // şablon ömür boyu yalnızca ilk vadesi için bildirim gönderiyordu.)
+        return await saveTemplate(
+          template.copyWith(nextExecutionDate: nextDate),
+        );
       },
     );
   }

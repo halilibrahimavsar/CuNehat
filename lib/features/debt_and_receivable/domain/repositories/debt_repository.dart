@@ -7,4 +7,8 @@ abstract class DebtRepository {
   Future<Either<Failure, void>> updateDebt(DebtEntity debt);
   Future<Either<Failure, void>> deleteDebt(String id);
   Future<Either<Failure, List<DebtEntity>>> getDebtsByWalletId(String walletId);
+
+  /// Tüm cüzdanlardaki borçlar. Cüzdan bağlamı olmayan çapraz işler için —
+  /// ör. bildirim hatırlatmalarının topluca yeniden kurulması.
+  Future<Either<Failure, List<DebtEntity>>> getAllDebts();
 }

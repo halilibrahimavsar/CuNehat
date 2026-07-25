@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/notifications/notification_tap_listener.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
@@ -48,13 +49,17 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => getIt<WalletBloc>()),
         BlocProvider(create: (_) => getIt<PendingRecurringBloc>()),
         BlocProvider(create: (_) => getIt<ConnectionCubit>()),
-        BlocProvider(create: (_) => getIt<NotificationSettingsBloc>()..add(const LoadNotificationSettings())),
+        BlocProvider(
+            create: (_) => getIt<NotificationSettingsBloc>()
+              ..add(const LoadNotificationSettings())),
 
         // Local Auth BLoCs
         BlocProvider(create: (_) => getIt<LocalAuthSettingsBloc>()),
         BlocProvider(create: (_) => getIt<LocalAuthLoginBloc>()),
       ],
-      child: child,
+      // Bloc'ların ALTINDA: bildirim dokunuşunu PendingRecurringBloc'a
+      // iletebilmesi için context'ten bloc okuyabilmeli.
+      child: NotificationTapListener(child: child),
     );
   }
 }

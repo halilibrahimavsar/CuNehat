@@ -1,6 +1,5 @@
 import 'package:cunehat/core/error/failure.dart';
-import 'package:cunehat/core/notifications/notification_service.dart';
-import 'package:cunehat/core/services/notification_settings_service.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
@@ -10,15 +9,14 @@ import 'package:mocktail/mocktail.dart';
 
 class MockDebtRepository extends Mock implements DebtRepository {}
 
-class MockNotificationService extends Mock implements NotificationService {}
+class MockReminderSyncService extends Mock implements ReminderSyncService {}
 
-class MockNotificationSettingsService extends Mock
-    implements NotificationSettingsService {}
-
+/// Hatırlatmaların NE ZAMAN/hangi kimlikle kurulduğu ReminderSyncService'in
+/// sorumluluğu ve orada test edilir (reminder_sync_service_test.dart).
+/// Burada yalnızca usecase'lerin o servise doğru şekilde devrettiği doğrulanır.
 void main() {
   late MockDebtRepository mockRepo;
-  late MockNotificationService mockNotificationService;
-  late MockNotificationSettingsService mockNotificationSettingsService;
+  late MockReminderSyncService mockReminderSync;
 
   late GetDebtsUseCase getUseCase;
   late AddDebtUseCase addUseCase;
@@ -44,18 +42,16 @@ void main() {
 
   setUp(() {
     mockRepo = MockDebtRepository();
-    mockNotificationService = MockNotificationService();
-    mockNotificationSettingsService = MockNotificationSettingsService();
+    mockReminderSync = MockReminderSyncService();
 
-    when(() => mockNotificationSettingsService.isDebtRemindersEnabled)
-        .thenReturn(true);
+    when(() => mockReminderSync.syncDebt(any())).thenAnswer((_) async {});
+    when(() => mockReminderSync.cancelDebtReminders(any()))
+        .thenAnswer((_) async {});
 
     getUseCase = GetDebtsUseCase(mockRepo);
-    addUseCase = AddDebtUseCase(
-        mockRepo, mockNotificationService, mockNotificationSettingsService);
-    updateUseCase = UpdateDebtUseCase(
-        mockRepo, mockNotificationService, mockNotificationSettingsService);
-    deleteUseCase = DeleteDebtUseCase(mockRepo, mockNotificationService);
+    addUseCase = AddDebtUseCase(mockRepo, mockReminderSync);
+    updateUseCase = UpdateDebtUseCase(mockRepo, mockReminderSync);
+    deleteUseCase = DeleteDebtUseCase(mockRepo, mockReminderSync);
   });
 
   final testDueDate = DateTime(2026, 6, 20);
@@ -88,9 +84,7 @@ void main() {
   });
 
   group('AddDebtUseCase', () {
-    test(
-        'should assign v7 ID, save debt, and schedule notifications if not paid and has dueDate',
-        () async {
+    test('should assign v7 ID, save debt, and sync its reminders', () async {
       final debtWithoutId = DebtEntity(
         id: null,
         userId: 'user_123',
@@ -108,83 +102,34 @@ void main() {
 
       String? capturedId;
       when(() => mockRepo.addDebt(any())).thenAnswer((inv) async {
-        final d = inv.positionalArguments[0] as DebtEntity;
-        capturedId = d.id;
+        capturedId = (inv.positionalArguments[0] as DebtEntity).id;
         return const Right(null);
       });
-
-      when(() => mockNotificationService.scheduleNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            scheduledDate: any(named: 'scheduledDate'),
-          )).thenAnswer((_) async {});
 
       final result = await addUseCase(debtWithoutId);
 
       expect(result, const Right<Failure, void>(null));
       expect(capturedId, isNotNull);
       expect(capturedId, isNotEmpty);
-
-      // Üretim şeması (bildirim ID çakışması düzeltmesi sonrası):
-      // 'debt_<id>_1' ve 'debt_<id>_2' hashCode'ları.
-      final id1 = 'debt_${capturedId}_1'.hashCode;
-      final id2 = 'debt_${capturedId}_2'.hashCode;
       verify(() => mockRepo.addDebt(any())).called(1);
-      verify(() => mockNotificationService.scheduleNotification(
-            id: id1,
-            title: 'Borç Hatırlatması',
-            body: 'Friend Loan başlıklı borcunuzun son ödeme tarihi yaklaştı.',
-            scheduledDate: testDueDate.subtract(const Duration(days: 1)),
-          )).called(1);
 
-      verify(() => mockNotificationService.scheduleNotification(
-            id: id2,
-            title: 'Borç Son Ödeme Tarihi!',
-            body: 'Friend Loan başlıklı borcunuzun son ödeme tarihi bugün.',
-            scheduledDate: testDueDate,
-          )).called(1);
+      // Kaydedilen kayıtla AYNI kimliğe sahip borç senkronize edilmeli;
+      // aksi halde hatırlatma başka bir kimlikle kurulup iptal edilemezdi.
+      final synced = verify(() => mockReminderSync.syncDebt(captureAny()))
+          .captured
+          .single as DebtEntity;
+      expect(synced.id, capturedId);
     });
 
-    test('should save debt but NOT schedule notifications if dueDate is null',
-        () async {
-      final debtNoDueDate = DebtEntity(
-        id: 'debt_123',
-        userId: 'user_123',
-        walletId: 'wallet_123',
-        title: 'Friend Loan',
-        counterparty: 'John',
-        type: DebtType.personalDebt,
-        principalAmount: 1000.0,
-        interestRate: 0,
-        termMonths: 1,
-        startDate: DateTime(2026, 6, 13),
-        dueDate: null,
-        isPaid: false,
-      );
-
-      when(() => mockRepo.addDebt(debtNoDueDate))
-          .thenAnswer((_) async => const Right(null));
-
-      final result = await addUseCase(debtNoDueDate);
-
-      expect(result, const Right<Failure, void>(null));
-      verify(() => mockRepo.addDebt(debtNoDueDate)).called(1);
-      verifyZeroInteractions(mockNotificationService);
-    });
-
-    test('should save debt but NOT schedule notifications if reminders are disabled',
-        () async {
-      when(() => mockNotificationSettingsService.isDebtRemindersEnabled)
-          .thenReturn(false);
-      when(() => mockRepo.addDebt(testDebt))
-          .thenAnswer((_) async => const Right(null));
+    test('should not sync reminders when repository fails', () async {
+      const failure = CacheFailure('Add error');
+      when(() => mockRepo.addDebt(any()))
+          .thenAnswer((_) async => const Left(failure));
 
       final result = await addUseCase(testDebt);
 
-      expect(result, const Right<Failure, void>(null));
-      verify(() => mockRepo.addDebt(testDebt)).called(1);
-      verifyZeroInteractions(mockNotificationService);
+      expect(result, const Left<Failure, void>(failure));
+      verifyNever(() => mockReminderSync.syncDebt(any()));
     });
   });
 
@@ -210,62 +155,53 @@ void main() {
           const Left<Failure, void>(ValidationFailure(
               'Debt ID cannot be null for update operation')));
       verifyZeroInteractions(mockRepo);
-      verifyZeroInteractions(mockNotificationService);
+      verifyZeroInteractions(mockReminderSync);
     });
 
-    test('should cancel old notifications and schedule new ones if not paid',
-        () async {
+    test('should save and re-sync reminders', () async {
       when(() => mockRepo.updateDebt(testDebt))
           .thenAnswer((_) async => const Right(null));
-      when(() => mockNotificationService.cancelNotification(any()))
-          .thenAnswer((_) async {});
-      when(() => mockNotificationService.scheduleNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            scheduledDate: any(named: 'scheduledDate'),
-          )).thenAnswer((_) async {});
 
       final result = await updateUseCase(testDebt);
 
       expect(result, const Right<Failure, void>(null));
-
-      final id1 = 'debt_${testDebt.id}_1'.hashCode;
-      final id2 = 'debt_${testDebt.id}_2'.hashCode;
       verify(() => mockRepo.updateDebt(testDebt)).called(1);
-      verify(() => mockNotificationService.cancelNotification(id1)).called(1);
-      verify(() => mockNotificationService.cancelNotification(id2)).called(1);
-      verify(() => mockNotificationService.scheduleNotification(
-            id: id1,
-            title: 'Borç Hatırlatması',
-            body: 'Bank Loan başlıklı borcunuzun son ödeme tarihi yaklaştı.',
-            scheduledDate: testDueDate.subtract(const Duration(days: 1)),
-          )).called(1);
-      verify(() => mockNotificationService.scheduleNotification(
-            id: id2,
-            title: 'Borç Son Ödeme Tarihi!',
-            body: 'Bank Loan başlıklı borcunuzun son ödeme tarihi bugün.',
-            scheduledDate: testDueDate,
-          )).called(1);
+      verify(() => mockReminderSync.syncDebt(testDebt)).called(1);
+    });
+
+    test('should not sync reminders when repository fails', () async {
+      const failure = CacheFailure('Update error');
+      when(() => mockRepo.updateDebt(testDebt))
+          .thenAnswer((_) async => const Left(failure));
+
+      final result = await updateUseCase(testDebt);
+
+      expect(result, const Left<Failure, void>(failure));
+      verifyNever(() => mockReminderSync.syncDebt(any()));
     });
   });
 
   group('DeleteDebtUseCase', () {
-    test('should delete debt and cancel notifications', () async {
+    test('should delete debt and cancel its reminders', () async {
       when(() => mockRepo.deleteDebt('debt_123'))
           .thenAnswer((_) async => const Right(null));
-      when(() => mockNotificationService.cancelNotification(any()))
-          .thenAnswer((_) async {});
 
       final result = await deleteUseCase('debt_123');
 
       expect(result, const Right<Failure, void>(null));
-
-      final id1 = 'debt_debt_123_1'.hashCode;
-      final id2 = 'debt_debt_123_2'.hashCode;
       verify(() => mockRepo.deleteDebt('debt_123')).called(1);
-      verify(() => mockNotificationService.cancelNotification(id1)).called(1);
-      verify(() => mockNotificationService.cancelNotification(id2)).called(1);
+      verify(() => mockReminderSync.cancelDebtReminders('debt_123')).called(1);
+    });
+
+    test('should not cancel reminders when repository fails', () async {
+      const failure = CacheFailure('Delete error');
+      when(() => mockRepo.deleteDebt('debt_123'))
+          .thenAnswer((_) async => const Left(failure));
+
+      final result = await deleteUseCase('debt_123');
+
+      expect(result, const Left<Failure, void>(failure));
+      verifyNever(() => mockReminderSync.cancelDebtReminders(any()));
     });
   });
 }

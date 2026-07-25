@@ -1,45 +1,104 @@
+import 'dart:async';
 import 'dart:io';
-
 import 'dart:math';
 
-import 'package:cunehat/core/enums/notification_frequency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:injectable/injectable.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:cunehat/core/enums/notification_frequency.dart';
+import 'package:cunehat/core/notifications/notification_constants.dart';
+import 'package:cunehat/core/notifications/notification_localizer.dart';
+
 abstract class NotificationService {
   Future<void> initialize();
-  Future<void> requestPermissions();
+
+  /// Kullanıcının dokunduğu bildirimin yükünü (payload) yayınlar.
+  ///
+  /// Hem sıcak açılışta (uygulama arkaplandayken dokunma) hem de soğuk
+  /// açılışta (uygulama kapalıyken dokunma) çalışır. Soğuk açılışta yük,
+  /// [initialize] sırasında okunur ve ilk dinleyici bağlanana kadar
+  /// tamponlanır — widget ağacı henüz kurulmamış olduğu için aksi halde
+  /// kaybolurdu.
+  Stream<String> get onNotificationTap;
+
+  /// Sistem bildirim iznini ister. Verildiyse `true`.
+  Future<bool> requestPermissions();
+
+  /// Sistem düzeyinde bildirimlerin açık olup olmadığı. Kullanıcı izni
+  /// reddettiyse uygulama içi anahtarlar açık görünse de bildirim gitmez.
+  Future<bool> areNotificationsEnabled();
+
   Future<void> showNotification({
     required int id,
     required String title,
     required String body,
     String? payload,
+    NotificationChannelKind channel = NotificationChannelKind.critical,
   });
+
   Future<void> scheduleNotification({
     required int id,
     required String title,
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    NotificationChannelKind channel = NotificationChannelKind.critical,
   });
+
   Future<void> scheduleRandomDailyReminders(NotificationFrequency frequency);
+
   Future<void> cancelNotification(int id);
+
   Future<void> cancelAllNotifications();
+
+  /// GetIt kapatılırken çağrılır; dokunma akışını serbest bırakır.
+  void dispose();
 }
 
 @LazySingleton(as: NotificationService)
 class NotificationServiceImpl implements NotificationService {
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
+  final NotificationLocalizer _localizer;
 
-  NotificationServiceImpl(this._flutterLocalNotificationsPlugin);
+  /// Motivasyon hatırlatıcılarının kaç gün ileriye planlanacağı.
+  ///
+  /// Yeniden planlama yalnızca uygulama açıldığında olur; pencere kısa
+  /// olursa uygulamayı bir süre açmayan kullanıcı — yani hatırlatmaya en çok
+  /// ihtiyaç duyan kullanıcı — hiç bildirim almaz. 14 gün × en yüksek frekans
+  /// (3/gün) = 42 bildirim, [ReminderIds.randomReminderCapacity] sınırının
+  /// altında kalır.
+  static const int _randomReminderDays = 14;
+
+  /// Motivasyon hatırlatıcılarının atılabileceği saat aralığı (yerel).
+  static const int _randomWindowStartHour = 10;
+  static const int _randomWindowEndHour = 20;
+
+  final StreamController<String> _tapController;
+  final List<String> _bufferedTaps = <String>[];
+
+  /// Motivasyon hatırlatıcıları "önce hepsini iptal et, sonra yeniden kur"
+  /// şeklinde çalışır. İki çalıştırma iç içe girerse birinin iptali
+  /// diğerinin planladıklarını siler; çağrıları sıraya alıyoruz.
+  Future<void> _randomRescheduleQueue = Future<void>.value();
+
+  NotificationServiceImpl(
+      this._flutterLocalNotificationsPlugin, this._localizer)
+      : _tapController = StreamController<String>.broadcast() {
+    _tapController.onListen = _flushBufferedTaps;
+  }
+
+  @override
+  Stream<String> get onNotificationTap => _tapController.stream;
 
   @override
   Future<void> initialize() async {
     tz.initializeTimeZones();
-    // Default local timezone can be set if needed, usually UTC is fine if we use TZDateTime.from
+    // tz.local UTC kalır; tek seferlik planlamada TZDateTime.from anı
+    // (instant) koruduğu için bu sorun değil. Yinelemeli planlamaya
+    // (matchDateTimeComponents) geçilirse setLocalLocation şart olur.
 
     const initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
@@ -58,47 +117,136 @@ class NotificationServiceImpl implements NotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
+
+    // Soğuk açılış: uygulama kapalıyken bildirime dokunulduysa
+    // onDidReceiveNotificationResponse güvenilir biçimde tetiklenmez;
+    // yükü başlangıç ayrıntılarından okumak gerekir.
+    await _emitLaunchPayload();
   }
 
-  void _onDidReceiveNotificationResponse(NotificationResponse response) {
-    debugPrint('Notification Clicked: ${response.payload}');
-    // Handle notification tapped logic here if needed
-  }
-
-  @override
-  Future<void> requestPermissions() async {
-    if (Platform.isIOS) {
-      await _flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
-    } else if (Platform.isAndroid) {
-      final androidImplementation = _flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
-      if (androidImplementation != null) {
-        await androidImplementation.requestNotificationsPermission();
+  Future<void> _emitLaunchPayload() async {
+    try {
+      final details = await _flutterLocalNotificationsPlugin
+          .getNotificationAppLaunchDetails();
+      if (details?.didNotificationLaunchApp ?? false) {
+        _emitTap(details?.notificationResponse?.payload);
       }
+    } catch (e) {
+      debugPrint('Error reading notification launch details: $e');
     }
   }
 
-  NotificationDetails _getNotificationDetails() {
-    const androidNotificationDetails = AndroidNotificationDetails(
-      'cunehat_channel_id',
-      'CuNehat Notifications',
-      channelDescription: 'Notifications for CuNehat app',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
-    const darwinNotificationDetails = DarwinNotificationDetails();
+  void _onDidReceiveNotificationResponse(NotificationResponse response) {
+    _emitTap(response.payload);
+  }
 
-    return const NotificationDetails(
-      android: androidNotificationDetails,
-      iOS: darwinNotificationDetails,
+  void _emitTap(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+    debugPrint('Notification tapped: $payload');
+    if (_tapController.hasListener) {
+      _tapController.add(payload);
+    } else {
+      _bufferedTaps.add(payload);
+    }
+  }
+
+  void _flushBufferedTaps() {
+    if (_bufferedTaps.isEmpty) return;
+    final pending = List<String>.of(_bufferedTaps);
+    _bufferedTaps.clear();
+    // onListen sırasında add etmek dinleyiciye ulaşmaz; bir sonraki
+    // mikrogöreve ertele.
+    scheduleMicrotask(() {
+      for (final payload in pending) {
+        if (_tapController.isClosed) return;
+        _tapController.add(payload);
+      }
+    });
+  }
+
+  @override
+  Future<bool> requestPermissions() async {
+    try {
+      if (Platform.isIOS) {
+        final granted = await _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+        return granted ?? false;
+      }
+      if (Platform.isAndroid) {
+        final granted = await _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.requestNotificationsPermission();
+        return granted ?? false;
+      }
+    } catch (e) {
+      debugPrint('Error requesting notification permissions: $e');
+    }
+    return false;
+  }
+
+  @override
+  Future<bool> areNotificationsEnabled() async {
+    try {
+      if (Platform.isAndroid) {
+        final enabled = await _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.areNotificationsEnabled();
+        return enabled ?? false;
+      }
+      if (Platform.isIOS) {
+        final options = await _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>()
+            ?.checkPermissions();
+        return options?.isEnabled ?? false;
+      }
+    } catch (e) {
+      debugPrint('Error reading notification permission state: $e');
+    }
+    // Masaüstü/test ortamı: izin kavramı yok, engellemeyelim.
+    return true;
+  }
+
+  NotificationDetails _detailsFor(NotificationChannelKind kind) {
+    final l10n = _localizer.l10n;
+
+    final (String id, String name, String description, Importance importance) =
+        switch (kind) {
+      NotificationChannelKind.critical => (
+          'cunehat_critical',
+          l10n.notifChannelCriticalName,
+          l10n.notifChannelCriticalDesc,
+          Importance.max,
+        ),
+      NotificationChannelKind.recurring => (
+          'cunehat_recurring',
+          l10n.notifChannelRecurringName,
+          l10n.notifChannelRecurringDesc,
+          Importance.high,
+        ),
+      NotificationChannelKind.motivational => (
+          'cunehat_motivational',
+          l10n.notifChannelMotivationalName,
+          l10n.notifChannelMotivationalDesc,
+          Importance.defaultImportance,
+        ),
+    };
+
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        id,
+        name,
+        channelDescription: description,
+        importance: importance,
+        priority: importance == Importance.defaultImportance
+            ? Priority.defaultPriority
+            : Priority.high,
+      ),
+      iOS: const DarwinNotificationDetails(),
     );
   }
 
@@ -108,13 +256,14 @@ class NotificationServiceImpl implements NotificationService {
     required String title,
     required String body,
     String? payload,
+    NotificationChannelKind channel = NotificationChannelKind.critical,
   }) async {
     try {
       await _flutterLocalNotificationsPlugin.show(
         id,
         title,
         body,
-        _getNotificationDetails(),
+        _detailsFor(channel),
         payload: payload,
       );
     } catch (e) {
@@ -129,6 +278,7 @@ class NotificationServiceImpl implements NotificationService {
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    NotificationChannelKind channel = NotificationChannelKind.critical,
   }) async {
     try {
       if (scheduledDate.isBefore(DateTime.now())) {
@@ -156,7 +306,7 @@ class NotificationServiceImpl implements NotificationService {
         title,
         body,
         tz.TZDateTime.from(scheduledDate, tz.local),
-        _getNotificationDetails(),
+        _detailsFor(channel),
         androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -173,21 +323,24 @@ class NotificationServiceImpl implements NotificationService {
   Future<void> cancelNotification(int id) async {
     try {
       await _flutterLocalNotificationsPlugin.cancel(id);
-      debugPrint('Canceled notification $id');
     } catch (e) {
       debugPrint('Error canceling notification: $e');
     }
   }
 
   @override
-  Future<void> scheduleRandomDailyReminders(NotificationFrequency frequency) async {
-    const int startId = 10000;
-    const int daysToSchedule = 7;
-    const int maxNotifications = 60; // Safe limit under iOS 64
+  Future<void> scheduleRandomDailyReminders(NotificationFrequency frequency) {
+    final run = _randomRescheduleQueue
+        .then((_) => _rescheduleRandomReminders(frequency));
+    // Kuyruk hata yüzünden kilitlenmesin.
+    _randomRescheduleQueue = run.catchError((Object _) {});
+    return run;
+  }
 
-    // 1. Cancel all previously scheduled random notifications
-    for (int i = 0; i < maxNotifications; i++) {
-      await cancelNotification(startId + i);
+  Future<void> _rescheduleRandomReminders(
+      NotificationFrequency frequency) async {
+    for (var i = 0; i < ReminderIds.randomReminderCapacity; i++) {
+      await cancelNotification(ReminderIds.randomReminderStart + i);
     }
 
     if (frequency == NotificationFrequency.none) {
@@ -195,66 +348,66 @@ class NotificationServiceImpl implements NotificationService {
       return;
     }
 
-    // 2. Schedule new ones
-    final int countPerDay = frequency.dailyCount;
-    final random = Random();
-    int currentId = startId;
-    
-    final messages = [
-      'Bugün hiç harcama girdin mi? Bütçeni güncel tut!',
-      'Finansal durumunu kontrol etme vakti!',
-      'Gelir ve giderlerini takip etmek bütçeni korur.',
-      'Küçük birikimler büyük hedeflere ulaştırır!',
-      'Harcamalarını gözden geçirmeyi unutma.',
-      'Bütçeni planla, rahat yaşa!'
+    final l10n = _localizer.l10n;
+    final messages = <String>[
+      l10n.notifDailyReminder1,
+      l10n.notifDailyReminder2,
+      l10n.notifDailyReminder3,
+      l10n.notifDailyReminder4,
+      l10n.notifDailyReminder5,
+      l10n.notifDailyReminder6,
     ];
 
+    final random = Random();
     final now = DateTime.now();
+    final slots = <DateTime>[];
 
-    for (int day = 0; day < daysToSchedule; day++) {
-      final scheduleDate = now.add(Duration(days: day));
-      
-      for (int c = 0; c < countPerDay; c++) {
-        if (currentId - startId >= maxNotifications) break;
-
-        // Random hour between 10 AM and 8 PM (20)
-        final hour = 10 + random.nextInt(10);
-        final minute = random.nextInt(60);
-
-        var timeToSchedule = DateTime(
-          scheduleDate.year,
-          scheduleDate.month,
-          scheduleDate.day,
+    for (var day = 0; day < _randomReminderDays; day++) {
+      final date = DateTime(now.year, now.month, now.day + day);
+      for (var i = 0; i < frequency.dailyCount; i++) {
+        final hour = _randomWindowStartHour +
+            random.nextInt(_randomWindowEndHour - _randomWindowStartHour);
+        slots.add(DateTime(
+          date.year,
+          date.month,
+          date.day,
           hour,
-          minute,
-        );
-
-        if (timeToSchedule.isBefore(now)) {
-           timeToSchedule = timeToSchedule.add(const Duration(days: 1));
-        }
-
-        final msgIndex = random.nextInt(messages.length);
-
-        await scheduleNotification(
-          id: currentId,
-          title: 'CuNehat',
-          body: messages[msgIndex],
-          scheduledDate: timeToSchedule,
-        );
-
-        currentId++;
+          random.nextInt(60),
+        ));
       }
     }
-    debugPrint('Scheduled ${currentId - startId} random reminders.');
+
+    // Geçmişte kalan slotlar ERTELENMEZ, atılır. Ertelemek akşam açılışlarında
+    // bugünün tüm slotlarını yarına yığıyor ve ertesi gün iki kat bildirim
+    // üretiyordu.
+    final upcoming = slots.where((slot) => slot.isAfter(now)).toList()..sort();
+
+    var scheduled = 0;
+    for (final slot in upcoming) {
+      if (scheduled >= ReminderIds.randomReminderCapacity) break;
+      await scheduleNotification(
+        id: ReminderIds.randomReminderStart + scheduled,
+        title: l10n.notifDailyReminderTitle,
+        body: messages[random.nextInt(messages.length)],
+        scheduledDate: slot,
+        payload: NotificationPayloads.dailyReminder,
+        channel: NotificationChannelKind.motivational,
+      );
+      scheduled++;
+    }
+    debugPrint('Scheduled $scheduled random reminders.');
   }
 
   @override
   Future<void> cancelAllNotifications() async {
     try {
       await _flutterLocalNotificationsPlugin.cancelAll();
-      debugPrint('Canceled all notifications');
     } catch (e) {
       debugPrint('Error canceling all notifications: $e');
     }
   }
+
+  @override
+  @disposeMethod
+  void dispose() => _tapController.close();
 }

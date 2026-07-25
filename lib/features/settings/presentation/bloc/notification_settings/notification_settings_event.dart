@@ -47,3 +47,14 @@ class UpdateBudgetAlertsEnabled extends NotificationSettingsEvent {
   @override
   List<Object> get props => [isEnabled];
 }
+
+/// Sistem bildirim iznini (yeniden) ister. Kullanıcı ilk açılışta "Şimdi
+/// Değil" dediyse tek dönüş yolu budur.
+class RequestNotificationPermission extends NotificationSettingsEvent {
+  const RequestNotificationPermission();
+}
+
+/// Kullanıcının kanal/izin kurulumunu doğrulayabilmesi için anlık bildirim.
+class SendTestNotification extends NotificationSettingsEvent {
+  const SendTestNotification();
+}

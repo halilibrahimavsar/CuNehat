@@ -244,8 +244,18 @@ void main() {
     );
 
     test('LoadPendingTransactionsEvent props', () {
-      final e = LoadPendingTransactionsEvent();
-      expect(e.props, <Object>[]);
+      const e = LoadPendingTransactionsEvent();
+      expect(e.props, <Object>[false]);
+      // forceShow farkı eşitliği bozmalı: bildirime dokunularak gelen yükleme,
+      // kullanıcının sustuğu kümeyle aynı sayılıp yutulmamalı.
+      expect(e, isNot(const LoadPendingTransactionsEvent(forceShow: true)));
+    });
+
+    test('ApproveAllOccurrencesEvent props', () {
+      final e1 = ApproveAllOccurrencesEvent(template);
+      final e2 = ApproveAllOccurrencesEvent(template);
+      expect(e1, e2);
+      expect(e1.props, [template]);
     });
 
     test('ApproveTransactionEvent props', () {

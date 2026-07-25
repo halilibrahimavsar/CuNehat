@@ -8,8 +8,8 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
-import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -59,14 +59,15 @@ class AppInitialization {
         onDismiss: (_) => getIt<OnboardingCoordinator>().handleShowcaseIdle(),
       );
 
-      // Initialize NotificationService
-      final notificationService = getIt<NotificationService>();
-      await notificationService.initialize();
-      
-      // Schedule random reminders based on user preference. Fire-and-forget:
-      // onlarca platform-channel çağrısı yapıyor, açılışı bloklamamalı.
-      final freq = getIt<NotificationSettingsService>().getRandomFrequency();
-      unawaited(notificationService.scheduleRandomDailyReminders(freq));
+      // Bildirim servisi: soğuk açılışta dokunulan bildirimin yükünü de
+      // burada okur ve ilk dinleyici bağlanana kadar tamponlar. Widget ağacı
+      // kurulmadan ÖNCE çalışması bu yüzden önemli.
+      await getIt<NotificationService>().initialize();
+
+      // Planlanmış tüm hatırlatmaları güncel veriye/ayara/dile göre yeniden
+      // kur. Fire-and-forget: onlarca platform-channel çağrısı yapıyor,
+      // açılışı bloklamamalı.
+      unawaited(getIt<ReminderSyncService>().syncAll());
 
       // Bütçe uyarı monitörünü erken canlandır: app-ömürlü olarak işlem
       // defteri değişimlerini dinler ve eşik aşımında bildirim atar (Budgets

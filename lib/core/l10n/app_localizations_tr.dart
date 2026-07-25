@@ -2056,6 +2056,149 @@ class AppLocalizationsTr extends AppLocalizations {
   String get budgetAlerts => 'Bütçe Uyarıları';
 
   @override
+  String get notificationRationaleTitle => 'Bildirimler';
+
+  @override
+  String get notificationRationaleBody =>
+      'CuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.';
+
+  @override
+  String get notificationRationaleLater => 'Şimdi Değil';
+
+  @override
+  String get notificationPermissionOffTitle => 'Bildirim izni kapalı';
+
+  @override
+  String get notificationPermissionOffDesc =>
+      'Aşağıdaki hatırlatmalar ancak sistem izni verildiğinde ulaşabilir.';
+
+  @override
+  String get notificationPermissionGrant => 'İzin Ver';
+
+  @override
+  String get notificationPermissionOpenSettings =>
+      'İzin daha önce reddedilmiş. Sistem ayarları → Uygulamalar → CuNehat → Bildirimler yolundan açabilirsiniz.';
+
+  @override
+  String get notificationSendTest => 'Test bildirimi gönder';
+
+  @override
+  String get notificationTestSent => 'Test bildirimi gönderildi';
+
+  @override
+  String get notificationTestTitle => 'CuNehat test bildirimi';
+
+  @override
+  String get notificationTestBody =>
+      'Bildirimler çalışıyor. Hatırlatmalarınız bu şekilde görünecek.';
+
+  @override
+  String get notifChannelCriticalName => 'Kritik Hatırlatmalar';
+
+  @override
+  String get notifChannelCriticalDesc => 'Borç vadeleri ve bütçe aşımları';
+
+  @override
+  String get notifChannelRecurringName => 'Düzenli İşlemler';
+
+  @override
+  String get notifChannelRecurringDesc =>
+      'Onay bekleyen düzenli işlem hatırlatmaları';
+
+  @override
+  String get notifChannelMotivationalName => 'Motive Edici Hatırlatıcılar';
+
+  @override
+  String get notifChannelMotivationalDesc =>
+      'Harcama girmeyi hatırlatan günlük mesajlar';
+
+  @override
+  String get notifRecurringDueTitle => 'Düzenli İşlem Vakti';
+
+  @override
+  String notifRecurringDueBody(Object title) {
+    return '$title onayınızı bekliyor.';
+  }
+
+  @override
+  String get notifDebtUpcomingTitle => 'Borç Hatırlatması';
+
+  @override
+  String notifDebtUpcomingBody(Object title) {
+    return '$title başlıklı borcunuzun son ödeme tarihi yaklaştı.';
+  }
+
+  @override
+  String get notifDebtDueTitle => 'Borç Son Ödeme Tarihi!';
+
+  @override
+  String notifDebtDueBody(Object title) {
+    return '$title başlıklı borcunuzun son ödeme tarihi bugün.';
+  }
+
+  @override
+  String get notifBudgetWarningTitle => 'Bütçe Uyarısı';
+
+  @override
+  String notifBudgetWarningBody(Object category) {
+    return '$category bütçenizin %80\'ine ulaştınız.';
+  }
+
+  @override
+  String get notifBudgetExceededTitle => 'Bütçe Aşıldı!';
+
+  @override
+  String notifBudgetExceededBody(Object category) {
+    return '$category bütçenizi aştınız.';
+  }
+
+  @override
+  String get notifDailyReminderTitle => 'CuNehat';
+
+  @override
+  String get notifDailyReminder1 =>
+      'Bugün hiç harcama girdin mi? Bütçeni güncel tut!';
+
+  @override
+  String get notifDailyReminder2 => 'Finansal durumunu kontrol etme vakti!';
+
+  @override
+  String get notifDailyReminder3 =>
+      'Gelir ve giderlerini takip etmek bütçeni korur.';
+
+  @override
+  String get notifDailyReminder4 =>
+      'Küçük birikimler büyük hedeflere ulaştırır!';
+
+  @override
+  String get notifDailyReminder5 => 'Harcamalarını gözden geçirmeyi unutma.';
+
+  @override
+  String get notifDailyReminder6 => 'Bütçeni planla, rahat yaşa!';
+
+  @override
+  String bekleyenVadeSayisi(Object count) {
+    return '$count vade birikmiş';
+  }
+
+  @override
+  String get tumunuOnayla => 'Tümünü Onayla';
+
+  @override
+  String get tumunuOnaylaBaslik => 'Birikmiş vadeleri onayla';
+
+  @override
+  String tumunuOnaylaAciklama(Object title, Object count) {
+    return '\"$title\" için birikmiş $count vadenin tümü deftere işlenecek.';
+  }
+
+  @override
+  String get buVadeyiAtla => 'Bu vadeyi atla';
+
+  @override
+  String get sablonuSilAciklama => 'Şablonu sil (gelecek vadeler de dahil)';
+
+  @override
   String get tumTurlariSifirla => 'Tüm Turları Sıfırla';
 
   @override

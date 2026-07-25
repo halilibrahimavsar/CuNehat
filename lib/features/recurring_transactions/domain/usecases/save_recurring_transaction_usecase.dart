@@ -3,40 +3,29 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import '../entities/recurring_transaction_entity.dart';
 import '../repositories/recurring_transaction_repository.dart';
 
-import 'package:cunehat/core/notifications/notification_service.dart';
-import 'package:cunehat/core/services/notification_settings_service.dart';
-
+/// Şablonu kaydeder ve hatırlatmasını güncel hale getirir.
+///
+/// Şablonun `nextExecutionDate` alanını değiştiren HER yol buradan geçmeli
+/// (onay ve atlama dahil); doğrudan repository'ye yazmak bir sonraki vadenin
+/// bildirimini kurmadan bırakır.
 @injectable
 class SaveRecurringTransactionUsecase {
   final RecurringTransactionRepository repository;
-  final NotificationService notificationService;
-  final NotificationSettingsService notificationSettingsService;
+  final ReminderSyncService reminderSync;
 
-  SaveRecurringTransactionUsecase(this.repository, this.notificationService, this.notificationSettingsService);
+  SaveRecurringTransactionUsecase(this.repository, this.reminderSync);
 
   Future<Either<Failure, void>> call(
       RecurringTransactionEntity template) async {
     final result = await repository.saveTemplate(template);
 
-    result.fold(
-      (failure) => null,
-      (_) {
-        final notifId = 'recurring_${template.id}'.hashCode;
-        notificationService.cancelNotification(notifId);
-
-        if (notificationSettingsService.isRecurringRemindersEnabled) {
-          notificationService.scheduleNotification(
-            id: notifId,
-            title: 'Düzenli İşlem Yaklaşıyor',
-            body: '${template.title} başlıklı işleminizin zamanı yaklaştı.',
-            scheduledDate:
-                template.nextExecutionDate.subtract(const Duration(days: 1)),
-          );
-        }
-      },
+    await result.fold(
+      (_) async {},
+      (_) => reminderSync.syncRecurringTemplate(template),
     );
 
     return result;

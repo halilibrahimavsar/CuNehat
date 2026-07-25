@@ -54,4 +54,14 @@ class DebtRepositoryImpl implements DebtRepository {
       return Left(CacheFailure('Borçlar getirilemedi: ${e.toString()}'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<DebtEntity>>> getAllDebts() async {
+    try {
+      final models = await debtDatasourceRepository.getAllDebts();
+      return Right(models.map((e) => e.toEntity()).toList());
+    } catch (e) {
+      return Left(CacheFailure('Borçlar getirilemedi: ${e.toString()}'));
+    }
+  }
 }

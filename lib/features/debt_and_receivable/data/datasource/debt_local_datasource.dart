@@ -28,6 +28,11 @@ class DebtLocalDatasource {
     return box.values.where((debt) => debt.walletId == walletId).toList();
   }
 
+  Future<List<DebtModel>> getAllDebts() async {
+    final box = await _getBox();
+    return box.values.toList();
+  }
+
   Future<void> updateDebt(DebtModel debt) async {
     final box = await _getBox();
     await box.put(debt.id, debt);

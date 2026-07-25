@@ -210,6 +210,124 @@ void main() {
     );
   });
 
+  group('çift dokunuş koruması', () {
+    blocTest<PendingRecurringBloc, PendingRecurringState>(
+      'aynı şablon için arka arkaya iki onay tek işlem yaratır',
+      build: () {
+        when(() => mockApproveUsecase(testTemplate,
+                overrideAmount: any(named: 'overrideAmount')))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetPendingUsecase())
+            .thenAnswer((_) async => const Right([]));
+        return pendingRecurringBloc;
+      },
+      // Bloc'un varsayılan olay dönüştürücüsü eşzamanlı (flatMap): koruma
+      // olmadan iki onay akışı paralel çalışıp AYNI vade için iki gerçek
+      // finansal işlem yaratıyordu.
+      act: (bloc) => bloc
+        ..add(ApproveTransactionEvent(testTemplate))
+        ..add(ApproveTransactionEvent(testTemplate)),
+      expect: () => [
+        PendingRecurringLoading(),
+        const PendingRecurringLoaded([]),
+      ],
+      verify: (_) {
+        verify(() => mockApproveUsecase(testTemplate)).called(1);
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+      },
+    );
+
+    blocTest<PendingRecurringBloc, PendingRecurringState>(
+      'işlem sürerken satır meşgul olarak işaretlenir',
+      build: () {
+        when(() => mockApproveUsecase(testTemplate,
+                overrideAmount: any(named: 'overrideAmount')))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetPendingUsecase())
+            .thenAnswer((_) async => const Right([]));
+        return pendingRecurringBloc;
+      },
+      seed: () => PendingRecurringLoaded([testTemplate]),
+      act: (bloc) => bloc.add(ApproveTransactionEvent(testTemplate)),
+      expect: () => [
+        PendingRecurringLoaded([testTemplate],
+            busyTemplateIds: const {'rec_123'}),
+        PendingRecurringLoading(),
+        const PendingRecurringLoaded([]),
+      ],
+    );
+  });
+
+  group('ApproveAllOccurrencesEvent', () {
+    blocTest<PendingRecurringBloc, PendingRecurringState>(
+      'birikmiş tüm vadeleri tek seferde işler',
+      build: () {
+        when(() => mockApproveUsecase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetPendingUsecase())
+            .thenAnswer((_) async => const Right([]));
+        return pendingRecurringBloc;
+      },
+      // Günlük şablon, 2 gün gecikmiş: bugün dahil 3 vade birikmiş demektir.
+      // Tek tek onayda kullanıcı 3 kez dokunmak zorunda kalıyordu.
+      act: (bloc) => bloc.add(ApproveAllOccurrencesEvent(
+        testTemplate.copyWith(
+          frequency: RecurringFrequency.daily,
+          nextExecutionDate: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      )),
+      expect: () => [
+        PendingRecurringLoading(),
+        const PendingRecurringLoaded([]),
+      ],
+      verify: (_) {
+        verify(() => mockApproveUsecase(any())).called(3);
+        // Bakiye her vade için değil, toplu işlem sonunda bir kez senkronlanır.
+        verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
+      },
+    );
+
+    blocTest<PendingRecurringBloc, PendingRecurringState>(
+      'vadesi gelmemiş şablonda hiçbir şey yapmaz',
+      build: () {
+        when(() => mockApproveUsecase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return pendingRecurringBloc;
+      },
+      act: (bloc) => bloc.add(ApproveAllOccurrencesEvent(
+        testTemplate.copyWith(nextExecutionDate: DateTime(2099, 1, 1)),
+      )),
+      expect: () => <PendingRecurringState>[],
+      verify: (_) {
+        verifyNever(() => mockApproveUsecase(any()));
+        verifyNever(() => mockMetricsService.syncBalance(any()));
+      },
+    );
+  });
+
+  group('forceShow', () {
+    blocTest<PendingRecurringBloc, PendingRecurringState>(
+      'bildirimden gelen yükleme forceShow bayrağını state\'e taşır',
+      build: () {
+        when(() => mockGetPendingUsecase())
+            .thenAnswer((_) async => Right([testTemplate]));
+        return pendingRecurringBloc;
+      },
+      act: (bloc) =>
+          bloc.add(const LoadPendingTransactionsEvent(forceShow: true)),
+      expect: () => [
+        PendingRecurringLoading(),
+        PendingRecurringLoaded([testTemplate], forceShow: true),
+      ],
+    );
+  });
+
   group('SkipTransactionEvent', () {
     blocTest<PendingRecurringBloc, PendingRecurringState>(
       'emits loading and loaded states via reload after successful skip',

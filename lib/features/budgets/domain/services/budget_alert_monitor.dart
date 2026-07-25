@@ -1,6 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:cunehat/core/notifications/notification_constants.dart';
+import 'package:cunehat/core/notifications/notification_localizer.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
@@ -24,20 +30,32 @@ class BudgetAlertMonitor {
   final GetBudgetsUsecase _getBudgets;
   final NotificationService _notifications;
   final NotificationSettingsService _notificationSettings;
+  final NotificationLocalizer _localizer;
+  final SharedPreferences _prefs;
 
   static const _alertService = BudgetAlertService();
+
+  /// Eşik karşılaştırmasının dayandığı önceki durum, kalıcı saklanır.
+  static const String _baselineKey = 'budget_alert_baseline';
 
   StreamSubscription<TransactionsChange>? _subscription;
 
   /// Cüzdan-başına son bilinen bütçe durumu; eşik geçişi bununla karşılaştırılır.
+  ///
+  /// Yalnız bellekte tutulduğunda her açılışta sıfırlanıyor ve "önceki oran 0"
+  /// kabul edildiği için zaten eşiğin üstünde olan bütçeler her oturumun ilk
+  /// işleminde yeniden uyarı üretiyordu. Bu yüzden diske de yazılır.
   final Map<String, List<BudgetEntity>> _previousByWallet = {};
 
   BudgetAlertMonitor(
     this._getBudgets,
     this._notifications,
     this._notificationSettings,
+    this._localizer,
+    this._prefs,
     TransactionsChangedNotifier notifier,
   ) {
+    _loadBaseline();
     _subscription = notifier.stream.listen(_onTransactionsChanged);
   }
 
@@ -48,25 +66,74 @@ class BudgetAlertMonitor {
     if (userId == null || walletId == null) return;
 
     final result = await _getBudgets(userId, walletId);
-    result.fold((_) {}, (budgets) {
-      final previous = _previousByWallet[walletId] ?? const <BudgetEntity>[];
-      for (final alert in _alertService.detectCrossings(
-        previous: previous,
-        current: budgets,
-      )) {
-        if (_notificationSettings.isBudgetAlertsEnabled) {
-          final exceeded = alert.level == BudgetAlertLevel.exceeded;
-          _notifications.showNotification(
-            id: alert.categoryId.hashCode,
-            title: exceeded ? 'Bütçe Aşıldı!' : 'Bütçe Uyarısı',
-            body: exceeded
-                ? 'Dikkat: Bütçenizi aştınız!'
-                : 'Dikkat: Bütçenizin %80\'ine ulaştınız.',
-          );
-        }
+    final budgets = result.fold((_) => null, (value) => value);
+    if (budgets == null) return;
+
+    final previous = _previousByWallet[walletId] ?? const <BudgetEntity>[];
+    final crossings = _alertService.detectCrossings(
+      previous: previous,
+      current: budgets,
+    );
+
+    // Uyarılar kapalıyken de temel durum ilerletilir: aksi halde anahtar
+    // yeniden açıldığında geçmişte kalmış tüm eşikler toptan bildirilirdi.
+    if (_notificationSettings.isBudgetAlertsEnabled) {
+      final l10n = _localizer.l10n;
+      for (final alert in crossings) {
+        final exceeded = alert.level == BudgetAlertLevel.exceeded;
+        await _notifications.showNotification(
+          // Bütçeler cüzdan bazlı: yalnız categoryId kullanılırsa aynı
+          // kategoriyi iki cüzdanda bütçeleyen kullanıcıda ikinci uyarı
+          // birincinin üstüne yazar.
+          id: ReminderIds.budget(walletId, alert.categoryId),
+          title: exceeded
+              ? l10n.notifBudgetExceededTitle
+              : l10n.notifBudgetWarningTitle,
+          body: exceeded
+              ? l10n.notifBudgetExceededBody(alert.categoryId)
+              : l10n.notifBudgetWarningBody(alert.categoryId),
+          payload: NotificationPayloads.budgetAlert,
+        );
       }
-      _previousByWallet[walletId] = budgets;
-    });
+    }
+
+    _previousByWallet[walletId] = budgets;
+    await _persistBaseline();
+  }
+
+  void _loadBaseline() {
+    final raw = _prefs.getString(_baselineKey);
+    if (raw == null) return;
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      decoded.forEach((walletId, byCategory) {
+        _previousByWallet[walletId] =
+            (byCategory as Map<String, dynamic>).entries.map((entry) {
+          final pair = (entry.value as List).cast<num>();
+          return BudgetEntity(
+            categoryId: entry.key,
+            walletId: walletId,
+            limitAmount: pair[0].toDouble(),
+            spentAmount: pair[1].toDouble(),
+          );
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Budget alert baseline unreadable, resetting: $e');
+      _previousByWallet.clear();
+      _prefs.remove(_baselineKey);
+    }
+  }
+
+  Future<void> _persistBaseline() async {
+    final snapshot = <String, Map<String, List<double>>>{
+      for (final entry in _previousByWallet.entries)
+        entry.key: {
+          for (final budget in entry.value)
+            budget.categoryId: [budget.limitAmount, budget.spentAmount],
+        },
+    };
+    await _prefs.setString(_baselineKey, jsonEncode(snapshot));
   }
 
   @disposeMethod

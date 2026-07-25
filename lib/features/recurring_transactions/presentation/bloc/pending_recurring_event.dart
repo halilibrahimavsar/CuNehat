@@ -10,7 +10,19 @@ abstract class PendingRecurringEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadPendingTransactionsEvent extends PendingRecurringEvent {}
+class LoadPendingTransactionsEvent extends PendingRecurringEvent {
+  /// Kullanıcı doğrudan bildirime dokunarak geldiğinde `true`.
+  ///
+  /// Diyalog normalde aynı bekleyen küme için ikinci kez açılmaz (kullanıcı
+  /// bir kez "Kapat" dediyse her uygulamaya dönüşte yeniden çıkmamalı);
+  /// bildirime dokunmak bu susturmayı bilinçli olarak geçersiz kılar.
+  final bool forceShow;
+
+  const LoadPendingTransactionsEvent({this.forceShow = false});
+
+  @override
+  List<Object?> get props => [forceShow];
+}
 
 class ApproveTransactionEvent extends PendingRecurringEvent {
   final RecurringTransactionEntity template;
@@ -22,6 +34,16 @@ class ApproveTransactionEvent extends PendingRecurringEvent {
 
   @override
   List<Object?> get props => [template, overrideAmount];
+}
+
+/// Şablonun birikmiş TÜM vadelerini sırayla deftere işler.
+class ApproveAllOccurrencesEvent extends PendingRecurringEvent {
+  final RecurringTransactionEntity template;
+
+  const ApproveAllOccurrencesEvent(this.template);
+
+  @override
+  List<Object?> get props => [template];
 }
 
 class SkipTransactionEvent extends PendingRecurringEvent {

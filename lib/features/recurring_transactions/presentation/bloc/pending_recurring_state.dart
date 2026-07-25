@@ -18,10 +18,33 @@ class PendingRecurringLoading extends PendingRecurringState {}
 class PendingRecurringLoaded extends PendingRecurringState {
   final List<RecurringTransactionEntity> pendingTransactions;
 
-  const PendingRecurringLoaded(this.pendingTransactions);
+  /// İşlemi süren şablon kimlikleri; ilgili satırın butonları kilitlenir.
+  final Set<String> busyTemplateIds;
+
+  /// Bu yükleme bildirime dokunularak tetiklendi; diyalog susturulmuş olsa
+  /// bile açılmalı.
+  final bool forceShow;
+
+  const PendingRecurringLoaded(
+    this.pendingTransactions, {
+    this.busyTemplateIds = const {},
+    this.forceShow = false,
+  });
+
+  PendingRecurringLoaded copyWith({
+    List<RecurringTransactionEntity>? pendingTransactions,
+    Set<String>? busyTemplateIds,
+    bool? forceShow,
+  }) {
+    return PendingRecurringLoaded(
+      pendingTransactions ?? this.pendingTransactions,
+      busyTemplateIds: busyTemplateIds ?? this.busyTemplateIds,
+      forceShow: forceShow ?? this.forceShow,
+    );
+  }
 
   @override
-  List<Object?> get props => [pendingTransactions];
+  List<Object?> get props => [pendingTransactions, busyTemplateIds, forceShow];
 }
 
 class PendingRecurringFailure extends PendingRecurringState {

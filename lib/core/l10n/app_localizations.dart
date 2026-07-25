@@ -3794,6 +3794,246 @@ abstract class AppLocalizations {
   /// **'Bütçe Uyarıları'**
   String get budgetAlerts;
 
+  /// No description provided for @notificationRationaleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimler'**
+  String get notificationRationaleTitle;
+
+  /// No description provided for @notificationRationaleBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.'**
+  String get notificationRationaleBody;
+
+  /// No description provided for @notificationRationaleLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi Değil'**
+  String get notificationRationaleLater;
+
+  /// No description provided for @notificationPermissionOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim izni kapalı'**
+  String get notificationPermissionOffTitle;
+
+  /// No description provided for @notificationPermissionOffDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aşağıdaki hatırlatmalar ancak sistem izni verildiğinde ulaşabilir.'**
+  String get notificationPermissionOffDesc;
+
+  /// No description provided for @notificationPermissionGrant.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin Ver'**
+  String get notificationPermissionGrant;
+
+  /// No description provided for @notificationPermissionOpenSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin daha önce reddedilmiş. Sistem ayarları → Uygulamalar → CuNehat → Bildirimler yolundan açabilirsiniz.'**
+  String get notificationPermissionOpenSettings;
+
+  /// No description provided for @notificationSendTest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Test bildirimi gönder'**
+  String get notificationSendTest;
+
+  /// No description provided for @notificationTestSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Test bildirimi gönderildi'**
+  String get notificationTestSent;
+
+  /// No description provided for @notificationTestTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat test bildirimi'**
+  String get notificationTestTitle;
+
+  /// No description provided for @notificationTestBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimler çalışıyor. Hatırlatmalarınız bu şekilde görünecek.'**
+  String get notificationTestBody;
+
+  /// No description provided for @notifChannelCriticalName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kritik Hatırlatmalar'**
+  String get notifChannelCriticalName;
+
+  /// No description provided for @notifChannelCriticalDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç vadeleri ve bütçe aşımları'**
+  String get notifChannelCriticalDesc;
+
+  /// No description provided for @notifChannelRecurringName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli İşlemler'**
+  String get notifChannelRecurringName;
+
+  /// No description provided for @notifChannelRecurringDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay bekleyen düzenli işlem hatırlatmaları'**
+  String get notifChannelRecurringDesc;
+
+  /// No description provided for @notifChannelMotivationalName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Motive Edici Hatırlatıcılar'**
+  String get notifChannelMotivationalName;
+
+  /// No description provided for @notifChannelMotivationalDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama girmeyi hatırlatan günlük mesajlar'**
+  String get notifChannelMotivationalDesc;
+
+  /// No description provided for @notifRecurringDueTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli İşlem Vakti'**
+  String get notifRecurringDueTitle;
+
+  /// No description provided for @notifRecurringDueBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{title} onayınızı bekliyor.'**
+  String notifRecurringDueBody(Object title);
+
+  /// No description provided for @notifDebtUpcomingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç Hatırlatması'**
+  String get notifDebtUpcomingTitle;
+
+  /// No description provided for @notifDebtUpcomingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{title} başlıklı borcunuzun son ödeme tarihi yaklaştı.'**
+  String notifDebtUpcomingBody(Object title);
+
+  /// No description provided for @notifDebtDueTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç Son Ödeme Tarihi!'**
+  String get notifDebtDueTitle;
+
+  /// No description provided for @notifDebtDueBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{title} başlıklı borcunuzun son ödeme tarihi bugün.'**
+  String notifDebtDueBody(Object title);
+
+  /// No description provided for @notifBudgetWarningTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe Uyarısı'**
+  String get notifBudgetWarningTitle;
+
+  /// No description provided for @notifBudgetWarningBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{category} bütçenizin %80\'ine ulaştınız.'**
+  String notifBudgetWarningBody(Object category);
+
+  /// No description provided for @notifBudgetExceededTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe Aşıldı!'**
+  String get notifBudgetExceededTitle;
+
+  /// No description provided for @notifBudgetExceededBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{category} bütçenizi aştınız.'**
+  String notifBudgetExceededBody(Object category);
+
+  /// No description provided for @notifDailyReminderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat'**
+  String get notifDailyReminderTitle;
+
+  /// No description provided for @notifDailyReminder1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün hiç harcama girdin mi? Bütçeni güncel tut!'**
+  String get notifDailyReminder1;
+
+  /// No description provided for @notifDailyReminder2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Finansal durumunu kontrol etme vakti!'**
+  String get notifDailyReminder2;
+
+  /// No description provided for @notifDailyReminder3.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir ve giderlerini takip etmek bütçeni korur.'**
+  String get notifDailyReminder3;
+
+  /// No description provided for @notifDailyReminder4.
+  ///
+  /// In tr, this message translates to:
+  /// **'Küçük birikimler büyük hedeflere ulaştırır!'**
+  String get notifDailyReminder4;
+
+  /// No description provided for @notifDailyReminder5.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcamalarını gözden geçirmeyi unutma.'**
+  String get notifDailyReminder5;
+
+  /// No description provided for @notifDailyReminder6.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçeni planla, rahat yaşa!'**
+  String get notifDailyReminder6;
+
+  /// No description provided for @bekleyenVadeSayisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} vade birikmiş'**
+  String bekleyenVadeSayisi(Object count);
+
+  /// No description provided for @tumunuOnayla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü Onayla'**
+  String get tumunuOnayla;
+
+  /// No description provided for @tumunuOnaylaBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikmiş vadeleri onayla'**
+  String get tumunuOnaylaBaslik;
+
+  /// No description provided for @tumunuOnaylaAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{title}\" için birikmiş {count} vadenin tümü deftere işlenecek.'**
+  String tumunuOnaylaAciklama(Object title, Object count);
+
+  /// No description provided for @buVadeyiAtla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu vadeyi atla'**
+  String get buVadeyiAtla;
+
+  /// No description provided for @sablonuSilAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonu sil (gelecek vadeler de dahil)'**
+  String get sablonuSilAciklama;
+
   /// No description provided for @tumTurlariSifirla.
   ///
   /// In tr, this message translates to:

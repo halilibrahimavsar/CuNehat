@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/shared/widgets/app_card.dart';
 import '../../../../../core/enums/notification_frequency.dart';
@@ -7,12 +8,45 @@ import '../bloc/notification_settings/notification_settings_bloc.dart';
 import '../bloc/notification_settings/notification_settings_event.dart';
 import '../bloc/notification_settings/notification_settings_state.dart';
 
-class NotificationSettingsCard extends StatelessWidget {
+class NotificationSettingsCard extends StatefulWidget {
   const NotificationSettingsCard({super.key});
 
   @override
+  State<NotificationSettingsCard> createState() =>
+      _NotificationSettingsCardState();
+}
+
+class _NotificationSettingsCardState extends State<NotificationSettingsCard>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Kullanıcı sistem ayarlarından izni açıp geri dönmüş olabilir.
+    if (state == AppLifecycleState.resumed && mounted) {
+      context
+          .read<NotificationSettingsBloc>()
+          .add(const LoadNotificationSettings());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationSettingsBloc, NotificationSettingsState>(
+    return BlocConsumer<NotificationSettingsBloc, NotificationSettingsState>(
+      listenWhen: (previous, current) =>
+          previous.testNotificationSentAt != current.testNotificationSentAt,
+      listener: (context, state) =>
+          IboSnackbar.showSuccess(context, context.l10n.notificationTestSent),
       builder: (context, state) {
         if (state.isLoading) {
           return const AppCard(
@@ -28,6 +62,8 @@ class NotificationSettingsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (!state.systemPermissionGranted)
+                _PermissionBanner(state: state),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
@@ -38,12 +74,14 @@ class NotificationSettingsCard extends StatelessWidget {
                 ),
               ),
               const Divider(height: 1),
-              
+
               // Random Reminders
               ListTile(
                 leading: const Icon(Icons.notifications_active),
                 title: Text(context.l10n.randomReminders),
-                subtitle: Text(_getFrequencyLabel(context, state.randomRemindersFrequency)),
+                subtitle: Text(
+                  _getFrequencyLabel(context, state.randomRemindersFrequency),
+                ),
                 trailing: DropdownButton<NotificationFrequency>(
                   value: state.randomRemindersFrequency,
                   underline: const SizedBox(),
@@ -62,8 +100,19 @@ class NotificationSettingsCard extends StatelessWidget {
                   },
                 ),
               ),
+              // Kullanıcı "Çok (Günde 3)" seçerken ne geleceğini bilmiyordu.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Text(
+                  '“${context.l10n.notifDailyReminder1}”',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ),
               const Divider(height: 1),
-              
+
               // Critical Notifications Header
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -75,41 +124,47 @@ class NotificationSettingsCard extends StatelessWidget {
                       ),
                 ),
               ),
-              
-              // Debt Reminders Toggle
+
               SwitchListTile(
                 secondary: const Icon(Icons.account_balance_wallet),
                 title: Text(context.l10n.debtReminders),
                 value: state.debtRemindersEnabled,
-                onChanged: (value) {
-                  context
-                      .read<NotificationSettingsBloc>()
-                      .add(UpdateDebtRemindersEnabled(value));
-                },
+                onChanged: (value) => context
+                    .read<NotificationSettingsBloc>()
+                    .add(UpdateDebtRemindersEnabled(value)),
               ),
-              
-              // Recurring Reminders Toggle
+
               SwitchListTile(
                 secondary: const Icon(Icons.repeat),
                 title: Text(context.l10n.recurringReminders),
                 value: state.recurringRemindersEnabled,
-                onChanged: (value) {
-                  context
-                      .read<NotificationSettingsBloc>()
-                      .add(UpdateRecurringRemindersEnabled(value));
-                },
+                onChanged: (value) => context
+                    .read<NotificationSettingsBloc>()
+                    .add(UpdateRecurringRemindersEnabled(value)),
               ),
 
-              // Budget Alerts Toggle
               SwitchListTile(
                 secondary: const Icon(Icons.pie_chart),
                 title: Text(context.l10n.budgetAlerts),
                 value: state.budgetAlertsEnabled,
-                onChanged: (value) {
-                  context
-                      .read<NotificationSettingsBloc>()
-                      .add(UpdateBudgetAlertsEnabled(value));
-                },
+                onChanged: (value) => context
+                    .read<NotificationSettingsBloc>()
+                    .add(UpdateBudgetAlertsEnabled(value)),
+              ),
+
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => context
+                        .read<NotificationSettingsBloc>()
+                        .add(const SendTestNotification()),
+                    icon: const Icon(Icons.send_outlined, size: 18),
+                    label: Text(context.l10n.notificationSendTest),
+                  ),
+                ),
               ),
             ],
           ),
@@ -118,7 +173,8 @@ class NotificationSettingsCard extends StatelessWidget {
     );
   }
 
-  String _getFrequencyLabel(BuildContext context, NotificationFrequency frequency) {
+  String _getFrequencyLabel(
+      BuildContext context, NotificationFrequency frequency) {
     switch (frequency) {
       case NotificationFrequency.none:
         return context.l10n.randomRemindersOff;
@@ -129,5 +185,69 @@ class NotificationSettingsCard extends StatelessWidget {
       case NotificationFrequency.high:
         return context.l10n.randomRemindersHigh;
     }
+  }
+}
+
+/// İzin kapalıyken kartın başında duran uyarı. Bu olmadan üç anahtar açık
+/// görünüp hiçbir bildirim gitmiyor ve kullanıcı hatayı uygulamada sanıyordu.
+class _PermissionBanner extends StatelessWidget {
+  final NotificationSettingsState state;
+
+  const _PermissionBanner({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notifications_off_outlined,
+                  size: 18, color: scheme.onErrorContainer),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.notificationPermissionOffTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: scheme.onErrorContainer,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            state.permissionRequestRejected
+                ? context.l10n.notificationPermissionOpenSettings
+                : context.l10n.notificationPermissionOffDesc,
+            style: TextStyle(
+              fontSize: 13,
+              color: scheme.onErrorContainer,
+              height: 1.4,
+            ),
+          ),
+          if (!state.permissionRequestRejected)
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.tonal(
+                onPressed: () => context
+                    .read<NotificationSettingsBloc>()
+                    .add(const RequestNotificationPermission()),
+                child: Text(context.l10n.notificationPermissionGrant),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/animations/horizontal_cube_animation_view.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
@@ -13,6 +15,7 @@ import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
@@ -51,6 +54,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   SliderState? _lastSliderState;
   bool _isPendingDialogShowing = false;
 
+  /// Kullanıcının "Kapat" dediği bekleyen kümenin imzası. Aynı küme için
+  /// diyalog tekrar açılmaz; aksi halde uygulamaya her dönüşte yeniden
+  /// çıkıyordu. Bildirime dokunmak (forceShow) bu susturmayı geçersiz kılar.
+  String? _dismissedPendingSignature;
+
+  /// İlk açılış akışı (gizlilik onamı + bildirim izni gerekçesi) bitene kadar
+  /// bekleyen-işlem diyaloğu açılmaz; yoksa üç modal üst üste biniyordu.
+  final Completer<void> _firstLaunchGate = Completer<void>();
+
   /// Build içinde yaratılırsa her rebuild'de key değişir ve scaffold'un tüm
   /// alt ağacı (DynamicSlider dahil) remount olur; bu da slider sürüklenirken
   /// 0.25/0.75 sınırında tetiklenen rebuild'le jesti öldürüp knob'u dondurur.
@@ -63,8 +75,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _lastSliderState = _navController.currentSliderState;
     _navController.horizontalController.addListener(_onSliderStateMaybeChanged);
     _loadWallets();
-    // Bekleyen işlemleri yükle
-    context.read<PendingRecurringBloc>().add(LoadPendingTransactionsEvent());
+    // Bekleyen işlemleri yükle. Uygulamaya dönüş ve bildirim dokunuşu
+    // yollarını NotificationTapListener (app seviyesi) besler.
+    context
+        .read<PendingRecurringBloc>()
+        .add(const LoadPendingTransactionsEvent());
 
     final coordinator = getIt<OnboardingCoordinator>();
     coordinator.addListener(_onOnboardingCoordinatorChanged);
@@ -76,9 +91,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
     // Tek postFrameCallback'te sıralı çalıştırılır ki sistem izin promptu
     // gizlilik diyaloğuyla çakışmasın.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _runFirstLaunchOnboarding();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _runFirstLaunchOnboarding();
+      _openFirstLaunchGate();
     });
+  }
+
+  void _openFirstLaunchGate() {
+    if (!_firstLaunchGate.isCompleted) _firstLaunchGate.complete();
   }
 
   static const String _privacyConsentKey = 'privacy_consent_shown';
@@ -103,19 +123,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final prefs = getIt<SharedPreferences>();
     if (prefs.getBool(_notificationRationaleKey) ?? false) return;
     if (!mounted) return;
-    await prefs.setBool(_notificationRationaleKey, true);
-    if (!mounted) return;
     final granted = await showNotificationPermissionRationale(context);
+    // Bayrak gerekçe GÖSTERİLDİKTEN sonra yazılır. Kullanıcı "Şimdi Değil"
+    // dese de açılışta bir daha rahatsız edilmez; izni sonradan vermek
+    // isterse Ayarlar > Bildirimler kartından her zaman isteyebilir.
+    await prefs.setBool(_notificationRationaleKey, true);
     if (granted) {
-      await _requestNotificationPermissions();
-    }
-  }
-
-  Future<void> _requestNotificationPermissions() async {
-    try {
-      await getIt<NotificationService>().requestPermissions();
-    } catch (e) {
-      debugPrint('Failed to request notification permissions: $e');
+      try {
+        await getIt<NotificationService>().requestPermissions();
+      } catch (e) {
+        debugPrint('Failed to request notification permissions: $e');
+      }
     }
   }
 
@@ -182,6 +200,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Kapıyı bekleyen listener'lar askıda kalmasın.
+    _openFirstLaunchGate();
     _navController.horizontalController
         .removeListener(_onSliderStateMaybeChanged);
     final coordinator = getIt<OnboardingCoordinator>();
@@ -215,23 +235,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               listener: _handleWalletStateChanges,
             ),
             BlocListener<PendingRecurringBloc, PendingRecurringState>(
-              listener: (context, state) async {
-                if (state is PendingRecurringLoaded) {
-                  if (state.pendingTransactions.isNotEmpty) {
-                    if (!_isPendingDialogShowing) {
-                      _isPendingDialogShowing = true;
-                      await showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (_) => const PendingRecurringDialog(),
-                      );
-                      _isPendingDialogShowing = false;
-                    }
-                  } else if (_isPendingDialogShowing) {
-                    Navigator.of(context, rootNavigator: true).pop();
-                  }
-                }
-              },
+              listener: _handlePendingRecurringState,
             ),
           ],
           child: BlocBuilder<WalletBloc, WalletState>(
@@ -240,6 +244,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  /// Bekleyen düzenli işlem diyaloğunun tek açılış noktası.
+  ///
+  /// Diyalog kendini kapatır (liste boşaldığında `removeRoute`), bu yüzden
+  /// burada dışarıdan pop edilmez — yığının en üstündeki yanlış route'u
+  /// kapatma riski böylece ortadan kalkar.
+  Future<void> _handlePendingRecurringState(
+    BuildContext _,
+    PendingRecurringState state,
+  ) async {
+    if (state is! PendingRecurringLoaded) return;
+
+    if (state.pendingTransactions.isEmpty) {
+      _dismissedPendingSignature = null;
+      return;
+    }
+    if (_isPendingDialogShowing) return;
+
+    final signature = _pendingSignature(state.pendingTransactions);
+    if (!state.forceShow && signature == _dismissedPendingSignature) return;
+
+    await _firstLaunchGate.future;
+    if (!mounted || _isPendingDialogShowing) return;
+
+    _isPendingDialogShowing = true;
+    final dismissedByUser = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PendingRecurringDialog(),
+    );
+    _isPendingDialogShowing = false;
+    if (dismissedByUser == true) _dismissedPendingSignature = signature;
+  }
+
+  /// Bekleyen kümenin kimliği. Yeni bir vade geldiğinde (ya da bir kalem
+  /// işlendiğinde) imza değişir ve diyalog yeniden açılabilir hale gelir.
+  String _pendingSignature(List<RecurringTransactionEntity> pending) {
+    final parts = pending
+        .map((t) => '${t.id}@${t.nextExecutionDate.toIso8601String()}')
+        .toList()
+      ..sort();
+    return parts.join('|');
   }
 
   void _handleWalletStateChanges(BuildContext context, WalletState state) {

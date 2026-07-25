@@ -3,22 +3,21 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import '../repositories/recurring_transaction_repository.dart';
-
-import 'package:cunehat/core/notifications/notification_service.dart';
 
 @injectable
 class DeleteRecurringTransactionUsecase {
   final RecurringTransactionRepository repository;
-  final NotificationService notificationService;
+  final ReminderSyncService reminderSync;
 
-  DeleteRecurringTransactionUsecase(this.repository, this.notificationService);
+  DeleteRecurringTransactionUsecase(this.repository, this.reminderSync);
 
   Future<Either<Failure, void>> call(String id) async {
     final result = await repository.deleteTemplate(id);
-    result.fold(
-      (failure) => null,
-      (_) => notificationService.cancelNotification('recurring_$id'.hashCode),
+    await result.fold(
+      (_) async {},
+      (_) => reminderSync.cancelRecurringReminder(id),
     );
     return result;
   }
@@ -30,10 +29,9 @@ class DeleteRecurringTransactionUsecase {
 @injectable
 class DeleteRecurringTemplatesForWalletUsecase {
   final RecurringTransactionRepository repository;
-  final NotificationService notificationService;
+  final ReminderSyncService reminderSync;
 
-  DeleteRecurringTemplatesForWalletUsecase(
-      this.repository, this.notificationService);
+  DeleteRecurringTemplatesForWalletUsecase(this.repository, this.reminderSync);
 
   Future<Either<Failure, void>> call(String walletId) async {
     final res = await repository.getAllTemplates();
@@ -42,10 +40,9 @@ class DeleteRecurringTemplatesForWalletUsecase {
       (templates) async {
         for (final t in templates.where((t) => t.walletId == walletId)) {
           final del = await repository.deleteTemplate(t.id);
-          del.fold(
-            (_) => null,
-            (_) => notificationService
-                .cancelNotification('recurring_${t.id}'.hashCode),
+          await del.fold(
+            (_) async {},
+            (_) => reminderSync.cancelRecurringReminder(t.id),
           );
         }
         return const Right(null);

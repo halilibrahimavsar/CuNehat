@@ -2052,6 +2052,149 @@ class AppLocalizationsEn extends AppLocalizations {
   String get budgetAlerts => 'Budget Alerts';
 
   @override
+  String get notificationRationaleTitle => 'Notifications';
+
+  @override
+  String get notificationRationaleBody =>
+      'CuNehat can remind you when debt and receivable due dates approach and when recurring transactions await approval. This requires notification permission. You can keep using the app without it; you just won\'t see reminders.';
+
+  @override
+  String get notificationRationaleLater => 'Not Now';
+
+  @override
+  String get notificationPermissionOffTitle => 'Notification permission is off';
+
+  @override
+  String get notificationPermissionOffDesc =>
+      'The reminders below can only reach you once system permission is granted.';
+
+  @override
+  String get notificationPermissionGrant => 'Allow';
+
+  @override
+  String get notificationPermissionOpenSettings =>
+      'Permission was denied earlier. Enable it from System settings → Apps → CuNehat → Notifications.';
+
+  @override
+  String get notificationSendTest => 'Send a test notification';
+
+  @override
+  String get notificationTestSent => 'Test notification sent';
+
+  @override
+  String get notificationTestTitle => 'CuNehat test notification';
+
+  @override
+  String get notificationTestBody =>
+      'Notifications are working. Your reminders will look like this.';
+
+  @override
+  String get notifChannelCriticalName => 'Critical Reminders';
+
+  @override
+  String get notifChannelCriticalDesc => 'Debt due dates and budget overruns';
+
+  @override
+  String get notifChannelRecurringName => 'Recurring Transactions';
+
+  @override
+  String get notifChannelRecurringDesc =>
+      'Reminders for recurring transactions awaiting approval';
+
+  @override
+  String get notifChannelMotivationalName => 'Motivational Reminders';
+
+  @override
+  String get notifChannelMotivationalDesc =>
+      'Daily nudges to log your spending';
+
+  @override
+  String get notifRecurringDueTitle => 'Recurring Transaction Due';
+
+  @override
+  String notifRecurringDueBody(Object title) {
+    return '$title is waiting for your approval.';
+  }
+
+  @override
+  String get notifDebtUpcomingTitle => 'Debt Reminder';
+
+  @override
+  String notifDebtUpcomingBody(Object title) {
+    return 'The due date for $title is approaching.';
+  }
+
+  @override
+  String get notifDebtDueTitle => 'Debt Due Today!';
+
+  @override
+  String notifDebtDueBody(Object title) {
+    return 'The due date for $title is today.';
+  }
+
+  @override
+  String get notifBudgetWarningTitle => 'Budget Warning';
+
+  @override
+  String notifBudgetWarningBody(Object category) {
+    return 'You have reached 80% of your $category budget.';
+  }
+
+  @override
+  String get notifBudgetExceededTitle => 'Budget Exceeded!';
+
+  @override
+  String notifBudgetExceededBody(Object category) {
+    return 'You have exceeded your $category budget.';
+  }
+
+  @override
+  String get notifDailyReminderTitle => 'CuNehat';
+
+  @override
+  String get notifDailyReminder1 =>
+      'Logged any spending today? Keep your budget current!';
+
+  @override
+  String get notifDailyReminder2 => 'Time to check in on your finances!';
+
+  @override
+  String get notifDailyReminder3 =>
+      'Tracking income and expenses protects your budget.';
+
+  @override
+  String get notifDailyReminder4 => 'Small savings lead to big goals!';
+
+  @override
+  String get notifDailyReminder5 => 'Don\'t forget to review your spending.';
+
+  @override
+  String get notifDailyReminder6 => 'Plan your budget, live at ease!';
+
+  @override
+  String bekleyenVadeSayisi(Object count) {
+    return '$count occurrences due';
+  }
+
+  @override
+  String get tumunuOnayla => 'Approve All';
+
+  @override
+  String get tumunuOnaylaBaslik => 'Approve backlog';
+
+  @override
+  String tumunuOnaylaAciklama(Object title, Object count) {
+    return 'All $count outstanding occurrences of \"$title\" will be recorded in the ledger.';
+  }
+
+  @override
+  String get buVadeyiAtla => 'Skip this occurrence';
+
+  @override
+  String get sablonuSilAciklama =>
+      'Delete template (including future occurrences)';
+
+  @override
   String get tumTurlariSifirla => 'Reset All Tours';
 
   @override
