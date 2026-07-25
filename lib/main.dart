@@ -30,6 +30,7 @@ Future<Widget> _buildApp() async {
   final result = await AppInitialization.initialize();
   return AppProviders(
     authBloc: result.authBloc,
+    router: result.router,
     child: ThemedApp(
       builder: (theme, locale) => CuNehatApp(
         router: result.router,

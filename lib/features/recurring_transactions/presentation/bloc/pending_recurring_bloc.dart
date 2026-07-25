@@ -53,7 +53,8 @@ class PendingRecurringBloc
     result.fold(
       (failure) => emit(PendingRecurringFailure(failure)),
       (transactions) => emit(
-        PendingRecurringLoaded(transactions, forceShow: event.forceShow),
+        PendingRecurringLoaded(transactions,
+            suppressNudge: event.suppressNudge),
       ),
     );
   }

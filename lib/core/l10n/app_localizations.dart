@@ -3998,6 +3998,96 @@ abstract class AppLocalizations {
   /// **'Bütçeni planla, rahat yaşa!'**
   String get notifDailyReminder6;
 
+  /// No description provided for @recurringNudgeCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlem onay bekliyor'**
+  String recurringNudgeCount(Object count);
+
+  /// No description provided for @recurringNudgeOldest.
+  ///
+  /// In tr, this message translates to:
+  /// **'En eskisi {days} gün gecikmiş'**
+  String recurringNudgeOldest(Object days);
+
+  /// No description provided for @sonra.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonra'**
+  String get sonra;
+
+  /// No description provided for @incele.
+  ///
+  /// In tr, this message translates to:
+  /// **'İncele'**
+  String get incele;
+
+  /// No description provided for @onayBekleyenler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay Bekleyenler'**
+  String get onayBekleyenler;
+
+  /// No description provided for @sablonlar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonlar'**
+  String get sablonlar;
+
+  /// No description provided for @yaklasanlar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaklaşanlar'**
+  String get yaklasanlar;
+
+  /// No description provided for @duraklatilmislar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklatılmış'**
+  String get duraklatilmislar;
+
+  /// No description provided for @duraklatildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklatıldı'**
+  String get duraklatildi;
+
+  /// No description provided for @onayBekleyenYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay bekleyen işlem yok.'**
+  String get onayBekleyenYok;
+
+  /// No description provided for @aylikDuzenliGider.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık düzenli gider'**
+  String get aylikDuzenliGider;
+
+  /// No description provided for @aylikDuzenliGelir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık düzenli gelir'**
+  String get aylikDuzenliGelir;
+
+  /// No description provided for @aktifSablonSayisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} aktif şablon'**
+  String aktifSablonSayisi(Object count);
+
+  /// No description provided for @yarin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın'**
+  String get yarin;
+
+  /// No description provided for @gunSonra.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gün sonra'**
+  String gunSonra(Object days);
+
   /// No description provided for @bekleyenVadeSayisi.
   ///
   /// In tr, this message translates to:

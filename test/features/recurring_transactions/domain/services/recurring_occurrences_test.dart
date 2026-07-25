@@ -69,6 +69,67 @@ void main() {
     );
   });
 
+  group('isRecurringDue', () {
+    test('duraklatılmış şablon vadesi geçmiş olsa da vadesi gelmiş sayılmaz',
+        () {
+      expect(
+        isRecurringDue(
+          isActive: false,
+          nextExecutionDate: DateTime(2026, 1, 1),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+
+    test('tam vade anı vadesi gelmiş sayılır (sınır dahil)', () {
+      expect(
+        isRecurringDue(isActive: true, nextExecutionDate: now, now: now),
+        isTrue,
+      );
+    });
+
+    test('gelecekteki vade sayılmaz', () {
+      expect(
+        isRecurringDue(
+          isActive: true,
+          nextExecutionDate: now.add(const Duration(seconds: 1)),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('monthlyEquivalent', () {
+    test('aylık şablon olduğu gibi kalır', () {
+      expect(
+        RecurringOccurrences.monthlyEquivalent(100, RecurringFrequency.monthly),
+        100,
+      );
+    });
+
+    test('yıllık şablon 12\'ye bölünür', () {
+      expect(
+        RecurringOccurrences.monthlyEquivalent(1200, RecurringFrequency.yearly),
+        100,
+      );
+    });
+
+    test('günlük ve haftalık ortalama ay uzunluğuyla ölçeklenir', () {
+      // 30 veya 31 sabitlemek yıl boyunca birikimli sapma yaratır; ortalama
+      // ay 365.2425/12 = 30.436875 gün.
+      expect(
+        RecurringOccurrences.monthlyEquivalent(10, RecurringFrequency.daily),
+        closeTo(304.37, 0.01),
+      );
+      expect(
+        RecurringOccurrences.monthlyEquivalent(70, RecurringFrequency.weekly),
+        closeTo(304.37, 0.01),
+      );
+    });
+  });
+
   test('çok eski tarihte güvenlik tavanında durur (sonsuz döngü yok)', () {
     expect(
       RecurringOccurrences.dueCount(

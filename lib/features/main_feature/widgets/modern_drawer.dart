@@ -8,6 +8,8 @@ import 'package:cunehat/core/services/google_drive_backup_service.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart'
     as constants;
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -140,6 +142,10 @@ class _ModernDrawerState extends State<ModernDrawer>
                         delay: 100,
                         isDark: isDark,
                         theme: theme,
+                        // Onay bekleyen kalem = deftere işlenmemiş gerçek
+                        // gelir/gider. Açılış hatırlatması "Sonra" ile
+                        // susturulabildiğinden kalıcı görünürlük burada.
+                        badgeCount: _pendingCount(context),
                       ),
                       _buildAnimatedMenuItem(
                         index: 2,
@@ -425,6 +431,7 @@ class _ModernDrawerState extends State<ModernDrawer>
     required int delay,
     required bool isDark,
     required ThemeData theme,
+    int badgeCount = 0,
   }) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -484,6 +491,25 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                     ),
                   ),
+                  if (badgeCount > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '$badgeCount',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.onError,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     color: isDark
@@ -499,6 +525,15 @@ class _ModernDrawerState extends State<ModernDrawer>
         ),
       ),
     );
+  }
+
+  /// Onay bekleyen düzenli işlem sayısı. Bloc app-kapsamlı olduğundan drawer
+  /// her açıldığında güncel değeri okur.
+  int _pendingCount(BuildContext context) {
+    final state = context.watch<PendingRecurringBloc>().state;
+    return state is PendingRecurringLoaded
+        ? state.pendingTransactions.length
+        : 0;
   }
 
   Widget _buildMenuIcon(IconData icon, bool isDark, ThemeData theme) {

@@ -2177,6 +2177,59 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notifDailyReminder6 => 'Bütçeni planla, rahat yaşa!';
 
   @override
+  String recurringNudgeCount(Object count) {
+    return '$count işlem onay bekliyor';
+  }
+
+  @override
+  String recurringNudgeOldest(Object days) {
+    return 'En eskisi $days gün gecikmiş';
+  }
+
+  @override
+  String get sonra => 'Sonra';
+
+  @override
+  String get incele => 'İncele';
+
+  @override
+  String get onayBekleyenler => 'Onay Bekleyenler';
+
+  @override
+  String get sablonlar => 'Şablonlar';
+
+  @override
+  String get yaklasanlar => 'Yaklaşanlar';
+
+  @override
+  String get duraklatilmislar => 'Duraklatılmış';
+
+  @override
+  String get duraklatildi => 'Duraklatıldı';
+
+  @override
+  String get onayBekleyenYok => 'Onay bekleyen işlem yok.';
+
+  @override
+  String get aylikDuzenliGider => 'Aylık düzenli gider';
+
+  @override
+  String get aylikDuzenliGelir => 'Aylık düzenli gelir';
+
+  @override
+  String aktifSablonSayisi(Object count) {
+    return '$count aktif şablon';
+  }
+
+  @override
+  String get yarin => 'Yarın';
+
+  @override
+  String gunSonra(Object days) {
+    return '$days gün sonra';
+  }
+
+  @override
   String bekleyenVadeSayisi(Object count) {
     return '$count vade birikmiş';
   }

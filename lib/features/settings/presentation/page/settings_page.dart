@@ -1,5 +1,6 @@
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:cunehat/features/settings/presentation/widgets/about_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security_settings_card.dart';
@@ -11,6 +12,7 @@ import 'package:cunehat/features/settings/presentation/widgets/data_export_impor
 import 'package:cunehat/features/settings/presentation/widgets/data_privacy_card.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/bank_import_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/onboarding_help_card.dart';
+import 'package:cunehat/features/settings/presentation/widgets/notification_debug_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/notification_settings_card.dart';
 
 /// Main settings page, styled with premium, theme-aware AppCards.
@@ -82,6 +84,10 @@ class SettingsPage extends StatelessWidget {
                   SettingsHeader(title: context.l10n.notificationSettings),
                   const SizedBox(height: 8),
                   const NotificationSettingsCard(),
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 8),
+                    const NotificationDebugCard(),
+                  ],
                   const SizedBox(height: 24),
                   SettingsHeader(title: context.l10n.dataBackupTransfer),
                   const SizedBox(height: 8),
@@ -89,7 +95,8 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   const DataExportImportCard(),
                   const SizedBox(height: 24),
-                  SettingsHeader(title: context.l10n.bankStatementSectionHeader),
+                  SettingsHeader(
+                      title: context.l10n.bankStatementSectionHeader),
                   const SizedBox(height: 8),
                   const BankImportCard(),
                   const SizedBox(height: 24),

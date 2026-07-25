@@ -311,19 +311,19 @@ void main() {
     );
   });
 
-  group('forceShow', () {
+  group('suppressNudge', () {
     blocTest<PendingRecurringBloc, PendingRecurringState>(
-      'bildirimden gelen yükleme forceShow bayrağını state\'e taşır',
+      'bildirimden gelen yükleme suppressNudge bayrağını state\'e taşır',
       build: () {
         when(() => mockGetPendingUsecase())
             .thenAnswer((_) async => Right([testTemplate]));
         return pendingRecurringBloc;
       },
       act: (bloc) =>
-          bloc.add(const LoadPendingTransactionsEvent(forceShow: true)),
+          bloc.add(const LoadPendingTransactionsEvent(suppressNudge: true)),
       expect: () => [
         PendingRecurringLoading(),
-        PendingRecurringLoaded([testTemplate], forceShow: true),
+        PendingRecurringLoaded([testTemplate], suppressNudge: true),
       ],
     );
   });

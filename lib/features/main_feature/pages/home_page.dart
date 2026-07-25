@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:go_router/go_router.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/shared/animations/horizontal_cube_animation_view.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
@@ -19,7 +21,7 @@ import 'package:cunehat/features/recurring_transactions/domain/entities/recurrin
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
-import 'package:cunehat/features/recurring_transactions/presentation/widgets/pending_recurring_dialog.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/widgets/pending_recurring_nudge.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,9 +56,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   SliderState? _lastSliderState;
   bool _isPendingDialogShowing = false;
 
-  /// Kullanıcının "Kapat" dediği bekleyen kümenin imzası. Aynı küme için
-  /// diyalog tekrar açılmaz; aksi halde uygulamaya her dönüşte yeniden
-  /// çıkıyordu. Bildirime dokunmak (forceShow) bu susturmayı geçersiz kılar.
+  /// Kullanıcının "Sonra" dediği bekleyen kümenin imzası. Aynı küme için
+  /// hatırlatma tekrar çıkmaz; aksi halde uygulamaya her dönüşte yeniden
+  /// gösteriliyordu. Yeni bir vade gelince imza değişir ve tekrar çıkar.
   String? _dismissedPendingSignature;
 
   /// İlk açılış akışı (gizlilik onamı + bildirim izni gerekçesi) bitene kadar
@@ -246,11 +248,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  /// Bekleyen düzenli işlem diyaloğunun tek açılış noktası.
+  /// Açılış hatırlatmasının (nudge) tek gösterim noktası.
   ///
-  /// Diyalog kendini kapatır (liste boşaldığında `removeRoute`), bu yüzden
-  /// burada dışarıdan pop edilmez — yığının en üstündeki yanlış route'u
-  /// kapatma riski böylece ortadan kalkar.
+  /// Onay/atlama/silme burada değil Düzenli İşlemler sayfasında; bu yüzey
+  /// sadece "deftere işlenmemiş kalem var" der ve oraya götürür.
   Future<void> _handlePendingRecurringState(
     BuildContext _,
     PendingRecurringState state,
@@ -261,22 +262,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _dismissedPendingSignature = null;
       return;
     }
-    if (_isPendingDialogShowing) return;
+    if (_isPendingDialogShowing || state.suppressNudge) return;
+
+    // Ana sayfanın üstünde başka bir sayfa varsa (Ayarlar, Bütçe, Düzenli
+    // İşlemler...) hatırlatma onun üstüne fırlamamalı.
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
 
     final signature = _pendingSignature(state.pendingTransactions);
-    if (!state.forceShow && signature == _dismissedPendingSignature) return;
+    if (signature == _dismissedPendingSignature) return;
 
     await _firstLaunchGate.future;
     if (!mounted || _isPendingDialogShowing) return;
 
     _isPendingDialogShowing = true;
-    final dismissedByUser = await showDialog<bool>(
+    final postponed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const PendingRecurringDialog(),
+      builder: (_) => PendingRecurringNudge(
+        pending: state.pendingTransactions,
+      ),
     );
     _isPendingDialogShowing = false;
-    if (dismissedByUser == true) _dismissedPendingSignature = signature;
+
+    // Yalnızca açıkça "İncele" denince gidilir; geri tuşu "Sonra" sayılır —
+    // aksi halde geri tuşu beklenmedik bir sayfa açardı.
+    if (postponed != false) {
+      _dismissedPendingSignature = signature;
+      return;
+    }
+    if (mounted) context.push(AppRoutes.recurringTemplates);
   }
 
   /// Bekleyen kümenin kimliği. Yeni bir vade geldiğinde (ya da bir kalem

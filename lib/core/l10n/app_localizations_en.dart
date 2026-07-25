@@ -2172,6 +2172,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifDailyReminder6 => 'Plan your budget, live at ease!';
 
   @override
+  String recurringNudgeCount(Object count) {
+    return '$count transactions awaiting approval';
+  }
+
+  @override
+  String recurringNudgeOldest(Object days) {
+    return 'Oldest is $days days overdue';
+  }
+
+  @override
+  String get sonra => 'Later';
+
+  @override
+  String get incele => 'Review';
+
+  @override
+  String get onayBekleyenler => 'Awaiting Approval';
+
+  @override
+  String get sablonlar => 'Templates';
+
+  @override
+  String get yaklasanlar => 'Upcoming';
+
+  @override
+  String get duraklatilmislar => 'Paused';
+
+  @override
+  String get duraklatildi => 'Paused';
+
+  @override
+  String get onayBekleyenYok => 'Nothing is awaiting approval.';
+
+  @override
+  String get aylikDuzenliGider => 'Monthly recurring expense';
+
+  @override
+  String get aylikDuzenliGelir => 'Monthly recurring income';
+
+  @override
+  String aktifSablonSayisi(Object count) {
+    return '$count active templates';
+  }
+
+  @override
+  String get yarin => 'Tomorrow';
+
+  @override
+  String gunSonra(Object days) {
+    return 'in $days days';
+  }
+
+  @override
   String bekleyenVadeSayisi(Object count) {
     return '$count occurrences due';
   }

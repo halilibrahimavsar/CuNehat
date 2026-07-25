@@ -2,6 +2,7 @@
 
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:injectable/injectable.dart';
+import '../../domain/services/recurring_occurrences.dart';
 import '../models/recurring_transaction_model.dart';
 
 abstract class RecurringTransactionLocalDataSource {
@@ -37,11 +38,13 @@ class RecurringTransactionLocalDataSourceImpl
   @override
   Future<List<RecurringTransactionModel>> getPendingTransactions() async {
     final now = DateTime.now();
-    // nextExecutionDate <= now olan ve aktif olan şablonlar
-    return _box.values.where((t) {
-      return t.isActive &&
-          (t.nextExecutionDate.isBefore(now) ||
-              t.nextExecutionDate.isAtSameMomentAs(now));
-    }).toList();
+    // Kural [isRecurringDue]'da; takip sayfası da aynı tanımı kullanır.
+    return _box.values
+        .where((t) => isRecurringDue(
+              isActive: t.isActive,
+              nextExecutionDate: t.nextExecutionDate,
+              now: now,
+            ))
+        .toList();
   }
 }

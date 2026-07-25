@@ -51,9 +51,14 @@ class ReminderSyncService {
 
   /// Tek bir şablonun hatırlatmasını yeniden kurar.
   ///
-  /// Bildirim **vade gününde** atılır, bir gün önce değil: "bekleyen işlem"
-  /// tanımı `nextExecutionDate <= now` olduğundan bir gün önce atılan bildirime
-  /// dokunulduğunda onay listesi henüz boş oluyor ve diyalog açılmıyordu.
+  /// Bildirim **vade gününün sabahı** atılır, bir gün önce değil: "bekleyen
+  /// işlem" tanımı `nextExecutionDate <= now` olduğundan bir gün önce atılan
+  /// bildirime dokunulduğunda onay listesi henüz boş oluyor ve diyalog
+  /// açılmıyordu.
+  ///
+  /// Vade (ya da o sabahki saat) geçmişse [nextReminderSlot] bir sonraki
+  /// sabaha kurar: geçmiş bir zamana planlama sessizce atlandığından, uygulama
+  /// kapalıyken vadesi gelen şablon için kullanıcı HİÇ bildirim almıyordu.
   Future<void> syncRecurringTemplate(
       RecurringTransactionEntity template) async {
     final id = ReminderIds.recurring(template.id);
@@ -66,7 +71,8 @@ class ReminderSyncService {
       id: id,
       title: l10n.notifRecurringDueTitle,
       body: l10n.notifRecurringDueBody(template.title),
-      scheduledDate: reminderTimeOn(template.nextExecutionDate),
+      scheduledDate:
+          nextReminderSlot(template.nextExecutionDate, DateTime.now()),
       payload: NotificationPayloads.pendingRecurring,
       channel: NotificationChannelKind.recurring,
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/notifications/notification_tap_listener.dart';
@@ -22,11 +23,17 @@ import 'package:unified_flutter_features/unified_flutter_features.dart';
 /// for the entire application.
 class AppProviders extends StatelessWidget {
   final AppAuthBloc authBloc;
+
+  /// Bildirim dokunuşunun yönlendirme yapabilmesi için (bkz.
+  /// [NotificationTapListener]) router örneği buradan aşağı geçirilir.
+  final GoRouter router;
+
   final Widget child;
 
   const AppProviders({
     super.key,
     required this.authBloc,
+    required this.router,
     required this.child,
   });
 
@@ -59,7 +66,7 @@ class AppProviders extends StatelessWidget {
       ],
       // Bloc'ların ALTINDA: bildirim dokunuşunu PendingRecurringBloc'a
       // iletebilmesi için context'ten bloc okuyabilmeli.
-      child: NotificationTapListener(child: child),
+      child: NotificationTapListener(router: router, child: child),
     );
   }
 }

@@ -246,9 +246,9 @@ void main() {
     test('LoadPendingTransactionsEvent props', () {
       const e = LoadPendingTransactionsEvent();
       expect(e.props, <Object>[false]);
-      // forceShow farkı eşitliği bozmalı: bildirime dokunularak gelen yükleme,
-      // kullanıcının sustuğu kümeyle aynı sayılıp yutulmamalı.
-      expect(e, isNot(const LoadPendingTransactionsEvent(forceShow: true)));
+      // suppressNudge farkı eşitliği bozmalı: bildirimden gelen yükleme,
+      // normal yüklemeyle aynı sayılıp yutulmamalı.
+      expect(e, isNot(const LoadPendingTransactionsEvent(suppressNudge: true)));
     });
 
     test('ApproveAllOccurrencesEvent props', () {

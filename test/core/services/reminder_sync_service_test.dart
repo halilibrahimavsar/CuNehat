@@ -127,6 +127,27 @@ void main() {
           )).called(1);
     });
 
+    test('vadesi GEÇMİŞ şablon bir sonraki sabaha kurulur (sessizce atlanmaz)',
+        () async {
+      // Geçmiş bir zamana planlama sessizce atlanır; uygulama kapalıyken
+      // vadesi gelen şablon için kullanıcı hiç bildirim almıyordu.
+      await service.syncRecurringTemplate(
+        template.copyWith(nextExecutionDate: DateTime(2020, 1, 1)),
+      );
+
+      final scheduled = verify(() => notifications.scheduleNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: captureAny(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+          )).captured.single as DateTime;
+
+      expect(scheduled.isAfter(DateTime.now()), isTrue);
+      expect(scheduled.hour, kReminderHour);
+    });
+
     test('hatırlatmalar kapalıyken iptal eder ama yeniden kurmaz', () async {
       when(() => settings.isRecurringRemindersEnabled).thenReturn(false);
 

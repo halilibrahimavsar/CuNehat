@@ -7,6 +7,8 @@ import 'package:cunehat/features/recurring_transactions/domain/entities/recurrin
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/approve_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +66,13 @@ class TransactionSheetHandler {
                       _calculateNextDate(transaction.date, recurringFrequency),
                 );
                 final saveUsecase = getIt<SaveRecurringTransactionUsecase>();
-                saveUsecase(template);
+                final pendingBloc = context.read<PendingRecurringBloc>();
+                // Geçmiş tarihli bir işleme tekrar eklenirse şablon ANINDA
+                // vadesi gelmiş olur; bekleyen liste tazelenmezse hatırlatma
+                // ancak ana sayfa yeniden kurulduğunda çıkardı.
+                saveUsecase(template).then(
+                  (_) => pendingBloc.add(const LoadPendingTransactionsEvent()),
+                );
               }
             }
           },

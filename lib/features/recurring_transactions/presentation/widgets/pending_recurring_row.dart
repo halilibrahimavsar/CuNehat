@@ -1,8 +1,7 @@
-// lib/features/recurring_transactions/presentation/widgets/pending_recurring_dialog.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
@@ -11,112 +10,36 @@ import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+
+import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/services/recurring_occurrences.dart';
 import '../bloc/pending_recurring_bloc.dart';
 import '../bloc/pending_recurring_event.dart';
-import '../bloc/pending_recurring_state.dart';
-import '../../domain/entities/recurring_transaction_entity.dart';
 
-/// Vadesi gelmiş düzenli işlemlerin onay diyaloğu.
+/// Onay bekleyen bir düzenli işlem kalemi.
 ///
-/// Kapatma nedenini çağırana bildirir: kullanıcı "Kapat"a bastıysa `true`
-/// döner ve HomePage aynı bekleyen küme için diyaloğu tekrar açmaz.
-class PendingRecurringDialog extends StatelessWidget {
-  const PendingRecurringDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return BlocListener<PendingRecurringBloc, PendingRecurringState>(
-      // Son kalem onaylanınca diyalog kendini kapatır. `Navigator.pop`
-      // yığının EN ÜSTÜNDEKİ route'u atar — araya başka bir diyalog girdiyse
-      // yanlış olanı kapatırdı; removeRoute tam olarak bu route'u kaldırır.
-      listenWhen: (_, current) =>
-          current is PendingRecurringLoaded &&
-          current.pendingTransactions.isEmpty,
-      listener: (context, _) {
-        final route = ModalRoute.of(context);
-        if (route != null && route.isActive) {
-          Navigator.of(context).removeRoute(route);
-        }
-      },
-      child: BlocBuilder<PendingRecurringBloc, PendingRecurringState>(
-        buildWhen: (previous, current) => current is PendingRecurringLoaded,
-        builder: (context, state) {
-          if (state is! PendingRecurringLoaded ||
-              state.pendingTransactions.isEmpty) {
-            return const SizedBox.shrink();
-          }
-
-          return AppDialogSurface(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.notifications_active_rounded,
-                    size: 44, color: scheme.primary),
-                const SizedBox(height: 12),
-                Text(
-                  context.l10n.bekleyenDuzenliIslemler,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: scheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  context.l10n.vadesiGelmisIslemlerinizVar,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: state.pendingTransactions.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final tx = state.pendingTransactions[index];
-                      return _PendingRow(
-                        template: tx,
-                        busy: state.busyTemplateIds.contains(tx.id),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(context.l10n.kapat),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _PendingRow extends StatelessWidget {
+/// Yıkıcı eylemler (şablonu sil) ve toplu onay taşma menüsünde: satırda yan
+/// yana duran çöp kutusu tek dokunuşla şablonun tamamını siliyordu ve
+/// "bu vadeyi atla" ile karışıyordu.
+class PendingRecurringRow extends StatelessWidget {
   final RecurringTransactionEntity template;
+
+  /// İşlem sürüyor: butonlar kilitli, onay yerine ilerleme göstergesi.
+  /// Bloc tarafındaki kilitle birlikte çift dokunuşta mükerrer finansal
+  /// işlem oluşmasını engeller.
   final bool busy;
 
-  const _PendingRow({required this.template, required this.busy});
+  const PendingRecurringRow({
+    super.key,
+    required this.template,
+    required this.busy,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    // Diyalog tüm cüzdanların vadesi gelen işlemlerini kapsar; kalem hangi
+    // Liste tüm cüzdanların vadesi gelen işlemlerini kapsar; kalem hangi
     // cüzdana işlenecekse onu göster.
     final wallet = context.walletById(template.walletId);
     final backlog = RecurringOccurrences.dueCount(template, DateTime.now());
@@ -181,9 +104,6 @@ class _PendingRow extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              // Yıkıcı eylemler (sil) ve toplu onay taşma menüsünde: satırda
-              // yan yana duran çöp kutusu, tek dokunuşla şablonun tamamını
-              // siliyordu ve "atla" ile karışıyordu.
               _RowOverflowMenu(
                 template: template,
                 backlog: backlog,
@@ -296,10 +216,7 @@ class _RowOverflowMenu extends StatelessWidget {
             dense: true,
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.delete_outline, color: scheme.error),
-            title: Text(
-              l10n.sablonuSil,
-              style: TextStyle(color: scheme.error),
-            ),
+            title: Text(l10n.sablonuSil, style: TextStyle(color: scheme.error)),
             subtitle: Text(
               l10n.sablonuSilAciklama,
               style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
@@ -316,7 +233,7 @@ class _RowOverflowMenu extends StatelessWidget {
 
     switch (action) {
       case _RowAction.edit:
-        await _showEditDialog(context, template);
+        await showPendingAmountOverrideDialog(context, template);
       case _RowAction.approveAll:
         final confirmed = await ConfirmDialog.show(
           context,
@@ -338,7 +255,9 @@ class _RowOverflowMenu extends StatelessWidget {
   }
 }
 
-Future<void> _showEditDialog(
+/// Yalnızca BU vadenin tutarını değiştirip onaylar; şablonun kalıcı tutarı
+/// değişmez.
+Future<void> showPendingAmountOverrideDialog(
   BuildContext context,
   RecurringTransactionEntity template,
 ) {
@@ -388,7 +307,6 @@ Future<void> _showEditDialog(
                     final newAmount = parseMoneyInput(amountController.text) ??
                         template.amount;
                     if (newAmount > 0) {
-                      // Tutar yalnızca bu vade için geçerli; şablon değişmez.
                       bloc.add(ApproveTransactionEvent(template,
                           overrideAmount: newAmount));
                       Navigator.pop(dialogContext);

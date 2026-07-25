@@ -11,17 +11,17 @@ abstract class PendingRecurringEvent extends Equatable {
 }
 
 class LoadPendingTransactionsEvent extends PendingRecurringEvent {
-  /// Kullanıcı doğrudan bildirime dokunarak geldiğinde `true`.
+  /// Açılış hatırlatması (nudge) bu yükleme için gösterilmesin.
   ///
-  /// Diyalog normalde aynı bekleyen küme için ikinci kez açılmaz (kullanıcı
-  /// bir kez "Kapat" dediyse her uygulamaya dönüşte yeniden çıkmamalı);
-  /// bildirime dokunmak bu susturmayı bilinçli olarak geçersiz kılar.
-  final bool forceShow;
+  /// Bildirime dokunulduğunda doğrudan Düzenli İşlemler sayfası açılır;
+  /// hatırlatma diyaloğu da çıkarsa sayfanın üstünde bir modal olarak
+  /// birikirdi.
+  final bool suppressNudge;
 
-  const LoadPendingTransactionsEvent({this.forceShow = false});
+  const LoadPendingTransactionsEvent({this.suppressNudge = false});
 
   @override
-  List<Object?> get props => [forceShow];
+  List<Object?> get props => [suppressNudge];
 }
 
 class ApproveTransactionEvent extends PendingRecurringEvent {

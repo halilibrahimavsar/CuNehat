@@ -72,3 +72,23 @@ const int kReminderHour = 9;
 /// [date]'in gününde [kReminderHour] saatine sabitlenmiş yerel zaman.
 DateTime reminderTimeOn(DateTime date) =>
     DateTime(date.year, date.month, date.day, kReminderHour);
+
+/// Bir vade için kurulacak hatırlatma anı.
+///
+/// Normalde vade gününün sabahı. Vade (ya da o sabahki hatırlatma saati)
+/// GEÇMİŞSE bir sonraki sabaha kurulur — aksi halde geçmiş bir zamana
+/// planlama yapılır, sessizce atlanır ve gecikmiş kalem için kullanıcı HİÇ
+/// bildirim almazdı. Bu, uygulama kapalıyken vadesi gelen her şablonun
+/// başına geliyordu.
+///
+/// Sonuç: gecikmiş kalem, işleme alınana kadar her sabah hatırlatılır.
+DateTime nextReminderSlot(DateTime dueDate, DateTime now) {
+  final onDueDay = reminderTimeOn(dueDate);
+  if (onDueDay.isAfter(now)) return onDueDay;
+
+  final thisMorning = reminderTimeOn(now);
+  if (thisMorning.isAfter(now)) return thisMorning;
+  // Gün aritmetiği takvimden: yaz saati geçişinde 24 saat eklemek aynı güne
+  // düşebiliyor.
+  return DateTime(now.year, now.month, now.day + 1, kReminderHour);
+}

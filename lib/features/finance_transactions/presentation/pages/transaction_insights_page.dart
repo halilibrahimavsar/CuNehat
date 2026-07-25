@@ -16,6 +16,8 @@ import 'package:cunehat/features/recurring_transactions/domain/entities/recurrin
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_pattern_detector.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/get_all_recurring_templates_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
 import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
@@ -114,6 +116,7 @@ class _InsightsViewState extends State<_InsightsView> {
   Future<void> _addAsRecurring(RecurringSuggestion s) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    final pendingBloc = context.read<PendingRecurringBloc>();
 
     final entity = RecurringTransactionEntity(
       id: UidGenerator.generateV7(),
@@ -135,6 +138,9 @@ class _InsightsViewState extends State<_InsightsView> {
         SnackBar(content: Text(l10n.duzenliOdemeEklenemedi)),
       ),
       (_) {
+        // Öneri geçmiş bir örüntüden türer; şablon anında vadesi gelmiş
+        // olabilir. Bekleyen liste tazelenmezse hatırlatma gecikirdi.
+        pendingBloc.add(const LoadPendingTransactionsEvent());
         setState(() => _dismissed.add(_suggestionKey(s)));
         messenger.showSnackBar(
           SnackBar(content: Text(l10n.duzenliOdemeEklendi(s.title))),

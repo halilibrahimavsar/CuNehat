@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
@@ -21,7 +23,15 @@ import 'package:cunehat/features/recurring_transactions/presentation/bloc/pendin
 class NotificationTapListener extends StatefulWidget {
   final Widget child;
 
-  const NotificationTapListener({super.key, required this.child});
+  /// Yönlendirme router örneği üzerinden yapılır: bu widget MaterialApp'in
+  /// ÜSTÜNDE (bloc'lara erişebilmek için) durduğundan context'inde Router yok.
+  final GoRouter router;
+
+  const NotificationTapListener({
+    super.key,
+    required this.router,
+    required this.child,
+  });
 
   @override
   State<NotificationTapListener> createState() =>
@@ -51,9 +61,18 @@ class _NotificationTapListenerState extends State<NotificationTapListener>
   void _onNotificationTap(String payload) {
     if (!mounted) return;
     if (payload != NotificationPayloads.pendingRecurring) return;
+
+    // Hatırlatma diyaloğu bastırılır: kullanıcı zaten niyetini belli etti,
+    // doğrudan takip sayfasına götürüyoruz. İkisi birden açılsa modal
+    // sayfanın üstünde birikirdi.
     context
         .read<PendingRecurringBloc>()
-        .add(const LoadPendingTransactionsEvent(forceShow: true));
+        .add(const LoadPendingTransactionsEvent(suppressNudge: true));
+
+    // Kilitliyken push'u router'ın redirect'i kilit ekranına çevirir; kilit
+    // açılınca kullanıcı ana ekranda hatırlatmayı görür ve tek dokunuşla
+    // aynı sayfaya gelir.
+    widget.router.push(AppRoutes.recurringTemplates);
   }
 
   @override
