@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'Henüz borç kaydı yok.'**
   String get henuzBorcKaydiYok;
 
+  /// No description provided for @henuzBorcKaydiYokAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kaydedilmiş aktif bir borcunuz bulunmuyor. Yeni borç eklemek için ekleme butonunu kullanabilirsiniz.'**
+  String get henuzBorcKaydiYokAciklama;
+
   /// No description provided for @odemeYap.
   ///
   /// In tr, this message translates to:
@@ -217,6 +223,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Henüz alacak kaydı yok.'**
   String get henuzAlacakKaydiYok;
+
+  /// No description provided for @henuzAlacakKaydiYokAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kaydedilmiş aktif bir alacağınız bulunmuyor. Yeni alacak eklemek için ekleme butonunu kullanabilirsiniz.'**
+  String get henuzAlacakKaydiYokAciklama;
 
   /// No description provided for @odendiIsaretle.
   ///

@@ -62,6 +62,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get henuzBorcKaydiYok => 'No debt record yet.';
 
   @override
+  String get henuzBorcKaydiYokAciklama =>
+      'You have no active debt records. You can add a new debt using the action button below.';
+
+  @override
   String get odemeYap => 'Make Payment';
 
   @override
@@ -69,6 +73,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get henuzAlacakKaydiYok => 'No receivable record yet.';
+
+  @override
+  String get henuzAlacakKaydiYokAciklama =>
+      'You have no active receivable records. You can add a new receivable using the action button below.';
 
   @override
   String get odendiIsaretle => 'Mark as Paid';

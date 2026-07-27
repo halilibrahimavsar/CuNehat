@@ -2,10 +2,12 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
@@ -14,6 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class DebtHistoryPage extends StatelessWidget {
   final String userId;
@@ -37,15 +40,25 @@ class DebtHistoryPage extends StatelessWidget {
             create: (_) =>
                 getIt<ReceivableBloc>()..add(GetReceivablesEvent(walletId))),
       ],
-      child: _DebtHistoryView(showAppBar: showAppBar),
+      child: _DebtHistoryView(
+        showAppBar: showAppBar,
+        userId: userId,
+        walletId: walletId,
+      ),
     );
   }
 }
 
 class _DebtHistoryView extends StatelessWidget {
   final bool showAppBar;
+  final String userId;
+  final String walletId;
 
-  const _DebtHistoryView({required this.showAppBar});
+  const _DebtHistoryView({
+    required this.showAppBar,
+    required this.userId,
+    required this.walletId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -80,11 +93,11 @@ class _DebtHistoryView extends StatelessWidget {
                         text: context.l10n.alacakGecmisi),
                   ],
                 ),
-                const Expanded(
+                Expanded(
                   child: TabBarView(
                     children: [
-                      _DebtHistoryTab(),
-                      _ReceivableHistoryTab(),
+                      _DebtHistoryTab(userId: userId, walletId: walletId),
+                      _ReceivableHistoryTab(userId: userId, walletId: walletId),
                     ],
                   ),
                 ),
@@ -98,13 +111,26 @@ class _DebtHistoryView extends StatelessWidget {
 }
 
 class _DebtHistoryTab extends StatelessWidget {
-  const _DebtHistoryTab();
+  final String userId;
+  final String walletId;
+
+  const _DebtHistoryTab({
+    required this.userId,
+    required this.walletId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DebtBloc, DebtState>(
+    return BlocConsumer<DebtBloc, DebtState>(
+      listener: (context, state) {
+        if (state is DebtOperationSuccess) {
+          IboSnackbar.showSuccess(context, state.message);
+        } else if (state is DebtError) {
+          IboSnackbar.showError(context, state.message);
+        }
+      },
       builder: (context, state) {
-        if (state is DebtLoading) {
+        if (state is DebtLoading || state is DebtOperationSuccess) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -132,12 +158,59 @@ class _DebtHistoryTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...paidDebts.map(
-              (debt) => _HistoryCard(
-                icon: Icons.receipt_long_rounded,
-                title: debt.title,
-                subtitle: debt.counterparty,
-                amount: debt.totalPaidAmount,
-                badge: 'Ödendi',
+              (debt) => InfoActionMenu<String>(
+                items: [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, color: Colors.blueGrey),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.duzenle),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.sil,
+                            style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => AddEntrySheet(
+                        walletId: walletId,
+                        userId: userId,
+                        debtToEdit: debt,
+                      ),
+                    );
+                  } else if (value == 'delete') {
+                    context.read<DebtBloc>().add(DeleteDebtEvent(
+                        id: debt.id!,
+                        userId: debt.userId,
+                        walletId: debt.walletId,
+                        principalAmount: debt.principalAmount,
+                        totalPaidAmount: debt.totalPaidAmount,
+                        principalToWallet: debt.principalToWallet));
+                  }
+                },
+                child: _HistoryCard(
+                  icon: Icons.receipt_long_rounded,
+                  title: debt.title,
+                  subtitle: debt.counterparty,
+                  amount: debt.totalPaidAmount,
+                  badge: 'Ödendi',
+                ),
               ),
             ),
           ],
@@ -148,13 +221,26 @@ class _DebtHistoryTab extends StatelessWidget {
 }
 
 class _ReceivableHistoryTab extends StatelessWidget {
-  const _ReceivableHistoryTab();
+  final String userId;
+  final String walletId;
+
+  const _ReceivableHistoryTab({
+    required this.userId,
+    required this.walletId,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ReceivableBloc, ReceivableState>(
+    return BlocConsumer<ReceivableBloc, ReceivableState>(
+      listener: (context, state) {
+        if (state is ReceivableOperationSuccess) {
+          IboSnackbar.showSuccess(context, state.message);
+        } else if (state is ReceivableError) {
+          IboSnackbar.showError(context, state.message);
+        }
+      },
       builder: (context, state) {
-        if (state is ReceivableLoading) {
+        if (state is ReceivableLoading || state is ReceivableOperationSuccess) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -185,13 +271,59 @@ class _ReceivableHistoryTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...paidReceivables.map(
-              (receivable) => _HistoryCard(
-                icon: Icons.call_received_rounded,
-                title: receivable.debtorName,
-                subtitle:
-                    "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}",
-                amount: receivable.amount,
-                badge: 'Tahsil Edildi',
+              (receivable) => InfoActionMenu<String>(
+                items: [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, color: Colors.blueGrey),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.duzenle),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.sil,
+                            style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => AddEntrySheet(
+                        walletId: walletId,
+                        userId: userId,
+                        receivableToEdit: receivable,
+                      ),
+                    );
+                  } else if (value == 'delete') {
+                    context.read<ReceivableBloc>().add(DeleteReceivableEvent(
+                        id: receivable.id!,
+                        userId: receivable.userId,
+                        walletId: receivable.walletId,
+                        amount: receivable.amount,
+                        isPaid: receivable.isPaid));
+                  }
+                },
+                child: _HistoryCard(
+                  icon: Icons.call_received_rounded,
+                  title: receivable.debtorName,
+                  subtitle:
+                      "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}",
+                  amount: receivable.amount,
+                  badge: 'Tahsil Edildi',
+                ),
               ),
             ),
           ],

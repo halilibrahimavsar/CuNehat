@@ -172,7 +172,12 @@ class DebtListSection extends StatelessWidget {
               .toList();
 
           if (activeDebts.isEmpty) {
-            return Center(child: Text(context.l10n.henuzBorcKaydiYok));
+            return _EmptyStateCard(
+              icon: Icons.outbound_rounded,
+              title: context.l10n.henuzBorcKaydiYok,
+              description: context.l10n.henuzBorcKaydiYokAciklama,
+              section: AppSection.debt,
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -458,7 +463,12 @@ class ReceivableListSection extends StatelessWidget {
               state.receivables.where((r) => !r.isPaid).toList();
 
           if (activeReceivables.isEmpty) {
-            return Center(child: Text(context.l10n.henuzAlacakKaydiYok));
+            return _EmptyStateCard(
+              icon: Icons.call_received_rounded,
+              title: context.l10n.henuzAlacakKaydiYok,
+              description: context.l10n.henuzAlacakKaydiYokAciklama,
+              section: AppSection.savings,
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -669,6 +679,89 @@ class ReceivableListSection extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EmptyStateCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final AppSection section;
+
+  const _EmptyStateCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.section,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final accentColor = AppGradients.sectionColor(section);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 32),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: AppCard(
+                  section: section,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: accentColor.withValues(alpha: 0.25),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 44,
+                          color: accentColor,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          letterSpacing: -0.3,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

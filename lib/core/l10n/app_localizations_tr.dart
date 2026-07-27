@@ -62,6 +62,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get henuzBorcKaydiYok => 'Henüz borç kaydı yok.';
 
   @override
+  String get henuzBorcKaydiYokAciklama =>
+      'Henüz kaydedilmiş aktif bir borcunuz bulunmuyor. Yeni borç eklemek için ekleme butonunu kullanabilirsiniz.';
+
+  @override
   String get odemeYap => 'Ödeme Yap';
 
   @override
@@ -69,6 +73,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get henuzAlacakKaydiYok => 'Henüz alacak kaydı yok.';
+
+  @override
+  String get henuzAlacakKaydiYokAciklama =>
+      'Henüz kaydedilmiş aktif bir alacağınız bulunmuyor. Yeni alacak eklemek için ekleme butonunu kullanabilirsiniz.';
 
   @override
   String get odendiIsaretle => 'Ödendi İşaretle';
