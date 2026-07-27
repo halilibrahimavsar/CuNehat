@@ -38,6 +38,9 @@ class PriceRangeFilter extends Equatable {
   /// geçer (varsayılan ₺ eski davranışı korur).
   String label({String symbol = '₺'}) {
     if (minPrice != null && maxPrice != null) {
+      if (minPrice == maxPrice) {
+        return '${minPrice!.toStringAsFixed(0)}$symbol';
+      }
       return '${minPrice!.toStringAsFixed(0)}$symbol - ${maxPrice!.toStringAsFixed(0)}$symbol';
     } else if (minPrice != null) {
       return '${minPrice!.toStringAsFixed(0)}$symbol+';
@@ -93,14 +96,14 @@ base class DataFilter extends BaseFilter {
   @override
   bool get hasActiveFilters =>
       selectedCategories.isNotEmpty ||
-      priceRange != null ||
+      (priceRange != null && priceRange!.isNotEmpty) ||
       (searchQuery?.trim().isNotEmpty ?? false);
 
   @override
   int get activeFilterCount {
     int count = 0;
     if (selectedCategories.isNotEmpty) count++;
-    if (priceRange != null) count++;
+    if (priceRange != null && priceRange!.isNotEmpty) count++;
     if (searchQuery?.trim().isNotEmpty ?? false) count++;
     return count;
   }

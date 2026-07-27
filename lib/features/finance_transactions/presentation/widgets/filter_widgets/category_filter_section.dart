@@ -1,10 +1,10 @@
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
-/// filter_view.dart'tan bölündü (v1 temizliği): davranış aynı.
 class CategoryFilterSection extends StatelessWidget {
   final CombinedFilter filter;
   final List<CategoryEntity> incomeCategories;
@@ -40,36 +40,79 @@ class CategoryFilterSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         if (isLoading)
-          const Center(child: CircularProgressIndicator())
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+          )
         else if (incomeCategories.isEmpty && expenseCategories.isEmpty)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.08),
+              ),
             ),
-            child: Text(
-              context.l10n.kategoriBulunamadi,
-              style: const TextStyle(color: Colors.grey),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.kategoriBulunamadi,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           )
         else ...[
           if (incomeCategories.isNotEmpty)
             _buildCategoryGroup(
-                context, 'GELİRLER', incomeCategories, Colors.green),
+              context,
+              context.l10n.gelirKategorileri,
+              incomeCategories,
+              Colors.green.shade600,
+              isIncome: true,
+            ),
           if (incomeCategories.isNotEmpty && expenseCategories.isNotEmpty)
             const SizedBox(height: 16),
           if (expenseCategories.isNotEmpty)
             _buildCategoryGroup(
-                context, 'GİDERLER', expenseCategories, Colors.red),
+              context,
+              context.l10n.giderKategorileri,
+              expenseCategories,
+              Colors.red.shade600,
+              isIncome: false,
+            ),
         ],
       ],
     );
   }
 
-  Widget _buildCategoryGroup(BuildContext context, String title,
-      List<CategoryEntity> categories, Color groupColor) {
+  Widget _buildCategoryGroup(
+    BuildContext context,
+    String title,
+    List<CategoryEntity> categories,
+    Color groupColor, {
+    required bool isIncome,
+  }) {
     final isCompareMode = filter.viewFilter.financeMode == FinanceMode.compare;
+    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,25 +120,33 @@ class CategoryFilterSection extends StatelessWidget {
         if (isCompareMode) ...[
           Row(
             children: [
-              Icon(
-                title == 'GELİRLER'
-                    ? Icons.trending_up_rounded
-                    : Icons.trending_down_rounded,
-                size: 16,
-                color: groupColor,
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: groupColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  isIncome
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  size: 14,
+                  color: groupColor,
+                ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
-                title,
+                title.toUpperCase(),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: groupColor,
+                  letterSpacing: 0.5,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
         ],
         Wrap(
           spacing: 8,
@@ -103,65 +154,49 @@ class CategoryFilterSection extends StatelessWidget {
           children: categories.map((category) {
             final isSelected =
                 filter.dataFilter.selectedCategories.contains(category.id);
+            final activeColor = isCompareMode
+                ? groupColor
+                : filter.viewFilter.financeMode.primaryColor;
+
             return FilterChip(
               label: Text(category.id),
               selected: isSelected,
               onSelected: (_) => onCategoryToggle(category.id),
               avatar: Icon(
-                categoryFilterIcon(category.iconName),
+                AppIcons.getIconData(category.iconName),
                 size: 18,
-                color: isSelected
-                    ? Colors.white
-                    : (isCompareMode ? groupColor : Colors.grey),
+                color: isSelected ? Colors.white : activeColor,
               ),
-              selectedColor: isCompareMode
-                  ? groupColor
-                  : filter.viewFilter.financeMode.primaryColor,
+              selectedColor: activeColor,
               checkmarkColor: Colors.white,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              side: isCompareMode && !isSelected
-                  ? BorderSide(color: groupColor.withValues(alpha: 0.3))
-                  : null,
-              backgroundColor:
-                  isCompareMode ? groupColor.withValues(alpha: 0.05) : null,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 13,
+              ),
+              side: BorderSide(
+                color: isSelected
+                    ? activeColor
+                    : (isCompareMode
+                        ? groupColor.withValues(alpha: 0.3)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.15)),
+                width: 1.2,
+              ),
+              backgroundColor: isSelected
+                  ? activeColor
+                  : (isCompareMode
+                      ? groupColor.withValues(alpha: 0.06)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.03)),
+              elevation: isSelected ? 2 : 0,
+              shadowColor: activeColor.withValues(alpha: 0.3),
             );
           }).toList(),
         ),
       ],
     );
-  }
-}
-
-/// Kategori ikon eşlemesi (filtre çipleri).
-IconData categoryFilterIcon(String iconName) {
-  switch (iconName.toLowerCase()) {
-    case 'food':
-    case 'yemek':
-      return Icons.restaurant;
-    case 'transport':
-    case 'ulasim':
-      return Icons.directions_bus;
-    case 'shopping':
-    case 'alisveris':
-      return Icons.shopping_bag;
-    case 'bills':
-    case 'fatura':
-      return Icons.receipt;
-    case 'entertainment':
-    case 'eglence':
-      return Icons.movie;
-    case 'health':
-    case 'saglik':
-      return Icons.local_hospital;
-    case 'education':
-    case 'egitim':
-      return Icons.school;
-    default:
-      return Icons.category;
   }
 }

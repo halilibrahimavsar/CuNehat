@@ -9,6 +9,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/filte
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/price_range_filter_section.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class FilterView extends StatefulWidget {
   final CombinedFilter filter;
@@ -45,13 +46,17 @@ class _FilterViewState extends State<FilterView> {
   void initState() {
     super.initState();
     _loadCategories();
+    final minPrice = widget.filter.dataFilter.priceRange?.minPrice;
     _minPriceController = TextEditingController(
-      text: widget.filter.dataFilter.priceRange?.minPrice?.toStringAsFixed(0) ??
-          '',
+      text: minPrice == null
+          ? ''
+          : formatAmountForInput(minPrice, decimalDigits: 0),
     );
+    final maxPrice = widget.filter.dataFilter.priceRange?.maxPrice;
     _maxPriceController = TextEditingController(
-      text: widget.filter.dataFilter.priceRange?.maxPrice?.toStringAsFixed(0) ??
-          '',
+      text: maxPrice == null
+          ? ''
+          : formatAmountForInput(maxPrice, decimalDigits: 0),
     );
   }
 
@@ -109,10 +114,12 @@ class _FilterViewState extends State<FilterView> {
           _expenseCategories = [];
         }
       }
+      if (!mounted) return;
       setState(() {
         _isLoadingCategories = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoadingCategories = false);
     }
   }
@@ -136,12 +143,44 @@ class _FilterViewState extends State<FilterView> {
   void _onPriceRangeChanged(PriceRangeFilter? priceRange) {
     widget.onFilterChanged(
       widget.filter.copyWith(
-        dataFilter: widget.filter.dataFilter.copyWith(priceRange: priceRange),
+        dataFilter: widget.filter.dataFilter.copyWith(
+          priceRange: priceRange,
+          clearPriceRange: priceRange == null,
+        ),
       ),
     );
   }
 
+  void _applyAndClose() {
+    final min = parseAmountInput(_minPriceController.text);
+    final max = parseAmountInput(_maxPriceController.text);
+
+    if (min != null && max != null && min > max) {
+      IboSnackbar.showError(
+        context,
+        'Minimum tutar, maksimum tutardan büyük olamaz',
+      );
+      return;
+    }
+
+    final priceRange = (min == null && max == null)
+        ? null
+        : PriceRangeFilter(minPrice: min, maxPrice: max);
+
+    widget.onFilterChanged(
+      widget.filter.copyWith(
+        dataFilter: widget.filter.dataFilter.copyWith(
+          priceRange: priceRange,
+          clearPriceRange: priceRange == null,
+        ),
+      ),
+    );
+    widget.onMenuToggle();
+  }
+
   void _clearAllFilters() {
+    _minPriceController.clear();
+    _maxPriceController.clear();
     widget.onFilterChanged(
       widget.filter.copyWith(
         dataFilter: widget.filter.dataFilter.copyWith(
@@ -429,7 +468,7 @@ class _FilterViewState extends State<FilterView> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: widget.onMenuToggle,
+              onPressed: _applyAndClose,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     widget.filter.viewFilter.financeMode.primaryColor,
@@ -438,7 +477,9 @@ class _FilterViewState extends State<FilterView> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                elevation: 0,
+                elevation: 2,
+                shadowColor: widget.filter.viewFilter.financeMode.primaryColor
+                    .withValues(alpha: 0.35),
               ),
               child: Text(
                 context.l10n.uygula,
