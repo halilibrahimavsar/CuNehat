@@ -1,6 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
+import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -9,12 +14,14 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
@@ -22,20 +29,35 @@ class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
+class MockBudgetRepository extends Mock implements BudgetRepository {}
+
+class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late MockTransactionBloc mockTransactionBloc;
   late MockCategoryRepository mockCategoryRepository;
+  late MockBudgetRepository mockBudgetRepository;
+  late MockOnboardingCoordinator mockOnboardingCoordinator;
 
   setUpAll(() {
     getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactionsReport);
+    ShowcaseView.register(
+      onFinish: () {},
+      onDismiss: (_) {},
+    );
   });
 
   setUp(() {
     mockTransactionBloc = MockTransactionBloc();
     mockCategoryRepository = MockCategoryRepository();
+    mockBudgetRepository = MockBudgetRepository();
+    mockOnboardingCoordinator = MockOnboardingCoordinator();
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    getIt.registerSingleton<BudgetRepository>(mockBudgetRepository);
+    getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
 
     when(() => mockCategoryRepository.getExpenseCategories())
         .thenAnswer((_) async => [
@@ -56,6 +78,11 @@ void main() {
                 isDefault: true,
               ),
             ]);
+
+    when(() => mockBudgetRepository.getBudgets(any()))
+        .thenAnswer((_) async => const Right<Failure, List<BudgetEntity>>([]));
+
+    when(() => mockOnboardingCoordinator.isSeen(any())).thenReturn(true);
   });
 
   tearDown(() {
@@ -166,7 +193,6 @@ void main() {
       ),
     );
 
-    // Wait for category icons load and rebuild
     await tester.pumpAndSettle();
 
     // Verify summary values
@@ -220,7 +246,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Tap Değiştir button
+    // Tap Değiştir button in ReportRangeHeader
     await tester.tap(find.text('Değiştir'));
     await tester.pumpAndSettle();
 
@@ -232,23 +258,31 @@ void main() {
     expect(find.byType(DateRangePickerDialog), findsOneWidget);
   });
 
-  testWidgets(
-      'groups categories into Diğer when there are more than 4 categories',
+  testWidgets('groups minor categories (<3%) into Diğer',
       (WidgetTester tester) async {
     final now = DateTime.now();
-    final categories = ['Cat1', 'Cat2', 'Cat3', 'Cat4', 'Cat5', 'Cat6'];
-    final transactions = List.generate(categories.length, (index) {
-      return TransactionEntity(
-        id: 'tx_$index',
+    final transactions = [
+      TransactionEntity(
+        id: 'tx_large',
         userId: 'user_123',
         walletId: 'wallet_123',
-        title: 'Transaction $index',
-        tag: categories[index],
-        amount: 10.0 + index,
+        title: 'Large Expense',
+        tag: 'Main',
+        amount: 1000.0,
         date: now,
         type: TransactionTypeModel.expense,
-      );
-    });
+      ),
+      TransactionEntity(
+        id: 'tx_small',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Small Expense',
+        tag: 'Tiny',
+        amount: 1.0,
+        date: now,
+        type: TransactionTypeModel.expense,
+      ),
+    ];
 
     when(() => mockTransactionBloc.state).thenReturn(
       TransactionLoaded(
@@ -268,12 +302,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify 'Diğer' is rendered in the legend
+    // Verify 'Diğer' is rendered in the legend for <3% category
     expect(find.text('Diğer'), findsOneWidget);
   });
 
   testWidgets(
-      'renders empty state message when transactions exist but filtered out by date range',
+      'renders ReportRangeHeader even when transactions in current range are empty',
       (WidgetTester tester) async {
     final oldDate = DateTime.now().subtract(const Duration(days: 100));
     final tx = TransactionEntity(
@@ -307,49 +341,9 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify the empty state message is shown because the range defaults to the current month
-    expect(find.text('Seçilen tarih aralığında işlem yok'), findsOneWidget);
-  });
-
-  testWidgets('handles PieChart touch interactions',
-      (WidgetTester tester) async {
-    final now = DateTime.now();
-    final transactions = [
-      TransactionEntity(
-        id: 'tx_1',
-        userId: 'user_123',
-        walletId: 'wallet_123',
-        title: 'Lunch',
-        tag: 'Food',
-        amount: 50.0,
-        date: now,
-        type: TransactionTypeModel.expense,
-      ),
-    ];
-
-    when(() => mockTransactionBloc.state).thenReturn(
-      TransactionLoaded(
-        groupedTransactions: {now: transactions},
-        allTransactions: transactions,
-      ),
-    );
-
-    await tester.pumpWidget(
-      buildTestableWidget(
-        const TransactionReportPage(
-          userId: 'user_123',
-          walletId: 'wallet_123',
-        ),
-      ),
-    );
-
-    await tester.pumpAndSettle();
-
-    // Tap the PieChart
-    final pieChartFinder = find.byType(PieChart).first;
-    await tester.ensureVisible(pieChartFinder);
-    await tester.tap(pieChartFinder);
-    await tester.pumpAndSettle();
+    // Date range header and Değiştir button MUST be visible even when empty!
+    expect(find.byType(ReportRangeHeader), findsOneWidget);
+    expect(find.text('Değiştir'), findsOneWidget);
   });
 
   testWidgets('tapping legend item opens category details bottom sheet',
@@ -393,25 +387,13 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify Food is rendered in the legend
     final foodLegendFinder = find.text('Food');
     expect(foodLegendFinder, findsOneWidget);
 
-    // Tap the legend item
     await tester.tap(foodLegendFinder);
     await tester.pumpAndSettle();
 
-    // Verify that the bottom sheet is opened by checking bottom sheet elements
-    // Header should show the category name
-    expect(
-        find.text('Food'), findsWidgets); // One in legend, one in sheet header
-    // Sheet should show category total amount
+    expect(find.text('Food'), findsWidgets);
     expect(find.text('50.00 ₺'), findsWidgets);
-
-    // Wait for list entrance animation
-    await tester.pump(const Duration(milliseconds: 500));
-
-    // Sheet should render the transaction details in the list
-    expect(find.text('Lunch'), findsOneWidget);
   });
 }

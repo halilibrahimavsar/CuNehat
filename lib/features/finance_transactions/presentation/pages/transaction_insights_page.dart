@@ -2,37 +2,35 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/category_spike_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/daily_safe_to_spend_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_range_chips.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_stat_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_summary_row.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_pattern_detector.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/get_all_recurring_templates_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/save_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
-import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 /// "Akıllı İçgörüler" — transactions sekmesinin ilk swipe sayfası.
-///
-/// Eski (gereksiz) TransactionDetailPage'in yerini alır. Cihaz içinde, paketsiz
-/// istatistikle:
-/// - metinsel içgörüler (günlük ort. harcama, en çok harcanan gün/kategori,
-///   en büyük gider, birikim oranı),
-/// - olası tekrarlayan ödeme tespiti → mevcut "Düzenli Ödemeler" sistemine
-///   tek dokunuşla ekleme.
 class TransactionInsightsPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -78,19 +76,15 @@ class _InsightsViewState extends State<_InsightsView> {
   static const _analytics = TransactionAnalyticsService();
   static const _detector = RecurringPatternDetector();
 
-  /// Sayfadaki tüm tutarlar aktif cüzdanın biriminde gösterilir.
   String _money(double v) =>
       formatMoney(v, currency: context.activeWalletCurrency);
 
   final _quickOptions = DateRangeHelper.buildDateRangeQuickOptions();
 
-  // "Bu Ay" — buildDateRangeQuickOptions sırasında index 1.
+  // "Bu Ay" — index 1
   late DateTimeRange _range = _quickOptions[1].range;
 
-  /// Mevcut şablonlar; null = henüz yükleniyor.
   List<RecurringTransactionEntity>? _templates;
-
-  /// Bu oturumda eklenip listeden düşürülen öneri anahtarları.
   final Set<String> _dismissed = {};
 
   @override
@@ -138,8 +132,6 @@ class _InsightsViewState extends State<_InsightsView> {
         SnackBar(content: Text(l10n.duzenliOdemeEklenemedi)),
       ),
       (_) {
-        // Öneri geçmiş bir örüntüden türer; şablon anında vadesi gelmiş
-        // olabilir. Bekleyen liste tazelenmezse hatırlatma gecikirdi.
         pendingBloc.add(const LoadPendingTransactionsEvent());
         setState(() => _dismissed.add(_suggestionKey(s)));
         messenger.showSnackBar(
@@ -157,7 +149,9 @@ class _InsightsViewState extends State<_InsightsView> {
       child: Scaffold(
         appBar: widget.showAppBar
             ? AppBar(
-                title: Text(context.l10n.akilliIcgoruler), centerTitle: true)
+                title: Text(context.l10n.akilliIcgoruler),
+                centerTitle: true,
+              )
             : null,
         body: Showcase(
           key: OnboardingKeys.transactionsInsightsBody,
@@ -193,14 +187,62 @@ class _InsightsViewState extends State<_InsightsView> {
                           ),
                     ),
                     const SizedBox(height: 12),
-                    _buildRangeChips(context),
+                    InsightRangeChips(
+                      quickOptions: _quickOptions,
+                      selectedRange: _range,
+                      onSelected: (newRange) =>
+                          setState(() => _range = newRange),
+                    ),
                     const SizedBox(height: 16),
                     if (insights.isEmpty)
                       _buildPeriodEmptyNote(context)
                     else ...[
-                      _buildSummaryRow(context, insights),
+                      InsightSummaryRow(
+                        insights: insights,
+                        formatMoney: _money,
+                      ),
                       const SizedBox(height: 12),
-                      ..._buildInsightCards(context, insights),
+                      if (insights.dailySafeToSpend != null &&
+                          insights.dailySafeToSpend! > 0)
+                        DailySafeToSpendCard(
+                          dailySafeAmount: insights.dailySafeToSpend!,
+                          remainingDays: insights.remainingDays,
+                          formatMoney: _money,
+                        ),
+                      if (insights.categorySpike != null)
+                        CategorySpikeCard(
+                          spike: insights.categorySpike!,
+                          formatMoney: _money,
+                        ),
+                      InsightStatCard(
+                        icon: Icons.calendar_today_rounded,
+                        label: context.l10n.gunlukOrtalamaHarcama,
+                        value: _money(insights.dailyAverageExpense),
+                      ),
+                      if (insights.topExpenseWeekday != null)
+                        InsightStatCard(
+                          icon: Icons.event_rounded,
+                          label: context.l10n.enCokHarcananGun,
+                          value:
+                              '${_weekdayName(context, insights.topExpenseWeekday!)} '
+                              '(${_money(insights.topExpenseWeekdayAmount)})',
+                        ),
+                      if (insights.topExpenseCategory != null)
+                        InsightStatCard(
+                          icon: Icons.category_rounded,
+                          label: context.l10n.enCokHarcananKategori,
+                          value:
+                              '${insights.topExpenseCategory!.trim().isEmpty ? context.l10n.kategorisiz : context.translateCategory(insights.topExpenseCategory!)} '
+                              '(${_money(insights.topExpenseCategoryAmount)})',
+                        ),
+                      if (insights.largestExpense != null)
+                        InsightStatCard(
+                          icon: Icons.north_east_rounded,
+                          label: context.l10n.enBuyukHarcama,
+                          value:
+                              '${insights.largestExpense!.title} (${_money(insights.largestExpense!.amount)})',
+                          accent: AppGradients.debt,
+                        ),
                     ],
                     _buildRecurringSection(context, all),
                   ],
@@ -213,181 +255,10 @@ class _InsightsViewState extends State<_InsightsView> {
     );
   }
 
-  Widget _buildRangeChips(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final opt in _quickOptions)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(opt.label),
-                selected: _range == opt.range,
-                onSelected: (_) => setState(() => _range = opt.range),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(BuildContext context, TransactionInsights i) {
-    final savingsColor =
-        i.savingsRate >= 0 ? AppGradients.savings : AppGradients.debt;
-    return Row(
-      children: [
-        _statTile(context, context.l10n.menuIncome, _money(i.totalIncome),
-            AppGradients.savings),
-        const SizedBox(width: 10),
-        _statTile(context, context.l10n.menuExpense, _money(i.totalExpense),
-            AppGradients.debt),
-        const SizedBox(width: 10),
-        _statTile(context, context.l10n.birikimOrani,
-            '${(i.savingsRate * 100).toStringAsFixed(0)}%', savingsColor),
-      ],
-    );
-  }
-
-  Widget _statTile(
-      BuildContext context, String label, String value, Color color) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Expanded(
-      child: AppCard(
-        accent: color,
-        padding: const EdgeInsets.all(12),
-        elevated: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-                fontSize: 15,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildInsightCards(BuildContext context, TransactionInsights i) {
-    final l10n = context.l10n;
-    final cards = <Widget>[
-      _insightCard(
-        context,
-        Icons.calendar_today_rounded,
-        l10n.gunlukOrtalamaHarcama,
-        _money(i.dailyAverageExpense),
-      ),
-    ];
-
-    if (i.topExpenseWeekday != null) {
-      cards.add(_insightCard(
-        context,
-        Icons.event_rounded,
-        l10n.enCokHarcananGun,
-        '${_weekdayName(context, i.topExpenseWeekday!)} '
-        '(${_money(i.topExpenseWeekdayAmount)})',
-      ));
-    }
-
-    if (i.topExpenseCategory != null) {
-      final cat = i.topExpenseCategory!.trim().isEmpty
-          ? l10n.kategorisiz
-          : context.translateCategory(i.topExpenseCategory!);
-      cards.add(_insightCard(
-        context,
-        Icons.category_rounded,
-        l10n.enCokHarcananKategori,
-        '$cat (${_money(i.topExpenseCategoryAmount)})',
-      ));
-    }
-
-    if (i.largestExpense != null) {
-      cards.add(_insightCard(
-        context,
-        Icons.north_east_rounded,
-        l10n.enBuyukHarcama,
-        '${i.largestExpense!.title} (${_money(i.largestExpense!.amount)})',
-        accent: AppGradients.debt,
-      ));
-    }
-
-    return cards;
-  }
-
-  Widget _insightCard(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value, {
-    Color? accent,
-  }) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final color = accent ?? AppGradients.transactions;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: AppCard(
-        section: AppSection.transactions,
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onSurface,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRecurringSection(
-      BuildContext context, List<TransactionEntity> all) {
+    BuildContext context,
+    List<TransactionEntity> all,
+  ) {
     final templates = _templates;
     if (templates == null) return const SizedBox.shrink();
 
@@ -414,66 +285,13 @@ class _InsightsViewState extends State<_InsightsView> {
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
-        for (final s in suggestions) _suggestionCard(context, s),
+        for (final s in suggestions)
+          RecurringSuggestionCard(
+            suggestion: s,
+            formatMoney: _money,
+            onAdd: () => _addAsRecurring(s),
+          ),
       ],
-    );
-  }
-
-  Widget _suggestionCard(BuildContext context, RecurringSuggestion s) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final accent = s.type == TransactionTypeModel.income
-        ? AppGradients.savings
-        : AppGradients.debt;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: AppCard(
-        accent: accent,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.autorenew_rounded, color: accent, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    s.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Text(
-                  _money(s.amount),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: accent,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${s.frequency.displayName} • '
-              '${context.l10n.kezTekrarlandi(s.occurrenceCount)}',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.tonalIcon(
-                onPressed: () => _addAsRecurring(s),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(context.l10n.duzenliOdemeOlarakEkle),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

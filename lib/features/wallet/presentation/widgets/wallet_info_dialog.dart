@@ -8,7 +8,7 @@ class WalletInfoDialog {
       context: context,
       builder: (ctx) {
         final scheme = Theme.of(ctx).colorScheme;
-        
+
         Widget buildInfoItem(IconData icon, String text) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
@@ -46,7 +46,8 @@ class WalletInfoDialog {
                       color: scheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.info_outline, color: scheme.primary, size: 24),
+                    child: Icon(Icons.info_outline,
+                        color: scheme.primary, size: 24),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -62,26 +63,33 @@ class WalletInfoDialog {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Info Items (Scrollable)
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      buildInfoItem(Icons.account_balance_outlined, ctx.l10n.infoBankImportDesc),
-                      buildInfoItem(Icons.touch_app_outlined, ctx.l10n.aktifCuzdaniniziDegistirmekIcin),
-                      buildInfoItem(Icons.delete_outline, ctx.l10n.aktifOlanCuzdanSilinemez),
-                      buildInfoItem(Icons.auto_graph_outlined, ctx.l10n.cuzdanBakiyeleriOtomatikOlarak),
-                      buildInfoItem(Icons.account_balance_wallet_outlined, ctx.l10n.herCuzdaninKendiGelir),
-                      buildInfoItem(Icons.edit_note_outlined, ctx.l10n.cuzdanlarinizaAitBorcAlacak),
-                      buildInfoItem(Icons.swap_horiz_rounded, ctx.l10n.infoTransferDesc),
+                      buildInfoItem(Icons.account_balance_outlined,
+                          ctx.l10n.infoBankImportDesc),
+                      buildInfoItem(Icons.touch_app_outlined,
+                          ctx.l10n.aktifCuzdaniniziDegistirmekIcin),
+                      buildInfoItem(Icons.delete_outline,
+                          ctx.l10n.aktifOlanCuzdanSilinemez),
+                      buildInfoItem(Icons.auto_graph_outlined,
+                          ctx.l10n.cuzdanBakiyeleriOtomatikOlarak),
+                      buildInfoItem(Icons.account_balance_wallet_outlined,
+                          ctx.l10n.herCuzdaninKendiGelir),
+                      buildInfoItem(Icons.edit_note_outlined,
+                          ctx.l10n.cuzdanlarinizaAitBorcAlacak),
+                      buildInfoItem(
+                          Icons.swap_horiz_rounded, ctx.l10n.infoTransferDesc),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Action Button
               SizedBox(
                 width: double.infinity,

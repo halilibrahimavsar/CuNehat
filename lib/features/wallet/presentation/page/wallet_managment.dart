@@ -203,7 +203,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                     // Döviz cüzdanı varsa ve tüm kurlar biliniyorsa TL toplamı;
                     // aksi halde standart alt başlık.
                     if (state is WalletLoadedSt &&
-                        state.wallets.any((w) => w.currency != kDefaultCurrency) &&
+                        state.wallets
+                            .any((w) => w.currency != kDefaultCurrency) &&
                         _tlTotal(state.wallets) != null)
                       Text(
                         context.l10n.toplamTlKarsilikFormat(
@@ -254,7 +255,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                     backgroundColor: Colors.grey.shade100,
                     foregroundColor: Colors.grey.shade800,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -270,7 +272,8 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   elevation: 4,
-                  shadowColor: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                  shadowColor:
+                      Theme.of(context).primaryColor.withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
