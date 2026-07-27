@@ -27,9 +27,17 @@ void main() {
       expect(alerts.single.level, BudgetAlertLevel.warning);
     });
 
-    test('%95 → %105: exceeded üretir', () {
+    test('%95 → %100: filled üretir', () {
       final alerts = service.detectCrossings(
         previous: [budget('a', 100, 95)],
+        current: [budget('a', 100, 100)],
+      );
+      expect(alerts.single.level, BudgetAlertLevel.filled);
+    });
+
+    test('%100 → %105: exceeded üretir', () {
+      final alerts = service.detectCrossings(
+        previous: [budget('a', 100, 100)],
         current: [budget('a', 100, 105)],
       );
       expect(alerts.single.level, BudgetAlertLevel.exceeded);

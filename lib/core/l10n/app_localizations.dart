@@ -3968,6 +3968,18 @@ abstract class AppLocalizations {
   /// **'{category} bütçenizi aştınız.'**
   String notifBudgetExceededBody(Object category);
 
+  /// No description provided for @notifBudgetFilledTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe Doldu'**
+  String get notifBudgetFilledTitle;
+
+  /// No description provided for @notifBudgetFilledBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{category} bütçe limitinizin tamamına ulaştınız (%100).'**
+  String notifBudgetFilledBody(Object category);
+
   /// No description provided for @notifDailyReminderTitle.
   ///
   /// In tr, this message translates to:

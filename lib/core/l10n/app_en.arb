@@ -829,6 +829,9 @@
   "notifBudgetExceededTitle": "Budget Exceeded!",
   "notifBudgetExceededBody": "You have exceeded your {category} budget.",
   "@notifBudgetExceededBody": { "placeholders": { "category": {} } },
+  "notifBudgetFilledTitle": "Budget Filled",
+  "notifBudgetFilledBody": "You have reached 100% of your {category} budget limit.",
+  "@notifBudgetFilledBody": { "placeholders": { "category": {} } },
 
   "notifDailyReminderTitle": "CuNehat",
   "notifDailyReminder1": "Logged any spending today? Keep your budget current!",

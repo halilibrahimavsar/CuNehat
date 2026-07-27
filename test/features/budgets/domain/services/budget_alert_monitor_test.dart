@@ -119,6 +119,22 @@ void main() {
         )).called(1);
   });
 
+  test('bütçe dolduğunda (%100) filled bildirimi', () async {
+    when(() => mockGetBudgets('u', 'w'))
+        .thenAnswer((_) async => Right([b('Food', 100, 100)]));
+    stubNotify();
+
+    notifier.notify(userId: 'u', walletId: 'w');
+    await settle();
+
+    verify(() => mockNotifications.showNotification(
+          id: ReminderIds.budget('w', 'Food'),
+          title: tr.notifBudgetFilledTitle,
+          body: tr.notifBudgetFilledBody('Food'),
+          payload: NotificationPayloads.budgetAlert,
+        )).called(1);
+  });
+
   test('aynı kategori iki cüzdanda farklı bildirim kimliği alır', () {
     // Bütçeler cüzdan bazlı; yalnız categoryId kullanılsaydı ikinci cüzdanın
     // uyarısı birincinin üstüne yazardı (Android'de aynı id = replace).

@@ -80,18 +80,26 @@ class BudgetAlertMonitor {
     if (_notificationSettings.isBudgetAlertsEnabled) {
       final l10n = _localizer.l10n;
       for (final alert in crossings) {
-        final exceeded = alert.level == BudgetAlertLevel.exceeded;
+        final String title;
+        final String body;
+        switch (alert.level) {
+          case BudgetAlertLevel.exceeded:
+            title = l10n.notifBudgetExceededTitle;
+            body = l10n.notifBudgetExceededBody(alert.categoryId);
+          case BudgetAlertLevel.filled:
+            title = l10n.notifBudgetFilledTitle;
+            body = l10n.notifBudgetFilledBody(alert.categoryId);
+          case BudgetAlertLevel.warning:
+            title = l10n.notifBudgetWarningTitle;
+            body = l10n.notifBudgetWarningBody(alert.categoryId);
+        }
         await _notifications.showNotification(
           // Bütçeler cüzdan bazlı: yalnız categoryId kullanılırsa aynı
           // kategoriyi iki cüzdanda bütçeleyen kullanıcıda ikinci uyarı
           // birincinin üstüne yazar.
           id: ReminderIds.budget(walletId, alert.categoryId),
-          title: exceeded
-              ? l10n.notifBudgetExceededTitle
-              : l10n.notifBudgetWarningTitle,
-          body: exceeded
-              ? l10n.notifBudgetExceededBody(alert.categoryId)
-              : l10n.notifBudgetWarningBody(alert.categoryId),
+          title: title,
+          body: body,
           payload: NotificationPayloads.budgetAlert,
         );
       }

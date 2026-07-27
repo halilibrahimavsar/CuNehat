@@ -2157,6 +2157,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get notifBudgetFilledTitle => 'Budget Filled';
+
+  @override
+  String notifBudgetFilledBody(Object category) {
+    return 'You have reached 100% of your $category budget limit.';
+  }
+
+  @override
   String get notifDailyReminderTitle => 'CuNehat';
 
   @override

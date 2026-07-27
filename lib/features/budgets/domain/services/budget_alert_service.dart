@@ -1,8 +1,8 @@
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 
 /// Bütçe uyarı seviyesi. [warning] = limitin ≥%80'i (ama <%100),
-/// [exceeded] = limit aşıldı (≥%100).
-enum BudgetAlertLevel { warning, exceeded }
+/// [filled] = limit doldu (=%100), [exceeded] = limit aşıldı (>%100).
+enum BudgetAlertLevel { warning, filled, exceeded }
 
 /// Bir bütçenin eşik geçişi. Saf veri; bildirim metni/biçimi UI/bloc'ta üretilir.
 class BudgetAlert {
@@ -13,7 +13,7 @@ class BudgetAlert {
 }
 
 /// Saf-Dart bütçe uyarı servisi: önceki ve güncel bütçe durumlarını
-/// karşılaştırıp **yeni geçilen** eşikleri (%80 uyarı / %100 aşım) bildirir.
+/// karşılaştırıp **yeni geçilen** eşikleri (%80 uyarı / %100 dolum / >%100 aşım) bildirir.
 ///
 /// Geçiş bazlıdır: bir bütçe zaten eşiğin üstündeyse tekrar uyarı üretmez
 /// (spam önlenir). Harcama gerçek değerdir (çağıran [GetBudgetsUsecase]'ten
@@ -43,8 +43,10 @@ class BudgetAlertService {
           : 0.0;
       final currentRatio = budget.spentAmount / budget.limitAmount;
 
-      if (prevRatio < 1.0 && currentRatio >= 1.0) {
+      if (prevRatio <= 1.0 && currentRatio > 1.0) {
         alerts.add(BudgetAlert(budget.categoryId, BudgetAlertLevel.exceeded));
+      } else if (prevRatio < 1.0 && currentRatio == 1.0) {
+        alerts.add(BudgetAlert(budget.categoryId, BudgetAlertLevel.filled));
       } else if (prevRatio < warningThreshold &&
           currentRatio >= warningThreshold &&
           currentRatio < 1.0) {

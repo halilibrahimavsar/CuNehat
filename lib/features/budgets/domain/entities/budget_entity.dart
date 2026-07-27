@@ -38,7 +38,8 @@ class BudgetEntity extends Equatable {
 
   double get progress =>
       limitAmount > 0 ? (spentAmount / limitAmount).clamp(0.0, 1.0) : 0.0;
-  bool get isExceeded => spentAmount > limitAmount;
+  bool get isFilled => limitAmount > 0 && spentAmount == limitAmount;
+  bool get isExceeded => limitAmount > 0 && spentAmount > limitAmount;
 
   @override
   List<Object?> get props => [categoryId, walletId, limitAmount, spentAmount];

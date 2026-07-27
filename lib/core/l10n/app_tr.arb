@@ -844,6 +844,9 @@
   "notifBudgetExceededTitle": "Bütçe Aşıldı!",
   "notifBudgetExceededBody": "{category} bütçenizi aştınız.",
   "@notifBudgetExceededBody": { "placeholders": { "category": {} } },
+  "notifBudgetFilledTitle": "Bütçe Doldu",
+  "notifBudgetFilledBody": "{category} bütçe limitinizin tamamına ulaştınız (%100).",
+  "@notifBudgetFilledBody": { "placeholders": { "category": {} } },
 
   "notifDailyReminderTitle": "CuNehat",
   "notifDailyReminder1": "Bugün hiç harcama girdin mi? Bütçeni güncel tut!",

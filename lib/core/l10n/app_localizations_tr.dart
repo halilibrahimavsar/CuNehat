@@ -2161,6 +2161,14 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get notifBudgetFilledTitle => 'Bütçe Doldu';
+
+  @override
+  String notifBudgetFilledBody(Object category) {
+    return '$category bütçe limitinizin tamamına ulaştınız (%100).';
+  }
+
+  @override
   String get notifDailyReminderTitle => 'CuNehat';
 
   @override

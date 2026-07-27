@@ -188,9 +188,22 @@ class _BudgetSummaryCard extends StatelessWidget {
     final totalLimit = budgets.fold(0.0, (sum, b) => sum + b.limitAmount);
     final totalSpent = budgets.fold(0.0, (sum, b) => sum + b.spentAmount);
     final exceededCount = budgets.where((b) => b.isExceeded).length;
+    final filledCount = budgets.where((b) => b.isFilled).length;
     final overallProgress =
         totalLimit > 0 ? (totalSpent / totalLimit).clamp(0.0, 1.0) : 0.0;
-    final statusColor = exceededCount > 0 ? Colors.red : Colors.green;
+
+    final Color statusColor;
+    final String statusText;
+    if (exceededCount > 0) {
+      statusColor = Colors.red;
+      statusText = '$exceededCount bütçe aşıldı';
+    } else if (filledCount > 0) {
+      statusColor = Colors.orange;
+      statusText = '$filledCount bütçe doldu';
+    } else {
+      statusColor = Colors.green;
+      statusText = 'Kontrol altında';
+    }
 
     return AppCard(
       section: AppSection.transactions,
@@ -217,9 +230,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                   border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  exceededCount > 0
-                      ? '$exceededCount bütçe aşıldı'
-                      : 'Kontrol altında',
+                  statusText,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.w900,
@@ -274,8 +285,24 @@ class _BudgetListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final statusColor = budget.isExceeded ? Colors.red : Colors.green;
-    final percent = (budget.progress * 100).toStringAsFixed(0);
+
+    final Color statusColor;
+    final IconData statusIcon;
+    if (budget.isExceeded) {
+      statusColor = Colors.red;
+      statusIcon = Icons.warning_amber_rounded;
+    } else if (budget.isFilled) {
+      statusColor = Colors.orange;
+      statusIcon = Icons.error_outline;
+    } else {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle_outline;
+    }
+
+    final percentValue = budget.limitAmount > 0
+        ? (budget.spentAmount / budget.limitAmount * 100)
+        : 0.0;
+    final percent = percentValue.toStringAsFixed(0);
 
     return AppCard(
       accent: statusColor,
@@ -292,9 +319,7 @@ class _BudgetListItem extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  budget.isExceeded
-                      ? Icons.warning_amber_rounded
-                      : Icons.check_circle_outline,
+                  statusIcon,
                   color: statusColor,
                   size: 20,
                 ),
@@ -360,9 +385,12 @@ class _BudgetListItem extends StatelessWidget {
                     AppFormatters.currencyFor(context.activeWalletCurrency)
                         .format(budget.spentAmount)),
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: budget.isExceeded ? Colors.red : scheme.onSurface,
-                  fontWeight:
-                      budget.isExceeded ? FontWeight.bold : FontWeight.w600,
+                  color: budget.isExceeded
+                      ? Colors.red
+                      : (budget.isFilled ? Colors.orange : scheme.onSurface),
+                  fontWeight: (budget.isExceeded || budget.isFilled)
+                      ? FontWeight.bold
+                      : FontWeight.w600,
                 ),
               ),
               Text(
