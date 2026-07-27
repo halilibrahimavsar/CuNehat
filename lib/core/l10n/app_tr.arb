@@ -638,6 +638,8 @@
   "olustur": "Oluştur",
   "ozelRenkSecin": "Özel Renk Seçin",
   "cuzdanYonetimiTitle": "Cüzdan Yönetimi",
+  "infoTransferDesc": "Cüzdanlarınız arasında para transferi yapabilirsiniz. Transfer edilen tutar kur farklılıkları gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.",
+  "infoBankImportDesc": "Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.",
 
   "dateBadgeToday": "BUGÜN",
   "dateBadgeYesterday": "DÜN",

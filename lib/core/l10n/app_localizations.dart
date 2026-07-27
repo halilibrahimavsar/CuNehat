@@ -3080,6 +3080,18 @@ abstract class AppLocalizations {
   /// **'Cüzdan Yönetimi'**
   String get cuzdanYonetimiTitle;
 
+  /// No description provided for @infoTransferDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlarınız arasında para transferi yapabilirsiniz. Transfer edilen tutar kur farklılıkları gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.'**
+  String get infoTransferDesc;
+
+  /// No description provided for @infoBankImportDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.'**
+  String get infoBankImportDesc;
+
   /// No description provided for @dateBadgeToday.
   ///
   /// In tr, this message translates to:

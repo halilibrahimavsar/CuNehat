@@ -638,6 +638,8 @@
   "olustur": "Create",
   "ozelRenkSecin": "Select Custom Color",
   "cuzdanYonetimiTitle": "Wallet Management",
+  "infoTransferDesc": "You can transfer money between your wallets. The transferred amount is deducted from the source wallet and added to the destination, considering exchange rates.",
+  "infoBankImportDesc": "You can quickly import transactions by pasting account movements copied from your bank's mobile app.",
 
   "dateBadgeToday": "TODAY",
   "dateBadgeYesterday": "YESTERDAY",

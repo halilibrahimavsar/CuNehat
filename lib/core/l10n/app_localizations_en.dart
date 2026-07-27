@@ -1656,6 +1656,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cuzdanYonetimiTitle => 'Wallet Management';
 
   @override
+  String get infoTransferDesc =>
+      'You can transfer money between your wallets. The transferred amount is deducted from the source wallet and added to the destination, considering exchange rates.';
+
+  @override
+  String get infoBankImportDesc =>
+      'You can quickly import transactions by pasting account movements copied from your bank\'s mobile app.';
+
+  @override
   String get dateBadgeToday => 'TODAY';
 
   @override

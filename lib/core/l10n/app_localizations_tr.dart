@@ -1659,6 +1659,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cuzdanYonetimiTitle => 'Cüzdan Yönetimi';
 
   @override
+  String get infoTransferDesc =>
+      'Cüzdanlarınız arasında para transferi yapabilirsiniz. Transfer edilen tutar kur farklılıkları gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.';
+
+  @override
+  String get infoBankImportDesc =>
+      'Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.';
+
+  @override
   String get dateBadgeToday => 'BUGÜN';
 
   @override
