@@ -16,6 +16,9 @@ import 'package:cunehat/features/recurring_transactions/domain/usecases/save_rec
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +39,10 @@ class FakeTransactionEntity extends Fake implements TransactionEntity {}
 class FakeRecurringTransactionEntity extends Fake
     implements RecurringTransactionEntity {}
 
+/// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
+/// gerçek koordinatör kayıtlı olmadığından mock'lanır.
+class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late MockTransactionBloc mockTransactionBloc;
   late MockCategoryRepository mockCategoryRepository;
@@ -43,12 +50,22 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
+    getIt.allowReassignment = true;
     registerFallbackValue(FakeTransactionEvent());
     registerFallbackValue(FakeTransactionEntity());
     registerFallbackValue(FakeRecurringTransactionEntity());
   });
 
   setUp(() {
+    // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
+    final onboardingCoordinator = _MockOnboardingCoordinator();
+    when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => onboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
+    getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     SharedPreferences.setMockInitialValues({});
     mockTransactionBloc = MockTransactionBloc();
     mockCategoryRepository = MockCategoryRepository();
@@ -298,7 +315,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Cancel in confirmation dialog
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.text('İptal'));
     await tester.pumpAndSettle();
 
     // Verify DeleteTransactionEvent was NOT dispatched
@@ -339,10 +356,10 @@ void main() {
     await tester.tap(find.text('İşlemi Sil'));
     await tester.pumpAndSettle();
 
-    // Tap Confirm in confirmation dialog
+    // ConfirmDialog'da iptal TextButton, onay FilledButton'dur.
     final confirmButton = find.descendant(
-      of: find.byType(TextButton),
-      matching: find.text('Confirm'),
+      of: find.byType(FilledButton),
+      matching: find.text('Sil'),
     );
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();

@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 
@@ -45,7 +46,7 @@ class DailySafeToSpendCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Günlük Harcama Limiti (Hedef)',
+                    context.l10n.insightDailyLimitTitle,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: scheme.onSurfaceVariant,
@@ -62,7 +63,7 @@ class DailySafeToSpendCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Kalan $remainingDays gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.',
+                    context.l10n.insightDailyLimitDesc(remainingDays),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                       fontSize: 11,

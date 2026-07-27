@@ -23,11 +23,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 /// Borç / alacak ekleme & düzenleme için sıfırdan tasarlanmış modern sayfa.
+///
+/// İşlem ekleme ekranıyla aynı dil: üstte büyük tutar girişi, sade dolgulu
+/// alanlar, gradyan kaydet butonu. Borç = rose, Alacak = emerald.
 class AddEntrySheet extends StatefulWidget {
   final String walletId;
+  /// Kayıt sahibi kimliği — her zaman bağlı cüzdanın userId'si geçilir;
+  /// auth state'inden okumak kilit anında 'unknown_user' yazdırıyordu.
   final String userId;
   final DebtEntity? debtToEdit;
   final ReceivableEntity? receivableToEdit;
+
+  /// Yeni kayıt eklerken hangi formun açılacağını belirler (borç mu alacak mı).
+  /// Düzenlemede dikkate alınmaz; tür kayda göre sabittir.
   final bool initialIsDebt;
 
   const AddEntrySheet({
@@ -51,7 +59,12 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   bool _isBankLoanMonthly = true;
   bool _includeBankTaxes = false;
   bool _isInstallmentAmortized = true;
+  /// "Aylık taksit biliyorum" modunda taksit alanını kullanıcı elle değiştirdi
+  /// mi. True ise vade/tutar değişse de otomatik öneri ezmez.
   bool _installmentEdited = false;
+
+  /// Otomatik doldurma sırasında taksit listener'ının "elle düzenlendi"
+  /// işaretini tetiklememesi için koruma bayrağı.
   bool _suppressInstallmentListener = false;
 
   final _titleController = TextEditingController();
@@ -65,6 +78,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   DebtType _selectedDebtType = DebtType.bankLoan;
   DateTime _selectedDate = DateTime.now();
   double? _originalAmount;
+  /// Düzenlemede taksit alanına yazılan prefill metni; kaydederken alan hâlâ
+  /// buna eşitse kayıtlı toplam korunur (prefill yuvarlaması toplamı kaydırmasın).
   String? _prefilledInstallmentText;
   String? _error;
 
@@ -83,6 +98,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _selectedDate = d.startDate;
       _counterpartyController.text = d.counterparty;
       _termController.text = d.termMonths.toString();
+      // Oranlar para değildir; kayıtlı hassasiyeti kırpmamak için 4 hane.
       _interestController.text =
           formatAmountForInput(d.interestRate, decimalDigits: 4);
       _overdueController.text =
@@ -90,6 +106,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _selectedDebtType = d.type;
       _originalAmount = d.principalAmount;
       if (d.type == DebtType.bankLoan) {
+        // Proxy: interestRate == 0 → "aylık taksiti biliyorum" modu
         _isBankLoanMonthly = d.interestRate == 0;
         if (_isBankLoanMonthly &&
             d.termMonths > 0 &&
@@ -99,6 +116,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           _prefilledInstallmentText = _installmentController.text;
         }
       } else if (d.type == DebtType.installmentDebt) {
+        // Proxy: interestRate == 0 → "basit vade farkı" modu
         _isInstallmentAmortized = d.interestRate != 0;
       }
     } else if (widget.receivableToEdit != null) {
@@ -111,6 +129,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _originalAmount = r.amount;
     }
 
+    // Düzenlemede yüklenen taksit değerini koru; yalnız yeni kayıtta öner.
     _installmentEdited = _isEditing;
     _amountController.addListener(_maybeAutoFillInstallment);
     _termController.addListener(_maybeAutoFillInstallment);
@@ -153,6 +172,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _installmentEdited = true;
   }
 
+  /// "Aylık taksit biliyorum" modunda, kullanıcı taksiti elle değiştirmediyse
+  /// taksiti "kredi tutarı ÷ vade" olarak önerir (faizsiz başlangıç). Kullanıcı
+  /// üzerine yazınca [_installmentEdited] true olur ve öneri bir daha ezmez.
   void _maybeAutoFillInstallment() {
     if (!_isDebt) return;
     if (_selectedDebtType != DebtType.bankLoan || !_isBankLoanMonthly) return;
@@ -200,6 +222,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         if (installment == null) {
           return context.l10n.aylikTaksitTutariniGirin;
         }
+        // Toplam geri ödeme (taksit × vade) kredi tutarının altında kalamaz;
+        // aksi halde borçtan az geri ödeme gibi imkânsız bir sonuç doğar.
+        // ±1 ₺ tolerans otomatik önerideki yuvarlamayı soğurur.
         final principal = _parsedAmount ?? 0;
         if (installment * t < principal - 1.0) {
           return context.l10n.aylikTaksitKrediTutarindanKucuk;
@@ -221,13 +246,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final amount = _parsedAmount!;
 
     if (_isDebt) {
+      // Faiz ORAN'dır, yuvarlanmaz; taksit para tutarıdır.
       final rawInterest = parseAmountInput(_interestController.text) ?? 0;
       final monthlyInstallment =
           parseMoneyInput(_installmentController.text) ?? 0;
       final parsedTerm = int.tryParse(_termController.text.trim()) ?? 1;
 
       int term = 1;
-      double interest = 0;
+      double interest = 0; // kalıcı değer; bazı modlarda proxy sentinel (0)
       double overdue = 0;
 
       switch (_selectedDebtType) {
@@ -236,6 +262,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           break;
         case DebtType.installmentDebt:
           term = parsedTerm;
+          // Amortisman: faizi sakla. Basit vade farkı: sentinel 0
+          // (restore'da "basit vade farkı" modu buradan anlaşılır).
           interest = _isInstallmentAmortized ? rawInterest : 0;
           break;
         case DebtType.bankLoan:
@@ -252,6 +280,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           break;
       }
 
+      // Önizleme ile aynı hesaplayıcı → kaydedilen tutar önizlenenle birebir.
+      // Kaydedilen toplam kuruşa yuvarlanır; "Tümü" ödemesi bu değerle eşleşir.
       var expectedTotal = roundToCents(_calc
           .compute(
             type: _selectedDebtType,
@@ -265,6 +295,9 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           )
           .expectedTotal);
 
+      // Aylık-taksit kredisinde taksit/vade/anapara DEĞİŞMEDİYSE kayıtlı
+      // toplamı koru: taksit prefill'i kuruşa yuvarlandığından `taksit × vade`
+      // yeniden hesabı toplamı kaydırabilir (1000/3 → 333,33 × 3 = 999,99).
       final original = widget.debtToEdit;
       if (_isEditing &&
           original != null &&
@@ -309,6 +342,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           dueDate: dueDate,
           expectedTotalAmount: expectedTotal,
         );
+        // Borç karşılığı nakit mi ürün mü alındığı bakiye kuplajını belirler;
+        // kullanıcıya iki seçeneğin etkisi açıklanarak sorulur.
         final impact = await DebtCashImpactDialog.show(
           context,
           amount: amount,
@@ -398,6 +433,10 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                       ),
                       const SizedBox(height: 20),
                       if (_isDebt) ...[
+                        // Vade ve Detaylar: borç türüne göre değişen tür-özel
+                        // alanlar. Tutar kartının canlı geri ödeme özeti zaten
+                        // tür-bağımlı olduğundan bu bölüm de tür seçiminin
+                        // üstünde tutarlı durur; personalDebt'te gizlenir.
                         if (_selectedDebtType != DebtType.personalDebt) ...[
                           _vadeDetaylarLabel(cs),
                           const SizedBox(height: 10),

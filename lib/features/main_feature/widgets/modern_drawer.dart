@@ -125,11 +125,7 @@ class _ModernDrawerState extends State<ModernDrawer>
 
                       // Section 1: Finansal Yönetim
                       _buildSectionHeader(
-                        context.l10n.budgetPlanning
-                                .toUpperCase()
-                                .contains('BÜTÇE')
-                            ? 'FİNANSAL YÖNETİM'
-                            : 'FINANCIAL MANAGEMENT',
+                        context.l10n.drawerSectionFinancial,
                         isDark,
                         theme,
                       ),
@@ -139,7 +135,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         icon: Icons.pie_chart_outline_rounded,
                         title: context.l10n.budgetPlanning,
                         subtitle:
-                            'Kategori bazlı bütçe takibi ve harcama limitleri',
+                            context.l10n.drawerBudgetSubtitle,
                         gradientColors: const [
                           Color(0xFF8E2DE2),
                           Color(0xFF4A00E0),
@@ -156,7 +152,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         index: 1,
                         icon: Icons.sync_alt_rounded,
                         title: context.l10n.recurringTransactions,
-                        subtitle: 'Otomatik gelir ve gider şablonları',
+                        subtitle: context.l10n.drawerRecurringSubtitle,
                         gradientColors: const [
                           Color(0xFFF2994A),
                           Color(0xFFF2C94C),
@@ -168,13 +164,16 @@ class _ModernDrawerState extends State<ModernDrawer>
                         delay: 100,
                         isDark: isDark,
                         theme: theme,
+                        // Onay bekleyen kalem = deftere işlenmemiş gerçek
+                        // gelir/gider. Açılış hatırlatması "Sonra" ile
+                        // susturulabildiğinden kalıcı görünürlük burada.
                         badgeCount: _pendingCount(context),
                       ),
                       _buildAnimatedMenuItem(
                         index: 2,
                         icon: Icons.document_scanner_rounded,
                         title: context.l10n.bankStatementSectionHeader,
-                        subtitle: 'PDF/Excel hesap ekstresi içe aktarma',
+                        subtitle: context.l10n.drawerBankImportSubtitle,
                         gradientColors: const [
                           Color(0xFF11998E),
                           Color(0xFF38EF7D),
@@ -192,7 +191,7 @@ class _ModernDrawerState extends State<ModernDrawer>
 
                       // Section 2: Sistem & Ayarlar
                       _buildSectionHeader(
-                        'SİSTEM & UYGULAMA',
+                        context.l10n.drawerSectionSystem,
                         isDark,
                         theme,
                       ),
@@ -201,7 +200,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         index: 3,
                         icon: Icons.tune_rounded,
                         title: context.l10n.settings,
-                        subtitle: 'Tema, para birimi ve genel tercihler',
+                        subtitle: context.l10n.drawerSettingsSubtitle,
                         gradientColors: const [
                           Color(0xFF2F80ED),
                           Color(0xFF56CCF2),
@@ -217,8 +216,8 @@ class _ModernDrawerState extends State<ModernDrawer>
                       _buildAnimatedMenuItem(
                         index: 4,
                         icon: Icons.shield_outlined,
-                        title: 'Güvenlik & Biyometrik',
-                        subtitle: 'Uygulama kilidi ve PIN ayarları',
+                        title: context.l10n.drawerSecurityTitle,
+                        subtitle: context.l10n.drawerSecuritySubtitle,
                         gradientColors: const [
                           Color(0xFF667EEA),
                           Color(0xFF764BA2),
@@ -261,6 +260,10 @@ class _ModernDrawerState extends State<ModernDrawer>
     );
   }
 
+  /// Kimlik bloğu (avatar + ad + e-posta) yalnızca gerçek bir Google (Drive)
+  /// hesabı bağlıyken anlamlı; yerel modda sadece placeholder olur. Yerel
+  /// modda placeholder yerine, durum çubuğu boşluğunu koruyan ince bir spacer
+  /// göster ki cüzdan metrikleri üste yapışmasın.
   Widget _buildAnimatedHeader(LocalUser? user, bool isDark, ThemeData theme) {
     final driveUser = getIt<GoogleDriveBackupService>().currentUser;
     if (driveUser == null) {
@@ -436,7 +439,7 @@ class _ModernDrawerState extends State<ModernDrawer>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Active Wallet Header Bar
+                // Aktif cüzdan başlık şeridi
                 Row(
                   children: [
                     Container(
@@ -470,7 +473,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'AKTİF CÜZDAN',
+                            context.l10n.drawerActiveWalletLabel,
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
@@ -509,7 +512,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                 ),
                 const SizedBox(height: 14),
 
-                // Main Cash Balance Display
+                // Ana nakit bakiye gösterimi
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,

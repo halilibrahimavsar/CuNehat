@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -249,7 +250,8 @@ class DebtListSection extends StatelessWidget {
           ),
         ),
       ],
-      onSelected: (value) {
+      onSelected: (value) async {
+        final debtBloc = context.read<DebtBloc>();
         if (value == 'payment') {
           DebtPaymentDialog.show(context, debt);
         } else if (value == 'edit') {
@@ -264,7 +266,18 @@ class DebtListSection extends StatelessWidget {
             ),
           );
         } else if (value == 'delete') {
-          context.read<DebtBloc>().add(DeleteDebtEvent(
+          // Borç silmek cüzdanın nakit hareketini de geri alır
+          // (bkz. DebtBloc._onDeleteDebt) → geri alınamaz.
+          final confirmed = await ConfirmDialog.show(
+            context,
+            title: context.l10n.borcSilBaslik,
+            message: context.l10n.borcSilOnayMesaji(debt.title),
+            confirmText: context.l10n.sil,
+            danger: true,
+          );
+          if (!confirmed) return;
+
+          debtBloc.add(DeleteDebtEvent(
               id: debt.id!,
               userId: debt.userId,
               walletId: debt.walletId,
@@ -542,11 +555,10 @@ class ReceivableListSection extends StatelessWidget {
           ),
         ),
       ],
-      onSelected: (value) {
+      onSelected: (value) async {
+        final receivableBloc = context.read<ReceivableBloc>();
         if (value == 'mark_paid') {
-          context
-              .read<ReceivableBloc>()
-              .add(MarkReceivableAsPaidEvent(receivable));
+          receivableBloc.add(MarkReceivableAsPaidEvent(receivable));
         } else if (value == 'edit') {
           showModalBottomSheet(
             context: context,
@@ -559,7 +571,16 @@ class ReceivableListSection extends StatelessWidget {
             ),
           );
         } else if (value == 'delete') {
-          context.read<ReceivableBloc>().add(DeleteReceivableEvent(
+          final confirmed = await ConfirmDialog.show(
+            context,
+            title: context.l10n.alacakSilBaslik,
+            message: context.l10n.alacakSilOnayMesaji(receivable.debtorName),
+            confirmText: context.l10n.sil,
+            danger: true,
+          );
+          if (!confirmed) return;
+
+          receivableBloc.add(DeleteReceivableEvent(
               id: receivable.id!,
               userId: receivable.userId,
               walletId: receivable.walletId,

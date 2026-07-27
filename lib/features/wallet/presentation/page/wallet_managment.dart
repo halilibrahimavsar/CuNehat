@@ -175,7 +175,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
         children: [
           Row(
             children: [
-              // Icon + Title
+              // Simge + başlık
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -226,7 +226,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
                   ],
                 ),
               ),
-              // Close Action
+              // Kapatma eylemi
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
@@ -238,7 +238,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
             ],
           ),
           const SizedBox(height: 16),
-          // Actions Row
+          // Eylem satırı
           Row(
             children: [
               Expanded(

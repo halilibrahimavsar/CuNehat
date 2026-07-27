@@ -16,7 +16,10 @@ import 'package:cunehat/features/finance_transactions/domain/services/transactio
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_segment.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/category_details_bottom_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
@@ -74,27 +77,24 @@ class _TransactionReportView extends StatefulWidget {
 class _TransactionReportViewState extends State<_TransactionReportView> {
   late DateTimeRange _range;
   bool _hasUserPickedRange = false;
+  bool _hasAutoAdjustedRange = false;
   bool _showExpenseBarChart = false;
   bool _showIncomeBarChart = false;
+  FinanceMode _categoryMode = FinanceMode.compare;
 
   Map<String, IconData> _categoryIcons = {};
   List<BudgetEntity> _budgets = [];
 
   static const _reportService = TransactionReportService();
 
-  static const _expensePalette = [
-    Colors.redAccent,
-    Colors.orangeAccent,
-    Colors.deepOrangeAccent,
-    Colors.amberAccent,
-  ];
-  static const _incomePalette = [
-    Colors.greenAccent,
-    Colors.tealAccent,
-    Colors.blueAccent,
-    Colors.indigoAccent,
-  ];
-  static const _otherColor = Colors.blueGrey;
+  /// Kategori kırılımı/renk paleti/bütçe eşlemesi tek yerde; detay bottom
+  /// sheet'i de aynı nesneyi alır.
+  ReportCategoryDataBuilder _dataBuilder(BuildContext context) =>
+      ReportCategoryDataBuilder(
+        range: _range,
+        budgets: _budgets,
+        otherCategoryLabel: context.l10n.categoryDiger,
+      );
 
   @override
   void initState() {
@@ -106,6 +106,16 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     );
     _loadCategoryIcons();
     _loadBudgets();
+
+    // Listener yalnız state DEĞİŞİMİNDE tetiklenir; bloc zaten dolu bir
+    // durumla verilmişse ilk kontrolü burada yapmak gerekir. [_maybeAdjust...]
+    // kendi bayrağıyla korunduğundan iki yolun çakışması sorun değildir.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _maybeAdjustInitialRange(
+        context.read<TransactionBloc>().state.currentTransactions,
+      );
+    });
   }
 
   Future<void> _loadCategoryIcons() async {
@@ -124,31 +134,18 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     setState(() => _categoryIcons = map);
   }
 
+  /// Bütçe limitlerini yükler. `spentAmount` burada kullanılmaz — rapor
+  /// sayfası kendi seçilebilir [_range]'ına göre harcamayı ayrıca hesaplar
+  /// (bkz. [ReportCategoryDataBuilder.budgetProgressFor]), çünkü
+  /// [BudgetRepository] yalnızca limitleri döner ve "bu ay" varsayımı taşımaz.
   Future<void> _loadBudgets() async {
+    // Bütçeler cüzdan bazlı; rapor da tek cüzdanın işlemlerini gösterir.
     final result = await getIt<BudgetRepository>().getBudgets(widget.walletId);
     if (!mounted) return;
     result.fold(
       (_) {},
       (budgets) => setState(() => _budgets = budgets),
     );
-  }
-
-  ({double progress, bool isExceeded, double limit})? _budgetProgressFor(
-    String tag,
-    double spentInRange,
-  ) {
-    for (final b in _budgets) {
-      if (b.categoryId == tag) {
-        if (b.limitAmount <= 0) return null;
-        final progress = (spentInRange / b.limitAmount).clamp(0.0, 1.0);
-        return (
-          progress: progress,
-          isExceeded: spentInRange > b.limitAmount,
-          limit: b.limitAmount,
-        );
-      }
-    }
-    return null;
   }
 
   Future<void> _pickDateRange() async {
@@ -165,6 +162,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     }
   }
 
+  /// Seçili [_range] ile aynı gün sayısına sahip, hemen öncesindeki dönemin
+  /// toplamlarını hesaplar (dönemsel değişim rozetleri için).
   ReportTotals _previousPeriodTotals(List<TransactionEntity> allTransactions) {
     final dayCount = _range.end.difference(_range.start).inDays + 1;
     final previousEnd = _range.start.subtract(const Duration(days: 1));
@@ -194,86 +193,16 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     return _reportService.filterByRange(transactions, _range.start, _range.end);
   }
 
-  List<CategoryData> _buildFullCategoryData(
-    List<TransactionEntity> transactions,
-    bool isExpense,
-  ) {
-    final breakdowns = _reportService.buildCategoryBreakdown(
-      transactions,
-      isExpense: isExpense,
-    );
-
-    return [
-      for (int i = 0; i < breakdowns.length; i++)
-        CategoryData(
-          breakdowns[i].name,
-          breakdowns[i].totalAmount,
-          breakdowns[i].transactions,
-          _colorForIndex(i, isExpense),
-        ),
-    ];
-  }
-
-  List<CategoryData> _buildPieCategoryData(
-    BuildContext context,
-    List<CategoryData> fullData,
-    bool isExpense,
-  ) {
-    if (fullData.isEmpty) return fullData;
-
-    final total =
-        fullData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
-    if (total <= 0) return fullData;
-
-    const thresholdPercent = 3.0;
-    final major = <CategoryData>[];
-    double otherTotal = 0;
-    final otherTx = <TransactionEntity>[];
-
-    for (final item in fullData) {
-      final percent = (item.totalAmount / total) * 100;
-      if (percent >= thresholdPercent) {
-        major.add(item);
-      } else {
-        otherTotal += item.totalAmount;
-        otherTx.addAll(item.transactions);
-      }
-    }
-
-    if (otherTx.isEmpty) return major;
-
-    return [
-      ...major,
-      CategoryData(
-        context.l10n.categoryDiger,
-        otherTotal,
-        otherTx,
-        _otherColor,
-        isOther: true,
-      ),
-    ];
-  }
-
-  Color _colorForIndex(int i, bool isExpense) {
-    final palette = isExpense ? _expensePalette : _incomePalette;
-    if (i < palette.length) return palette[i];
-
-    final overflow = i - palette.length;
-    const stepsPerCycle = 8;
-    final hueStart = isExpense ? 0.0 : 95.0;
-    final hueWidth = isExpense ? 45.0 : 150.0;
-    final hue =
-        (hueStart + (overflow % stepsPerCycle) * (hueWidth / stepsPerCycle)) %
-            360;
-    final cycle = overflow ~/ stepsPerCycle;
-    final lightness = (0.42 + (cycle % 3) * 0.12).clamp(0.3, 0.72);
-    return HSLColor.fromAHSL(1, hue, 0.65, lightness).toColor();
-  }
-
+  /// Varsayılan aralık ("bu ay") boşsa ama geçmiş veri varsa, aralığı son
+  /// işlemin ayına kaydırır — kullanıcı raporu boş sanmasın.
+  ///
+  /// build sırasında değil, işlem listesi her değiştiğinde bir kez çalışır
+  /// (bkz. [BlocListener] kurulumu): build içinde state yazmak aynı kareyi
+  /// tutarsız bırakır ve aralık boş kaldığı sürece her rebuild'de tekrarlanırdı.
   void _maybeAdjustInitialRange(List<TransactionEntity> transactions) {
-    if (_hasUserPickedRange || transactions.isEmpty) return;
-    final inCurrentRange = _filterTransactionsByRange(transactions);
-    if (inCurrentRange.isNotEmpty) return;
+    if (_hasUserPickedRange || _hasAutoAdjustedRange) return;
+    if (transactions.isEmpty) return;
+    if (_filterTransactionsByRange(transactions).isNotEmpty) return;
 
     DateTime? latestDate;
     for (final t in transactions) {
@@ -281,15 +210,19 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         latestDate = t.date;
       }
     }
-    if (latestDate != null) {
-      final start = DateTime(latestDate.year, latestDate.month, 1);
-      final lastDayOfMonth = DateTime(latestDate.year, latestDate.month + 1, 0);
-      final now = DateTime.now();
-      final end = latestDate.isBefore(now)
-          ? (lastDayOfMonth.isBefore(now) ? lastDayOfMonth : now)
-          : latestDate;
+    if (latestDate == null) return;
+
+    final start = DateTime(latestDate.year, latestDate.month, 1);
+    final lastDayOfMonth = DateTime(latestDate.year, latestDate.month + 1, 0);
+    final now = DateTime.now();
+    final end = latestDate.isBefore(now)
+        ? (lastDayOfMonth.isBefore(now) ? lastDayOfMonth : now)
+        : latestDate;
+
+    setState(() {
       _range = DateTimeRange(start: start, end: end);
-    }
+      _hasAutoAdjustedRange = true;
+    });
   }
 
   void _openCategoryDetails(
@@ -300,10 +233,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       isExpense: isExpense,
       useFullData: useFullData,
       categoryIcons: _categoryIcons,
-      filterTransactionsByRange: _filterTransactionsByRange,
-      buildFullCategoryData: _buildFullCategoryData,
-      buildPieCategoryData: _buildPieCategoryData,
-      budgetProgressFor: _budgetProgressFor,
+      dataBuilder: _dataBuilder(context),
     );
   }
 
@@ -337,7 +267,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           key: OnboardingKeys.transactionsReportBody,
           title: context.l10n.onboardingTransactionsReportTitle,
           description: context.l10n.onboardingTransactionsReportDesc,
-          child: BlocBuilder<TransactionBloc, TransactionState>(
+          child: BlocConsumer<TransactionBloc, TransactionState>(
+            listenWhen: (prev, curr) =>
+                prev.currentTransactions != curr.currentTransactions,
+            listener: (context, state) =>
+                _maybeAdjustInitialRange(state.currentTransactions),
             builder: (context, state) {
               final transactions = state.currentTransactions;
               if (state is TransactionLoading && transactions.isEmpty) {
@@ -348,9 +282,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 return _buildEmptyState(context);
               }
 
-              // Auto adjust range if default range is empty but history exists
-              _maybeAdjustInitialRange(transactions);
-
+              final dataBuilder = _dataBuilder(context);
               final filteredTransactions =
                   _filterTransactionsByRange(transactions);
 
@@ -358,13 +290,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   _reportService.calculateTotals(filteredTransactions);
               final previousTotals = _previousPeriodTotals(transactions);
               final expenseFull =
-                  _buildFullCategoryData(filteredTransactions, true);
+                  dataBuilder.buildFull(filteredTransactions, isExpense: true);
               final incomeFull =
-                  _buildFullCategoryData(filteredTransactions, false);
-              final expensePie =
-                  _buildPieCategoryData(context, expenseFull, true);
-              final incomePie =
-                  _buildPieCategoryData(context, incomeFull, false);
+                  dataBuilder.buildFull(filteredTransactions, isExpense: false);
+              final expensePie = dataBuilder.buildPie(expenseFull);
+              final incomePie = dataBuilder.buildPie(incomeFull);
+
+              final showExpense = _categoryMode != FinanceMode.income;
+              final showIncome = _categoryMode != FinanceMode.expense;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -379,7 +312,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Date range header is ALWAYS displayed at top
+                    // Tarih başlığı aralık boş olsa da görünür kalır; aksi
+                    // halde kullanıcı aralığı değiştirecek kontrolü bulamıyordu.
                     ReportRangeHeader(
                       range: _range,
                       onPickDateRange: _pickDateRange,
@@ -409,7 +343,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Bakiye Trendi',
+                        context.l10n.reportBalanceTrend,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -419,40 +353,53 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         transactions: filteredTransactions,
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        context.l10n.kategoriDagilimi,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            context.l10n.kategoriDagilimi,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          FinanceModeSegment(
+                            currentMode: _categoryMode,
+                            onModeChanged: (m) =>
+                                setState(() => _categoryMode = m),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      // Expense Category Distribution Card
-                      ReportCategoryChartCard(
-                        title: 'Giderler',
-                        fullData: expenseFull,
-                        pieData: expensePie,
-                        isExpense: true,
-                        showBarChart: _showExpenseBarChart,
-                        onToggleBarChart: (v) =>
-                            setState(() => _showExpenseBarChart = v),
-                        onCategoryTap: (cat, useFull) =>
-                            _openCategoryDetails(cat, true, useFull),
-                        budgetProgressFor: _budgetProgressFor,
-                      ),
-                      const SizedBox(height: 16),
-                      // Income Category Distribution Card (Stacked vertically)
-                      ReportCategoryChartCard(
-                        title: 'Gelirler',
-                        fullData: incomeFull,
-                        pieData: incomePie,
-                        isExpense: false,
-                        showBarChart: _showIncomeBarChart,
-                        onToggleBarChart: (v) =>
-                            setState(() => _showIncomeBarChart = v),
-                        onCategoryTap: (cat, useFull) =>
-                            _openCategoryDetails(cat, false, useFull),
-                        budgetProgressFor: _budgetProgressFor,
-                      ),
+                      // Gider kategorileri
+                      if (showExpense)
+                        ReportCategoryChartCard(
+                          title: context.l10n.reportExpensesTitle,
+                          fullData: expenseFull,
+                          pieData: expensePie,
+                          isExpense: true,
+                          showBarChart: _showExpenseBarChart,
+                          onToggleBarChart: (v) =>
+                              setState(() => _showExpenseBarChart = v),
+                          onCategoryTap: (cat, useFull) =>
+                              _openCategoryDetails(cat, true, useFull),
+                          budgetProgressFor: dataBuilder.budgetProgressFor,
+                        ),
+                      if (showExpense && showIncome)
+                        const SizedBox(height: 16),
+                      // Gelir kategorileri (giderin altında, dikey yığın)
+                      if (showIncome)
+                        ReportCategoryChartCard(
+                          title: context.l10n.reportIncomesTitle,
+                          fullData: incomeFull,
+                          pieData: incomePie,
+                          isExpense: false,
+                          showBarChart: _showIncomeBarChart,
+                          onToggleBarChart: (v) =>
+                              setState(() => _showIncomeBarChart = v),
+                          onCategoryTap: (cat, useFull) =>
+                              _openCategoryDetails(cat, false, useFull),
+                          budgetProgressFor: dataBuilder.budgetProgressFor,
+                        ),
                     ],
                   ],
                 ),
@@ -492,7 +439,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               ),
               const SizedBox(height: 16),
               Text(
-                message ?? 'Rapor Oluşturmak İçin Veri Yok',
+                message ?? context.l10n.reportNoDataTitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,

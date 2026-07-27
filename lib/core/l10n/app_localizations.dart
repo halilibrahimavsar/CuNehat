@@ -4819,6 +4819,192 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{baslik} işlemini silmek istediğinizden emin misiniz?'**
   String islemSilOnayMesaji(String baslik);
+
+  /// No description provided for @borcSilBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borcu Sil'**
+  String get borcSilBaslik;
+
+  /// No description provided for @borcSilOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} borcunu silmek istediğinizden emin misiniz? Bu borcun cüzdan bakiyesine etkisi de geri alınır.'**
+  String borcSilOnayMesaji(String baslik);
+
+  /// No description provided for @alacakSilBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacağı Sil'**
+  String get alacakSilBaslik;
+
+  /// No description provided for @alacakSilOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{isim} alacağını silmek istediğinizden emin misiniz? Bu alacağın cüzdan bakiyesine etkisi de geri alınır.'**
+  String alacakSilOnayMesaji(String isim);
+
+  /// No description provided for @budgetStatusUnderControl.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kontrol altında'**
+  String get budgetStatusUnderControl;
+
+  /// No description provided for @budgetStatusFilledCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{sayi} bütçe doldu'**
+  String budgetStatusFilledCount(int sayi);
+
+  /// No description provided for @budgetStatusExceededCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{sayi} bütçe aşıldı'**
+  String budgetStatusExceededCount(int sayi);
+
+  /// No description provided for @insightDailyLimitTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük Harcama Limiti (Hedef)'**
+  String get insightDailyLimitTitle;
+
+  /// No description provided for @insightDailyLimitDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan {gun} gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.'**
+  String insightDailyLimitDesc(int gun);
+
+  /// No description provided for @insightSpikeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama Sıçraması Uyarısı'**
+  String get insightSpikeTitle;
+
+  /// No description provided for @insightSpikeDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçen döneme göre ({tutar}) dikkate değer bir artış var.'**
+  String insightSpikeDesc(String tutar);
+
+  /// No description provided for @drawerSectionFinancial.
+  ///
+  /// In tr, this message translates to:
+  /// **'FİNANSAL YÖNETİM'**
+  String get drawerSectionFinancial;
+
+  /// No description provided for @drawerSectionSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'SİSTEM & UYGULAMA'**
+  String get drawerSectionSystem;
+
+  /// No description provided for @drawerBudgetSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori bazlı bütçe takibi ve harcama limitleri'**
+  String get drawerBudgetSubtitle;
+
+  /// No description provided for @drawerRecurringSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik gelir ve gider şablonları'**
+  String get drawerRecurringSubtitle;
+
+  /// No description provided for @drawerBankImportSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF/Excel hesap ekstresi içe aktarma'**
+  String get drawerBankImportSubtitle;
+
+  /// No description provided for @drawerSettingsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tema, para birimi ve genel tercihler'**
+  String get drawerSettingsSubtitle;
+
+  /// No description provided for @drawerSecurityTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenlik & Biyometrik'**
+  String get drawerSecurityTitle;
+
+  /// No description provided for @drawerSecuritySubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama kilidi ve PIN ayarları'**
+  String get drawerSecuritySubtitle;
+
+  /// No description provided for @drawerActiveWalletLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'AKTİF CÜZDAN'**
+  String get drawerActiveWalletLabel;
+
+  /// No description provided for @reportBalanceTrend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye Trendi'**
+  String get reportBalanceTrend;
+
+  /// No description provided for @reportExpensesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giderler'**
+  String get reportExpensesTitle;
+
+  /// No description provided for @reportIncomesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelirler'**
+  String get reportIncomesTitle;
+
+  /// No description provided for @reportNoDataTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rapor Oluşturmak İçin Veri Yok'**
+  String get reportNoDataTitle;
+
+  /// No description provided for @reportNetLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Net'**
+  String get reportNetLabel;
+
+  /// No description provided for @debtHistoryEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz Kapanan Borç Yok'**
+  String get debtHistoryEmptyTitle;
+
+  /// No description provided for @receivableHistoryEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz Tahsil Edilen Alacak Yok'**
+  String get receivableHistoryEmptyTitle;
+
+  /// No description provided for @badgeOdendi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödendi'**
+  String get badgeOdendi;
+
+  /// No description provided for @badgeTahsilEdildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahsil Edildi'**
+  String get badgeTahsilEdildi;
+
+  /// No description provided for @reportSavingsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'%{oran} Birikim'**
+  String reportSavingsSubtitle(String oran);
+
+  /// No description provided for @vadeTarihLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade: {tarih}'**
+  String vadeTarihLabel(String tarih);
 }
 
 class _AppLocalizationsDelegate

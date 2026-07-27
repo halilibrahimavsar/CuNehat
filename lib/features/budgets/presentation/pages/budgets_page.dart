@@ -196,13 +196,13 @@ class _BudgetSummaryCard extends StatelessWidget {
     final String statusText;
     if (exceededCount > 0) {
       statusColor = Colors.red;
-      statusText = '$exceededCount bütçe aşıldı';
+      statusText = context.l10n.budgetStatusExceededCount(exceededCount);
     } else if (filledCount > 0) {
       statusColor = Colors.orange;
-      statusText = '$filledCount bütçe doldu';
+      statusText = context.l10n.budgetStatusFilledCount(filledCount);
     } else {
       statusColor = Colors.green;
-      statusText = 'Kontrol altında';
+      statusText = context.l10n.budgetStatusUnderControl;
     }
 
     return AppCard(
@@ -299,10 +299,21 @@ class _BudgetListItem extends StatelessWidget {
       statusIcon = Icons.check_circle_outline;
     }
 
-    final percentValue = budget.limitAmount > 0
-        ? (budget.spentAmount / budget.limitAmount * 100)
-        : 0.0;
-    final percent = percentValue.toStringAsFixed(0);
+    // Yüzde etiketi rozet rengiyle çelişmemeli: yuvarlama yüzünden %99,6
+    // (yeşil), %100 (turuncu) ve %100,4 (kırmızı) üçü de "100" yazıyordu.
+    // Etiket, durumun eşiklerine sabitlenir.
+    final rawPercent = budget.limitAmount > 0
+        ? (budget.spentAmount / budget.limitAmount * 100).round()
+        : 0;
+    final int percentValue;
+    if (budget.isFilled) {
+      percentValue = 100;
+    } else if (budget.isExceeded) {
+      percentValue = rawPercent <= 100 ? 101 : rawPercent;
+    } else {
+      percentValue = rawPercent >= 100 ? 99 : rawPercent;
+    }
+    final percent = '$percentValue';
 
     return AppCard(
       accent: statusColor,

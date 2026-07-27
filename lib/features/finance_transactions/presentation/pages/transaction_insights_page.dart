@@ -7,6 +7,7 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
@@ -31,6 +32,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 /// "Akıllı İçgörüler" — transactions sekmesinin ilk swipe sayfası.
+///
+/// Eski (gereksiz) TransactionDetailPage'in yerini alır. Cihaz içinde, paketsiz
+/// istatistikle:
+/// - metinsel içgörüler (günlük ort. harcama, en çok harcanan gün/kategori,
+///   en büyük gider, birikim oranı),
+/// - günlük harcanabilir tutar ve kategori sıçraması uyarısı,
+/// - olası tekrarlayan ödeme tespiti → mevcut "Düzenli Ödemeler" sistemine
+///   tek dokunuşla ekleme.
 class TransactionInsightsPage extends StatelessWidget {
   final String userId;
   final String walletId;
@@ -76,15 +85,19 @@ class _InsightsViewState extends State<_InsightsView> {
   static const _analytics = TransactionAnalyticsService();
   static const _detector = RecurringPatternDetector();
 
+  /// Sayfadaki tüm tutarlar aktif cüzdanın biriminde gösterilir.
   String _money(double v) =>
       formatMoney(v, currency: context.activeWalletCurrency);
 
   final _quickOptions = DateRangeHelper.buildDateRangeQuickOptions();
 
-  // "Bu Ay" — index 1
+  // "Bu Ay" — buildDateRangeQuickOptions sırasında index 1.
   late DateTimeRange _range = _quickOptions[1].range;
 
+  /// Mevcut şablonlar; null = henüz yükleniyor.
   List<RecurringTransactionEntity>? _templates;
+
+  /// Bu oturumda eklenip listeden düşürülen öneri anahtarları.
   final Set<String> _dismissed = {};
 
   @override
@@ -132,6 +145,8 @@ class _InsightsViewState extends State<_InsightsView> {
         SnackBar(content: Text(l10n.duzenliOdemeEklenemedi)),
       ),
       (_) {
+        // Öneri geçmiş bir örüntüden türer; şablon anında vadesi gelmiş
+        // olabilir. Bekleyen liste tazelenmezse hatırlatma gecikirdi.
         pendingBloc.add(const LoadPendingTransactionsEvent());
         setState(() => _dismissed.add(_suggestionKey(s)));
         messenger.showSnackBar(
@@ -172,6 +187,14 @@ class _InsightsViewState extends State<_InsightsView> {
                 all,
                 rangeStart: _range.start,
                 rangeEnd: _range.end,
+                // Sıçrama alt eşiği tutar bazlıdır; işlemler aktif cüzdanın
+                // biriminde tutulduğundan eşik de o birimden seçilir
+                // (50 ₺ ile 50 $ aynı büyüklük değil).
+                spikeMinimumAmount:
+                    noiseThresholdFor(context.activeWalletCurrency),
+                // Günlük harcama hedefi yalnız bütçe döneminde ("Bu Ay",
+                // "Bu Yıl") dönemin son gününde de anlamlı.
+                rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range),
               );
 
               return SingleChildScrollView(

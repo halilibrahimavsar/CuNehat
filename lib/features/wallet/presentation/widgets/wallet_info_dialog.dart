@@ -37,7 +37,7 @@ class WalletInfoDialog {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // Başlık
               Row(
                 children: [
                   Container(
@@ -64,7 +64,7 @@ class WalletInfoDialog {
               ),
               const SizedBox(height: 24),
 
-              // Info Items (Scrollable)
+              // Bilgi maddeleri (kaydırılabilir)
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
@@ -90,7 +90,7 @@ class WalletInfoDialog {
 
               const SizedBox(height: 12),
 
-              // Action Button
+              // Kapat butonu
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(

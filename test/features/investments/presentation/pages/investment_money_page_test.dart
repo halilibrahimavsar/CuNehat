@@ -12,6 +12,9 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,11 +23,19 @@ class MockInvestmentBloc extends MockBloc<InvestmentEvent, InvestmentState>
 
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
+/// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
+/// gerçek koordinatör kayıtlı olmadığından mock'lanır.
+class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late MockInvestmentBloc mockInvestmentBloc;
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
   setUpAll(() {
+    getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;
     registerFallbackValue(
       GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123'),
@@ -45,6 +56,12 @@ void main() {
   });
 
   setUp(() {
+    // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
+    final onboardingCoordinator = _MockOnboardingCoordinator();
+    when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => onboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
+    getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     mockInvestmentBloc = MockInvestmentBloc();
     mockGetLiveQuoteUseCase = MockGetLiveQuoteUseCase();
     getIt.registerSingleton<GetLiveQuoteUseCase>(mockGetLiveQuoteUseCase);

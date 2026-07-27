@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -20,7 +21,7 @@ class GetBudgetsUsecase {
     return budgetsResult.fold(
       (failure) => Left(failure),
       (budgets) async {
-        // Find start and end of current month
+        // İçinde bulunulan ayın başı ve sonu
         final now = DateTime.now();
         final startOfMonth = DateTime(now.year, now.month, 1);
         final endOfMonth =
@@ -38,11 +39,14 @@ class GetBudgetsUsecase {
           (tFailure) => Left(
               tFailure), // If fetching transactions fails, we return error.
           (transactions) {
-            // Map the budgets with their spent amount
+            // Her bütçeye dönem harcamasını iliştir
             final updatedBudgets = budgets.map((budget) {
-              final spent = transactions
+              // spentAmount yalnız gösterime değil, "doldu / aşıldı" kararına da
+              // girer (bkz. BudgetEntity.isFilled, BudgetAlertService) — bu
+              // yüzden ham fold artığı burada kuruşa yuvarlanarak kesilir.
+              final spent = roundToCents(transactions
                   .where((t) => t.tag == budget.categoryId)
-                  .fold(0.0, (sum, t) => sum + t.amount);
+                  .fold(0.0, (sum, t) => sum + t.amount));
 
               return budget.copyWith(spentAmount: spent);
             }).toList();

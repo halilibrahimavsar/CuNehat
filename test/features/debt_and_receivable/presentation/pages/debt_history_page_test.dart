@@ -8,31 +8,46 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivabl
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class MockDebtBloc extends MockBloc<DebtEvent, DebtState> implements DebtBloc {}
 
 class MockReceivableBloc extends MockBloc<ReceivableEvent, ReceivableState>
     implements ReceivableBloc {}
 
+class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late MockDebtBloc mockDebtBloc;
   late MockReceivableBloc mockReceivableBloc;
+  late MockOnboardingCoordinator mockOnboardingCoordinator;
 
   setUpAll(() {
     getIt.allowReassignment = true;
     registerFallbackValue(GetDebtsEvent('wallet_123'));
     registerFallbackValue(GetReceivablesEvent('wallet_123'));
+    registerFallbackValue(OnboardingFlow.debtAdd);
+    // Sayfa Showcase kullanır; kayıtlı bir scope yoksa initState fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });
 
   setUp(() {
     Intl.defaultLocale = 'tr_TR';
     mockDebtBloc = MockDebtBloc();
     mockReceivableBloc = MockReceivableBloc();
+    mockOnboardingCoordinator = MockOnboardingCoordinator();
     getIt.registerSingleton<DebtBloc>(mockDebtBloc);
     getIt.registerSingleton<ReceivableBloc>(mockReceivableBloc);
+    // OnboardingAutoTourTrigger getIt üzerinden koordinatörü çeker.
+    getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
+    when(() => mockOnboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => mockOnboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
   });
 
   tearDown(() {

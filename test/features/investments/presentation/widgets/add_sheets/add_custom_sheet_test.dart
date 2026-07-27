@@ -3,9 +3,34 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+/// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
+/// gerçek koordinatör kayıtlı olmadığından mock'lanır.
+class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 
 void main() {
+  setUpAll(() {
+    getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
+  });
+
+  setUp(() {
+    // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
+    final onboardingCoordinator = _MockOnboardingCoordinator();
+    when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => onboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
+    getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
+  });
+
   Widget buildTestableWidget(Widget child) {
     return MaterialApp(
       localizationsDelegates: const [
@@ -135,11 +160,13 @@ void main() {
         (w) => w is TextField && w.decoration?.hintText == '0');
     await tester.enterText(currentValueFinder, '2200');
 
-    // Enter invalid targetAmount to trigger targetAmount validation error
+    // Geçersiz hedef tutar → doğrulama hatası. AmountInputFormatter
+    // allowNegative:false olduğundan '-' zaten yazılamıyor; sıfır bu alanda
+    // hâlâ geçersizdir (bkz. AddCustomSheet doğrulaması: targetAmount <= 0).
     final targetFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
         widget.decoration?.hintText == 'Hedef Tutar (İsteğe Bağlı)');
-    await tester.enterText(targetFinder, '-50');
+    await tester.enterText(targetFinder, '0');
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
     expect(find.text('Geçerli bir hedef tutar girin'), findsOneWidget);
@@ -182,7 +209,7 @@ void main() {
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
-    expect(tester.widget<TextField>(amountFinder).controller?.text, '3000');
+    expect(tester.widget<TextField>(amountFinder).controller?.text, '3.000');
 
     // Goal category warning should be rendered
     expect(

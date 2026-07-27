@@ -48,7 +48,7 @@ class CategorySpikeCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        'Harcama Sıçraması Uyarısı',
+                        context.l10n.insightSpikeTitle,
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppGradients.debt,
@@ -83,7 +83,8 @@ class CategorySpikeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Geçen döneme göre (${formatMoney(spike.previousAmount)}) dikkate değer bir artış var.',
+                    context.l10n
+                        .insightSpikeDesc(formatMoney(spike.previousAmount)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                       fontSize: 11,

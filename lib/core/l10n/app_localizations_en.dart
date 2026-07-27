@@ -2642,4 +2642,116 @@ class AppLocalizationsEn extends AppLocalizations {
   String islemSilOnayMesaji(String baslik) {
     return 'Are you sure you want to delete the transaction $baslik?';
   }
+
+  @override
+  String get borcSilBaslik => 'Delete Debt';
+
+  @override
+  String borcSilOnayMesaji(String baslik) {
+    return 'Are you sure you want to delete the debt $baslik? Its effect on the wallet balance will be reversed as well.';
+  }
+
+  @override
+  String get alacakSilBaslik => 'Delete Receivable';
+
+  @override
+  String alacakSilOnayMesaji(String isim) {
+    return 'Are you sure you want to delete the receivable from $isim? Its effect on the wallet balance will be reversed as well.';
+  }
+
+  @override
+  String get budgetStatusUnderControl => 'Under control';
+
+  @override
+  String budgetStatusFilledCount(int sayi) {
+    return '$sayi budget(s) filled';
+  }
+
+  @override
+  String budgetStatusExceededCount(int sayi) {
+    return '$sayi budget(s) exceeded';
+  }
+
+  @override
+  String get insightDailyLimitTitle => 'Daily Spending Limit (Target)';
+
+  @override
+  String insightDailyLimitDesc(int gun) {
+    return 'Recommended daily limit to stay on budget for the remaining $gun day(s).';
+  }
+
+  @override
+  String get insightSpikeTitle => 'Spending Spike Alert';
+
+  @override
+  String insightSpikeDesc(String tutar) {
+    return 'A notable increase compared to the previous period ($tutar).';
+  }
+
+  @override
+  String get drawerSectionFinancial => 'FINANCIAL MANAGEMENT';
+
+  @override
+  String get drawerSectionSystem => 'SYSTEM & APP';
+
+  @override
+  String get drawerBudgetSubtitle =>
+      'Category-based budget tracking and spending limits';
+
+  @override
+  String get drawerRecurringSubtitle =>
+      'Automatic income and expense templates';
+
+  @override
+  String get drawerBankImportSubtitle => 'Import PDF/Excel account statements';
+
+  @override
+  String get drawerSettingsSubtitle =>
+      'Theme, currency and general preferences';
+
+  @override
+  String get drawerSecurityTitle => 'Security & Biometrics';
+
+  @override
+  String get drawerSecuritySubtitle => 'App lock and PIN settings';
+
+  @override
+  String get drawerActiveWalletLabel => 'ACTIVE WALLET';
+
+  @override
+  String get reportBalanceTrend => 'Balance Trend';
+
+  @override
+  String get reportExpensesTitle => 'Expenses';
+
+  @override
+  String get reportIncomesTitle => 'Incomes';
+
+  @override
+  String get reportNoDataTitle => 'No Data to Build a Report';
+
+  @override
+  String get reportNetLabel => 'Net';
+
+  @override
+  String get debtHistoryEmptyTitle => 'No Closed Debts Yet';
+
+  @override
+  String get receivableHistoryEmptyTitle => 'No Collected Receivables Yet';
+
+  @override
+  String get badgeOdendi => 'Paid';
+
+  @override
+  String get badgeTahsilEdildi => 'Collected';
+
+  @override
+  String reportSavingsSubtitle(String oran) {
+    return '$oran% Savings';
+  }
+
+  @override
+  String vadeTarihLabel(String tarih) {
+    return 'Due: $tarih';
+  }
 }

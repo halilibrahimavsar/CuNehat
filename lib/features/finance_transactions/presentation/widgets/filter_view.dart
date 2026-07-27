@@ -291,7 +291,7 @@ class _FilterViewState extends State<FilterView> {
                       offset: const Offset(0, 3),
                     ),
                   ],
-                  // Border removed for full screen sheet look
+                  // Tam ekran sheet görünümü için kenarlık kaldırıldı
                 ),
                 child: _buildFilterMenu(),
               ),

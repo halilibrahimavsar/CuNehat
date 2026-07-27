@@ -1,45 +1,28 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CategoryData {
-  final String name;
-  final double totalAmount;
-  final List<TransactionEntity> transactions;
-  final Color color;
-  final bool isOther;
-
-  CategoryData(
-    this.name,
-    this.totalAmount,
-    this.transactions,
-    this.color, {
-    this.isOther = false,
-  });
-}
-
+/// Bir kategori diliminin işlemlerini listeleyen detay sayfası.
+///
+/// TransactionBloc'u dinler: liste açıkken bir işlem silinir/eklenirse kırılım
+/// [dataBuilder] üzerinden yeniden hesaplanır.
 class CategoryDetailsBottomSheet extends StatelessWidget {
   final CategoryData initialCategory;
   final bool isExpense;
+
+  /// true = bar grafikten açıldı (tam liste), false = pastadan açıldı
+  /// (küçük kategoriler "Diğer"de toplanmış liste).
   final bool useFullData;
   final Map<String, IconData> categoryIcons;
-  final List<TransactionEntity> Function(List<TransactionEntity> all)
-      filterTransactionsByRange;
-  final List<CategoryData> Function(
-      List<TransactionEntity> filtered, bool isExpense) buildFullCategoryData;
-  final List<CategoryData> Function(
-          BuildContext context, List<CategoryData> full, bool isExpense)
-      buildPieCategoryData;
-  final ({double progress, bool isExceeded, double limit})? Function(
-      String tag, double spent) budgetProgressFor;
+  final ReportCategoryDataBuilder dataBuilder;
 
   const CategoryDetailsBottomSheet({
     super.key,
@@ -47,10 +30,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required this.isExpense,
     required this.useFullData,
     required this.categoryIcons,
-    required this.filterTransactionsByRange,
-    required this.buildFullCategoryData,
-    required this.buildPieCategoryData,
-    required this.budgetProgressFor,
+    required this.dataBuilder,
   });
 
   static void show({
@@ -59,25 +39,17 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required bool isExpense,
     required bool useFullData,
     required Map<String, IconData> categoryIcons,
-    required List<TransactionEntity> Function(List<TransactionEntity> all)
-        filterTransactionsByRange,
-    required List<CategoryData> Function(
-            List<TransactionEntity> filtered, bool isExpense)
-        buildFullCategoryData,
-    required List<CategoryData> Function(
-            BuildContext context, List<CategoryData> full, bool isExpense)
-        buildPieCategoryData,
-    required ({double progress, bool isExceeded, double limit})? Function(
-            String tag, double spent)
-        budgetProgressFor,
+    required ReportCategoryDataBuilder dataBuilder,
   }) {
+    // Modal route sayfanın provider'ının altında değil, Overlay'de kardeşi
+    // olarak açılır → bloc elle taşınmalı.
     final transactionBloc = context.read<TransactionBloc>();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
+      builder: (_) {
         return BlocProvider.value(
           value: transactionBloc,
           child: CategoryDetailsBottomSheet(
@@ -85,10 +57,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             isExpense: isExpense,
             useFullData: useFullData,
             categoryIcons: categoryIcons,
-            filterTransactionsByRange: filterTransactionsByRange,
-            buildFullCategoryData: buildFullCategoryData,
-            buildPieCategoryData: buildPieCategoryData,
-            budgetProgressFor: budgetProgressFor,
+            dataBuilder: dataBuilder,
           ),
         );
       },
@@ -105,12 +74,12 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
 
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
-        final allTransactions = state.currentTransactions;
-        final filteredTransactions = filterTransactionsByRange(allTransactions);
-        final fullList = buildFullCategoryData(filteredTransactions, isExpense);
-        final categoryDataList = useFullData
-            ? fullList
-            : buildPieCategoryData(context, fullList, isExpense);
+        final filteredTransactions =
+            dataBuilder.filterByRange(state.currentTransactions);
+        final fullList =
+            dataBuilder.buildFull(filteredTransactions, isExpense: isExpense);
+        final categoryDataList =
+            useFullData ? fullList : dataBuilder.buildPie(fullList);
 
         final updatedCategory = categoryDataList.firstWhere(
           (c) =>
@@ -119,14 +88,14 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
           orElse: () => CategoryData(
             initialCategory.name,
             0,
-            [],
+            const [],
             initialCategory.color,
             isOther: initialCategory.isOther,
           ),
         );
 
         final budgetInfo = isExpense
-            ? budgetProgressFor(
+            ? dataBuilder.budgetProgressFor(
                 updatedCategory.name, updatedCategory.totalAmount)
             : null;
 
@@ -142,7 +111,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Bottom Sheet Header
+              // Sayfa başlığı: kategori rengi, adı, dönem toplamı
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -204,7 +173,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              // Transaction List
+              // Kategorinin dönem içindeki işlemleri
               Expanded(
                 child: transactionsWithBalance.isEmpty
                     ? Center(

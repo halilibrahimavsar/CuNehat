@@ -2,9 +2,10 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/category_details_bottom_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ReportCategoryChartCard extends StatefulWidget {
@@ -37,6 +38,20 @@ class ReportCategoryChartCard extends StatefulWidget {
 
 class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
   int _touchedIndex = -1;
+
+  @override
+  void didUpdateWidget(ReportCategoryChartCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Dilim listesi değiştiğinde (tarih aralığı seçimi, işlem ekleme/silme)
+    // eski indeks artık başka bir kategoriyi işaret eder; vurgu sıfırlanır.
+    // Uzunluk yetmez: aynı sayıda ama farklı sıradaki kategoriler de kayar.
+    if (!listEquals(
+      [for (final c in oldWidget.pieData) c.name],
+      [for (final c in widget.pieData) c.name],
+    )) {
+      _touchedIndex = -1;
+    }
+  }
 
   String _formatCurrency(BuildContext context, double value) =>
       formatMoney(value, currency: context.activeWalletCurrency);

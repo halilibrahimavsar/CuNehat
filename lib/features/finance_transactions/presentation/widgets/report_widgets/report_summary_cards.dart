@@ -43,7 +43,7 @@ class ReportSummaryCards extends StatelessWidget {
     return Row(
       children: [
         SummaryTile(
-          title: 'Gelir',
+          title: context.l10n.menuIncome,
           amount: totals.totalIncome,
           color: Colors.green,
           change: _periodChange(
@@ -54,7 +54,7 @@ class ReportSummaryCards extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         SummaryTile(
-          title: 'Gider',
+          title: context.l10n.menuExpense,
           amount: totals.totalExpense,
           color: Colors.redAccent,
           change: _periodChange(
@@ -65,10 +65,11 @@ class ReportSummaryCards extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         SummaryTile(
-          title: 'Net',
+          title: context.l10n.reportNetLabel,
           amount: totals.net,
           color: totals.net >= 0 ? Colors.blue : Colors.orange,
-          subtitle: '%${savingsRate.toStringAsFixed(0)} Birikim',
+          subtitle: context.l10n
+              .reportSavingsSubtitle(savingsRate.toStringAsFixed(0)),
         ),
       ],
     );

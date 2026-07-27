@@ -10,6 +10,9 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,14 +21,28 @@ import 'package:unified_flutter_features/unified_flutter_features.dart';
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
 
+/// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
+/// gerçek koordinatör kayıtlı olmadığından mock'lanır.
+class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late MockTransactionBloc mockTransactionBloc;
 
   setUpAll(() {
     getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
+    getIt.allowReassignment = true;
   });
 
   setUp(() {
+    // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
+    final onboardingCoordinator = _MockOnboardingCoordinator();
+    when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => onboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
+    getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     mockTransactionBloc = MockTransactionBloc();
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
   });

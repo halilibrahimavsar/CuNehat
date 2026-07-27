@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 
 /// Bütçe uyarı seviyesi. [warning] = limitin ≥%80'i (ama <%100),
@@ -43,13 +44,29 @@ class BudgetAlertService {
           : 0.0;
       final currentRatio = budget.spentAmount / budget.limitAmount;
 
-      if (prevRatio <= 1.0 && currentRatio > 1.0) {
+      // %100 sınırı oranla değil, tutarla ve yarım kuruş toleransıyla ölçülür.
+      // Harcama kuruş-temiz kalemlerin ham toplamı olduğundan `ratio == 1.0`
+      // IEEE-754 artığına takılır ve tam dolan bütçe "aşıldı" sanılırdı.
+      // %80 eşiği knife-edge olmadığından oran karşılaştırması orada yeterli.
+      final prevOverLimit = prev != null &&
+          prev.limitAmount > 0 &&
+          moneyGreaterThan(prev.spentAmount, prev.limitAmount);
+      final prevAtOrOverLimit = prev != null &&
+          prev.limitAmount > 0 &&
+          moneyGte(prev.spentAmount, prev.limitAmount);
+      final currentOverLimit =
+          moneyGreaterThan(budget.spentAmount, budget.limitAmount);
+      final currentAtLimit =
+          moneyEquals(budget.spentAmount, budget.limitAmount);
+
+      if (!prevOverLimit && currentOverLimit) {
         alerts.add(BudgetAlert(budget.categoryId, BudgetAlertLevel.exceeded));
-      } else if (prevRatio < 1.0 && currentRatio == 1.0) {
+      } else if (!prevAtOrOverLimit && currentAtLimit) {
         alerts.add(BudgetAlert(budget.categoryId, BudgetAlertLevel.filled));
       } else if (prevRatio < warningThreshold &&
           currentRatio >= warningThreshold &&
-          currentRatio < 1.0) {
+          !currentAtLimit &&
+          !currentOverLimit) {
         alerts.add(BudgetAlert(budget.categoryId, BudgetAlertLevel.warning));
       }
     }

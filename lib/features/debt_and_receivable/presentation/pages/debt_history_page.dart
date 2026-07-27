@@ -2,6 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -129,8 +130,13 @@ class _DebtHistoryTab extends StatelessWidget {
           IboSnackbar.showError(context, state.message);
         }
       },
+      // DebtOperationSuccess yalnız snackbar taşıyan geçici bir durumdur; liste
+      // için önceki kare korunur. Aksi halde gövde "başarı → hemen ardından
+      // GetDebtsEvent geliyor" varsayımına bağlı kalır ve refetch atlayan bir
+      // handler eklendiğinde sekme kalıcı spinner'da donardı.
+      buildWhen: (_, current) => current is! DebtOperationSuccess,
       builder: (context, state) {
-        if (state is DebtLoading || state is DebtOperationSuccess) {
+        if (state is DebtLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -139,7 +145,7 @@ class _DebtHistoryTab extends StatelessWidget {
 
         if (paidDebts.isEmpty) {
           return _HistoryEmptyState(
-            title: 'Henüz Kapanan Borç Yok',
+            title: context.l10n.debtHistoryEmptyTitle,
             message: context.l10n.msgOdemesiTamamlanipKapatilanBorclarinizin,
           );
         }
@@ -182,20 +188,40 @@ class _DebtHistoryTab extends StatelessWidget {
                     ),
                   ),
                 ],
-                onSelected: (value) {
+                onSelected: (value) async {
+                  // Bu sayfa kendi DebtBloc örneğini yaratır (DI'da factory).
+                  // Modal route sayfanın provider'ının ALTINDA değil, Overlay'de
+                  // kardeşi olarak açılır → sheet içindeki context.read global
+                  // bloc'u bulur ve düzenleme bu listeyi hiç tazelemezdi.
+                  final debtBloc = context.read<DebtBloc>();
+
                   if (value == 'edit') {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (context) => AddEntrySheet(
-                        walletId: walletId,
-                        userId: userId,
-                        debtToEdit: debt,
+                      builder: (_) => BlocProvider.value(
+                        value: debtBloc,
+                        child: AddEntrySheet(
+                          walletId: walletId,
+                          userId: userId,
+                          debtToEdit: debt,
+                        ),
                       ),
                     );
                   } else if (value == 'delete') {
-                    context.read<DebtBloc>().add(DeleteDebtEvent(
+                    // Borç silmek cüzdanın nakit hareketini de geri alır
+                    // (bkz. DebtBloc._onDeleteDebt) → geri alınamaz.
+                    final confirmed = await ConfirmDialog.show(
+                      context,
+                      title: context.l10n.borcSilBaslik,
+                      message: context.l10n.borcSilOnayMesaji(debt.title),
+                      confirmText: context.l10n.sil,
+                      danger: true,
+                    );
+                    if (!confirmed) return;
+
+                    debtBloc.add(DeleteDebtEvent(
                         id: debt.id!,
                         userId: debt.userId,
                         walletId: debt.walletId,
@@ -209,7 +235,7 @@ class _DebtHistoryTab extends StatelessWidget {
                   title: debt.title,
                   subtitle: debt.counterparty,
                   amount: debt.totalPaidAmount,
-                  badge: 'Ödendi',
+                  badge: context.l10n.badgeOdendi,
                 ),
               ),
             ),
@@ -239,8 +265,10 @@ class _ReceivableHistoryTab extends StatelessWidget {
           IboSnackbar.showError(context, state.message);
         }
       },
+      // Bkz. _DebtHistoryTab: OperationSuccess yalnız snackbar durumudur.
+      buildWhen: (_, current) => current is! ReceivableOperationSuccess,
       builder: (context, state) {
-        if (state is ReceivableLoading || state is ReceivableOperationSuccess) {
+        if (state is ReceivableLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -251,7 +279,7 @@ class _ReceivableHistoryTab extends StatelessWidget {
 
         if (paidReceivables.isEmpty) {
           return _HistoryEmptyState(
-            title: 'Henüz Tahsil Edilen Alacak Yok',
+            title: context.l10n.receivableHistoryEmptyTitle,
             message: context.l10n.msgOdendiOlarakIsaretlenenAlacaklarinizin,
           );
         }
@@ -295,20 +323,37 @@ class _ReceivableHistoryTab extends StatelessWidget {
                     ),
                   ),
                 ],
-                onSelected: (value) {
+                onSelected: (value) async {
+                  // Bkz. _DebtHistoryTab: sheet Overlay'de açıldığından sayfanın
+                  // yerel bloc'u elle taşınmalı.
+                  final receivableBloc = context.read<ReceivableBloc>();
+
                   if (value == 'edit') {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (context) => AddEntrySheet(
-                        walletId: walletId,
-                        userId: userId,
-                        receivableToEdit: receivable,
+                      builder: (_) => BlocProvider.value(
+                        value: receivableBloc,
+                        child: AddEntrySheet(
+                          walletId: walletId,
+                          userId: userId,
+                          receivableToEdit: receivable,
+                        ),
                       ),
                     );
                   } else if (value == 'delete') {
-                    context.read<ReceivableBloc>().add(DeleteReceivableEvent(
+                    final confirmed = await ConfirmDialog.show(
+                      context,
+                      title: context.l10n.alacakSilBaslik,
+                      message: context.l10n
+                          .alacakSilOnayMesaji(receivable.debtorName),
+                      confirmText: context.l10n.sil,
+                      danger: true,
+                    );
+                    if (!confirmed) return;
+
+                    receivableBloc.add(DeleteReceivableEvent(
                         id: receivable.id!,
                         userId: receivable.userId,
                         walletId: receivable.walletId,
@@ -319,10 +364,10 @@ class _ReceivableHistoryTab extends StatelessWidget {
                 child: _HistoryCard(
                   icon: Icons.call_received_rounded,
                   title: receivable.debtorName,
-                  subtitle:
-                      "Vade: ${DateFormat('dd MMM yyyy').format(receivable.dueDate)}",
+                  subtitle: context.l10n.vadeTarihLabel(
+                      DateFormat('dd MMM yyyy').format(receivable.dueDate)),
                   amount: receivable.amount,
-                  badge: 'Tahsil Edildi',
+                  badge: context.l10n.badgeTahsilEdildi,
                 ),
               ),
             ),

@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -18,6 +20,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
@@ -35,16 +38,22 @@ class FakeTransactionEntity extends Fake implements TransactionEntity {}
 class FakeRecurringTransactionEntity extends Fake
     implements RecurringTransactionEntity {}
 
+class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
 void main() {
   late MockTransactionBloc mockTransactionBloc;
   late MockCategoryRepository mockCategoryRepository;
   late MockSaveRecurringTransactionUsecase mockSaveRecurringTransactionUsecase;
+  late MockOnboardingCoordinator mockOnboardingCoordinator;
 
   setUpAll(() {
     getIt.allowReassignment = true;
     registerFallbackValue(FakeTransactionEvent());
     registerFallbackValue(FakeTransactionEntity());
     registerFallbackValue(FakeRecurringTransactionEntity());
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Sayfa Showcase kullanır; kayıtlı bir scope yoksa initState fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });
 
   setUp(() {
@@ -52,11 +61,17 @@ void main() {
     mockTransactionBloc = MockTransactionBloc();
     mockCategoryRepository = MockCategoryRepository();
     mockSaveRecurringTransactionUsecase = MockSaveRecurringTransactionUsecase();
+    mockOnboardingCoordinator = MockOnboardingCoordinator();
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
     getIt.registerSingleton<SaveRecurringTransactionUsecase>(
         mockSaveRecurringTransactionUsecase);
+    // OnboardingAutoTourTrigger getIt üzerinden koordinatörü çeker.
+    getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
+    when(() => mockOnboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => mockOnboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
 
     when(() => mockCategoryRepository.getCategories(any())).thenAnswer(
       (_) async => [

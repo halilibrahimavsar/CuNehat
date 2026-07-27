@@ -16,6 +16,12 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,12 +42,27 @@ class FakeTransactionEntity extends Fake implements TransactionEntity {}
 class FakeRecurringTransactionEntity extends Fake
     implements RecurringTransactionEntity {}
 
+/// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
+/// gerçek koordinatör kayıtlı olmadığından mock'lanır.
+class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
+/// Düzenli işlem seçilerek kaydedildiğinde sheet bekleyen listeyi tazeler
+/// (TransactionEntrySheet: `context.read<PendingRecurringBloc>()`).
+class MockPendingRecurringBloc
+    extends MockBloc<PendingRecurringEvent, PendingRecurringState>
+    implements PendingRecurringBloc {}
+
 void main() {
+  late MockPendingRecurringBloc mockPendingRecurringBloc;
   late MockTransactionBloc mockTransactionBloc;
   late MockCategoryRepository mockCategoryRepository;
   late MockSaveRecurringTransactionUsecase mockSaveRecurringTransactionUsecase;
 
   setUpAll(() {
+    getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;
     registerFallbackValue(FakeTransactionEvent());
     registerFallbackValue(FakeTransactionEntity());
@@ -49,6 +70,12 @@ void main() {
   });
 
   setUp(() {
+    // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
+    final onboardingCoordinator = _MockOnboardingCoordinator();
+    when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => onboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
+    getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     SharedPreferences.setMockInitialValues({});
     mockTransactionBloc = MockTransactionBloc();
     mockCategoryRepository = MockCategoryRepository();
@@ -83,6 +110,8 @@ void main() {
 
     when(() => mockSaveRecurringTransactionUsecase.call(any()))
         .thenAnswer((_) async => const Right(null));
+
+    mockPendingRecurringBloc = MockPendingRecurringBloc();
   });
 
   tearDown(() {
@@ -105,8 +134,12 @@ void main() {
         ],
         locale: const Locale('tr'),
         home: Scaffold(
-          body: BlocProvider<TransactionBloc>.value(
-            value: mockTransactionBloc,
+          body: MultiBlocProvider(
+            providers: [
+              BlocProvider<TransactionBloc>.value(value: mockTransactionBloc),
+              BlocProvider<PendingRecurringBloc>.value(
+                  value: mockPendingRecurringBloc),
+            ],
             child: child,
           ),
         ),
@@ -306,6 +339,10 @@ void main() {
     // Open recurring frequency dropdown
     // Finding the dropdown
     final dropdownFinder = find.byType(DropdownButton<RecurringFrequency?>);
+    // Form kaydırılabilir; görünür alana alınmazsa tap ıskalıyor ve menü
+    // hiç açılmadığından 'Aylık' araması boş listede patlıyordu.
+    await tester.ensureVisible(dropdownFinder);
+    await tester.pumpAndSettle();
     await tester.tap(dropdownFinder);
     await tester.pumpAndSettle();
 

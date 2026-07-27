@@ -1052,5 +1052,80 @@
     "placeholders": {
       "baslik": { "type": "String" }
     }
+  },
+
+  "borcSilBaslik": "Borcu Sil",
+  "borcSilOnayMesaji": "{baslik} borcunu silmek istediğinizden emin misiniz? Bu borcun cüzdan bakiyesine etkisi de geri alınır.",
+  "@borcSilOnayMesaji": {
+    "placeholders": {
+      "baslik": { "type": "String" }
+    }
+  },
+  "alacakSilBaslik": "Alacağı Sil",
+  "alacakSilOnayMesaji": "{isim} alacağını silmek istediğinizden emin misiniz? Bu alacağın cüzdan bakiyesine etkisi de geri alınır.",
+  "@alacakSilOnayMesaji": {
+    "placeholders": {
+      "isim": { "type": "String" }
+    }
+  },
+
+  "budgetStatusUnderControl": "Kontrol altında",
+  "budgetStatusFilledCount": "{sayi} bütçe doldu",
+  "@budgetStatusFilledCount": {
+    "placeholders": {
+      "sayi": { "type": "int" }
+    }
+  },
+  "budgetStatusExceededCount": "{sayi} bütçe aşıldı",
+  "@budgetStatusExceededCount": {
+    "placeholders": {
+      "sayi": { "type": "int" }
+    }
+  },
+
+  "insightDailyLimitTitle": "Günlük Harcama Limiti (Hedef)",
+  "insightDailyLimitDesc": "Kalan {gun} gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.",
+  "@insightDailyLimitDesc": {
+    "placeholders": {
+      "gun": { "type": "int" }
+    }
+  },
+  "insightSpikeTitle": "Harcama Sıçraması Uyarısı",
+  "insightSpikeDesc": "Geçen döneme göre ({tutar}) dikkate değer bir artış var.",
+  "@insightSpikeDesc": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+
+  "drawerSectionFinancial": "FİNANSAL YÖNETİM",
+  "drawerSectionSystem": "SİSTEM & UYGULAMA",
+  "drawerBudgetSubtitle": "Kategori bazlı bütçe takibi ve harcama limitleri",
+  "drawerRecurringSubtitle": "Otomatik gelir ve gider şablonları",
+  "drawerBankImportSubtitle": "PDF/Excel hesap ekstresi içe aktarma",
+  "drawerSettingsSubtitle": "Tema, para birimi ve genel tercihler",
+  "drawerSecurityTitle": "Güvenlik & Biyometrik",
+  "drawerSecuritySubtitle": "Uygulama kilidi ve PIN ayarları",
+  "drawerActiveWalletLabel": "AKTİF CÜZDAN",
+  "reportBalanceTrend": "Bakiye Trendi",
+  "reportExpensesTitle": "Giderler",
+  "reportIncomesTitle": "Gelirler",
+  "reportNoDataTitle": "Rapor Oluşturmak İçin Veri Yok",
+  "reportNetLabel": "Net",
+  "debtHistoryEmptyTitle": "Henüz Kapanan Borç Yok",
+  "receivableHistoryEmptyTitle": "Henüz Tahsil Edilen Alacak Yok",
+  "badgeOdendi": "Ödendi",
+  "badgeTahsilEdildi": "Tahsil Edildi",
+  "reportSavingsSubtitle": "%{oran} Birikim",
+  "@reportSavingsSubtitle": {
+    "placeholders": {
+      "oran": { "type": "String" }
+    }
+  },
+  "vadeTarihLabel": "Vade: {tarih}",
+  "@vadeTarihLabel": {
+    "placeholders": {
+      "tarih": { "type": "String" }
+    }
   }
 }

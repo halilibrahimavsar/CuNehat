@@ -8,6 +8,8 @@
 /// Gösterim amaçlı fold/`+=` toplamları (rapor/analiz servisleri) bilinçli
 /// olarak ham bırakılır: saklanan tutarlar kuruş-temiz olduğundan biriken
 /// hata ~1e-9 mertebesinde kalır ve formatMoney render'da zaten yuvarlar.
+/// İstisna: toplam bir KARARA girecekse (ör. bütçenin "tam doldu mu"su)
+/// ya yuvarlanmalı ya da buradaki toleranslı karşılaştırıcılarla ölçülmeli.
 library;
 
 /// Yarım kuruş toleransı: fark bunun altındaysa iki değer para olarak eşittir.

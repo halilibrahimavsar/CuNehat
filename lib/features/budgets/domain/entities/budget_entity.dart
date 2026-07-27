@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:equatable/equatable.dart';
 
 /// Bütçe nesnesi. Her bir kategori için kullanıcının belirlediği aylık harcama limitini temsil eder.
@@ -38,8 +39,14 @@ class BudgetEntity extends Equatable {
 
   double get progress =>
       limitAmount > 0 ? (spentAmount / limitAmount).clamp(0.0, 1.0) : 0.0;
-  bool get isFilled => limitAmount > 0 && spentAmount == limitAmount;
-  bool get isExceeded => limitAmount > 0 && spentAmount > limitAmount;
+
+  /// "Tam doldu" ve "aşıldı" ayrımı yarım kuruş toleransıyla yapılır:
+  /// [spentAmount] kuruş-temiz tutarların toplamı olduğundan ham `==` /`>`
+  /// karşılaştırması IEEE-754 artığına takılır (ör. 9602.48 limitli bütçede
+  /// toplam 9602.480000000001 çıkıp "aşıldı" sanılır).
+  bool get isFilled => limitAmount > 0 && moneyEquals(spentAmount, limitAmount);
+  bool get isExceeded =>
+      limitAmount > 0 && moneyGreaterThan(spentAmount, limitAmount);
 
   @override
   List<Object?> get props => [categoryId, walletId, limitAmount, spentAmount];

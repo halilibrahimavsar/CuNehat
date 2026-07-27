@@ -23,6 +23,8 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(OnboardingFlow.debtAdd);
+    // Showcase scope'u global kayıtla verilir (ShowCaseWidget kullanımdan kalktı).
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     registerFallbackValue(DebtInitial());
     registerFallbackValue(ReceivableInitial());
   });
@@ -58,6 +60,8 @@ void main() {
         BlocProvider<ReceivableBloc>.value(value: mockReceivableBloc),
       ],
       child: MaterialApp(
+        // Metin bazlı beklentiler sabit kalsın diye dil sabitlenir.
+        locale: const Locale('tr'),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -65,9 +69,7 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: ShowCaseWidget(
-          builder: (context) => Scaffold(body: child),
-        ),
+        home: Scaffold(body: child),
       ),
     );
   }
@@ -98,5 +100,68 @@ void main() {
 
     expect(find.byType(AddEntrySheet), findsOneWidget);
     expect(find.byType(TextField), findsWidgets);
+  });
+
+  // ------------------------------------------------- Refactor koruma testleri
+  // Aşağıdakiler add_entry/* widget'larına bölünen davranışı sabitler: tutar
+  // kartındaki canlı geri ödeme özeti ve tür-özel dinamik alanlar.
+
+  testWidgets('banka kredisinde canlı geri ödeme özeti hesaplanır',
+      (tester) async {
+    await tester.pumpWidget(buildTestableWidget(
+      const AddEntrySheet(walletId: 'w1', userId: 'u1', initialIsDebt: true),
+    ));
+    await tester.pumpAndSettle();
+
+    // Varsayılan tür bankLoan; özet kartı tutar girilmeden "—" gösterir.
+    expect(find.text('—'), findsWidgets);
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    final amountField = find.byType(TextField).first;
+    await tester.enterText(amountField, '12000');
+    await tester.pumpAndSettle();
+
+    // Tutar girilince toplam geri ödeme satırı gerçek bir değere döner.
+    expect(find.text(l10n.toplamGeriOdeme), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AddEntrySheet),
+        matching: find.textContaining('12.000'),
+      ),
+      findsWidgets,
+    );
+  });
+
+  testWidgets('kişisel borçta vade/detay alanları gizlenir', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+    await tester.pumpWidget(buildTestableWidget(
+      const AddEntrySheet(walletId: 'w1', userId: 'u1', initialIsDebt: true),
+    ));
+    await tester.pumpAndSettle();
+
+    // bankLoan modunda vade alanı görünür.
+    expect(find.text(l10n.vadeAyHint), findsOneWidget);
+
+    await tester.tap(find.text(l10n.debtTypePersonal));
+    await tester.pumpAndSettle();
+
+    // personalDebt'te tür-özel alanlar ve geri ödeme özeti kaldırılır.
+    expect(find.text(l10n.vadeAyHint), findsNothing);
+    expect(find.text(l10n.toplamGeriOdeme), findsNothing);
+  });
+
+  testWidgets('alacak formunda borç-özel alanlar hiç gösterilmez',
+      (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+    await tester.pumpWidget(buildTestableWidget(
+      const AddEntrySheet(walletId: 'w1', userId: 'u1', initialIsDebt: false),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.alacakTutari), findsOneWidget);
+    expect(find.text(l10n.borcTuruLabel), findsNothing);
+    expect(find.text(l10n.toplamGeriOdeme), findsNothing);
   });
 }

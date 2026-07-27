@@ -9,19 +9,36 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
+
+/// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
+/// gerçek koordinatör kayıtlı olmadığından mock'lanır.
+class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 
 void main() {
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
   setUpAll(() {
     getIt.allowReassignment = true;
+    registerFallbackValue(OnboardingFlow.transactions);
+    // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
+    ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
+    getIt.allowReassignment = true;
   });
 
   setUp(() {
+    // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
+    final onboardingCoordinator = _MockOnboardingCoordinator();
+    when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
+    when(() => onboardingCoordinator.registerKeys(any(), any()))
+        .thenReturn(null);
+    getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     mockGetLiveQuoteUseCase = MockGetLiveQuoteUseCase();
     getIt.registerSingleton<GetLiveQuoteUseCase>(mockGetLiveQuoteUseCase);
   });
@@ -113,7 +130,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify fetched price message
-    expect(find.text('Güncel Fiyat: 1500 ₺'), findsOneWidget);
+    expect(find.text('Güncel Fiyat: 1.500 ₺'), findsOneWidget);
 
     // Verify currentValue and amount TextFields have auto-filled '3000'
     // currentValue: has hintText: '0'
@@ -121,13 +138,13 @@ void main() {
         (w) => w is TextField && w.decoration?.hintText == '0');
     expect(currentValueFinder, findsOneWidget);
     expect(
-        tester.widget<TextField>(currentValueFinder).controller?.text, '3000');
+        tester.widget<TextField>(currentValueFinder).controller?.text, '3.000');
 
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
     expect(amountFinder, findsOneWidget);
-    expect(tester.widget<TextField>(amountFinder).controller?.text, '3000');
+    expect(tester.widget<TextField>(amountFinder).controller?.text, '3.000');
 
     // Enter name
     final nameFinder = find.byWidgetPredicate((widget) =>
@@ -239,7 +256,7 @@ void main() {
     final amountFinder = find.byWidgetPredicate((widget) =>
         widget is TextField &&
         widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
-    expect(tester.widget<TextField>(amountFinder).controller?.text, '2000');
+    expect(tester.widget<TextField>(amountFinder).controller?.text, '2.000');
 
     // Goal category warning should be rendered
     expect(

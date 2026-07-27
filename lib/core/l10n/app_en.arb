@@ -1037,5 +1037,80 @@
     "placeholders": {
       "baslik": { "type": "String" }
     }
+  },
+
+  "borcSilBaslik": "Delete Debt",
+  "borcSilOnayMesaji": "Are you sure you want to delete the debt {baslik}? Its effect on the wallet balance will be reversed as well.",
+  "@borcSilOnayMesaji": {
+    "placeholders": {
+      "baslik": { "type": "String" }
+    }
+  },
+  "alacakSilBaslik": "Delete Receivable",
+  "alacakSilOnayMesaji": "Are you sure you want to delete the receivable from {isim}? Its effect on the wallet balance will be reversed as well.",
+  "@alacakSilOnayMesaji": {
+    "placeholders": {
+      "isim": { "type": "String" }
+    }
+  },
+
+  "budgetStatusUnderControl": "Under control",
+  "budgetStatusFilledCount": "{sayi} budget(s) filled",
+  "@budgetStatusFilledCount": {
+    "placeholders": {
+      "sayi": { "type": "int" }
+    }
+  },
+  "budgetStatusExceededCount": "{sayi} budget(s) exceeded",
+  "@budgetStatusExceededCount": {
+    "placeholders": {
+      "sayi": { "type": "int" }
+    }
+  },
+
+  "insightDailyLimitTitle": "Daily Spending Limit (Target)",
+  "insightDailyLimitDesc": "Recommended daily limit to stay on budget for the remaining {gun} day(s).",
+  "@insightDailyLimitDesc": {
+    "placeholders": {
+      "gun": { "type": "int" }
+    }
+  },
+  "insightSpikeTitle": "Spending Spike Alert",
+  "insightSpikeDesc": "A notable increase compared to the previous period ({tutar}).",
+  "@insightSpikeDesc": {
+    "placeholders": {
+      "tutar": { "type": "String" }
+    }
+  },
+
+  "drawerSectionFinancial": "FINANCIAL MANAGEMENT",
+  "drawerSectionSystem": "SYSTEM & APP",
+  "drawerBudgetSubtitle": "Category-based budget tracking and spending limits",
+  "drawerRecurringSubtitle": "Automatic income and expense templates",
+  "drawerBankImportSubtitle": "Import PDF/Excel account statements",
+  "drawerSettingsSubtitle": "Theme, currency and general preferences",
+  "drawerSecurityTitle": "Security & Biometrics",
+  "drawerSecuritySubtitle": "App lock and PIN settings",
+  "drawerActiveWalletLabel": "ACTIVE WALLET",
+  "reportBalanceTrend": "Balance Trend",
+  "reportExpensesTitle": "Expenses",
+  "reportIncomesTitle": "Incomes",
+  "reportNoDataTitle": "No Data to Build a Report",
+  "reportNetLabel": "Net",
+  "debtHistoryEmptyTitle": "No Closed Debts Yet",
+  "receivableHistoryEmptyTitle": "No Collected Receivables Yet",
+  "badgeOdendi": "Paid",
+  "badgeTahsilEdildi": "Collected",
+  "reportSavingsSubtitle": "{oran}% Savings",
+  "@reportSavingsSubtitle": {
+    "placeholders": {
+      "oran": { "type": "String" }
+    }
+  },
+  "vadeTarihLabel": "Due: {tarih}",
+  "@vadeTarihLabel": {
+    "placeholders": {
+      "tarih": { "type": "String" }
+    }
   }
 }

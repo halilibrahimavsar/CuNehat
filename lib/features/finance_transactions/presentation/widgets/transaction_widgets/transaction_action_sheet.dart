@@ -33,12 +33,15 @@ class TransactionActionSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+    // Material (Container değil): içerideki ListTile zeminini ve ink dalgasını
+    // en yakın Material'a boyar. Renkli bir DecoratedBox araya girerse dalga
+    // görünmez olur ve Flutter debug'da assertion atar.
+    return Material(
+      color: cs.surface,
       clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       child: SafeArea(
         top: false,
         child: Column(

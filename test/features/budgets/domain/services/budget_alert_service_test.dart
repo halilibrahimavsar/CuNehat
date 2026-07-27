@@ -43,6 +43,48 @@ void main() {
       expect(alerts.single.level, BudgetAlertLevel.exceeded);
     });
 
+    test('%95 → %105: %100 eşiğini atlayan sıçrama exceeded üretir', () {
+      final alerts = service.detectCrossings(
+        previous: [budget('a', 100, 95)],
+        current: [budget('a', 100, 105)],
+      );
+      expect(alerts, hasLength(1));
+      expect(alerts.single.level, BudgetAlertLevel.exceeded);
+    });
+
+    test('kayan-nokta artığı olan tam dolum "aşıldı" sayılmaz', () {
+      // 1615.99 + 1946.72 + 1547.04 + 4114.81 + 377.92 = 9602.480000000001
+      final drifted = [1615.99, 1946.72, 1547.04, 4114.81, 377.92]
+          .fold<double>(0, (s, v) => s + v);
+      expect(drifted, greaterThan(9602.48), reason: 'FP artığı beklenir');
+
+      final alerts = service.detectCrossings(
+        previous: [budget('a', 9602.48, 5000)],
+        current: [budget('a', 9602.48, drifted)],
+      );
+      expect(alerts.single.level, BudgetAlertLevel.filled);
+    });
+
+    test('eksi yönlü kayan-nokta artığında dolum kaçmaz', () {
+      // Toplamı limitin bir tık altında kalan kuruş-tam kalemler.
+      final drifted = [
+        3363.14,
+        1705.15,
+        5286.26,
+        953.54,
+        4218.53,
+        605.09,
+        3081.94
+      ].fold<double>(0, (s, v) => s + v);
+      expect(drifted, lessThan(19213.65), reason: 'FP artığı beklenir');
+
+      final alerts = service.detectCrossings(
+        previous: [budget('a', 19213.65, 10000)],
+        current: [budget('a', 19213.65, drifted)],
+      );
+      expect(alerts.single.level, BudgetAlertLevel.filled);
+    });
+
     test('%50 → %120: doğrudan aşım, yalnız exceeded (warning yok)', () {
       final alerts = service.detectCrossings(
         previous: [budget('a', 100, 50)],

@@ -19,17 +19,34 @@ class CategorySpike {
 /// "Akıllı İçgörüler" sayfasının metinsel özetlerini ve akıllı hedeflerini üretir.
 ///
 /// Flutter/Hive bağımlılığı yoktur → kolay birim test edilir. Veriyi yalnızca
-/// okur; para zincirine (syncBalance) veya deftere dokunmaz.
+/// okur; para zincirine (syncBalance) veya deftere dokunmaz. Sistem (otomatik)
+/// işlemler de gerçek para hareketi olduğundan dahil edilir — Rapor sayfasıyla
+/// tutarlı.
 class TransactionAnalyticsService {
   const TransactionAnalyticsService();
 
+  /// Harcama sıçraması uyarısının varsayılan alt eşiği. Gürültüyü (birkaç
+  /// liralık kalemin %300 "artışı") elemek içindir.
+  ///
+  /// Cüzdan bazlı para birimi (TRY/USD/EUR) nedeniyle mutlak bir eşik tam
+  /// doğru olamaz — 50 USD ≠ 50 TL. Bu yüzden [analyze]'a parametre olarak
+  /// geçilebilir; çağıran aktif cüzdanın birimine uygun bir değer verebilir.
+  static const double defaultSpikeMinimumAmount = 50;
+
   /// [rangeStart]–[rangeEnd] penceresini (gün bazında, iki uç da dahil) analiz
   /// eder.
+  ///
+  /// [rangeIsBudgetPeriod], pencerenin içinde bulunulan bütçe dönemi olduğunu
+  /// ("Bu Ay", "Bu Yıl") söyler; geriye dönük pencerelerde ("Son 7 Gün",
+  /// "Son 3 Ay") false'tur. Yalnız günlük harcama hedefini etkiler —
+  /// bkz. [TransactionInsights.dailySafeToSpend].
   TransactionInsights analyze(
     List<TransactionEntity> transactions, {
     required DateTime rangeStart,
     required DateTime rangeEnd,
     DateTime? currentDateOverride,
+    double spikeMinimumAmount = defaultSpikeMinimumAmount,
+    bool rangeIsBudgetPeriod = false,
   }) {
     final startDay = _dayOnly(rangeStart);
     final endDay = _dayOnly(rangeEnd);
@@ -69,17 +86,32 @@ class TransactionAnalyticsService {
     final net = totalIncome - totalExpense;
 
     // Günde Ne Kadar Harcayabilirim? (Daily Safe-to-Spend)
-    int remainingDays;
+    //
+    // Yalnız pencerenin ÖNÜNDE gün varken anlamlıdır: "kalan neti kalan güne
+    // böl". Bugünde ya da daha erken biten aralıklarda dağıtılacak gün
+    // kalmadığından hedef üretilmez (0 döner). Aksi halde geriye dönük bir
+    // pencerenin ("Geçen Ay", bugün biten "Son 7 Gün") tüm neti tek günün
+    // harcama limitiymiş gibi gösterilirdi.
+    //
+    // Tek istisna bütçe döneminin son günüdür ([rangeIsBudgetPeriod]): "Bu Ay"
+    // ayın 30'unda gerçekten "kalan net bugün harcanabilir" demektir. Ayrım
+    // tarihlerden türetilemez — 31'inde biten "Bu Ay" ile bugün biten "Son 7
+    // Gün" aynı görünür — bu yüzden niyeti çağıran bildirir.
+    final int remainingDays;
     if (today.isBefore(startDay)) {
       remainingDays = days;
-    } else if (today.isAfter(endDay)) {
+    } else if (today.isBefore(endDay)) {
+      // Bugün hâlâ harcanabilir → sayıya dahil.
+      remainingDays = endDay.difference(today).inDays + 1;
+    } else if (rangeIsBudgetPeriod && today.isAtSameMomentAs(endDay)) {
+      // Dönemin son günü: geriye yalnız bugün kaldı.
       remainingDays = 1;
     } else {
-      final rem = endDay.difference(today).inDays + 1;
-      remainingDays = rem < 1 ? 1 : rem;
+      remainingDays = 0;
     }
 
-    final double? dailySafeToSpend = net > 0 ? (net / remainingDays) : null;
+    final double? dailySafeToSpend =
+        (remainingDays > 0 && net > 0) ? (net / remainingDays) : null;
 
     // Kategori Bazlı Harcama Sıçraması Uyarısı (Category Spike)
     final CategorySpike? categorySpike = _detectCategorySpike(
@@ -88,6 +120,7 @@ class TransactionAnalyticsService {
       startDay: startDay,
       endDay: endDay,
       spanDays: days,
+      minimumAmount: spikeMinimumAmount,
     );
 
     return TransactionInsights(
@@ -114,6 +147,7 @@ class TransactionAnalyticsService {
     required DateTime startDay,
     required DateTime endDay,
     required int spanDays,
+    required double minimumAmount,
   }) {
     if (currentExpenseByCategory.isEmpty) return null;
 
@@ -138,8 +172,9 @@ class TransactionAnalyticsService {
       final currentAmt = entry.value;
       final prevAmt = prevExpenseByCategory[category] ?? 0;
 
-      // Anlamlı bir harcama sıçraması için en az 50 TL harcama ve geçen döneme göre %25+ artış
-      if (currentAmt >= 50 && prevAmt > 0) {
+      // Anlamlı sıçrama = en az [minimumAmount] harcama + geçen döneme göre
+      // %25 artış. Alt eşik olmadan birkaç liralık kalemler listeyi doldurur.
+      if (currentAmt >= minimumAmount && prevAmt > 0) {
         final increase = ((currentAmt - prevAmt) / prevAmt) * 100;
         if (increase >= 25.0) {
           if (maxSpike == null || increase > maxSpike.percentIncrease) {
@@ -159,6 +194,7 @@ class TransactionAnalyticsService {
 
   DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
+  /// En büyük değere sahip anahtarı döndürür; harita boşsa null.
   MapEntry<K, double>? _argMax<K>(Map<K, double> map) {
     MapEntry<K, double>? best;
     for (final e in map.entries) {
@@ -168,7 +204,8 @@ class TransactionAnalyticsService {
   }
 }
 
-/// Tek bir dönemin metinsel ve akıllı içgörü özeti.
+/// Tek bir dönemin metinsel ve akıllı içgörü özeti. Saf veri; biçimlendirme
+/// UI'da yapılır.
 class TransactionInsights {
   final int transactionCount;
   final double totalIncome;
@@ -176,20 +213,29 @@ class TransactionInsights {
   final double net;
   final double dailyAverageExpense;
 
+  /// En çok harcanan haftanın günü (1=Pazartesi .. 7=Pazar) ya da gider yoksa null.
   final int? topExpenseWeekday;
   final double topExpenseWeekdayAmount;
 
+  /// En çok harcanan kategori (tag); boş string olabilir, gider yoksa null.
   final String? topExpenseCategory;
   final double topExpenseCategoryAmount;
 
+  /// Dönemin en büyük tek gideri ya da gider yoksa null.
   final TransactionEntity? largestExpense;
+
+  /// (gelir − gider) / gelir. Gelir 0 ise 0; negatif olabilir.
   final double savingsRate;
 
-  /// Günde Ne Kadar Harcayabilirim? (Kalan net bakiye / Kalan gün sayısı)
+  /// Günde Ne Kadar Harcayabilirim? = net / [remainingDays].
+  /// Net ≤ 0 ise ya da pencerenin önünde gün kalmadıysa null.
   final double? dailySafeToSpend;
+
+  /// Pencerede bugün dahil kaç gün kaldığı. Aralık bugünde ya da daha önce
+  /// bittiyse 0 — bu durumda [dailySafeToSpend] de null'dır.
   final int remainingDays;
 
-  /// Kategori Harcama Sıçraması Uyarısı (%25+ artış gösteren kategori)
+  /// Geçen eşdeğer döneme göre %25+ artan kategori (varsa en yükseği).
   final CategorySpike? categorySpike;
 
   const TransactionInsights({
