@@ -12,6 +12,7 @@ import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
+import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_mapping_view.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_review_view.dart';
@@ -42,6 +43,26 @@ class BankImportPage extends StatelessWidget {
             BankImportCommitting() => _Committing(state: state),
             BankImportDone() => _Done(state: state),
             BankImportRawText() => _RawTextView(text: state.rawText),
+            BankImportScannedPdf() => _BlockedView(
+                icon: Icons.image_not_supported_outlined,
+                title: context.l10n.bankImportScannedPdfTitle,
+                message: context.l10n.bankImportScannedPdfHint,
+              ),
+            BankImportLegacyExcel() => _BlockedView(
+                icon: Icons.table_chart_outlined,
+                title: context.l10n.bankImportLegacyExcelTitle,
+                message:
+                    context.l10n.bankImportLegacyExcelHint(state.reason),
+              ),
+            BankImportUnsupportedFile() => _BlockedView(
+                icon: Icons.help_outline_rounded,
+                title: context.l10n.bankImportUnsupportedTitle,
+                message: context.l10n.bankImportUnsupportedHint(
+                  StatementFormat.supportedExtensions
+                      .map((e) => '.$e')
+                      .join(', '),
+                ),
+              ),
             BankImportError() => _ErrorView(message: state.message),
           },
         ),
@@ -155,6 +176,22 @@ class _SetupStepState extends State<_SetupStep> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 16),
+        // Desteklenen biçimleri açıkça göster: dosya seçici artık her şeyi
+        // seçilebilir bıraktığı için (bkz. cubit) kullanıcı neyi indirmesi
+        // gerektiğini burada görmeli — özellikle eski `.xls` karışıklığında.
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final ext in StatementFormat.supportedExtensions)
+              Chip(
+                label: Text('.$ext', style: const TextStyle(fontSize: 12)),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+              ),
+          ],
         ),
         const SizedBox(height: 28),
         FilledButton.icon(
@@ -575,6 +612,67 @@ class _RawTextView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Dosya okunabildi ama içe aktarım BAŞLAYAMADI (taranmış PDF, eski .xls,
+/// tanınmayan biçim). Hata değil, açıklanabilir bir engel: nedeni + ne
+/// yapılacağı + doğrudan yeni dosya seçme yolu.
+class _BlockedView extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  const _BlockedView({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 36, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => context.read<BankImportCubit>().reset(),
+                icon: const Icon(Icons.upload_file_rounded),
+                label: Text(context.l10n.bankImportPickAnother),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

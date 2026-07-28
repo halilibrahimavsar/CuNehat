@@ -926,6 +926,64 @@
   "bankImportDateFormat": "Date format",
   "bankImportDateAuto": "Auto",
   "bankImportContinue": "Continue",
+  "bankImportColumnN": "Column {n}",
+  "@bankImportColumnN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportPreviewTitle": "Preview (first transactions)",
+  "bankImportRoleDate": "Date",
+  "bankImportRoleDesc": "Description",
+  "bankImportRoleAmount": "Amount",
+  "bankImportRoleDebit": "Debit",
+  "bankImportRoleCredit": "Credit",
+  "bankImportRoleBalance": "Balance",
+  "bankImportEditDescTitle": "Edit description",
+  "bankImportEditDescLabel": "Description",
+  "bankImportEditAmountTitle": "Edit amount",
+  "bankImportEditAmountLabel": "Amount",
+  "bankImportFilterAll": "All",
+  "bankImportFilterUncategorized": "Uncategorized",
+  "bankImportFilterDuplicates": "Possible duplicate",
+  "bankImportSearchHint": "Search descriptions",
+  "bankImportNoMatch": "No transaction matches the filter.",
+  "bankImportShownOf": "Showing {shown} / {total}",
+  "@bankImportShownOf": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportWarnings": "Warnings ({count})",
+  "@bankImportWarnings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportStatRows": "transactions",
+  "bankImportStatDuplicates": "possible duplicates",
+  "bankImportStatSkipped": "skipped rows",
+  "bankImportStatUncategorized": "uncategorized",
+  "bankImportSelectedOf": "{selected} / {total} selected",
+  "@bankImportSelectedOf": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "bankImportNoRows": "No transactions to import.",
   "bankImportSelectAll": "All",
   "bankImportDeselectAll": "None",
@@ -940,6 +998,37 @@
   "bankImportShowRaw": "Show raw text",
   "bankImportPdfRawTitle": "Couldn't recognize the PDF text",
   "bankImportPdfRawHint": "We extracted the text but couldn't recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank's layout.",
+  "bankImportScannedPdfTitle": "This PDF is a scanned image",
+  "bankImportScannedPdfHint": "The file contains no text — only a photo or scan. We tried reading it as an image but couldn't extract any transaction rows. Download the statement as Excel (.xls/.xlsx) or CSV from your bank's online banking for a much more accurate result.",
+  "bankImportOcrWarning": "These transactions were read from an IMAGE. Image recognition often confuses digits (comma/dot, 1/7, 0/O) and there is usually no balance column to verify against — check every amount before adding.",
+  "bankImportPickAnother": "Pick another file",
+  "bankImportLegacyExcelTitle": "Couldn't open the Excel file",
+  "bankImportLegacyExcelHint": "{reason}\n\nDownload the statement as .xlsx or CSV from your bank, or open the file in Excel/Google Sheets and save it as .xlsx.",
+  "@bankImportLegacyExcelHint": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportSourceTruncated": "The Excel file doesn't end with the expected marker — it may have been downloaded incompletely. Some transactions may be missing; compare the row count with your bank's statement.",
+  "bankImportSourceUnresolved": "Couldn't resolve the value of {count} cells; fields that look empty on those rows may actually contain data.",
+  "@bankImportSourceUnresolved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUnsupportedTitle": "Unsupported file",
+  "bankImportUnsupportedHint": "We couldn't recognize this file's format. Supported formats: {formats}",
+  "@bankImportUnsupportedHint": {
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
+  },
   "bankImportCopy": "Copy",
   "bankImportCopied": "Copied",
   "bankImportSummary": "{count} transactions · {dup} possible duplicates · {skipped} rows skipped · {uncategorized} uncategorized",

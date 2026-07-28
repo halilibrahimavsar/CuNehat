@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,9 +14,13 @@ import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
+import 'package:cunehat/features/bank_import/data/pdf_rasterizer.dart';
 import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
+import 'package:cunehat/features/bank_import/data/statement_ocr_service.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/data/statement_currency_detector.dart';
+import 'package:cunehat/features/bank_import/data/xls/biff8_reader.dart';
+import 'package:cunehat/features/bank_import/data/xls/ole2_reader.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/domain/statement_format.dart';
@@ -35,6 +40,8 @@ class BankImportCubit extends Cubit<BankImportState> {
   final RawTableReader _reader;
   final ColumnMapper _mapper;
   final PdfStatementParser _pdfParser;
+  final PdfRasterizer _rasterizer;
+  final StatementOcrService _ocr;
   final CategoryGuesser _guesser;
   final CategoryRepository _categoryRepo;
   final TransactionsRepository _txRepo;
@@ -45,6 +52,8 @@ class BankImportCubit extends Cubit<BankImportState> {
     this._reader,
     this._mapper,
     this._pdfParser,
+    this._rasterizer,
+    this._ocr,
     this._guesser,
     this._categoryRepo,
     this._txRepo,
@@ -69,6 +78,17 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// farklıysa inceleme ekranında uyarı gösterilir; sinyal yoksa `null`.
   String? _statementCurrency;
 
+  /// Kaynak dosyanın bütünlük şüphesi (şimdilik yalnız `.xls` yolu doldurur):
+  /// akış kapanmadan bitti / bazı hücrelerin değeri çözülemedi. İnceleme
+  /// ekranında uyarı olarak gösterilir.
+  bool _sourceTruncated = false;
+  int _sourceUnresolvedCells = 0;
+
+  /// Taslaklar OCR'dan geldi (ekran görüntüsü / taranmış PDF): inceleme
+  /// ekranında ayrıca uyarılır, çünkü bu yolda hata olasılığı belirgin
+  /// biçimde yüksektir.
+  bool _fromOcr = false;
+
   /// Son `commit`te GERÇEKTEN yazılan işlem id'leri; `_Done`'daki "Geri al"
   /// bu partiyi (yalnız az önce eklenenleri) siler. Oturum-içi (Hive alanı yok).
   List<String> _lastImportedIds = const [];
@@ -83,22 +103,34 @@ class BankImportCubit extends Cubit<BankImportState> {
     _walletId = walletId;
     _reconciliation = null;
     _statementCurrency = null;
+    _fromOcr = false;
 
-    final picked = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: StatementFormat.allExtensions,
-    );
+    // Uzantı BAZLI süzme (FileType.custom) bilerek kullanılmıyor: Android'de
+    // file_picker bunu `EXTRA_MIME_TYPES` MIME süzgecine çeviriyor ve SAF,
+    // dosyayı sağlayıcının bildirdiği MIME'a göre eliyor. Banka uygulamasından/
+    // tarayıcıdan inen ekstreler indirme sağlayıcısında sık sık
+    // `application/octet-stream` olarak kayıtlı → uzantı doğru olmasına rağmen
+    // dosya seçicide GRİ görünüyordu. Her şeyi seçilebilir yapıp biçimi
+    // içerik imzasından kendimiz belirliyoruz (bkz. [detectStatementFormat]).
+    final picked = await FilePicker.pickFiles(type: FileType.any);
     final path = picked?.files.single.path;
     if (path == null) {
       emit(const BankImportInitial());
       return;
     }
 
-    final format = StatementFormat.fromExtension(path);
-    if (format == null) {
-      emit(BankImportError('Desteklenmeyen dosya türü: $path'));
+    final DetectedStatementFormat detected;
+    try {
+      detected = detectStatementFormat(path: path, head: await _readHead(path));
+    } catch (e) {
+      emit(BankImportError('Dosya okunamadı: $e'));
       return;
     }
+    if (detected == DetectedStatementFormat.unknown) {
+      emit(const BankImportUnsupportedFile());
+      return;
+    }
+    final format = detected.supported!;
 
     emit(const BankImportParsing());
     try {
@@ -107,10 +139,25 @@ class BankImportCubit extends Cubit<BankImportState> {
 
       // PDF'te kolon yapısı güvenilir değil → satır-sezgisel doğrudan taslak,
       // eşleme adımı atlanır, direkt incelemeye gider.
+      if (format == StatementFormat.image) {
+        await _parseFromOcr([path]);
+        return;
+      }
+
       if (format == StatementFormat.pdf) {
         final result = await _pdfParser.parse(path);
-        _lastPdfRawText = result.rawText;
+        final hasTextLayer = result.rawText.trim().isNotEmpty;
+        // Yalnız gerçekten metin varsa sakla: aksi halde AppBar'daki "ham metni
+        // göster" düğmesi boş bir diyalog açıyordu ("\r\n" boş string DEĞİL).
+        _lastPdfRawText = hasTextLayer ? result.rawText : null;
         _statementCurrency = detectDominantCurrency(result.rawText);
+        if (!hasTextLayer) {
+          // Taranmış/fotoğraf PDF: metin katmanı yok. Sayfaları görüntüye
+          // çevirip OCR'a veriyoruz; rasterleştirme yapılamıyorsa (Android
+          // dışı platform, parolalı/bozuk PDF) açıklayıcı ekrana düşülür.
+          await _parseScannedPdf(path);
+          return;
+        }
         if (result.drafts.isEmpty) {
           // Metin çıktı ama satır tanınamadı → ham metni tanılama için göster.
           emit(BankImportRawText(result.rawText));
@@ -120,11 +167,34 @@ class BankImportCubit extends Cubit<BankImportState> {
         return;
       }
 
-      final table = switch (format) {
-        StatementFormat.csv => await _reader.readCsv(path),
-        StatementFormat.excel => await _reader.readExcel(path),
-        StatementFormat.pdf => throw StateError('unreachable'),
-      };
+      _sourceTruncated = false;
+      _sourceUnresolvedCells = 0;
+      final RawTable table;
+      switch (format) {
+        case StatementFormat.csv:
+          table = await _reader.readCsv(path);
+        case StatementFormat.excel:
+          table = await _reader.readExcel(path);
+        case StatementFormat.legacyExcel:
+          // Eski .xls kendi okuyucumuzdan geçer; açılamazsa (parola, BIFF5,
+          // bozuk kap) kullanıcıya "dönüştür" yönergesi gösterilir.
+          try {
+            final result = await _reader.readXls(path);
+            table = result.table;
+            _sourceTruncated = result.truncated;
+            _sourceUnresolvedCells = result.unresolvedCells;
+          } on Ole2Exception catch (e) {
+            emit(BankImportLegacyExcel(e.message));
+            return;
+          } on Biff8Exception catch (e) {
+            emit(BankImportLegacyExcel(e.message));
+            return;
+          }
+        case StatementFormat.pdf:
+        case StatementFormat.image:
+          // Bu ikisi yukarıda kendi yollarına ayrıldı; buraya düşemezler.
+          throw StateError('unreachable');
+      }
       if (table.isEmpty) {
         emit(const BankImportError('Dosya boş veya okunamadı.'));
         return;
@@ -138,6 +208,62 @@ class BankImportCubit extends Cubit<BankImportState> {
       ));
     } catch (e) {
       emit(BankImportError('Dosya okunamadı: $e'));
+    }
+  }
+
+  /// Taranmış PDF: sayfaları görüntüye çevirip OCR yoluna sok. Rasterleştirme
+  /// başarısızsa (Android dışı platform, parolalı/bozuk PDF) kullanıcıya neden
+  /// okunamadığını ve ne yapabileceğini söyleyen ekrana düşülür.
+  Future<void> _parseScannedPdf(String path) async {
+    if (!_rasterizer.isSupported) {
+      emit(const BankImportScannedPdf());
+      return;
+    }
+    try {
+      final pages = await _rasterizer.rasterize(path);
+      if (pages.isEmpty) {
+        emit(const BankImportScannedPdf());
+        return;
+      }
+      await _parseFromOcr(pages);
+    } on PdfRasterException {
+      emit(const BankImportScannedPdf());
+    }
+  }
+
+  /// Görüntülerden (ekran görüntüsü / taranmış sayfa) OCR ile metin çıkarıp
+  /// PDF yolundaki AYNI ayrıştırıcıya verir — banka stratejileri, işaret
+  /// sezgisi ve etiket ayırma yeniden kullanılır.
+  ///
+  /// OCR en düşük güvenilirlikli yol: tutarlarda `,`/`.` ve `1`/`7` karışması
+  /// tipiktir ve ekran görüntüsünde bakiye sütunu çoğu zaman bulunmaz, yani
+  /// mutabakat güvenlik ağı da devrede olmaz. Bu yüzden inceleme ekranında
+  /// [BankImportReview.fromOcr] ile ayrıca uyarılır.
+  Future<void> _parseFromOcr(List<String> imagePaths) async {
+    final text = await _ocr.extractLayoutText(imagePaths);
+    _lastPdfRawText = text.trim().isEmpty ? null : text;
+    _statementCurrency = detectDominantCurrency(text);
+    if (text.trim().isEmpty) {
+      emit(const BankImportScannedPdf());
+      return;
+    }
+    final result = _pdfParser.parseText(text);
+    if (result.drafts.isEmpty) {
+      emit(BankImportRawText(result.rawText));
+      return;
+    }
+    _fromOcr = true;
+    await _afterParse(result.drafts, result.skippedLines);
+  }
+
+  /// Biçim imzası için dosyanın ilk baytları. 512 bayt hem her imzayı hem de
+  /// "metne benziyor mu" örneklemesini kapsar; koca ekstreyi belleğe almaz.
+  Future<List<int>> _readHead(String path) async {
+    final handle = await File(path).open();
+    try {
+      return await handle.read(512);
+    } finally {
+      await handle.close();
     }
   }
 
@@ -273,43 +399,53 @@ class BankImportCubit extends Cubit<BankImportState> {
     }
     final historyIndex = _guesser.buildHistoryIndex(history);
 
-    // Kategori tahmini: önce kullanıcının KENDİ geçmişinden ("bu markayı geçen
-    // sefer X yapmıştım"), yoksa sabit anahtar-kelime sözlüğü. İkisi de yoksa
-    // BİLEREK `null` kalır (türün ilk kategorisine düşülmez — eskiden işlemlerin
-    // ~%80'i tesadüfen "Yemek" görünüp yanlış güven veriyordu). Eşleşmeyenler
-    // inceleme ekranında elle seçilir (bkz. `BankImportReview.uncategorizedCount`).
+    // Kategori tahmini, güvenilirlik sırasıyla: (1) kullanıcının KENDİ geçmişi
+    // ("bu markayı geçen sefer X yapmıştım"), (2) bankanın ekstrede verdiği
+    // kendi etiketi, (3) sabit anahtar-kelime sözlüğü. Üçü de tutmazsa BİLEREK
+    // `null` kalır (türün ilk kategorisine düşülmez — eskiden işlemlerin ~%80'i
+    // tesadüfen "Yemek" görünüp yanlış güven veriyordu). Eşleşmeyenler inceleme
+    // ekranında elle seçilir (bkz. `BankImportReview.uncategorizedCount`).
     var drafts = [
       for (final d in raw)
-        d.copyWith(
-          categoryId: _guesser.guessFromHistory(
-                description: d.description,
-                isIncome: d.isIncome,
-                index: historyIndex,
-                candidates: d.isIncome ? _incomeCats : _expenseCats,
-              ) ??
-              _guesser.guess(
-                description: d.description,
-                isIncome: d.isIncome,
-                candidates: d.isIncome ? _incomeCats : _expenseCats,
-              ),
-        ),
+        () {
+          final candidates = d.isIncome ? _incomeCats : _expenseCats;
+          return d.copyWith(
+            categoryId: _guesser.guessFromHistory(
+                  description: d.description,
+                  isIncome: d.isIncome,
+                  index: historyIndex,
+                  candidates: candidates,
+                ) ??
+                _guesser.guessFromSourceTag(
+                  sourceTag: d.sourceTag,
+                  candidates: candidates,
+                ) ??
+                _guesser.guess(
+                  description: d.description,
+                  isIncome: d.isIncome,
+                  candidates: candidates,
+                ),
+          );
+        }(),
     ];
 
     if (drafts.isNotEmpty) {
       drafts = markDuplicateDrafts(drafts, history);
     }
 
+    // Hedef cüzdanın birimi HER ZAMAN okunur: inceleme ekranı tutarları bu
+    // birimle biçimlendirir (eskiden yalnız uyarı gerektiğinde okunuyordu, bu
+    // yüzden tutarlar hep ₺ ile gösteriliyordu — USD/EUR cüzdanda yanlış).
+    final wRes = await _metrics.walletRepository.getWalletById(_walletId);
+    final walletCurrency = wRes.fold((_) => null, (w) => w?.currency);
+
     // Ekstre belirgin bir para birimi taşıyor ve bu hedef cüzdanınkinden
-    // farklıysa uyar (ör. USD ekstresi TRY cüzdana). Yalnız sinyal varken oku.
-    String? foreignCurrency;
-    String? walletCurrency;
-    if (_statementCurrency != null) {
-      final wRes = await _metrics.walletRepository.getWalletById(_walletId);
-      walletCurrency = wRes.fold((_) => null, (w) => w?.currency);
-      if (walletCurrency != null && _statementCurrency != walletCurrency) {
-        foreignCurrency = _statementCurrency;
-      }
-    }
+    // farklıysa ayrıca uyar (ör. USD ekstresi TRY cüzdana).
+    final foreignCurrency = (_statementCurrency != null &&
+            walletCurrency != null &&
+            _statementCurrency != walletCurrency)
+        ? _statementCurrency
+        : null;
 
     emit(BankImportReview(
       drafts: drafts,
@@ -319,6 +455,9 @@ class BankImportCubit extends Cubit<BankImportState> {
       reconciliation: _reconciliation,
       foreignCurrency: foreignCurrency,
       walletCurrency: walletCurrency,
+      sourceTruncated: _sourceTruncated,
+      sourceUnresolvedCells: _sourceUnresolvedCells,
+      fromOcr: _fromOcr,
     ));
   }
 

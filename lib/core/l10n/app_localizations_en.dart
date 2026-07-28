@@ -2440,6 +2440,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportContinue => 'Continue';
 
   @override
+  String bankImportColumnN(int n) {
+    return 'Column $n';
+  }
+
+  @override
+  String get bankImportPreviewTitle => 'Preview (first transactions)';
+
+  @override
+  String get bankImportRoleDate => 'Date';
+
+  @override
+  String get bankImportRoleDesc => 'Description';
+
+  @override
+  String get bankImportRoleAmount => 'Amount';
+
+  @override
+  String get bankImportRoleDebit => 'Debit';
+
+  @override
+  String get bankImportRoleCredit => 'Credit';
+
+  @override
+  String get bankImportRoleBalance => 'Balance';
+
+  @override
+  String get bankImportEditDescTitle => 'Edit description';
+
+  @override
+  String get bankImportEditDescLabel => 'Description';
+
+  @override
+  String get bankImportEditAmountTitle => 'Edit amount';
+
+  @override
+  String get bankImportEditAmountLabel => 'Amount';
+
+  @override
+  String get bankImportFilterAll => 'All';
+
+  @override
+  String get bankImportFilterUncategorized => 'Uncategorized';
+
+  @override
+  String get bankImportFilterDuplicates => 'Possible duplicate';
+
+  @override
+  String get bankImportSearchHint => 'Search descriptions';
+
+  @override
+  String get bankImportNoMatch => 'No transaction matches the filter.';
+
+  @override
+  String bankImportShownOf(int shown, int total) {
+    return 'Showing $shown / $total';
+  }
+
+  @override
+  String bankImportWarnings(int count) {
+    return 'Warnings ($count)';
+  }
+
+  @override
+  String get bankImportStatRows => 'transactions';
+
+  @override
+  String get bankImportStatDuplicates => 'possible duplicates';
+
+  @override
+  String get bankImportStatSkipped => 'skipped rows';
+
+  @override
+  String get bankImportStatUncategorized => 'uncategorized';
+
+  @override
+  String bankImportSelectedOf(int selected, int total) {
+    return '$selected / $total selected';
+  }
+
+  @override
   String get bankImportNoRows => 'No transactions to import.';
 
   @override
@@ -2481,6 +2561,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bankImportPdfRawHint =>
       'We extracted the text but couldn\'t recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank\'s layout.';
+
+  @override
+  String get bankImportScannedPdfTitle => 'This PDF is a scanned image';
+
+  @override
+  String get bankImportScannedPdfHint =>
+      'The file contains no text — only a photo or scan. We tried reading it as an image but couldn\'t extract any transaction rows. Download the statement as Excel (.xls/.xlsx) or CSV from your bank\'s online banking for a much more accurate result.';
+
+  @override
+  String get bankImportOcrWarning =>
+      'These transactions were read from an IMAGE. Image recognition often confuses digits (comma/dot, 1/7, 0/O) and there is usually no balance column to verify against — check every amount before adding.';
+
+  @override
+  String get bankImportPickAnother => 'Pick another file';
+
+  @override
+  String get bankImportLegacyExcelTitle => 'Couldn\'t open the Excel file';
+
+  @override
+  String bankImportLegacyExcelHint(String reason) {
+    return '$reason\n\nDownload the statement as .xlsx or CSV from your bank, or open the file in Excel/Google Sheets and save it as .xlsx.';
+  }
+
+  @override
+  String get bankImportSourceTruncated =>
+      'The Excel file doesn\'t end with the expected marker — it may have been downloaded incompletely. Some transactions may be missing; compare the row count with your bank\'s statement.';
+
+  @override
+  String bankImportSourceUnresolved(int count) {
+    return 'Couldn\'t resolve the value of $count cells; fields that look empty on those rows may actually contain data.';
+  }
+
+  @override
+  String get bankImportUnsupportedTitle => 'Unsupported file';
+
+  @override
+  String bankImportUnsupportedHint(String formats) {
+    return 'We couldn\'t recognize this file\'s format. Supported formats: $formats';
+  }
 
   @override
   String get bankImportCopy => 'Copy';

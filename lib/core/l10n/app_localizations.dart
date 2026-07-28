@@ -4472,6 +4472,150 @@ abstract class AppLocalizations {
   /// **'Devam'**
   String get bankImportContinue;
 
+  /// No description provided for @bankImportColumnN.
+  ///
+  /// In tr, this message translates to:
+  /// **'{n}. sütun'**
+  String bankImportColumnN(int n);
+
+  /// No description provided for @bankImportPreviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önizleme (ilk hareketler)'**
+  String get bankImportPreviewTitle;
+
+  /// No description provided for @bankImportRoleDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih'**
+  String get bankImportRoleDate;
+
+  /// No description provided for @bankImportRoleDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama'**
+  String get bankImportRoleDesc;
+
+  /// No description provided for @bankImportRoleAmount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar'**
+  String get bankImportRoleAmount;
+
+  /// No description provided for @bankImportRoleDebit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç'**
+  String get bankImportRoleDebit;
+
+  /// No description provided for @bankImportRoleCredit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacak'**
+  String get bankImportRoleCredit;
+
+  /// No description provided for @bankImportRoleBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye'**
+  String get bankImportRoleBalance;
+
+  /// No description provided for @bankImportEditDescTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklamayı düzenle'**
+  String get bankImportEditDescTitle;
+
+  /// No description provided for @bankImportEditDescLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama'**
+  String get bankImportEditDescLabel;
+
+  /// No description provided for @bankImportEditAmountTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarı düzenle'**
+  String get bankImportEditAmountTitle;
+
+  /// No description provided for @bankImportEditAmountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar'**
+  String get bankImportEditAmountLabel;
+
+  /// No description provided for @bankImportFilterAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get bankImportFilterAll;
+
+  /// No description provided for @bankImportFilterUncategorized.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorisiz'**
+  String get bankImportFilterUncategorized;
+
+  /// No description provided for @bankImportFilterDuplicates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Olası tekrar'**
+  String get bankImportFilterDuplicates;
+
+  /// No description provided for @bankImportSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklamada ara'**
+  String get bankImportSearchHint;
+
+  /// No description provided for @bankImportNoMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreye uyan hareket yok.'**
+  String get bankImportNoMatch;
+
+  /// No description provided for @bankImportShownOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'{shown} / {total} gösteriliyor'**
+  String bankImportShownOf(int shown, int total);
+
+  /// No description provided for @bankImportWarnings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uyarılar ({count})'**
+  String bankImportWarnings(int count);
+
+  /// No description provided for @bankImportStatRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'hareket'**
+  String get bankImportStatRows;
+
+  /// No description provided for @bankImportStatDuplicates.
+  ///
+  /// In tr, this message translates to:
+  /// **'olası tekrar'**
+  String get bankImportStatDuplicates;
+
+  /// No description provided for @bankImportStatSkipped.
+  ///
+  /// In tr, this message translates to:
+  /// **'atlanan satır'**
+  String get bankImportStatSkipped;
+
+  /// No description provided for @bankImportStatUncategorized.
+  ///
+  /// In tr, this message translates to:
+  /// **'kategorisiz'**
+  String get bankImportStatUncategorized;
+
+  /// No description provided for @bankImportSelectedOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'{selected} / {total} seçili'**
+  String bankImportSelectedOf(int selected, int total);
+
   /// No description provided for @bankImportNoRows.
   ///
   /// In tr, this message translates to:
@@ -4555,6 +4699,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.'**
   String get bankImportPdfRawHint;
+
+  /// No description provided for @bankImportScannedPdfTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu PDF taranmış bir görüntü'**
+  String get bankImportScannedPdfTitle;
+
+  /// No description provided for @bankImportScannedPdfHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyanın içinde metin yok, yalnızca fotoğraf/tarama var. Görüntüden okumayı denedik ama hareket satırı çıkaramadık. Bankanın internet şubesinden ekstreyi Excel (.xls/.xlsx) ya da CSV olarak indirirsen çok daha isabetli sonuç alırsın.'**
+  String get bankImportScannedPdfHint;
+
+  /// No description provided for @bankImportOcrWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hareketler bir GÖRÜNTÜDEN okundu. Görüntü tanımada rakamlar sık karışır (virgül/nokta, 1/7, 0/O) ve doğrulayacak bakiye sütunu genelde yoktur — eklemeden önce her tutarı tek tek kontrol et.'**
+  String get bankImportOcrWarning;
+
+  /// No description provided for @bankImportPickAnother.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka dosya seç'**
+  String get bankImportPickAnother;
+
+  /// No description provided for @bankImportLegacyExcelTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Excel dosyası açılamadı'**
+  String get bankImportLegacyExcelTitle;
+
+  /// No description provided for @bankImportLegacyExcelHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'{reason}\n\nBankandan ekstreyi .xlsx ya da CSV olarak indir; ya da dosyayı Excel/Google E-Tablolar\'da açıp .xlsx olarak kaydet.'**
+  String bankImportLegacyExcelHint(String reason);
+
+  /// No description provided for @bankImportSourceTruncated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Excel dosyası beklenen kapanışla bitmiyor; eksik indirilmiş olabilir. Bazı hareketler hiç okunmamış olabilir — satır sayısını bankadaki ekstreyle karşılaştır.'**
+  String get bankImportSourceTruncated;
+
+  /// No description provided for @bankImportSourceUnresolved.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hücrenin değeri okunamadı; o satırlarda boş görünen alanlar aslında dolu olabilir.'**
+  String bankImportSourceUnresolved(int count);
+
+  /// No description provided for @bankImportUnsupportedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desteklenmeyen dosya'**
+  String get bankImportUnsupportedTitle;
+
+  /// No description provided for @bankImportUnsupportedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosyanın biçimi tanınamadı. Desteklenen biçimler: {formats}'**
+  String bankImportUnsupportedHint(String formats);
 
   /// No description provided for @bankImportCopy.
   ///

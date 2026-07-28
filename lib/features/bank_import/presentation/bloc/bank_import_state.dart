@@ -56,9 +56,26 @@ class BankImportReview extends BankImportState {
   final BalanceReconciliation? reconciliation;
 
   /// Ekstrede sezilen para birimi hedef cüzdanınkinden farklıysa dolu gelir
-  /// (uyarı için); aksi halde `null`. [walletCurrency] mesajda göstermek için.
+  /// (uyarı için); aksi halde `null`.
   final String? foreignCurrency;
+
+  /// Hedef cüzdanın para birimi — tutarların biçimlendirilmesi için HER ZAMAN
+  /// doldurulur (cüzdan okunamazsa `null`).
   final String? walletCurrency;
+
+  /// Kaynak dosyanın bütünlüğü şüpheli: akış beklenen kapanışla bitmedi
+  /// (`.xls` yolunda) → bazı hareketler hiç okunmamış olabilir.
+  final bool sourceTruncated;
+
+  /// Kaydı okunduğu hâlde değeri çözülemeyen hücre sayısı — boş görünen bazı
+  /// hücreler aslında veri taşıyordu.
+  final int sourceUnresolvedCells;
+
+  /// Taslaklar OCR'dan (ekran görüntüsü / taranmış PDF) çıkarıldı. Bu yolda
+  /// tutarlarda karakter karışması (`,`↔`.`, `1`↔`7`) tipiktir ve görüntüde
+  /// bakiye sütunu çoğu zaman bulunmadığı için mutabakat güvenlik ağı da
+  /// devrede olmaz — kullanıcı ayrıca uyarılır.
+  final bool fromOcr;
 
   const BankImportReview({
     required this.drafts,
@@ -68,6 +85,9 @@ class BankImportReview extends BankImportState {
     this.reconciliation,
     this.foreignCurrency,
     this.walletCurrency,
+    this.sourceTruncated = false,
+    this.sourceUnresolvedCells = 0,
+    this.fromOcr = false,
   });
 
   int get selectedCount => drafts.where((d) => d.selected).length;
@@ -88,6 +108,9 @@ class BankImportReview extends BankImportState {
         reconciliation: reconciliation,
         foreignCurrency: foreignCurrency,
         walletCurrency: walletCurrency,
+        sourceTruncated: sourceTruncated,
+        sourceUnresolvedCells: sourceUnresolvedCells,
+        fromOcr: fromOcr,
       );
 }
 
@@ -131,4 +154,25 @@ class BankImportError extends BankImportState {
 class BankImportRawText extends BankImportState {
   final String rawText;
   const BankImportRawText(this.rawText);
+}
+
+/// PDF'in metin katmanı YOK (taranmış sayfa / fotoğraf / ekran görüntüsünden
+/// üretilmiş belge). [BankImportRawText]'ten ayrı bir durum, çünkü gösterilecek
+/// ham metin de yok: kullanıcıya boş bir kutu göstermek yerine neden okunamadığı
+/// ve ne yapabileceği söylenir.
+class BankImportScannedPdf extends BankImportState {
+  const BankImportScannedPdf();
+}
+
+/// Eski ikili Excel (.xls) okunmaya çalışıldı ama AÇILAMADI (parola, BIFF5 gibi
+/// daha eski sürüm, bozuk kap). [reason] kullanıcıya gösterilecek kısa neden;
+/// çözüm her hâlde aynı: dosyayı .xlsx olarak kaydet ya da CSV indir.
+class BankImportLegacyExcel extends BankImportState {
+  final String reason;
+  const BankImportLegacyExcel(this.reason);
+}
+
+/// Seçilen dosyanın biçimi ne imzadan ne uzantıdan tanınabildi.
+class BankImportUnsupportedFile extends BankImportState {
+  const BankImportUnsupportedFile();
 }

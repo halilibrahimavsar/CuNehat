@@ -20,14 +20,21 @@ class BankImportMappingView extends StatelessWidget {
   void _update(BuildContext context, ColumnMapping m) =>
       context.read<BankImportCubit>().updateMapping(m);
 
-  String _colLabel(int i) {
-    if (_m.hasHeaderRow &&
-        _table.rows.isNotEmpty &&
-        i < _table.rows.first.length) {
-      final h = _table.rows.first[i].trim();
+  /// Başlık satırı tablonun İLK satırı olmak zorunda değil: gerçek ekstrelerde
+  /// önce hesap künyesi (Şube/IBAN/Bakiye) gelir. Etiket, tespit edilen
+  /// başlık satırından okunur (bkz. `ColumnMapping.headerRowIndex`).
+  List<String> get _headerRow =>
+      _m.hasHeaderRow && _m.headerRowIndex < _table.rows.length
+          ? _table.rows[_m.headerRowIndex]
+          : const [];
+
+  String _colLabel(BuildContext context, int i) {
+    final header = _headerRow;
+    if (i < header.length) {
+      final h = header[i].trim();
       if (h.isNotEmpty) return h.length > 22 ? '${h.substring(0, 22)}…' : h;
     }
-    return '${i + 1}. sütun';
+    return context.l10n.bankImportColumnN(i + 1);
   }
 
   @override
@@ -150,7 +157,8 @@ class BankImportMappingView extends StatelessWidget {
                 if (allowNone)
                   const DropdownMenuItem(value: -1, child: Text('—')),
                 for (var i = 0; i < cols; i++)
-                  DropdownMenuItem(value: i, child: Text(_colLabel(i))),
+                  DropdownMenuItem(
+                      value: i, child: Text(_colLabel(context, i))),
               ],
               onChanged: (v) => v == null ? null : onChanged(v),
             ),
@@ -186,28 +194,78 @@ class BankImportMappingView extends StatelessWidget {
     );
   }
 
+  /// Eşlemenin hangi alana denk geldiği (sütun → kısa etiket). Önizlemede
+  /// başlığın altına yazılır ki kullanıcı "hangi sütun neye gidiyor" sorusunu
+  /// açılır menülere bakmadan görebilsin.
+  String? _roleOf(BuildContext context, int col) {
+    if (col == _m.dateCol) return context.l10n.bankImportRoleDate;
+    if (col == _m.descCol) return context.l10n.bankImportRoleDesc;
+    if (col == _m.amountCol) return context.l10n.bankImportRoleAmount;
+    if (col == _m.debitCol) return context.l10n.bankImportRoleDebit;
+    if (col == _m.creditCol) return context.l10n.bankImportRoleCredit;
+    if (col == _m.balanceCol) return context.l10n.bankImportRoleBalance;
+    return null;
+  }
+
+  /// Önizleme: başlık + İLK VERİ satırları. Eskiden `rows.take(6)` ile
+  /// tablonun ilk 6 satırı gösteriliyordu; gerçek ekstrelerde bunlar hesap
+  /// künyesi olduğu için tek bir hareket bile görünmüyordu.
   Widget _preview(BuildContext context) {
-    final rows = _table.rows.take(6).toList();
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columnSpacing: 18,
-        headingRowHeight: 0,
-        columns: [
-          for (var i = 0; i < _table.columnCount; i++)
-            const DataColumn(label: SizedBox.shrink()),
-        ],
-        rows: [
-          for (final r in rows)
-            DataRow(
-              cells: [
-                for (var i = 0; i < _table.columnCount; i++)
-                  DataCell(Text(i < r.length ? r[i] : '',
-                      style: const TextStyle(fontSize: 12))),
-              ],
-            ),
-        ],
-      ),
+    final cs = Theme.of(context).colorScheme;
+    final cols = _table.columnCount;
+    final dataRows = _table.rows.skip(_m.firstDataRow).take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.l10n.bankImportPreviewTitle,
+            style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 18,
+            headingRowHeight: 46,
+            dataRowMinHeight: 32,
+            dataRowMaxHeight: 40,
+            columns: [
+              for (var i = 0; i < cols; i++)
+                DataColumn(
+                  label: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_colLabel(context, i),
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w600)),
+                      if (_roleOf(context, i) case final role?)
+                        Text(role,
+                            style:
+                                TextStyle(fontSize: 10, color: cs.primary)),
+                    ],
+                  ),
+                ),
+            ],
+            rows: [
+              for (final r in dataRows)
+                DataRow(
+                  cells: [
+                    for (var i = 0; i < cols; i++)
+                      DataCell(Text(
+                        i < r.length ? r[i] : '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _roleOf(context, i) == null
+                              ? cs.onSurfaceVariant
+                              : cs.onSurface,
+                        ),
+                      )),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -48,5 +48,57 @@ void main() {
       expect(parseStatementDate('Tarih', StatementDateFormat.auto), isNull);
       expect(parseStatementDate('', StatementDateFormat.auto), isNull);
     });
+
+    // --- Gerçek Akbank CSV örneğinden çıkarılan regresyonlar ---
+
+    test('REGRESYON: DB2 zaman damgası ISO önekinden okunur', () {
+      // Eski sabitlenmemiş regex dizenin ORTASINDAKİ "26-07-16"yı yakalayıp
+      // 2016-07-26 üretiyordu (sessiz veri bozulması).
+      expect(
+        parseStatementDate('2026-07-16-10.53.10.816925',
+            StatementDateFormat.auto),
+        DateTime(2026, 7, 16),
+      );
+      expect(
+        parseStatementDate('2026-04-30-19.56.39.971948',
+            StatementDateFormat.auto),
+        DateTime(2026, 4, 30),
+      );
+    });
+
+    test('ISO önekine saat eklenmiş biçimler', () {
+      expect(parseStatementDate('2026-07-16 10:53', StatementDateFormat.auto),
+          DateTime(2026, 7, 16));
+      expect(
+          parseStatementDate('2026-07-16T10:53:10Z', StatementDateFormat.auto),
+          DateTime(2026, 7, 16));
+    });
+
+    test('gg.aa.yyyy sonrası saat kuyruğu', () {
+      expect(
+          parseStatementDate('16.07.2026 10:53:10', StatementDateFormat.auto),
+          DateTime(2026, 7, 16));
+    });
+
+    test('ISO öneki zorlanan biçimden bağımsızdır', () {
+      expect(parseStatementDate('2026-07-16', StatementDateFormat.monthFirst),
+          DateTime(2026, 7, 16));
+    });
+
+    test('rakam dizisinin içindeki sahte tarih reddedilir', () {
+      // IBAN / hesap numarası / referans no gibi uzun rakam dizileri.
+      expect(
+          parseStatementDate(
+              'TR320004600817888000097812', StatementDateFormat.auto),
+          isNull);
+      expect(
+          parseStatementDate('000000003598401', StatementDateFormat.auto),
+          isNull);
+    });
+
+    test('geçersiz ISO öneki sessizce gün-önceye düşmez', () {
+      expect(
+          parseStatementDate('2026-13-45', StatementDateFormat.auto), isNull);
+    });
   });
 }

@@ -39,6 +39,18 @@ class ColumnMapper {
   static const _creditKw = ['alacak', 'credit', 'giren', 'yatan', 'gelir'];
   static const _balanceKw = ['bakiye', 'balance', 'kalan'];
 
+  /// Hareket referansı başlıkları. "dekont"/"referans" tek başına yeterince
+  /// ayırt edici; "islem no"/"fis no" da bankalarda yaygın.
+  static const _referenceKw = [
+    'dekont',
+    'referans',
+    'reference',
+    'islem no',
+    'fis no',
+    'islem numarasi',
+    'transaction id',
+  ];
+
   /// Başlık ve içerik sezgisiyle bir başlangıç eşlemesi üretir.
   ColumnMapping guess(RawTable table) {
     if (table.isEmpty) return const ColumnMapping(dateCol: -1, descCol: -1);
@@ -52,6 +64,7 @@ class ColumnMapper {
     final debitCol = _findByKeywords(header, _debitKw);
     final creditCol = _findByKeywords(header, _creditKw);
     final balanceCol = _findByKeywords(header, _balanceKw);
+    final referenceCol = _findByKeywords(header, _referenceKw);
 
     // "Bakiye Tutarı" gibi TEK başlık hem 'bakiye' hem 'tutar' anahtarını
     // içerebilir; bakiye sütununu yanlışlıkla tutar sanma.
@@ -68,7 +81,7 @@ class ColumnMapper {
     }
     if (descCol < 0) {
       descCol = _guessTextColumn(dataRows, table.columnCount,
-          {dateCol, amountCol, debitCol, creditCol, balanceCol});
+          {dateCol, amountCol, debitCol, creditCol, balanceCol, referenceCol});
     }
 
     final useDebitCredit = debitCol >= 0 || creditCol >= 0;
@@ -79,9 +92,10 @@ class ColumnMapper {
       debitCol: useDebitCredit && debitCol >= 0 ? debitCol : null,
       creditCol: useDebitCredit && creditCol >= 0 ? creditCol : null,
       balanceCol: balanceCol >= 0 ? balanceCol : null,
+      referenceCol: referenceCol >= 0 ? referenceCol : null,
       signMode:
           useDebitCredit ? SignMode.debitCreditColumns : SignMode.signedAmount,
-      hasHeaderRow: headerIdx >= 0,
+      headerRowIndex: headerIdx,
     );
   }
 
@@ -92,7 +106,12 @@ class ColumnMapper {
     var skipped = 0;
     final rows = <_DataRow>[];
 
-    for (final row in table.rows) {
+    // Başlıktan ÖNCEKİ satırlar (hesap künyesi: Şube/IBAN/Bakiye/Tarih Aralığı)
+    // veri değildir; hiç bakılmaz. Aksi halde "0817" ya da "10.650,04" gibi
+    // hücreler tutar sanılıp satır "atlandı" diye sayılıyor, kullanıcı gerçekte
+    // hiçbir şey kaybetmediği hâlde "5 satır atlandı" uyarısı görüyordu.
+    for (var r = m.firstDataRow; r < table.rows.length; r++) {
+      final row = table.rows[r];
       String cell(int i) => (i >= 0 && i < row.length) ? row[i] : '';
 
       final date = parseStatementDate(cell(m.dateCol), m.dateFormat);
@@ -113,6 +132,9 @@ class ColumnMapper {
         columnSigned: signed,
         magnitude: signed.abs(),
         balance: balance,
+        reference: m.referenceCol != null
+            ? _nullIfEmpty(cell(m.referenceCol!))
+            : null,
       ));
     }
 
@@ -138,6 +160,7 @@ class ColumnMapper {
             type: signed < 0
                 ? TransactionTypeModel.expense
                 : TransactionTypeModel.income,
+            reference: r.reference,
           );
         }(),
     ];
@@ -256,6 +279,8 @@ class ColumnMapper {
 
   bool _hasDigit(String s) => RegExp(r'\d').hasMatch(s);
 
+  String? _nullIfEmpty(String s) => s.trim().isEmpty ? null : s.trim();
+
   /// Türkçe aksanları sadeleştirip küçük harfe çevirir (anahtar eşleşmesi için).
   String _norm(String s) => s
       .replaceAll('İ', 'I')
@@ -283,11 +308,13 @@ class _DataRow {
   final double columnSigned;
   final double magnitude;
   final double? balance;
+  final String? reference;
   const _DataRow({
     required this.date,
     required this.description,
     required this.columnSigned,
     required this.magnitude,
     required this.balance,
+    required this.reference,
   });
 }

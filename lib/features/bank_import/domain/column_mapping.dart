@@ -36,11 +36,29 @@ class ColumnMapping extends Equatable {
   /// edilemedi.
   final int? balanceCol;
 
+  /// Varsa bankanın hareket referansı (Dekont No / İşlem No / Referans).
+  /// Hareketin bir parçası DEĞİL; yalnız tekrar tespitinde kesin anahtar
+  /// olarak kullanılır. Yalnız BAŞLIKTAN bulunur (içerikten tahmin edilmez —
+  /// rastgele bir kod sütunu referans sanılırsa gerçek tekrarlar kaçardı).
+  final int? referenceCol;
+
   final SignMode signMode;
   final StatementDateFormat dateFormat;
 
-  /// İlk satır başlık mı (ayrıştırmada atlanır).
-  final bool hasHeaderRow;
+  /// Başlık satırının tablodaki İNDEKSİ; başlık bulunamadıysa -1.
+  ///
+  /// Eskiden yalnız `hasHeaderRow: bool` tutuluyor, indeks atılıyordu; UI de
+  /// başlığın `rows.first` olduğunu varsayıyordu. Gerçek ekstrelerde tablodan
+  /// önce hesap künyesi (Şube/IBAN/Bakiye…) gelir — bir Akbank CSV'sinde
+  /// başlık 6. satırdaydı ve eşleme ekranı sütunları "Şube / 0817 / (boş)"
+  /// diye etiketliyordu. İndeks ayrıca künye satırlarının veri sanılıp
+  /// "N satır atlandı" uyarısı üretmesini de engeller.
+  final int headerRowIndex;
+
+  bool get hasHeaderRow => headerRowIndex >= 0;
+
+  /// Veri satırlarının başladığı indeks (başlık yoksa 0).
+  int get firstDataRow => headerRowIndex + 1;
 
   const ColumnMapping({
     required this.dateCol,
@@ -49,9 +67,10 @@ class ColumnMapping extends Equatable {
     this.debitCol,
     this.creditCol,
     this.balanceCol,
+    this.referenceCol,
     this.signMode = SignMode.signedAmount,
     this.dateFormat = StatementDateFormat.auto,
-    this.hasHeaderRow = true,
+    this.headerRowIndex = -1,
   });
 
   bool get isValid {
@@ -70,9 +89,10 @@ class ColumnMapping extends Equatable {
     int? Function()? debitCol,
     int? Function()? creditCol,
     int? Function()? balanceCol,
+    int? Function()? referenceCol,
     SignMode? signMode,
     StatementDateFormat? dateFormat,
-    bool? hasHeaderRow,
+    int? headerRowIndex,
   }) {
     return ColumnMapping(
       dateCol: dateCol ?? this.dateCol,
@@ -81,9 +101,10 @@ class ColumnMapping extends Equatable {
       debitCol: debitCol != null ? debitCol() : this.debitCol,
       creditCol: creditCol != null ? creditCol() : this.creditCol,
       balanceCol: balanceCol != null ? balanceCol() : this.balanceCol,
+      referenceCol: referenceCol != null ? referenceCol() : this.referenceCol,
       signMode: signMode ?? this.signMode,
       dateFormat: dateFormat ?? this.dateFormat,
-      hasHeaderRow: hasHeaderRow ?? this.hasHeaderRow,
+      headerRowIndex: headerRowIndex ?? this.headerRowIndex,
     );
   }
 
@@ -96,9 +117,10 @@ class ColumnMapping extends Equatable {
         'debitCol': debitCol,
         'creditCol': creditCol,
         'balanceCol': balanceCol,
+        'referenceCol': referenceCol,
         'signMode': signMode.name,
         'dateFormat': dateFormat.name,
-        'hasHeaderRow': hasHeaderRow,
+        'headerRowIndex': headerRowIndex,
       };
 
   factory ColumnMapping.fromMap(Map<String, dynamic> m) => ColumnMapping(
@@ -108,10 +130,11 @@ class ColumnMapping extends Equatable {
         debitCol: m['debitCol'] as int?,
         creditCol: m['creditCol'] as int?,
         balanceCol: m['balanceCol'] as int?,
+        referenceCol: m['referenceCol'] as int?,
         signMode: SignMode.values.byName(m['signMode'] as String),
         dateFormat:
             StatementDateFormat.values.byName(m['dateFormat'] as String),
-        hasHeaderRow: m['hasHeaderRow'] as bool,
+        headerRowIndex: m['headerRowIndex'] as int,
       );
 
   @override
@@ -122,8 +145,9 @@ class ColumnMapping extends Equatable {
         debitCol,
         creditCol,
         balanceCol,
+        referenceCol,
         signMode,
         dateFormat,
-        hasHeaderRow,
+        headerRowIndex,
       ];
 }

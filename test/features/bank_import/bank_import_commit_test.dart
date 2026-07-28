@@ -2,8 +2,10 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
+import 'package:cunehat/features/bank_import/data/pdf_rasterizer.dart';
 import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
+import 'package:cunehat/features/bank_import/data/statement_ocr_service.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
@@ -22,6 +24,10 @@ class _MockReader extends Mock implements RawTableReader {}
 class _MockMapper extends Mock implements ColumnMapper {}
 
 class _MockPdf extends Mock implements PdfStatementParser {}
+
+class _MockRasterizer extends Mock implements PdfRasterizer {}
+
+class _MockOcr extends Mock implements StatementOcrService {}
 
 class _MockGuesser extends Mock implements CategoryGuesser {}
 
@@ -97,6 +103,9 @@ void main() {
       _MockReader(),
       _MockMapper(),
       _MockPdf(),
+      // Rasterleştirme/OCR commit yolunda kullanılmaz.
+      _MockRasterizer(),
+      _MockOcr(),
       _MockGuesser(),
       // CategoryRepository commit yolunda kullanılmaz.
       _MockCategoryRepo(),

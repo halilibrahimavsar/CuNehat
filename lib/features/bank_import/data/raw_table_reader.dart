@@ -1,9 +1,11 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart';
 import 'package:injectable/injectable.dart';
+
+import 'package:cunehat/features/bank_import/data/statement_text_decoder.dart';
+import 'package:cunehat/features/bank_import/data/xls/biff8_reader.dart';
 
 /// Ham tablo: satır × hücre (hepsi String). Kolon eşleme bunun üstünde çalışır.
 class RawTable {
@@ -12,6 +14,20 @@ class RawTable {
 
   bool get isEmpty => rows.isEmpty;
   int get columnCount => rows.fold(0, (m, r) => r.length > m ? r.length : m);
+}
+
+/// `.xls` okumasının sonucu: tablo + bütünlük şüphesi.
+class XlsReadResult {
+  final RawTable table;
+  final int unresolvedCells;
+  final bool truncated;
+  const XlsReadResult({
+    required this.table,
+    required this.unresolvedCells,
+    required this.truncated,
+  });
+
+  bool get isSuspect => unresolvedCells > 0 || truncated;
 }
 
 /// Banka ekstresi dosyalarını ham tabloya çeviren okuyucu. CSV bu fazda;
@@ -38,6 +54,22 @@ class RawTableReader {
     return RawTable(rows);
   }
 
+  /// Eski ikili `.xls` (OLE2/BIFF8) ekstresini ham tabloya çevirir. `excel`
+  /// paketi bu biçimi okumaz; okuyucu `data/xls/` altında.
+  ///
+  /// Okunabildiği hâlde bütünlüğü şüpheliyse (çözülemeyen hücre / kırpık akış)
+  /// tablo yine döner ama [XlsReadResult.warning] doldurulur — sessizce eksik
+  /// veri sunmamak için.
+  Future<XlsReadResult> readXls(String path) async {
+    final bytes = await File(path).readAsBytes();
+    final sheet = Biff8Reader().readFirstSheet(bytes);
+    return XlsReadResult(
+      table: RawTable(sheet.rows),
+      unresolvedCells: sheet.unresolvedCells,
+      truncated: sheet.truncated,
+    );
+  }
+
   String _cellString(Data? cell) {
     final v = cell?.value;
     return switch (v) {
@@ -55,7 +87,9 @@ class RawTableReader {
     final bytes = await File(path).readAsBytes();
     // Satır sonlarını tek biçime indir; csv paketinin eol'ü aksi halde
     // '\n'-yalnız dosyalarda satırları bölmez (hepsini tek satır sanır).
-    final text = _decode(bytes).replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+    final text = decodeStatementBytes(bytes)
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n');
     if (text.trim().isEmpty) return const RawTable([]);
 
     final delimiter = _detectDelimiter(text);
@@ -73,17 +107,6 @@ class RawTableReader {
           .where((r) => r.any((c) => c.trim().isNotEmpty))
           .toList(),
     );
-  }
-
-  /// UTF-8 (katı) dener; başarısızsa latin1'e düşer (asla fırlatmaz). Türkçe
-  /// Windows-1254 dosyalarda bazı karakterler bozulabilir — kozmetik ve
-  /// inceleme adımında düzeltilebilir; yapı (tarih/tutar) korunur.
-  String _decode(List<int> bytes) {
-    try {
-      return utf8.decode(bytes);
-    } on FormatException {
-      return latin1.decode(bytes);
-    }
   }
 
   String _detectDelimiter(String text) {

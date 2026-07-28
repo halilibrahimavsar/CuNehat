@@ -8,6 +8,71 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final mapper = ColumnMapper();
 
+  /// Gerçek Akbank CSV'sinin yapısı: tablodan önce 5 satırlık hesap künyesi,
+  /// başlık 6. satırda (indeks 5).
+  RawTable realAkbankTable() => RawTable([
+        ['Şube', '0817', ''],
+        ['HesapNo', '0097812', ''],
+        ['IBAN', 'TR320004600817888000097812', ''],
+        ['Kullanılabilir Bakiye', '10.650,04', ''],
+        ['Tarih Aralığı', '01.03.2026-21.07.2026', ''],
+        ['Tarih', 'Tutar', 'Bakiye', 'Açıklama', ''],
+        [
+          '2026-07-16-10.53.10.816925',
+          '2.000,00 TL',
+          '2.000,04 TL',
+          'Mirze Mehmet Avşar - Yapı Ve Kredi Ban',
+          ''
+        ],
+        [
+          '2026-07-13-02.11.57.188977',
+          '-2.304,00 TL',
+          '-2.299,96 TL',
+          'Elekse/merveserin.co',
+          ''
+        ],
+      ]);
+
+  group('künyeli (preamble) gerçek ekstre', () {
+    test('REGRESYON: başlık satırının indeksi korunur', () {
+      final m = mapper.guess(realAkbankTable());
+      expect(m.headerRowIndex, 5);
+      expect(m.hasHeaderRow, isTrue);
+      expect(m.firstDataRow, 6);
+      expect(m.dateCol, 0);
+      expect(m.amountCol, 1);
+      expect(m.balanceCol, 2);
+      expect(m.descCol, 3);
+    });
+
+    test('REGRESYON: künye satırları "atlandı" sayılmaz', () {
+      final table = realAkbankTable();
+      final r = mapper.apply(table, mapper.guess(table));
+      expect(r.drafts.length, 2);
+      // Eskiden Şube/HesapNo/IBAN/Bakiye/Tarih Aralığı satırlarındaki sayılar
+      // tutar sanılıp 5 sahte "atlanan satır" raporlanıyordu.
+      expect(r.skippedRows, 0);
+    });
+
+    test('REGRESYON: DB2 zaman damgalı tarihler doğru okunur', () {
+      final table = realAkbankTable();
+      final r = mapper.apply(table, mapper.guess(table));
+      expect(r.drafts[0].date, DateTime(2026, 7, 16));
+      expect(r.drafts[1].date, DateTime(2026, 7, 13));
+    });
+
+    test('başlık yoksa firstDataRow 0 (tüm satırlar taranır)', () {
+      final table = RawTable([
+        ['15.06.2026', 'MARKET', '-150,00'],
+        ['16.06.2026', 'MAAŞ', '5.000,00'],
+      ]);
+      final m = mapper.guess(table);
+      expect(m.headerRowIndex, -1);
+      expect(m.firstDataRow, 0);
+      expect(mapper.apply(table, m).drafts.length, 2);
+    });
+  });
+
   group('guess', () {
     test('tek tutar sütunlu TR başlığı', () {
       final table = RawTable([
@@ -81,7 +146,7 @@ void main() {
 
     test('tarihi geçerli ama tutarı bozuk satır atlanan sayılır', () {
       final m = const ColumnMapping(
-          dateCol: 0, descCol: 1, amountCol: 2, hasHeaderRow: true);
+          dateCol: 0, descCol: 1, amountCol: 2, headerRowIndex: 0);
       final table = RawTable([
         ['Tarih', 'Açıklama', 'Tutar'],
         ['20.03.2026', 'X', 'abc'],

@@ -18,13 +18,15 @@ TransactionEntity _tx(DateTime d, double a, String title,
           expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
     );
 
-ImportDraft _draft(DateTime d, double a, String desc, {bool expense = true}) =>
+ImportDraft _draft(DateTime d, double a, String desc,
+        {bool expense = true, String? reference}) =>
     ImportDraft(
       date: d,
       description: desc,
       amount: a,
       type:
           expense ? TransactionTypeModel.expense : TransactionTypeModel.income,
+      reference: reference,
     );
 
 void main() {
@@ -58,5 +60,75 @@ void main() {
     ];
     final marked = markDuplicateDrafts(drafts, existing);
     expect(marked[0].isDuplicate, isFalse);
+  });
+
+  group('banka referansı (Dekont No) varsa', () {
+    test(
+        'REGRESYON: aynı gün/tutar/açıklamalı GERÇEK iki hareket tekrar '
+        'sayılmaz', () {
+      // Gerçek Garanti ekstresinde "KARACA OTOMAT GIDA" aynı gün aynı tutarla
+      // iki kez geçiyor; sezgisel anahtar bunu yanlışlıkla tekrar sayıyordu.
+      final drafts = [
+        _draft(DateTime(2026, 6, 25), 40, 'KARACA OTOMAT GIDA',
+            reference: 'REF-1'),
+        _draft(DateTime(2026, 6, 25), 40, 'KARACA OTOMAT GIDA',
+            reference: 'REF-2'),
+      ];
+      final marked = markDuplicateDrafts(drafts, const []);
+      expect(marked[0].isDuplicate, isFalse);
+      expect(marked[1].isDuplicate, isFalse);
+      expect(marked[1].selected, isTrue);
+    });
+
+    test(
+        'REGRESYON: aynı dekontu paylaşan havale + masraf satırı tekrar '
+        'SAYILMAZ', () {
+      // Gerçek Garanti ekstresinde dekont no işlem başına değil OPERASYON
+      // başına: havalenin masraf satırı ana havaleyle aynı numarayı taşıyor.
+      // Referansı tek başına anahtar yapan ilk tasarım bu 3 satırı seçimden
+      // düşürüyordu — sessiz veri kaybı.
+      final drafts = [
+        _draft(DateTime(2025, 7, 7), 9000, 'MOBIL-FAST-578000367',
+            reference: '2025-07-07-16.45.14.329462'),
+        _draft(DateTime(2025, 7, 7), 12.80, 'KESİNTİ VE EKLERİ-',
+            reference: '2025-07-07-16.45.14.329462'),
+      ];
+      final marked = markDuplicateDrafts(drafts, const []);
+      expect(marked[0].isDuplicate, isFalse);
+      expect(marked[1].isDuplicate, isFalse);
+      expect(marked[1].selected, isTrue);
+    });
+
+    test('gerçekten aynı satır iki kez geçerse (aynı anahtar + aynı referans) '
+        'tekrardır', () {
+      final drafts = [
+        _draft(DateTime(2026, 6, 25), 40, 'A', reference: 'REF-1'),
+        _draft(DateTime(2026, 6, 25), 40, 'A', reference: 'REF-1'),
+      ];
+      final marked = markDuplicateDrafts(drafts, const []);
+      expect(marked[0].isDuplicate, isFalse);
+      expect(marked[1].isDuplicate, isTrue);
+      expect(marked[1].selected, isFalse);
+    });
+
+    test('referans boşsa/yoksa eski sezgi aynen çalışır', () {
+      final drafts = [
+        _draft(DateTime(2026, 6, 16), 50, 'Faiz', reference: '  '),
+        _draft(DateTime(2026, 6, 16), 50, 'Faiz'),
+      ];
+      final marked = markDuplicateDrafts(drafts, const []);
+      expect(marked[1].isDuplicate, isTrue);
+    });
+
+    test('mevcut cüzdan karşılaştırması referanstan ETKİLENMEZ', () {
+      // Kayıtlı işlemlerde banka referansı saklanmıyor; geçmiş eşleşmesi
+      // sezgisel anahtarla sürer.
+      final existing = [_tx(DateTime(2026, 6, 15), 150, 'MARKET')];
+      final drafts = [
+        _draft(DateTime(2026, 6, 15), 150, 'Market', reference: 'REF-9'),
+      ];
+      final marked = markDuplicateDrafts(drafts, existing);
+      expect(marked[0].isDuplicate, isTrue);
+    });
   });
 }

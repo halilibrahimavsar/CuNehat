@@ -183,6 +183,38 @@ class CategoryGuesser {
     return null;
   }
 
+  /// Bankanın KENDİ etiketi ([ImportDraft.sourceTag]) → uygulamadaki grup adı.
+  /// Yalnız anlamlı olanlar eşlenir: "Para Çekme"/"Para Transferi"/"Komisyon"
+  /// gibi etiketler bir harcama TÜRÜ değil bir kanal bildirir, kategoriye
+  /// çevrilmeleri yanlış güven verirdi — bilerek listede yok (o satırlar
+  /// kategorisiz kalıp inceleme ekranında kullanıcıya sorulur).
+  static const Map<String, String> _tagGroups = {
+    'Alışveriş': 'Alışveriş',
+    'Fatura': 'Fatura',
+    'Fatura Ödemesi': 'Fatura',
+    'Yatırım': 'Yatırım',
+    'Maaş': 'Maaş',
+  };
+
+  /// Ekstrenin kendi kategori etiketinden tahmin. Sabit anahtar-kelime
+  /// sözlüğünden GÜÇLÜDÜR (bankanın işlemi sınıflandırması, metinden çıkarılan
+  /// tahmin değil) ama kullanıcının kendi geçmişinden zayıftır. Etiket
+  /// eşlenemiyorsa ya da karşılık gelen kategori kullanıcının listesinde yoksa
+  /// `null` — çağıran bir sonraki tahmin yoluna düşer.
+  String? guessFromSourceTag({
+    required String? sourceTag,
+    required List<CategoryEntity> candidates,
+  }) {
+    if (sourceTag == null) return null;
+    final group = _tagGroups[sourceTag];
+    if (group == null) return null;
+    final normGroup = _normalizeTr(group);
+    for (final c in candidates) {
+      if (_normalizeTr(c.id) == normGroup) return c.id;
+    }
+    return null;
+  }
+
   /// Kullanıcının GEÇMİŞ işlemlerinden bir açıklama-token → kategori indeksi
   /// kurar (tür bazında). Bir kez kurulur, tüm taslaklar için tekrar kullanılır
   /// ([guessFromHistory]). Sabit anahtar-kelime sözlüğünün aksine kullanıcının

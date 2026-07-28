@@ -16,7 +16,48 @@ typedef PdfParseLines = ({List<ImportDraft> drafts, int skippedLines});
 abstract class PdfParserStrategy {
   const PdfParserStrategy();
 
-  static final _dateRe = RegExp(r'\d{1,2}[./-]\d{1,2}[./-]\d{2,4}');
+  /// Satır başındaki tarih. Yıl-önce (ISO) biçimi ÖNCE denenir: aksi halde
+  /// `2026-07-16` satırında hiçbir alternatif tutmaz (`\d{1,2}` "20"yi alır,
+  /// ardından ayraç gelmez) ve satır bir öncekinin devamı sanılırdı.
+  static final _dateRe = RegExp(
+      r'\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}');
+
+  /// Tutarın hemen ardından gelen para birimi eki ("-4.400,00 TL12,28 TL").
+  /// Sayı çıkarıldığında bu ek açıklamada kalıp her satırın sonuna "TLTL"
+  /// yapıştırıyordu.
+  static final _currencyAfterRe = RegExp(
+    r'^[ \t]*(?:TL|TRY|USD|EUR|GBP|₺|\$|€|£)(?![A-Za-zÇĞİÖŞÜçğıöşü])',
+    caseSensitive: false,
+  );
+
+  /// Tutardan ÖNCE gelen para birimi SİMGESİ ("₺1.234,56"). Yalnız simge:
+  /// harfli biçimi burada aramak "… TL" ile biten gerçek açıklamaları
+  /// kırpma riskini getirirdi.
+  static final _currencySymbolBeforeRe = RegExp(r'[₺\$€£]\s*$');
+
+  /// Sayfa numarası satırı ("1 / 3", "2/3").
+  static final _pageNumberRe = RegExp(r'^\d+\s*/\s*\d+$');
+
+  /// Bazı bankalar (ör. Garanti) hareket satırında KENDİ kategori etiketini de
+  /// verir. `layoutText` çıktısında ayrı bir sütun olmadığı için bu etiket
+  /// açıklamaya BİTİŞİK gelir ("…-SULAlışveriş", "MAAŞ ÖDEMESİMaaş"). Uzun
+  /// olanlar önce denenmeli ("Fatura Ödemesi", "Fatura"dan önce).
+  static const statementTags = <String>[
+    'Fatura Ödemesi',
+    'Para Transferi',
+    'Para Yatırma',
+    'Kredi Kartı',
+    'Para Çekme',
+    'Alışveriş',
+    'Yatırım',
+    'Komisyon',
+    'Fatura',
+    'Kredi',
+    'Vergi',
+    'Faiz',
+    'Maaş',
+    'Diğer',
+  ];
 
   /// Virgül-binlik/nokta-ondalık ("6,500.00" — İngilizce/Akbank-QNB biçimi).
   static const _englishGroupedSrc =
@@ -105,19 +146,23 @@ abstract class PdfParserStrategy {
   /// paradan önce de sonra da gelmiş olsa fark etmez).
   PdfParseLines parseLines(String text) {
     final moneyRe = moneyPatternFor(text);
-    final records = <StringBuffer>[];
-    for (final rawLine in text.split('\n')) {
-      final line = rawLine.trim();
-      if (line.isEmpty) continue;
+    final lines = [
+      for (final raw in text.split('\n'))
+        if (raw.trim().isNotEmpty) raw.trim(),
+    ];
+    final boilerplate = _boilerplateLines(lines);
 
+    final records = <StringBuffer>[];
+    for (final line in lines) {
       if (_dateRe.matchAsPrefix(line) != null) {
         records.add(StringBuffer(line));
-      } else if (records.isNotEmpty) {
-        records.last
-          ..write(' ')
-          ..write(line);
+        continue;
       }
-      // else: ilk kayıttan önceki başlık/köşe metni — yok sayılır.
+      if (records.isEmpty) continue; // ilk kayıttan önceki başlık — yok sayılır
+      if (!_isContinuation(line, boilerplate)) continue;
+      records.last
+        ..write(' ')
+        ..write(line);
     }
 
     final drafts = <ImportDraft>[];
@@ -150,7 +195,8 @@ abstract class PdfParserStrategy {
         continue;
       }
 
-      final description = _withoutMoneyTokens(after, moneyMatches);
+      final cleaned = _withoutMoneyTokens(after, moneyMatches);
+      final (description, sourceTag) = splitTrailingTag(cleaned);
 
       drafts.add(ImportDraft(
         date: date,
@@ -158,23 +204,118 @@ abstract class PdfParserStrategy {
             description.isEmpty ? emptyDescriptionFallback : description,
         amount: magnitude.abs(),
         type: signOf(token, text),
+        sourceTag: sourceTag,
       ));
     }
 
     return (drafts: drafts, skippedLines: skipped);
   }
 
+  /// Bir kayıtta birebir tekrar eden sayfa üstbilgi/altbilgi satırları.
+  /// Çok sayfalı ekstrelerde banka adı, adres, vergi no ve sütun başlığı her
+  /// sayfada aynen tekrar eder; tarihle başlamadıkları için bir önceki kaydın
+  /// devamı sanılıp açıklamasına yapışıyorlardı (gerçek Garanti ekstresinde
+  /// son hareketin başlığı 5 satırlık künyeyle birlikte kaydediliyordu).
+  static Set<String> _boilerplateLines(List<String> lines) {
+    final counts = <String, int>{};
+    for (final line in lines) {
+      if (_dateRe.matchAsPrefix(line) != null) continue;
+      counts.update(line, (v) => v + 1, ifAbsent: () => 1);
+    }
+    return {
+      for (final e in counts.entries)
+        if (e.value > 1) e.key,
+    };
+  }
+
+  /// Tek sayfalık ekstrede tekrar sezgisi tutmaz (künye bir kez geçer), ama
+  /// künye satırları kendi başlarına da oldukça belirgindir. Hareket
+  /// açıklamalarında bu ifadeler pratikte geçmez.
+  static const _footerKeywords = <String>[
+    'genel mudurluk',
+    'vergi dairesi',
+    'vergi no',
+    'mersis',
+    'ticaret sicil',
+    'www.',
+    'http',
+  ];
+
+  /// [line], önceki kaydın görsel devamı mı (sarılmış açıklama / ayrı satıra
+  /// düşmüş Tutar-Bakiye) yoksa sayfa süsü mü?
+  ///
+  /// "Kayıtta 2 parasal token varsa tamamlanmıştır" gibi bir kural CAZİP ama
+  /// YANLIŞ: gerçek bir Akbank ekstresinde Tutar+Bakiye tarih satırındayken
+  /// açıklama yine de ikinci satıra sarabiliyor. Bu yüzden ayrım paranın
+  /// yerinden değil, satırın KENDİSİNDEN yapılır: her sayfada tekrarlayan
+  /// satırlar, sayfa numaraları ve künye ifadeleri devam değildir.
+  static bool _isContinuation(String line, Set<String> boilerplate) {
+    if (boilerplate.contains(line)) return false;
+    if (_pageNumberRe.hasMatch(line)) return false;
+    final folded = _foldTr(line);
+    return !_footerKeywords.any(folded.contains);
+  }
+
+  /// Açıklamanın sonuna BİTİŞİK gelmiş banka etiketini ayırır (bkz.
+  /// [statementTags]). Etiketten hemen önce boşluk varsa ayırmaz: o durumda
+  /// kelime açıklamanın gerçek bir parçasıdır ("ODEME FATURA" kırpılmamalı),
+  /// ayrı sütundan gelen etiket ise daima bitişiktir.
+  static (String, String?) splitTrailingTag(String description) {
+    final lowered = _foldTr(description);
+    for (final tag in statementTags) {
+      final loweredTag = _foldTr(tag);
+      if (!lowered.endsWith(loweredTag)) continue;
+      final start = description.length - tag.length;
+      if (start <= 0) continue; // açıklamanın tamamı etiket — dokunma
+      if (description[start - 1] == ' ') continue; // bitişik değil
+      final rest = description.substring(0, start).trim();
+      if (rest.isEmpty) continue;
+      return (rest, tag);
+    }
+    return (description, null);
+  }
+
+  /// Türkçe aksanı sadeleştirip küçük harfe çevirir (etiket eşleşmesi için;
+  /// `toLowerCase` tek başına 'İ'/'I' çiftinde güvenilir değil).
+  static String _foldTr(String s) => s
+      .replaceAll('İ', 'i')
+      .replaceAll('I', 'i')
+      .replaceAll('ı', 'i')
+      .replaceAll('Ş', 's')
+      .replaceAll('ş', 's')
+      .replaceAll('Ğ', 'g')
+      .replaceAll('ğ', 'g')
+      .replaceAll('Ü', 'u')
+      .replaceAll('ü', 'u')
+      .replaceAll('Ö', 'o')
+      .replaceAll('ö', 'o')
+      .replaceAll('Ç', 'c')
+      .replaceAll('ç', 'c')
+      .toLowerCase();
+
   /// [text]'ten [matches] ile eşleşen tüm alt-dizeleri çıkarıp kalanı
   /// boşlukları sadeleştirerek döner (tutar/bakiye devam satırının önünde ya
   /// da arkasında olsa da açıklamadan doğru çıkarılsın diye).
+  ///
+  /// Sayıya BİTİŞİK para birimi eki de atılır: "-4.400,00 TL12,28 TL"
+  /// satırında yalnız sayılar silinince açıklamanın sonunda "TLTL" kalıyordu
+  /// (gerçek Garanti ekstresindeki 85 hareketin tamamında).
   static String _withoutMoneyTokens(String text, List<RegExpMatch> matches) {
     final buffer = StringBuffer();
     var last = 0;
     for (final m in matches) {
-      buffer.write(text.substring(last, m.start));
+      var gap = text.substring(last, m.start);
+      // Bir önceki tutarın ardından gelen birim eki ("… 4.400,00 TL12,28 …").
+      if (last > 0) gap = gap.replaceFirst(_currencyAfterRe, '');
+      // Bu tutarın önündeki birim simgesi ("₺1.234,56").
+      gap = gap.replaceFirst(_currencySymbolBeforeRe, '');
+      buffer.write(gap);
       last = m.end;
     }
-    buffer.write(text.substring(last));
+    var tail = text.substring(last);
+    if (last > 0) tail = tail.replaceFirst(_currencyAfterRe, '');
+    buffer.write(tail);
+
     return buffer.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 }

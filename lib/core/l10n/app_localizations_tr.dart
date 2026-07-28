@@ -2444,6 +2444,86 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportContinue => 'Devam';
 
   @override
+  String bankImportColumnN(int n) {
+    return '$n. sütun';
+  }
+
+  @override
+  String get bankImportPreviewTitle => 'Önizleme (ilk hareketler)';
+
+  @override
+  String get bankImportRoleDate => 'Tarih';
+
+  @override
+  String get bankImportRoleDesc => 'Açıklama';
+
+  @override
+  String get bankImportRoleAmount => 'Tutar';
+
+  @override
+  String get bankImportRoleDebit => 'Borç';
+
+  @override
+  String get bankImportRoleCredit => 'Alacak';
+
+  @override
+  String get bankImportRoleBalance => 'Bakiye';
+
+  @override
+  String get bankImportEditDescTitle => 'Açıklamayı düzenle';
+
+  @override
+  String get bankImportEditDescLabel => 'Açıklama';
+
+  @override
+  String get bankImportEditAmountTitle => 'Tutarı düzenle';
+
+  @override
+  String get bankImportEditAmountLabel => 'Tutar';
+
+  @override
+  String get bankImportFilterAll => 'Tümü';
+
+  @override
+  String get bankImportFilterUncategorized => 'Kategorisiz';
+
+  @override
+  String get bankImportFilterDuplicates => 'Olası tekrar';
+
+  @override
+  String get bankImportSearchHint => 'Açıklamada ara';
+
+  @override
+  String get bankImportNoMatch => 'Filtreye uyan hareket yok.';
+
+  @override
+  String bankImportShownOf(int shown, int total) {
+    return '$shown / $total gösteriliyor';
+  }
+
+  @override
+  String bankImportWarnings(int count) {
+    return 'Uyarılar ($count)';
+  }
+
+  @override
+  String get bankImportStatRows => 'hareket';
+
+  @override
+  String get bankImportStatDuplicates => 'olası tekrar';
+
+  @override
+  String get bankImportStatSkipped => 'atlanan satır';
+
+  @override
+  String get bankImportStatUncategorized => 'kategorisiz';
+
+  @override
+  String bankImportSelectedOf(int selected, int total) {
+    return '$selected / $total seçili';
+  }
+
+  @override
   String get bankImportNoRows => 'İçe aktarılacak hareket bulunamadı.';
 
   @override
@@ -2485,6 +2565,45 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bankImportPdfRawHint =>
       'Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.';
+
+  @override
+  String get bankImportScannedPdfTitle => 'Bu PDF taranmış bir görüntü';
+
+  @override
+  String get bankImportScannedPdfHint =>
+      'Dosyanın içinde metin yok, yalnızca fotoğraf/tarama var. Görüntüden okumayı denedik ama hareket satırı çıkaramadık. Bankanın internet şubesinden ekstreyi Excel (.xls/.xlsx) ya da CSV olarak indirirsen çok daha isabetli sonuç alırsın.';
+
+  @override
+  String get bankImportOcrWarning =>
+      'Bu hareketler bir GÖRÜNTÜDEN okundu. Görüntü tanımada rakamlar sık karışır (virgül/nokta, 1/7, 0/O) ve doğrulayacak bakiye sütunu genelde yoktur — eklemeden önce her tutarı tek tek kontrol et.';
+
+  @override
+  String get bankImportPickAnother => 'Başka dosya seç';
+
+  @override
+  String get bankImportLegacyExcelTitle => 'Excel dosyası açılamadı';
+
+  @override
+  String bankImportLegacyExcelHint(String reason) {
+    return '$reason\n\nBankandan ekstreyi .xlsx ya da CSV olarak indir; ya da dosyayı Excel/Google E-Tablolar\'da açıp .xlsx olarak kaydet.';
+  }
+
+  @override
+  String get bankImportSourceTruncated =>
+      'Excel dosyası beklenen kapanışla bitmiyor; eksik indirilmiş olabilir. Bazı hareketler hiç okunmamış olabilir — satır sayısını bankadaki ekstreyle karşılaştır.';
+
+  @override
+  String bankImportSourceUnresolved(int count) {
+    return '$count hücrenin değeri okunamadı; o satırlarda boş görünen alanlar aslında dolu olabilir.';
+  }
+
+  @override
+  String get bankImportUnsupportedTitle => 'Desteklenmeyen dosya';
+
+  @override
+  String bankImportUnsupportedHint(String formats) {
+    return 'Bu dosyanın biçimi tanınamadı. Desteklenen biçimler: $formats';
+  }
 
   @override
   String get bankImportCopy => 'Kopyala';

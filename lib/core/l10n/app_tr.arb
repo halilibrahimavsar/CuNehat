@@ -941,6 +941,64 @@
   "bankImportDateFormat": "Tarih biçimi",
   "bankImportDateAuto": "Otomatik",
   "bankImportContinue": "Devam",
+  "bankImportColumnN": "{n}. sütun",
+  "@bankImportColumnN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportPreviewTitle": "Önizleme (ilk hareketler)",
+  "bankImportRoleDate": "Tarih",
+  "bankImportRoleDesc": "Açıklama",
+  "bankImportRoleAmount": "Tutar",
+  "bankImportRoleDebit": "Borç",
+  "bankImportRoleCredit": "Alacak",
+  "bankImportRoleBalance": "Bakiye",
+  "bankImportEditDescTitle": "Açıklamayı düzenle",
+  "bankImportEditDescLabel": "Açıklama",
+  "bankImportEditAmountTitle": "Tutarı düzenle",
+  "bankImportEditAmountLabel": "Tutar",
+  "bankImportFilterAll": "Tümü",
+  "bankImportFilterUncategorized": "Kategorisiz",
+  "bankImportFilterDuplicates": "Olası tekrar",
+  "bankImportSearchHint": "Açıklamada ara",
+  "bankImportNoMatch": "Filtreye uyan hareket yok.",
+  "bankImportShownOf": "{shown} / {total} gösteriliyor",
+  "@bankImportShownOf": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportWarnings": "Uyarılar ({count})",
+  "@bankImportWarnings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportStatRows": "hareket",
+  "bankImportStatDuplicates": "olası tekrar",
+  "bankImportStatSkipped": "atlanan satır",
+  "bankImportStatUncategorized": "kategorisiz",
+  "bankImportSelectedOf": "{selected} / {total} seçili",
+  "@bankImportSelectedOf": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "bankImportNoRows": "İçe aktarılacak hareket bulunamadı.",
   "bankImportSelectAll": "Tümü",
   "bankImportDeselectAll": "Hiçbiri",
@@ -955,6 +1013,37 @@
   "bankImportShowRaw": "Ham metni göster",
   "bankImportPdfRawTitle": "PDF metni tanınamadı",
   "bankImportPdfRawHint": "Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.",
+  "bankImportScannedPdfTitle": "Bu PDF taranmış bir görüntü",
+  "bankImportScannedPdfHint": "Dosyanın içinde metin yok, yalnızca fotoğraf/tarama var. Görüntüden okumayı denedik ama hareket satırı çıkaramadık. Bankanın internet şubesinden ekstreyi Excel (.xls/.xlsx) ya da CSV olarak indirirsen çok daha isabetli sonuç alırsın.",
+  "bankImportOcrWarning": "Bu hareketler bir GÖRÜNTÜDEN okundu. Görüntü tanımada rakamlar sık karışır (virgül/nokta, 1/7, 0/O) ve doğrulayacak bakiye sütunu genelde yoktur — eklemeden önce her tutarı tek tek kontrol et.",
+  "bankImportPickAnother": "Başka dosya seç",
+  "bankImportLegacyExcelTitle": "Excel dosyası açılamadı",
+  "bankImportLegacyExcelHint": "{reason}\n\nBankandan ekstreyi .xlsx ya da CSV olarak indir; ya da dosyayı Excel/Google E-Tablolar'da açıp .xlsx olarak kaydet.",
+  "@bankImportLegacyExcelHint": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportSourceTruncated": "Excel dosyası beklenen kapanışla bitmiyor; eksik indirilmiş olabilir. Bazı hareketler hiç okunmamış olabilir — satır sayısını bankadaki ekstreyle karşılaştır.",
+  "bankImportSourceUnresolved": "{count} hücrenin değeri okunamadı; o satırlarda boş görünen alanlar aslında dolu olabilir.",
+  "@bankImportSourceUnresolved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportUnsupportedTitle": "Desteklenmeyen dosya",
+  "bankImportUnsupportedHint": "Bu dosyanın biçimi tanınamadı. Desteklenen biçimler: {formats}",
+  "@bankImportUnsupportedHint": {
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
+  },
   "bankImportCopy": "Kopyala",
   "bankImportCopied": "Kopyalandı",
   "bankImportSummary": "{count} hareket · {dup} olası tekrar · {skipped} satır atlandı · {uncategorized} kategorisiz",

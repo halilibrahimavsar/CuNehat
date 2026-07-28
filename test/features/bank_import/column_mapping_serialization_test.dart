@@ -27,7 +27,7 @@ void main() {
         creditCol: 3,
         signMode: SignMode.debitCreditColumns,
         dateFormat: StatementDateFormat.auto,
-        hasHeaderRow: false,
+        headerRowIndex: -1,
       );
       final restored = ColumnMapping.fromMap(
           jsonDecode(jsonEncode(m.toMap())) as Map<String, dynamic>);

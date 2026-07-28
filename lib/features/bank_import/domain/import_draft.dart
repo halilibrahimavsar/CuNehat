@@ -18,6 +18,17 @@ class ImportDraft extends Equatable {
   /// Atanan kategori (tag). Toplu varsayılandan gelir, satır bazında düzenlenir.
   final String? categoryId;
 
+  /// Bankanın ekstrede verdiği KENDİ kategori etiketi ("Alışveriş",
+  /// "Para Çekme", "Maaş"…). Yalnız kategori tahmininde ipucu olarak
+  /// kullanılır; işleme yazılmaz. Ekstrede böyle bir sütun yoksa `null`.
+  final String? sourceTag;
+
+  /// Bankanın hareket referansı (dekont/fiş/işlem no). Ekstre içinde her
+  /// hareket için BENZERSİZDİR, dolayısıyla dosya içi tekrarları
+  /// (gün+tutar+açıklama sezgisinin aksine) KESİN olarak yakalar.
+  /// Sütun yoksa `null`. İşleme yazılmaz — bkz. [toEntity].
+  final String? reference;
+
   /// Dedup tarafından mevcut cüzdanda ya da dosya içinde eşi bulunduysa true.
   final bool isDuplicate;
 
@@ -30,6 +41,8 @@ class ImportDraft extends Equatable {
     required this.amount,
     required this.type,
     this.categoryId,
+    this.sourceTag,
+    this.reference,
     this.isDuplicate = false,
     this.selected = true,
   });
@@ -42,6 +55,8 @@ class ImportDraft extends Equatable {
     double? amount,
     TransactionTypeModel? type,
     String? categoryId,
+    String? sourceTag,
+    String? reference,
     bool? isDuplicate,
     bool? selected,
   }) {
@@ -51,6 +66,8 @@ class ImportDraft extends Equatable {
       amount: amount ?? this.amount,
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
+      sourceTag: sourceTag ?? this.sourceTag,
+      reference: reference ?? this.reference,
       isDuplicate: isDuplicate ?? this.isDuplicate,
       selected: selected ?? this.selected,
     );
@@ -80,6 +97,15 @@ class ImportDraft extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [date, description, amount, type, categoryId, isDuplicate, selected];
+  List<Object?> get props => [
+        date,
+        description,
+        amount,
+        type,
+        categoryId,
+        sourceTag,
+        reference,
+        isDuplicate,
+        selected,
+      ];
 }
