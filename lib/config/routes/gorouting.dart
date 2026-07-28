@@ -7,6 +7,7 @@ import 'package:cunehat/features/settings/presentation/page/local_auth_settings_
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_page.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/onboarding/onboarding_route_observer.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
@@ -17,6 +18,9 @@ import 'package:cunehat/features/recurring_transactions/presentation/pages/recur
 GoRouter createAppRouter(AppAuthBloc authBloc) {
   return GoRouter(
     initialLocation: AppRoutes.home,
+    // İnteraktif turlar "sayfam üstte mi" koşuluna bakar; route yığını
+    // değişince bekleyenler yeniden değerlendirilmeli.
+    observers: [OnboardingRouteObserver()],
     redirect: (context, state) {
       final authState = authBloc.state;
 

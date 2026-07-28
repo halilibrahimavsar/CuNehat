@@ -14,10 +14,9 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_custom_sheet.dart';
-import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confetti/confetti.dart';
@@ -94,21 +93,6 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
     _loadInvestments();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
-  }
-
-  Future<void> _maybeShowTour() async {
-    if (!mounted) return;
-    // v1 kısıtı: TL dışı cüzdanda bu sayfa TryOnlyFeatureView gösterir,
-    // showcase hedefleri hiç mount olmaz — bayrağı erken işaretlemeyelim.
-    if (widget.activeWallet.currency != kDefaultCurrency) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    coordinator.registerKeys(OnboardingFlow.investment, _tourKeys);
-    if (coordinator.isSeen(OnboardingFlow.investment)) return;
-    await coordinator.waitUntilStable();
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(_tourKeys);
-    await coordinator.markSeen(OnboardingFlow.investment);
   }
 
   @override
@@ -249,12 +233,23 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
 
   @override
   Widget build(BuildContext context) {
-    // v1 kısıtı: yatırım değerlemesi ve nakit kuplajı TL varsayar.
-    if (widget.activeWallet.currency != kDefaultCurrency) {
-      return Scaffold(
-        body: TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanYatirim),
-      );
-    }
+    // v1 kısıtı: yatırım değerlemesi ve nakit kuplajı TL varsayar. TL dışı
+    // cüzdanda showcase hedefleri hiç mount olmaz; tur da istenmez.
+    final isTryWallet = widget.activeWallet.currency == kDefaultCurrency;
+    return OnboardingTour(
+      flow: OnboardingFlow.investment,
+      keys: _tourKeys,
+      enabled: isTryWallet,
+      child: isTryWallet
+          ? _buildContent(context)
+          : Scaffold(
+              body:
+                  TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanYatirim),
+            ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
         if (state is InvestmentActionSuccess) {

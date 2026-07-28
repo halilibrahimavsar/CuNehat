@@ -36,8 +36,6 @@ void main() {
 
     when(() => mockDebtBloc.state).thenReturn(DebtInitial());
     when(() => mockReceivableBloc.state).thenReturn(ReceivableInitial());
-
-    when(() => mockOnboardingCoordinator.registerKeys(any(), any())).thenReturn(null);
     when(() => mockOnboardingCoordinator.isSeen(any())).thenReturn(true);
 
     if (GetIt.I.isRegistered<OnboardingCoordinator>()) {

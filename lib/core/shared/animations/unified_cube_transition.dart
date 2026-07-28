@@ -1,12 +1,79 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import 'cube_face.dart';
+
 /// Direction of cube transition
 enum CubeDirection {
   left, // Horizontal: slide left
   right, // Horizontal: slide right
   up, // Vertical: slide up (going to higher index)
   down, // Vertical: slide down (going to lower index)
+}
+
+bool _isHorizontal(CubeDirection direction) =>
+    direction == CubeDirection.left || direction == CubeDirection.right;
+
+/// Bir küp yüzünün geçiş parametrelerini üretir.
+///
+/// [isOutgoing] false ise yüz "gelen" taraftır. Duran bir yığında geçerli
+/// yüz, `value = 1.0` ile gelen taraf olarak çizilir; tüm dönüşümler birim
+/// olduğundan görsel olarak dokunulmamış görünür.
+CubeFace _cubeFace({
+  required Widget child,
+  required bool visible,
+  required bool isOutgoing,
+  required double value,
+  required CubeDirection direction,
+  required bool useFade,
+}) {
+  // right/down = normal (-1 for outgoing rotation to go right/down)
+  // left/up = reverse (1 for outgoing rotation to go left/up)
+  final sign =
+      (direction == CubeDirection.right || direction == CubeDirection.down)
+          ? -1.0
+          : 1.0;
+  final horizontal = _isHorizontal(direction);
+
+  final rotation = isOutgoing
+      ? Tween(begin: 0.0, end: sign * math.pi / 2.2).transform(value)
+      : Tween(begin: -sign * math.pi / 2.2, end: 0.0).transform(value);
+
+  final Offset translation;
+  if (horizontal) {
+    translation = isOutgoing
+        ? Tween<Offset>(begin: Offset.zero, end: Offset(sign, 0.0))
+            .transform(value)
+        : Tween<Offset>(begin: Offset(-sign, 0.0), end: Offset.zero)
+            .transform(value);
+  } else {
+    translation = isOutgoing
+        ? Tween<Offset>(begin: Offset.zero, end: Offset(0.0, sign))
+            .transform(value)
+        : Tween<Offset>(begin: Offset(0.0, -sign), end: Offset.zero)
+            .transform(value);
+  }
+
+  final Alignment alignment;
+  if (horizontal) {
+    alignment = isOutgoing
+        ? (sign < 0 ? Alignment.centerRight : Alignment.centerLeft)
+        : (sign < 0 ? Alignment.centerLeft : Alignment.centerRight);
+  } else {
+    alignment = isOutgoing
+        ? (sign < 0 ? Alignment.bottomCenter : Alignment.topCenter)
+        : (sign < 0 ? Alignment.topCenter : Alignment.bottomCenter);
+  }
+
+  return CubeFace(
+    visible: visible,
+    alignment: alignment,
+    rotationX: horizontal ? 0.0 : rotation,
+    rotationY: horizontal ? rotation : 0.0,
+    translation: translation,
+    opacity: useFade ? (isOutgoing ? 1.0 - value : value) : 1.0,
+    child: child,
+  );
 }
 
 /// Unified cube transition widget supporting all directions
@@ -28,117 +95,30 @@ class UnifiedCubeTransition extends StatelessWidget {
     this.useFade = true,
   });
 
-  bool get _isHorizontal =>
-      direction == CubeDirection.left || direction == CubeDirection.right;
-
-  Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.001);
-
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
         final value = controller.value;
-
-        // Calculate sign based on direction
-        // right/down = normal (-1 for outgoing rotation to go right/down)
-        // left/up = reverse (1 for outgoing rotation to go left/up)
-        final sign = (direction == CubeDirection.right ||
-                direction == CubeDirection.down)
-            ? -1.0
-            : 1.0;
-
-        // Rotations
-        final outgoingRotation = Tween(
-          begin: 0.0,
-          end: sign * math.pi / 2.2,
-        ).transform(value);
-
-        final incomingRotation = Tween(
-          begin: -sign * math.pi / 2.2,
-          end: 0.0,
-        ).transform(value);
-
-        // Offsets
-        final Offset outgoingOffset;
-        final Offset incomingOffset;
-
-        if (_isHorizontal) {
-          // Horizontal movement
-          outgoingOffset = Tween<Offset>(
-            begin: Offset.zero,
-            end: Offset(sign * 1.0, 0.0),
-          ).transform(value);
-
-          incomingOffset = Tween<Offset>(
-            begin: Offset(-sign * 1.0, 0.0),
-            end: Offset.zero,
-          ).transform(value);
-        } else {
-          // Vertical movement
-          outgoingOffset = Tween<Offset>(
-            begin: Offset.zero,
-            end: Offset(0.0, sign * 1.0),
-          ).transform(value);
-
-          incomingOffset = Tween<Offset>(
-            begin: Offset(0.0, -sign * 1.0),
-            end: Offset.zero,
-          ).transform(value);
-        }
-
-        // Alignment points for rotation
-        final Alignment outgoingAlignment;
-        final Alignment incomingAlignment;
-
-        if (_isHorizontal) {
-          outgoingAlignment =
-              sign < 0 ? Alignment.centerRight : Alignment.centerLeft;
-          incomingAlignment =
-              sign < 0 ? Alignment.centerLeft : Alignment.centerRight;
-        } else {
-          outgoingAlignment =
-              sign < 0 ? Alignment.bottomCenter : Alignment.topCenter;
-          incomingAlignment =
-              sign < 0 ? Alignment.topCenter : Alignment.bottomCenter;
-        }
-
         return Stack(
           alignment: Alignment.center,
           children: [
-            // Outgoing view
-            Visibility(
+            _cubeFace(
+              child: outgoingView,
               visible: value < 0.95,
-              child: FractionalTranslation(
-                translation: outgoingOffset,
-                child: Transform(
-                  alignment: outgoingAlignment,
-                  transform: _perspective()
-                    ..multiply(_isHorizontal
-                        ? Matrix4.rotationY(outgoingRotation)
-                        : Matrix4.rotationX(outgoingRotation)),
-                  child: useFade
-                      ? Opacity(opacity: 1.0 - value, child: outgoingView)
-                      : outgoingView,
-                ),
-              ),
+              isOutgoing: true,
+              value: value,
+              direction: direction,
+              useFade: useFade,
             ),
-            // Incoming view
-            Visibility(
+            _cubeFace(
+              child: incomingView,
               visible: value > 0.05,
-              child: FractionalTranslation(
-                translation: incomingOffset,
-                child: Transform(
-                  alignment: incomingAlignment,
-                  transform: _perspective()
-                    ..multiply(_isHorizontal
-                        ? Matrix4.rotationY(incomingRotation)
-                        : Matrix4.rotationX(incomingRotation)),
-                  child: useFade
-                      ? Opacity(opacity: value, child: incomingView)
-                      : incomingView,
-                ),
-              ),
+              isOutgoing: false,
+              value: value,
+              direction: direction,
+              useFade: useFade,
             ),
           ],
         );
@@ -244,42 +224,81 @@ class VerticalListTransitionManager extends ChangeNotifier {
   }
 
   /// Build the current transition
+  ///
+  /// Her görünüm yığında **sabit bir yuvada** durur; geçiş başlarken ya da
+  /// biterken widget zinciri değişmediğinden görünümler yeniden mount olmaz.
+  /// (Eski sürüm duruyorken görünümü çıplak, geçerken sarmalanmış döndürüyor;
+  /// bu da her alt sayfa açılışında sayfayı iki kez mount ediyordu.)
   Widget buildTransition({bool useFade = true}) {
-    // Safety check: ensure views list is populated and indices are valid
-    if (_views.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    if (_isTransitioning && _previousIndex != null) {
-      // Validate indices before accessing list
-      if (_previousIndex! >= _views.length || _currentIndex >= _views.length) {
-        return const SizedBox.shrink();
-      }
-
-      final direction = _currentIndex > _previousIndex!
-          ? CubeDirection.down
-          : CubeDirection.up;
-
-      return UnifiedCubeTransition(
-        controller: _controller,
-        outgoingView: _views[_previousIndex!],
-        incomingView: _views[_currentIndex],
-        direction: direction,
-        useFade: useFade,
-      );
-    }
-
-    // Return current view if not transitioning
-    if (_currentIndex < _views.length) {
-      return _views[_currentIndex];
-    }
-
-    return const SizedBox.shrink();
+    if (_views.isEmpty) return const SizedBox.shrink();
+    return _VerticalCubeStack(
+      controller: _controller,
+      views: List.of(_views),
+      currentIndex: _currentIndex.clamp(0, _views.length - 1),
+      previousIndex: _isTransitioning ? _previousIndex : null,
+      useFade: useFade,
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+}
+
+class _VerticalCubeStack extends StatelessWidget {
+  final AnimationController controller;
+  final List<Widget> views;
+  final int currentIndex;
+  final int? previousIndex;
+  final bool useFade;
+
+  const _VerticalCubeStack({
+    required this.controller,
+    required this.views,
+    required this.currentIndex,
+    required this.previousIndex,
+    required this.useFade,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final previous = previousIndex;
+    final isTransitioning = previous != null &&
+        previous != currentIndex &&
+        previous >= 0 &&
+        previous < views.length;
+    final direction = isTransitioning && currentIndex > previous
+        ? CubeDirection.down
+        : CubeDirection.up;
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        // Durur haldeyken geçerli yüz "gelen" tarafın bitiş konumundadır:
+        // dönüşümler birim, opaklık 1.
+        final value = isTransitioning ? controller.value : 1.0;
+        return Stack(
+          alignment: Alignment.center,
+          // Yığın artık duruyorken de araya girdiğinden, görünümler eskiden
+          // olduğu gibi ebeveynin kısıtlarını AYNEN almalı.
+          fit: StackFit.passthrough,
+          children: [
+            for (var i = 0; i < views.length; i++)
+              _cubeFace(
+                child: views[i],
+                isOutgoing: isTransitioning && i == previous,
+                visible: i == currentIndex
+                    ? value > 0.05
+                    : (isTransitioning && i == previous && value < 0.95),
+                value: value,
+                direction: direction,
+                useFade: useFade,
+              ),
+          ],
+        );
+      },
+    );
   }
 }

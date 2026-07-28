@@ -8,7 +8,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
-import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
@@ -44,9 +44,9 @@ class _InvestmentDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingAutoTourTrigger(
+    return OnboardingTour(
       flow: OnboardingFlow.investmentDetail,
-      keysBuilder: () => [OnboardingKeys.investmentDetailBody],
+      keys: [OnboardingKeys.investmentDetailBody],
       child: Scaffold(
         appBar: showAppBar
             ? AppBar(

@@ -4,9 +4,9 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -82,21 +82,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _routeAnimation = null;
     if (!mounted) return;
     _c.loadCategories();
-    if (!_isEdit) {
-      _amountFocus.requestFocus();
-      _maybeShowTour();
-    }
-  }
-
-  Future<void> _maybeShowTour() async {
-    if (!getIt.isRegistered<OnboardingCoordinator>()) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    final keys = [OnboardingKeys.transactionAddForm];
-    coordinator.registerKeys(OnboardingFlow.transactionsAdd, keys);
-    if (coordinator.isSeen(OnboardingFlow.transactionsAdd)) return;
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(keys);
-    await coordinator.markSeen(OnboardingFlow.transactionsAdd);
+    if (!_isEdit) _amountFocus.requestFocus();
   }
 
   @override
@@ -157,6 +143,16 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     final surface =
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
 
+    return OnboardingTour(
+      flow: OnboardingFlow.transactionsAdd,
+      keys: [OnboardingKeys.transactionAddForm],
+      // Düzenleme modunda tanıtım gösterilmez.
+      enabled: !_isEdit,
+      child: _buildContent(context, surface),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, AppSurface surface) {
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),

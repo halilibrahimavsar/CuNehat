@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
@@ -52,19 +52,6 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
     unawaited(getIt<ExchangeRateService>().rateToTry('USD').then((_) {
       if (mounted) setState(() {});
     }));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
-  }
-
-  Future<void> _maybeShowTour() async {
-    if (!mounted) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    final keys = [OnboardingKeys.walletManagementAddButton];
-    coordinator.registerKeys(OnboardingFlow.walletManagement, keys);
-    if (coordinator.isSeen(OnboardingFlow.walletManagement)) return;
-    await coordinator.waitUntilStable();
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(keys);
-    await coordinator.markSeen(OnboardingFlow.walletManagement);
   }
 
   /// Tüm cüzdanların TL karşılığı toplamı; herhangi bir döviz cüzdanının
@@ -82,6 +69,21 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    // Kendi route'u olan yüzey: turu kabuğun dönüşümüne değil, sheet'in
+    // açılış animasyonunun bitmesine bağlıdır. (Eskiden kabuk "dönüşmüş"
+    // sayıldığından bu tur hiç oynayamıyordu.)
+    return OnboardingTour(
+      flow: OnboardingFlow.walletManagement,
+      keys: _tourKeys,
+      child: _buildContent(context),
+    );
+  }
+
+  static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.walletManagementAddButton,
+  ];
+
+  Widget _buildContent(BuildContext context) {
     return BlocConsumer<WalletBloc, WalletState>(
       listener: (context, state) {
         if (state is WalletLoadedSt) {

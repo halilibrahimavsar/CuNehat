@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,15 +7,69 @@ import 'package:showcaseview/showcaseview.dart';
 
 import 'onboarding_flow.dart';
 
-/// Üç ana ekranın (yatırım/işlemler/borç) interaktif turlarını yönetir.
+/// HomePage kabuğunun o anki durumu. [OnboardingCoordinator] bunu turların
+/// "benim yüzeyim şu an gerçekten ekranda ve duruyor mu" sorusunu yanıtlamak
+/// için okur.
+@immutable
+class OnboardingShellStatus {
+  /// Yatay küpün konumu (0.0 yatırım, 0.5 işlemler, 1.0 borç).
+  final double sliderValue;
+
+  /// Dikey yığının indeksi (0 ana görünüm, 1+ alt sayfalar).
+  final int stackIndex;
+
+  /// Yatay veya dikey geçiş animasyonu sürüyor mu.
+  final bool isAnimating;
+
+  /// Drawer / cüzdan sheet'i içeriği ölçekleyip kaydırmış durumda mı. Yalnız
+  /// animasyon sırasında değil, açık kaldığı SÜRECE true'dur: bu haldeyken
+  /// kabuktaki hedeflerin ekran konumu gerçek konumları değildir.
+  final bool isTransformed;
+
+  const OnboardingShellStatus({
+    required this.sliderValue,
+    required this.stackIndex,
+    required this.isAnimating,
+    required this.isTransformed,
+  });
+}
+
+/// Bekleyen bir tur isteği: turun anahtarları + sahibinin canlılık ve
+/// görünürlük yordamları.
+@immutable
+class _PendingTour {
+  /// İsteği açan State nesnesi. Aynı akış yeniden mount olduğunda eski
+  /// örneğin `dispose`'u yeni isteği silmesin diye kimlik olarak tutulur.
+  final Object owner;
+  final List<GlobalKey> keys;
+  final bool Function() isAlive;
+  final bool Function() isReady;
+
+  const _PendingTour({
+    required this.owner,
+    required this.keys,
+    required this.isAlive,
+    required this.isReady,
+  });
+}
+
+/// İnteraktif turların tek sahibi.
 ///
-/// Her sayfa kendi tur adımlarının [GlobalKey]'lerini [registerKeys] ile bir
-/// kez kaydeder; hem "ilk kez görüldüğünde otomatik başlat" (sayfanın kendi
-/// initState'i) hem de "Ayarlar'dan tekrar oynat" ([resetAndReplay]) aynı key
-/// listesini kullanır. [pendingFlow], Ayarlar'dan tetiklenen tekrar oynatma
-/// isteğini HomePage'e taşır (Settings ayrı bir route olduğundan, HomePage
-/// zaten dinlediği bu bildirim üzerinden slider'ı ilgili ekrana getirip
-/// showcase'i başlatır).
+/// Tasarım: **istek + kapı**, kuyruk değil. Her yüzey (sayfa/sheet) mount
+/// olduğunda turunu ister; tur ancak o yüzey KULLANICININ O AN GÖRDÜĞÜ ve
+/// DURAN yüzeyken oynatılır. Böylece bir tur asla başka bir sayfanın üstünde
+/// açılmaz — eski FIFO kuyruk, sırası gelen turu o anda hangi ekran açıksa
+/// orada başlatıyordu.
+///
+/// Kapı koşulları [OnboardingTour] içinde toplanır (route güncel mi, giriş
+/// animasyonu bitti mi, kabuk doğru konumda ve duruyor mu, hedefler ağaçta
+/// mı). Koordinatör yalnızca "hazır olan ilk isteği başlat, aynı anda tek tur
+/// oynat" kuralını uygular.
+///
+/// Yeniden değerlendirme olay güdümlüdür ([notifyMaybeReady]): kabuk
+/// animasyonları, route geçişleri ve tur bitişleri tetikler. Eski sürümdeki
+/// `await endOfFrame` döngüsü yoktur — o döngü sheet/drawer açık kaldığı
+/// sürece 60fps kare zamanlıyor ve hiç sonlanmıyordu.
 @lazySingleton
 class OnboardingCoordinator extends ChangeNotifier {
   final SharedPreferences _prefs;
@@ -25,86 +78,178 @@ class OnboardingCoordinator extends ChangeNotifier {
 
   static String _seenKey(OnboardingFlow flow) => 'onboarding_${flow.name}_seen';
 
-  final Map<OnboardingFlow, List<GlobalKey>> _registeredKeys = {};
+  /// HomePage tarafından set edilir. null ise kabuk henüz kurulmamıştır ve
+  /// kabuğa bağlı turlar (bkz. [OnboardingFlowSurface.homeSlot]) beklemede
+  /// kalır.
+  OnboardingShellStatus Function()? shellStatusProvider;
 
+  /// Testlerde gerçek overlay'i kurmadan turun başladığını gözlemleyebilmek
+  /// için ayrılmış dikiş.
+  @visibleForTesting
+  void Function(List<GlobalKey> keys)? startShowcaseOverride;
+
+  final Map<OnboardingFlow, _PendingTour> _pending = {};
+
+  /// Bu oturumda başlatılmış turlar. Kalıcı bayrak yazımı asenkron olduğundan
+  /// (ve tur BAŞLARKEN yazıldığından) senkron bir ikinci kaynak gerekir.
+  final Set<OnboardingFlow> _seenInSession = {};
+
+  OnboardingFlow? _running;
+  bool _evaluateScheduled = false;
+  bool _disposed = false;
+
+  /// O an oynayan tur (yoksa null).
+  OnboardingFlow? get runningFlow => _running;
+
+  bool isPending(OnboardingFlow flow) => _pending.containsKey(flow);
+
+  bool isSeen(OnboardingFlow flow) =>
+      _seenInSession.contains(flow) || (_prefs.getBool(_seenKey(flow)) ?? false);
+
+  Future<void> markSeen(OnboardingFlow flow) {
+    _seenInSession.add(flow);
+    return _prefs.setBool(_seenKey(flow), true);
+  }
+
+  // ==================== İSTEK / İPTAL ====================
+
+  /// Bir yüzeyin turunu ister. Akış başına EN FAZLA BİR istek tutulur; aynı
+  /// akış iki kez mount olsa da (küp geçişlerinde olabiliyor) tur bir kez
+  /// oynar.
+  void requestTour(
+    OnboardingFlow flow, {
+    required Object owner,
+    required List<GlobalKey> keys,
+    required bool Function() isAlive,
+    required bool Function() isReady,
+  }) {
+    if (keys.isEmpty || isSeen(flow) || _running == flow) return;
+    _pending[flow] = _PendingTour(
+      owner: owner,
+      keys: keys,
+      isAlive: isAlive,
+      isReady: isReady,
+    );
+    _scheduleEvaluate();
+  }
+
+  /// Yüzey ağaçtan kalkarken isteğini geri çeker. Aynı akış bu arada yeniden
+  /// mount olduysa (yeni sahip) istek korunur.
+  void cancelTour(OnboardingFlow flow, Object owner) {
+    if (identical(_pending[flow]?.owner, owner)) _pending.remove(flow);
+  }
+
+  /// "Görünürlük koşulları değişmiş olabilir, bekleyenleri yeniden
+  /// değerlendir." Kabuk animasyonları, route geçişleri, sheet açılıp
+  /// kapanması ve tur bitişleri çağırır.
+  void notifyMaybeReady() => _scheduleEvaluate();
+
+  /// [AppInitialization]'da `ShowcaseView.register(onFinish:, onDismiss:)`
+  /// ile bağlanır: tur bitince ya da kullanıcı erken kapatınca sıradaki
+  /// hazır tur değerlendirilir.
+  void handleShowcaseIdle() {
+    _running = null;
+    _scheduleEvaluate();
+  }
+
+  // ==================== DEĞERLENDİRME ====================
+
+  void _scheduleEvaluate() {
+    if (_disposed || _pending.isEmpty || _evaluateScheduled) return;
+    _evaluateScheduled = true;
+    // Kare sonuna ertelenir: mount/layout bitmeden hedeflerin ağaçta olup
+    // olmadığı ve kabuğun nihai konumu güvenilir okunamaz.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _evaluateScheduled = false;
+      _evaluate();
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _evaluate() {
+    if (_disposed || _pending.isEmpty) return;
+    _pending.removeWhere((_, tour) => !tour.isAlive());
+    if (_running != null) return;
+
+    // Bildirim sırası önceliktir (bkz. OnboardingFlow).
+    for (final flow in OnboardingFlow.values) {
+      final tour = _pending[flow];
+      if (tour == null) continue;
+      if (isSeen(flow)) {
+        _pending.remove(flow);
+        continue;
+      }
+      if (!tour.isReady()) continue;
+      _pending.remove(flow);
+      _start(flow, tour.keys);
+      return;
+    }
+  }
+
+  void _start(OnboardingFlow flow, List<GlobalKey> keys) {
+    _running = flow;
+    // Bayrak turun BAŞINDA yazılır. Tur oynarken sayfa yeniden mount olursa
+    // (küp geçişi, cüzdan değişimi) ikinci bir istek açılmasın diye; eski
+    // sürümde bayrak turun SONUNDA yazıldığı için aynı tanıtım arka arkaya
+    // iki kez oynayabiliyordu.
+    unawaited(markSeen(flow));
+    final start = startShowcaseOverride ??
+        (List<GlobalKey> k) => ShowcaseView.get().startShowCase(k);
+    start(keys);
+  }
+
+  // ==================== KABUK DURUMU ====================
+
+  /// Kabuğa bağlı bir turun oynatılabilmesi için kabuğun tam olarak o
+  /// konumda ve durur halde olması gerekir.
+  bool isHomeSlotSettled(OnboardingHomeSlot slot) {
+    final status = shellStatusProvider?.call();
+    if (status == null) return false;
+    if (status.isAnimating || status.isTransformed) return false;
+    final stackIndex = slot.stackIndex;
+    if (stackIndex != null && status.stackIndex != stackIndex) return false;
+    final sliderValue = slot.sliderValue;
+    if (sliderValue != null &&
+        (status.sliderValue - sliderValue).abs() > 0.01) {
+      return false;
+    }
+    return true;
+  }
+
+  // ==================== AYARLAR'DAN TEKRAR OYNATMA ====================
+
+  /// Ayarlar'dan tekrar oynatma isteğini HomePage'e taşır: ana ekran
+  /// turlarında kaydırıcı ilgili ekrana getirilmelidir. Turun kendisi
+  /// başlatılmaz — sayfa görünür olduğunda kapı kendiliğinden açılır.
   OnboardingFlow? _pendingFlow;
   OnboardingFlow? get pendingFlow => _pendingFlow;
 
-  /// HomePage tarafından set edilir: drawer/cüzdan diyaloğu geçiş dönüşümü
-  /// (translate/scale/rotate) sürerken true döner. Bu sırada hedef
-  /// widget'ların global konumu her frame değiştiğinden showcase overlay'i
-  /// yanlış yere çizilir — bkz. [waitUntilStable].
-  bool Function()? isBlocked;
+  void consumePendingFlow() => _pendingFlow = null;
 
-  /// Herhangi bir turu başlatmadan önce çağrılır: içeriği kaydıran geçiş
-  /// animasyonu bitene kadar (her frame yeniden kontrol ederek) bekler.
-  /// Sabit bir gecikme yerine gerçek animasyon durumunu izlediğinden, hem
-  /// gereksiz beklemez hem de animasyon süresi değişse de kırılmaz.
-  Future<void> waitUntilStable() async {
-    while (isBlocked?.call() ?? false) {
-      await SchedulerBinding.instance.endOfFrame;
-    }
-  }
-
-  // ==================== SIRALAMA (kaç ekran/sheet artık bağımsız kendi
-  // initState'inde otomatik tur tetikleyebiliyor; ikisi aynı ilk frame'de
-  // tetiklenirse showcaseview'un tekil, global ShowcaseView'ı ikinci
-  // çağrıda birincisini yarıda kesip üzerine yazar. Bu kuyruk, her turun
-  // sırayla ve tam bitene kadar gösterilmesini garanti eder. ====================
-  Completer<void>? _activeTour;
-
-  /// [AppInitialization]'da `ShowcaseView.register(onFinish:, onDismiss:)`
-  /// ile bağlanır: bir tur bitince veya kullanıcı erken kapatınca çağrılır.
-  void handleShowcaseIdle() {
-    final tour = _activeTour;
-    _activeTour = null;
-    tour?.complete();
-  }
-
-  /// Bir turu başlatmak isteyen her çağrı buradan geçer. O anda başka bir
-  /// tur gösteriliyorsa, o bitene kadar (sırayla) bekler.
-  Future<void> requestStartShowCase(List<GlobalKey> keys) async {
-    if (keys.isEmpty) return;
-    while (_activeTour != null) {
-      await _activeTour!.future;
-    }
-    final completer = Completer<void>();
-    _activeTour = completer;
-    ShowcaseView.get().startShowCase(keys);
-    await completer.future;
-  }
-
-  bool isSeen(OnboardingFlow flow) => _prefs.getBool(_seenKey(flow)) ?? false;
-
-  Future<void> markSeen(OnboardingFlow flow) =>
-      _prefs.setBool(_seenKey(flow), true);
-
-  void registerKeys(OnboardingFlow flow, List<GlobalKey> keys) {
-    _registeredKeys[flow] = keys;
-  }
-
-  List<GlobalKey> keysFor(OnboardingFlow flow) =>
-      _registeredKeys[flow] ?? const [];
-
-  /// Ayarlar'dan "turu tekrar göster": bayrağı sıfırlar, [pendingFlow]'u
-  /// set edip dinleyicileri (HomePage) bilgilendirir.
+  /// Bayrağı sıfırlar; [notifyListeners] canlı [OnboardingTour]'ların
+  /// isteklerini yeniden açmasını sağlar (sayfa zaten ekrandaysa tur oracıkta
+  /// yeniden oynar).
   Future<void> resetAndReplay(OnboardingFlow flow) async {
+    _seenInSession.remove(flow);
     await _prefs.remove(_seenKey(flow));
     _pendingFlow = flow;
     notifyListeners();
   }
 
-  void consumePendingFlow() {
-    _pendingFlow = null;
-  }
-
-  /// Ayarlar'daki "Tüm Turları Sıfırla": her akışın bayrağını temizler,
-  /// böylece o ekrana bir sonraki gidişte turu tekrar otomatik başlar.
-  /// Ana 3 ekranın aksine burada slider'ı taşımaya gerek yok; alt sayfa
-  /// turları zaten o sayfaya gidildiğinde kendiliğinden tetiklenir.
+  /// Ayarlar'daki "Tüm Turları Sıfırla".
   Future<void> resetAll() async {
+    _seenInSession.clear();
     for (final flow in OnboardingFlow.values) {
       await _prefs.remove(_seenKey(flow));
     }
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _pending.clear();
+    shellStatusProvider = null;
+    super.dispose();
   }
 }

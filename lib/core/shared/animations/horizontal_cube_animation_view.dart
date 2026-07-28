@@ -3,10 +3,20 @@
 // ==========================================
 
 // lib/features/main_feature/presentation/animations/cube_animation_view.dart
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
+
+import 'cube_face.dart';
+
 /// 3 Aşamalı 3D Kart Çevirme Animasyonu.
+///
+/// Üç sayfa **sabit yuvalarda** durur: 0 birinci, 1 ikinci, 2 üçüncü. Faz
+/// değişiminde (değer 0.5'i geçerken) ortadaki sayfa "gelen"den "giden"e
+/// dönüşür ama yuvası değişmediği için yeniden mount OLMAZ. Eski sürümde
+/// yuvalar rollere göre kuruluyordu; işlemler sayfası her 0.5 geçişinde
+/// yeniden mount oluyor, bu da bloc'ları yeniden kurup tanıtım turunu ikinci
+/// kez tetikliyordu.
 class HorizontalCubeAnimationView extends StatelessWidget {
   final AnimationController controller;
   final Widget firstView; // Expense (value = 0.0)
@@ -22,7 +32,7 @@ class HorizontalCubeAnimationView extends StatelessWidget {
   });
 
   // Deeper perspective for a more dramatic 3D effect
-  Matrix4 _perspective() => Matrix4.identity()..setEntry(3, 2, 0.0015);
+  static const double _perspective = 0.0015;
 
   @override
   Widget build(BuildContext context) {
@@ -31,88 +41,64 @@ class HorizontalCubeAnimationView extends StatelessWidget {
       builder: (context, child) {
         final double value = controller.value;
 
-        final Widget outgoingWidget;
-        final Widget incomingWidget;
-        final double phaseValue;
-
-        if (value < 0.5) {
-          // PHASE 1: Expense -> Compare (0.0 to 0.5)
-          outgoingWidget = firstView;
-          incomingWidget = secondView;
-          phaseValue = value * 2;
-        } else {
-          // PHASE 2: Compare -> Income (0.5 to 1.0)
-          outgoingWidget = secondView;
-          incomingWidget = thirdView;
-          phaseValue = (value - 0.5) * 2;
-        }
-
-        final outgoingRotation =
-            Tween(begin: 0.0, end: math.pi / 2.0).transform(phaseValue);
-        final outgoingOffset = Tween<Offset>(
-          begin: Offset.zero,
-          end: const Offset(-1.0, 0.0),
-        ).transform(phaseValue);
-
-        // Add subtle scale and opacity for depth
-        final outgoingScale =
-            Tween(begin: 1.0, end: 0.85).transform(phaseValue);
-        final outgoingOpacity =
-            Tween(begin: 1.0, end: 0.0).transform(phaseValue);
-
-        final incomingRotation =
-            Tween(begin: -math.pi / 2.0, end: 0.0).transform(phaseValue);
-        final incomingOffset = Tween<Offset>(
-          begin: const Offset(1.0, 0.0),
-          end: Offset.zero,
-        ).transform(phaseValue);
-
-        // Add subtle scale and opacity for depth
-        final incomingScale =
-            Tween(begin: 0.85, end: 1.0).transform(phaseValue);
-        final incomingOpacity =
-            Tween(begin: 0.0, end: 1.0).transform(phaseValue);
+        // PHASE 1: 0.0 -> 0.5 (first -> second)
+        // PHASE 2: 0.5 -> 1.0 (second -> third)
+        final bool isFirstPhase = value < 0.5;
+        final double phaseValue = isFirstPhase ? value * 2 : (value - 0.5) * 2;
+        final int outgoingSlot = isFirstPhase ? 0 : 1;
+        final int incomingSlot = outgoingSlot + 1;
 
         return Stack(
           alignment: Alignment.center,
           children: [
-            Visibility(
-              visible: phaseValue < 0.95,
-              child: FractionalTranslation(
-                translation: outgoingOffset,
-                child: Transform(
-                  alignment: Alignment.centerRight,
-                  transform: _perspective()
-                    ..rotateY(outgoingRotation)
-                    ..scaleByDouble(
-                        outgoingScale, outgoingScale, outgoingScale, 1.0),
-                  child: Opacity(
-                    opacity: outgoingOpacity.clamp(0.0, 1.0),
-                    child: outgoingWidget,
-                  ),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: phaseValue > 0.05,
-              child: FractionalTranslation(
-                translation: incomingOffset,
-                child: Transform(
-                  alignment: Alignment.centerLeft,
-                  transform: _perspective()
-                    ..rotateY(incomingRotation)
-                    ..scaleByDouble(
-                        incomingScale, incomingScale, incomingScale, 1.0),
-                  child: Opacity(
-                    opacity: incomingOpacity.clamp(0.0, 1.0),
-                    child: incomingWidget,
-                  ),
-                ),
-              ),
-            ),
+            _face(0, firstView, phaseValue, outgoingSlot, incomingSlot),
+            _face(1, secondView, phaseValue, outgoingSlot, incomingSlot),
+            _face(2, thirdView, phaseValue, outgoingSlot, incomingSlot),
           ],
         );
       },
+    );
+  }
+
+  Widget _face(
+    int slot,
+    Widget view,
+    double phaseValue,
+    int outgoingSlot,
+    int incomingSlot,
+  ) {
+    final bool isOutgoing = slot == outgoingSlot;
+    final bool isIncoming = slot == incomingSlot;
+
+    if (isOutgoing) {
+      return CubeFace(
+        visible: phaseValue < 0.95,
+        perspective: _perspective,
+        alignment: Alignment.centerRight,
+        rotationY: Tween(begin: 0.0, end: math.pi / 2.0).transform(phaseValue),
+        translation: Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-1.0, 0.0),
+        ).transform(phaseValue),
+        // Add subtle scale and opacity for depth
+        scale: Tween(begin: 1.0, end: 0.85).transform(phaseValue),
+        opacity: Tween(begin: 1.0, end: 0.0).transform(phaseValue),
+        child: view,
+      );
+    }
+
+    return CubeFace(
+      visible: isIncoming && phaseValue > 0.05,
+      perspective: _perspective,
+      alignment: Alignment.centerLeft,
+      rotationY: Tween(begin: -math.pi / 2.0, end: 0.0).transform(phaseValue),
+      translation: Tween<Offset>(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).transform(phaseValue),
+      scale: Tween(begin: 0.85, end: 1.0).transform(phaseValue),
+      opacity: Tween(begin: 0.0, end: 1.0).transform(phaseValue),
+      child: view,
     );
   }
 }

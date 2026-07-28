@@ -1,5 +1,5 @@
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -38,7 +38,11 @@ class AppBarContent extends StatefulWidget {
 
 class _AppBarContentState extends State<AppBarContent> {
   WalletLoadedSt? _cachedLoadedState;
-  bool _tourScheduled = false;
+
+  static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.appBarMenuButton,
+    OnboardingKeys.appBarWalletArea,
+  ];
 
   /// Cüzdan alt-sayfasına verilen kaydırma denetleyicisi. State'e ait: her
   /// dokunuşta `ScrollController()` üretmek dispose edilmeyen denetleyici
@@ -51,31 +55,22 @@ class _AppBarContentState extends State<AppBarContent> {
     super.dispose();
   }
 
-  Future<void> _maybeShowTour() async {
-    if (!mounted) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    final keys = [
-      OnboardingKeys.appBarMenuButton,
-      OnboardingKeys.appBarWalletArea,
-    ];
-    coordinator.registerKeys(OnboardingFlow.appBar, keys);
-    if (coordinator.isSeen(OnboardingFlow.appBar)) return;
-    await coordinator.waitUntilStable();
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(keys);
-    await coordinator.markSeen(OnboardingFlow.appBar);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Row(
-        children: [
-          _buildMenuButton(context),
-          Expanded(child: _buildCenterContent(context)),
-          _buildVisibilityButton(),
-        ],
+    // Kabuk kromu turu: hedefler (menü butonu + cüzdan alanı) render edilip
+    // kabuk durunca oynar; cüzdan alanı yoksa (cüzdan yüklenmemiş) bekler.
+    return OnboardingTour(
+      flow: OnboardingFlow.appBar,
+      keys: _tourKeys,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          children: [
+            _buildMenuButton(context),
+            Expanded(child: _buildCenterContent(context)),
+            _buildVisibilityButton(),
+          ],
+        ),
       ),
     );
   }
@@ -209,11 +204,6 @@ class _AppBarContentState extends State<AppBarContent> {
           value = state.activeWallet?.debt ?? 0.0;
           valueName = context.l10n.drawerDebt.toUpperCase();
       }
-    }
-
-    if (!_tourScheduled) {
-      _tourScheduled = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
     }
 
     return Showcase(

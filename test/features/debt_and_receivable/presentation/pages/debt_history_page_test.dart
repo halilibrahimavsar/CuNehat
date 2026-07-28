@@ -46,8 +46,6 @@ void main() {
     // OnboardingAutoTourTrigger getIt üzerinden koordinatörü çeker.
     getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
     when(() => mockOnboardingCoordinator.isSeen(any())).thenReturn(true);
-    when(() => mockOnboardingCoordinator.registerKeys(any(), any()))
-        .thenReturn(null);
   });
 
   tearDown(() {

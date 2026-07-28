@@ -15,7 +15,9 @@ class OnboardingKeys {
   /// StatelessWidget olduğundan (kendi initState'leri yok), her rebuild'de
   /// yeniden yaratılmaması için burada modül-seviyesinde sabit tutulur —
   /// aksi halde Showcase'in kayıt sistemi her seferinde farklı bir key
-  /// görüp hedefi bulamaz.
+  /// görüp hedefi bulamaz. Turun kapısı (`OnboardingTour`) hedefin gerçekten
+  /// render edildiğini `isTargetRendered` ile bu anahtarlar üzerinden
+  /// doğrular.
   static final GlobalKey investmentDetailBody =
       GlobalKey(debugLabel: 'onboarding_investment_detail_body');
   static final GlobalKey transactionsInsightsBody =

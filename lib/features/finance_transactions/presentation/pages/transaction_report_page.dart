@@ -1,7 +1,7 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/csv_service.dart';
@@ -241,9 +241,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return OnboardingAutoTourTrigger(
+    return OnboardingTour(
       flow: OnboardingFlow.transactionsReport,
-      keysBuilder: () => [OnboardingKeys.transactionsReportBody],
+      keys: [OnboardingKeys.transactionsReportBody],
       child: Scaffold(
         appBar: widget.showAppBar
             ? AppBar(

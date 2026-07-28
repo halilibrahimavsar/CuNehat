@@ -13,12 +13,18 @@ class AnimatedScaffoldWrapper extends StatefulWidget {
   final PreferredSizeWidget? appBar;
   final Widget? floatingActionButton;
 
+  /// [AnimatedScaffoldWrapperState.isTransforming] değeri her değiştiğinde
+  /// çağrılır (dönüşüm başladı / tamamen bitti). İçeriğin ekran konumuna
+  /// bağlı işler — ör. interaktif turlar — bunu dinler.
+  final VoidCallback? onTransformChanged;
+
   const AnimatedScaffoldWrapper({
     super.key,
     required this.child,
     required this.drawer,
     this.appBar,
     this.floatingActionButton,
+    this.onTransformChanged,
   });
 
   @override
@@ -49,10 +55,23 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
   bool get isTransforming =>
       _drawerController.value != 0.0 || _walletController.value != 0.0;
 
+  bool _wasTransforming = false;
+
   @override
   void initState() {
     super.initState();
     _initAnimations();
+    _drawerController.addListener(_notifyTransformChanged);
+    _walletController.addListener(_notifyTransformChanged);
+  }
+
+  /// Yalnız eşik geçişlerinde (durgun ↔ dönüşmüş) haber verir; her tikte
+  /// değil.
+  void _notifyTransformChanged() {
+    final transforming = isTransforming;
+    if (transforming == _wasTransforming) return;
+    _wasTransforming = transforming;
+    widget.onTransformChanged?.call();
   }
 
   void _initAnimations() {
@@ -119,6 +138,8 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
 
   @override
   void dispose() {
+    _drawerController.removeListener(_notifyTransformChanged);
+    _walletController.removeListener(_notifyTransformChanged);
     _drawerController.dispose();
     _walletController.dispose();
     super.dispose();

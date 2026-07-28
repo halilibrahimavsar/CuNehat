@@ -20,9 +20,9 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
@@ -84,18 +84,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
     super.initState();
     _loadData();
     _loadCategoryIcons();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
-  }
-
-  Future<void> _maybeShowTour() async {
-    if (!mounted) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    coordinator.registerKeys(OnboardingFlow.transactions, _tourKeys);
-    if (coordinator.isSeen(OnboardingFlow.transactions)) return;
-    await coordinator.waitUntilStable();
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(_tourKeys);
-    await coordinator.markSeen(OnboardingFlow.transactions);
   }
 
   Future<void> _loadCategoryIcons() async {
@@ -241,6 +229,14 @@ class _TransactionsViewState extends State<_TransactionsView> {
   Widget build(BuildContext context) {
     // Tarih aralığı bellekte filtrelendiği için tarih değişiminde yeniden
     // veri çekmeye gerek yok; rebuild yeterli.
+    return OnboardingTour(
+      flow: OnboardingFlow.transactions,
+      keys: _tourKeys,
+      child: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     return BlocBuilder<TransactionFilterCubit, CombinedFilter>(
       builder: (context, filterState) {
         return BlocConsumer<TransactionBloc, TransactionState>(

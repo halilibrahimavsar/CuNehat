@@ -85,10 +85,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     final coordinator = getIt<OnboardingCoordinator>();
     coordinator.addListener(_onOnboardingCoordinatorChanged);
-    // Drawer/cüzdan diyaloğu geçiş animasyonu sürerken hedef widget'ların
-    // konumu kayar; turlar bu bittiğinde başlamalı (bkz. waitUntilStable).
-    coordinator.isBlocked =
-        () => _scaffoldKey.currentState?.isTransforming ?? false;
+    // İnteraktif turların "yüzeyim şu an gerçekten ekranda mı" sorusunun
+    // kabuk tarafındaki yanıtı: kaydırıcı konumu, alt yığın indeksi, süren
+    // geçiş ve drawer/cüzdan dönüşümü. Turlar yalnız kabuk hedef konumunda
+    // DURURKEN oynar.
+    coordinator.shellStatusProvider = () => OnboardingShellStatus(
+          sliderValue: _navController.horizontalController.value,
+          stackIndex: _navController.viewStack.currentIndex,
+          isAnimating: _navController.isAnimating,
+          isTransformed: _scaffoldKey.currentState?.isTransforming ?? false,
+        );
+    _navController.viewStack.addListener(_pumpOnboarding);
 
     // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
     // Tek postFrameCallback'te sıralı çalıştırılır ki sistem izin promptu
@@ -139,53 +146,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  /// Ayarlar'dan tetiklenen "turu tekrar göster" isteğini karşılar: slider'ı
-  /// ilgili ekrana taşır, sayfa (yeniden) mount olduktan sonra showcase'i
-  /// başlatır. Settings `context.push` ile açıldığından HomePage state'i
-  /// canlı kalır; bu yüzden initState'e değil bu listener'a ihtiyaç var.
+  /// Ayarlar'dan tetiklenen "turu tekrar göster" isteğini karşılar: yalnızca
+  /// kaydırıcıyı ilgili ekrana taşır. Turu BAŞLATMAZ — sayfanın kendi
+  /// [OnboardingTour] kapısı, ekran görünür ve durur hale gelince turu
+  /// kendiliğinden açar. Settings `context.push` ile açıldığından HomePage
+  /// state'i canlı kalır; bu yüzden initState'e değil bu listener'a ihtiyaç
+  /// var.
   void _onOnboardingCoordinatorChanged() {
-    final flow = getIt<OnboardingCoordinator>().pendingFlow;
-    if (flow == null) return;
-    _startFlowTour(flow);
-  }
-
-  Future<void> _startFlowTour(OnboardingFlow flow) async {
     final coordinator = getIt<OnboardingCoordinator>();
-    // Yalnızca ana 3 ekran Ayarlar'dan doğrudan tekrar oynatılabilir; alt
-    // sayfa akışları (Detay/İçgörü/Rapor/Geçmiş) o sayfaya gidildiğinde
-    // kendiliğinden tetiklenir, buraya pendingFlow olarak hiç gelmezler.
+    final flow = coordinator.pendingFlow;
+    if (flow == null) return;
+    coordinator.consumePendingFlow();
+    // Alt sayfa/sheet akışları buraya hiç gelmez; onlar o yüzeye gidildiğinde
+    // kendiliğinden tetiklenir.
+    if (!flow.isReplayableMainScreen) return;
     final targetValue = switch (flow) {
       OnboardingFlow.investment => 0.0,
       OnboardingFlow.transactions => 0.5,
-      OnboardingFlow.debt => 1.0,
-      _ => null,
+      _ => 1.0,
     };
-    if (targetValue == null) {
-      coordinator.consumePendingFlow();
-      return;
-    }
     if ((_navController.horizontalController.value - targetValue).abs() >
         0.01) {
-      await _navController.horizontalController.animateTo(targetValue);
+      _navController.horizontalController.animateTo(targetValue);
     }
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      await coordinator.waitUntilStable();
-      if (!mounted) return;
-      final keys = coordinator.keysFor(flow);
-      if (keys.isNotEmpty) {
-        await coordinator.requestStartShowCase(keys);
-      }
-      coordinator.consumePendingFlow();
-    });
   }
+
+  void _pumpOnboarding() => getIt<OnboardingCoordinator>().notifyMaybeReady();
 
   /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in
   /// yeni durumun alt sayfalarıyla yeniden kurulması için rebuild tetikler.
   /// Bu olmadan stack ilk build'deki durumda (transactions) donar ve
   /// Birikim'in "Detay"ı / Borç'un "Geçmiş"i hep işlem sayfasını açar.
   void _onSliderStateMaybeChanged() {
+    // Kaydırıcının her tiki bekleyen turlar için yeniden değerlendirme
+    // fırsatıdır; bekleyen yoksa çağrı bedelsizdir.
+    _pumpOnboarding();
     final state = _navController.currentSliderState;
     if (state == _lastSliderState) return;
     _lastSliderState = state;
@@ -206,9 +201,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _openFirstLaunchGate();
     _navController.horizontalController
         .removeListener(_onSliderStateMaybeChanged);
+    _navController.viewStack.removeListener(_pumpOnboarding);
     final coordinator = getIt<OnboardingCoordinator>();
     coordinator.removeListener(_onOnboardingCoordinatorChanged);
-    coordinator.isBlocked = null;
+    coordinator.shellStatusProvider = null;
     _navController.dispose();
     super.dispose();
   }
@@ -220,6 +216,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: AnimatedScaffoldWrapper(
         key: _scaffoldKey,
         drawer: const ModernDrawer(),
+        // Drawer/cüzdan sheet'i açıkken kabuk içeriği ölçeklenip kaydığından
+        // hedeflerin ekran konumu geçersizdir; dönüşüm bitince bekleyen
+        // turlar yeniden değerlendirilir.
+        onTransformChanged: _pumpOnboarding,
         appBar: PreferredSize(
           preferredSize: const Size(double.maxFinite, AppSizes.appBarHeight),
           child: AnimatedBuilder(

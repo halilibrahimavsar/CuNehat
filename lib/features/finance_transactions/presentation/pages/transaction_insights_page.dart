@@ -2,7 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
-import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
@@ -159,9 +159,9 @@ class _InsightsViewState extends State<_InsightsView> {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingAutoTourTrigger(
+    return OnboardingTour(
       flow: OnboardingFlow.transactionsInsights,
-      keysBuilder: () => [OnboardingKeys.transactionsInsightsBody],
+      keys: [OnboardingKeys.transactionsInsightsBody],
       child: Scaffold(
         appBar: widget.showAppBar
             ? AppBar(

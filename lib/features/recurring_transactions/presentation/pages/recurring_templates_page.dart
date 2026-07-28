@@ -7,9 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -67,25 +67,12 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
     _loadTemplates();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _maybeShowTour() async {
-    if (!mounted) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    final keys = [OnboardingKeys.recurringTemplatesBody];
-    coordinator.registerKeys(OnboardingFlow.recurringTemplates, keys);
-    if (coordinator.isSeen(OnboardingFlow.recurringTemplates)) return;
-    await coordinator.waitUntilStable();
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(keys);
-    await coordinator.markSeen(OnboardingFlow.recurringTemplates);
   }
 
   Future<void> _loadTemplates() async {
@@ -163,6 +150,14 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    return OnboardingTour(
+      flow: OnboardingFlow.recurringTemplates,
+      keys: [OnboardingKeys.recurringTemplatesBody],
+      child: _buildContent(context, scheme),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ColorScheme scheme) {
     return BlocListener<PendingRecurringBloc, PendingRecurringState>(
       // Onay/atlama/silme şablonun vadesini değiştirir; sayfanın kendi
       // listesi bloc'un yüklemesinden bağımsız olduğu için tazelenmeli.

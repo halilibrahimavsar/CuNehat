@@ -57,8 +57,6 @@ void main() {
     // tearDown'daki getIt.reset() kayıtları sildiğinden test başına yapılır.
     final onboardingCoordinator = _MockOnboardingCoordinator();
     when(() => onboardingCoordinator.isSeen(any())).thenReturn(true);
-    when(() => onboardingCoordinator.registerKeys(any(), any()))
-        .thenReturn(null);
     getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     mockGetLiveQuoteUseCase = MockGetLiveQuoteUseCase();
     getIt.registerSingleton<GetLiveQuoteUseCase>(mockGetLiveQuoteUseCase);

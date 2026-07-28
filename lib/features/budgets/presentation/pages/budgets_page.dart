@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
@@ -39,9 +39,9 @@ class BudgetsPage extends StatelessWidget {
 
     final scheme = Theme.of(context).colorScheme;
 
-    return OnboardingAutoTourTrigger(
+    return OnboardingTour(
       flow: OnboardingFlow.budgets,
-      keysBuilder: () => [OnboardingKeys.budgetsAddButton],
+      keys: [OnboardingKeys.budgetsAddButton],
       child: BlocProvider(
         create: (context) => getIt<BudgetsBloc>()
           ..add(LoadBudgetsEvent(userId: userId, walletId: walletId)),

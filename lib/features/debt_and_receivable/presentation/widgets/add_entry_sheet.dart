@@ -1,8 +1,7 @@
-import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
@@ -135,21 +134,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _termController.addListener(_maybeAutoFillInstallment);
     _installmentController.addListener(_onInstallmentChanged);
 
-    if (!_isEditing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTour());
-    }
-  }
-
-  Future<void> _maybeShowTour() async {
-    if (!mounted) return;
-    final coordinator = getIt<OnboardingCoordinator>();
-    final keys = [OnboardingKeys.debtAddForm];
-    coordinator.registerKeys(OnboardingFlow.debtAdd, keys);
-    if (coordinator.isSeen(OnboardingFlow.debtAdd)) return;
-    await coordinator.waitUntilStable();
-    if (!mounted) return;
-    await coordinator.requestStartShowCase(keys);
-    await coordinator.markSeen(OnboardingFlow.debtAdd);
   }
 
   @override
@@ -391,6 +375,19 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         Theme.of(context).extension<AppSurface>() ?? AppSurface.light;
     final cs = Theme.of(context).colorScheme;
 
+    return OnboardingTour(
+      flow: OnboardingFlow.debtAdd,
+      keys: [OnboardingKeys.debtAddForm],
+      enabled: !_isEditing,
+      child: _buildContent(context, surface, cs),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    AppSurface surface,
+    ColorScheme cs,
+  ) {
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),

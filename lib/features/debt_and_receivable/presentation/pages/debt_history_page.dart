@@ -9,7 +9,7 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
-import 'package:cunehat/core/onboarding/onboarding_auto_tour_trigger.dart';
+import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
@@ -63,9 +63,9 @@ class _DebtHistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingAutoTourTrigger(
+    return OnboardingTour(
       flow: OnboardingFlow.debtHistory,
-      keysBuilder: () => [OnboardingKeys.debtHistoryBody],
+      keys: [OnboardingKeys.debtHistoryBody],
       child: DefaultTabController(
         length: 2,
         child: Scaffold(
