@@ -101,7 +101,7 @@ class NotificationServiceImpl implements NotificationService {
     // (matchDateTimeComponents) geçilirse setLocalLocation şart olur.
 
     const initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
+        AndroidInitializationSettings('@drawable/ic_notification');
     const initializationSettingsDarwin = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -245,6 +245,7 @@ class NotificationServiceImpl implements NotificationService {
         priority: importance == Importance.defaultImportance
             ? Priority.defaultPriority
             : Priority.high,
+        icon: '@drawable/ic_notification',
       ),
       iOS: const DarwinNotificationDetails(),
     );
