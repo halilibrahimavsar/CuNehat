@@ -493,6 +493,18 @@ class _Done extends StatelessWidget {
       BuildContext context, WalletEntity wallet) async {
     final controller =
         TextEditingController(text: formatAmountForInput(state.balance));
+    try {
+      return await _runSyncDialog(context, wallet, controller);
+    } finally {
+      controller.dispose();
+    }
+  }
+
+  Future<void> _runSyncDialog(
+    BuildContext context,
+    WalletEntity wallet,
+    TextEditingController controller,
+  ) async {
     final result = await showDialog<double>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -535,9 +547,15 @@ class _Done extends StatelessWidget {
       ),
     );
     if (result != null && context.mounted) {
-      context
-          .read<WalletBloc>()
-          .add(UpdateWalletEvent(wallet.copyWith(balance: result)));
+      // Baseline = diyalog açılırken alana önyüklenen bakiye; kullanıcı onu
+      // değiştirdiyse fark opening'e yansır, dokunmadıysa defter olduğu gibi
+      // kalır.
+      context.read<WalletBloc>().add(
+            UpdateWalletEvent(
+              wallet.copyWith(balance: result),
+              baselineBalance: state.balance,
+            ),
+          );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.bankImportSyncSuccess)),
       );

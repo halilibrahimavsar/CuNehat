@@ -5209,6 +5209,120 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Vade: {tarih}'**
   String vadeTarihLabel(String tarih);
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik Politikası'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyLocalDataTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazınızda saklanan veriler'**
+  String get privacyLocalDataTitle;
+
+  /// No description provided for @privacyLocalDataBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler, tekrarlayan şablonlar ve uygulama tercihleri (tema, dil, kategoriler) yalnızca cihazınızda saklanır ve bize iletilmez.'**
+  String get privacyLocalDataBody;
+
+  /// No description provided for @privacyDriveTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive yedeği (isteğe bağlı)'**
+  String get privacyDriveTitle;
+
+  /// No description provided for @privacyDriveBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve kısıtlı \"drive.appdata\" kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) kendi Drive\'ınızdaki, başka uygulamaların erişemediği özel bir klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.'**
+  String get privacyDriveBody;
+
+  /// No description provided for @privacyMarketDataTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Piyasa verisi'**
+  String get privacyMarketDataTitle;
+
+  /// No description provided for @privacyMarketDataBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.'**
+  String get privacyMarketDataBody;
+
+  /// No description provided for @privacySharingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veri paylaşımı'**
+  String get privacySharingTitle;
+
+  /// No description provided for @privacySharingBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla paylaşmayız. Uygulamada analitik, çökme-raporlama, reklam veya izleme SDK\'sı yoktur. Google API\'lerinden alınan bilgilerin kullanımı Google API Hizmetleri Kullanıcı Verileri Politikası\'na (Sınırlı Kullanım dahil) uyar.'**
+  String get privacySharingBody;
+
+  /// No description provided for @privacySecurityTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenlik'**
+  String get privacySecurityTitle;
+
+  /// No description provided for @privacySecurityBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerel veri uygulamanın özel depolama alanında tutulur. Yetkisiz erişimi önlemek için biyometrik / PIN kilidi desteklenir ve uygulama arka plana alındığında içerik bulanıklaştırılır. Tüm ağ iletişimi HTTPS kullanır.'**
+  String get privacySecurityBody;
+
+  /// No description provided for @privacyRetentionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veri saklama ve silme'**
+  String get privacyRetentionTitle;
+
+  /// No description provided for @privacyRetentionBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Verileriniz üzerinde tam kontrol sizdedir. Tüm yerel veriyi Ayarlar → Gizlilik & Veri → \"Tüm veriyi sil\" ile silebilirsiniz. Drive yedeğini Ayarlar → Yedekleme bölümünden silebilir veya hesabınızın bağlantısını kesebilirsiniz.'**
+  String get privacyRetentionBody;
+
+  /// No description provided for @privacyContactLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletişim: {email}'**
+  String privacyContactLabel(String email);
+
+  /// No description provided for @privacyLastUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son güncelleme: 30 Haziran 2026'**
+  String get privacyLastUpdated;
+
+  /// No description provided for @privacyConsentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizliliğiniz'**
+  String get privacyConsentTitle;
+
+  /// No description provided for @privacyConsentBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.'**
+  String get privacyConsentBody;
+
+  /// No description provided for @privacyConsentAcknowledge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anladım'**
+  String get privacyConsentAcknowledge;
 }
 
 class _AppLocalizationsDelegate

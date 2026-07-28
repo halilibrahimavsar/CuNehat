@@ -19,6 +19,7 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
     required super.type,
     required super.frequency,
     required super.nextExecutionDate,
+    required super.anchorDay,
     super.isActive = true,
   });
 
@@ -34,6 +35,7 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
       type: entity.type,
       frequency: entity.frequency,
       nextExecutionDate: entity.nextExecutionDate,
+      anchorDay: entity.anchorDay,
       isActive: entity.isActive,
     );
   }
@@ -49,6 +51,7 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
       type: type,
       frequency: frequency,
       nextExecutionDate: nextExecutionDate,
+      anchorDay: anchorDay,
       isActive: isActive,
     );
   }
@@ -64,6 +67,7 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
       'type': type.name,
       'frequency': frequency.name,
       'nextExecutionDate': nextExecutionDate.toIso8601String(),
+      'anchorDay': anchorDay,
       'isActive': isActive,
     };
   }
@@ -79,6 +83,7 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
       type: TransactionTypeModel.values.byName(json['type'] as String),
       frequency: RecurringFrequency.values.byName(json['frequency'] as String),
       nextExecutionDate: DateTime.parse(json['nextExecutionDate'] as String),
+      anchorDay: json['anchorDay'] as int,
       isActive: json['isActive'] as bool,
     );
   }
@@ -122,4 +127,8 @@ class RecurringTransactionModel extends RecurringTransactionEntity {
   @override
   @HiveField(9)
   bool get isActive => super.isActive;
+
+  @override
+  @HiveField(10)
+  int get anchorDay => super.anchorDay;
 }

@@ -61,7 +61,7 @@ class DataPrivacyCard extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.privacy_tip_outlined, color: scheme.primary),
             title: Text(
-              'Gizlilik Politikası',
+              context.l10n.privacyPolicyTitle,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,

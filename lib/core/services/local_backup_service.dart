@@ -100,6 +100,9 @@ class LocalBackupService {
     }
   }
 
+  /// `cunehat_backup_YYYYMMDD_HHmm.json` — alfabetik sıra = kronolojik sıra
+  /// olsun diye büyükten küçüğe. (Önceden gün ile ay yer değişikti; dosyalar
+  /// yanlış sıralanıyor ve kullanıcı geri yüklerken yanlış yedeği seçiyordu.)
   String _backupFileName() {
     final now = DateTime.now();
     final y = now.year.toString().padLeft(4, '0');
@@ -107,6 +110,6 @@ class LocalBackupService {
     final d = now.day.toString().padLeft(2, '0');
     final h = now.hour.toString().padLeft(2, '0');
     final min = now.minute.toString().padLeft(2, '0');
-    return 'cunehat_backup_$y$d${m}_$h$min.json';
+    return 'cunehat_backup_$y$m${d}_$h$min.json';
   }
 }

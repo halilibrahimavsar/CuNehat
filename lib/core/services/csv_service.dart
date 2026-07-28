@@ -12,6 +12,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
 
+/// UTF-8 bayt sırası işareti (BOM). Excel'in dosyayı UTF-8 olarak tanıması
+/// için dışa aktarımın başına yazılır.
+const List<int> utf8Bom = [0xEF, 0xBB, 0xBF];
+
 /// Import sonucu: geçerli işlemler + tarih/tutar hatası nedeniyle atlanan
 /// satır sayısı (kullanıcıya raporlanır; sessiz veri bozulması yerine).
 class CsvImportResult {
@@ -48,7 +52,11 @@ class CsvService {
     final directory = await getTemporaryDirectory();
     final path = "${directory.path}/transactions_export.csv";
     final file = File(path);
-    await file.writeAsString(csvData);
+    // UTF-8 BOM ile yazılır: Windows Excel, BOM'suz bir CSV'yi sistem kod
+    // sayfası (cp1252) sanıp Türkçe karakterleri bozuyor. Dışa aktarımın en
+    // olası hedefi Excel olduğundan BOM burada gerekli; kendi içe aktarımımız
+    // BOM'u zaten atlar (Utf8Decoder).
+    await file.writeAsBytes([...utf8Bom, ...utf8.encode(csvData)]);
 
     await SharePlus.instance.share(ShareParams(
       files: [XFile(path)],

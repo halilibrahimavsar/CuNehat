@@ -24,6 +24,7 @@ class RecurringOccurrences {
       date = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
         date,
         template.frequency,
+        anchorDay: template.anchorDay,
       );
     }
     return count;

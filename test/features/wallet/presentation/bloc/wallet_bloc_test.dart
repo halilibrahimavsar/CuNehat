@@ -419,8 +419,11 @@ void main() {
         return walletBloc;
       },
       seed: () => WalletLoadedSt([testInactiveWallet], testInactiveWallet),
-      act: (bloc) => bloc
-          .add(UpdateWalletEvent(testInactiveWallet.copyWith(balance: 350))),
+      act: (bloc) => bloc.add(UpdateWalletEvent(
+        testInactiveWallet.copyWith(balance: 350),
+        // Form açılırken gösterilen bakiye; kullanıcı 300 → 350 yaptı.
+        baselineBalance: 300,
+      )),
       expect: () => [
         WalletLoadedSt(
           [testInactiveWallet],
@@ -453,6 +456,64 @@ void main() {
           error: 'Cüzdan güncellenemedi: Update failed',
         ),
       ],
+    );
+
+    // REGRESYON: form açıkken defter değişirse (düzenli işlem onayı, banka
+    // içe aktarımı) ve kullanıcı bakiyeye DOKUNMADAN kaydederse, eski kod
+    // farkı bayat anlık görüntüye göre ölçüp opening'i kalıcı kaydırıyordu.
+    blocTest<WalletBloc, WalletState>(
+      'bakiyeye dokunulmadıysa defter değişse bile opening kaydırılmaz',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return walletBloc;
+      },
+      // Bloc'un bildiği canlı kayıt: bakiye 300 → 500 olmuş (opening aynı).
+      seed: () => WalletLoadedSt(
+        [testInactiveWallet.copyWith(balance: 500)],
+        testInactiveWallet.copyWith(balance: 500),
+      ),
+      // Form 300 bakiyeyle açılmıştı; kullanıcı yalnız adı değiştirdi.
+      act: (bloc) => bloc.add(UpdateWalletEvent(
+        testInactiveWallet.copyWith(name: 'Yeni Ad'),
+        baselineBalance: 300,
+      )),
+      verify: (_) {
+        final captured =
+            verify(() => mockUpdateUseCase(captureAny())).captured.single
+                as WalletEntity;
+        expect(captured.name, 'Yeni Ad');
+        // Opening kaydırılmadı ve bakiye canlı defterden korundu.
+        expect(captured.openingBalance, testInactiveWallet.openingBalance);
+        expect(captured.balance, 500);
+      },
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'bakiye gerçekten düzenlendiyse fark CANLI opening üzerine uygulanır',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return walletBloc;
+      },
+      // Canlı opening 300 → 320 olmuş (başka bir yol yazmış).
+      seed: () => WalletLoadedSt(
+        [testInactiveWallet.copyWith(openingBalance: 320)],
+        testInactiveWallet.copyWith(openingBalance: 320),
+      ),
+      // Form 300'le açıldı, kullanıcı 350 yazdı → delta +50.
+      act: (bloc) => bloc.add(UpdateWalletEvent(
+        testInactiveWallet.copyWith(balance: 350),
+        baselineBalance: 300,
+      )),
+      verify: (_) {
+        final captured =
+            verify(() => mockUpdateUseCase(captureAny())).captured.single
+                as WalletEntity;
+        expect(captured.balance, 350);
+        // Bayat 300 değil, canlı 320 + 50.
+        expect(captured.openingBalance, 370);
+      },
     );
   });
 

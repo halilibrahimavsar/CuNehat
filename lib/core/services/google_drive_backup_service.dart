@@ -117,6 +117,10 @@ class GoogleDriveBackupService {
       },
       body: jsonEncode({
         'name': 'cunehat_backup.json',
+        // mimeType açıkça verilir: indirmede Drive dosyanın kayıtlı
+        // mimeType'ını Content-Type olarak döndürür ve `application/json`
+        // olmayan her değerde package:http gövdeyi latin1 çözerdi.
+        'mimeType': 'application/json',
         'parents': ['appDataFolder'],
       }),
     );
@@ -180,8 +184,13 @@ class GoogleDriveBackupService {
       final response = await _httpClient.get(downloadUrl, headers: headers);
       if (response.statusCode != 200) return false;
 
-      final restoreResult =
-          await _dataSerializationService.importDataFromJson(response.body);
+      // `response.body` DEĞİL: package:http, Content-Type'ta charset yoksa
+      // yalnız `application/json` için utf8'e düşer, başka her değerde
+      // latin1'e. Yedek her zaman utf8 yazıldığından burada da utf8 okunur.
+      // Latin1 çözme hata vermez — sessizce mojibake üretir ve JSON yine
+      // parse olurdu, yani tüm Türkçe karakterler fark edilmeden bozulurdu.
+      final restoreResult = await _dataSerializationService
+          .importDataFromJson(utf8.decode(response.bodyBytes));
       return restoreResult.isSuccess;
     } catch (e, st) {
       debugPrint('GoogleDriveBackupService.restore error: $e\n$st');

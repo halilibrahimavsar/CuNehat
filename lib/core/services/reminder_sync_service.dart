@@ -117,11 +117,17 @@ class ReminderSyncService {
           DateTime(dueDate.year, dueDate.month, dueDate.day - 1, kReminderHour),
       payload: NotificationPayloads.debtDue,
     );
+    // Vade günü hatırlatması [nextReminderSlot] ile kurulur, ham vadeyle
+    // DEĞİL: geçmiş bir zamana planlama sessizce atlanır
+    // (NotificationService.scheduleNotification), yani vadesi GEÇMİŞ borç —
+    // hatırlatılması en kritik olan kalem — hiç bildirim almıyordu. Düzenli
+    // işlem tarafındaki aynı düzeltmenin borç karşılığı; gecikmiş borç
+    // kapatılana kadar her sabah hatırlatılır.
     await _notifications.scheduleNotification(
       id: ReminderIds.debtDue(debtId),
       title: l10n.notifDebtDueTitle,
       body: l10n.notifDebtDueBody(debt.title),
-      scheduledDate: reminderTimeOn(dueDate),
+      scheduledDate: nextReminderSlot(dueDate, DateTime.now()),
       payload: NotificationPayloads.debtDue,
     );
   }

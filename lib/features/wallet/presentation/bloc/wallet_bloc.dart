@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/delete_recurring_transaction_usecase.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
@@ -142,16 +143,33 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       // Manuel bakiye düzenlemesi defter değişmezini (`balance = opening +
       // Σtx`) bozmasın: bakiye farkı opening'e yansıtılır; böylece sonraki
       // syncBalance kullanıcının düzeltmesini geri almaz.
+      //
+      // Fark, formun AÇILDIĞI andaki bakiyeye (event.baselineBalance) göre
+      // ölçülür — bloc'un o anki state'ine göre değil. Aksi halde form
+      // açıkken defter değişirse (düzenli işlem onayı, banka içe aktarımı)
+      // kullanıcı sadece adı değiştirip kaydetse bile opening sahte bir delta
+      // yutuyor ve cüzdan kalıcı olarak yanlış bakiyeye oturuyordu.
       var toWrite = event.wallet;
-      final current = state;
-      if (current is WalletLoadedSt) {
-        for (final old in current.wallets) {
-          if (old.id == event.wallet.id) {
-            final newOpening =
-                old.openingBalance + (event.wallet.balance - old.balance);
-            toWrite = event.wallet.copyWith(openingBalance: newOpening);
-            break;
-          }
+      final baseline = event.baselineBalance;
+      if (baseline != null && !moneyEquals(event.wallet.balance, baseline)) {
+        final currentWallet = _findById(event.wallet.id);
+        // Kaydırma canlı opening üzerine uygulanır: iki okuma arasında
+        // syncBalance yazmış olabilir.
+        final liveOpening =
+            currentWallet?.openingBalance ?? event.wallet.openingBalance;
+        toWrite = event.wallet.copyWith(
+          openingBalance:
+              roundToCents(liveOpening + (event.wallet.balance - baseline)),
+        );
+      } else if (baseline != null) {
+        // Bakiye alanına dokunulmadı: türetilmiş bakiye/opening çiftini
+        // olduğu gibi koru, yalnız görsel alanlar (ad/renk/ikon/birim) yazılsın.
+        final currentWallet = _findById(event.wallet.id);
+        if (currentWallet != null) {
+          toWrite = event.wallet.copyWith(
+            balance: currentWallet.balance,
+            openingBalance: currentWallet.openingBalance,
+          );
         }
       }
       final result = await updateWalletUseCase.call(toWrite);
@@ -217,6 +235,17 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     } else {
       emit(WalletErrorSt(error));
     }
+  }
+
+  /// Bloc'un bildiği en güncel cüzdan kaydı; bilinmiyorsa null.
+  WalletEntity? _findById(String? walletId) {
+    if (walletId == null) return null;
+    final current = state;
+    if (current is! WalletLoadedSt) return null;
+    for (final w in current.wallets) {
+      if (w.id == walletId) return w;
+    }
+    return null;
   }
 
   WalletEntity? _findActiveWallet(List<WalletEntity> wallets) {

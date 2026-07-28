@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
@@ -26,6 +28,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MockHiveInterface extends Mock implements HiveInterface {}
 
+class MockNotificationService extends Mock implements NotificationService {}
+
+class MockReminderSyncService extends Mock implements ReminderSyncService {}
+
 class MockBox<T> extends Mock implements Box<T> {}
 
 class FakeWalletModel extends Fake implements WalletModel {}
@@ -46,6 +52,8 @@ class FakeRecurringTransactionModel extends Fake
 void main() {
   late Directory tempDir;
   late DataSerializationService service;
+  late MockNotificationService notifications;
+  late MockReminderSyncService reminderSync;
 
   setUpAll(() async {
     registerFallbackValue(FakeWalletModel());
@@ -82,8 +90,16 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    service =
-        DataSerializationService(ReceiptStorageService.withBaseDir(tempDir));
+    notifications = MockNotificationService();
+    reminderSync = MockReminderSyncService();
+    when(() => notifications.cancelAllNotifications())
+        .thenAnswer((_) async {});
+    when(() => reminderSync.syncAll()).thenAnswer((_) async {});
+    service = DataSerializationService(
+      ReceiptStorageService.withBaseDir(tempDir),
+      notifications,
+      reminderSync,
+    );
     await _openAllBoxes();
     await _clearAllBoxes();
   });
@@ -214,6 +230,40 @@ void main() {
     expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
   });
 
+  group('planlanmış hatırlatmaların yaşam döngüsü', () {
+    // REGRESYON: hatırlatmalar Hive'da değil OS'ta yaşar. Kutuları boşaltmak
+    // ya da geri yüklemek onları etkilemediğinden, silinmiş/değişmiş kayıtların
+    // bildirimleri günlerce gelmeye devam ediyordu.
+    test('clearAllLocalData planlanmış tüm bildirimleri de iptal eder',
+        () async {
+      await service.clearAllLocalData();
+
+      verify(() => notifications.cancelAllNotifications()).called(1);
+    });
+
+    test('başarılı geri yükleme eski bildirimleri düşürüp yenilerini kurar',
+        () async {
+      await Hive.box<WalletModel>('wallets').put('w1', _wallet());
+      await Hive.box<RecurringTransactionModel>('recurring_transactions_box')
+          .put('rec1', _recurring());
+      final backup = await service.exportDataToJson();
+
+      final result = await service.importDataFromJson(backup);
+
+      expect(result.isSuccess, true);
+      verify(() => notifications.cancelAllNotifications()).called(1);
+      verify(() => reminderSync.syncAll()).called(1);
+    });
+
+    test('geçersiz yedekte hatırlatmalara dokunulmaz', () async {
+      final result = await service.importDataFromJson('{bad json');
+
+      expect(result.status, DataRestoreStatus.invalidFormat);
+      verifyNever(() => notifications.cancelAllNotifications());
+      verifyNever(() => reminderSync.syncAll());
+    });
+  });
+
   test('rolls back boxes and category prefs when a write fails', () async {
     SharedPreferences.setMockInitialValues({
       CategoryService.backupKeys.first: 'old-cats',
@@ -258,7 +308,11 @@ void main() {
     when(() => mockHive.openBox<Map>('users')).thenAnswer((_) async => userBox);
 
     final failingService = DataSerializationService.withHive(
-        mockHive, ReceiptStorageService.withBaseDir(tempDir));
+      mockHive,
+      ReceiptStorageService.withBaseDir(tempDir),
+      notifications,
+      reminderSync,
+    );
     final backup = jsonEncode({
       'version': DataSerializationService.schemaVersion,
       'wallets': [_wallet().toJson()],
@@ -415,5 +469,6 @@ RecurringTransactionModel _recurring({String id = 'rec1'}) {
     type: TransactionTypeModel.expense,
     frequency: RecurringFrequency.monthly,
     nextExecutionDate: DateTime(2024, 2, 1),
+    anchorDay: 1,
   );
 }

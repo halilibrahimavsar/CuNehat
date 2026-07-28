@@ -98,6 +98,7 @@ void main() {
           type: TransactionTypeModel.expense,
           frequency: RecurringFrequency.monthly,
           nextExecutionDate: DateTime(2026, 7, 15),
+          anchorDay: 15,
         ),
       ];
 

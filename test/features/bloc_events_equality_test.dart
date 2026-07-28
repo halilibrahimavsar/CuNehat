@@ -57,7 +57,14 @@ void main() {
       final e1 = UpdateWalletEvent(wallet);
       final e2 = UpdateWalletEvent(wallet);
       expect(e1, e2);
-      expect(e1.props, [wallet]);
+      expect(e1.props, [wallet, null]);
+    });
+
+    test('UpdateWalletEvent baselineBalance eşitliğe girer', () {
+      final withBaseline = UpdateWalletEvent(wallet, baselineBalance: 100);
+      expect(withBaseline, isNot(UpdateWalletEvent(wallet)));
+      expect(withBaseline, UpdateWalletEvent(wallet, baselineBalance: 100));
+      expect(withBaseline.props, [wallet, 100.0]);
     });
 
     test('DeleteWalletEvent props', () {
@@ -241,6 +248,7 @@ void main() {
       type: TransactionTypeModel.income,
       frequency: RecurringFrequency.monthly,
       nextExecutionDate: DateTime(2026, 2, 1),
+      anchorDay: 1,
     );
 
     test('LoadPendingTransactionsEvent props', () {

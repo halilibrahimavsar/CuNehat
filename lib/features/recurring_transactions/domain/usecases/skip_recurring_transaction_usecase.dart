@@ -19,6 +19,7 @@ class SkipRecurringTransactionUsecase {
     final nextDate = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
       template.nextExecutionDate,
       template.frequency,
+      anchorDay: template.anchorDay,
     );
     // Kaydetme usecase'i üzerinden: yeni vadenin hatırlatması da kurulsun.
     return saveTemplate(template.copyWith(nextExecutionDate: nextDate));

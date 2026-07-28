@@ -17,6 +17,7 @@ void main() {
       type: TransactionTypeModel.expense,
       frequency: RecurringFrequency.monthly,
       nextExecutionDate: nextDate,
+      anchorDay: nextDate.day,
       isActive: true,
     );
 
@@ -50,6 +51,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: nextDate,
+        anchorDay: nextDate.day,
         isActive: true,
       );
 

@@ -1,10 +1,16 @@
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Uygulama-içi gizlilik politikası ekranı. İçerik, barındırılan
 /// `docs/privacy-policy.html` ile aynı bilgileri özetler; çevrimdışı da
 /// erişilebilir olsun diye metin gömülüdür (harici bağımlılık yok).
+///
+/// Metinler l10n'dan gelir: uygulama tr+en yayınlanıyor ve bu, mağaza
+/// incelemesinin baktığı ekranlardan biri — sabit Türkçe bırakılırsa İngilizce
+/// kullanıcı gizlilik politikasını okuyamaz. İngilizce karşılıklar
+/// `docs/privacy-policy.html`'in EN bölümünden alınmıştır (uydurulmadı).
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
 
@@ -13,10 +19,11 @@ class PrivacyPolicyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gizlilik Politikası'),
+        title: Text(l10n.privacyPolicyTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -26,63 +33,37 @@ class PrivacyPolicyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
           Text(
-            'CuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir '
-            'kişisel finans uygulamasıdır. "Önce-çevrimdışı" tasarlandı: bulut '
-            'yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz '
-            'cihazınızda kalır. Sunucumuz yoktur.',
+            l10n.privacyIntro,
             style: TextStyle(color: scheme.onSurfaceVariant, height: 1.5),
           ),
           const SizedBox(height: 8),
-          const _Section(
-            title: 'Cihazınızda saklanan veriler',
-            body:
-                'Cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler, '
-                'tekrarlayan şablonlar ve uygulama tercihleri (tema, dil, '
-                'kategoriler) yalnızca cihazınızda saklanır ve bize iletilmez.',
+          _Section(
+            title: l10n.privacyLocalDataTitle,
+            body: l10n.privacyLocalDataBody,
           ),
-          const _Section(
-            title: 'Google Drive yedeği (isteğe bağlı)',
-            body:
-                'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google '
-                'ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın '
-                'bağlı olduğunu görmeniz için) ve kısıtlı "drive.appdata" '
-                'kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) '
-                'kendi Drive\'ınızdaki, başka uygulamaların erişemediği özel bir '
-                'klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız '
-                'okunamaz.',
+          _Section(
+            title: l10n.privacyDriveTitle,
+            body: l10n.privacyDriveBody,
           ),
-          const _Section(
-            title: 'Piyasa verisi',
-            body:
-                'Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse '
-                'kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) '
-                'gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.',
+          _Section(
+            title: l10n.privacyMarketDataTitle,
+            body: l10n.privacyMarketDataBody,
           ),
-          const _Section(
-            title: 'Veri paylaşımı',
-            body: 'Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla '
-                'paylaşmayız. Uygulamada analitik, çökme-raporlama, reklam veya '
-                'izleme SDK\'sı yoktur. Google API\'lerinden alınan bilgilerin '
-                'kullanımı Google API Hizmetleri Kullanıcı Verileri '
-                'Politikası\'na (Sınırlı Kullanım dahil) uyar.',
+          _Section(
+            title: l10n.privacySharingTitle,
+            body: l10n.privacySharingBody,
           ),
-          const _Section(
-            title: 'Güvenlik',
-            body: 'Yerel veri uygulamanın özel depolama alanında tutulur. '
-                'Yetkisiz erişimi önlemek için biyometrik / PIN kilidi '
-                'desteklenir ve uygulama arka plana alındığında içerik '
-                'bulanıklaştırılır. Tüm ağ iletişimi HTTPS kullanır.',
+          _Section(
+            title: l10n.privacySecurityTitle,
+            body: l10n.privacySecurityBody,
           ),
-          const _Section(
-            title: 'Veri saklama ve silme',
-            body: 'Verileriniz üzerinde tam kontrol sizdedir. Tüm yerel veriyi '
-                'Ayarlar → Gizlilik & Veri → "Tüm veriyi sil" ile silebilirsiniz. '
-                'Drive yedeğini Ayarlar → Yedekleme bölümünden silebilir veya '
-                'hesabınızın bağlantısını kesebilirsiniz.',
+          _Section(
+            title: l10n.privacyRetentionTitle,
+            body: l10n.privacyRetentionBody,
           ),
           const SizedBox(height: 12),
           Text(
-            'İletişim: $contactEmail',
+            l10n.privacyContactLabel(contactEmail),
             style: TextStyle(
               color: scheme.onSurface,
               fontWeight: FontWeight.w600,
@@ -90,7 +71,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Son güncelleme: 30 Haziran 2026',
+            l10n.privacyLastUpdated,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
           ),
         ],
@@ -141,13 +122,11 @@ Future<void> showPrivacyConsentDialog(BuildContext context) {
     barrierDismissible: false,
     builder: (dialogContext) {
       final scheme = Theme.of(dialogContext).colorScheme;
+      final l10n = dialogContext.l10n;
       return AlertDialog(
-        title: const Text('Gizliliğiniz'),
+        title: Text(l10n.privacyConsentTitle),
         content: Text(
-          'CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. '
-          'İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi '
-          'Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü '
-          'taraflarla paylaşılmaz; reklam veya izleme yoktur.',
+          l10n.privacyConsentBody,
           style: TextStyle(color: scheme.onSurfaceVariant, height: 1.5),
         ),
         actions: [
@@ -156,11 +135,11 @@ Future<void> showPrivacyConsentDialog(BuildContext context) {
               Navigator.of(dialogContext).pop();
               context.push(AppRoutes.privacyPolicy);
             },
-            child: const Text('Gizlilik Politikası'),
+            child: Text(l10n.privacyPolicyTitle),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Anladım'),
+            child: Text(l10n.privacyConsentAcknowledge),
           ),
         ],
       );

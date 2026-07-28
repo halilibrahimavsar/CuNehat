@@ -743,7 +743,11 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         // Kilitliyken mevcut birim korunur (copyWith null = koru).
         currency: _currencyLocked ? null : _selectedCurrency,
       );
-      context.read<WalletBloc>().add(UpdateWalletEvent(wallet));
+      // Baseline = form açılırken alana yazılan bakiye (_initializeControllers).
+      // Bloc, opening kaydırmasını yalnız bu değer değiştiyse uygular.
+      context.read<WalletBloc>().add(
+            UpdateWalletEvent(wallet, baselineBalance: widget.wallet!.balance),
+          );
     } else {
       final WalletEntity wallet = WalletEntity(
         id: null, // ID usecase'de oluşturulacak

@@ -16,6 +16,18 @@ class RecurringTransactionEntity extends Equatable {
   final DateTime nextExecutionDate;
   final bool isActive;
 
+  /// Şablonun ayın kaçında tekrarlayacağı (1–31). Aylık/yıllık ilerletmenin
+  /// çapası; günlük/haftalık frekansta kullanılmaz.
+  ///
+  /// Neden ayrı alan: vade tarihi kısa aylarda kenetlenir (31 Oca → 28 Şub).
+  /// Bir sonraki vade kenetlenmiş tarihten hesaplanırsa gün kalıcı olarak
+  /// aşağı çekilir ve ayın 29/30/31'inde tekrarlayan her şablon (maaş, kira,
+  /// kart kesim tarihi) ilk Şubat'tan sonra sonsuza dek 28'e kayar. Kenetleme
+  /// tersine çevrilemediği için asıl gün ayrıca saklanmak zorunda.
+  ///
+  /// Şablon oluşturulurken ilk vadenin gününden türetilir; sonradan değişmez.
+  final int anchorDay;
+
   const RecurringTransactionEntity({
     required this.id,
     required this.userId,
@@ -26,8 +38,38 @@ class RecurringTransactionEntity extends Equatable {
     required this.type,
     required this.frequency,
     required this.nextExecutionDate,
+    required this.anchorDay,
     this.isActive = true,
   });
+
+  /// Çapayı ilk vade tarihinden türeterek şablon kurar. Oluşturma yollarının
+  /// tamamı bunu kullanmalı: [anchorDay]'i elle geçmek, kenetlenmiş bir
+  /// tarihten (28 Şub) çapa üretme hatasına açık.
+  factory RecurringTransactionEntity.startingOn({
+    required String id,
+    required String userId,
+    required String walletId,
+    required String title,
+    required String tag,
+    required double amount,
+    required TransactionTypeModel type,
+    required RecurringFrequency frequency,
+    required DateTime firstExecutionDate,
+    bool isActive = true,
+  }) =>
+      RecurringTransactionEntity(
+        id: id,
+        userId: userId,
+        walletId: walletId,
+        title: title,
+        tag: tag,
+        amount: amount,
+        type: type,
+        frequency: frequency,
+        nextExecutionDate: firstExecutionDate,
+        anchorDay: firstExecutionDate.day,
+        isActive: isActive,
+      );
 
   RecurringTransactionEntity copyWith({
     String? id,
@@ -39,6 +81,7 @@ class RecurringTransactionEntity extends Equatable {
     TransactionTypeModel? type,
     RecurringFrequency? frequency,
     DateTime? nextExecutionDate,
+    int? anchorDay,
     bool? isActive,
   }) {
     return RecurringTransactionEntity(
@@ -51,6 +94,7 @@ class RecurringTransactionEntity extends Equatable {
       type: type ?? this.type,
       frequency: frequency ?? this.frequency,
       nextExecutionDate: nextExecutionDate ?? this.nextExecutionDate,
+      anchorDay: anchorDay ?? this.anchorDay,
       isActive: isActive ?? this.isActive,
     );
   }
@@ -66,6 +110,7 @@ class RecurringTransactionEntity extends Equatable {
         type,
         frequency,
         nextExecutionDate,
+        anchorDay,
         isActive,
       ];
 }

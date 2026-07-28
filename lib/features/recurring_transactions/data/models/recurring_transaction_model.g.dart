@@ -27,6 +27,7 @@ class RecurringTransactionModelAdapter
       type: fields[6] as TransactionTypeModel,
       frequency: fields[7] as RecurringFrequency,
       nextExecutionDate: fields[8] as DateTime,
+      anchorDay: fields[10] as int,
       isActive: fields[9] as bool,
     );
   }
@@ -34,7 +35,7 @@ class RecurringTransactionModelAdapter
   @override
   void write(BinaryWriter writer, RecurringTransactionModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -54,7 +55,9 @@ class RecurringTransactionModelAdapter
       ..writeByte(8)
       ..write(obj.nextExecutionDate)
       ..writeByte(9)
-      ..write(obj.isActive);
+      ..write(obj.isActive)
+      ..writeByte(10)
+      ..write(obj.anchorDay);
   }
 
   @override

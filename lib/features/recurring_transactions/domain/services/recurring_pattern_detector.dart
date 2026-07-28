@@ -85,9 +85,13 @@ class RecurringPatternDetector {
       final latest = items.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
       final lastDay =
           DateTime(latest.date.year, latest.date.month, latest.date.day);
+      // Çapa gözlemlenen son tekrarın günü; ilerletme döngüsü bunu korur.
+      // Kenetlenmiş tarihten devam etseydik (bkz. addMonthsAnchored) Şubat'ı
+      // geçen her öneri kalıcı olarak 28'e kayardı.
+      final anchorDay = lastDay.day;
       var next = lastDay;
       while (!next.isAfter(reference)) {
-        next = _advance(next, frequency);
+        next = _advance(next, frequency, anchorDay);
       }
 
       suggestions.add(RecurringSuggestion(
@@ -97,6 +101,7 @@ class RecurringPatternDetector {
         type: latest.type,
         frequency: frequency,
         nextExecutionDate: next,
+        anchorDay: anchorDay,
         occurrenceCount: dates.length,
       ));
     }
@@ -111,16 +116,16 @@ class RecurringPatternDetector {
   String _key(String title, TransactionTypeModel type) =>
       '${title.trim().toLowerCase()}|${type.name}';
 
-  DateTime _advance(DateTime d, RecurringFrequency f) {
+  DateTime _advance(DateTime d, RecurringFrequency f, int anchorDay) {
     switch (f) {
       case RecurringFrequency.daily:
         return d.add(const Duration(days: 1));
       case RecurringFrequency.weekly:
         return d.add(const Duration(days: 7));
       case RecurringFrequency.monthly:
-        return addMonthsClamped(d, 1);
+        return addMonthsAnchored(d, 1, anchorDay);
       case RecurringFrequency.yearly:
-        return addMonthsClamped(d, 12);
+        return addMonthsAnchored(d, 12, anchorDay);
     }
   }
 
@@ -166,6 +171,11 @@ class RecurringSuggestion {
   final TransactionTypeModel type;
   final RecurringFrequency frequency;
   final DateTime nextExecutionDate;
+
+  /// Gözlemlenen örüntünün ayın kaçında tekrarladığı; şablona çapa olarak
+  /// geçer (bkz. [RecurringTransactionEntity.anchorDay]).
+  final int anchorDay;
+
   final int occurrenceCount;
 
   const RecurringSuggestion({
@@ -175,6 +185,7 @@ class RecurringSuggestion {
     required this.type,
     required this.frequency,
     required this.nextExecutionDate,
+    required this.anchorDay,
     required this.occurrenceCount,
   });
 }

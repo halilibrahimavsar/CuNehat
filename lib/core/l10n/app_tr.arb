@@ -51,7 +51,11 @@
   "tooltipTarihAraligi": "Tarih Aralığı",
   "raporuPaylas": "Raporu Paylaş",
   "oncekiDonemeGorePercent": "%{percent} önceki döneme göre",
-  "@oncekiDonemeGorePercent": { "placeholders": { "percent": {} } },
+  "@oncekiDonemeGorePercent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "msgSecilenTarihAraligindaIslem": "Seçilen tarih aralığında işlem yok",
   "degistir": "Değiştir",
   "labelKategoriAdi": "Kategori Adı",
@@ -122,7 +126,7 @@
   "msgCurrentPinIsIncorrect": "Mevcut PIN hatalı",
   "msgPINUpdatedSuccessfully": "PIN başarıyla güncellendi",
   "msgPINRemoved": "PIN kaldırıldı",
-  "msgBackgroundLockAndPrivacy": "Arka plan kilidi ve Gizlilik Koruması etkinleştirildi",
+  "msgBackgroundLockAndPrivacy": "Arka plan kilidi ve Ekran Koruması etkinleştirildi",
   "securitySettings": "Güvenlik Ayarları",
   "manageYourAppSecurity": "Uygulama güvenliğinizi yönetin",
   "createPin": "PIN Oluştur",
@@ -180,10 +184,10 @@
   "backgroundLockTileTitle": "Uygulama arka planda kaldığında kimlik doğrulama gerektir",
   "backgroundLockTileSubtitle": "Arka plan kilidini etkinleştirmek için bir PIN ayarlayın veya biyometrik girişi açın.",
   "backgroundLockTileInfo": "Not: Uygulamaya dönerken kimlik doğrulama ekranı görünür.",
-  "msgIncorrectPinRemainingTries": "Hatalı PIN. Kalan deneme: {tries}",
+  "msgIncorrectPinRemainingTries": "Hatalı PIN. Kalan deneme: {newAttempts}",
   "@msgIncorrectPinRemainingTries": {
     "placeholders": {
-      "tries": {}
+      "newAttempts": {}
     }
   },
   "settings": "Ayarlar",
@@ -233,44 +237,100 @@
   "verilerinizSilinmediTekrarDeneyin": "Verileriniz silinmedi. Tekrar deneyin; sorun sürerse ",
   "ikonBulunamadi": "İkon bulunamadı",
   "valueTostringasfixedCurrencysymbol": "{toStringAsFixed} {currencySymbol}",
-  "@valueTostringasfixedCurrencysymbol": { "placeholders": { "toStringAsFixed": {}, "currencySymbol": {} } },
+  "@valueTostringasfixedCurrencysymbol": {
+    "placeholders": {
+      "toStringAsFixed": {},
+      "currencySymbol": {}
+    }
+  },
   "butcePlanlama": "Bütçe Planlama",
   "henuzButceYok": "Henüz bütçe yok",
   "kategorilerinizeAylikHarcamaLimiti": "Kategorilerinize aylık harcama limiti koyun,\nharcamalarınızı buradan takip edin.",
   "bUAyToplamHarcama": "BU AY TOPLAM HARCAMA",
   "toplamLimitAppformattersCurrency": "Toplam limit: {totalLimit}",
-  "@toplamLimitAppformattersCurrency": { "placeholders": { "totalLimit": {} } },
+  "@toplamLimitAppformattersCurrency": {
+    "placeholders": {
+      "totalLimit": {}
+    }
+  },
   "percent": "%{percent}",
-  "@percent": { "placeholders": { "percent": {} } },
+  "@percent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "harcananAppformattersCurrencyFormat": "Harcanan: {spentAmount}",
-  "@harcananAppformattersCurrencyFormat": { "placeholders": { "spentAmount": {} } },
+  "@harcananAppformattersCurrencyFormat": {
+    "placeholders": {
+      "spentAmount": {}
+    }
+  },
   "limitAppformattersCurrencyFormat": "Limit: {limitAmount}",
-  "@limitAppformattersCurrencyFormat": { "placeholders": { "limitAmount": {} } },
+  "@limitAppformattersCurrencyFormat": {
+    "placeholders": {
+      "limitAmount": {}
+    }
+  },
   "buKategorininButcesiVar": "Bu kategorinin bütçesi var; limit güncellenecek.",
   "finansalTakip": "Finansal Takip",
   "vADESIGecmis": "VADESİ GEÇMİŞ",
   "oDENDI": "ÖDENDİ",
   "vadeDebtTermmonthsAy": "Vade: {termMonths} Ay | {length} Ödeme",
-  "@vadeDebtTermmonthsAy": { "placeholders": { "termMonths": {}, "length": {} } },
+  "@vadeDebtTermmonthsAy": {
+    "placeholders": {
+      "termMonths": {},
+      "length": {}
+    }
+  },
   "vadeDateformatDdMmm": "Vade: {dueDate}",
-  "@vadeDateformatDdMmm": { "placeholders": { "dueDate": {} } },
+  "@vadeDateformatDdMmm": {
+    "placeholders": {
+      "dueDate": {}
+    }
+  },
   "msgOdemesiTamamlanipKapatilanBorclarinizin": "Ödemesi tamamlanıp kapatılan borçlarınızın geçmişi burada görüntülenecektir.",
   "paidDebtsLengthBorcKapandi": "{length} borç kapandı",
-  "@paidDebtsLengthBorcKapandi": { "placeholders": { "length": {} } },
+  "@paidDebtsLengthBorcKapandi": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "msgOdendiOlarakIsaretlenenAlacaklarinizin": "Ödendi olarak işaretlenen alacaklarınızın geçmişi burada görüntülenecektir.",
   "paidReceivablesLengthAlacakTahsil": "{length} alacak tahsil edildi",
-  "@paidReceivablesLengthAlacakTahsil": { "placeholders": { "length": {} } },
+  "@paidReceivablesLengthAlacakTahsil": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "toplamGeriOdeme": "Toplam geri ödeme",
   "kKDFVeBsmvVergilerini": "KKDF ve BSMV vergilerini (%30) dahil et",
   "tuketiciKredilerindeFaizeYasal": "Tüketici kredilerinde faize yasal olarak %15 KKDF ve %15 BSMV eklenir. Konut vb. kredilerde bu vergiler %0 olabilir. Duruma göre aktifleştirin.",
   "iTaksitAppformattersDateshort": "{i}. Taksit — {scheduledDate}",
-  "@iTaksitAppformattersDateshort": { "placeholders": { "i": {}, "scheduledDate": {} } },
+  "@iTaksitAppformattersDateshort": {
+    "placeholders": {
+      "i": {},
+      "scheduledDate": {}
+    }
+  },
   "formatMoneyMonthlyamount": "≈ {monthlyAmount}",
-  "@formatMoneyMonthlyamount": { "placeholders": { "monthlyAmount": {} } },
+  "@formatMoneyMonthlyamount": {
+    "placeholders": {
+      "monthlyAmount": {}
+    }
+  },
   "index": "{index}",
-  "@index": { "placeholders": { "index": {} } },
+  "@index": {
+    "placeholders": {
+      "index": {}
+    }
+  },
   "optLabelFormatmoneyOpt": "{label}  {amount}",
-  "@optLabelFormatmoneyOpt": { "placeholders": { "label": {}, "amount": {} } },
+  "@optLabelFormatmoneyOpt": {
+    "placeholders": {
+      "label": {},
+      "amount": {}
+    }
+  },
   "otomatikIslem": "Otomatik işlem",
   "buIslemOtomatikOlusturuldu": "Bu işlem otomatik oluşturuldu. İlgili borç/yatırım/alacak kaydından düzenleyin veya silin.",
   "nakitAkisi": "Nakit Akışı",
@@ -283,15 +343,29 @@
   "haftalikNetAkis": "Haftalık Net Akış",
   "kategoriDagilimi": "Kategori Dağılımı",
   "titleIcinVeriYok": "{title} için veri yok",
-  "@titleIcinVeriYok": { "placeholders": { "title": {} } },
+  "@titleIcinVeriYok": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "buKategoriyeAitIslem": "Bu kategoriye ait işlem bulunmuyor.",
   "formatMoneyItemTotalamountPercent": "{totalAmount} (%{toStringAsFixed})",
-  "@formatMoneyItemTotalamountPercent": { "placeholders": { "totalAmount": {}, "toStringAsFixed": {} } },
+  "@formatMoneyItemTotalamountPercent": {
+    "placeholders": {
+      "totalAmount": {},
+      "toStringAsFixed": {}
+    }
+  },
   "buDonemIcinHenuz": "Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.",
   "ikonSecin": "İkon Seçin",
   "ikonDegistirmekIcinDokun": "İkon değiştirmek için dokun",
   "categoriesWhereCC": "{customLength} özel, {defaultLength} varsayılan",
-  "@categoriesWhereCC": { "placeholders": { "customLength": {}, "defaultLength": {} } },
+  "@categoriesWhereCC": {
+    "placeholders": {
+      "customLength": {},
+      "defaultLength": {}
+    }
+  },
   "asagidakiButondanEkleyebilirsiniz": "Aşağıdaki butondan ekleyebilirsiniz",
   "varsayilan": "Varsayılan",
   "filtreler": "Filtreler",
@@ -303,63 +377,131 @@
   "fIYATAraligi": "FİYAT ARALIĞI",
   "yeni": "Yeni",
   "appFormattersDateshortFormatStartdate": "{startDate} - {endDate}",
-  "@appFormattersDateshortFormatStartdate": { "placeholders": { "startDate": {}, "endDate": {} } },
+  "@appFormattersDateshortFormatStartdate": {
+    "placeholders": {
+      "startDate": {},
+      "endDate": {}
+    }
+  },
   "filterSelectedcategoriesLengthKategori": "{length} Kategori",
-  "@filterSelectedcategoriesLengthKategori": { "placeholders": { "length": {} } },
+  "@filterSelectedcategoriesLengthKategori": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "gunSonu": "Gün sonu ",
   "netNetAppformattersCurrency": "Net: {net}",
-  "@netNetAppformattersCurrency": { "placeholders": { "net": {} } },
+  "@netNetAppformattersCurrency": {
+    "placeholders": {
+      "net": {}
+    }
+  },
   "gorunumListe": "Liste",
   "gorunumTakvim": "Takvim",
   "takvimAy": "Ay",
   "takvimHafta": "Hafta",
   "buGuneAitIslemYok": "Bu güne ait işlem yok",
   "dataFilterSelectedcategoriesLengthKategori": "{length} Kategori",
-  "@dataFilterSelectedcategoriesLengthKategori": { "placeholders": { "length": {} } },
+  "@dataFilterSelectedcategoriesLengthKategori": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "countCountlabel": "{count} {countLabel}",
-  "@countCountlabel": { "placeholders": { "count": {}, "countLabel": {} } },
+  "@countCountlabel": {
+    "placeholders": {
+      "count": {},
+      "countLabel": {}
+    }
+  },
   "portfoyDetayi": "Portföy Detayı",
   "henuzYatirimKaydiYok": "Henüz Yatırım Kaydı Yok",
   "yatirimlariniziEklediktenSonraDetayli": "Yatırımlarınızı ekledikten sonra detaylı analizler burada görünecektir.",
   "guncelDegerFormatmoneyInvestment": "Güncel değer ({currentValue}) cüzdana gelir olarak işlenir ve kayıt kapatılır.",
-  "@guncelDegerFormatmoneyInvestment": { "placeholders": { "currentValue": {} } },
+  "@guncelDegerFormatmoneyInvestment": {
+    "placeholders": {
+      "currentValue": {}
+    }
+  },
   "hataliGirislerIcinAlim": "Hatalı girişler için: alım gideri ({amount}) düzeltme kaydıyla iade edilir, bakiye yatırım öncesine döner.\n\nGerçekten sattıysanız bunun yerine \"Sat\" kullanın.",
-  "@hataliGirislerIcinAlim": { "placeholders": { "amount": {} } },
+  "@hataliGirislerIcinAlim": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
   "portfoyum": "Portföyüm",
   "investmentsLengthYatirim": "{length} yatırım",
-  "@investmentsLengthYatirim": { "placeholders": { "length": {} } },
+  "@investmentsLengthYatirim": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "mevcutDeger": "Mevcut Değer",
   "maliyetiDegistirirsenizFarkCuzdana": "Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.",
   "hesapla": "Hesapla",
   "birikmisFormatmoneyInvCurrentvalue": "Birikmiş: {currentValue} / ",
-  "@birikmisFormatmoneyInvCurrentvalue": { "placeholders": { "currentValue": {} } },
+  "@birikmisFormatmoneyInvCurrentvalue": {
+    "placeholders": {
+      "currentValue": {}
+    }
+  },
   "guncelFiyatiGetir": "Güncel Fiyatı Getir",
   "ekle": "Ekle",
   "karZarar": "Kar/Zarar",
   "investmentProfitpercentageTostringasfixed": "{toStringAsFixed}%",
-  "@investmentProfitpercentageTostringasfixed": { "placeholders": { "toStringAsFixed": {} } },
+  "@investmentProfitpercentageTostringasfixed": {
+    "placeholders": {
+      "toStringAsFixed": {}
+    }
+  },
   "hedefCurrencyformatFormatInvestment": "Hedef: {targetAmount}",
-  "@hedefCurrencyformatFormatInvestment": { "placeholders": { "targetAmount": {} } },
+  "@hedefCurrencyformatFormatInvestment": {
+    "placeholders": {
+      "targetAmount": {}
+    }
+  },
   "investmentTargetprogressTostringasfixed": "{toStringAsFixed}%",
-  "@investmentTargetprogressTostringasfixed": { "placeholders": { "toStringAsFixed": {} } },
+  "@investmentTargetprogressTostringasfixed": {
+    "placeholders": {
+      "toStringAsFixed": {}
+    }
+  },
   "grafikIcinYatirimBulunmuyor": "Grafik için yatırım bulunmuyor",
   "portfoyDagilimi": "Portföy Dağılımı",
   "percentage": "%{percentage}",
-  "@percentage": { "placeholders": { "percentage": {} } },
+  "@percentage": {
+    "placeholders": {
+      "percentage": {}
+    }
+  },
   "tOPLAMPortfoyDegeri": "TOPLAM PORTFÖY DEĞERİ",
   "tOPLAMMaliyet": "TOPLAM MALİYET",
   "kAZANCZarar": "KAZANÇ / ZARAR",
   "isProfitTotalprofitpercentageTostringasfixed": "{isProfit}{toStringAsFixed}%",
-  "@isProfitTotalprofitpercentageTostringasfixed": { "placeholders": { "isProfit": {}, "toStringAsFixed": {} } },
+  "@isProfitTotalprofitpercentageTostringasfixed": {
+    "placeholders": {
+      "isProfit": {},
+      "toStringAsFixed": {}
+    }
+  },
   "templateTitleDuzenliIslemi": "\"{title}\" düzenli işlemi silinsin mi?\n\nDeftere işlenmiş geçmiş işlemler silinmez.",
-  "@templateTitleDuzenliIslemi": { "placeholders": { "title": {} } },
+  "@templateTitleDuzenliIslemi": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "duzenliIslemler": "Düzenli İşlemler",
   "henuzDuzenliIslemYok": "Henüz düzenli işlem yok",
   "islemEklerkenTekrarSikligi": "İşlem eklerken tekrar sıklığı seçerseniz\nşablon burada görünür.",
   "bekleyenDuzenliIslemler": "Bekleyen Düzenli İşlemler",
   "vadesiGelmisIslemlerinizVar": "Vadesi gelmiş işlemleriniz var. Onaylayarak deftere işlenmesini sağlayabilirsiniz.",
   "titleTarihDatestrNtutarTx": "Tarih: {dateStr}\nTutar: {amount}",
-  "@titleTarihDatestrNtutarTx": { "placeholders": { "dateStr": {}, "amount": {} } },
+  "@titleTarihDatestrNtutarTx": {
+    "placeholders": {
+      "dateStr": {},
+      "amount": {}
+    }
+  },
   "ibo": "İbo",
   "uygulamaKilidi": "Uygulama Kilidi",
   "pINBiyometrikVeGizlilik": "PIN, Biyometrik ve Gizlilik Ayarları",
@@ -374,40 +516,18 @@
   "finansalNyolculugunuzBasliyor": "Finansal\nYolculuğunuz Başlıyor",
   "ilkCuzdaniOlustur": "İlk Cüzdanı Oluştur",
   "olusturulmaAppformattersDateshortFormat": "Oluşturulma: {createdAt}",
-  "@olusturulmaAppformattersDateshortFormat": { "placeholders": { "createdAt": {} } },
+  "@olusturulmaAppformattersDateshortFormat": {
+    "placeholders": {
+      "createdAt": {}
+    }
+  },
   "aktif": "Aktif",
   "aktifOlanCuzdanSilinemez": "• Aktif olan cüzdan silinemez. Silmek için önce başka bir cüzdanı aktif yapmalısınız.",
   "cuzdanlarinizaAitBorcAlacak": "• Cüzdanlarınıza ait Borç, Alacak ve Birikim tutarlarını düzenle sayfasından manuel olarak yönetebilirsiniz.",
-  "msgIncorrectPinRemainingTries": "Hatalı PIN. Kalan deneme: {newAttempts}",
-  "@msgIncorrectPinRemainingTries": { "placeholders": { "newAttempts": {} } },
-  "msgPINVerificationFailedE": "PIN doğrulama başarısız: {error}",
-  "@msgPINVerificationFailedE": { "placeholders": { "error": {} } },
-  "msgCreateAPinFirst": "Önce bir PIN oluşturun",
-  "msgBiometricAuthenticationIsNot": "Biyometrik kimlik doğrulama desteklenmiyor",
-  "msgBiometricAuthenticationFailed": "Biyometrik kimlik doğrulama başarısız",
-  "msgBiometricLoginEnabled": "Biyometrik giriş etkinleştirildi",
-  "msgBiometricLoginDisabled": "Biyometrik giriş devre dışı bırakıldı",
-  "msgPINAlreadyExistsUse": "PIN zaten mevcut, bunun yerine PIN değiştirmeyi kullanın",
-  "msgPINsDoNotMatch": "PIN'ler eşleşmiyor",
-  "msgPINSavedSuccessfully": "PIN başarıyla kaydedildi",
-  "msgNewPinValuesDo": "Yeni PIN değerleri eşleşmiyor",
-  "msgCurrentPinIsIncorrect": "Mevcut PIN hatalı",
-  "msgPINUpdatedSuccessfully": "PIN başarıyla güncellendi",
-  "msgPINRemoved": "PIN kaldırıldı",
   "msgPINOrBiometricLogin": "PIN veya biyometrik giriş arka plan kilidi için gereklidir",
-  "msgBackgroundLockAndPrivacy": "Arka plan kilidi ve Ekran Koruması etkinleştirildi",
-  "unifiedFeaturesDemo": "Birleşik Özellikler Demosu",
   "sharedFeatures": "Paylaşılan Özellikler",
-  "tarihSec": "Tarih Seç",
   "tarihAraligi": "Tarih Aralığı",
-  "dialog": "Dialog",
-  "metinGiris": "Metin Giriş",
-  "yukle": "Yükle",
   "butonGalerisi": "Buton Galerisi",
-  "basarili": "Başarılı",
-  "hata": "Hata",
-  "yuklemeButonu": "Yükleme Butonu",
-  "onayDialog": "Onay Dialog",
   "internetBaglantisiAktif": "İnternet bağlantısı aktif",
   "internetBaglantisiYok": "İnternet bağlantısı yok",
   "baglantiKontrolEdiliyor": "Bağlantı kontrol ediliyor...",
@@ -435,20 +555,16 @@
   "menuDebt": "Borç",
   "menuReceivable": "Alacak",
   "menuHistory": "Geçmiş",
-
   "themeSysLight": "Sistem [Açık]",
   "themeSysDark": "Sistem [Kapalı]",
-
   "cuzdanOlusturunuz": "Cüzdan oluşturunuz",
   "cuzdanSeciniz": "Cüzdan seçiniz",
   "yerelMod": "Yerel Mod",
   "henuzCuzdanOlusturmadiniz": "Henüz cüzdan oluşturmadınız",
-
   "cuzdanOlusturuldu": "Cüzdan oluşturuldu!",
   "cuzdanGuncellendi": "Cüzdan güncellendi!",
   "cuzdanSilindi": "Cüzdan silindi!",
   "cuzdanSecildi": "Cüzdan seçildi",
-
   "disaAktarilacakIslemBulunamadi": "Dışa aktarılacak işlem bulunamadı.",
   "islemlerDisaAktarildi": "İşlemler başarıyla dışa aktarıldı.",
   "csvGecerliIslemBulunamadi": "CSV dosyasında geçerli işlem bulunamadı.",
@@ -458,7 +574,9 @@
   "satirAtlandi": "{count} satır tarih/tutar hatası nedeniyle atlandı.",
   "@satirAtlandi": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "guncelle": "Güncelle",
@@ -642,14 +760,12 @@
   "cuzdanYonetimiTitle": "Cüzdan Yönetimi",
   "infoTransferDesc": "Cüzdanlarınız arasında para transferi yapabilirsiniz. Transfer edilen tutar kur farklılıkları gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.",
   "infoBankImportDesc": "Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.",
-
   "dateBadgeToday": "BUGÜN",
   "dateBadgeYesterday": "DÜN",
   "dateBadgeThisWeek": "BU HAFTA",
   "dateBadgeLastWeek": "GEÇEN HAFTA",
   "dateBadgeThisMonth": "BU AY",
   "dateBadgeLastMonth": "GEÇEN AY",
-
   "categoryFinans": "Finans",
   "categoryGrafikler": "Grafikler",
   "categoryIsVeOfis": "İş & Ofis",
@@ -668,13 +784,11 @@
   "categoryHediyeVeBagis": "Hediye & Bağış",
   "categoryHizmetler": "Hizmetler",
   "categoryDiger": "Diğer",
-
   "defaultCategoryFood": "Yemek",
   "defaultCategoryTransport": "Ulaşım",
   "defaultCategoryShopping": "Alışveriş",
   "defaultCategoryBills": "Fatura",
   "defaultCategoryEntertainment": "Eğlence",
-  "defaultCategorySalary": "Maaş",
   "defaultCategorySalary": "Maaş",
   "defaultCategoryInvestment": "Yatırım",
   "defaultCategoryFreelance": "Serbest",
@@ -696,20 +810,26 @@
   "tekrarlayanTespitOzeti": "{count} olası düzenli ödeme tespit ettik",
   "@tekrarlayanTespitOzeti": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "kezTekrarlandi": "{count} kez tekrarlandı",
   "@kezTekrarlandi": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "duzenliOdemeOlarakEkle": "Düzenli Ödeme olarak ekle",
   "duzenliOdemeEklendi": "'{title}' düzenli ödemelere eklendi",
   "@duzenliOdemeEklendi": {
     "placeholders": {
-      "title": { "type": "String" }
+      "title": {
+        "type": "String"
+      }
     }
   },
   "duzenliOdemeEklenemedi": "Düzenli ödeme eklenemedi",
@@ -719,7 +839,9 @@
   "borcNakitSecenekGovde": "{tutar} cüzdan bakiyene gelir olarak eklenir. Yaptığın geri ödemeler bakiyeden gider olarak düşülür.",
   "@borcNakitSecenekGovde": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "borcUrunSecenekBaslik": "Ürün / hizmet aldım",
@@ -736,13 +858,17 @@
   "yaklasikKarsilikFormat": "≈ {tutar}",
   "@yaklasikKarsilikFormat": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "toplamTlKarsilikFormat": "Toplam ≈ {tutar}",
   "@toplamTlKarsilikFormat": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "cuzdanlarArasiTransfer": "Cüzdanlar Arası Transfer",
@@ -751,7 +877,9 @@
   "transferOnizlemeFormat": "Hedefe ≈ {tutar} geçecek",
   "@transferOnizlemeFormat": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin",
@@ -761,29 +889,26 @@
   "transferBakiyeAsimiMesaj": "Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?",
   "@transferBakiyeAsimiMesaj": {
     "placeholders": {
-      "bakiye": { "type": "String" }
+      "bakiye": {
+        "type": "String"
+      }
     }
   },
-
   "yardimVeTurlar": "Yardım & Turlar",
   "genelTanitimiTekrarGoster": "Gizlilik ve Bildirim Tanıtımını Tekrar Göster",
   "yatirimBirikimTuru": "Yatırım/Birikim Turu",
   "islemlerTuru": "İşlemler Turu",
   "borcAlacakTuru": "Borç & Alacak Turu",
-
   "onboardingInvestmentSummaryTitle": "Toplam Birikiminiz",
   "onboardingInvestmentSummaryDesc": "Toplam yatırım, güncel değer ve kâr/zararınızı burada tek bakışta görürsünüz.",
   "onboardingInvestmentPortfolioTitle": "Portföyünüz",
   "onboardingInvestmentPortfolioDesc": "Altın, hisse ve özel yatırımlarınızın listesi burada. Bir karta dokunarak katkı, satış, düzenleme ve silme işlemlerine ulaşabilirsiniz.",
-
   "onboardingTransactionsFilterTitle": "Mod ve Filtreler",
   "onboardingTransactionsFilterDesc": "Gelir/Gider modunu değiştirin ve kategoriye, tarihe veya tutara göre filtreleyin.",
   "onboardingTransactionsViewToggleTitle": "Liste / Takvim",
   "onboardingTransactionsViewToggleDesc": "İşlemlerinizi liste veya takvim görünümünde inceleyebilirsiniz.",
-
   "onboardingDebtTabsTitle": "Borçlarım / Alacaklarım",
   "onboardingDebtTabsDesc": "Verdiğiniz ve aldığınız borçları buradan sekmeler halinde takip edersiniz.",
-
   "onboardingNavHintHeader": "Nasıl Gezinilir?",
   "onboardingNavHintSwipeTitle": "Sağa / Sola Kaydırın",
   "onboardingNavHintSwipeDesc": "Yatırım, İşlemler ve Borç ekranları arasında geçiş yapın.",
@@ -791,7 +916,6 @@
   "onboardingNavHintDragDesc": "Detay, Rapor, Bekleyen ve Geçmiş gibi alt sayfalara ulaşın.",
   "onboardingNavHintAddTitle": "Simgelere Dokunun",
   "onboardingNavHintAddDesc": "Yeni gelir, gider, yatırım, borç veya alacak ekleyin.",
-
   "onboardingInvestmentDetailTitle": "Birikim Detayı",
   "onboardingInvestmentDetailDesc": "Yatırımlarınızla ilgili tüm alım/satım hareketlerini burada kronolojik olarak görürsünüz.",
   "onboardingTransactionsInsightsTitle": "Akıllı İçgörüler",
@@ -800,7 +924,6 @@
   "onboardingTransactionsReportDesc": "Seçtiğiniz tarih aralığı için gelir/gider dağılımını grafiklerle inceleyin, dışa aktarın.",
   "onboardingDebtHistoryTitle": "Geçmiş",
   "onboardingDebtHistoryDesc": "Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.",
-
   "notificationSettings": "Bildirim Ayarları",
   "notificationSettingsDesc": "Kritik ve rastgele bildirim tercihlerinizi yönetin.",
   "randomReminders": "Motive Edici Hatırlatıcılar",
@@ -823,33 +946,54 @@
   "notificationTestSent": "Test bildirimi gönderildi",
   "notificationTestTitle": "CuNehat test bildirimi",
   "notificationTestBody": "Bildirimler çalışıyor. Hatırlatmalarınız bu şekilde görünecek.",
-
   "notifChannelCriticalName": "Kritik Hatırlatmalar",
   "notifChannelCriticalDesc": "Borç vadeleri ve bütçe aşımları",
   "notifChannelRecurringName": "Düzenli İşlemler",
   "notifChannelRecurringDesc": "Onay bekleyen düzenli işlem hatırlatmaları",
   "notifChannelMotivationalName": "Motive Edici Hatırlatıcılar",
   "notifChannelMotivationalDesc": "Harcama girmeyi hatırlatan günlük mesajlar",
-
   "notifRecurringDueTitle": "Düzenli İşlem Vakti",
   "notifRecurringDueBody": "{title} onayınızı bekliyor.",
-  "@notifRecurringDueBody": { "placeholders": { "title": {} } },
+  "@notifRecurringDueBody": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "notifDebtUpcomingTitle": "Borç Hatırlatması",
   "notifDebtUpcomingBody": "{title} başlıklı borcunuzun son ödeme tarihi yaklaştı.",
-  "@notifDebtUpcomingBody": { "placeholders": { "title": {} } },
+  "@notifDebtUpcomingBody": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "notifDebtDueTitle": "Borç Son Ödeme Tarihi!",
   "notifDebtDueBody": "{title} başlıklı borcunuzun son ödeme tarihi bugün.",
-  "@notifDebtDueBody": { "placeholders": { "title": {} } },
+  "@notifDebtDueBody": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "notifBudgetWarningTitle": "Bütçe Uyarısı",
   "notifBudgetWarningBody": "{category} bütçenizin %80'ine ulaştınız.",
-  "@notifBudgetWarningBody": { "placeholders": { "category": {} } },
+  "@notifBudgetWarningBody": {
+    "placeholders": {
+      "category": {}
+    }
+  },
   "notifBudgetExceededTitle": "Bütçe Aşıldı!",
   "notifBudgetExceededBody": "{category} bütçenizi aştınız.",
-  "@notifBudgetExceededBody": { "placeholders": { "category": {} } },
+  "@notifBudgetExceededBody": {
+    "placeholders": {
+      "category": {}
+    }
+  },
   "notifBudgetFilledTitle": "Bütçe Doldu",
   "notifBudgetFilledBody": "{category} bütçe limitinizin tamamına ulaştınız (%100).",
-  "@notifBudgetFilledBody": { "placeholders": { "category": {} } },
-
+  "@notifBudgetFilledBody": {
+    "placeholders": {
+      "category": {}
+    }
+  },
   "notifDailyReminderTitle": "CuNehat",
   "notifDailyReminder1": "Bugün hiç harcama girdin mi? Bütçeni güncel tut!",
   "notifDailyReminder2": "Finansal durumunu kontrol etme vakti!",
@@ -857,11 +1001,18 @@
   "notifDailyReminder4": "Küçük birikimler büyük hedeflere ulaştırır!",
   "notifDailyReminder5": "Harcamalarını gözden geçirmeyi unutma.",
   "notifDailyReminder6": "Bütçeni planla, rahat yaşa!",
-
   "recurringNudgeCount": "{count} işlem onay bekliyor",
-  "@recurringNudgeCount": { "placeholders": { "count": {} } },
+  "@recurringNudgeCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "recurringNudgeOldest": "En eskisi {days} gün gecikmiş",
-  "@recurringNudgeOldest": { "placeholders": { "days": {} } },
+  "@recurringNudgeOldest": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "sonra": "Sonra",
   "incele": "İncele",
   "onayBekleyenler": "Onay Bekleyenler",
@@ -873,23 +1024,38 @@
   "aylikDuzenliGider": "Aylık düzenli gider",
   "aylikDuzenliGelir": "Aylık düzenli gelir",
   "aktifSablonSayisi": "{count} aktif şablon",
-  "@aktifSablonSayisi": { "placeholders": { "count": {} } },
+  "@aktifSablonSayisi": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "yarin": "Yarın",
   "gunSonra": "{days} gün sonra",
-  "@gunSonra": { "placeholders": { "days": {} } },
+  "@gunSonra": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "bekleyenVadeSayisi": "{count} vade birikmiş",
-  "@bekleyenVadeSayisi": { "placeholders": { "count": {} } },
+  "@bekleyenVadeSayisi": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "tumunuOnayla": "Tümünü Onayla",
   "tumunuOnaylaBaslik": "Birikmiş vadeleri onayla",
   "tumunuOnaylaAciklama": "\"{title}\" için birikmiş {count} vadenin tümü deftere işlenecek.",
-  "@tumunuOnaylaAciklama": { "placeholders": { "title": {}, "count": {} } },
+  "@tumunuOnaylaAciklama": {
+    "placeholders": {
+      "title": {},
+      "count": {}
+    }
+  },
   "buVadeyiAtla": "Bu vadeyi atla",
   "sablonuSilAciklama": "Şablonu sil (gelecek vadeler de dahil)",
-
   "tumTurlariSifirla": "Tüm Turları Sıfırla",
   "tumTurlariSifirlaAciklama": "Alt sayfa turları da dahil, tüm ekranları ziyaret ettiğinizde tekrar gösterilir.",
   "tumTurlarSifirlandi": "Turlar sıfırlandı",
-
   "onboardingAppBarMenuTitle": "Menü",
   "onboardingAppBarMenuDesc": "Buradan bütçe, düzenli işlemler, profil ve ayarlara ulaşabilirsiniz.",
   "onboardingAppBarWalletTitle": "Cüzdanınız",
@@ -906,7 +1072,6 @@
   "onboardingBudgetsDesc": "Bir kategori seçip aylık harcama limiti belirleyin; limit aşıldığında bilgilendirilirsiniz.",
   "onboardingRecurringTemplatesTitle": "Düzenli İşlemler",
   "onboardingRecurringTemplatesDesc": "Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.",
-
   "fisEkle": "Fiş/fotoğraf ekle",
   "fisEkli": "Fiş eklendi",
   "fisKamera": "Kamera",
@@ -917,7 +1082,6 @@
   "fisOcrTaraniyor": "Fiş taranıyor…",
   "fisOcrDolduruldu": "Bilgiler fişten dolduruldu — lütfen kontrol edin",
   "fisCihazdaYok": "Görsel bu cihazda yok",
-
   "bankImportSettingsEntry": "Banka ekstresi içe aktar",
   "bankImportSettingsSubtitle": "CSV/Excel/PDF ekstresini işlemlere dönüştür",
   "bankImportTitle": "Banka Ekstresi İçe Aktar",
@@ -1049,34 +1213,58 @@
   "bankImportSummary": "{count} hareket · {dup} olası tekrar · {skipped} satır atlandı · {uncategorized} kategorisiz",
   "@bankImportSummary": {
     "placeholders": {
-      "count": { "type": "int" },
-      "dup": { "type": "int" },
-      "skipped": { "type": "int" },
-      "uncategorized": { "type": "int" }
+      "count": {
+        "type": "int"
+      },
+      "dup": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "uncategorized": {
+        "type": "int"
+      }
     }
   },
   "bankImportAdd": "Seçilenleri ekle ({count})",
   "@bankImportAdd": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bankImportDoneMsg": "{added} işlem eklendi, {skipped} atlandı.",
   "@bankImportDoneMsg": {
     "placeholders": {
-      "added": { "type": "int" },
-      "skipped": { "type": "int" }
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
     }
   },
   "bankImportDonePastDatesHint": "Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.",
   "bankImportReconcileMatched": "Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.",
   "bankImportReconcileMismatch": "Bakiye uyuşmadı: {count} satırda bakiye ile tutar tutmuyor. Ekstre eksik/hatalı okunmuş olabilir; işaretleri kontrol et.",
   "@bankImportReconcileMismatch": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bankImportCurrencyMismatch": "Ekstre {statement} para biriminde görünüyor ama hedef cüzdan {wallet}. Tutarlar dönüştürülmez; doğru cüzdana aktardığından emin ol.",
   "@bankImportCurrencyMismatch": {
     "placeholders": {
-      "statement": { "type": "String" },
-      "wallet": { "type": "String" }
+      "statement": {
+        "type": "String"
+      },
+      "wallet": {
+        "type": "String"
+      }
     }
   },
   "bankImportUndo": "İçe aktarımı geri al",
@@ -1096,7 +1284,6 @@
   "bankImportCategorySuggestionHint": "Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.",
   "bankImportCategorySuggestionContinue": "Devam et",
   "bankImportPickCategoryHint": "Kategori seç",
-
   "bankStatementSectionHeader": "BANKA EKSTRESİ",
   "sifirla": "Sıfırla",
   "tumTurlariSifirlaOnayMesaji": "Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?",
@@ -1110,83 +1297,105 @@
   "deleteWalletConfirmMessage": "{ad} cüzdanını silmek istediğinizden emin misiniz?",
   "@deleteWalletConfirmMessage": {
     "placeholders": {
-      "ad": { "type": "String" }
+      "ad": {
+        "type": "String"
+      }
     }
   },
   "deleteWalletDangerMessage": "{ad} cüzdanı ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.",
   "@deleteWalletDangerMessage": {
     "placeholders": {
-      "ad": { "type": "String" }
+      "ad": {
+        "type": "String"
+      }
     }
   },
   "transferOnayBasligi": "Transferi Onayla",
   "transferOnayMesaji": "{tutar} tutarını {kaynak} cüzdanından {hedef} cüzdanına transfer etmek istediğinizden emin misiniz?",
   "@transferOnayMesaji": {
     "placeholders": {
-      "tutar": { "type": "String" },
-      "kaynak": { "type": "String" },
-      "hedef": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      },
+      "kaynak": {
+        "type": "String"
+      },
+      "hedef": {
+        "type": "String"
+      }
     }
   },
   "budgetDeleteConfirmTitle": "Bütçeyi Sil",
   "budgetDeleteConfirmMessage": "{kategori} bütçesini silmek istediğinizden emin misiniz?",
   "@budgetDeleteConfirmMessage": {
     "placeholders": {
-      "kategori": { "type": "String" }
+      "kategori": {
+        "type": "String"
+      }
     }
   },
   "islemSilBaslik": "İşlem Sil",
   "islemSilOnayMesaji": "{baslik} işlemini silmek istediğinizden emin misiniz?",
   "@islemSilOnayMesaji": {
     "placeholders": {
-      "baslik": { "type": "String" }
+      "baslik": {
+        "type": "String"
+      }
     }
   },
-
   "borcSilBaslik": "Borcu Sil",
   "borcSilOnayMesaji": "{baslik} borcunu silmek istediğinizden emin misiniz? Bu borcun cüzdan bakiyesine etkisi de geri alınır.",
   "@borcSilOnayMesaji": {
     "placeholders": {
-      "baslik": { "type": "String" }
+      "baslik": {
+        "type": "String"
+      }
     }
   },
   "alacakSilBaslik": "Alacağı Sil",
   "alacakSilOnayMesaji": "{isim} alacağını silmek istediğinizden emin misiniz? Bu alacağın cüzdan bakiyesine etkisi de geri alınır.",
   "@alacakSilOnayMesaji": {
     "placeholders": {
-      "isim": { "type": "String" }
+      "isim": {
+        "type": "String"
+      }
     }
   },
-
   "budgetStatusUnderControl": "Kontrol altında",
   "budgetStatusFilledCount": "{sayi} bütçe doldu",
   "@budgetStatusFilledCount": {
     "placeholders": {
-      "sayi": { "type": "int" }
+      "sayi": {
+        "type": "int"
+      }
     }
   },
   "budgetStatusExceededCount": "{sayi} bütçe aşıldı",
   "@budgetStatusExceededCount": {
     "placeholders": {
-      "sayi": { "type": "int" }
+      "sayi": {
+        "type": "int"
+      }
     }
   },
-
   "insightDailyLimitTitle": "Günlük Harcama Limiti (Hedef)",
   "insightDailyLimitDesc": "Kalan {gun} gün boyunca bütçenizi korumak için tavsiye edilen günlük limit.",
   "@insightDailyLimitDesc": {
     "placeholders": {
-      "gun": { "type": "int" }
+      "gun": {
+        "type": "int"
+      }
     }
   },
   "insightSpikeTitle": "Harcama Sıçraması Uyarısı",
   "insightSpikeDesc": "Geçen döneme göre ({tutar}) dikkate değer bir artış var.",
   "@insightSpikeDesc": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
-
   "drawerSectionFinancial": "FİNANSAL YÖNETİM",
   "drawerSectionSystem": "SİSTEM & UYGULAMA",
   "drawerBudgetSubtitle": "Kategori bazlı bütçe takibi ve harcama limitleri",
@@ -1208,13 +1417,43 @@
   "reportSavingsSubtitle": "%{oran} Birikim",
   "@reportSavingsSubtitle": {
     "placeholders": {
-      "oran": { "type": "String" }
+      "oran": {
+        "type": "String"
+      }
     }
   },
   "vadeTarihLabel": "Vade: {tarih}",
   "@vadeTarihLabel": {
     "placeholders": {
-      "tarih": { "type": "String" }
+      "tarih": {
+        "type": "String"
+      }
     }
-  }
+  },
+  "privacyPolicyTitle": "Gizlilik Politikası",
+  "privacyIntro": "CuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.",
+  "privacyLocalDataTitle": "Cihazınızda saklanan veriler",
+  "privacyLocalDataBody": "Cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler, tekrarlayan şablonlar ve uygulama tercihleri (tema, dil, kategoriler) yalnızca cihazınızda saklanır ve bize iletilmez.",
+  "privacyDriveTitle": "Google Drive yedeği (isteğe bağlı)",
+  "privacyDriveBody": "Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve kısıtlı \"drive.appdata\" kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) kendi Drive'ınızdaki, başka uygulamaların erişemediği özel bir klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.",
+  "privacyMarketDataTitle": "Piyasa verisi",
+  "privacyMarketDataBody": "Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.",
+  "privacySharingTitle": "Veri paylaşımı",
+  "privacySharingBody": "Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla paylaşmayız. Uygulamada analitik, çökme-raporlama, reklam veya izleme SDK'sı yoktur. Google API'lerinden alınan bilgilerin kullanımı Google API Hizmetleri Kullanıcı Verileri Politikası'na (Sınırlı Kullanım dahil) uyar.",
+  "privacySecurityTitle": "Güvenlik",
+  "privacySecurityBody": "Yerel veri uygulamanın özel depolama alanında tutulur. Yetkisiz erişimi önlemek için biyometrik / PIN kilidi desteklenir ve uygulama arka plana alındığında içerik bulanıklaştırılır. Tüm ağ iletişimi HTTPS kullanır.",
+  "privacyRetentionTitle": "Veri saklama ve silme",
+  "privacyRetentionBody": "Verileriniz üzerinde tam kontrol sizdedir. Tüm yerel veriyi Ayarlar → Gizlilik & Veri → \"Tüm veriyi sil\" ile silebilirsiniz. Drive yedeğini Ayarlar → Yedekleme bölümünden silebilir veya hesabınızın bağlantısını kesebilirsiniz.",
+  "privacyContactLabel": "İletişim: {email}",
+  "@privacyContactLabel": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyLastUpdated": "Son güncelleme: 30 Haziran 2026",
+  "privacyConsentTitle": "Gizliliğiniz",
+  "privacyConsentBody": "CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.",
+  "privacyConsentAcknowledge": "Anladım"
 }

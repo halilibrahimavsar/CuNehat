@@ -255,8 +255,6 @@ extension GetItInjectableX on _i174.GetIt {
               localDatasource: gh<_i934.TransactionHiveDataSource>(),
               receiptStorage: gh<_i40.ReceiptStorageService>(),
             ));
-    gh.lazySingleton<_i348.DataSerializationService>(
-        () => _i348.DataSerializationService(gh<_i40.ReceiptStorageService>()));
     gh.lazySingleton<_i94.BudgetRepository>(
         () => _i626.BudgetRepositoryImpl(gh<_i828.BudgetLocalDataSource>()));
     gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
@@ -381,10 +379,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i721.NotificationSettingsService>(),
           gh<_i931.NotificationLocalizer>(),
         ));
-    gh.lazySingleton<_i186.GoogleDriveBackupService>(() =>
-        _i186.GoogleDriveBackupService(gh<_i348.DataSerializationService>()));
-    gh.lazySingleton<_i266.LocalBackupService>(
-        () => _i266.LocalBackupService(gh<_i348.DataSerializationService>()));
     gh.lazySingleton<_i222.BudgetAlertMonitor>(
       () => _i222.BudgetAlertMonitor(
         gh<_i21.GetBudgetsUsecase>(),
@@ -430,14 +424,6 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i788.RecurringTransactionRepository>(),
               gh<_i534.ReminderSyncService>(),
             ));
-    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
-          csvService: gh<_i530.CsvService>(),
-          localBackupService: gh<_i266.LocalBackupService>(),
-          transactionsRepository: gh<_i543.TransactionsRepository>(),
-          walletRepository: gh<_i504.WalletRepository>(),
-          walletMetricsService: gh<_i239.WalletMetricsService>(),
-          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
-        ));
     gh.factory<_i726.InvestmentBloc>(() => _i726.InvestmentBloc(
           getInvestmentsUseCase: gh<_i864.GetInvestmentsUseCase>(),
           addInvestmentUseCase: gh<_i818.AddInvestmentUseCase>(),
@@ -466,6 +452,12 @@ extension GetItInjectableX on _i174.GetIt {
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
+    gh.lazySingleton<_i348.DataSerializationService>(
+        () => _i348.DataSerializationService(
+              gh<_i40.ReceiptStorageService>(),
+              gh<_i551.NotificationService>(),
+              gh<_i534.ReminderSyncService>(),
+            ));
     gh.factory<_i827.WalletBloc>(() => _i827.WalletBloc(
           getWalletsUseCase: gh<_i207.WalletGetUseCase>(),
           watchWalletsUseCase: gh<_i207.WalletWatchUseCase>(),
@@ -500,6 +492,18 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i111.SkipRecurringTransactionUsecase>(),
           gh<_i239.WalletMetricsService>(),
           gh<_i777.TransactionsChangedNotifier>(),
+        ));
+    gh.lazySingleton<_i186.GoogleDriveBackupService>(() =>
+        _i186.GoogleDriveBackupService(gh<_i348.DataSerializationService>()));
+    gh.lazySingleton<_i266.LocalBackupService>(
+        () => _i266.LocalBackupService(gh<_i348.DataSerializationService>()));
+    gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
+          csvService: gh<_i530.CsvService>(),
+          localBackupService: gh<_i266.LocalBackupService>(),
+          transactionsRepository: gh<_i543.TransactionsRepository>(),
+          walletRepository: gh<_i504.WalletRepository>(),
+          walletMetricsService: gh<_i239.WalletMetricsService>(),
+          transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
     return this;
   }

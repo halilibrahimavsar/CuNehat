@@ -49,6 +49,7 @@ void main() {
     frequency: RecurringFrequency.monthly,
     // Testin bugüne göre "gelecek" kalması için sabit uzak tarih.
     nextExecutionDate: DateTime(2099, 6, 20),
+    anchorDay: 20,
   );
 
   final debt = DebtEntity(
@@ -237,6 +238,41 @@ void main() {
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
           ));
+    });
+
+    // REGRESYON: vade günü hatırlatması ham `dueDate` ile kuruluyordu; geçmiş
+    // bir zamana planlama NotificationService'te sessizce atlandığından
+    // GECİKMİŞ borç — hatırlatılması en kritik kalem — hiç bildirim almıyordu.
+    test('vadesi GEÇMİŞ borç için vade günü hatırlatması sessizce atlanmaz',
+        () async {
+      final overdue = debt.copyWith(dueDate: DateTime(2020, 1, 15));
+      final before = DateTime.now();
+
+      await service.syncDebt(overdue);
+
+      final scheduled = verify(() => notifications.scheduleNotification(
+            id: ReminderIds.debtDue('debt_1'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: captureAny(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+          )).captured.single as DateTime;
+
+      // Geçmişe değil, bir sonraki hatırlatma yuvasına (sabah) kurulmalı.
+      expect(scheduled.isAfter(before), isTrue,
+          reason: 'gecikmiş borç geçmiş bir zamana planlanmamalı');
+      expect(scheduled.hour, kReminderHour);
+
+      // Vade öncesi ("bir gün önce") hatırlatması ham tarihle kurulmaya devam
+      // eder; geçmişte kaldığından NotificationService onu zaten düşürür.
+      // Bilinçli: gecikmiş borcu her sabah İKİ kez hatırlatmak istemiyoruz.
+      verify(() => notifications.scheduleNotification(
+            id: ReminderIds.debtUpcoming('debt_1'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: DateTime(2020, 1, 14, kReminderHour),
+            payload: any(named: 'payload'),
+          )).called(1);
     });
   });
 

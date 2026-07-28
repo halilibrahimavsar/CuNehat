@@ -107,6 +107,7 @@ class PendingRecurringBloc
               ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
             current.nextExecutionDate,
             current.frequency,
+            anchorDay: current.anchorDay,
           ),
         );
       }

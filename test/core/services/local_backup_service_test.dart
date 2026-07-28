@@ -51,6 +51,29 @@ void main() {
     expect(filePickerLog.single.method, 'save');
   });
 
+  // REGRESYON: dosya adında gün ile ay yer değişikti (28 Tem 2026 →
+  // `..._20262807_...`). Yedekler kronolojik sıralanmıyor ve kullanıcı geri
+  // yüklerken yanlış dosyayı seçiyordu.
+  test('yedek dosya adı YYYYMMDD sırasında ve bugünün tarihiyle üretilir',
+      () async {
+    when(() => dataSerializationService.exportDataToJson())
+        .thenAnswer((_) async => '{"version":3}');
+    filePickerResponse = null;
+
+    await service.exportToDevice();
+
+    final name = filePickerLog.single.arguments['fileName'] as String;
+    final match =
+        RegExp(r'^cunehat_backup_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})\.json$')
+            .firstMatch(name);
+    expect(match, isNotNull, reason: 'beklenen biçim dışında: $name');
+
+    final now = DateTime.now();
+    expect(int.parse(match!.group(1)!), now.year);
+    expect(int.parse(match.group(2)!), now.month);
+    expect(int.parse(match.group(3)!), now.day);
+  });
+
   test('importFromDevice returns cancelled when picker is cancelled', () async {
     filePickerResponse = null;
 

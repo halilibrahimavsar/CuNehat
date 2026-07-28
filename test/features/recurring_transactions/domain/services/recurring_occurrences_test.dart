@@ -19,6 +19,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: frequency,
         nextExecutionDate: next,
+        anchorDay: next.day,
       );
 
   final now = DateTime(2026, 7, 25, 12);

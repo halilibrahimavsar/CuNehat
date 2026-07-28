@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -55,6 +56,54 @@ void main() {
         .setMockMethodCallHandler(shareChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(filePickerChannel, null);
+  });
+
+  // REGRESYON: dışa aktarım BOM'suz UTF-8 yazıyordu; Windows Excel dosyayı
+  // sistem kod sayfası sanıp Türkçe karakterleri bozuyordu (Şişli → Åžisli).
+  group('CsvService.exportTransactionsToCSV — kodlama', () {
+    final tx = TransactionEntity(
+      id: 't1',
+      userId: 'u1',
+      walletId: 'w1',
+      title: 'Şişli Bakkal — ÇĞİÖÜ',
+      tag: 'Market',
+      amount: 123.45,
+      date: DateTime(2026, 7, 28),
+      type: TransactionTypeModel.expense,
+    );
+
+    test('UTF-8 BOM ile yazılır ve Türkçe karakterler korunur', () async {
+      await csvService.exportTransactionsToCSV([tx]);
+
+      final file =
+          File('${Directory.systemTemp.path}/transactions_export.csv');
+      final bytes = await file.readAsBytes();
+
+      expect(bytes.take(3).toList(), utf8Bom, reason: 'BOM eksik');
+      // BOM'dan sonrası geçerli UTF-8 ve metin bozulmamış olmalı.
+      expect(utf8.decode(bytes.skip(3).toList()), contains('Şişli Bakkal'));
+      expect(utf8.decode(bytes.skip(3).toList()), contains('ÇĞİÖÜ'));
+    });
+
+    test('kendi içe aktarımımız BOM\'a takılmaz (round-trip)', () async {
+      await csvService.exportTransactionsToCSV([tx]);
+      final path = '${Directory.systemTemp.path}/transactions_export.csv';
+
+      filePickerResponse = [
+        {
+          'path': path,
+          'name': 'transactions_export.csv',
+          'size': await File(path).length(),
+          'bytes': null,
+        }
+      ];
+      final result = await csvService.importTransactionsFromCSV('u1');
+
+      expect(result, isNotNull);
+      expect(result!.skippedRows, 0);
+      expect(result.transactions.single.title, 'Şişli Bakkal — ÇĞİÖÜ');
+      expect(result.transactions.single.amount, 123.45);
+    });
   });
 
   group('CsvService.parseDate', () {

@@ -55,6 +55,7 @@ void main() {
       type: TransactionTypeModel.expense,
       frequency: RecurringFrequency.monthly,
       nextExecutionDate: DateTime(2026, 6, 1),
+      anchorDay: 1,
       isActive: true,
     );
 
@@ -93,6 +94,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: now.subtract(const Duration(days: 1)),
+        anchorDay: now.day,
         isActive: true,
       );
 
@@ -106,6 +108,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: now,
+        anchorDay: now.day,
         isActive: true,
       );
 
@@ -119,6 +122,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: now.add(const Duration(days: 1)),
+        anchorDay: now.day,
         isActive: true,
       );
 
@@ -132,6 +136,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: now.subtract(const Duration(days: 1)),
+        anchorDay: now.day,
         isActive: false,
       );
 

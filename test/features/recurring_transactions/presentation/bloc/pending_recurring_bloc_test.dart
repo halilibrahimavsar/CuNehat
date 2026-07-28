@@ -51,6 +51,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: DateTime(2026, 1, 1),
+        anchorDay: 1,
       ),
     );
   });
@@ -88,6 +89,7 @@ void main() {
     type: TransactionTypeModel.expense,
     frequency: RecurringFrequency.monthly,
     nextExecutionDate: DateTime(2026, 6, 20),
+    anchorDay: 20,
     isActive: true,
   );
 

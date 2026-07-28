@@ -51,6 +51,7 @@ void main() {
         type: TransactionTypeModel.expense,
         frequency: RecurringFrequency.monthly,
         nextExecutionDate: DateTime(2026, 1, 1),
+        anchorDay: 1,
       ),
     );
     registerFallbackValue(
@@ -102,6 +103,7 @@ void main() {
     type: TransactionTypeModel.expense,
     frequency: RecurringFrequency.monthly,
     nextExecutionDate: DateTime(2026, 6, 20),
+    anchorDay: 20,
     isActive: true,
   );
 
@@ -433,14 +435,14 @@ void main() {
     test('daily frequency adds 1 day', () {
       final base = DateTime(2026, 6, 13);
       final next = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
-          base, RecurringFrequency.daily);
+          base, RecurringFrequency.daily, anchorDay: base.day);
       expect(next, DateTime(2026, 6, 14));
     });
 
     test('weekly frequency adds 7 days', () {
       final base = DateTime(2026, 6, 13);
       final next = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
-          base, RecurringFrequency.weekly);
+          base, RecurringFrequency.weekly, anchorDay: base.day);
       expect(next, DateTime(2026, 6, 20));
     });
 
@@ -449,7 +451,7 @@ void main() {
       // 2027 is not a leap year, so Jan 31 + 1 month should be Feb 28
       final base = DateTime(2027, 1, 31);
       final next = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
-          base, RecurringFrequency.monthly);
+          base, RecurringFrequency.monthly, anchorDay: base.day);
       expect(next, DateTime(2027, 2, 28));
     });
 
@@ -458,7 +460,7 @@ void main() {
       // 2028 is a leap year, so Jan 31 + 1 month should be Feb 29
       final base = DateTime(2028, 1, 31);
       final next = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
-          base, RecurringFrequency.monthly);
+          base, RecurringFrequency.monthly, anchorDay: base.day);
       expect(next, DateTime(2028, 2, 29));
     });
 
@@ -468,7 +470,7 @@ void main() {
       // 2028 is leap year (Feb 29), 2029 is non-leap year (Feb 28)
       final base = DateTime(2028, 2, 29);
       final next = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
-          base, RecurringFrequency.yearly);
+          base, RecurringFrequency.yearly, anchorDay: base.day);
       expect(next, DateTime(2029, 2, 28));
     });
   });

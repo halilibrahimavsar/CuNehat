@@ -40,6 +40,17 @@ class _AppBarContentState extends State<AppBarContent> {
   WalletLoadedSt? _cachedLoadedState;
   bool _tourScheduled = false;
 
+  /// Cüzdan alt-sayfasına verilen kaydırma denetleyicisi. State'e ait: her
+  /// dokunuşta `ScrollController()` üretmek dispose edilmeyen denetleyici
+  /// bırakıyordu.
+  final ScrollController _walletSheetScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _walletSheetScrollController.dispose();
+    super.dispose();
+  }
+
   Future<void> _maybeShowTour() async {
     if (!mounted) return;
     final coordinator = getIt<OnboardingCoordinator>();
@@ -222,7 +233,7 @@ class _AppBarContentState extends State<AppBarContent> {
 
           scaffoldState?.openWalletDialog(
             WalletSheetContent(
-              scrollController: ScrollController(),
+              scrollController: _walletSheetScrollController,
               userId: userId,
             ),
           );

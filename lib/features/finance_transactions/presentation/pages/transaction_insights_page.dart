@@ -135,6 +135,7 @@ class _InsightsViewState extends State<_InsightsView> {
       type: s.type,
       frequency: s.frequency,
       nextExecutionDate: s.nextExecutionDate,
+      anchorDay: s.anchorDay,
     );
 
     final res = await getIt<SaveRecurringTransactionUsecase>()(entity);

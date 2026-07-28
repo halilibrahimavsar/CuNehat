@@ -4,8 +4,9 @@ part of 'wallet_bloc.dart';
 sealed class WalletEvent extends Equatable {
   const WalletEvent();
 
+  // Object? (Object değil): UpdateWalletEvent.baselineBalance nullable.
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 /// Kullanıcının cüzdanlarını getir
@@ -42,10 +43,20 @@ final class CreateWalletEvent extends WalletEvent {
 final class UpdateWalletEvent extends WalletEvent {
   final WalletEntity wallet;
 
-  const UpdateWalletEvent(this.wallet);
+  /// Formun AÇILDIĞI andaki bakiye. Bloc, kullanıcının bakiye alanına gerçekten
+  /// dokunup dokunmadığını buna göre anlar ve `openingBalance` kaydırmasını
+  /// yalnız o zaman uygular (bkz. WalletBloc.UpdateWalletEvent).
+  ///
+  /// null geçmek "bakiye alanını yönetme" demektir: `wallet.balance` ne ise
+  /// aynen yazılır ve opening'e dokunulmaz. Bakiyeyi düzenleyen her form
+  /// bunu doldurmalı; aksi halde form açıkken defter değişirse kullanıcı
+  /// başka bir alanı düzenlerken cüzdanı sessizce yanlış bakiyeye oturur.
+  final double? baselineBalance;
+
+  const UpdateWalletEvent(this.wallet, {this.baselineBalance});
 
   @override
-  List<Object> get props => [wallet];
+  List<Object?> get props => [wallet, baselineBalance];
 }
 
 /// Cüzdan sil

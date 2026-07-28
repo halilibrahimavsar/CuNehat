@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
@@ -67,15 +69,37 @@ class DataSerializationService {
   ///
   /// v2 (2026-07-20): işlemlere `receiptFileName` alanı eklendi (fiş/foto eki).
   /// Görsel binary'si yedeğe GİRMEZ — yalnız dosya adı taşınır.
-  static const int schemaVersion = 2;
+  ///
+  /// v3 (2026-07-28): düzenli işlem şablonlarına `anchorDay` eklendi (ayın
+  /// kaçında tekrarlayacağı). Kenetlenmiş vade tarihinden geri türetilemez.
+  static const int schemaVersion = 3;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;
 
-  DataSerializationService(this._receiptStorage) : _hive = Hive;
+  /// Bu servis "cihaz-yerel verinin tamamı"nın yaşam döngüsünü sahiplenir
+  /// (Hive kutuları + kategori tercihleri + fiş görselleri). Planlanmış
+  /// hatırlatmalar da o verinin türevi: kaydı silinen/değişen bir borç veya
+  /// şablon için OS'ta planlı kalan bildirim, silinmiş verinin adını günler
+  /// sonra kullanıcının kilit ekranına düşürür. Bu yüzden bildirim tarafı da
+  /// buradan sürülür — silme/geri yükleme çağıranlarının unutabileceği bir
+  /// adım olarak değil.
+  final NotificationService _notifications;
+  final ReminderSyncService _reminderSync;
+
+  DataSerializationService(
+    this._receiptStorage,
+    this._notifications,
+    this._reminderSync,
+  ) : _hive = Hive;
 
   @visibleForTesting
-  DataSerializationService.withHive(this._hive, this._receiptStorage);
+  DataSerializationService.withHive(
+    this._hive,
+    this._receiptStorage,
+    this._notifications,
+    this._reminderSync,
+  );
 
   /// Tüm yerel veriyi siler: tüm Hive kutuları (cüzdan/işlem/yatırım/borç/
   /// alacak/bütçe/tekrarlayan/kullanıcı) + yedeklenebilir kategori tercihleri.
@@ -100,6 +124,11 @@ class DataSerializationService {
 
     // İşlemlere iliştirilmiş fiş görselleri de cihaz-yerel; onları da temizle.
     await _receiptStorage.clearAll();
+
+    // Planlanmış hatırlatmalar Hive'da değil OS'ta yaşar; kutuları boşaltmak
+    // onları iptal ETMEZ. Aksi halde kullanıcı "tüm veriyi sil" dedikten sonra
+    // ertesi sabah silinmiş borcunun başlığıyla bildirim alırdı.
+    await _notifications.cancelAllNotifications();
   }
 
   Future<String> exportDataToJson() async {
@@ -243,6 +272,14 @@ class DataSerializationService {
           if (t.receiptFileName != null) t.receiptFileName!,
       };
       await _receiptStorage.pruneExcept(keepReceipts);
+
+      // Geri yükleme şablon ve borç kümesini komple değiştirir: eski kayıtların
+      // kimliğinden türeyen bildirimler (ReminderIds.recurring/debt*) planlı
+      // kalır, geri yüklenenler ise hiç kurulmaz. Önce OS'taki her şeyi düşür,
+      // sonra ReminderSyncService yeni veriden baştan kursun — aksi halde
+      // hatırlatmalar bir sonraki soğuk açılışa kadar yanlış kalıyordu.
+      await _notifications.cancelAllNotifications();
+      await _reminderSync.syncAll();
 
       return const DataRestoreResult.success();
     } catch (e, st) {

@@ -51,7 +51,11 @@
   "tooltipTarihAraligi": "Date Range",
   "raporuPaylas": "Share Report",
   "oncekiDonemeGorePercent": "{percent}% vs previous period",
-  "@oncekiDonemeGorePercent": { "placeholders": { "percent": {} } },
+  "@oncekiDonemeGorePercent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "msgSecilenTarihAraligindaIslem": "No transaction in selected date range",
   "degistir": "Change",
   "labelKategoriAdi": "Category Name",
@@ -180,10 +184,10 @@
   "backgroundLockTileTitle": "Require authentication when app stays in background",
   "backgroundLockTileSubtitle": "To enable background lock, set a PIN or enable biometric login.",
   "backgroundLockTileInfo": "Note: Authentication screen appears when returning to app.",
-  "msgIncorrectPinRemainingTries": "Incorrect PIN. Remaining tries: {tries}",
+  "msgIncorrectPinRemainingTries": "Incorrect PIN. Remaining tries: {newAttempts}",
   "@msgIncorrectPinRemainingTries": {
     "placeholders": {
-      "tries": {}
+      "newAttempts": {}
     }
   },
   "settings": "Settings",
@@ -233,44 +237,100 @@
   "verilerinizSilinmediTekrarDeneyin": "Your data was not deleted. Try again; if the problem persists ",
   "ikonBulunamadi": "Icon not found",
   "valueTostringasfixedCurrencysymbol": "{toStringAsFixed} {currencySymbol}",
-  "@valueTostringasfixedCurrencysymbol": { "placeholders": { "toStringAsFixed": {}, "currencySymbol": {} } },
+  "@valueTostringasfixedCurrencysymbol": {
+    "placeholders": {
+      "toStringAsFixed": {},
+      "currencySymbol": {}
+    }
+  },
   "butcePlanlama": "Budget Planning",
   "henuzButceYok": "No budgets yet",
   "kategorilerinizeAylikHarcamaLimiti": "Set a monthly spending limit for your categories,\ntrack your spending here.",
   "bUAyToplamHarcama": "TOTAL SPENDING THIS MONTH",
   "toplamLimitAppformattersCurrency": "Total limit: {totalLimit}",
-  "@toplamLimitAppformattersCurrency": { "placeholders": { "totalLimit": {} } },
+  "@toplamLimitAppformattersCurrency": {
+    "placeholders": {
+      "totalLimit": {}
+    }
+  },
   "percent": "{percent}%",
-  "@percent": { "placeholders": { "percent": {} } },
+  "@percent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "harcananAppformattersCurrencyFormat": "Spent: {spentAmount}",
-  "@harcananAppformattersCurrencyFormat": { "placeholders": { "spentAmount": {} } },
+  "@harcananAppformattersCurrencyFormat": {
+    "placeholders": {
+      "spentAmount": {}
+    }
+  },
   "limitAppformattersCurrencyFormat": "Limit: {limitAmount}",
-  "@limitAppformattersCurrencyFormat": { "placeholders": { "limitAmount": {} } },
+  "@limitAppformattersCurrencyFormat": {
+    "placeholders": {
+      "limitAmount": {}
+    }
+  },
   "buKategorininButcesiVar": "This category has a budget; limit will be updated.",
   "finansalTakip": "Financial Tracking",
   "vADESIGecmis": "OVERDUE",
   "oDENDI": "PAID",
   "vadeDebtTermmonthsAy": "Maturity: {termMonths} Months | {length} Payments",
-  "@vadeDebtTermmonthsAy": { "placeholders": { "termMonths": {}, "length": {} } },
+  "@vadeDebtTermmonthsAy": {
+    "placeholders": {
+      "termMonths": {},
+      "length": {}
+    }
+  },
   "vadeDateformatDdMmm": "Maturity: {dueDate}",
-  "@vadeDateformatDdMmm": { "placeholders": { "dueDate": {} } },
+  "@vadeDateformatDdMmm": {
+    "placeholders": {
+      "dueDate": {}
+    }
+  },
   "msgOdemesiTamamlanipKapatilanBorclarinizin": "The history of your paid and closed debts will be displayed here.",
   "paidDebtsLengthBorcKapandi": "{length} debts closed",
-  "@paidDebtsLengthBorcKapandi": { "placeholders": { "length": {} } },
+  "@paidDebtsLengthBorcKapandi": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "msgOdendiOlarakIsaretlenenAlacaklarinizin": "The history of your receivables marked as paid will be displayed here.",
   "paidReceivablesLengthAlacakTahsil": "{length} receivables collected",
-  "@paidReceivablesLengthAlacakTahsil": { "placeholders": { "length": {} } },
+  "@paidReceivablesLengthAlacakTahsil": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "toplamGeriOdeme": "Total repayment",
   "kKDFVeBsmvVergilerini": "Include KKDF and BSMV taxes (30%)",
   "tuketiciKredilerindeFaizeYasal": "In consumer loans, 15% KKDF and 15% BSMV are legally added to the interest. In housing etc. loans, these taxes can be 0%. Activate accordingly.",
   "iTaksitAppformattersDateshort": "{i}. Installment — {scheduledDate}",
-  "@iTaksitAppformattersDateshort": { "placeholders": { "i": {}, "scheduledDate": {} } },
+  "@iTaksitAppformattersDateshort": {
+    "placeholders": {
+      "i": {},
+      "scheduledDate": {}
+    }
+  },
   "formatMoneyMonthlyamount": "≈ {monthlyAmount}",
-  "@formatMoneyMonthlyamount": { "placeholders": { "monthlyAmount": {} } },
+  "@formatMoneyMonthlyamount": {
+    "placeholders": {
+      "monthlyAmount": {}
+    }
+  },
   "index": "{index}",
-  "@index": { "placeholders": { "index": {} } },
+  "@index": {
+    "placeholders": {
+      "index": {}
+    }
+  },
   "optLabelFormatmoneyOpt": "{label}  {amount}",
-  "@optLabelFormatmoneyOpt": { "placeholders": { "label": {}, "amount": {} } },
+  "@optLabelFormatmoneyOpt": {
+    "placeholders": {
+      "label": {},
+      "amount": {}
+    }
+  },
   "otomatikIslem": "Automatic transaction",
   "buIslemOtomatikOlusturuldu": "This transaction was created automatically. Edit or delete it from the corresponding debt/investment/receivable record.",
   "nakitAkisi": "Cash Flow",
@@ -283,15 +343,29 @@
   "haftalikNetAkis": "Weekly Net Flow",
   "kategoriDagilimi": "Category Distribution",
   "titleIcinVeriYok": "No data for {title}",
-  "@titleIcinVeriYok": { "placeholders": { "title": {} } },
+  "@titleIcinVeriYok": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "buKategoriyeAitIslem": "There are no transactions belonging to this category.",
   "formatMoneyItemTotalamountPercent": "{totalAmount} ({toStringAsFixed}%)",
-  "@formatMoneyItemTotalamountPercent": { "placeholders": { "totalAmount": {}, "toStringAsFixed": {} } },
+  "@formatMoneyItemTotalamountPercent": {
+    "placeholders": {
+      "totalAmount": {},
+      "toStringAsFixed": {}
+    }
+  },
   "buDonemIcinHenuz": "No transaction data found for this period yet. Reports will be compiled after data is entered.",
   "ikonSecin": "Select Icon",
   "ikonDegistirmekIcinDokun": "Tap to change icon",
   "categoriesWhereCC": "{customLength} custom, {defaultLength} default",
-  "@categoriesWhereCC": { "placeholders": { "customLength": {}, "defaultLength": {} } },
+  "@categoriesWhereCC": {
+    "placeholders": {
+      "customLength": {},
+      "defaultLength": {}
+    }
+  },
   "asagidakiButondanEkleyebilirsiniz": "You can add from the button below",
   "varsayilan": "Default",
   "filtreler": "Filters",
@@ -303,63 +377,131 @@
   "fIYATAraligi": "PRICE RANGE",
   "yeni": "New",
   "appFormattersDateshortFormatStartdate": "{startDate} - {endDate}",
-  "@appFormattersDateshortFormatStartdate": { "placeholders": { "startDate": {}, "endDate": {} } },
+  "@appFormattersDateshortFormatStartdate": {
+    "placeholders": {
+      "startDate": {},
+      "endDate": {}
+    }
+  },
   "filterSelectedcategoriesLengthKategori": "{length} Categories",
-  "@filterSelectedcategoriesLengthKategori": { "placeholders": { "length": {} } },
+  "@filterSelectedcategoriesLengthKategori": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "gunSonu": "End of day ",
   "netNetAppformattersCurrency": "Net: {net}",
-  "@netNetAppformattersCurrency": { "placeholders": { "net": {} } },
+  "@netNetAppformattersCurrency": {
+    "placeholders": {
+      "net": {}
+    }
+  },
   "gorunumListe": "List",
   "gorunumTakvim": "Calendar",
   "takvimAy": "Month",
   "takvimHafta": "Week",
   "buGuneAitIslemYok": "No transactions on this day",
   "dataFilterSelectedcategoriesLengthKategori": "{length} Categories",
-  "@dataFilterSelectedcategoriesLengthKategori": { "placeholders": { "length": {} } },
+  "@dataFilterSelectedcategoriesLengthKategori": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "countCountlabel": "{count} {countLabel}",
-  "@countCountlabel": { "placeholders": { "count": {}, "countLabel": {} } },
+  "@countCountlabel": {
+    "placeholders": {
+      "count": {},
+      "countLabel": {}
+    }
+  },
   "portfoyDetayi": "Portfolio Detail",
   "henuzYatirimKaydiYok": "No Investment Record Yet",
   "yatirimlariniziEklediktenSonraDetayli": "Detailed analyses will appear here after you add your investments.",
   "guncelDegerFormatmoneyInvestment": "Current value ({currentValue}) will be processed as income to the wallet and the record will be closed.",
-  "@guncelDegerFormatmoneyInvestment": { "placeholders": { "currentValue": {} } },
+  "@guncelDegerFormatmoneyInvestment": {
+    "placeholders": {
+      "currentValue": {}
+    }
+  },
   "hataliGirislerIcinAlim": "For incorrect entries: purchase expense ({amount}) will be refunded with a correction record, and the balance will revert to pre-investment.\n\nIf you actually sold it, use \"Sell\" instead.",
-  "@hataliGirislerIcinAlim": { "placeholders": { "amount": {} } },
+  "@hataliGirislerIcinAlim": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
   "portfoyum": "My Portfolio",
   "investmentsLengthYatirim": "{length} investments",
-  "@investmentsLengthYatirim": { "placeholders": { "length": {} } },
+  "@investmentsLengthYatirim": {
+    "placeholders": {
+      "length": {}
+    }
+  },
   "mevcutDeger": "Current Value",
   "maliyetiDegistirirsenizFarkCuzdana": "If you change the cost, the difference will be processed as a correction transaction to the wallet.",
   "hesapla": "Calculate",
   "birikmisFormatmoneyInvCurrentvalue": "Accumulated: {currentValue} / ",
-  "@birikmisFormatmoneyInvCurrentvalue": { "placeholders": { "currentValue": {} } },
+  "@birikmisFormatmoneyInvCurrentvalue": {
+    "placeholders": {
+      "currentValue": {}
+    }
+  },
   "guncelFiyatiGetir": "Get Current Price",
   "ekle": "Add",
   "karZarar": "Profit/Loss",
   "investmentProfitpercentageTostringasfixed": "{toStringAsFixed}%",
-  "@investmentProfitpercentageTostringasfixed": { "placeholders": { "toStringAsFixed": {} } },
+  "@investmentProfitpercentageTostringasfixed": {
+    "placeholders": {
+      "toStringAsFixed": {}
+    }
+  },
   "hedefCurrencyformatFormatInvestment": "Target: {targetAmount}",
-  "@hedefCurrencyformatFormatInvestment": { "placeholders": { "targetAmount": {} } },
+  "@hedefCurrencyformatFormatInvestment": {
+    "placeholders": {
+      "targetAmount": {}
+    }
+  },
   "investmentTargetprogressTostringasfixed": "{toStringAsFixed}%",
-  "@investmentTargetprogressTostringasfixed": { "placeholders": { "toStringAsFixed": {} } },
+  "@investmentTargetprogressTostringasfixed": {
+    "placeholders": {
+      "toStringAsFixed": {}
+    }
+  },
   "grafikIcinYatirimBulunmuyor": "No investments for chart",
   "portfoyDagilimi": "Portfolio Distribution",
   "percentage": "{percentage}%",
-  "@percentage": { "placeholders": { "percentage": {} } },
+  "@percentage": {
+    "placeholders": {
+      "percentage": {}
+    }
+  },
   "tOPLAMPortfoyDegeri": "TOTAL PORTFOLIO VALUE",
   "tOPLAMMaliyet": "TOTAL COST",
   "kAZANCZarar": "PROFIT / LOSS",
   "isProfitTotalprofitpercentageTostringasfixed": "{isProfit}{toStringAsFixed}%",
-  "@isProfitTotalprofitpercentageTostringasfixed": { "placeholders": { "isProfit": {}, "toStringAsFixed": {} } },
+  "@isProfitTotalprofitpercentageTostringasfixed": {
+    "placeholders": {
+      "isProfit": {},
+      "toStringAsFixed": {}
+    }
+  },
   "templateTitleDuzenliIslemi": "Delete recurring transaction \"{title}\"?\n\nPast transactions recorded in the ledger will not be deleted.",
-  "@templateTitleDuzenliIslemi": { "placeholders": { "title": {} } },
+  "@templateTitleDuzenliIslemi": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "duzenliIslemler": "Recurring Transactions",
   "henuzDuzenliIslemYok": "No recurring transactions yet",
   "islemEklerkenTekrarSikligi": "If you select repeat frequency while adding a transaction\nthe template appears here.",
   "bekleyenDuzenliIslemler": "Pending Recurring Transactions",
   "vadesiGelmisIslemlerinizVar": "You have transactions whose maturity has arrived. You can approve them to be recorded in the ledger.",
   "titleTarihDatestrNtutarTx": "Date: {dateStr}\nAmount: {amount}",
-  "@titleTarihDatestrNtutarTx": { "placeholders": { "dateStr": {}, "amount": {} } },
+  "@titleTarihDatestrNtutarTx": {
+    "placeholders": {
+      "dateStr": {},
+      "amount": {}
+    }
+  },
   "ibo": "Ibo",
   "uygulamaKilidi": "App Lock",
   "pINBiyometrikVeGizlilik": "PIN, Biometric and Privacy Settings",
@@ -374,40 +516,18 @@
   "finansalNyolculugunuzBasliyor": "Your Financial\nJourney Begins",
   "ilkCuzdaniOlustur": "Create First Wallet",
   "olusturulmaAppformattersDateshortFormat": "Created: {createdAt}",
-  "@olusturulmaAppformattersDateshortFormat": { "placeholders": { "createdAt": {} } },
+  "@olusturulmaAppformattersDateshortFormat": {
+    "placeholders": {
+      "createdAt": {}
+    }
+  },
   "aktif": "Active",
   "aktifOlanCuzdanSilinemez": "• Active wallet cannot be deleted. To delete, first make another wallet active.",
   "cuzdanlarinizaAitBorcAlacak": "• You can manually manage Debt, Receivable, and Savings amounts of your wallets from the edit page.",
-  "msgIncorrectPinRemainingTries": "Incorrect PIN. Remaining tries: {newAttempts}",
-  "@msgIncorrectPinRemainingTries": { "placeholders": { "newAttempts": {} } },
-  "msgPINVerificationFailedE": "PIN verification failed: {error}",
-  "@msgPINVerificationFailedE": { "placeholders": { "error": {} } },
-  "msgCreateAPinFirst": "Create a PIN first",
-  "msgBiometricAuthenticationIsNot": "Biometric authentication is not supported",
-  "msgBiometricAuthenticationFailed": "Biometric authentication failed",
-  "msgBiometricLoginEnabled": "Biometric login enabled",
-  "msgBiometricLoginDisabled": "Biometric login disabled",
-  "msgPINAlreadyExistsUse": "PIN already exists, use change PIN instead",
-  "msgPINsDoNotMatch": "PINs do not match",
-  "msgPINSavedSuccessfully": "PIN saved successfully",
-  "msgNewPinValuesDo": "New PIN values do not match",
-  "msgCurrentPinIsIncorrect": "Current PIN is incorrect",
-  "msgPINUpdatedSuccessfully": "PIN updated successfully",
-  "msgPINRemoved": "PIN removed",
   "msgPINOrBiometricLogin": "PIN or biometric login is required for background lock",
-  "msgBackgroundLockAndPrivacy": "Background lock and Privacy Guard enabled",
-  "unifiedFeaturesDemo": "Unified Features Demo",
   "sharedFeatures": "Shared Features",
-  "tarihSec": "Select Date",
   "tarihAraligi": "Date Range",
-  "dialog": "Dialog",
-  "metinGiris": "Text Input",
-  "yukle": "Load",
   "butonGalerisi": "Button Gallery",
-  "basarili": "Success",
-  "hata": "Error",
-  "yuklemeButonu": "Loading Button",
-  "onayDialog": "Confirmation Dialog",
   "internetBaglantisiAktif": "Internet connection is active",
   "internetBaglantisiYok": "No internet connection",
   "baglantiKontrolEdiliyor": "Checking connection...",
@@ -435,20 +555,16 @@
   "menuDebt": "Debt",
   "menuReceivable": "Receivable",
   "menuHistory": "History",
-
   "themeSysLight": "System [Light]",
   "themeSysDark": "System [Dark]",
-
   "cuzdanOlusturunuz": "Create a wallet",
   "cuzdanSeciniz": "Select a wallet",
   "yerelMod": "Local Mode",
   "henuzCuzdanOlusturmadiniz": "No wallet created yet",
-
   "cuzdanOlusturuldu": "Wallet created!",
   "cuzdanGuncellendi": "Wallet updated!",
   "cuzdanSilindi": "Wallet deleted!",
   "cuzdanSecildi": "Wallet selected",
-
   "disaAktarilacakIslemBulunamadi": "No transactions to export.",
   "islemlerDisaAktarildi": "Transactions exported successfully.",
   "csvGecerliIslemBulunamadi": "No valid transactions found in CSV.",
@@ -458,7 +574,9 @@
   "satirAtlandi": "{count} rows skipped due to date/amount errors.",
   "@satirAtlandi": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "guncelle": "Update",
@@ -642,14 +760,12 @@
   "cuzdanYonetimiTitle": "Wallet Management",
   "infoTransferDesc": "You can transfer money between your wallets. The transferred amount is deducted from the source wallet and added to the destination, considering exchange rates.",
   "infoBankImportDesc": "You can quickly import transactions by pasting account movements copied from your bank's mobile app.",
-
   "dateBadgeToday": "TODAY",
   "dateBadgeYesterday": "YESTERDAY",
   "dateBadgeThisWeek": "THIS WEEK",
   "dateBadgeLastWeek": "LAST WEEK",
   "dateBadgeThisMonth": "THIS MONTH",
   "dateBadgeLastMonth": "LAST MONTH",
-
   "categoryFinans": "Finance",
   "categoryGrafikler": "Charts",
   "categoryIsVeOfis": "Work & Office",
@@ -668,13 +784,11 @@
   "categoryHediyeVeBagis": "Gifts & Donation",
   "categoryHizmetler": "Services",
   "categoryDiger": "Other",
-
   "defaultCategoryFood": "Food",
   "defaultCategoryTransport": "Transport",
   "defaultCategoryShopping": "Shopping",
   "defaultCategoryBills": "Bills",
   "defaultCategoryEntertainment": "Entertainment",
-  "defaultCategorySalary": "Salary",
   "defaultCategorySalary": "Salary",
   "defaultCategoryInvestment": "Investment",
   "defaultCategoryFreelance": "Freelance",
@@ -704,7 +818,9 @@
   "borcNakitSecenekGovde": "{tutar} is added to your wallet balance as income. Your repayments are deducted from the balance as expenses.",
   "@borcNakitSecenekGovde": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "borcUrunSecenekBaslik": "I bought a product / service",
@@ -721,13 +837,17 @@
   "yaklasikKarsilikFormat": "≈ {tutar}",
   "@yaklasikKarsilikFormat": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "toplamTlKarsilikFormat": "Total ≈ {tutar}",
   "@toplamTlKarsilikFormat": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "cuzdanlarArasiTransfer": "Transfer Between Wallets",
@@ -736,39 +856,38 @@
   "transferOnizlemeFormat": "Target will receive ≈ {tutar}",
   "@transferOnizlemeFormat": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
   "transferKurYok": "Couldn't get the exchange rate — try again when online",
   "transferBakiyeAsimiMesaj": "The amount exceeds the wallet balance ({bakiye}). Continuing will push the balance below zero. Continue?",
   "@transferBakiyeAsimiMesaj": {
     "placeholders": {
-      "bakiye": { "type": "String" }
+      "bakiye": {
+        "type": "String"
+      }
     }
   },
   "transferBasarili": "Transfer completed",
   "transferBasarisiz": "Transfer failed",
   "transferIcinIkiCuzdanGerekli": "You need at least two wallets to transfer",
-
   "yardimVeTurlar": "Help & Tours",
   "genelTanitimiTekrarGoster": "Replay Privacy & Notification Intro",
   "yatirimBirikimTuru": "Investments/Savings Tour",
   "islemlerTuru": "Transactions Tour",
   "borcAlacakTuru": "Debts & Receivables Tour",
-
   "onboardingInvestmentSummaryTitle": "Your Total Savings",
   "onboardingInvestmentSummaryDesc": "See your total investment, current value, and profit/loss at a glance here.",
   "onboardingInvestmentPortfolioTitle": "Your Portfolio",
   "onboardingInvestmentPortfolioDesc": "Your gold, stock, and custom investments are listed here. Tap a card to contribute, sell, edit, or delete.",
-
   "onboardingTransactionsFilterTitle": "Mode & Filters",
   "onboardingTransactionsFilterDesc": "Switch between Income/Expense mode and filter by category, date, or amount.",
   "onboardingTransactionsViewToggleTitle": "List / Calendar",
   "onboardingTransactionsViewToggleDesc": "Browse your transactions in a list or calendar view.",
-
   "onboardingDebtTabsTitle": "My Debts / My Receivables",
   "onboardingDebtTabsDesc": "Track what you owe and what's owed to you in separate tabs here.",
-
   "onboardingNavHintHeader": "How to Navigate",
   "onboardingNavHintSwipeTitle": "Swipe Left / Right",
   "onboardingNavHintSwipeDesc": "Switch between the Investments, Transactions, and Debts screens.",
@@ -776,7 +895,6 @@
   "onboardingNavHintDragDesc": "Reach sub-pages like Details, Report, Pending, and History.",
   "onboardingNavHintAddTitle": "Tap an Icon",
   "onboardingNavHintAddDesc": "Add a new income, expense, investment, debt, or receivable.",
-
   "onboardingInvestmentDetailTitle": "Savings Detail",
   "onboardingInvestmentDetailDesc": "See all buy/sell activity for your investments here, in chronological order.",
   "onboardingTransactionsInsightsTitle": "Smart Insights",
@@ -785,7 +903,6 @@
   "onboardingTransactionsReportDesc": "Explore income/expense breakdowns with charts for your selected date range, and export them.",
   "onboardingDebtHistoryTitle": "History",
   "onboardingDebtHistoryDesc": "The full history of paid-off debts and collected receivables is kept here.",
-
   "notificationSettings": "Notification Settings",
   "notificationSettingsDesc": "Manage your critical and random notification preferences.",
   "randomReminders": "Motivational Reminders",
@@ -808,33 +925,54 @@
   "notificationTestSent": "Test notification sent",
   "notificationTestTitle": "CuNehat test notification",
   "notificationTestBody": "Notifications are working. Your reminders will look like this.",
-
   "notifChannelCriticalName": "Critical Reminders",
   "notifChannelCriticalDesc": "Debt due dates and budget overruns",
   "notifChannelRecurringName": "Recurring Transactions",
   "notifChannelRecurringDesc": "Reminders for recurring transactions awaiting approval",
   "notifChannelMotivationalName": "Motivational Reminders",
   "notifChannelMotivationalDesc": "Daily nudges to log your spending",
-
   "notifRecurringDueTitle": "Recurring Transaction Due",
   "notifRecurringDueBody": "{title} is waiting for your approval.",
-  "@notifRecurringDueBody": { "placeholders": { "title": {} } },
+  "@notifRecurringDueBody": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "notifDebtUpcomingTitle": "Debt Reminder",
   "notifDebtUpcomingBody": "The due date for {title} is approaching.",
-  "@notifDebtUpcomingBody": { "placeholders": { "title": {} } },
+  "@notifDebtUpcomingBody": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "notifDebtDueTitle": "Debt Due Today!",
   "notifDebtDueBody": "The due date for {title} is today.",
-  "@notifDebtDueBody": { "placeholders": { "title": {} } },
+  "@notifDebtDueBody": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "notifBudgetWarningTitle": "Budget Warning",
   "notifBudgetWarningBody": "You have reached 80% of your {category} budget.",
-  "@notifBudgetWarningBody": { "placeholders": { "category": {} } },
+  "@notifBudgetWarningBody": {
+    "placeholders": {
+      "category": {}
+    }
+  },
   "notifBudgetExceededTitle": "Budget Exceeded!",
   "notifBudgetExceededBody": "You have exceeded your {category} budget.",
-  "@notifBudgetExceededBody": { "placeholders": { "category": {} } },
+  "@notifBudgetExceededBody": {
+    "placeholders": {
+      "category": {}
+    }
+  },
   "notifBudgetFilledTitle": "Budget Filled",
   "notifBudgetFilledBody": "You have reached 100% of your {category} budget limit.",
-  "@notifBudgetFilledBody": { "placeholders": { "category": {} } },
-
+  "@notifBudgetFilledBody": {
+    "placeholders": {
+      "category": {}
+    }
+  },
   "notifDailyReminderTitle": "CuNehat",
   "notifDailyReminder1": "Logged any spending today? Keep your budget current!",
   "notifDailyReminder2": "Time to check in on your finances!",
@@ -842,11 +980,18 @@
   "notifDailyReminder4": "Small savings lead to big goals!",
   "notifDailyReminder5": "Don't forget to review your spending.",
   "notifDailyReminder6": "Plan your budget, live at ease!",
-
   "recurringNudgeCount": "{count} transactions awaiting approval",
-  "@recurringNudgeCount": { "placeholders": { "count": {} } },
+  "@recurringNudgeCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "recurringNudgeOldest": "Oldest is {days} days overdue",
-  "@recurringNudgeOldest": { "placeholders": { "days": {} } },
+  "@recurringNudgeOldest": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "sonra": "Later",
   "incele": "Review",
   "onayBekleyenler": "Awaiting Approval",
@@ -858,23 +1003,38 @@
   "aylikDuzenliGider": "Monthly recurring expense",
   "aylikDuzenliGelir": "Monthly recurring income",
   "aktifSablonSayisi": "{count} active templates",
-  "@aktifSablonSayisi": { "placeholders": { "count": {} } },
+  "@aktifSablonSayisi": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "yarin": "Tomorrow",
   "gunSonra": "in {days} days",
-  "@gunSonra": { "placeholders": { "days": {} } },
+  "@gunSonra": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "bekleyenVadeSayisi": "{count} occurrences due",
-  "@bekleyenVadeSayisi": { "placeholders": { "count": {} } },
+  "@bekleyenVadeSayisi": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "tumunuOnayla": "Approve All",
   "tumunuOnaylaBaslik": "Approve backlog",
   "tumunuOnaylaAciklama": "All {count} outstanding occurrences of \"{title}\" will be recorded in the ledger.",
-  "@tumunuOnaylaAciklama": { "placeholders": { "title": {}, "count": {} } },
+  "@tumunuOnaylaAciklama": {
+    "placeholders": {
+      "title": {},
+      "count": {}
+    }
+  },
   "buVadeyiAtla": "Skip this occurrence",
   "sablonuSilAciklama": "Delete template (including future occurrences)",
-
   "tumTurlariSifirla": "Reset All Tours",
   "tumTurlariSifirlaAciklama": "Including sub-page tours — they'll show again as you revisit each screen.",
   "tumTurlarSifirlandi": "Tours reset",
-
   "onboardingAppBarMenuTitle": "Menu",
   "onboardingAppBarMenuDesc": "Access budgets, recurring transactions, profile, and settings from here.",
   "onboardingAppBarWalletTitle": "Your Wallet",
@@ -891,7 +1051,6 @@
   "onboardingBudgetsDesc": "Pick a category and set a monthly spending limit; you'll be notified if you exceed it.",
   "onboardingRecurringTemplatesTitle": "Recurring Transactions",
   "onboardingRecurringTemplatesDesc": "Templates created from the repeat option when adding income/expense are listed here; pause or delete them.",
-
   "fisEkle": "Add receipt/photo",
   "fisEkli": "Receipt attached",
   "fisKamera": "Camera",
@@ -902,7 +1061,6 @@
   "fisOcrTaraniyor": "Scanning receipt…",
   "fisOcrDolduruldu": "Filled from the receipt — please double-check",
   "fisCihazdaYok": "Image not on this device",
-
   "bankImportSettingsEntry": "Import bank statement",
   "bankImportSettingsSubtitle": "Turn a CSV/Excel/PDF statement into transactions",
   "bankImportTitle": "Import Bank Statement",
@@ -1034,34 +1192,58 @@
   "bankImportSummary": "{count} transactions · {dup} possible duplicates · {skipped} rows skipped · {uncategorized} uncategorized",
   "@bankImportSummary": {
     "placeholders": {
-      "count": { "type": "int" },
-      "dup": { "type": "int" },
-      "skipped": { "type": "int" },
-      "uncategorized": { "type": "int" }
+      "count": {
+        "type": "int"
+      },
+      "dup": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "uncategorized": {
+        "type": "int"
+      }
     }
   },
   "bankImportAdd": "Add selected ({count})",
   "@bankImportAdd": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bankImportDoneMsg": "{added} added, {skipped} skipped.",
   "@bankImportDoneMsg": {
     "placeholders": {
-      "added": { "type": "int" },
-      "skipped": { "type": "int" }
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
     }
   },
   "bankImportDonePastDatesHint": "Some transactions are dated in earlier months. The transactions list shows the current month by default; widen the date filter to see them all.",
   "bankImportReconcileMatched": "Verified against balance: the income/expense direction of transactions matches the bank's balance column.",
   "bankImportReconcileMismatch": "Balance mismatch: {count} row(s) don't reconcile with the balance column. The statement may be misread; check the signs.",
   "@bankImportReconcileMismatch": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bankImportCurrencyMismatch": "The statement appears to be in {statement} but the target wallet is {wallet}. Amounts are not converted; make sure you're importing into the right wallet.",
   "@bankImportCurrencyMismatch": {
     "placeholders": {
-      "statement": { "type": "String" },
-      "wallet": { "type": "String" }
+      "statement": {
+        "type": "String"
+      },
+      "wallet": {
+        "type": "String"
+      }
     }
   },
   "bankImportUndo": "Undo import",
@@ -1081,7 +1263,6 @@
   "bankImportCategorySuggestionHint": "Some transactions don't match any of your existing categories. Checked ones will be created and assigned automatically; unchecked ones won't be created and those transactions stay in the default category.",
   "bankImportCategorySuggestionContinue": "Continue",
   "bankImportPickCategoryHint": "Pick category",
-
   "bankStatementSectionHeader": "BANK STATEMENT",
   "sifirla": "Reset",
   "tumTurlariSifirlaOnayMesaji": "All intro tours will be reset and shown again. Do you want to continue?",
@@ -1095,83 +1276,105 @@
   "deleteWalletConfirmMessage": "Are you sure you want to delete the wallet {ad}?",
   "@deleteWalletConfirmMessage": {
     "placeholders": {
-      "ad": { "type": "String" }
+      "ad": {
+        "type": "String"
+      }
     }
   },
   "deleteWalletDangerMessage": "Wallet {ad} and its entire transaction history will be permanently deleted. This action cannot be undone.",
   "@deleteWalletDangerMessage": {
     "placeholders": {
-      "ad": { "type": "String" }
+      "ad": {
+        "type": "String"
+      }
     }
   },
   "transferOnayBasligi": "Confirm Transfer",
   "transferOnayMesaji": "Are you sure you want to transfer {tutar} from {kaynak} to {hedef}?",
   "@transferOnayMesaji": {
     "placeholders": {
-      "tutar": { "type": "String" },
-      "kaynak": { "type": "String" },
-      "hedef": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      },
+      "kaynak": {
+        "type": "String"
+      },
+      "hedef": {
+        "type": "String"
+      }
     }
   },
   "budgetDeleteConfirmTitle": "Delete Budget",
   "budgetDeleteConfirmMessage": "Are you sure you want to delete the budget for {kategori}?",
   "@budgetDeleteConfirmMessage": {
     "placeholders": {
-      "kategori": { "type": "String" }
+      "kategori": {
+        "type": "String"
+      }
     }
   },
   "islemSilBaslik": "Delete Transaction",
   "islemSilOnayMesaji": "Are you sure you want to delete the transaction {baslik}?",
   "@islemSilOnayMesaji": {
     "placeholders": {
-      "baslik": { "type": "String" }
+      "baslik": {
+        "type": "String"
+      }
     }
   },
-
   "borcSilBaslik": "Delete Debt",
   "borcSilOnayMesaji": "Are you sure you want to delete the debt {baslik}? Its effect on the wallet balance will be reversed as well.",
   "@borcSilOnayMesaji": {
     "placeholders": {
-      "baslik": { "type": "String" }
+      "baslik": {
+        "type": "String"
+      }
     }
   },
   "alacakSilBaslik": "Delete Receivable",
   "alacakSilOnayMesaji": "Are you sure you want to delete the receivable from {isim}? Its effect on the wallet balance will be reversed as well.",
   "@alacakSilOnayMesaji": {
     "placeholders": {
-      "isim": { "type": "String" }
+      "isim": {
+        "type": "String"
+      }
     }
   },
-
   "budgetStatusUnderControl": "Under control",
   "budgetStatusFilledCount": "{sayi} budget(s) filled",
   "@budgetStatusFilledCount": {
     "placeholders": {
-      "sayi": { "type": "int" }
+      "sayi": {
+        "type": "int"
+      }
     }
   },
   "budgetStatusExceededCount": "{sayi} budget(s) exceeded",
   "@budgetStatusExceededCount": {
     "placeholders": {
-      "sayi": { "type": "int" }
+      "sayi": {
+        "type": "int"
+      }
     }
   },
-
   "insightDailyLimitTitle": "Daily Spending Limit (Target)",
   "insightDailyLimitDesc": "Recommended daily limit to stay on budget for the remaining {gun} day(s).",
   "@insightDailyLimitDesc": {
     "placeholders": {
-      "gun": { "type": "int" }
+      "gun": {
+        "type": "int"
+      }
     }
   },
   "insightSpikeTitle": "Spending Spike Alert",
   "insightSpikeDesc": "A notable increase compared to the previous period ({tutar}).",
   "@insightSpikeDesc": {
     "placeholders": {
-      "tutar": { "type": "String" }
+      "tutar": {
+        "type": "String"
+      }
     }
   },
-
   "drawerSectionFinancial": "FINANCIAL MANAGEMENT",
   "drawerSectionSystem": "SYSTEM & APP",
   "drawerBudgetSubtitle": "Category-based budget tracking and spending limits",
@@ -1193,13 +1396,43 @@
   "reportSavingsSubtitle": "{oran}% Savings",
   "@reportSavingsSubtitle": {
     "placeholders": {
-      "oran": { "type": "String" }
+      "oran": {
+        "type": "String"
+      }
     }
   },
   "vadeTarihLabel": "Due: {tarih}",
   "@vadeTarihLabel": {
     "placeholders": {
-      "tarih": { "type": "String" }
+      "tarih": {
+        "type": "String"
+      }
     }
-  }
+  },
+  "privacyPolicyTitle": "Privacy Policy",
+  "privacyIntro": "CuNehat is a personal finance app that helps you track your financial records. It is designed offline-first: your data stays on your device unless you explicitly enable cloud backup. We operate no server.",
+  "privacyLocalDataTitle": "Data stored on your device",
+  "privacyLocalDataBody": "Wallets, transactions, investments, debts, receivables, budgets, recurring templates and app preferences (theme, language, categories) are stored only on your device and are never sent to us.",
+  "privacyDriveTitle": "Google Drive backup (optional)",
+  "privacyDriveBody": "Cloud backup is OFF by default. If you turn it on, you sign in with Google and only your email address (so you can see which account is connected) and the restricted \"drive.appdata\" scope are used. A single backup file (cunehat_backup.json) is written to a private, app-specific folder in your own Google Drive that other apps cannot access. The app does not request full Drive access and cannot read your other files.",
+  "privacyMarketDataTitle": "Market data",
+  "privacyMarketDataBody": "To show live prices, only the asset symbol (e.g. a stock ticker) is sent to public endpoints (Yahoo Finance, Truncgil). No personal or financial-record data is included.",
+  "privacySharingTitle": "Data sharing",
+  "privacySharingBody": "We do not sell, rent, or share your data with third parties. The app contains no analytics, crash-reporting, advertising, or tracking SDKs. Our use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.",
+  "privacySecurityTitle": "Security",
+  "privacySecurityBody": "Local data is stored in the app's private storage. Biometric / PIN lock is supported to prevent unauthorized access, and the app blurs its content when sent to the background. All network communication uses HTTPS.",
+  "privacyRetentionTitle": "Data retention and deletion",
+  "privacyRetentionBody": "You are in full control of your data. You can erase all local data from Settings → Privacy & Data → \"Delete all data\". You can delete the Drive backup from Settings → Backup, or disconnect your account.",
+  "privacyContactLabel": "Contact: {email}",
+  "@privacyContactLabel": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyLastUpdated": "Last updated: 30 June 2026",
+  "privacyConsentTitle": "Your privacy",
+  "privacyConsentBody": "CuNehat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.",
+  "privacyConsentAcknowledge": "Got it"
 }

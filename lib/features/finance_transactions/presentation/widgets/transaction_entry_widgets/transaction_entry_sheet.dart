@@ -53,6 +53,10 @@ class TransactionSheetHandler {
                 // Şablonu da kaydet
                 // Şablonun id'si uuid ile oluşturulmalı, ama burada uuid paketi
                 // var mı? Evet, UidGenerator kullanabiliriz.
+                // Çapa, işlemin KENDİ gününden alınır — hesaplanan ilk
+                // vadeden değil: 31 Oca'lık bir işlemde ilk vade 28 Şub'a
+                // kenetlenir ve çapayı oradan türetmek şablonu kalıcı olarak
+                // 28'e sabitlerdi.
                 final template = RecurringTransactionEntity(
                   id: UidGenerator.generateV7(),
                   userId: userId,
@@ -62,8 +66,9 @@ class TransactionSheetHandler {
                   amount: transaction.amount,
                   type: type,
                   frequency: recurringFrequency,
-                  nextExecutionDate:
-                      _calculateNextDate(transaction.date, recurringFrequency),
+                  nextExecutionDate: _calculateNextDate(
+                      transaction.date, recurringFrequency),
+                  anchorDay: transaction.date.day,
                 );
                 final saveUsecase = getIt<SaveRecurringTransactionUsecase>();
                 final pendingBloc = context.read<PendingRecurringBloc>();
@@ -84,5 +89,10 @@ class TransactionSheetHandler {
 
   static DateTime _calculateNextDate(DateTime from, RecurringFrequency freq) =>
       // Ay sonu taşmasına karşı clamp'li ortak hesap (31 Oca → 28 Şub).
-      ApproveRecurringTransactionUsecase.nextExecutionDateAfter(from, freq);
+      // İlk vade olduğundan çapa işlemin kendi günüdür.
+      ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
+        from,
+        freq,
+        anchorDay: from.day,
+      );
 }

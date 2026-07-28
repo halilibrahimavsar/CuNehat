@@ -2875,4 +2875,71 @@ class AppLocalizationsTr extends AppLocalizations {
   String vadeTarihLabel(String tarih) {
     return 'Vade: $tarih';
   }
+
+  @override
+  String get privacyPolicyTitle => 'Gizlilik Politikası';
+
+  @override
+  String get privacyIntro =>
+      'CuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.';
+
+  @override
+  String get privacyLocalDataTitle => 'Cihazınızda saklanan veriler';
+
+  @override
+  String get privacyLocalDataBody =>
+      'Cüzdanlar, işlemler, yatırımlar, borçlar, alacaklar, bütçeler, tekrarlayan şablonlar ve uygulama tercihleri (tema, dil, kategoriler) yalnızca cihazınızda saklanır ve bize iletilmez.';
+
+  @override
+  String get privacyDriveTitle => 'Google Drive yedeği (isteğe bağlı)';
+
+  @override
+  String get privacyDriveBody =>
+      'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve kısıtlı \"drive.appdata\" kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) kendi Drive\'ınızdaki, başka uygulamaların erişemediği özel bir klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.';
+
+  @override
+  String get privacyMarketDataTitle => 'Piyasa verisi';
+
+  @override
+  String get privacyMarketDataBody =>
+      'Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.';
+
+  @override
+  String get privacySharingTitle => 'Veri paylaşımı';
+
+  @override
+  String get privacySharingBody =>
+      'Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla paylaşmayız. Uygulamada analitik, çökme-raporlama, reklam veya izleme SDK\'sı yoktur. Google API\'lerinden alınan bilgilerin kullanımı Google API Hizmetleri Kullanıcı Verileri Politikası\'na (Sınırlı Kullanım dahil) uyar.';
+
+  @override
+  String get privacySecurityTitle => 'Güvenlik';
+
+  @override
+  String get privacySecurityBody =>
+      'Yerel veri uygulamanın özel depolama alanında tutulur. Yetkisiz erişimi önlemek için biyometrik / PIN kilidi desteklenir ve uygulama arka plana alındığında içerik bulanıklaştırılır. Tüm ağ iletişimi HTTPS kullanır.';
+
+  @override
+  String get privacyRetentionTitle => 'Veri saklama ve silme';
+
+  @override
+  String get privacyRetentionBody =>
+      'Verileriniz üzerinde tam kontrol sizdedir. Tüm yerel veriyi Ayarlar → Gizlilik & Veri → \"Tüm veriyi sil\" ile silebilirsiniz. Drive yedeğini Ayarlar → Yedekleme bölümünden silebilir veya hesabınızın bağlantısını kesebilirsiniz.';
+
+  @override
+  String privacyContactLabel(String email) {
+    return 'İletişim: $email';
+  }
+
+  @override
+  String get privacyLastUpdated => 'Son güncelleme: 30 Haziran 2026';
+
+  @override
+  String get privacyConsentTitle => 'Gizliliğiniz';
+
+  @override
+  String get privacyConsentBody =>
+      'CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.';
+
+  @override
+  String get privacyConsentAcknowledge => 'Anladım';
 }

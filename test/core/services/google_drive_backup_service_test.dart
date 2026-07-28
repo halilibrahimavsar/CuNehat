@@ -314,6 +314,42 @@ void main() {
           .called(1);
     });
 
+    // REGRESYON: gövde `response.body` ile okunuyordu. package:http, Content-Type
+    // başlığında charset yoksa yalnız `application/json` için utf8'e düşer,
+    // başka her değerde latin1'e — ve latin1 çözme hata VERMEZ, sessizce
+    // mojibake üretir. JSON yine parse olduğu için Drive'dan geri yüklenen
+    // her Türkçe başlık/kategori/cüzdan adı fark edilmeden bozulurdu.
+    test('indirilen gövde Content-Type ne olursa olsun utf8 çözülür', () async {
+      setupAuth();
+      const payload = '{"version":3,"note":"Bakkal fişi — Şişli, İĞÜÖÇ"}';
+      final responses = [
+        http.Response(
+          jsonEncode({
+            'files': [
+              {'id': 'file123'}
+            ],
+          }),
+          200,
+        ),
+        // Drive dosyanın kayıtlı mimeType'ını döndürür; charset yok.
+        http.Response.bytes(
+          utf8.encode(payload),
+          200,
+          headers: const {'content-type': 'application/octet-stream'},
+        ),
+      ];
+      when(() => mockHttpClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => responses.removeAt(0));
+      when(() => mockDataSerializationService.importDataFromJson(any()))
+          .thenAnswer((_) async => const DataRestoreResult.success());
+
+      final result = await service.restore();
+
+      expect(result, true);
+      verify(() => mockDataSerializationService.importDataFromJson(payload))
+          .called(1);
+    });
+
     test('restore returns false when delegated restore fails', () async {
       setupAuth();
       final responses = [

@@ -2873,4 +2873,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String vadeTarihLabel(String tarih) {
     return 'Due: $tarih';
   }
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String get privacyIntro =>
+      'CuNehat is a personal finance app that helps you track your financial records. It is designed offline-first: your data stays on your device unless you explicitly enable cloud backup. We operate no server.';
+
+  @override
+  String get privacyLocalDataTitle => 'Data stored on your device';
+
+  @override
+  String get privacyLocalDataBody =>
+      'Wallets, transactions, investments, debts, receivables, budgets, recurring templates and app preferences (theme, language, categories) are stored only on your device and are never sent to us.';
+
+  @override
+  String get privacyDriveTitle => 'Google Drive backup (optional)';
+
+  @override
+  String get privacyDriveBody =>
+      'Cloud backup is OFF by default. If you turn it on, you sign in with Google and only your email address (so you can see which account is connected) and the restricted \"drive.appdata\" scope are used. A single backup file (cunehat_backup.json) is written to a private, app-specific folder in your own Google Drive that other apps cannot access. The app does not request full Drive access and cannot read your other files.';
+
+  @override
+  String get privacyMarketDataTitle => 'Market data';
+
+  @override
+  String get privacyMarketDataBody =>
+      'To show live prices, only the asset symbol (e.g. a stock ticker) is sent to public endpoints (Yahoo Finance, Truncgil). No personal or financial-record data is included.';
+
+  @override
+  String get privacySharingTitle => 'Data sharing';
+
+  @override
+  String get privacySharingBody =>
+      'We do not sell, rent, or share your data with third parties. The app contains no analytics, crash-reporting, advertising, or tracking SDKs. Our use of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements.';
+
+  @override
+  String get privacySecurityTitle => 'Security';
+
+  @override
+  String get privacySecurityBody =>
+      'Local data is stored in the app\'s private storage. Biometric / PIN lock is supported to prevent unauthorized access, and the app blurs its content when sent to the background. All network communication uses HTTPS.';
+
+  @override
+  String get privacyRetentionTitle => 'Data retention and deletion';
+
+  @override
+  String get privacyRetentionBody =>
+      'You are in full control of your data. You can erase all local data from Settings → Privacy & Data → \"Delete all data\". You can delete the Drive backup from Settings → Backup, or disconnect your account.';
+
+  @override
+  String privacyContactLabel(String email) {
+    return 'Contact: $email';
+  }
+
+  @override
+  String get privacyLastUpdated => 'Last updated: 30 June 2026';
+
+  @override
+  String get privacyConsentTitle => 'Your privacy';
+
+  @override
+  String get privacyConsentBody =>
+      'CuNehat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.';
+
+  @override
+  String get privacyConsentAcknowledge => 'Got it';
 }

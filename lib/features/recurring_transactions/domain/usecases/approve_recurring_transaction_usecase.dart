@@ -52,6 +52,7 @@ class ApproveRecurringTransactionUsecase {
         final nextDate = nextExecutionDateAfter(
           template.nextExecutionDate,
           template.frequency,
+          anchorDay: template.anchorDay,
         );
 
         // Doğrudan repository'ye değil kaydetme usecase'ine yazılır: bir
@@ -67,19 +68,26 @@ class ApproveRecurringTransactionUsecase {
   /// Bir sonraki vade tarihini hesaplar. Aylık/yıllık ilerletmede gün, hedef
   /// ayın son gününe clamp'lenir (31 Oca → 28/29 Şub); aksi halde Dart'ın
   /// tarih normalizasyonu vadeyi sonraki ayın başına kaydırır.
+  ///
+  /// Kenetleme [anchorDay]'den yapılır, [current]'ın gününden DEĞİL: aksi
+  /// halde kısa bir ay zinciri kalıcı olarak aşağı çeker
+  /// (31 Oca → 28 Şub → 28 Mar → …) ve ayın 29/30/31'inde tekrarlayan her
+  /// şablon (maaş, kira, kart kesim tarihi) ilk Şubat'tan sonra sonsuza dek
+  /// 28'e kayardı. Çapayla doğru zincir: 31 Oca → 28 Şub → **31** Mar → 30 Nis.
   static DateTime nextExecutionDateAfter(
     DateTime current,
-    RecurringFrequency frequency,
-  ) {
+    RecurringFrequency frequency, {
+    required int anchorDay,
+  }) {
     switch (frequency) {
       case RecurringFrequency.daily:
         return current.add(const Duration(days: 1));
       case RecurringFrequency.weekly:
         return current.add(const Duration(days: 7));
       case RecurringFrequency.monthly:
-        return addMonthsClamped(current, 1);
+        return addMonthsAnchored(current, 1, anchorDay);
       case RecurringFrequency.yearly:
-        return addMonthsClamped(current, 12);
+        return addMonthsAnchored(current, 12, anchorDay);
     }
   }
 }
