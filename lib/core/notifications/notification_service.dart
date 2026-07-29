@@ -11,6 +11,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:cunehat/core/enums/notification_frequency.dart';
 import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_localizer.dart';
+import 'package:cunehat/core/notifications/notification_permission_channel.dart';
 
 abstract class NotificationService {
   Future<void> initialize();
@@ -27,11 +28,21 @@ abstract class NotificationService {
   /// Sistem bildirim iznini ister. Verildiyse `true`.
   Future<bool> requestPermissions();
 
+  /// Sistem izin diyaloğunun hâlâ açılabildiği durumlarda `true`. `false` ise
+  /// [requestPermissions] diyaloğu göstermeden anında `false` döner; tek çıkış
+  /// yolu [openSystemNotificationSettings].
+  Future<bool> canRequestPermissions();
+
+  /// Uygulamanın sistem bildirim ayarlarını açar; açılabildiyse `true`.
+  Future<bool> openSystemNotificationSettings();
+
   /// Sistem düzeyinde bildirimlerin açık olup olmadığı. Kullanıcı izni
   /// reddettiyse uygulama içi anahtarlar açık görünse de bildirim gitmez.
   Future<bool> areNotificationsEnabled();
 
-  Future<void> showNotification({
+  /// Bildirimi gösterir. Sisteme teslim edilebildiyse `true`; platform hatası
+  /// yutulup `false` döner (çağıran "gönderildi" demeden önce buna bakmalı).
+  Future<bool> showNotification({
     required int id,
     required String title,
     required String body,
@@ -62,6 +73,7 @@ abstract class NotificationService {
 class NotificationServiceImpl implements NotificationService {
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
   final NotificationLocalizer _localizer;
+  final NotificationPermissionChannel _permissionChannel;
 
   /// Motivasyon hatırlatıcılarının kaç gün ileriye planlanacağı.
   ///
@@ -85,8 +97,10 @@ class NotificationServiceImpl implements NotificationService {
   Future<void> _randomRescheduleQueue = Future<void>.value();
 
   NotificationServiceImpl(
-      this._flutterLocalNotificationsPlugin, this._localizer)
-      : _tapController = StreamController<String>.broadcast() {
+    this._flutterLocalNotificationsPlugin,
+    this._localizer,
+    this._permissionChannel,
+  ) : _tapController = StreamController<String>.broadcast() {
     _tapController.onListen = _flushBufferedTaps;
   }
 
@@ -166,6 +180,9 @@ class NotificationServiceImpl implements NotificationService {
 
   @override
   Future<bool> requestPermissions() async {
+    // İzin isteğinin YAPILDIĞI tek yer burası; "hiç sorulmadı" ile "kalıcı
+    // reddedildi" ayrımı bu kayda dayandığı için işaretleme de burada durmalı.
+    await _permissionChannel.markRequested();
     try {
       if (Platform.isIOS) {
         final granted = await _flutterLocalNotificationsPlugin
@@ -186,6 +203,13 @@ class NotificationServiceImpl implements NotificationService {
     }
     return false;
   }
+
+  @override
+  Future<bool> canRequestPermissions() => _permissionChannel.canPrompt();
+
+  @override
+  Future<bool> openSystemNotificationSettings() =>
+      _permissionChannel.openSettings();
 
   @override
   Future<bool> areNotificationsEnabled() async {
@@ -252,7 +276,7 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   @override
-  Future<void> showNotification({
+  Future<bool> showNotification({
     required int id,
     required String title,
     required String body,
@@ -267,8 +291,10 @@ class NotificationServiceImpl implements NotificationService {
         _detailsFor(channel),
         payload: payload,
       );
+      return true;
     } catch (e) {
       debugPrint('Error showing notification: $e');
+      return false;
     }
   }
 

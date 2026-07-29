@@ -2083,13 +2083,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationPermissionOpenSettings =>
-      'Permission was denied earlier. Enable it from System settings → Apps → CuNehat → Notifications.';
+      'Permission was denied earlier, so the system no longer asks. You can turn notifications on from system settings.';
+
+  @override
+  String get notificationPermissionOpenSettingsAction => 'Open Settings';
 
   @override
   String get notificationSendTest => 'Send a test notification';
 
   @override
   String get notificationTestSent => 'Test notification sent';
+
+  @override
+  String get notificationTestFailedNoPermission =>
+      'Test notification could not be sent: notification permission is off';
+
+  @override
+  String get notificationTestFailed => 'Test notification could not be sent';
 
   @override
   String get notificationTestTitle => 'CuNehat test notification';

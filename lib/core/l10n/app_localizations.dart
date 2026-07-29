@@ -3850,8 +3850,14 @@ abstract class AppLocalizations {
   /// No description provided for @notificationPermissionOpenSettings.
   ///
   /// In tr, this message translates to:
-  /// **'İzin daha önce reddedilmiş. Sistem ayarları → Uygulamalar → CuNehat → Bildirimler yolundan açabilirsiniz.'**
+  /// **'İzin daha önce reddedildiği için sistem bir daha sormuyor. Bildirimleri sistem ayarlarından açabilirsiniz.'**
   String get notificationPermissionOpenSettings;
+
+  /// No description provided for @notificationPermissionOpenSettingsAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarları Aç'**
+  String get notificationPermissionOpenSettingsAction;
 
   /// No description provided for @notificationSendTest.
   ///
@@ -3864,6 +3870,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Test bildirimi gönderildi'**
   String get notificationTestSent;
+
+  /// No description provided for @notificationTestFailedNoPermission.
+  ///
+  /// In tr, this message translates to:
+  /// **'Test bildirimi gönderilemedi: bildirim izni kapalı'**
+  String get notificationTestFailedNoPermission;
+
+  /// No description provided for @notificationTestFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Test bildirimi gönderilemedi'**
+  String get notificationTestFailed;
 
   /// No description provided for @notificationTestTitle.
   ///

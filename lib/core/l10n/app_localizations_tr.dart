@@ -2087,13 +2087,23 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationPermissionOpenSettings =>
-      'İzin daha önce reddedilmiş. Sistem ayarları → Uygulamalar → CuNehat → Bildirimler yolundan açabilirsiniz.';
+      'İzin daha önce reddedildiği için sistem bir daha sormuyor. Bildirimleri sistem ayarlarından açabilirsiniz.';
+
+  @override
+  String get notificationPermissionOpenSettingsAction => 'Ayarları Aç';
 
   @override
   String get notificationSendTest => 'Test bildirimi gönder';
 
   @override
   String get notificationTestSent => 'Test bildirimi gönderildi';
+
+  @override
+  String get notificationTestFailedNoPermission =>
+      'Test bildirimi gönderilemedi: bildirim izni kapalı';
+
+  @override
+  String get notificationTestFailed => 'Test bildirimi gönderilemedi';
 
   @override
   String get notificationTestTitle => 'CuNehat test bildirimi';

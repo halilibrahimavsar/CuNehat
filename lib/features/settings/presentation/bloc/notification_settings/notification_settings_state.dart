@@ -9,8 +9,9 @@ class NotificationSettingsState extends Equatable {
     this.recurringRemindersEnabled = true,
     this.budgetAlertsEnabled = true,
     this.systemPermissionGranted = true,
-    this.permissionRequestRejected = false,
+    this.canRequestPermission = true,
     this.testNotificationSentAt,
+    this.testNotificationDelivered = false,
   });
 
   final bool isLoading;
@@ -23,13 +24,17 @@ class NotificationSettingsState extends Equatable {
   /// hiçbiri işe yaramaz — kart bunu açıkça söylemeli.
   final bool systemPermissionGranted;
 
-  /// İzin isteği yapıldı ama verilmedi. Android'de izin kalıcı olarak
-  /// reddedildiyse sistem promptu bir daha açılmaz; kullanıcıyı ayarlara
-  /// yönlendiren metin ancak bu durumda gösterilir.
-  final bool permissionRequestRejected;
+  /// Sistem izin diyaloğu hâlâ açılabiliyor mu? `false` ise izin kalıcı olarak
+  /// reddedilmiştir (ya da sürüm çalışma zamanı izni tanımıyordur) ve tek
+  /// çözüm sistem ayarlarıdır — düğme "İzin Ver" yerine ayarları açar.
+  final bool canRequestPermission;
 
-  /// Test bildiriminin gönderildiği an; UI geri bildirimini tetikler.
+  /// Test bildiriminin denendiği an; UI geri bildirimini tetikler.
   final DateTime? testNotificationSentAt;
+
+  /// Son test bildiriminin sisteme gerçekten teslim edilip edilmediği. İzin
+  /// kapalıyken "gönderildi" demek kullanıcıyı yanıltıyordu.
+  final bool testNotificationDelivered;
 
   NotificationSettingsState copyWith({
     bool? isLoading,
@@ -38,8 +43,9 @@ class NotificationSettingsState extends Equatable {
     bool? recurringRemindersEnabled,
     bool? budgetAlertsEnabled,
     bool? systemPermissionGranted,
-    bool? permissionRequestRejected,
+    bool? canRequestPermission,
     DateTime? testNotificationSentAt,
+    bool? testNotificationDelivered,
   }) {
     return NotificationSettingsState(
       isLoading: isLoading ?? this.isLoading,
@@ -51,10 +57,11 @@ class NotificationSettingsState extends Equatable {
       budgetAlertsEnabled: budgetAlertsEnabled ?? this.budgetAlertsEnabled,
       systemPermissionGranted:
           systemPermissionGranted ?? this.systemPermissionGranted,
-      permissionRequestRejected:
-          permissionRequestRejected ?? this.permissionRequestRejected,
+      canRequestPermission: canRequestPermission ?? this.canRequestPermission,
       testNotificationSentAt:
           testNotificationSentAt ?? this.testNotificationSentAt,
+      testNotificationDelivered:
+          testNotificationDelivered ?? this.testNotificationDelivered,
     );
   }
 
@@ -66,7 +73,8 @@ class NotificationSettingsState extends Equatable {
         recurringRemindersEnabled,
         budgetAlertsEnabled,
         systemPermissionGranted,
-        permissionRequestRejected,
+        canRequestPermission,
         testNotificationSentAt,
+        testNotificationDelivered,
       ];
 }

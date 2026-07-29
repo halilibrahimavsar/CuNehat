@@ -2,6 +2,7 @@ import 'package:cunehat/core/enums/notification_frequency.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_localizer.dart';
+import 'package:cunehat/core/notifications/notification_permission_channel.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,6 +16,9 @@ class MockFlutterLocalNotificationsPlugin extends Mock
 
 class MockNotificationLocalizer extends Mock implements NotificationLocalizer {}
 
+class MockNotificationPermissionChannel extends Mock
+    implements NotificationPermissionChannel {}
+
 class FakeNotificationDetails extends Fake implements NotificationDetails {}
 
 class FakeTZDateTime extends Fake implements tz.TZDateTime {}
@@ -22,6 +26,7 @@ class FakeTZDateTime extends Fake implements tz.TZDateTime {}
 void main() {
   late MockFlutterLocalNotificationsPlugin mockPlugin;
   late MockNotificationLocalizer mockLocalizer;
+  late MockNotificationPermissionChannel mockPermissionChannel;
   late NotificationServiceImpl service;
 
   setUpAll(() {
@@ -39,7 +44,11 @@ void main() {
         .thenReturn(lookupAppLocalizations(const Locale('tr')));
     when(() => mockPlugin.getNotificationAppLaunchDetails())
         .thenAnswer((_) async => null);
-    service = NotificationServiceImpl(mockPlugin, mockLocalizer);
+    mockPermissionChannel = MockNotificationPermissionChannel();
+    when(() => mockPermissionChannel.markRequested())
+        .thenAnswer((_) async {});
+    service =
+        NotificationServiceImpl(mockPlugin, mockLocalizer, mockPermissionChannel);
   });
 
   tearDown(() => service.dispose());
@@ -78,11 +87,14 @@ void main() {
             any<NotificationDetails>(),
           )).thenThrow(Exception('Plugin error'));
 
-      await service.showNotification(
+      final delivered = await service.showNotification(
         id: 1,
         title: 'Test',
         body: 'Test',
       );
+
+      // Yutulan hata "gönderildi" diye raporlanmamalı.
+      expect(delivered, isFalse);
     });
 
     test('scheduleNotification calls plugin.zonedSchedule with correct params',

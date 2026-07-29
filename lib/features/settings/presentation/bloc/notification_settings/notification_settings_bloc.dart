@@ -42,6 +42,7 @@ class NotificationSettingsBloc
     emit(state.copyWith(isLoading: true));
 
     final granted = await _notificationService.areNotificationsEnabled();
+    final canRequest = await _notificationService.canRequestPermissions();
 
     emit(state.copyWith(
       isLoading: false,
@@ -50,6 +51,7 @@ class NotificationSettingsBloc
       recurringRemindersEnabled: _settingsService.isRecurringRemindersEnabled,
       budgetAlertsEnabled: _settingsService.isBudgetAlertsEnabled,
       systemPermissionGranted: granted,
+      canRequestPermission: canRequest,
     ));
   }
 
@@ -96,12 +98,29 @@ class NotificationSettingsBloc
     RequestNotificationPermission event,
     Emitter<NotificationSettingsState> emit,
   ) async {
+    // Sistem diyaloğu bir daha açılmayacaksa istek çağrısı hiçbir şey yapmadan
+    // false dönerdi; düğme ölü kalmasın diye ayarlara yönlendiriyoruz. Dönüşte
+    // kartın yaşam döngüsü dinleyicisi durumu yeniden yükler.
+    if (!await _notificationService.canRequestPermissions()) {
+      await _notificationService.openSystemNotificationSettings();
+      return;
+    }
+
     final granted = await _notificationService.requestPermissions();
+    // Banner'ın doğruluk kaynağı iznin kendisi değil, bildirimlerin GERÇEKTEN
+    // açık olması: izin verilmiş olsa da kullanıcı bildirimleri sistem
+    // ayarlarından kapatmış olabilir.
+    final enabled =
+        granted && await _notificationService.areNotificationsEnabled();
+    // Reddedildiyse sistemin HÂLÂ sorup sormayacağını yeniden okuyoruz:
+    // Android ilk redden sonra genelde bir şans daha verir, bu yüzden düğme
+    // "İzin Ver" olarak kalır; ikinci redde ayarlara dönüşür.
+    final canRequest = await _notificationService.canRequestPermissions();
     emit(state.copyWith(
-      systemPermissionGranted: granted,
-      permissionRequestRejected: !granted,
+      systemPermissionGranted: enabled,
+      canRequestPermission: canRequest,
     ));
-    if (granted) {
+    if (enabled) {
       // İzin yokken planlama sessizce boşa gidiyordu; şimdi yeniden kur.
       await _reminderSync.syncAll();
     }
@@ -111,13 +130,28 @@ class NotificationSettingsBloc
     SendTestNotification event,
     Emitter<NotificationSettingsState> emit,
   ) async {
+    // Bildirim izni kapalıyken `show` sessizce yutuluyor ve kullanıcıya
+    // "gönderildi" deniyordu. Önce izni doğrula.
+    if (!await _notificationService.areNotificationsEnabled()) {
+      emit(state.copyWith(
+        systemPermissionGranted: false,
+        canRequestPermission: await _notificationService.canRequestPermissions(),
+        testNotificationSentAt: DateTime.now(),
+        testNotificationDelivered: false,
+      ));
+      return;
+    }
+
     final l10n = _localizer.l10n;
-    await _notificationService.showNotification(
+    final delivered = await _notificationService.showNotification(
       id: _testNotificationId,
       title: l10n.notificationTestTitle,
       body: l10n.notificationTestBody,
       channel: NotificationChannelKind.motivational,
     );
-    emit(state.copyWith(testNotificationSentAt: DateTime.now()));
+    emit(state.copyWith(
+      testNotificationSentAt: DateTime.now(),
+      testNotificationDelivered: delivered,
+    ));
   }
 }

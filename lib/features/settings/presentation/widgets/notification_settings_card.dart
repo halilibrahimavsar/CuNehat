@@ -45,8 +45,18 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
     return BlocConsumer<NotificationSettingsBloc, NotificationSettingsState>(
       listenWhen: (previous, current) =>
           previous.testNotificationSentAt != current.testNotificationSentAt,
-      listener: (context, state) =>
-          IboSnackbar.showSuccess(context, context.l10n.notificationTestSent),
+      listener: (context, state) {
+        if (state.testNotificationDelivered) {
+          IboSnackbar.showSuccess(context, context.l10n.notificationTestSent);
+          return;
+        }
+        IboSnackbar.showError(
+          context,
+          state.systemPermissionGranted
+              ? context.l10n.notificationTestFailed
+              : context.l10n.notificationTestFailedNoPermission,
+        );
+      },
       builder: (context, state) {
         if (state.isLoading) {
           return const AppCard(
@@ -227,25 +237,31 @@ class _PermissionBanner extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            state.permissionRequestRejected
-                ? context.l10n.notificationPermissionOpenSettings
-                : context.l10n.notificationPermissionOffDesc,
+            state.canRequestPermission
+                ? context.l10n.notificationPermissionOffDesc
+                : context.l10n.notificationPermissionOpenSettings,
             style: TextStyle(
               fontSize: 13,
               color: scheme.onErrorContainer,
               height: 1.4,
             ),
           ),
-          if (!state.permissionRequestRejected)
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.tonal(
-                onPressed: () => context
-                    .read<NotificationSettingsBloc>()
-                    .add(const RequestNotificationPermission()),
-                child: Text(context.l10n.notificationPermissionGrant),
+          // Düğme HER ZAMAN durur. Önceden reddedildiğinde gizleniyordu ve
+          // kullanıcının izni sonradan vermesinin uygulama içinde hiçbir yolu
+          // kalmıyordu; sistem artık sormuyorsa aynı düğme ayarları açar.
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonal(
+              onPressed: () => context
+                  .read<NotificationSettingsBloc>()
+                  .add(const RequestNotificationPermission()),
+              child: Text(
+                state.canRequestPermission
+                    ? context.l10n.notificationPermissionGrant
+                    : context.l10n.notificationPermissionOpenSettingsAction,
               ),
             ),
+          ),
         ],
       ),
     );

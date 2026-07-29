@@ -12,6 +12,8 @@ import 'package:cunehat/config/di/app_module.dart' as _i621;
 import 'package:cunehat/core/blocs/app_auth_bloc.dart' as _i256;
 import 'package:cunehat/core/notifications/notification_localizer.dart'
     as _i931;
+import 'package:cunehat/core/notifications/notification_permission_channel.dart'
+    as _i477;
 import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart' as _i371;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
@@ -227,6 +229,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i721.NotificationSettingsService(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i931.NotificationLocalizer>(
         () => _i931.NotificationLocalizer(gh<_i460.SharedPreferences>()));
+    gh.lazySingleton<_i477.NotificationPermissionChannel>(() =>
+        _i477.NotificationPermissionChannel(gh<_i460.SharedPreferences>()));
     gh.singleton<_i896.CategoryRepository>(
         () => _i20.CategoryRepositoryImpl(gh<_i1002.CategoryService>()));
     gh.lazySingleton<_i500.ExchangeRateService>(() => _i500.ExchangeRateService(
@@ -261,13 +265,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i698.LocalAuthRepository>(),
           gh<_i460.SharedPreferences>(),
         ));
-    gh.lazySingleton<_i551.NotificationService>(
-      () => _i551.NotificationServiceImpl(
-        gh<_i163.FlutterLocalNotificationsPlugin>(),
-        gh<_i931.NotificationLocalizer>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
     gh.factory<_i207.WalletCreateUseCase>(
         () => _i207.WalletCreateUseCase(gh<_i504.WalletRepository>()));
     gh.factory<_i207.WalletDeleteUseCase>(
@@ -292,6 +289,14 @@ extension GetItInjectableX on _i174.GetIt {
               localDataSource: gh<_i648.InvestmentLocalDatasource>(),
               remoteDataSource: gh<_i29.InvestmentRemoteDataSource>(),
             ));
+    gh.lazySingleton<_i551.NotificationService>(
+      () => _i551.NotificationServiceImpl(
+        gh<_i163.FlutterLocalNotificationsPlugin>(),
+        gh<_i931.NotificationLocalizer>(),
+        gh<_i477.NotificationPermissionChannel>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
         _i162.GetPendingRecurringTransactionsUsecase(
             gh<_i788.RecurringTransactionRepository>()));

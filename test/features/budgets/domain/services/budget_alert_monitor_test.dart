@@ -47,7 +47,7 @@ void main() {
           title: any(named: 'title'),
           body: any(named: 'body'),
           payload: any(named: 'payload'),
-        )).thenAnswer((_) async {});
+        )).thenAnswer((_) async => true);
   }
 
   BudgetAlertMonitor buildMonitor() => BudgetAlertMonitor(
