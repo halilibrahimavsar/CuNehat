@@ -1,6 +1,7 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -159,7 +160,7 @@ class CategoryFilterSection extends StatelessWidget {
                 : filter.viewFilter.financeMode.primaryColor;
 
             return FilterChip(
-              label: Text(category.id),
+              label: Text(context.categoryLabel(category)),
               selected: isSelected,
               onSelected: (_) => onCategoryToggle(category.id),
               avatar: Icon(

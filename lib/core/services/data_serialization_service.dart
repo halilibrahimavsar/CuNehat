@@ -72,7 +72,15 @@ class DataSerializationService {
   ///
   /// v3 (2026-07-28): düzenli işlem şablonlarına `anchorDay` eklendi (ayın
   /// kaçında tekrarlayacağı). Kenetlenmiş vade tarihinden geri türetilemez.
-  static const int schemaVersion = 3;
+  ///
+  /// v4 (2026-07-29): defter tarihlemesi + kategori kimliği.
+  /// - Alacaklara `createdAt`: silmede ters kayıt bu tarihe yazılır; `dueDate`
+  ///   (beklenen tahsilat) bunun yerine geçemez.
+  /// - Alacaklara `collectedAt` (nullable): tutar düzeltmesinin tahsilat bacağı
+  ///   bu tarihe yazılır, yoksa iki bacak farklı dönemlere düşer.
+  /// - Kategorilere `displayName` (nullable): `id` artık sabit opak anahtar,
+  ///   yeniden adlandırma bu alandan geçer.
+  static const int schemaVersion = 4;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

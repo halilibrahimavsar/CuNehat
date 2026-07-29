@@ -303,5 +303,57 @@ void main() {
         );
       });
     });
+
+    group('addTransactions (toplu yazım)', () {
+      // Borç silme gibi mutabakat akışları ödeme başına bir ters kayıt üretir;
+      // tek tek addTransaction her kayıt için ayrı await turu + disk flush
+      // demekti (36 taksitli borçta 37 tur, silme diyaloğu bloklu).
+
+      test('hepsini tek çağrıda yazar', () async {
+        await dataSource.addTransactions([t1, t2]);
+
+        final all = await dataSource.getTransactions(
+          userId: t1.userId,
+          walletId: t1.walletId,
+        );
+        expect(all.map((t) => t.id), containsAll([t1.id, t2.id]));
+      });
+
+      test('boş liste no-op', () async {
+        await dataSource.addTransactions([]);
+
+        final all = await dataSource.getTransactions(
+          userId: t1.userId,
+          walletId: t1.walletId,
+        );
+        expect(all, isEmpty);
+      });
+
+      test('id boşsa HİÇBİRİ yazılmaz', () async {
+        // `copyWith(id: null)` işe yaramaz (`id ?? this.id`); geçersiz kayıt
+        // doğrudan kurulur.
+        final invalid = TransactionModel(
+          id: null,
+          userId: 'user_1',
+          walletId: 'wallet_1',
+          title: 'Broken',
+          tag: 'Food',
+          amount: 10.0,
+          date: DateTime(2026, 6, 17),
+          type: TransactionTypeModel.expense,
+        );
+
+        expect(
+          () => dataSource.addTransactions([t1, invalid]),
+          throwsA(isA<CacheException>()),
+        );
+
+        final all = await dataSource.getTransactions(
+          userId: t1.userId,
+          walletId: t1.walletId,
+        );
+        expect(all, isEmpty, reason: 'ya hepsi ya hiçbiri');
+      });
+    });
   });
 }

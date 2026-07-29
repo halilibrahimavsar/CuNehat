@@ -6,6 +6,7 @@ import 'package:cunehat/core/services/wallet_metrics_service.dart'
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 
 Future<bool?> showCategoryForm({
@@ -45,6 +46,13 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
 
   String _selectedIcon = 'category';
   bool _isLoading = false;
+  bool _nameSeeded = false;
+
+  /// Aynı türdeki mevcut kategoriler. Çift-ad koruması, kullanıcının GÖRDÜĞÜ
+  /// adlar üzerinden çalışmalı; varsayılanların l10n karşılığı yalnız burada
+  /// bilinir (veri katmanı ham `displayName ?? id` görür). Kaydet anında
+  /// senkron harita kurabilmek için önden yüklenir.
+  List<CategoryEntity> _siblings = const [];
 
   bool get _isEditMode => widget.category != null;
 
@@ -52,8 +60,28 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
   void initState() {
     super.initState();
     if (_isEditMode) {
-      _nameController.text = widget.category!.id;
       _selectedIcon = widget.category!.iconName;
+    }
+    _loadSiblings();
+  }
+
+  Future<void> _loadSiblings() async {
+    final list = await _categoryService.getCategoriesWithDefaults(
+      widget.isExpense,
+    );
+    if (!mounted) return;
+    setState(() => _siblings = list);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ad alanı GÖRÜNEN adla dolar (id ile değil): varsayılanlarda id bir
+    // anahtardır ve seçili dile göre çevrilir. l10n context gerektirdiğinden
+    // initState'te değil burada, bir kez tohumlanır.
+    if (_isEditMode && !_nameSeeded) {
+      _nameSeeded = true;
+      _nameController.text = context.categoryLabel(widget.category!);
     }
   }
 
@@ -158,7 +186,8 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
         // bütçe/rapor `tag == categoryId` eşleşmesi otomatik hareketleri bu
         // kategoriye sayardı. Düzenlemede DEĞİŞMEYEN ad serbest kalır
         // (eski veriyle açılan kayıt ikon düzenlemesine kilitlenmesin).
-        final unchanged = _isEditMode && value.trim() == widget.category!.id;
+        final unchanged = _isEditMode &&
+            value.trim() == context.categoryLabel(widget.category!);
         if (!unchanged && CashMovementTags.isReserved(value)) {
           return context.l10n.kategoriAdiRezerve;
         }
@@ -276,6 +305,11 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
     );
   }
 
+  /// id → kullanıcının GÖRDÜĞÜ ad. `buildCategoryLabelMap` l10n'a çevrilmiş
+  /// varsayılan adları da içerir; veri katmanı bunları kendi başına bilemez.
+  Map<String, String> _displayLabels() =>
+      buildCategoryLabelMap(context, _siblings);
+
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -286,20 +320,47 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       final sortOrder = DateTime.now().millisecondsSinceEpoch;
 
       if (_isEditMode) {
-        final updatedCategory = widget.category!.copyWith(
-          id: name,
+        // Yalnız GÖRÜNEN ad değişir; `id` sabit kalır. id'yi yeni ada
+        // çevirmek hem kaydı bulunamaz yapıyordu (updateCategory kaydı id ile
+        // arar) hem de o kategoriye yazılmış tüm işlemleri (`tag`) ve
+        // bütçeleri (`walletId::categoryId`) yetim bırakırdı.
+        //
+        // Ad, id'nin l10n karşılığıyla AYNIYSA `displayName` null bırakılır:
+        // alan görünen adla tohumlandığından (bkz. didChangeDependencies),
+        // İngilizce'de yalnız ikonu değiştiren kullanıcı "Groceries"i kalıcı
+        // olarak yazar ve kategori o dile kilitlenirdi — copyWith'in
+        // `displayName ?? this.displayName`'i null'a dönüşe izin vermediği
+        // için geri alınamayan bir kayıptı. Bu yüzden copyWith değil, alanı
+        // açıkça kuran bir yapıcı kullanılır.
+        final localizedDefault = context.translateCategory(widget.category!.id);
+        final updatedCategory = CategoryEntity(
+          id: widget.category!.id,
+          displayName: name == localizedDefault ? null : name,
           iconName: _selectedIcon,
+          isExpense: widget.category!.isExpense,
+          isDefault: widget.category!.isDefault,
+          sortOrder: widget.category!.sortOrder,
         );
-        await _categoryService.updateCategory(updatedCategory);
+        await _categoryService.updateCategory(
+          updatedCategory,
+          // Hedef ad kendi id'si altında taşınır: kullanıcının GİRDİĞİ ad
+          // henüz kaydedilmemiş olsa da çakışma ona göre aranır.
+          displayLabels: {..._displayLabels(), widget.category!.id: name},
+        );
       } else {
+        // Yeni kategoride kimlik bu an donar: id = ilk verilen ad.
         final newCategory = CategoryEntity(
           id: name,
+          displayName: name,
           iconName: _selectedIcon,
           isExpense: widget.isExpense,
           isDefault: false,
           sortOrder: sortOrder,
         );
-        await _categoryService.addCategory(newCategory);
+        await _categoryService.addCategory(
+          newCategory,
+          displayLabels: _displayLabels(),
+        );
       }
 
       if (mounted) {

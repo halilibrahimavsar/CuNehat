@@ -82,12 +82,17 @@ final class DeleteInvestmentEvent extends InvestmentEvent {
   /// gideri, maliyet (amount) kadar gelirle ters kayıt edilir.
   final bool recordSale;
 
+  /// Yatırımın deftere yazıldığı tarih. DÜZELTME ters kaydı buraya yazılır
+  /// (satış ters kayıt değil, bugün gerçekleşen bir olaydır).
+  final DateTime dateAdded;
+
   const DeleteInvestmentEvent({
     required this.id,
     required this.userId,
     required this.walletId,
     required this.amount,
     required this.currentValue,
+    required this.dateAdded,
     this.recordSale = true,
   });
   @override

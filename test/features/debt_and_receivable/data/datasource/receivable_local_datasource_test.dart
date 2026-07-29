@@ -41,6 +41,7 @@ void main() {
       debtorName: 'John Doe',
       amount: 1500.0,
       dueDate: dueDate,
+      createdAt: DateTime(2026, 1, 1),
     );
 
     final testReceivable2 = ReceivableModel(
@@ -50,6 +51,7 @@ void main() {
       debtorName: 'Jane Smith',
       amount: 2500.0,
       dueDate: dueDate,
+      createdAt: DateTime(2026, 1, 1),
     );
 
     test('should save and get receivables by walletId successfully', () async {

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -196,8 +197,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final cs = Theme.of(context).colorScheme;
     final rec = _s.reconciliation;
     return [
-      _Warning(Icons.warning_amber_rounded, context.l10n.bankImportReviewWarning,
-          Colors.orange),
+      _Warning(Icons.warning_amber_rounded,
+          context.l10n.bankImportReviewWarning, Colors.orange),
       // OCR yolu diğerlerinden belirgin biçimde hatalı: en üstte, kırmızıyla.
       if (_s.fromOcr)
         _Warning(Icons.image_search_rounded, context.l10n.bankImportOcrWarning,
@@ -230,8 +231,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     ];
   }
 
-  Widget _stat(
-      BuildContext context, String value, String label, Color color) {
+  Widget _stat(BuildContext context, String value, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -251,8 +251,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
   }
 
-  Widget _chip(
-      BuildContext context, IconData icon, String label, Color color) {
+  Widget _chip(BuildContext context, IconData icon, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -420,7 +419,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           children: [
             for (final c in cats)
               ListTile(
-                title: Text(c.id),
+                title: Text(context.categoryLabel(c)),
                 onTap: () => Navigator.pop(ctx, c.id),
               ),
           ],
@@ -492,8 +491,11 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                               fontSize: 12, color: cs.onSurfaceVariant)),
                       if (d.isDuplicate) ...[
                         const SizedBox(width: 8),
-                        _chip(context, Icons.copy_all_rounded,
-                            context.l10n.bankImportDuplicate, AppGradients.debt),
+                        _chip(
+                            context,
+                            Icons.copy_all_rounded,
+                            context.l10n.bankImportDuplicate,
+                            AppGradients.debt),
                       ],
                       const Spacer(),
                       _categoryDropdown(context, i, d),
@@ -546,7 +548,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         style: TextStyle(color: cs.error, fontSize: 12),
       ),
       items: [
-        for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.id)),
+        for (final c in cats)
+          DropdownMenuItem(value: c.id, child: Text(context.categoryLabel(c))),
       ],
       onChanged: (v) => v == null ? null : _cubit.setDraftCategory(i, v),
     );

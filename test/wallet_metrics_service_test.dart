@@ -72,6 +72,13 @@ class FakeTransactionsRepository implements TransactionsRepository {
   }
 
   @override
+  Future<Either<Failure, void>> addTransactions(
+      List<TransactionEntity> transactions) async {
+    store.addAll(transactions);
+    return const Right(null);
+  }
+
+  @override
   Future<Either<Failure, List<TransactionEntity>>> getTransactions({
     required String userId,
     required String walletId,
@@ -209,10 +216,15 @@ class FakeInvestmentRepository implements InvestmentRepository {
           LivePriceQuote(price: 0, currency: 'TRY', priceTl: 0));
 }
 
-/// addTransaction'ı her zaman başarısız kılan varyant (hata yolu testi).
+/// Yazmayı her zaman başarısız kılan varyant (hata yolu testi).
 class FailingTransactionsRepository extends FakeTransactionsRepository {
   @override
   Future<Either<Failure, String>> addTransaction(TransactionEntity t) async =>
+      const Left(CacheFailure('yazılamadı'));
+
+  @override
+  Future<Either<Failure, void>> addTransactions(
+          List<TransactionEntity> transactions) async =>
       const Left(CacheFailure('yazılamadı'));
 
   @override
@@ -588,6 +600,7 @@ void main() {
         amount: 200,
         dueDate: DateTime.now(),
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       ));
       receivables.store.add(ReceivableEntity(
         id: 'r2',
@@ -597,6 +610,7 @@ void main() {
         amount: 300,
         dueDate: DateTime.now(),
         isPaid: true,
+        createdAt: DateTime(2026, 1, 1),
       ));
 
       await svc.syncCredit('w');
@@ -758,12 +772,14 @@ void main() {
           type: DebtType.personalDebt));
 
       receivables.store.add(ReceivableEntity(
-          id: 'r1',
-          userId: 'u',
-          walletId: 'w',
-          debtorName: 'c',
-          amount: 10,
-          dueDate: DateTime.now()));
+        id: 'r1',
+        userId: 'u',
+        walletId: 'w',
+        debtorName: 'c',
+        amount: 10,
+        dueDate: DateTime.now(),
+        createdAt: DateTime(2026, 1, 1),
+      ));
 
       investments.store.add(InvestmentEntity(
           id: 'i1',

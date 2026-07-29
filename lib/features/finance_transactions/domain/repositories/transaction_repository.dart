@@ -23,6 +23,11 @@ abstract class TransactionsRepository {
   });
   Future<Either<Failure, TransactionEntity>> getTransactionById(String id);
   Future<Either<Failure, String>> addTransaction(TransactionEntity transaction);
+
+  /// Birden çok işlemi TEK yazımda ekler (bkz. `WalletMetricsService`
+  /// mutabakat akışları). Ya hepsi yazılır ya hiçbiri.
+  Future<Either<Failure, void>> addTransactions(
+      List<TransactionEntity> transactions);
   Future<Either<Failure, void>> updateTransaction(
       TransactionEntity transaction);
   Future<Either<Failure, void>> deleteTransaction(String id);

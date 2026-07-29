@@ -22,12 +22,18 @@ class TransactionCard extends StatelessWidget {
   final bool isListView;
   final IconData? categoryIcon;
 
+  /// Kategorinin çözülmüş görünen adı (`categoryIcon` ile aynı kanal).
+  /// null ise `tag` l10n'a düşer — sistem etiketleri ve silinmiş
+  /// kategorilerden kalan tag'ler için doğru davranış budur.
+  final String? categoryLabel;
+
   const TransactionCard({
     super.key,
     required this.context,
     required this.item,
     required this.isListView,
     this.categoryIcon,
+    this.categoryLabel,
   });
 
   String get _heroTag => 'tx_${item.transaction.id ?? item.hashCode}';
@@ -191,7 +197,7 @@ class TransactionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          context.translateCategory(tag),
+          categoryLabel ?? context.translateCategory(tag),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -213,6 +219,7 @@ class TransactionCard extends StatelessWidget {
             item: item,
             heroTag: _heroTag,
             categoryIcon: categoryIcon,
+            categoryLabel: categoryLabel,
           ),
         ),
       ),

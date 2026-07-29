@@ -44,6 +44,9 @@ void main() {
       final json = model.toJson();
       expect(json, {
         'id': 'Food',
+        // Ad verilmediyse null: görünen ad id'den çözülür (varsayılanlarda
+        // l10n'a çevrilir). Bkz. CategoryEntity.displayName.
+        'displayName': null,
         'iconName': 'restaurant',
         'isExpense': true,
         'isDefault': true,
@@ -73,8 +76,11 @@ void main() {
         iconName: 'restaurant',
         isExpense: true,
       );
-      final updated = model.copyWith(id: 'Drinks', iconName: 'local_drink');
-      expect(updated.id, 'Drinks');
+      final updated =
+          model.copyWith(displayName: 'Drinks', iconName: 'local_drink');
+      // Kimlik DEĞİŞMEZ: copyWith artık `id` almıyor (bkz. CategoryEntity).
+      expect(updated.id, 'Food');
+      expect(updated.displayName, 'Drinks');
       expect(updated.iconName, 'local_drink');
     });
 

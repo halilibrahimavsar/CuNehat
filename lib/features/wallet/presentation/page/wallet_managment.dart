@@ -11,6 +11,10 @@ import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
@@ -18,6 +22,7 @@ import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart
 import 'package:cunehat/features/wallet/presentation/widgets/transfer_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_card_widget.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/wallet_info_dialog.dart';
+import 'package:cunehat/features/wallet/presentation/widgets/wallet_quick_start_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +44,23 @@ class WalletSheetContent extends StatefulWidget {
 }
 
 class _WalletSheetContentState extends State<WalletSheetContent> {
+  /// Hızlı başlangıç sheet'ine verilen bloc'lar (bkz.
+  /// [_openFirstTransactionSheet]). İkisi de DI'da FACTORY olduğundan her
+  /// çağrıda yeni örnek üretilir; bu yüzey onları SAHİPLENİR ve [dispose]'da
+  /// kapatır.
+  TransactionBloc? _quickStartTxBloc;
+  PendingRecurringBloc? _quickStartPendingBloc;
+
+  @override
+  void dispose() {
+    // close() edilmezlerse constructor'daki TransactionsChangedNotifier
+    // aboneliği süreç boyu açık kalır ve sonraki her defter değişikliği
+    // ölü bloc'lara da dağıtılır.
+    _quickStartTxBloc?.close();
+    _quickStartPendingBloc?.close();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -434,7 +456,9 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       context: context,
       userId: widget.userId,
       wallet: null,
-      onSuccess: () {},
+      // Yeni cüzdan boş açılır ve kullanıcıya hiçbir yön göstermez; en çok
+      // değer veren adım (ekstre içe aktarma) tam bu anda önerilir.
+      onSuccess: (name) => _offerQuickStart(context, name),
       onError: (error) {},
     );
   }
@@ -444,8 +468,51 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       context: context,
       userId: widget.userId,
       wallet: wallet,
-      onSuccess: () {},
+      // Düzenlemede hızlı başlangıç YOK — cüzdan zaten kurulu.
+      onSuccess: (_) {},
       onError: (error) {},
+    );
+  }
+
+  /// Cüzdan oluşturulduktan sonraki atlanabilir yönlendirme.
+  Future<void> _offerQuickStart(BuildContext context, String walletName) async {
+    final action =
+        await WalletQuickStartSheet.show(context, walletName: walletName);
+    if (action == null || !context.mounted) return;
+
+    switch (action) {
+      case WalletQuickStartAction.importStatement:
+        // BankImportPage aktif cüzdanı varsayılan seçer; CreateWalletEvent
+        // yeni cüzdanı zaten aktif yaptığı için ek parametre gerekmez.
+        _openBankImport(context);
+      case WalletQuickStartAction.addTransaction:
+        _openFirstTransactionSheet(context);
+      case WalletQuickStartAction.skip:
+        break;
+    }
+  }
+
+  /// İlk işlem sheet'ini cüzdan yönetimi üstünde açar.
+  ///
+  /// Bu yüzey kendi route'unda olduğundan ağacında TransactionBloc yoktur;
+  /// bloc'lar DI'dan açıkça verilir (bkz. [TransactionSheetHandler.showSheet]).
+  ///
+  /// Örnekler sheet route'una DEĞİL bu State'e bağlanır: kayıttan sonra düzenli
+  /// işlem şablonu yazımı route kapandıktan SONRA tamamlanıp bekleyen listeye
+  /// event gönderir; route'la birlikte kapatılan bir bloc o anda ölü olurdu.
+  /// Tembel kurulur — kullanıcı hızlı başlangıcı hiç seçmezse hiç üretilmez.
+  void _openFirstTransactionSheet(BuildContext context) {
+    final state = context.read<WalletBloc>().state;
+    final wallet = state is WalletLoadedSt ? state.activeWallet : null;
+    if (wallet?.id == null) return;
+
+    TransactionSheetHandler.showSheet(
+      context: context,
+      userId: widget.userId,
+      walletId: wallet!.id!,
+      type: TransactionTypeModel.expense,
+      transactionBloc: _quickStartTxBloc ??= getIt<TransactionBloc>(),
+      pendingBloc: _quickStartPendingBloc ??= getIt<PendingRecurringBloc>(),
     );
   }
 

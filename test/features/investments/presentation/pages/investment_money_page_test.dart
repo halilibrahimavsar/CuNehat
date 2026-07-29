@@ -25,7 +25,8 @@ class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 void main() {
   late MockInvestmentBloc mockInvestmentBloc;
@@ -51,6 +52,7 @@ void main() {
         amount: 1000.0,
         currentValue: 1250.0,
         recordSale: true,
+        dateAdded: DateTime(2026, 1, 1),
       ),
     );
   });

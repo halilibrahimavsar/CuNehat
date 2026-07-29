@@ -37,6 +37,7 @@ void main() {
         debtorName: 'Debtor',
         amount: 0,
         dueDate: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026, 1, 1),
       ),
     );
   });
@@ -69,6 +70,7 @@ void main() {
     amount: 1000.0,
     dueDate: DateTime(2026, 6, 20),
     isPaid: false,
+    createdAt: DateTime(2026, 1, 1),
   );
 
   group('GetReceivablesEvent', () {
@@ -114,6 +116,9 @@ void main() {
               isIncome: false,
               title: 'Alice',
               tag: CashMovementTags.receivable,
+              // Silmedeki iade de `createdAt`e yazılır; bugüne düşerse iki
+              // bacak farklı dönemlere dağılır.
+              date: DateTime(2026, 1, 1),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -137,6 +142,7 @@ void main() {
               isIncome: false,
               title: 'Alice',
               tag: CashMovementTags.receivable,
+              date: DateTime(2026, 1, 1),
             )).called(1);
         verify(() => mockMetricsService.syncCredit('wallet_123')).called(1);
       },
@@ -154,6 +160,7 @@ void main() {
               isIncome: any(named: 'isIncome'),
               title: any(named: 'title'),
               tag: any(named: 'tag'),
+              date: any(named: 'date'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -184,13 +191,9 @@ void main() {
         const ReceivableError('Add failed'),
       ],
       verify: (_) {
-        verifyNever(() => mockMetricsService.recordCashMovement(
+        verifyNever(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
+              entries: any(named: 'entries'),
             ));
       },
     );
@@ -204,13 +207,9 @@ void main() {
         final updatedReceivable = testReceivable.copyWith(amount: 1500.0);
         when(() => mockUpdateUseCase(updatedReceivable))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
-              walletId: 'wallet_123',
-              userId: 'user_123',
-              amount: 500.0,
-              isIncome: false, // more cash out
-              title: 'Alacak güncellendi: Alice',
-              tag: CashMovementTags.receivable,
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -236,13 +235,9 @@ void main() {
         final updated = testReceivable.copyWith(amount: 700.0);
         when(() => mockUpdateUseCase(updated))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
-              walletId: 'wallet_123',
-              userId: 'user_123',
-              amount: 300.0, // diff absolute: 1000 - 700 = 300
-              isIncome: true, // less lent out → cash returned (income)
-              title: 'Alacak güncellendi: Alice',
-              tag: CashMovementTags.receivable,
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -284,24 +279,27 @@ void main() {
         ReceivableLoaded([testReceivable]),
       ],
       verify: (_) {
-        verifyNever(() => mockMetricsService.recordCashMovement(
+        verifyNever(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
+              entries: any(named: 'entries'),
             ));
       },
     );
 
     blocTest<ReceivableBloc, ReceivableState>(
-      'does NOT record cash movement when receivable is already paid',
+      'tahsil edilmiş alacakta tutar değişimi İKİ bacağı da düzeltir',
       build: () {
-        final paidReceivable = testReceivable.copyWith(isPaid: true);
+        // Eskiden isPaid'de kuplaj TAMAMEN atlanıyordu → defter 1.000'de
+        // kalıp alacak 1.200 diyordu. Artık iki bacak da yazılır; net sıfır.
+        final paidReceivable = testReceivable.copyWith(
+            isPaid: true, collectedAt: DateTime(2026, 3, 15));
         final updated = paidReceivable.copyWith(amount: 1200.0);
         when(() => mockUpdateUseCase(updated))
             .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))
@@ -309,41 +307,51 @@ void main() {
         return receivableBloc;
       },
       act: (bloc) => bloc.add(UpdateReceivableEvent(
-        receivable: testReceivable.copyWith(isPaid: true, amount: 1200.0),
+        receivable: testReceivable.copyWith(
+            isPaid: true, amount: 1200.0, collectedAt: DateTime(2026, 3, 15)),
         prevAmount: 1000.0,
       )),
       expect: () => [
         ReceivableLoading(),
         const ReceivableOperationSuccess('Alacak güncellendi.'),
         ReceivableLoading(),
-        ReceivableLoaded(
-            [testReceivable.copyWith(isPaid: true, amount: 1200.0)]),
+        ReceivableLoaded([
+          testReceivable.copyWith(
+              isPaid: true, amount: 1200.0, collectedAt: DateTime(2026, 3, 15))
+        ]),
       ],
       verify: (_) {
-        verifyNever(() => mockMetricsService.recordCashMovement(
-              walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
-            ));
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(2));
+
+        // Verilen para bacağı: 200 ₺ daha verildi → gider, KAYIT tarihinde.
+        expect(entries[0].amount, 200.0);
+        expect(entries[0].isIncome, isFalse);
+        expect(entries[0].tag, CashMovementTags.receivable);
+        expect(entries[0].date, DateTime(2026, 1, 1));
+
+        // Tahsilat bacağı aynı farkla düzeltilir → net etki sıfır. TARİH
+        // tahsilat günüdür: "bugüne" düşerse net sıfır yalnız bakiye için
+        // doğru olur, Ocak'ın gideri şişer ve bugüne yoktan gelir belirir.
+        expect(entries[1].amount, 200.0);
+        expect(entries[1].isIncome, isTrue);
+        expect(entries[1].tag, CashMovementTags.receivableCollection);
+        expect(entries[1].date, DateTime(2026, 3, 15));
       },
     );
 
     blocTest<ReceivableBloc, ReceivableState>(
-      'emits success with cash warning when recordCashMovement returns false',
+      'emits success with cash warning when recordCashMovements returns false',
       build: () {
         final updated = testReceivable.copyWith(amount: 1500.0);
         when(() => mockUpdateUseCase(updated))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
+        when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
+              entries: any(named: 'entries'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -390,13 +398,9 @@ void main() {
         // The cash lent (1000) is refunded to our wallet balance.
         when(() => mockDeleteUseCase('receivable_123'))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
-              walletId: 'wallet_123',
-              userId: 'user_123',
-              amount: 1000.0,
-              isIncome: true, // cash returned
-              title: 'Alacak silindi',
-              tag: CashMovementTags.receivable,
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -404,12 +408,13 @@ void main() {
             .thenAnswer((_) async => const Right([]));
         return receivableBloc;
       },
-      act: (bloc) => bloc.add(const DeleteReceivableEvent(
+      act: (bloc) => bloc.add(DeleteReceivableEvent(
         id: 'receivable_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       )),
       expect: () => [
         ReceivableLoading(),
@@ -417,6 +422,18 @@ void main() {
         ReceivableLoading(),
         const ReceivableLoaded([]),
       ],
+      verify: (_) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(1));
+        expect(entries.single.amount, 1000.0);
+        expect(entries.single.isIncome, isTrue);
+        // İade, paranın ÇIKTIĞI tarihe yazılır; silme günü o ayın gider
+        // toplamını şişirmemeli.
+        expect(entries.single.date, DateTime(2026, 1, 1));
+      },
     );
 
     blocTest<ReceivableBloc, ReceivableState>(
@@ -430,12 +447,13 @@ void main() {
             .thenAnswer((_) async => const Right([]));
         return receivableBloc;
       },
-      act: (bloc) => bloc.add(const DeleteReceivableEvent(
+      act: (bloc) => bloc.add(DeleteReceivableEvent(
         id: 'receivable_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         isPaid: true,
+        createdAt: DateTime(2026, 1, 1),
       )),
       expect: () => [
         ReceivableLoading(),
@@ -444,13 +462,9 @@ void main() {
         const ReceivableLoaded([]),
       ],
       verify: (_) {
-        verifyNever(() => mockMetricsService.recordCashMovement(
+        verifyNever(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
+              entries: any(named: 'entries'),
             ));
       },
     );
@@ -466,12 +480,13 @@ void main() {
             .thenAnswer((_) async => const Right([]));
         return receivableBloc;
       },
-      act: (bloc) => bloc.add(const DeleteReceivableEvent(
+      act: (bloc) => bloc.add(DeleteReceivableEvent(
         id: 'receivable_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 0.0,
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       )),
       expect: () => [
         ReceivableLoading(),
@@ -480,29 +495,21 @@ void main() {
         const ReceivableLoaded([]),
       ],
       verify: (_) {
-        verifyNever(() => mockMetricsService.recordCashMovement(
+        verifyNever(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
+              entries: any(named: 'entries'),
             ));
       },
     );
 
     blocTest<ReceivableBloc, ReceivableState>(
-      'emits success with cash warning when recordCashMovement returns false',
+      'emits success with cash warning when recordCashMovements returns false',
       build: () {
         when(() => mockDeleteUseCase('receivable_123'))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
+        when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
+              entries: any(named: 'entries'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -510,12 +517,13 @@ void main() {
             .thenAnswer((_) async => const Right([]));
         return receivableBloc;
       },
-      act: (bloc) => bloc.add(const DeleteReceivableEvent(
+      act: (bloc) => bloc.add(DeleteReceivableEvent(
         id: 'receivable_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       )),
       expect: () => [
         ReceivableLoading(),
@@ -533,12 +541,13 @@ void main() {
             (_) async => const Left(ServerFailure('Delete failed')));
         return receivableBloc;
       },
-      act: (bloc) => bloc.add(const DeleteReceivableEvent(
+      act: (bloc) => bloc.add(DeleteReceivableEvent(
         id: 'receivable_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       )),
       expect: () => [
         ReceivableLoading(),
@@ -572,7 +581,9 @@ void main() {
       'marks unpaid receivable as paid, records collection income, syncs and reloads',
       build: () {
         final updatedReceivable = testReceivable.copyWith(isPaid: true);
-        when(() => mockUpdateUseCase(updatedReceivable))
+        // `collectedAt` tahsilat ANIDIR (DateTime.now()); tam eşleşen stub
+        // tutmaz, kaydedilen değer verify'da yakalanır.
+        when(() => mockUpdateUseCase(any()))
             .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: 'wallet_123',
@@ -581,6 +592,7 @@ void main() {
               isIncome: true, // collected cash
               title: 'Tahsilat: Alice',
               tag: CashMovementTags.receivableCollection,
+              date: any(named: 'date'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
@@ -596,8 +608,15 @@ void main() {
         ReceivableLoaded([testReceivable.copyWith(isPaid: true)]),
       ],
       verify: (_) {
-        verify(() => mockUpdateUseCase(testReceivable.copyWith(isPaid: true)))
-            .called(1);
+        final saved = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .single as ReceivableEntity;
+        expect(saved.isPaid, isTrue);
+        // Tahsilat anı kalemin ÜSTÜNDE saklanır; sonraki tutar düzeltmesinin
+        // tahsilat bacağı bu tarihe yazılacak.
+        expect(saved.collectedAt, isNotNull);
+
+        // Deftere yazılan tarih ile kaleme kaydedilen tarih AYNI olmalı.
         verify(() => mockMetricsService.recordCashMovement(
               walletId: 'wallet_123',
               userId: 'user_123',
@@ -605,6 +624,7 @@ void main() {
               isIncome: true,
               title: 'Tahsilat: Alice',
               tag: CashMovementTags.receivableCollection,
+              date: saved.collectedAt,
             )).called(1);
       },
     );
@@ -613,7 +633,7 @@ void main() {
       'emits success with cash warning suffix when recordCashMovement returns false',
       build: () {
         final updated = testReceivable.copyWith(isPaid: true);
-        when(() => mockUpdateUseCase(updated))
+        when(() => mockUpdateUseCase(any()))
             .thenAnswer((_) async => const Right(null));
         when(() => mockMetricsService.recordCashMovement(
               walletId: any(named: 'walletId'),
@@ -622,6 +642,7 @@ void main() {
               isIncome: any(named: 'isIncome'),
               title: any(named: 'title'),
               tag: any(named: 'tag'),
+              date: any(named: 'date'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);

@@ -10,7 +10,19 @@ abstract class CategoryRepository {
   /// Silinen varsayılanlar dahil tam liste (kategori yöneticisi için).
   Future<List<CategoryEntity>> getCategoriesWithDefaults(bool isExpense);
 
-  Future<void> addCategory(CategoryEntity category);
-  Future<void> updateCategory(CategoryEntity category);
+  /// [displayLabels]: id → kullanıcının GÖRDÜĞÜ ad. Çift-ad koruması bunun
+  /// üzerinden çalışır; varsayılanların l10n karşılığı yalnız sunum
+  /// katmanında bilindiği için oradan doldurulur.
+  Future<void> addCategory(
+    CategoryEntity category, {
+    Map<String, String> displayLabels,
+  });
+
+  /// Bkz. [addCategory] — [displayLabels] aynı işi görür ve kullanıcının
+  /// GİRDİĞİ yeni adı da kategorinin kendi id'si altında taşır.
+  Future<void> updateCategory(
+    CategoryEntity category, {
+    Map<String, String> displayLabels,
+  });
   Future<void> deleteCategory(String categoryId, bool isExpense);
 }

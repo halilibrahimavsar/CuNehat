@@ -32,14 +32,17 @@ void main() {
 
     test('copyWith returns updated object', () {
       final updated = entity.copyWith(
-        id: 'Drinks',
+        displayName: 'Drinks',
         iconName: 'local_drink',
         isExpense: false,
         isDefault: false,
         sortOrder: 2,
       );
 
-      expect(updated.id, 'Drinks');
+      // `id` copyWith'te YOK: deftere `tag`, bütçeye `walletId::categoryId`
+      // olarak yazılan anahtar yeniden adlandırmayla değişemez.
+      expect(updated.id, entity.id);
+      expect(updated.displayName, 'Drinks');
       expect(updated.iconName, 'local_drink');
       expect(updated.isExpense, false);
       expect(updated.isDefault, false);

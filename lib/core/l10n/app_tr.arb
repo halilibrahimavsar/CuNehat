@@ -777,14 +777,19 @@
   "categoryHediyeVeBagis": "Hediye & Bağış",
   "categoryHizmetler": "Hizmetler",
   "categoryDiger": "Diğer",
+  "defaultCategoryGroceries": "Market",
   "defaultCategoryFood": "Yemek",
   "defaultCategoryTransport": "Ulaşım",
-  "defaultCategoryShopping": "Alışveriş",
   "defaultCategoryBills": "Fatura",
+  "defaultCategoryRent": "Kira",
+  "defaultCategoryShopping": "Alışveriş",
+  "defaultCategoryHealth": "Sağlık",
+  "defaultCategoryEducation": "Eğitim",
   "defaultCategoryEntertainment": "Eğlence",
   "defaultCategorySalary": "Maaş",
-  "defaultCategoryInvestment": "Yatırım",
+  "defaultCategorySideIncome": "Ek Gelir",
   "defaultCategoryFreelance": "Serbest",
+  "defaultCategoryInvestment": "Yatırım",
   "kategorisiz": "Kategorisiz",
   "detailLabelTarih": "Tarih",
   "detailLabelSaat": "Saat",
@@ -1466,6 +1471,20 @@
   },
   "yatirimSilOnayBaslik": "{name} kaydı silinsin mi?",
   "@yatirimSilOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "walletQuickStartTitle": "Cüzdan hazır!",
+  "walletQuickStartSubtitle": "{name} oluşturuldu. Nasıl başlamak istersin?",
+  "walletQuickStartImportTitle": "Banka ekstresi içe aktar",
+  "walletQuickStartImportSubtitle": "Geçmiş işlemlerini dosyadan yükle — en hızlı yol",
+  "walletQuickStartManualTitle": "İlk işlemi elle ekle",
+  "walletQuickStartManualSubtitle": "Tek bir gelir ya da giderle başla",
+  "walletQuickStartSkip": "Şimdilik atla",
+  "@walletQuickStartSubtitle": {
     "placeholders": {
       "name": {
         "type": "String"

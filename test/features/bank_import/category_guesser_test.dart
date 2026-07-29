@@ -1,5 +1,6 @@
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
+import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,26 +18,24 @@ ImportDraft _draft(String desc, {bool income = false}) => ImportDraft(
 void main() {
   final guesser = CategoryGuesser();
 
-  final defaultExpenseCats = [
-    _cat('Yemek'),
-    _cat('Ulaşım'),
-    _cat('Alışveriş'),
-    _cat('Fatura'),
-    _cat('Eğlence'),
-  ];
-  final defaultIncomeCats = [
-    _cat('Maaş', isExpense: false),
-    _cat('Yatırım', isExpense: false),
-    _cat('Serbest', isExpense: false),
-  ];
+  // Sabit liste yerine GERÇEK varsayılanlar: tahmin grupları varsayılan
+  // id'leriyle birebir eşleşmek zorunda, elle kopyalanan liste sessizce
+  // kayıyordu (ör. 'Market'/'Sağlık' eklendiğinde).
+  final defaultExpenseCats = CategoryModel.getDefaultExpenseCategories()
+      .map((m) => m.toEntity())
+      .toList();
+  final defaultIncomeCats = CategoryModel.getDefaultIncomeCategories()
+      .map((m) => m.toEntity())
+      .toList();
 
-  test('bilinen market zinciri Alışveriş kategorisine eşlenir', () {
+  test('bilinen market zinciri Market kategorisine eşlenir', () {
+    // Market (gıda) ile Alışveriş (giyim/elektronik) bilerek ayrı gruplar.
     final result = guesser.guess(
       description: '5411 MIGROS TIC.A.S. ISTANBUL TR',
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'Alışveriş');
+    expect(result, 'Market');
   });
 
   test('akaryakıt markası Ulaşım kategorisine eşlenir', () {
@@ -111,7 +110,7 @@ void main() {
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'Alışveriş');
+    expect(result, 'Market');
   });
 
   test('kısa anahtar kelime kelime-sınırı olmadan yanlışlıkla eşleşmez', () {
@@ -143,7 +142,7 @@ void main() {
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'Alışveriş');
+    expect(result, 'Market');
   });
 
   test(
@@ -166,7 +165,7 @@ void main() {
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'Alışveriş');
+    expect(result, 'Market');
   });
 
   test('Midas Menkul Değerler transferi Yatırım grubuna düşer (kategori varsa)',
@@ -204,7 +203,7 @@ void main() {
   group('suggestNewCategories', () {
     test('yalnız kullanıcının listesinde OLMAYAN gruplar önerilir', () {
       final drafts = [
-        _draft('5411 MIGROS TIC.A.S.'), // Alışveriş zaten var → önerilmez
+        _draft('5411 MIGROS TIC.A.S.'), // Market zaten var → önerilmez
         _draft(
             'MB Transfer İşlemleri - Alıcı:Midas Menkul Değerler Anonim Şirketi'),
       ];
@@ -230,9 +229,10 @@ void main() {
     test(
         'aynı grup birden çok taslakta eşleşse de tek öneri döner (tekilleştirme)',
         () {
+      // 'Yatırım' gider tarafında varsayılan DEĞİL (yalnız gelirde var).
       final drafts = [
-        _draft('ECZANESI ISTANBUL'),
-        _draft('MERKEZ ECZANESI'),
+        _draft('MIDAS MENKUL DEGERLER'),
+        _draft('BORSA ISTANBUL ODEMESI'),
       ];
       final suggestions = guesser.suggestNewCategories(
         drafts: drafts,
@@ -240,7 +240,7 @@ void main() {
         incomeCategories: defaultIncomeCats,
       );
       expect(suggestions.length, 1);
-      expect(suggestions.single.name, 'Sağlık');
+      expect(suggestions.single.name, 'Yatırım');
     });
 
     test('gelir tarafında karşılığı olmayan grup isIncome:true olarak önerilir',

@@ -1,6 +1,7 @@
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 
 /// Rapor sayfasındaki tek bir kategori dilimi: ad, dönem toplamı, o kategoriye
@@ -23,6 +24,19 @@ class CategoryData {
     this.color, {
     this.isOther = false,
   });
+}
+
+extension CategoryDataLabel on CategoryData {
+  /// Dilimin kullanıcıya gösterilecek adı.
+  ///
+  /// Sentetik "Diğer" kovasının [CategoryData.name]'i bir kategori id'si DEĞİL,
+  /// çağıran tarafından zaten l10n'a çevrilmiş bir ETİKETTİR. tag→ad
+  /// haritasından geçirilirse, kullanıcının gerçek "Diğer" kategorisi
+  /// yeniden adlandırılmışsa kova onun yeni adını alır ve yan yana duran iki
+  /// dilim ayırt edilemez olur. Eşleştirme her zaman [CategoryData.isOther]
+  /// bayrağıyla yapılır, isimle değil.
+  String labelIn(BuildContext context, Map<String, String>? labels) =>
+      isOther ? name : context.categoryLabelForTag(name, labels: labels);
 }
 
 /// Rapor sayfasının kategori kırılımını üreten yardımcı: seçili tarih aralığı,

@@ -36,6 +36,14 @@ class ReceivableModel extends ReceivableEntity {
   @HiveField(7)
   String? get notes;
 
+  @override
+  @HiveField(8)
+  DateTime get createdAt;
+
+  @override
+  @HiveField(9)
+  DateTime? get collectedAt;
+
   const ReceivableModel({
     required super.id,
     required super.userId,
@@ -43,6 +51,8 @@ class ReceivableModel extends ReceivableEntity {
     required super.debtorName,
     required super.amount,
     required super.dueDate,
+    required super.createdAt,
+    super.collectedAt,
     super.isPaid,
     super.notes,
   });
@@ -55,6 +65,8 @@ class ReceivableModel extends ReceivableEntity {
       debtorName: entity.debtorName,
       amount: entity.amount,
       dueDate: entity.dueDate,
+      createdAt: entity.createdAt,
+      collectedAt: entity.collectedAt,
       isPaid: entity.isPaid,
       notes: entity.notes,
     );
@@ -68,6 +80,8 @@ class ReceivableModel extends ReceivableEntity {
       debtorName: debtorName,
       amount: amount,
       dueDate: dueDate,
+      createdAt: createdAt,
+      collectedAt: collectedAt,
       isPaid: isPaid,
       notes: notes,
     );
@@ -81,6 +95,8 @@ class ReceivableModel extends ReceivableEntity {
     String? debtorName,
     double? amount,
     DateTime? dueDate,
+    DateTime? createdAt,
+    DateTime? collectedAt,
     bool? isPaid,
     String? notes,
   }) {
@@ -91,6 +107,8 @@ class ReceivableModel extends ReceivableEntity {
       debtorName: debtorName ?? this.debtorName,
       amount: amount ?? this.amount,
       dueDate: dueDate ?? this.dueDate,
+      createdAt: createdAt ?? this.createdAt,
+      collectedAt: collectedAt ?? this.collectedAt,
       isPaid: isPaid ?? this.isPaid,
       notes: notes ?? this.notes,
     );
@@ -104,6 +122,8 @@ class ReceivableModel extends ReceivableEntity {
       'debtorName': debtorName,
       'amount': amount,
       'dueDate': dueDate.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'collectedAt': collectedAt?.toIso8601String(),
       'isPaid': isPaid,
       'notes': notes,
     };
@@ -117,6 +137,11 @@ class ReceivableModel extends ReceivableEntity {
       debtorName: json['debtorName'] as String,
       amount: (json['amount'] as num).toDouble(),
       dueDate: DateTime.parse(json['dueDate'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      // Gerçekten nullable (henüz tahsil edilmemiş), sürüm fallback'i değil.
+      collectedAt: json['collectedAt'] == null
+          ? null
+          : DateTime.parse(json['collectedAt'] as String),
       isPaid: json['isPaid'] as bool,
       notes: json['notes'] as String?,
     );

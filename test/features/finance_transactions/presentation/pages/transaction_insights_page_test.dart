@@ -1,3 +1,6 @@
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
@@ -30,10 +33,13 @@ class MockGetAllRecurringTemplatesUsecase extends Mock
 
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 
+class MockCategoryRepository extends Mock implements CategoryRepository {}
+
 void main() {
   late MockTransactionBloc mockTransactionBloc;
   late MockGetAllRecurringTemplatesUsecase mockGetAllRecurringTemplatesUsecase;
   late MockOnboardingCoordinator mockOnboardingCoordinator;
+  late MockCategoryRepository mockCategoryRepository;
 
   setUpAll(() {
     getIt.allowReassignment = true;
@@ -48,6 +54,19 @@ void main() {
     mockTransactionBloc = MockTransactionBloc();
     mockGetAllRecurringTemplatesUsecase = MockGetAllRecurringTemplatesUsecase();
     mockOnboardingCoordinator = MockOnboardingCoordinator();
+    mockCategoryRepository = MockCategoryRepository();
+
+    // Sayfa kategori etiketlerini yükler (tag → görünen ad); kırılım anahtarı
+    // hep tag kalır, harita yalnız gösterim içindir.
+    when(() => mockCategoryRepository.getExpenseCategories())
+        .thenAnswer((_) async => const <CategoryEntity>[]);
+    when(() => mockCategoryRepository.getIncomeCategories())
+        .thenAnswer((_) async => const <CategoryEntity>[]);
+    getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    // Sayfa, kategoriler değiştiğinde ikon/ad indeksini tazelemek için bu
+    // kanala abone olur (bkz. CategoriesChangedNotifier).
+    getIt.registerSingleton<CategoriesChangedNotifier>(
+        CategoriesChangedNotifier());
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<GetAllRecurringTemplatesUsecase>(

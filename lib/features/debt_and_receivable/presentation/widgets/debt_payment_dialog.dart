@@ -1,12 +1,14 @@
 // lib/features/debt_and_receivable/presentation/widgets/debt_payment_dialog.dart
 
+import 'dart:math' as math;
+
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/installment_progress.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
 import 'package:flutter/material.dart';
@@ -98,7 +100,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
       isPaid: isPaid,
     );
 
-    context.read<DebtBloc>().add(PayDebtEvent(updatedDebt, amount));
+    context
+        .read<DebtBloc>()
+        .add(PayDebtEvent(updatedDebt, amount, paymentDate: _paymentDate));
     Navigator.of(context).pop(true);
   }
 
@@ -402,67 +406,75 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   }
 
   Widget _buildInstallmentPlanList(bool isDark) {
-    final monthlyAmount = widget.debt.totalDebtAmount / widget.debt.termMonths;
+    // Durum ödenen TUTARdan gelir, ödeme SAYISINDAN değil: aradan geçen
+    // kısmi/fazla ödemeler planı kaydırmaz (bkz. buildInstallmentPlan).
+    final plan = buildInstallmentPlanFor(widget.debt);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: List.generate(widget.debt.termMonths, (i) {
-        final scheduledDate = addMonthsClamped(widget.debt.startDate, i + 1);
-        final isPaidInstallment = i < widget.debt.payments.length;
-        final isOverdue =
-            !isPaidInstallment && scheduledDate.isBefore(DateTime.now());
-
-        final Color statusColor;
-        final IconData statusIcon;
-        final String statusText;
-        if (isPaidInstallment) {
-          statusColor = Colors.green;
-          statusIcon = Icons.check_circle_rounded;
-          statusText = formatMoney(widget.debt.payments[i].amount);
-        } else if (isOverdue) {
-          statusColor = Colors.red;
-          statusIcon = Icons.warning_rounded;
-          statusText = context.l10n.gecikmis;
-        } else {
-          statusColor = Colors.orange;
-          statusIcon = Icons.schedule_rounded;
-          statusText = context.l10n.bekleniyor;
-        }
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 6),
-          child: ListTile(
-            dense: true,
-            leading: CircleAvatar(
-              radius: 14,
-              backgroundColor:
-                  statusColor.withValues(alpha: isDark ? 0.25 : 0.12),
-              child: Icon(statusIcon, size: 16, color: statusColor),
-            ),
-            title: Text(
-              context.l10n.iTaksitAppformattersDateshort(
-                  i + 1, AppFormatters.dateShort.format(scheduledDate)),
-              style: const TextStyle(fontSize: 13),
-            ),
-            subtitle: Text(
-              context.l10n.formatMoneyMonthlyamount(formatMoney(monthlyAmount)),
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+      children: [
+        for (final row in plan)
+          Card(
+            margin: const EdgeInsets.only(bottom: 6),
+            child: ListTile(
+              dense: true,
+              leading: CircleAvatar(
+                radius: 14,
+                backgroundColor:
+                    _statusColor(row).withValues(alpha: isDark ? 0.25 : 0.12),
+                child:
+                    Icon(_statusIcon(row), size: 16, color: _statusColor(row)),
               ),
-            ),
-            trailing: Text(
-              statusText,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: statusColor,
+              title: Text(
+                context.l10n.iTaksitAppformattersDateshort(
+                    row.number, AppFormatters.dateShort.format(row.dueDate)),
+                style: const TextStyle(fontSize: 13),
+              ),
+              subtitle: Text(
+                context.l10n
+                    .formatMoneyMonthlyamount(formatMoney(row.scheduledAmount)),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+              ),
+              trailing: Text(
+                _statusText(row),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _statusColor(row),
+                ),
               ),
             ),
           ),
-        );
-      }),
+      ],
     );
   }
+
+  Color _statusColor(InstallmentProgress row) => switch (row.status) {
+        InstallmentStatus.paid => Colors.green,
+        _ => row.isOverdue ? Colors.red : Colors.orange,
+      };
+
+  IconData _statusIcon(InstallmentProgress row) => switch (row.status) {
+        InstallmentStatus.paid => Icons.check_circle_rounded,
+        _ => row.isOverdue
+            ? Icons.warning_rounded
+            : (row.status == InstallmentStatus.partial
+                ? Icons.incomplete_circle_rounded
+                : Icons.schedule_rounded),
+      };
+
+  /// Kısmi ödemede tutar gösterilir ("300,00 ₺ / 1.000,00 ₺"); gecikme
+  /// ayrı bir eksen olduğundan renk/ikon uyarıyı ayrıca taşır.
+  String _statusText(InstallmentProgress row) => switch (row.status) {
+        InstallmentStatus.paid => formatMoney(row.paidAmount),
+        InstallmentStatus.partial =>
+          '${formatMoney(row.paidAmount)} / ${formatMoney(row.scheduledAmount)}',
+        InstallmentStatus.unpaid =>
+          row.isOverdue ? context.l10n.gecikmis : context.l10n.bekleniyor,
+      };
 
   Widget _buildPaymentHistoryList() {
     return Column(
@@ -509,22 +521,39 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   // ---------------------------------------------------------------- Quick pay
 
   Widget _buildQuickPayOptions(double remaining) {
-    final termMonths = widget.debt.termMonths;
-    final monthly =
-        termMonths > 1 ? widget.debt.totalDebtAmount / termMonths : null;
+    // Tutarlar plandan okunur, yeniden hesaplanmaz. Elle `toplam / vade`
+    // bölmek aynı diyalogda İKİ ayrı "bir taksit" tanımı yaratıyordu: plan
+    // satırları kuruşa yuvarlanıp artığı son taksite yüklerken (1.000/3 →
+    // 333,33 / 333,33 / 333,34) chip 333,33333… öneriyordu. Chip'lerle ödeyen
+    // kullanıcı son taksiti hiçbir zaman "ödendi"ye çeviremiyor, borç kuruşu
+    // kapanmadan açık kalıyordu.
+    final plan = buildInstallmentPlanFor(widget.debt);
+    final unpaid = plan
+        .where((r) => r.status != InstallmentStatus.paid)
+        .toList(growable: false);
+
+    /// Sıradaki [count] ödenmemiş taksitin KALAN tutarı (kısmen ödenmiş bir
+    /// taksitte yalnız eksik kısım istenir).
+    double? nextInstallments(int count) {
+      if (unpaid.length < count) return null;
+      final sum = unpaid
+          .take(count)
+          .fold<double>(0, (acc, r) => acc + r.remainingAmount);
+      final capped = roundToCents(math.min(sum, remaining));
+      return capped > 0 ? capped : null;
+    }
+
+    final oneInstallment =
+        widget.debt.termMonths > 1 ? nextInstallments(1) : null;
+    final twoInstallments =
+        widget.debt.termMonths > 1 ? nextInstallments(2) : null;
 
     final options = <({String label, double amount})>[
-      if (monthly != null) ...[
-        (
-          label: context.l10n.taksit1,
-          amount: roundToCents(monthly.clamp(0, remaining).toDouble()),
-        ),
-        if (remaining > monthly * 1.5)
-          (
-            label: context.l10n.taksit2,
-            amount: roundToCents((monthly * 2).clamp(0, remaining).toDouble()),
-          ),
-      ],
+      if (oneInstallment != null)
+        (label: context.l10n.taksit1, amount: oneInstallment),
+      // Tamamıyla aynı tutara düşen ikinci chip kullanıcıya bir şey sunmaz.
+      if (twoInstallments != null && twoInstallments < remaining)
+        (label: context.l10n.taksit2, amount: twoInstallments),
       // remaining getter'ı zaten kuruşa yuvarlı
       (label: context.l10n.tamaminiOde, amount: remaining),
     ];

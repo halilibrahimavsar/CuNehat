@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -56,6 +57,10 @@ void main() {
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    // Sayfa, kategoriler değiştiğinde ikon/ad indeksini tazelemek için bu
+    // kanala abone olur (bkz. CategoriesChangedNotifier).
+    getIt.registerSingleton<CategoriesChangedNotifier>(
+        CategoriesChangedNotifier());
     getIt.registerSingleton<BudgetRepository>(mockBudgetRepository);
     getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
 

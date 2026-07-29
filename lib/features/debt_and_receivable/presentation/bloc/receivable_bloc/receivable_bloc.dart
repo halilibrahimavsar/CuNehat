@@ -60,6 +60,9 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
           isIncome: false,
           title: event.receivable.debtorName,
           tag: CashMovementTags.receivable,
+          // Silmedeki ters kayıt da `createdAt`e yazılır; bugüne düşerse iki
+          // bacak farklı dönemlere dağılır.
+          date: event.receivable.createdAt,
         );
         await _safeSyncCredit(event.receivable.walletId);
 
@@ -78,20 +81,43 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
     await result.fold(
       (failure) async => emit(ReceivableError(failure.message)),
       (_) async {
-        // Mutabakat: yalnız tahsil edilmemiş alacakta tutar değişimi nakde yansır.
+        // Mutabakat: tutar değişimi her hâlükârda deftere yansır.
+        //
+        // Eskiden tahsil edilmiş alacakta (isPaid) kuplaj TAMAMEN atlanıyordu:
+        // 1.000 ₺'lik tahsil edilmiş bir alacak 1.500 ₺'ye çıkarılınca defter
+        // hâlâ -1.000/+1.000 gösteriyor, alacak ise 1.500 diyordu. Tahsil
+        // edilmişte para hem verilmiş hem geri alınmış olduğundan net etki
+        // sıfırdır → iki bacak da yazılır ve defter kalemle tutarlı kalır.
         var cashOk = true;
-        if (!event.receivable.isPaid) {
-          final diff = event.receivable.amount - event.prevAmount;
-          if (diff != 0) {
-            cashOk = await walletMetricsService.recordCashMovement(
-              walletId: event.receivable.walletId,
-              userId: event.receivable.userId,
-              amount: diff.abs(),
-              isIncome: diff < 0, // daha çok verildi → gider; azaldı → gelir
-              title: 'Alacak güncellendi: ${event.receivable.debtorName}',
-              tag: CashMovementTags.receivable,
-            );
-          }
+        final diff = event.receivable.amount - event.prevAmount;
+        if (diff != 0) {
+          cashOk = await walletMetricsService.recordCashMovements(
+            walletId: event.receivable.walletId,
+            entries: [
+              CashMovement(
+                userId: event.receivable.userId,
+                amount: diff.abs(),
+                isIncome: diff < 0, // daha çok verildi → gider; azaldı → gelir
+                title: 'Alacak güncellendi: ${event.receivable.debtorName}',
+                tag: CashMovementTags.receivable,
+                date: event.receivable.createdAt,
+              ),
+              // Tahsil edilmişse tahsilat bacağı da aynı farkla düzeltilir;
+              // net etki sıfır kalır ama iki kayıt da gerçek tutarı gösterir.
+              // Düzeltme TAHSİLAT tarihine yazılır: bugüne düşerse "net etki
+              // sıfır" yalnız bakiye için doğru olur, alacak ayının gideri
+              // şişer ve bugünün ayına yoktan bir gelir belirirdi.
+              if (event.receivable.isPaid)
+                CashMovement(
+                  userId: event.receivable.userId,
+                  amount: diff.abs(),
+                  isIncome: diff > 0,
+                  title: 'Tahsilat düzeltmesi: ${event.receivable.debtorName}',
+                  tag: CashMovementTags.receivableCollection,
+                  date: event.receivable.collectedAt,
+                ),
+            ],
+          );
         }
         await _safeSyncCredit(event.receivable.walletId);
 
@@ -110,16 +136,24 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
     await result.fold(
       (failure) async => emit(ReceivableError(failure.message)),
       (_) async {
-        // Mutabakat: tahsil edilmemiş alacak silinince verilen para geri döner (gelir).
+        // Mutabakat: tahsil edilmemiş alacak silinince verilen para geri döner.
+        // Ters kayıt paranın ÇIKTIĞI tarihe yazılır (bugüne değil): aksi hâlde
+        // bakiye doğru çıksa bile o ayın gider toplamı şişik kalırdı.
+        // Tahsil edilmişte defter zaten -tutar/+tutar ile sıfırlanmıştır.
         var cashOk = true;
         if (!event.isPaid && event.amount != 0) {
-          cashOk = await walletMetricsService.recordCashMovement(
+          cashOk = await walletMetricsService.recordCashMovements(
             walletId: event.walletId,
-            userId: event.userId,
-            amount: event.amount,
-            isIncome: true,
-            title: 'Alacak silindi',
-            tag: CashMovementTags.receivable,
+            entries: [
+              CashMovement(
+                userId: event.userId,
+                amount: event.amount,
+                isIncome: true,
+                title: 'Alacak silindi',
+                tag: CashMovementTags.receivable,
+                date: event.createdAt,
+              ),
+            ],
           );
         }
         await _safeSyncCredit(event.walletId);
@@ -141,7 +175,12 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
       return;
     }
     emit(ReceivableLoading());
-    final updatedReceivable = event.receivable.copyWith(isPaid: true);
+    // Tahsilat anı kalemin üstünde SAKLANIR: sonraki bir tutar düzeltmesinin
+    // tahsilat bacağı bu tarihe yazılır. Kaydedilmezse düzeltme "bugüne"
+    // düşüyor ve iki bacak farklı dönemlere dağılıyordu.
+    final collectedAt = DateTime.now();
+    final updatedReceivable =
+        event.receivable.copyWith(isPaid: true, collectedAt: collectedAt);
     final result = await updateReceivableUseCase(updatedReceivable);
 
     await result.fold(
@@ -155,6 +194,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
           isIncome: true,
           title: 'Tahsilat: ${event.receivable.debtorName}',
           tag: CashMovementTags.receivableCollection,
+          date: collectedAt,
         );
         await _safeSyncCredit(event.receivable.walletId);
 

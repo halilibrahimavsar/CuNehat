@@ -25,6 +25,7 @@ void main() {
         debtorName: 'Debtor',
         amount: 0,
         dueDate: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026, 1, 1),
       ),
     );
   });
@@ -47,6 +48,7 @@ void main() {
     amount: 1200.0,
     dueDate: testDueDate,
     isPaid: false,
+    createdAt: DateTime(2026, 1, 1),
   );
 
   group('GetReceivablesUseCase', () {
@@ -72,6 +74,7 @@ void main() {
         debtorName: 'Alice',
         amount: 1000.0,
         dueDate: testDueDate,
+        createdAt: DateTime(2026, 1, 1),
       );
 
       String? capturedId;
@@ -99,6 +102,7 @@ void main() {
         debtorName: 'Debtor',
         amount: 100,
         dueDate: testDueDate,
+        createdAt: DateTime(2026, 1, 1),
       );
 
       final result = await updateUseCase(recWithNullId);

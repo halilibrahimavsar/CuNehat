@@ -31,6 +31,19 @@ class TransactionRepositoryImpl implements TransactionsRepository {
   }
 
   @override
+  Future<Either<Failure, void>> addTransactions(
+      List<TransactionEntity> transactions) async {
+    try {
+      await localDatasource.addTransactions(
+        transactions.map(TransactionModel.fromEntity).toList(),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('İşlemler eklenemedi: ${e.toString()}'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> updateTransaction(
       TransactionEntity transaction) async {
     try {

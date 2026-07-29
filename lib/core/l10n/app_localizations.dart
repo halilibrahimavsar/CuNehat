@@ -3241,6 +3241,12 @@ abstract class AppLocalizations {
   /// **'Diğer'**
   String get categoryDiger;
 
+  /// No description provided for @defaultCategoryGroceries.
+  ///
+  /// In tr, this message translates to:
+  /// **'Market'**
+  String get defaultCategoryGroceries;
+
   /// No description provided for @defaultCategoryFood.
   ///
   /// In tr, this message translates to:
@@ -3253,17 +3259,35 @@ abstract class AppLocalizations {
   /// **'Ulaşım'**
   String get defaultCategoryTransport;
 
+  /// No description provided for @defaultCategoryBills.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura'**
+  String get defaultCategoryBills;
+
+  /// No description provided for @defaultCategoryRent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kira'**
+  String get defaultCategoryRent;
+
   /// No description provided for @defaultCategoryShopping.
   ///
   /// In tr, this message translates to:
   /// **'Alışveriş'**
   String get defaultCategoryShopping;
 
-  /// No description provided for @defaultCategoryBills.
+  /// No description provided for @defaultCategoryHealth.
   ///
   /// In tr, this message translates to:
-  /// **'Fatura'**
-  String get defaultCategoryBills;
+  /// **'Sağlık'**
+  String get defaultCategoryHealth;
+
+  /// No description provided for @defaultCategoryEducation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğitim'**
+  String get defaultCategoryEducation;
 
   /// No description provided for @defaultCategoryEntertainment.
   ///
@@ -3277,17 +3301,23 @@ abstract class AppLocalizations {
   /// **'Maaş'**
   String get defaultCategorySalary;
 
-  /// No description provided for @defaultCategoryInvestment.
+  /// No description provided for @defaultCategorySideIncome.
   ///
   /// In tr, this message translates to:
-  /// **'Yatırım'**
-  String get defaultCategoryInvestment;
+  /// **'Ek Gelir'**
+  String get defaultCategorySideIncome;
 
   /// No description provided for @defaultCategoryFreelance.
   ///
   /// In tr, this message translates to:
   /// **'Serbest'**
   String get defaultCategoryFreelance;
+
+  /// No description provided for @defaultCategoryInvestment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım'**
+  String get defaultCategoryInvestment;
 
   /// No description provided for @kategorisiz.
   ///
@@ -5370,6 +5400,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{name} kaydı silinsin mi?'**
   String yatirimSilOnayBaslik(String name);
+
+  /// No description provided for @walletQuickStartTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan hazır!'**
+  String get walletQuickStartTitle;
+
+  /// No description provided for @walletQuickStartSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} oluşturuldu. Nasıl başlamak istersin?'**
+  String walletQuickStartSubtitle(String name);
+
+  /// No description provided for @walletQuickStartImportTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka ekstresi içe aktar'**
+  String get walletQuickStartImportTitle;
+
+  /// No description provided for @walletQuickStartImportSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmiş işlemlerini dosyadan yükle — en hızlı yol'**
+  String get walletQuickStartImportSubtitle;
+
+  /// No description provided for @walletQuickStartManualTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk işlemi elle ekle'**
+  String get walletQuickStartManualTitle;
+
+  /// No description provided for @walletQuickStartManualSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek bir gelir ya da giderle başla'**
+  String get walletQuickStartManualSubtitle;
+
+  /// No description provided for @walletQuickStartSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdilik atla'**
+  String get walletQuickStartSkip;
 }
 
 class _AppLocalizationsDelegate

@@ -15,12 +15,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionSheetHandler {
+  /// [transactionBloc] / [pendingBloc] verilmezse [context]'ten okunur.
+  ///
+  /// Cüzdan yönetimi sheet'i gibi bu bloc'ların ÜSTÜNDE olmayan yüzeylerden
+  /// (kendi route'unda açılır, ana sayfanın ağacında değildir) çağrılırken
+  /// açıkça geçilir. Her ikisi de DI'da factory; ayrı örnekten yazılan işlem
+  /// `TransactionsChangedNotifier` üzerinden ana sayfadaki bloc'a ulaşır.
   static void showSheet({
     required BuildContext context,
     required String userId,
     required String walletId,
     required TransactionTypeModel type,
     TransactionEntity? initialTransaction,
+    TransactionBloc? transactionBloc,
+    PendingRecurringBloc? pendingBloc,
   }) {
     showModalBottomSheet(
       context: context,
@@ -37,17 +45,18 @@ class TransactionSheetHandler {
             Navigator.pop(sheetContext);
 
             // Send to BLoC
+            final txBloc = transactionBloc ?? context.read<TransactionBloc>();
             if (initialTransaction != null) {
-              context.read<TransactionBloc>().add(
-                    UpdateTransactionEvent(
-                      newTransaction: transaction,
-                      previousTransaction: initialTransaction,
-                    ),
-                  );
+              txBloc.add(
+                UpdateTransactionEvent(
+                  newTransaction: transaction,
+                  previousTransaction: initialTransaction,
+                ),
+              );
             } else {
-              context.read<TransactionBloc>().add(
-                    AddTransactionEvent(transaction),
-                  );
+              txBloc.add(
+                AddTransactionEvent(transaction),
+              );
 
               if (recurringFrequency != null) {
                 // Şablonu da kaydet
@@ -66,17 +75,18 @@ class TransactionSheetHandler {
                   amount: transaction.amount,
                   type: type,
                   frequency: recurringFrequency,
-                  nextExecutionDate: _calculateNextDate(
-                      transaction.date, recurringFrequency),
+                  nextExecutionDate:
+                      _calculateNextDate(transaction.date, recurringFrequency),
                   anchorDay: transaction.date.day,
                 );
                 final saveUsecase = getIt<SaveRecurringTransactionUsecase>();
-                final pendingBloc = context.read<PendingRecurringBloc>();
+                final pending =
+                    pendingBloc ?? context.read<PendingRecurringBloc>();
                 // Geçmiş tarihli bir işleme tekrar eklenirse şablon ANINDA
                 // vadesi gelmiş olur; bekleyen liste tazelenmezse hatırlatma
                 // ancak ana sayfa yeniden kurulduğunda çıkardı.
                 saveUsecase(template).then(
-                  (_) => pendingBloc.add(const LoadPendingTransactionsEvent()),
+                  (_) => pending.add(const LoadPendingTransactionsEvent()),
                 );
               }
             }

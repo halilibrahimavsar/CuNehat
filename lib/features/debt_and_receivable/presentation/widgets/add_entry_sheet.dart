@@ -27,6 +27,7 @@ import 'package:showcaseview/showcaseview.dart';
 /// alanlar, gradyan kaydet butonu. Borç = rose, Alacak = emerald.
 class AddEntrySheet extends StatefulWidget {
   final String walletId;
+
   /// Kayıt sahibi kimliği — her zaman bağlı cüzdanın userId'si geçilir;
   /// auth state'inden okumak kilit anında 'unknown_user' yazdırıyordu.
   final String userId;
@@ -58,6 +59,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   bool _isBankLoanMonthly = true;
   bool _includeBankTaxes = false;
   bool _isInstallmentAmortized = true;
+
   /// "Aylık taksit biliyorum" modunda taksit alanını kullanıcı elle değiştirdi
   /// mi. True ise vade/tutar değişse de otomatik öneri ezmez.
   bool _installmentEdited = false;
@@ -77,6 +79,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   DebtType _selectedDebtType = DebtType.bankLoan;
   DateTime _selectedDate = DateTime.now();
   double? _originalAmount;
+
   /// Düzenlemede taksit alanına yazılan prefill metni; kaydederken alan hâlâ
   /// buna eşitse kayıtlı toplam korunur (prefill yuvarlaması toplamı kaydırmasın).
   String? _prefilledInstallmentText;
@@ -133,7 +136,6 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     _amountController.addListener(_maybeAutoFillInstallment);
     _termController.addListener(_maybeAutoFillInstallment);
     _installmentController.addListener(_onInstallmentChanged);
-
   }
 
   @override
@@ -309,8 +311,11 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           dueDate: dueDate,
           expectedTotalAmount: expectedTotal,
         );
-        context.read<DebtBloc>().add(UpdateDebtEvent(updated,
-            prevPrincipal: _originalAmount ?? updated.principalAmount));
+        context.read<DebtBloc>().add(UpdateDebtEvent(
+              updated,
+              prevPrincipal: _originalAmount ?? updated.principalAmount,
+              prevStartDate: widget.debtToEdit!.startDate,
+            ));
       } else {
         final debt = DebtEntity(
           userId: userId,
@@ -358,6 +363,8 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           debtorName: _titleController.text.trim(),
           amount: amount,
           dueDate: _selectedDate,
+          // Silmede ters kayıt bu tarihe yazılır; vade değil, kayıt anı.
+          createdAt: DateTime.now(),
         );
         context.read<ReceivableBloc>().add(AddReceivableEvent(receivable));
       }

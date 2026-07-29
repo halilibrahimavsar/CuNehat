@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -7,7 +9,6 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
-import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
@@ -17,6 +18,7 @@ import 'package:cunehat/features/finance_transactions/domain/services/transactio
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode_segment.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/category_details_bottom_sheet.dart';
@@ -83,7 +85,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   FinanceMode _categoryMode = FinanceMode.compare;
 
   Map<String, IconData> _categoryIcons = {};
+
+  /// `tag` → görünen ad. Kırılım anahtarı hep `tag` (kategori id'si) kalır;
+  /// bu harita yalnız gösterim içindir (bkz. [buildCategoryLabelMap]).
+  Map<String, String> _categoryLabels = {};
   List<BudgetEntity> _budgets = [];
+
+  StreamSubscription<void>? _categoriesSub;
 
   static const _reportService = TransactionReportService();
 
@@ -105,6 +113,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       end: now,
     );
     _loadCategoryIcons();
+    _categoriesSub = getIt<CategoriesChangedNotifier>()
+        .stream
+        .listen((_) => _loadCategoryIcons());
     _loadBudgets();
 
     // Listener yalnız state DEĞİŞİMİNDE tetiklenir; bloc zaten dolu bir
@@ -118,20 +129,25 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     });
   }
 
+  /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
+  ///
+  /// Harita eskiden yalnız initState'te kuruluyordu: sayfa route yığınında
+  /// dururken yapılan bir yeniden adlandırma ancak sayfa yeniden kurulduğunda
+  /// görünüyordu.
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadCategoryIcons() async {
-    final service = widget.categoryRepository;
-    final results = await Future.wait([
-      service.getExpenseCategories(),
-      service.getIncomeCategories(),
-    ]);
+    final categories = await fetchAllCategories(widget.categoryRepository);
     if (!mounted) return;
-    final map = <String, IconData>{};
-    for (final list in results) {
-      for (final c in list) {
-        map[c.id] = AppIcons.getIconData(c.iconName);
-      }
-    }
-    setState(() => _categoryIcons = map);
+    final index = buildCategoryDisplayIndex(context, categories);
+    setState(() {
+      _categoryIcons = index.icons;
+      _categoryLabels = index.labels;
+    });
   }
 
   /// Bütçe limitlerini yükler. `spentAmount` burada kullanılmaz — rapor
@@ -233,6 +249,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       isExpense: isExpense,
       useFullData: useFullData,
       categoryIcons: _categoryIcons,
+      categoryLabels: _categoryLabels,
       dataBuilder: _dataBuilder(context),
     );
   }
@@ -383,9 +400,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                           onCategoryTap: (cat, useFull) =>
                               _openCategoryDetails(cat, true, useFull),
                           budgetProgressFor: dataBuilder.budgetProgressFor,
+                          categoryLabels: _categoryLabels,
                         ),
-                      if (showExpense && showIncome)
-                        const SizedBox(height: 16),
+                      if (showExpense && showIncome) const SizedBox(height: 16),
                       // Gelir kategorileri (giderin altında, dikey yığın)
                       if (showIncome)
                         ReportCategoryChartCard(
@@ -399,6 +416,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                           onCategoryTap: (cat, useFull) =>
                               _openCategoryDetails(cat, false, useFull),
                           budgetProgressFor: dataBuilder.budgetProgressFor,
+                          categoryLabels: _categoryLabels,
                         ),
                     ],
                   ],

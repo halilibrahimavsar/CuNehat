@@ -23,6 +23,7 @@ void main() {
         debtorName: 'fallback',
         amount: 0.0,
         dueDate: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026, 1, 1),
       ),
     );
   });
@@ -41,6 +42,7 @@ void main() {
     debtorName: 'John Doe',
     amount: 1500.0,
     dueDate: dueDate,
+    createdAt: DateTime(2026, 1, 1),
   );
 
   final testModel = ReceivableModel.fromEntity(testEntity);

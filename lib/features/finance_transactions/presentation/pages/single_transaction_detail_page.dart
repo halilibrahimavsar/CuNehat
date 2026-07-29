@@ -27,6 +27,10 @@ class SingleTransactionDetailPage extends StatelessWidget {
   final TransactionWithBalance item;
   final IconData? categoryIcon;
 
+  /// Kategorinin çözülmüş görünen adı (karttan taşınır). null ise `tag`
+  /// l10n'a düşer — sistem etiketleri için doğru davranış budur.
+  final String? categoryLabel;
+
   /// Hero animasyonunun karttaki ikonla eşleşmesi için benzersiz etiket.
   final String heroTag;
 
@@ -35,6 +39,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
     required this.item,
     required this.heroTag,
     this.categoryIcon,
+    this.categoryLabel,
   });
 
   @override
@@ -153,7 +158,8 @@ class SingleTransactionDetailPage extends StatelessWidget {
                       _infoRow(context,
                           icon: Icons.sell_rounded,
                           label: context.l10n.labelKategori,
-                          value: context.translateCategory(t.tag)),
+                          value: categoryLabel ??
+                              context.translateCategory(t.tag)),
                       _divider(scheme),
                       _infoRow(context,
                           icon: Icons.event_rounded,

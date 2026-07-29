@@ -14,6 +14,7 @@ void main() {
       dueDate: dueDate,
       isPaid: false,
       notes: 'Lent money for rent',
+      createdAt: DateTime(2026, 1, 1),
     );
 
     test('fromEntity should return valid ReceivableModel', () {
@@ -38,6 +39,7 @@ void main() {
         dueDate: dueDate,
         isPaid: false,
         notes: 'Lent money for rent',
+        createdAt: DateTime(2026, 1, 1),
       );
       final entityResult = model.toEntity();
       expect(entityResult.id, model.id);
@@ -52,6 +54,7 @@ void main() {
         debtorName: 'John Doe',
         amount: 1500.0,
         dueDate: dueDate,
+        createdAt: DateTime(2026, 1, 1),
       );
       final updated = model.copyWith(debtorName: 'Jane Smith', isPaid: true);
       expect(updated.debtorName, 'Jane Smith');
@@ -68,6 +71,7 @@ void main() {
         dueDate: dueDate,
         isPaid: false,
         notes: 'Lent money for rent',
+        createdAt: DateTime(2026, 1, 1),
       );
       final json = model.toJson();
       expect(json, {
@@ -77,6 +81,9 @@ void main() {
         'debtorName': 'John Doe',
         'amount': 1500.0,
         'dueDate': dueDate.toIso8601String(),
+        'createdAt': DateTime(2026, 1, 1).toIso8601String(),
+        // Henüz tahsil edilmedi → gerçekten null.
+        'collectedAt': null,
         'isPaid': false,
         'notes': 'Lent money for rent',
       });
@@ -90,6 +97,8 @@ void main() {
         'debtorName': 'John Doe',
         'amount': 1500.0,
         'dueDate': dueDate.toIso8601String(),
+        'createdAt': DateTime(2026, 1, 1).toIso8601String(),
+        'collectedAt': null,
         'isPaid': false,
         'notes': 'Lent money for rent',
       };
@@ -100,6 +109,29 @@ void main() {
       expect(model.dueDate, dueDate);
       expect(model.isPaid, false);
       expect(model.notes, 'Lent money for rent');
+      expect(model.createdAt, DateTime(2026, 1, 1));
+      expect(model.collectedAt, isNull);
+    });
+
+    test('tahsil edilmiş alacakta collectedAt gidiş-dönüş korunur', () {
+      // Tutar düzeltmesinin tahsilat bacağı bu tarihe yazılır; yedekten
+      // dönerken kaybolursa düzeltme yine "bugüne" düşer.
+      final model = ReceivableModel(
+        id: 'rec_1',
+        userId: 'user_1',
+        walletId: 'wallet_1',
+        debtorName: 'John Doe',
+        amount: 1500.0,
+        dueDate: dueDate,
+        createdAt: DateTime(2026, 1, 1),
+        collectedAt: DateTime(2026, 3, 15),
+        isPaid: true,
+      );
+
+      final restored = ReceivableModel.fromJson(model.toJson());
+
+      expect(restored.collectedAt, DateTime(2026, 3, 15));
+      expect(restored.isPaid, isTrue);
     });
   });
 }

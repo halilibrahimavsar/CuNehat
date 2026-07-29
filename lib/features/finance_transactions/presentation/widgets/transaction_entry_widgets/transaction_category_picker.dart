@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 
@@ -179,7 +180,7 @@ class _CategoryTile extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              category.id,
+              context.categoryLabel(category),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

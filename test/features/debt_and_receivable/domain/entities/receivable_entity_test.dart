@@ -13,6 +13,7 @@ void main() {
       dueDate: dueDate,
       isPaid: false,
       notes: 'Lent money for rent',
+      createdAt: DateTime(2026, 1, 1),
     );
 
     test('supports value comparisons (Equatable)', () {
@@ -26,6 +27,7 @@ void main() {
           dueDate: dueDate,
           isPaid: false,
           notes: 'Lent money for rent',
+          createdAt: DateTime(2026, 1, 1),
         ),
         ReceivableEntity(
           id: 'rec_1',
@@ -36,6 +38,7 @@ void main() {
           dueDate: dueDate,
           isPaid: false,
           notes: 'Lent money for rent',
+          createdAt: DateTime(2026, 1, 1),
         ),
       );
     });

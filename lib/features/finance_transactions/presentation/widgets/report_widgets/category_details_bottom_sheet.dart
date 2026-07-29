@@ -24,6 +24,9 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   final Map<String, IconData> categoryIcons;
   final ReportCategoryDataBuilder dataBuilder;
 
+  /// `tag` → görünen ad; kırılım anahtarı hep tag kalır (bkz. chart card).
+  final Map<String, String> categoryLabels;
+
   const CategoryDetailsBottomSheet({
     super.key,
     required this.initialCategory,
@@ -31,6 +34,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required this.useFullData,
     required this.categoryIcons,
     required this.dataBuilder,
+    this.categoryLabels = const {},
   });
 
   static void show({
@@ -40,6 +44,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required bool useFullData,
     required Map<String, IconData> categoryIcons,
     required ReportCategoryDataBuilder dataBuilder,
+    Map<String, String> categoryLabels = const {},
   }) {
     // Modal route sayfanın provider'ının altında değil, Overlay'de kardeşi
     // olarak açılır → bloc elle taşınmalı.
@@ -58,6 +63,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             useFullData: useFullData,
             categoryIcons: categoryIcons,
             dataBuilder: dataBuilder,
+            categoryLabels: categoryLabels,
           ),
         );
       },
@@ -151,7 +157,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            context.translateCategory(updatedCategory.name),
+                            updatedCategory.labelIn(context, categoryLabels),
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -191,6 +197,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                             ? FinanceMode.expense
                             : FinanceMode.income,
                         categoryIcons: categoryIcons,
+                        categoryLabels: categoryLabels,
                         showDayEndBalance: false,
                       ),
               ),

@@ -623,13 +623,14 @@ void main() {
             )).thenAnswer((_) async => const Right([]));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const DeleteInvestmentEvent(
+      act: (bloc) => bloc.add(DeleteInvestmentEvent(
         id: 'inv_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         currentValue: 1200.0,
         recordSale: true,
+        dateAdded: DateTime(2026, 1, 1),
       )),
       expect: () => [
         InvestmentLoading(),
@@ -640,17 +641,13 @@ void main() {
     );
 
     blocTest<InvestmentBloc, InvestmentState>(
-      'emits [InvestmentLoading, InvestmentActionSuccess] and records cash movement (income) for cost amount (correction) when recordSale is false and amount > 0',
+      'düzeltme ters kaydı KAYIT TARİHİNE yazılır (satış değil)',
       build: () {
         when(() => mockDeleteUseCase('inv_123'))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
-              walletId: 'wallet_123',
-              userId: 'user_123',
-              amount: 1000.0, // amount is 1000.0
-              isIncome: true,
-              title: 'Yatırım kaydı silindi (düzeltme)',
-              tag: CashMovementTags.investmentCorrection,
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
@@ -660,13 +657,14 @@ void main() {
             )).thenAnswer((_) async => const Right([]));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const DeleteInvestmentEvent(
+      act: (bloc) => bloc.add(DeleteInvestmentEvent(
         id: 'inv_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         currentValue: 1200.0,
         recordSale: false,
+        dateAdded: DateTime(2026, 1, 1),
       )),
       expect: () => [
         InvestmentLoading(),
@@ -674,6 +672,19 @@ void main() {
         InvestmentLoading(),
         const InvestmentLoaded([], totalAmount: 0.0),
       ],
+      verify: (_) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(1));
+        expect(entries.single.amount, 1000.0);
+        expect(entries.single.isIncome, isTrue);
+        expect(entries.single.tag, CashMovementTags.investmentCorrection);
+        // Satış BUGÜN olan gerçek bir olaydır; düzeltme ise geçmişteki alımı
+        // iptal eder → kaydın açılış tarihine yazılır.
+        expect(entries.single.date, DateTime(2026, 1, 1));
+      },
     );
 
     blocTest<InvestmentBloc, InvestmentState>(
@@ -697,13 +708,14 @@ void main() {
             )).thenAnswer((_) async => const Right([]));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const DeleteInvestmentEvent(
+      act: (bloc) => bloc.add(DeleteInvestmentEvent(
         id: 'inv_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         currentValue: 1200.0,
         recordSale: true,
+        dateAdded: DateTime(2026, 1, 1),
       )),
       expect: () => [
         InvestmentLoading(),
@@ -727,13 +739,14 @@ void main() {
             )).thenAnswer((_) async => const Right([]));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const DeleteInvestmentEvent(
+      act: (bloc) => bloc.add(DeleteInvestmentEvent(
         id: 'inv_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 0.0,
         currentValue: 0.0,
         recordSale: false,
+        dateAdded: DateTime(2026, 1, 1),
       )),
       expect: () => [
         InvestmentLoading(),
@@ -760,13 +773,14 @@ void main() {
             (_) async => const Left(ServerFailure('Delete failed')));
         return investmentBloc;
       },
-      act: (bloc) => bloc.add(const DeleteInvestmentEvent(
+      act: (bloc) => bloc.add(DeleteInvestmentEvent(
         id: 'inv_123',
         userId: 'user_123',
         walletId: 'wallet_123',
         amount: 1000.0,
         currentValue: 1200.0,
         recordSale: true,
+        dateAdded: DateTime(2026, 1, 1),
       )),
       expect: () => [
         InvestmentLoading(),

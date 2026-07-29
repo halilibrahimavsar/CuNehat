@@ -44,6 +44,29 @@ class CashMovementTags {
   }
 }
 
+/// Deftere yazılacak tek bir nakit hareketi.
+///
+/// [date] geçmişteki bir kaydı TERSİNE ÇEVİRİRKEN kritik: ters kayıt, iptal
+/// ettiği hareketin kendi tarihine yazılmazsa bakiye doğru çıksa bile o ayın
+/// raporuna hiç yaşanmamış bir gelir/gider düşer. `null` ise "şimdi".
+class CashMovement {
+  final String userId;
+  final double amount;
+  final bool isIncome;
+  final String title;
+  final String tag;
+  final DateTime? date;
+
+  const CashMovement({
+    required this.userId,
+    required this.amount,
+    required this.isIncome,
+    required this.title,
+    required this.tag,
+    this.date,
+  });
+}
+
 /// Kasıtlı cross-feature orkestratör: cüzdan defteri (balance/debt/credit/
 /// investment) birden çok feature'ın repolarından beslenir; bu yüzden core'da
 /// yaşar ve feature repolarına bağımlılığı mimari bir kabul olarak belgelidir.
@@ -122,36 +145,86 @@ class WalletMetricsService {
     required String title,
     required String tag,
     DateTime? date,
+  }) =>
+      _writeCashMovements(
+        walletId: walletId,
+        entries: [
+          CashMovement(
+            userId: userId,
+            amount: amount,
+            isIncome: isIncome,
+            title: title,
+            tag: tag,
+            date: date,
+          ),
+        ],
+      );
+
+  /// Birden çok nakit hareketini TEK defter senkronuyla yazar.
+  ///
+  /// Bir borcun silinmesi gibi işlemler N+1 ters kayıt üretir; bunları tek tek
+  /// [recordCashMovement] ile yazmak her kayıt için ayrı bir defter okuma +
+  /// bakiye yazma turu demekti. Burada işlemler yazılır, dinleyiciler bir kez
+  /// uyarılır ve bakiye bir kez yeniden hesaplanır.
+  ///
+  /// Herhangi bir işlem yazılamazsa `false` döner; yazılabilenler geri
+  /// alınmaz — bakiye zaten defterden türetildiği için tutarlı kalır.
+  Future<bool> recordCashMovements({
+    required String walletId,
+    required List<CashMovement> entries,
+  }) =>
+      _serialized(
+        walletId,
+        () => _writeCashMovements(walletId: walletId, entries: entries),
+      );
+
+  Future<bool> _writeCashMovements({
+    required String walletId,
+    required List<CashMovement> entries,
   }) async {
-    final tx = TransactionEntity(
-      id: UidGenerator.generateV7(),
-      userId: userId,
-      walletId: walletId,
-      title: title,
-      tag: tag,
-      // Kuplajla gelen tutarlar (borç farkı, satış bedeli vb.) hesaplanmış
-      // olabilir; deftere her zaman kuruş-temiz yazılır.
-      amount: roundToCents(amount),
-      date: date ?? DateTime.now(),
-      type:
-          isIncome ? TransactionTypeModel.income : TransactionTypeModel.expense,
-      isSystem: true,
-    );
+    if (entries.isEmpty) return true;
+
     try {
-      final addResult = await transactionsRepository.addTransaction(tx);
-      final added = addResult.fold(
+      final transactions = [
+        for (final e in entries)
+          TransactionEntity(
+            id: UidGenerator.generateV7(),
+            userId: e.userId,
+            walletId: walletId,
+            title: e.title,
+            tag: e.tag,
+            // Kuplajla gelen tutarlar (borç farkı, satış bedeli vb.)
+            // hesaplanmış olabilir; deftere her zaman kuruş-temiz yazılır.
+            amount: roundToCents(e.amount),
+            date: e.date ?? DateTime.now(),
+            type: e.isIncome
+                ? TransactionTypeModel.income
+                : TransactionTypeModel.expense,
+            isSystem: true,
+          ),
+      ];
+
+      // TEK toplu yazım. Kayıt başına ayrı `addTransaction` çağrısı, her biri
+      // kendi await turu ve disk flush'ı olan N tur demekti: 36 taksitli bir
+      // borcun silinmesi 37 ardışık yazım yapıyor, silme diyaloğu o süre
+      // boyunca bloklu bekliyordu.
+      final addResult = await transactionsRepository.addTransactions(
+        transactions,
+      );
+      final allWritten = addResult.fold(
         (failure) {
           debugPrint(
-              'recordCashMovement: işlem yazılamadı: ${failure.message}');
+              'recordCashMovement: işlemler yazılamadı: ${failure.message}');
           return false;
         },
         (_) => true,
       );
-      if (!added) return false;
+
       // Kuplajla yazılan sistem işlemi de defteri değiştirir; işlem sayfası
       // ve diğer dinleyiciler canlı yenilensin.
       transactionsChangedNotifier.notify();
-      return await _syncBalanceImpl(walletId);
+      final synced = await _syncBalanceImpl(walletId);
+      return allWritten && synced;
     } catch (e) {
       debugPrint('recordCashMovement başarısız: $e');
       return false;

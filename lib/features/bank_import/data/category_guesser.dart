@@ -36,12 +36,15 @@ class CategorySuggestion extends Equatable {
 /// onaysız hiçbir kategori yaratılmaz (bkz. kullanıcı talebi 2026-07-21).
 @lazySingleton
 class CategoryGuesser {
-  /// Grup adları mevcut varsayılan kategori adlarıyla (`CategoryModel`)
-  /// birebir eşleşecek şekilde seçildi ki kurulumdan hiç dokunulmamış
-  /// kategori listesinde doğrudan tutsun. `Yatırım`/`Sağlık` varsayılanda
-  /// YOK — bunlar yalnız [suggestNewCategories] üzerinden, onaylanırsa ortaya
-  /// çıkar (gerçek Akbank ekstresi örneğinde "Midas Menkul Değerler" transferi
-  /// hiçbir varsayılana uymadığı için eklendi).
+  /// Grup adları varsayılan kategori **id**'leriyle (`CategoryModel`) birebir
+  /// eşleşecek şekilde seçildi ki kurulumdan hiç dokunulmamış kategori
+  /// listesinde doğrudan tutsun. Eşleşme id üzerinden olduğu için kullanıcının
+  /// kategoriyi yeniden adlandırması (`displayName`) tahmini bozmaz.
+  ///
+  /// Gider tarafındaki `Yatırım` varsayılanda YOK (yalnız gelirde var); bu grup
+  /// yalnız [suggestNewCategories] üzerinden, onaylanırsa ortaya çıkar (gerçek
+  /// Akbank ekstresi örneğinde "Midas Menkul Değerler" transferi hiçbir
+  /// varsayılana uymadığı için eklendi).
   static const Map<String, List<String>> _expenseGroups = {
     'Yemek': [
       'starbucks',
@@ -88,7 +91,10 @@ class CategoryGuesser {
       'motorin',
       ' lpg ',
     ],
-    'Alışveriş': [
+    // Market (gıda/temel ihtiyaç) ile Alışveriş (giyim/elektronik/genel)
+    // bilerek AYRI: ikisi tek kovada toplanınca aylık gıda harcaması
+    // görünmez oluyor ve o kaleme bütçe koymak imkânsızlaşıyordu.
+    'Market': [
       'migros',
       'carrefour',
       'sok market',
@@ -96,6 +102,12 @@ class CategoryGuesser {
       ' a101 ',
       ' bim ',
       'market',
+      'getir',
+      'banabi',
+      'tarim kredi',
+      'metro market',
+    ],
+    'Alışveriş': [
       'teknosa',
       'mediamarkt',
       'lc waikiki',
@@ -112,7 +124,15 @@ class CategoryGuesser {
       'rossmann',
       ' ikea ',
       'decathlon',
-      'getir',
+    ],
+    'Kira': ['kira odeme', ' kira ', 'kiraci'],
+    'Eğitim': [
+      'universite',
+      'okul taksit',
+      ' dershane ',
+      ' kurs ',
+      'egitim',
+      'yayinlari',
     ],
     'Fatura': [
       'elektrik',
@@ -151,19 +171,24 @@ class CategoryGuesser {
 
   static const Map<String, List<String>> _incomeGroups = {
     'Maaş': ['maas', 'salary', 'bordro'],
+    'Ek Gelir': ['ek gelir', 'prim odemesi', 'ikramiye'],
   };
 
   /// Yeni kategori oluşturulması gerektiğinde kullanılacak ikon (bkz.
   /// `AppIcons` — burada yalnız isim tutulur, widget bağımlılığı yok).
   static const Map<String, String> _groupIcons = {
+    'Market': 'shopping_cart',
     'Yemek': 'restaurant',
     'Ulaşım': 'directions_bus',
-    'Alışveriş': 'shopping_bag',
     'Fatura': 'receipt_long',
+    'Kira': 'home',
+    'Alışveriş': 'shopping_bag',
+    'Sağlık': 'medical_services',
+    'Eğitim': 'school',
     'Eğlence': 'movie',
     'Yatırım': 'trending_up',
-    'Sağlık': 'medical_services',
     'Maaş': 'payments',
+    'Ek Gelir': 'savings',
   };
 
   /// [description] içinde bilinen bir anahtar kelime bulunursa VE grup adı

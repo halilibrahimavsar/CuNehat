@@ -45,12 +45,17 @@ class DeleteReceivableEvent extends ReceivableEvent {
   final double amount; // Wallet senkronizasyonu için
   final bool isPaid; // Mutabakat: tahsil edilmemişse silmede para geri döner
 
+  /// Alacağın deftere yazıldığı tarih; ters kayıt buraya yazılır ki para
+  /// verilen ay kendi içinde sıfırlansın.
+  final DateTime createdAt;
+
   const DeleteReceivableEvent({
     required this.id,
     required this.userId,
     required this.walletId,
     required this.amount,
     required this.isPaid,
+    required this.createdAt,
   });
 
   @override

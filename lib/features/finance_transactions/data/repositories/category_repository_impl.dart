@@ -1,3 +1,4 @@
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -8,7 +9,11 @@ import 'package:injectable/injectable.dart';
 class CategoryRepositoryImpl implements CategoryRepository {
   final CategoryService service;
 
-  CategoryRepositoryImpl(this.service);
+  /// Kategori listesini DEĞİŞTİREN her yol buradan geçer; açık sayfaların
+  /// ikon/ad indeksini tazeleyebilmesi için tek uyarı noktası burasıdır.
+  final CategoriesChangedNotifier changedNotifier;
+
+  CategoryRepositoryImpl(this.service, this.changedNotifier);
 
   @override
   Future<List<CategoryEntity>> getExpenseCategories() async =>
@@ -32,14 +37,28 @@ class CategoryRepositoryImpl implements CategoryRepository {
           .toList();
 
   @override
-  Future<void> addCategory(CategoryEntity category) =>
-      service.addCategory(CategoryModel.fromEntity(category));
+  Future<void> addCategory(
+    CategoryEntity category, {
+    Map<String, String> displayLabels = const {},
+  }) async {
+    await service.addCategory(CategoryModel.fromEntity(category),
+        displayLabels: displayLabels);
+    changedNotifier.notify();
+  }
 
   @override
-  Future<void> updateCategory(CategoryEntity category) =>
-      service.updateCategory(CategoryModel.fromEntity(category));
+  Future<void> updateCategory(
+    CategoryEntity category, {
+    Map<String, String> displayLabels = const {},
+  }) async {
+    await service.updateCategory(CategoryModel.fromEntity(category),
+        displayLabels: displayLabels);
+    changedNotifier.notify();
+  }
 
   @override
-  Future<void> deleteCategory(String categoryId, bool isExpense) =>
-      service.deleteCategory(categoryId, isExpense);
+  Future<void> deleteCategory(String categoryId, bool isExpense) async {
+    await service.deleteCategory(categoryId, isExpense);
+    changedNotifier.notify();
+  }
 }

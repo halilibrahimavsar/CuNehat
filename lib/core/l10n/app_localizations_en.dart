@@ -1738,16 +1738,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryDiger => 'Other';
 
   @override
+  String get defaultCategoryGroceries => 'Groceries';
+
+  @override
   String get defaultCategoryFood => 'Food';
 
   @override
   String get defaultCategoryTransport => 'Transport';
 
   @override
+  String get defaultCategoryBills => 'Bills';
+
+  @override
+  String get defaultCategoryRent => 'Rent';
+
+  @override
   String get defaultCategoryShopping => 'Shopping';
 
   @override
-  String get defaultCategoryBills => 'Bills';
+  String get defaultCategoryHealth => 'Health';
+
+  @override
+  String get defaultCategoryEducation => 'Education';
 
   @override
   String get defaultCategoryEntertainment => 'Entertainment';
@@ -1756,10 +1768,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get defaultCategorySalary => 'Salary';
 
   @override
-  String get defaultCategoryInvestment => 'Investment';
+  String get defaultCategorySideIncome => 'Side Income';
 
   @override
   String get defaultCategoryFreelance => 'Freelance';
+
+  @override
+  String get defaultCategoryInvestment => 'Investment';
 
   @override
   String get kategorisiz => 'Uncategorized';
@@ -2966,4 +2981,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String yatirimSilOnayBaslik(String name) {
     return 'Delete the $name record?';
   }
+
+  @override
+  String get walletQuickStartTitle => 'Wallet ready!';
+
+  @override
+  String walletQuickStartSubtitle(String name) {
+    return '$name was created. How would you like to start?';
+  }
+
+  @override
+  String get walletQuickStartImportTitle => 'Import bank statement';
+
+  @override
+  String get walletQuickStartImportSubtitle =>
+      'Load your past transactions from a file — the fastest way';
+
+  @override
+  String get walletQuickStartManualTitle => 'Add the first transaction';
+
+  @override
+  String get walletQuickStartManualSubtitle =>
+      'Start with a single income or expense';
+
+  @override
+  String get walletQuickStartSkip => 'Skip for now';
 }

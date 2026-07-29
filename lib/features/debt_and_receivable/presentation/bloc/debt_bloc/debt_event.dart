@@ -26,10 +26,20 @@ class AddDebtEvent extends DebtEvent {
 class UpdateDebtEvent extends DebtEvent {
   final DebtEntity debt;
   final double prevPrincipal; // mutabakat için düzenleme öncesi anapara
-  const UpdateDebtEvent(this.debt, {required this.prevPrincipal});
+
+  /// Düzenleme öncesi başlangıç tarihi. Anapara hareketi bu tarihte duruyor;
+  /// tarih taşındıysa kayıt eski dönemde bırakılamaz (silmedeki ters kayıt
+  /// YENİ tarihe yazılır ve iki dönem birden bozulurdu).
+  final DateTime prevStartDate;
+
+  const UpdateDebtEvent(
+    this.debt, {
+    required this.prevPrincipal,
+    required this.prevStartDate,
+  });
 
   @override
-  List<Object?> get props => [debt, prevPrincipal];
+  List<Object?> get props => [debt, prevPrincipal, prevStartDate];
 }
 
 /// Borca ödeme yapıldığında: güncel borcu (yeni payment eklenmiş) kaydeder ve
@@ -37,10 +47,18 @@ class UpdateDebtEvent extends DebtEvent {
 class PayDebtEvent extends DebtEvent {
   final DebtEntity debt;
   final double paymentAmount;
-  const PayDebtEvent(this.debt, this.paymentAmount);
+
+  /// Kullanıcının seçtiği ödeme tarihi. Gider bu tarihe yazılır; silmedeki
+  /// ters kayıt da `Payment.date`'i kullandığından iki bacak aynı dönemde
+  /// kapanır. (Bugüne yazılırsa geçmiş tarihli ödeme bir dönemde gidersiz
+  /// iade, başka dönemde iadesiz gider bırakıyordu.)
+  final DateTime paymentDate;
+
+  const PayDebtEvent(this.debt, this.paymentAmount,
+      {required this.paymentDate});
 
   @override
-  List<Object?> get props => [debt, paymentAmount];
+  List<Object?> get props => [debt, paymentAmount, paymentDate];
 }
 
 class DeleteDebtEvent extends DebtEvent {
@@ -48,20 +66,30 @@ class DeleteDebtEvent extends DebtEvent {
   final String userId;
   final String
       walletId; // Silme işleminden sonra listeyi yenilemek için gerekli
-  // Mutabakat için: net nakit etkisi = principal - totalPaid (geri alınır).
+
+  /// Mutabakat için: anapara eklendiğinde yazılan gelir bu tutardaydı.
   final double principalAmount;
-  final double totalPaidAmount;
+
+  /// Anaparanın deftere yazıldığı tarih; ters kaydı aynı döneme oturtur.
+  final DateTime startDate;
+
+  /// Her ödeme kendi tarihinde tersine çevrilir — toplu tutar yetmez, aksi
+  /// hâlde geçmiş ayların gider toplamları bozuk kalırdı.
+  final List<Payment> payments;
 
   /// Anapara eklenirken bakiyeye gelir yazıldı mı (ürün borcunda false);
   /// geri alma hesabı buna göre anaparayı sayar ya da saymaz.
   final bool principalToWallet;
-  const DeleteDebtEvent(
-      {required this.id,
-      required this.userId,
-      required this.walletId,
-      required this.principalAmount,
-      required this.totalPaidAmount,
-      this.principalToWallet = true});
+
+  const DeleteDebtEvent({
+    required this.id,
+    required this.userId,
+    required this.walletId,
+    required this.principalAmount,
+    required this.startDate,
+    this.payments = const [],
+    this.principalToWallet = true,
+  });
 
   @override
   List<Object?> get props => [id, walletId];

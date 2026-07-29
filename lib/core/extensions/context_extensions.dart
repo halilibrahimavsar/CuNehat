@@ -131,25 +131,44 @@ extension LocalizationX on BuildContext {
     }
   }
 
-  /// Translates default transaction categories
+  /// Varsayılan kategori id'sini görünen ada çevirir.
+  ///
+  /// Kategori id'leri opak anahtardır (deftere `TransactionEntity.tag` olarak
+  /// bu hâliyle yazılır); kullanıcıya gösterilmeden önce buradan geçmeleri
+  /// gerekir. Bilinmeyen bir id — özel kategori, sistem etiketi ("Borç",
+  /// "Transfer") ya da silinmiş kategoriden kalan tag — olduğu gibi döner.
+  ///
+  /// Kullanıcının yeniden adlandırdığı kategorilerde bu değil,
+  /// `CategoryEntity.displayName` geçerlidir; ikisini birlikte çözen sarmalayıcı
+  /// için bkz. `context.categoryLabel`.
   String translateCategory(String categoryName) {
     switch (categoryName) {
+      case 'Market':
+        return l10n.defaultCategoryGroceries;
       case 'Yemek':
         return l10n.defaultCategoryFood;
       case 'Ulaşım':
         return l10n.defaultCategoryTransport;
-      case 'Alışveriş':
-        return l10n.defaultCategoryShopping;
       case 'Fatura':
         return l10n.defaultCategoryBills;
+      case 'Kira':
+        return l10n.defaultCategoryRent;
+      case 'Alışveriş':
+        return l10n.defaultCategoryShopping;
+      case 'Sağlık':
+        return l10n.defaultCategoryHealth;
+      case 'Eğitim':
+        return l10n.defaultCategoryEducation;
       case 'Eğlence':
         return l10n.defaultCategoryEntertainment;
       case 'Maaş':
         return l10n.defaultCategorySalary;
-      case 'Yatırım':
-        return l10n.defaultCategoryInvestment;
+      case 'Ek Gelir':
+        return l10n.defaultCategorySideIncome;
       case 'Serbest':
         return l10n.defaultCategoryFreelance;
+      case 'Yatırım':
+        return l10n.defaultCategoryInvestment;
       default:
         return categoryName;
     }

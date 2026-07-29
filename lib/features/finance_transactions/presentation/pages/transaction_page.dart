@@ -1,6 +1,7 @@
+import 'dart:async';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
-import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -8,6 +9,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -67,6 +69,10 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// Kategori adı (tag) → ikon. İşlem kartlarında gerçek kategori glyph'i için.
   Map<String, IconData> _categoryIcons = {};
 
+  /// `tag` → görünen ad; kart/liste yalnız gösterim için kullanır, gruplama
+  /// ve filtre anahtarı hep `tag` kalır.
+  Map<String, String> _categoryLabels = {};
+
   /// Liste ↔ Takvim görünüm modu (saf sunum; filtre cubit'ine taşımaya gerek yok).
   /// Varsayılan Takvim: uygulama açılışta İşlemler (orta) görünümüne geldiğinden
   /// kullanıcı doğrudan takvimi görür.
@@ -80,27 +86,37 @@ class _TransactionsViewState extends State<_TransactionsView> {
   List<GlobalKey> get _tourKeys =>
       [_filterBarKey, _viewToggleKey, OnboardingKeys.addActionSlider];
 
+  StreamSubscription<void>? _categoriesSub;
+
   @override
   void initState() {
     super.initState();
     _loadData();
     _loadCategoryIcons();
+    _categoriesSub = getIt<CategoriesChangedNotifier>()
+        .stream
+        .listen((_) => _loadCategoryIcons());
   }
 
+  /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
+  ///
+  /// Harita eskiden yalnız initState'te kuruluyordu: sayfa route yığınında
+  /// dururken yapılan bir yeniden adlandırma ancak sayfa yeniden kurulduğunda
+  /// görünüyordu.
   Future<void> _loadCategoryIcons() async {
-    final service = getIt<CategoryRepository>();
-    final results = await Future.wait([
-      service.getExpenseCategories(),
-      service.getIncomeCategories(),
-    ]);
+    final categories = await fetchAllCategories(getIt<CategoryRepository>());
     if (!mounted) return;
-    final map = <String, IconData>{};
-    for (final list in results) {
-      for (final c in list) {
-        map[c.id] = AppIcons.getIconData(c.iconName);
-      }
-    }
-    setState(() => _categoryIcons = map);
+    final index = buildCategoryDisplayIndex(context, categories);
+    setState(() {
+      _categoryIcons = index.icons;
+      _categoryLabels = index.labels;
+    });
+  }
+
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -347,6 +363,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                                 allTransactions, filterState,
                                 applyDateWindow: false),
                             categoryIcons: _categoryIcons,
+                            categoryLabels: _categoryLabels,
                           )
                         : filteredData.isEmpty
                             ? _buildEmptyState(
@@ -355,6 +372,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                                 transactions: filteredData,
                                 mode: filterState.viewFilter.financeMode,
                                 categoryIcons: _categoryIcons,
+                                categoryLabels: _categoryLabels,
                               ),
               ),
             );

@@ -7,6 +7,7 @@ import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -267,7 +268,8 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
           ),
         ),
         title: Text(
-          category.id,
+          // id opak anahtar; ekrana daima çözümlenmiş ad basılır.
+          context.categoryLabel(category),
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         trailing: category.isDefault && !isDefaultTab
@@ -363,7 +365,8 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     final confirmed = await ConfirmDialog.show(
       context,
       title: context.l10n.kategoriSilTitle,
-      message: context.l10n.kategoriSilConfirmMessage(category.id),
+      message: context.l10n
+          .kategoriSilConfirmMessage(context.categoryLabel(category)),
       confirmText: context.l10n.sil,
       danger: true,
     );

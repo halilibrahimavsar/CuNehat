@@ -777,14 +777,19 @@
   "categoryHediyeVeBagis": "Gifts & Donation",
   "categoryHizmetler": "Services",
   "categoryDiger": "Other",
+  "defaultCategoryGroceries": "Groceries",
   "defaultCategoryFood": "Food",
   "defaultCategoryTransport": "Transport",
-  "defaultCategoryShopping": "Shopping",
   "defaultCategoryBills": "Bills",
+  "defaultCategoryRent": "Rent",
+  "defaultCategoryShopping": "Shopping",
+  "defaultCategoryHealth": "Health",
+  "defaultCategoryEducation": "Education",
   "defaultCategoryEntertainment": "Entertainment",
   "defaultCategorySalary": "Salary",
-  "defaultCategoryInvestment": "Investment",
+  "defaultCategorySideIncome": "Side Income",
   "defaultCategoryFreelance": "Freelance",
+  "defaultCategoryInvestment": "Investment",
   "kategorisiz": "Uncategorized",
   "detailLabelTarih": "Date",
   "detailLabelSaat": "Time",
@@ -1445,6 +1450,20 @@
   },
   "yatirimSilOnayBaslik": "Delete the {name} record?",
   "@yatirimSilOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "walletQuickStartTitle": "Wallet ready!",
+  "walletQuickStartSubtitle": "{name} was created. How would you like to start?",
+  "walletQuickStartImportTitle": "Import bank statement",
+  "walletQuickStartImportSubtitle": "Load your past transactions from a file — the fastest way",
+  "walletQuickStartManualTitle": "Add the first transaction",
+  "walletQuickStartManualSubtitle": "Start with a single income or expense",
+  "walletQuickStartSkip": "Skip for now",
+  "@walletQuickStartSubtitle": {
     "placeholders": {
       "name": {
         "type": "String"

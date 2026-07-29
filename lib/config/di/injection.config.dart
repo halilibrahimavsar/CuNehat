@@ -16,6 +16,8 @@ import 'package:cunehat/core/notifications/notification_permission_channel.dart'
     as _i477;
 import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart' as _i371;
+import 'package:cunehat/core/services/categories_changed_notifier.dart'
+    as _i520;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
 import 'package:cunehat/core/services/data_serialization_service.dart' as _i348;
 import 'package:cunehat/core/services/exchange_rate_service.dart' as _i500;
@@ -215,6 +217,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i344.StatementOcrService>(
         () => _i344.StatementOcrService());
     gh.lazySingleton<_i373.PdfRasterizer>(() => _i373.PdfRasterizer());
+    gh.lazySingleton<_i520.CategoriesChangedNotifier>(
+      () => _i520.CategoriesChangedNotifier(),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(
@@ -231,8 +237,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i931.NotificationLocalizer(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i477.NotificationPermissionChannel>(() =>
         _i477.NotificationPermissionChannel(gh<_i460.SharedPreferences>()));
-    gh.singleton<_i896.CategoryRepository>(
-        () => _i20.CategoryRepositoryImpl(gh<_i1002.CategoryService>()));
     gh.lazySingleton<_i500.ExchangeRateService>(() => _i500.ExchangeRateService(
           client: gh<_i519.Client>(),
           prefs: gh<_i460.SharedPreferences>(),
@@ -264,6 +268,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
           gh<_i698.LocalAuthRepository>(),
           gh<_i460.SharedPreferences>(),
+        ));
+    gh.singleton<_i896.CategoryRepository>(() => _i20.CategoryRepositoryImpl(
+          gh<_i1002.CategoryService>(),
+          gh<_i520.CategoriesChangedNotifier>(),
         ));
     gh.factory<_i207.WalletCreateUseCase>(
         () => _i207.WalletCreateUseCase(gh<_i504.WalletRepository>()));

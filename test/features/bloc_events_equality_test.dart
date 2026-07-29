@@ -114,33 +114,37 @@ void main() {
     });
 
     test('UpdateDebtEvent props', () {
-      final e1 = UpdateDebtEvent(debt, prevPrincipal: 1000.0);
-      final e2 = UpdateDebtEvent(debt, prevPrincipal: 1000.0);
+      final start = DateTime(2026, 1, 10);
+      final e1 =
+          UpdateDebtEvent(debt, prevPrincipal: 1000.0, prevStartDate: start);
+      final e2 =
+          UpdateDebtEvent(debt, prevPrincipal: 1000.0, prevStartDate: start);
       expect(e1, e2);
-      expect(e1.props, [debt, 1000.0]);
+      expect(e1.props, [debt, 1000.0, start]);
     });
 
     test('PayDebtEvent props', () {
-      final e1 = PayDebtEvent(debt, 500.0);
-      final e2 = PayDebtEvent(debt, 500.0);
+      final payDate = DateTime(2026, 3, 5);
+      final e1 = PayDebtEvent(debt, 500.0, paymentDate: payDate);
+      final e2 = PayDebtEvent(debt, 500.0, paymentDate: payDate);
       expect(e1, e2);
-      expect(e1.props, [debt, 500.0]);
+      expect(e1.props, [debt, 500.0, payDate]);
     });
 
     test('DeleteDebtEvent props', () {
-      const e1 = DeleteDebtEvent(
+      final e1 = DeleteDebtEvent(
         id: 'd1',
         userId: 'u1',
         walletId: 'w1',
         principalAmount: 1000.0,
-        totalPaidAmount: 0.0,
+        startDate: DateTime(2026, 1, 1),
       );
-      const e2 = DeleteDebtEvent(
+      final e2 = DeleteDebtEvent(
         id: 'd1',
         userId: 'u1',
         walletId: 'w1',
         principalAmount: 1000.0,
-        totalPaidAmount: 0.0,
+        startDate: DateTime(2026, 1, 1),
       );
       expect(e1, e2);
       expect(e1.props, ['d1', 'w1']);
@@ -156,6 +160,7 @@ void main() {
       amount: 1000,
       dueDate: DateTime(2026, 12, 31),
       isPaid: false,
+      createdAt: DateTime(2026, 1, 1),
     );
 
     test('GetReceivablesEvent props', () {
@@ -182,19 +187,21 @@ void main() {
     });
 
     test('DeleteReceivableEvent props', () {
-      const e1 = DeleteReceivableEvent(
+      final e1 = DeleteReceivableEvent(
         id: 'r1',
         userId: 'u1',
         walletId: 'w1',
         amount: 1000.0,
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       );
-      const e2 = DeleteReceivableEvent(
+      final e2 = DeleteReceivableEvent(
         id: 'r1',
         userId: 'u1',
         walletId: 'w1',
         amount: 1000.0,
         isPaid: false,
+        createdAt: DateTime(2026, 1, 1),
       );
       expect(e1, e2);
       expect(e1.props, ['r1', 'u1', 'w1', 1000.0, false]);
@@ -346,21 +353,23 @@ void main() {
     });
 
     test('DeleteInvestmentEvent props', () {
-      const e1 = DeleteInvestmentEvent(
+      final e1 = DeleteInvestmentEvent(
         id: 'i1',
         userId: 'u1',
         walletId: 'w1',
         amount: 5000,
         currentValue: 5500,
         recordSale: true,
+        dateAdded: DateTime(2026, 1, 1),
       );
-      const e2 = DeleteInvestmentEvent(
+      final e2 = DeleteInvestmentEvent(
         id: 'i1',
         userId: 'u1',
         walletId: 'w1',
         amount: 5000,
         currentValue: 5500,
         recordSale: true,
+        dateAdded: DateTime(2026, 1, 1),
       );
       expect(e1, e2);
       expect(e1.props, ['i1', 'u1', 'w1', true]);

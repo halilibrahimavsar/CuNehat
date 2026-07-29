@@ -110,6 +110,8 @@ void main() {
       buildTestableWidget(
         DetailedListView(
           transactions: transactions,
+          categoryIcons: const {},
+          categoryLabels: const {},
           mode: FinanceMode.compare,
         ),
       ),
@@ -147,6 +149,8 @@ void main() {
       buildTestableWidget(
         DetailedListView(
           transactions: transactions,
+          categoryIcons: const {},
+          categoryLabels: const {},
           mode: FinanceMode.income,
         ),
       ),
@@ -177,6 +181,8 @@ void main() {
       buildTestableWidget(
         DetailedListView(
           transactions: transactions,
+          categoryIcons: const {},
+          categoryLabels: const {},
           mode: FinanceMode.expense,
         ),
       ),
@@ -209,6 +215,8 @@ void main() {
           transactions: [
             TransactionWithBalance(transaction: tx1, balanceAfter: 1850.0),
           ],
+          categoryIcons: const {},
+          categoryLabels: const {},
           mode: FinanceMode.compare,
         ),
       ),

@@ -195,13 +195,24 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           } else if (event.amount > 0) {
             // event.amount = güncel maliyet (alım + Σ maliyet güncellemeleri);
             // kümülatif alım hareketlerini birebir tersine çevirir.
-            cashOk = await walletMetricsService.recordCashMovement(
+            //
+            // Ters kayıt kaydın AÇILIŞ tarihine yazılır, bugüne değil: hatalı
+            // girilip silinen kayıt (baskın durum) böylece kendi ayında
+            // sıfırlanır. Katkılar tek tek tarihlenmediğinden (entity yalnız
+            // kümülatif `amount` tutar), çok katkılı bir birikimde tersleme
+            // açılış ayında toplanır — bu bilinçli bir yaklaşıklıktır.
+            cashOk = await walletMetricsService.recordCashMovements(
               walletId: event.walletId,
-              userId: event.userId,
-              amount: event.amount,
-              isIncome: true,
-              title: 'Yatırım kaydı silindi (düzeltme)',
-              tag: CashMovementTags.investmentCorrection,
+              entries: [
+                CashMovement(
+                  userId: event.userId,
+                  amount: event.amount,
+                  isIncome: true,
+                  title: 'Yatırım kaydı silindi (düzeltme)',
+                  tag: CashMovementTags.investmentCorrection,
+                  date: event.dateAdded,
+                ),
+              ],
             );
           }
           await _safeSyncInvestment(event.walletId);

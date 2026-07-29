@@ -106,6 +106,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           walletId: widget.activeWallet.id!,
           amount: investment.amount,
           currentValue: investment.currentValue,
+          dateAdded: investment.dateAdded,
           recordSale: sell,
         ));
   }
@@ -225,8 +226,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       child: isTryWallet
           ? _buildContent(context)
           : Scaffold(
-              body:
-                  TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanYatirim),
+              body: TryOnlyFeatureView(
+                  message: context.l10n.sadeceTlCuzdanYatirim),
             ),
     );
   }

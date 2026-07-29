@@ -1741,16 +1741,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get categoryDiger => 'Diğer';
 
   @override
+  String get defaultCategoryGroceries => 'Market';
+
+  @override
   String get defaultCategoryFood => 'Yemek';
 
   @override
   String get defaultCategoryTransport => 'Ulaşım';
 
   @override
+  String get defaultCategoryBills => 'Fatura';
+
+  @override
+  String get defaultCategoryRent => 'Kira';
+
+  @override
   String get defaultCategoryShopping => 'Alışveriş';
 
   @override
-  String get defaultCategoryBills => 'Fatura';
+  String get defaultCategoryHealth => 'Sağlık';
+
+  @override
+  String get defaultCategoryEducation => 'Eğitim';
 
   @override
   String get defaultCategoryEntertainment => 'Eğlence';
@@ -1759,10 +1771,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get defaultCategorySalary => 'Maaş';
 
   @override
-  String get defaultCategoryInvestment => 'Yatırım';
+  String get defaultCategorySideIncome => 'Ek Gelir';
 
   @override
   String get defaultCategoryFreelance => 'Serbest';
+
+  @override
+  String get defaultCategoryInvestment => 'Yatırım';
 
   @override
   String get kategorisiz => 'Kategorisiz';
@@ -2968,4 +2983,29 @@ class AppLocalizationsTr extends AppLocalizations {
   String yatirimSilOnayBaslik(String name) {
     return '$name kaydı silinsin mi?';
   }
+
+  @override
+  String get walletQuickStartTitle => 'Cüzdan hazır!';
+
+  @override
+  String walletQuickStartSubtitle(String name) {
+    return '$name oluşturuldu. Nasıl başlamak istersin?';
+  }
+
+  @override
+  String get walletQuickStartImportTitle => 'Banka ekstresi içe aktar';
+
+  @override
+  String get walletQuickStartImportSubtitle =>
+      'Geçmiş işlemlerini dosyadan yükle — en hızlı yol';
+
+  @override
+  String get walletQuickStartManualTitle => 'İlk işlemi elle ekle';
+
+  @override
+  String get walletQuickStartManualSubtitle =>
+      'Tek bir gelir ya da giderle başla';
+
+  @override
+  String get walletQuickStartSkip => 'Şimdilik atla';
 }

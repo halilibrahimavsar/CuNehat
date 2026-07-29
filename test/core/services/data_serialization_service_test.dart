@@ -92,8 +92,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     notifications = MockNotificationService();
     reminderSync = MockReminderSyncService();
-    when(() => notifications.cancelAllNotifications())
-        .thenAnswer((_) async {});
+    when(() => notifications.cancelAllNotifications()).thenAnswer((_) async {});
     when(() => reminderSync.syncAll()).thenAnswer((_) async {});
     service = DataSerializationService(
       ReceiptStorageService.withBaseDir(tempDir),
@@ -455,6 +454,7 @@ ReceivableModel _receivable() {
     debtorName: 'Client',
     amount: 250,
     dueDate: DateTime(2024, 1, 5),
+    createdAt: DateTime(2026, 1, 1),
   );
 }
 

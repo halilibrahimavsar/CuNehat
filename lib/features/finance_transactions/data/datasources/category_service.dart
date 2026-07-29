@@ -43,8 +43,16 @@ class CategoryService {
 
   // ========== ADD CATEGORY ==========
 
-  /// Add a new custom category
-  Future<void> addCategory(CategoryModel category) async {
+  /// Add a new custom category.
+  ///
+  /// Yeni özel kategoride `id` = kullanıcının girdiği ad; bu an kimliğin
+  /// DONDUĞU andır. Sonraki yeniden adlandırmalar yalnız `displayName`'i
+  /// değiştirir (bkz. [updateCategory]), çünkü `id` deftere `tag` olarak
+  /// yazılmıştır.
+  Future<void> addCategory(
+    CategoryModel category, {
+    Map<String, String> displayLabels = const {},
+  }) async {
     if (category.isDefault) {
       throw Exception('Varsayılan kategoriler düzenlenemez');
     }
@@ -57,11 +65,16 @@ class CategoryService {
 
     final categories = await getCategories(category.isExpense);
 
-    // Check if category with same name already exists
+    // Kimlik çakışması: aynı id ikinci kez yazılamaz.
     if (categories
         .any((c) => c.id.toLowerCase() == category.id.toLowerCase())) {
       throw Exception('Bu isimde bir kategori zaten var');
     }
+
+    // Görünen ad çakışması: id farklı olsa da kullanıcı listede iki özdeş
+    // satır görürdü (ör. 'Kahve' yeniden adlandırılıp 'Kahve' tekrar eklenirse).
+    _assertLabelIsFree(categories, category,
+        exceptId: null, displayLabels: displayLabels);
 
     // Get only custom categories (exclude defaults)
     final customCategories = categories.where((c) => !c.isDefault).toList();
@@ -75,9 +88,21 @@ class CategoryService {
 
   // ========== UPDATE CATEGORY ==========
 
-  /// Update an existing category
-  Future<void> updateCategory(CategoryModel category) async {
+  /// Var olan kategoriyi günceller.
+  ///
+  /// `category.id` DEĞİŞMEZ bir anahtardır ve kayıt onunla bulunur; yeniden
+  /// adlandırma `displayName` üzerinden yapılır. (Eskiden form `id`'yi yeni
+  /// ada çevirip gönderiyordu; arama yeni id ile yapıldığından kayıt hiçbir
+  /// zaman bulunamıyor ve her yeniden adlandırma "kategori bulunamadı" ile
+  /// başarısız oluyordu.)
+  Future<void> updateCategory(
+    CategoryModel category, {
+    Map<String, String> displayLabels = const {},
+  }) async {
     final categories = await getCategories(category.isExpense);
+
+    _assertLabelIsFree(categories, category,
+        exceptId: category.id, displayLabels: displayLabels);
 
     if (category.isDefault) {
       // For default categories, update in defaults
@@ -111,6 +136,50 @@ class CategoryService {
     }
   }
 
+  /// [subject]'in görünen adı başka bir kategori tarafından kullanılıyorsa
+  /// fırlatır.
+  ///
+  /// [displayLabels] (id → kullanıcının GÖRDÜĞÜ ad) sunum katmanından gelir:
+  /// varsayılanların l10n karşılığı yalnız orada bilinir. Veri katmanı ham
+  /// etikete (`displayName ?? id`) baktığı sürece koruma İngilizce'de
+  /// delinebiliyordu — 'Yemek' varsayılanı 'Food' görünürken kullanıcı 'Food'
+  /// adlı özel kategori ekleyebiliyor, listede iki özdeş satır oluşuyordu.
+  ///
+  /// [subject]'in kendi hedef adı da aynı haritadan okunur: yeniden
+  /// adlandırmada kullanıcının GİRDİĞİ ad, henüz kaydedilmemiş olsa bile
+  /// oraya kendi id'siyle konur.
+  ///
+  /// Harita verilmezse davranış ham etikete düşer (yalnız veri katmanı
+  /// testleri ve l10n'suz çağrılar).
+  void _assertLabelIsFree(
+    List<CategoryModel> categories,
+    CategoryModel subject, {
+    required String? exceptId,
+    required Map<String, String> displayLabels,
+  }) {
+    String labelOf(CategoryModel c) => displayLabels[c.id] ?? c.rawLabel;
+
+    final target = labelOf(subject).trim().toLowerCase();
+    final clash = categories.any(
+      (c) => c.id != exceptId && labelOf(c).trim().toLowerCase() == target,
+    );
+    if (clash) {
+      throw Exception('Bu isimde bir kategori zaten var');
+    }
+  }
+
+  /// Kayıtlı liste, varsayılanların KOPYASI değil üstlerine binen
+  /// DÜZENLEMELERDİR; [getCategoriesWithDefaults] onu id→override haritası
+  /// olarak okur. Burada da harita gibi davranılır: düzenlenen id kayıtlı
+  /// değilse EKLENİR.
+  ///
+  /// (Eskiden yalnız var olan id güncelleniyordu. Kayıtlı liste varsayılanların
+  /// yerine geçtiği sürece id her zaman bulunuyordu; merge'e geçilince koda
+  /// SONRADAN eklenen bir varsayılan düzenlendiğinde indexWhere -1 dönüyor,
+  /// yazma sessizce düşüyor, arayüz yine de "başarılı" diyordu.)
+  ///
+  /// Dokunulmamış varsayılanlar bilerek yazılmaz: hepsi tohumlanırsa koddaki
+  /// sonraki bir ikon/ad değişikliğini bayat override kalıcı olarak maskeler.
   Future<List<CategoryModel>> _getUpdatedDefaults(
       CategoryModel updatedCategory) async {
     final prefs = await SharedPreferences.getInstance();
@@ -118,27 +187,20 @@ class CategoryService {
         ? _updatedExpenseDefaultsKey
         : _updatedIncomeDefaultsKey;
 
-    final defaultsJson = prefs.getString(key);
-    List<CategoryModel> updatedDefaults = [];
+    final overrides = <String, CategoryModel>{};
 
+    final defaultsJson = prefs.getString(key);
     if (defaultsJson != null) {
       final List<dynamic> jsonList = json.decode(defaultsJson);
-      updatedDefaults =
-          jsonList.map((json) => CategoryModel.fromJson(json)).toList();
-    } else {
-      // Initialize with original defaults
-      updatedDefaults = updatedCategory.isExpense
-          ? CategoryModel.getDefaultExpenseCategories()
-          : CategoryModel.getDefaultIncomeCategories();
+      for (final j in jsonList) {
+        final stored = CategoryModel.fromJson(j as Map<String, dynamic>);
+        overrides[stored.id] = stored;
+      }
     }
 
-    // Update or add the category
-    final index = updatedDefaults.indexWhere((c) => c.id == updatedCategory.id);
-    if (index != -1) {
-      updatedDefaults[index] = updatedCategory;
-    }
+    overrides[updatedCategory.id] = updatedCategory;
 
-    return updatedDefaults;
+    return overrides.values.toList();
   }
 
   Future<void> _saveUpdatedDefaults(
@@ -159,16 +221,25 @@ class CategoryService {
     final key =
         isExpense ? _updatedExpenseDefaultsKey : _updatedIncomeDefaultsKey;
 
+    // Kaynak liste HER ZAMAN koddaki varsayılanlardır; kayıtlı sürüm yalnız
+    // ÜSTÜNE binen düzenlemelerdir (ikon/ad). Eskiden kayıtlı liste
+    // varsayılanların YERİNE geçiyordu — o yüzden bir varsayılana bir kez
+    // dokunulduktan sonra koda eklenen yeni varsayılanlar hiç görünmüyordu.
+    final base = isExpense
+        ? CategoryModel.getDefaultExpenseCategories()
+        : CategoryModel.getDefaultIncomeCategories();
+
     final defaultsJson = prefs.getString(key);
-    List<CategoryModel> defaults = [];
+    List<CategoryModel> defaults = base;
 
     if (defaultsJson != null) {
       final List<dynamic> jsonList = json.decode(defaultsJson);
-      defaults = jsonList.map((json) => CategoryModel.fromJson(json)).toList();
-    } else {
-      defaults = isExpense
-          ? CategoryModel.getDefaultExpenseCategories()
-          : CategoryModel.getDefaultIncomeCategories();
+      final overrides = {
+        for (final j in jsonList)
+          (j as Map<String, dynamic>)['id'] as String: CategoryModel.fromJson(j)
+      };
+      // Artık varsayılan olmayan kayıtlı id'ler bilerek düşer.
+      defaults = base.map((d) => overrides[d.id] ?? d).toList();
     }
 
     // Add custom categories

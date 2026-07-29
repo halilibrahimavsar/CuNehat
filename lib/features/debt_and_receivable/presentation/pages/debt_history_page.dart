@@ -226,7 +226,8 @@ class _DebtHistoryTab extends StatelessWidget {
                         userId: debt.userId,
                         walletId: debt.walletId,
                         principalAmount: debt.principalAmount,
-                        totalPaidAmount: debt.totalPaidAmount,
+                        startDate: debt.startDate,
+                        payments: debt.payments,
                         principalToWallet: debt.principalToWallet));
                   }
                 },
@@ -358,7 +359,8 @@ class _ReceivableHistoryTab extends StatelessWidget {
                         userId: receivable.userId,
                         walletId: receivable.walletId,
                         amount: receivable.amount,
-                        isPaid: receivable.isPaid));
+                        isPaid: receivable.isPaid,
+                        createdAt: receivable.createdAt));
                   }
                 },
                 child: _HistoryCard(

@@ -28,7 +28,10 @@ Future<void> showCreateEditDialog({
   required BuildContext context,
   required String userId,
   WalletEntity? wallet,
-  required VoidCallback onSuccess,
+
+  /// Kaydedilen cüzdanın adıyla çağrılır (yeni cüzdanda hızlı başlangıç
+  /// adımı bunu başlıkta gösterir).
+  required void Function(String walletName) onSuccess,
   required Function(String error) onError,
 }) async {
   await showModalBottomSheet<void>(
@@ -51,7 +54,7 @@ Future<void> showCreateEditDialog({
 class _WalletFormDialog extends StatefulWidget {
   final String userId;
   final WalletEntity? wallet;
-  final VoidCallback onSuccess;
+  final void Function(String walletName) onSuccess;
   final Function(String error) onError;
 
   const _WalletFormDialog({
@@ -81,6 +84,10 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
   /// tamamlanana dek kilitli kalır (güvenli varsayılan).
   bool _currencyLocked = false;
   bool _isLoading = false;
+
+  /// Gönderilen ad; `onSuccess` controller dispose edildikten sonra da
+  /// çağrılabildiğinden değeri burada saklanır.
+  String _submittedName = '';
 
   // ========== GETTERS ==========
   bool get isEditMode => widget.wallet != null;
@@ -726,6 +733,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
     setState(() => _isLoading = true);
 
     final name = _nameController.text.trim();
+    _submittedName = name;
     final balance = parseMoneyInput(_balanceController.text) ?? 0.0;
     final colorHex = _selectedColorHex;
     final iconName = _selectedIconName;
@@ -829,7 +837,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       if ((state.messageType != null || state.message != null) && _isLoading) {
         setState(() => _isLoading = false);
         Navigator.pop(context);
-        widget.onSuccess();
+        widget.onSuccess(_submittedName);
       } else if (state.error != null && _isLoading) {
         setState(() => _isLoading = false);
         widget.onError(state.error!);
@@ -838,7 +846,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
       if ((state.messageType != null || state.message != null) && _isLoading) {
         setState(() => _isLoading = false);
         Navigator.pop(context);
-        widget.onSuccess();
+        widget.onSuccess(_submittedName);
       } else if (state.error != null && _isLoading) {
         setState(() => _isLoading = false);
         widget.onError(state.error!);

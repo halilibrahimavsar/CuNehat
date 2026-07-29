@@ -108,6 +108,34 @@ class TransactionHiveDataSource {
     }
   }
 
+  /// Birden çok işlemi TEK Hive yazımında ekler.
+  ///
+  /// Borç silme gibi mutabakat akışları ödeme başına bir ters kayıt üretir.
+  /// Bunları tek tek [addTransaction] ile yazmak her kayıt için ayrı bir await
+  /// turu ve disk flush'ı demekti: 36 taksitli bir borçta 37 ardışık yazım,
+  /// üstelik silme diyaloğu bloklu beklerken.
+  Future<void> addTransactions(List<TransactionModel> transactions) async {
+    if (transactions.isEmpty) return;
+    try {
+      final box = await _getBox();
+
+      final entries = <String, TransactionModel>{};
+      for (final transaction in transactions) {
+        if (transaction.id == null) {
+          throw ValidationException('Transaction ID boş olamaz');
+        }
+        if (transaction.userId.isEmpty) {
+          throw ValidationException('Kullanıcı ID boş olamaz');
+        }
+        entries[transaction.id!] = transaction;
+      }
+
+      await box.putAll(entries);
+    } catch (e) {
+      throw CacheException('İşlemler eklenirken hata oluştu', e);
+    }
+  }
+
   Future<void> updateTransaction(TransactionModel transaction) async {
     try {
       final box = await _getBox();

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -20,7 +22,9 @@ import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
 class BudgetsPage extends StatelessWidget {
@@ -89,8 +93,45 @@ class BudgetsPage extends StatelessWidget {
   }
 }
 
-class _BudgetsBody extends StatelessWidget {
+class _BudgetsBody extends StatefulWidget {
   const _BudgetsBody();
+
+  @override
+  State<_BudgetsBody> createState() => _BudgetsBodyState();
+}
+
+class _BudgetsBodyState extends State<_BudgetsBody> {
+  /// `categoryId` → görünen ad. Bütçe anahtarı hep kategori id'sidir
+  /// (`tag` ile eşleşmek zorunda); bu harita yalnız başlık basmak içindir.
+  Map<String, String> _labels = {};
+
+  StreamSubscription<void>? _categoriesSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLabels();
+    _categoriesSub =
+        getIt<CategoriesChangedNotifier>().stream.listen((_) => _loadLabels());
+  }
+
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
+  }
+
+  /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
+  ///
+  /// Harita eskiden yalnız initState'te kuruluyordu: sayfa route yığınında
+  /// dururken yapılan bir yeniden adlandırma ancak sayfa yeniden kurulduğunda
+  /// görünüyordu.
+  Future<void> _loadLabels() async {
+    // Bütçeler yalnız gider kategorilerine kurulur.
+    final cats = await getIt<CategoryRepository>().getCategories(true);
+    if (!mounted) return;
+    setState(() => _labels = buildCategoryLabelMap(context, cats));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,8 +159,8 @@ class _BudgetsBody extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 _BudgetSummaryCard(budgets: state.budgets),
                 const SizedBox(height: 16),
-                ...state.budgets
-                    .map((budget) => _BudgetListItem(budget: budget)),
+                ...state.budgets.map((budget) =>
+                    _BudgetListItem(budget: budget, categoryLabels: _labels)),
               ]),
             ),
           );
@@ -277,9 +318,15 @@ class _BudgetSummaryCard extends StatelessWidget {
 }
 
 class _BudgetListItem extends StatelessWidget {
+  /// `categoryId` → görünen ad; boşsa id l10n'a düşer.
+  final Map<String, String> categoryLabels;
+
   final BudgetEntity budget;
 
-  const _BudgetListItem({required this.budget});
+  const _BudgetListItem({
+    required this.budget,
+    this.categoryLabels = const {},
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +385,8 @@ class _BudgetListItem extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  budget.categoryId,
+                  context.categoryLabelForTag(budget.categoryId,
+                      labels: categoryLabels),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -365,8 +413,9 @@ class _BudgetListItem extends StatelessWidget {
                   final confirmed = await ConfirmDialog.show(
                     context,
                     title: context.l10n.budgetDeleteConfirmTitle,
-                    message: context.l10n
-                        .budgetDeleteConfirmMessage(budget.categoryId),
+                    message: context.l10n.budgetDeleteConfirmMessage(
+                        context.categoryLabelForTag(budget.categoryId,
+                            labels: categoryLabels)),
                     confirmText: context.l10n.sil,
                   );
                   if (!confirmed || !context.mounted) return;
@@ -458,7 +507,9 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   final _formKey = GlobalKey<FormState>();
   final _limitController = TextEditingController();
 
-  List<String> _categories = [];
+  /// Entity olarak tutulur: dropdown'un DEĞERİ `id` (bütçe anahtarı,
+  /// `tag` ile eşleşmek zorunda), ETİKETİ ise çözümlenmiş görünen ad.
+  List<CategoryEntity> _categories = [];
   String? _selectedCategory;
 
   @override
@@ -472,7 +523,7 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
     // işlem tag'iyle birebir eşleşmezse harcama hiç birikmez.
     final categories = await getIt<CategoryRepository>().getCategories(true);
     if (!mounted) return;
-    setState(() => _categories = categories.map((c) => c.id).toList());
+    setState(() => _categories = categories);
   }
 
   @override
@@ -524,7 +575,8 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                 border: const OutlineInputBorder(),
               ),
               items: _categories
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                  .map((c) => DropdownMenuItem(
+                      value: c.id, child: Text(context.categoryLabel(c))))
                   .toList(),
               onChanged: _onCategorySelected,
               validator: (value) => value == null ? 'Bir kategori seçin' : null,

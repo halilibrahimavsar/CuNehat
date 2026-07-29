@@ -60,6 +60,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
             isIncome: true,
             title: event.debt.title,
             tag: CashMovementTags.debt,
+            // Para borcun BAŞLANGIÇ tarihinde ele geçti; silmedeki ters kayıt
+            // da oraya yazılır, iki bacak aynı dönemde kapanır.
+            date: event.debt.startDate,
           );
         }
         await _safeSyncDebt(event.debt.walletId);
@@ -87,6 +90,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
           isIncome: false,
           title: 'Ödeme: ${event.debt.title}',
           tag: CashMovementTags.debtPayment,
+          // Kullanıcının seçtiği ödeme tarihi; silmedeki iade `Payment.date`'e
+          // yazıldığından bugüne düşerse iki dönem birden bozulur.
+          date: event.paymentDate,
         );
         await _safeSyncDebt(event.debt.walletId);
 
@@ -111,21 +117,60 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     await result.fold(
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
-        // Mutabakat: anapara değişimi kadar nakit (borç arttıysa gelir).
-        // Ürün borcunda anapara hiç bakiyeye girmedi → değişimi de girmez.
-        final diff = event.debt.principalToWallet
-            ? event.debt.principalAmount - event.prevPrincipal
-            : 0.0;
+        // Mutabakat: anapara hareketi HER ZAMAN başlangıç tarihinde durur;
+        // silmedeki ters kayıt da oraya yazıldığından iki bacak aynı dönemde
+        // kapanır. Ürün borcunda anapara hiç bakiyeye girmedi → değişimi de
+        // girmez.
         var cashOk = true;
-        if (diff != 0) {
-          cashOk = await walletMetricsService.recordCashMovement(
-            walletId: event.debt.walletId,
-            userId: event.debt.userId,
-            amount: diff.abs(),
-            isIncome: diff > 0,
-            title: 'Borç güncellendi: ${event.debt.title}',
-            tag: CashMovementTags.debt,
-          );
+        if (event.debt.principalToWallet) {
+          final entries = <CashMovement>[];
+
+          if (_isSameDay(event.prevStartDate, event.debt.startDate)) {
+            // Tarih yerinde: yalnız farkı yaz, defteri karşılıklı kayıtlarla
+            // şişirme.
+            final diff = event.debt.principalAmount - event.prevPrincipal;
+            if (diff != 0) {
+              entries.add(CashMovement(
+                userId: event.debt.userId,
+                amount: diff.abs(),
+                isIncome: diff > 0,
+                title: 'Borç güncellendi: ${event.debt.title}',
+                tag: CashMovementTags.debt,
+                date: event.debt.startDate,
+              ));
+            }
+          } else {
+            // Başlangıç tarihi taşındı: eski kayıt eski dönemde bırakılırsa
+            // silmedeki ters kayıt YENİ tarihe düşer, iki dönem birden bozulur.
+            // Eskisini kendi tarihinde geri al, yenisini yeni tarihe yaz.
+            if (event.prevPrincipal != 0) {
+              entries.add(CashMovement(
+                userId: event.debt.userId,
+                amount: event.prevPrincipal,
+                isIncome: false,
+                title: 'Borç güncellendi: ${event.debt.title}',
+                tag: CashMovementTags.debt,
+                date: event.prevStartDate,
+              ));
+            }
+            if (event.debt.principalAmount != 0) {
+              entries.add(CashMovement(
+                userId: event.debt.userId,
+                amount: event.debt.principalAmount,
+                isIncome: true,
+                title: 'Borç güncellendi: ${event.debt.title}',
+                tag: CashMovementTags.debt,
+                date: event.debt.startDate,
+              ));
+            }
+          }
+
+          if (entries.isNotEmpty) {
+            cashOk = await walletMetricsService.recordCashMovements(
+              walletId: event.debt.walletId,
+              entries: entries,
+            );
+          }
         }
         await _safeSyncDebt(event.debt.walletId);
 
@@ -144,23 +189,39 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     await result.fold(
       (failure) async => emit(DebtError(failure.message)),
       (_) async {
-        // Mutabakat: borcun net nakit etkisini geri al.
-        // net = +principal (nakit alındıysa) − Σödeme
-        //   → geri alma = Σödeme − principal (ürün borcunda principal 0 sayılır).
-        final coupledPrincipal =
-            event.principalToWallet ? event.principalAmount : 0.0;
-        final reversal = event.totalPaidAmount - coupledPrincipal;
-        var cashOk = true;
-        if (reversal != 0) {
-          cashOk = await walletMetricsService.recordCashMovement(
-            walletId: event.walletId,
-            userId: event.userId,
-            amount: reversal.abs(),
-            isIncome: reversal > 0,
-            title: 'Borç silindi',
-            tag: CashMovementTags.debt,
-          );
-        }
+        // Mutabakat: borcun nakit etkisini KAYIT KAYIT geri al.
+        //
+        // Toplam etki sıfırlanacak şekilde tek bir ters kayıt yazmak bakiyeyi
+        // doğru veriyordu ama tamamı BUGÜNE düşüyordu: Ocak'ta alınan kredi
+        // Temmuz'da silindiğinde Temmuz raporunda hiç yaşanmamış dev bir gider
+        // beliriyordu. Bunun yerine her hareket iptal ettiği kaydın kendi
+        // tarihine yazılır → her dönem kendi içinde sıfırlanır.
+        final reversals = <CashMovement>[
+          if (event.principalToWallet && event.principalAmount != 0)
+            CashMovement(
+              userId: event.userId,
+              amount: event.principalAmount,
+              isIncome: false, // anapara girişi geri alınır
+              title: 'Borç silindi',
+              tag: CashMovementTags.debt,
+              date: event.startDate,
+            ),
+          for (final p in event.payments)
+            if (p.amount != 0)
+              CashMovement(
+                userId: event.userId,
+                amount: p.amount,
+                isIncome: true, // ödeme gideri geri alınır
+                title: 'Borç silindi (ödeme iadesi)',
+                tag: CashMovementTags.debtPayment,
+                date: p.date,
+              ),
+        ];
+
+        final cashOk = await walletMetricsService.recordCashMovements(
+          walletId: event.walletId,
+          entries: reversals,
+        );
         await _safeSyncDebt(event.walletId);
 
         emit(DebtOperationSuccess(
@@ -172,4 +233,9 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
 
   Future<void> _safeSyncDebt(String walletId) =>
       safeSyncMetric(() => walletMetricsService.syncDebt(walletId), 'debt');
+
+  /// Defter dönemi gün çözünürlüğündedir; aynı gün yeniden seçilirse (tarih
+  /// seçici gece yarısına sabitler) taşıma sayılmaz.
+  static bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 }

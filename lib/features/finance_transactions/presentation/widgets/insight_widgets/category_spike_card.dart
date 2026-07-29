@@ -2,6 +2,7 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 
 /// Kategori bazlı harcama sıçraması uyarısı kartı (%25+ artış gösteren kategori).
@@ -9,17 +10,22 @@ class CategorySpikeCard extends StatelessWidget {
   final CategorySpike spike;
   final String Function(double) formatMoney;
 
+  /// `tag` → görünen ad; boşsa kategori id'si l10n'a düşer.
+  final Map<String, String> categoryLabels;
+
   const CategorySpikeCard({
     super.key,
     required this.spike,
     required this.formatMoney,
+    this.categoryLabels = const {},
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final categoryName = context.translateCategory(spike.categoryName);
+    final categoryName =
+        context.categoryLabelForTag(spike.categoryName, labels: categoryLabels);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

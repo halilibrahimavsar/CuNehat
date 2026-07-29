@@ -24,13 +24,18 @@ void main() {
   setUp(() {
     mockCategoryRepository = MockCategoryRepository();
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    // Form, çift-ad korumasını kullanıcının GÖRDÜĞÜ adlar üzerinden çalıştırmak
+    // için kardeş kategorileri önden yükler (bkz. _loadSiblings).
+    when(() => mockCategoryRepository.getCategoriesWithDefaults(any()))
+        .thenAnswer((_) async => <CategoryEntity>[]);
   });
 
   tearDown(() {
     getIt.reset();
   });
 
-  Widget buildTestableWidget(Widget child) {
+  Widget buildTestableWidget(Widget child,
+      {Locale locale = const Locale('tr')}) {
     return MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -42,7 +47,7 @@ void main() {
         Locale('tr'),
         Locale('en'),
       ],
-      locale: const Locale('tr'),
+      locale: locale,
       home: Scaffold(
         body: child,
       ),
@@ -94,8 +99,8 @@ void main() {
       (WidgetTester tester) async {
     bool? result;
 
-    when(() => mockCategoryRepository.addCategory(any()))
-        .thenAnswer((_) async {});
+    when(() => mockCategoryRepository.addCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -131,12 +136,14 @@ void main() {
     // Verify dialog pops and result is true
     expect(find.byType(CategoryFormSheet), findsNothing);
     expect(result, isTrue);
-    verify(() => mockCategoryRepository.addCategory(any())).called(1);
+    verify(() => mockCategoryRepository.addCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).called(1);
   });
 
   testWidgets('handles error when adding custom category fails',
       (WidgetTester tester) async {
-    when(() => mockCategoryRepository.addCategory(any()))
+    when(() => mockCategoryRepository.addCategory(any(),
+            displayLabels: any(named: 'displayLabels')))
         .thenThrow(Exception('Add failed'));
 
     await tester.pumpWidget(
@@ -169,8 +176,8 @@ void main() {
       isDefault: false,
     );
 
-    when(() => mockCategoryRepository.updateCategory(any()))
-        .thenAnswer((_) async {});
+    when(() => mockCategoryRepository.updateCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -210,7 +217,113 @@ void main() {
     // Verify dialog pops and result is true
     expect(find.byType(CategoryFormSheet), findsNothing);
     expect(result, isTrue);
-    verify(() => mockCategoryRepository.updateCategory(any())).called(1);
+    verify(() => mockCategoryRepository.updateCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).called(1);
+  });
+
+  // ------------------------------------------------------- displayName / l10n
+  //
+  // REGRESYON: ad alanı GÖRÜNEN adla tohumlanır (didChangeDependencies).
+  // İngilizce'de 'Market' varsayılanı 'Groceries' görünür; Kaydet'te bu etiket
+  // koşulsuz displayName'e yazılınca kategori o dile KALICI kilitleniyordu —
+  // copyWith'in `displayName ?? this.displayName`'i null'a dönüşe izin vermez
+  // ve arayüzde temizleme yolu yoktur.
+
+  Future<CategoryEntity> openEditAndSave(
+    WidgetTester tester, {
+    required CategoryEntity category,
+    required Locale locale,
+    required String saveLabel,
+    String? newName,
+  }) async {
+    when(() => mockCategoryRepository.updateCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
+
+    await tester.pumpWidget(buildTestableWidget(
+      Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () => showCategoryForm(
+            context: context,
+            isExpense: category.isExpense,
+            category: category,
+          ),
+          child: const Text('Show Form'),
+        ),
+      ),
+      locale: locale,
+    ));
+
+    await tester.tap(find.text('Show Form'));
+    await tester.pumpAndSettle();
+
+    if (newName != null) {
+      await tester.enterText(find.byType(TextFormField), newName);
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.text(saveLabel));
+    await tester.pumpAndSettle();
+
+    return verify(() => mockCategoryRepository.updateCategory(captureAny(),
+            displayLabels: any(named: 'displayLabels'))).captured.single
+        as CategoryEntity;
+  }
+
+  const marketDefault = CategoryEntity(
+    id: 'Market',
+    iconName: 'shopping_cart',
+    isExpense: true,
+    isDefault: true,
+  );
+
+  testWidgets('İngilizce\'de yalnız ikon değişince displayName YAZILMAZ',
+      (WidgetTester tester) async {
+    final saved = await openEditAndSave(
+      tester,
+      category: marketDefault,
+      locale: const Locale('en'),
+      saveLabel: 'Save',
+    );
+
+    expect(saved.id, 'Market');
+    // l10n canlı kalmalı: Türkçe'ye dönüldüğünde yine "Market" görünsün.
+    expect(saved.displayName, isNull);
+  });
+
+  testWidgets('gerçek yeniden adlandırma displayName olarak yazılır',
+      (WidgetTester tester) async {
+    final saved = await openEditAndSave(
+      tester,
+      category: marketDefault,
+      locale: const Locale('en'),
+      saveLabel: 'Save',
+      newName: 'Bakkal',
+    );
+
+    expect(saved.id, 'Market');
+    expect(saved.displayName, 'Bakkal');
+  });
+
+  testWidgets('l10n karşılığına geri adlandırmak displayName\'i temizler',
+      (WidgetTester tester) async {
+    const renamed = CategoryEntity(
+      id: 'Market',
+      displayName: 'Bakkal',
+      iconName: 'shopping_cart',
+      isExpense: true,
+      isDefault: true,
+    );
+
+    final saved = await openEditAndSave(
+      tester,
+      category: renamed,
+      locale: const Locale('tr'),
+      saveLabel: 'Kaydet',
+      newName: 'Market',
+    );
+
+    // Varsayılan ada dönüldü → l10n yeniden devralır.
+    expect(saved.displayName, isNull);
   });
 
   testWidgets('can change icon using IconPicker', (WidgetTester tester) async {

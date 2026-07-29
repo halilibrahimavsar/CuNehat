@@ -29,6 +29,8 @@ void main() {
     mockDeleteBudgetUsecase = MockDeleteBudgetsForCategoryUsecase();
 
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    when(() => mockCategoryRepository.getCategoriesWithDefaults(any()))
+        .thenAnswer((_) async => <CategoryEntity>[]);
     getIt.registerSingleton<DeleteBudgetsForCategoryUsecase>(
         mockDeleteBudgetUsecase);
   });
@@ -335,8 +337,8 @@ void main() {
       ],
     );
 
-    when(() => mockCategoryRepository.updateCategory(any()))
-        .thenAnswer((_) async {});
+    when(() => mockCategoryRepository.updateCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -362,6 +364,7 @@ void main() {
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
 
-    verify(() => mockCategoryRepository.updateCategory(any())).called(1);
+    verify(() => mockCategoryRepository.updateCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).called(1);
   });
 }

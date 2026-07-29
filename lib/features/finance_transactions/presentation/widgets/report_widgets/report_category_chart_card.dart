@@ -19,6 +19,10 @@ class ReportCategoryChartCard extends StatefulWidget {
   final ({double progress, bool isExceeded, double limit})? Function(
       String tag, double spent) budgetProgressFor;
 
+  /// `tag` → görünen ad. Dilim/çubuk anahtarı hep `CategoryData.name` (tag)
+  /// kalır; bu harita yalnız etiket basarken kullanılır.
+  final Map<String, String> categoryLabels;
+
   const ReportCategoryChartCard({
     super.key,
     required this.title,
@@ -29,6 +33,7 @@ class ReportCategoryChartCard extends StatefulWidget {
     required this.onToggleBarChart,
     required this.onCategoryTap,
     required this.budgetProgressFor,
+    this.categoryLabels = const {},
   });
 
   @override
@@ -315,7 +320,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final cat = widget.fullData[group.x];
                       return BarTooltipItem(
-                        '${context.translateCategory(cat.name)}\n${_formatCurrency(context, rod.toY)}',
+                        '${cat.labelIn(context, widget.categoryLabels)}\n${_formatCurrency(context, rod.toY)}',
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -367,7 +372,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        context.translateCategory(item.name),
+                        item.labelIn(context, widget.categoryLabels),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: scheme.onSurface,

@@ -23,6 +23,8 @@ class ReceivableModelAdapter extends TypeAdapter<ReceivableModel> {
       debtorName: fields[3] as String,
       amount: fields[4] as double,
       dueDate: fields[5] as DateTime,
+      createdAt: fields[8] as DateTime,
+      collectedAt: fields[9] as DateTime?,
       isPaid: fields[6] as bool,
       notes: fields[7] as String?,
     );
@@ -31,7 +33,7 @@ class ReceivableModelAdapter extends TypeAdapter<ReceivableModel> {
   @override
   void write(BinaryWriter writer, ReceivableModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +49,11 @@ class ReceivableModelAdapter extends TypeAdapter<ReceivableModel> {
       ..writeByte(6)
       ..write(obj.isPaid)
       ..writeByte(7)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(8)
+      ..write(obj.createdAt)
+      ..writeByte(9)
+      ..write(obj.collectedAt);
   }
 
   @override

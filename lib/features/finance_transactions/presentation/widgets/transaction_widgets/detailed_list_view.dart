@@ -17,13 +17,21 @@ class DetailedListView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final FinanceMode mode;
   final Map<String, IconData> categoryIcons;
+
+  /// `tag` → görünen ad (bkz. `buildCategoryLabelMap`).
+  final Map<String, String> categoryLabels;
   final bool showDayEndBalance;
 
+  /// [categoryIcons] ve [categoryLabels] TEK bir indeksin iki yarısıdır ve
+  /// birlikte yüklenir; ikisi de zorunludur. Varsayılanlı olduklarında
+  /// ikonları geçip adları unutmak sessizce derleniyordu: rapor detay
+  /// sheet'inde başlık yeni adı, altındaki kartlar eski adı gösteriyordu.
   const DetailedListView({
     super.key,
     required this.transactions,
+    required this.categoryIcons,
+    required this.categoryLabels,
     this.mode = FinanceMode.compare,
-    this.categoryIcons = const {},
     this.showDayEndBalance = true,
   });
 
@@ -134,6 +142,8 @@ class _DetailedListViewState extends State<DetailedListView> {
                   item: row.item,
                   isListView: true,
                   categoryIcon: widget.categoryIcons[row.item.transaction.tag],
+                  categoryLabel:
+                      widget.categoryLabels[row.item.transaction.tag],
                 ),
                 if (row.dayEndBalance != null)
                   _buildDayEndBalance(context, row.dayEndBalance!),

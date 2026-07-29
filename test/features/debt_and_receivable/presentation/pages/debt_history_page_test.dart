@@ -95,6 +95,7 @@ void main() {
     amount: 5000.0,
     dueDate: DateTime(2026, 6, 10),
     isPaid: true,
+    createdAt: DateTime(2026, 1, 1),
   );
 
   testWidgets('renders CircularProgressIndicator when loading in either tab',

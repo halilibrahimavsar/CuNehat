@@ -24,10 +24,14 @@ class TransactionCalendarView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final Map<String, IconData> categoryIcons;
 
+  /// `tag` → görünen ad (bkz. `buildCategoryLabelMap`).
+  final Map<String, String> categoryLabels;
+
   const TransactionCalendarView({
     super.key,
     required this.transactions,
     this.categoryIcons = const {},
+    this.categoryLabels = const {},
   });
 
   @override
@@ -197,6 +201,8 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
                         isListView: true,
                         categoryIcon: widget
                             .categoryIcons[dayItems[index].transaction.tag],
+                        categoryLabel: widget
+                            .categoryLabels[dayItems[index].transaction.tag],
                       ),
                     ),
                     childCount: dayItems.length,

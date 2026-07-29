@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -27,6 +29,8 @@ import 'package:cunehat/features/recurring_transactions/domain/usecases/save_rec
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -100,10 +104,38 @@ class _InsightsViewState extends State<_InsightsView> {
   /// Bu oturumda eklenip listeden düşürülen öneri anahtarları.
   final Set<String> _dismissed = {};
 
+  /// `tag` → görünen ad; analiz hep `tag` üzerinden gruplar, bu harita
+  /// yalnız gösterim içindir.
+  Map<String, String> _categoryLabels = {};
+
+  StreamSubscription<void>? _categoriesSub;
+
   @override
   void initState() {
     super.initState();
     _loadTemplates();
+    _loadCategoryLabels();
+    _categoriesSub = getIt<CategoriesChangedNotifier>()
+        .stream
+        .listen((_) => _loadCategoryLabels());
+  }
+
+  /// Kategori ikon+ad indeksini yükler ve kategoriler değiştikçe TAZELER.
+  ///
+  /// Harita eskiden yalnız initState'te kuruluyordu: sayfa route yığınında
+  /// dururken yapılan bir yeniden adlandırma ancak sayfa yeniden kurulduğunda
+  /// görünüyordu.
+  Future<void> _loadCategoryLabels() async {
+    final categories = await fetchAllCategories(getIt<CategoryRepository>());
+    if (!mounted) return;
+    final index = buildCategoryDisplayIndex(context, categories);
+    setState(() => _categoryLabels = index.labels);
+  }
+
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadTemplates() async {
@@ -237,6 +269,7 @@ class _InsightsViewState extends State<_InsightsView> {
                         CategorySpikeCard(
                           spike: insights.categorySpike!,
                           formatMoney: _money,
+                          categoryLabels: _categoryLabels,
                         ),
                       InsightStatCard(
                         icon: Icons.calendar_today_rounded,
@@ -256,7 +289,7 @@ class _InsightsViewState extends State<_InsightsView> {
                           icon: Icons.category_rounded,
                           label: context.l10n.enCokHarcananKategori,
                           value:
-                              '${insights.topExpenseCategory!.trim().isEmpty ? context.l10n.kategorisiz : context.translateCategory(insights.topExpenseCategory!)} '
+                              '${insights.topExpenseCategory!.trim().isEmpty ? context.l10n.kategorisiz : context.categoryLabelForTag(insights.topExpenseCategory!, labels: _categoryLabels)} '
                               '(${_money(insights.topExpenseCategoryAmount)})',
                         ),
                       if (insights.largestExpense != null)
