@@ -94,7 +94,8 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
   }
 
   Future<void> _submit() async {
-    final err = _c.validate();
+    final err =
+        _c.validate(categoryRequiredMessage: context.l10n.kategoriSecmeUyarisi);
     if (err != null) {
       _c.error.value = err;
       return;

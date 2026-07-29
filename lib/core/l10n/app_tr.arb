@@ -236,13 +236,6 @@
   "uygulamaBaslatilamadi": "Uygulama başlatılamadı",
   "verilerinizSilinmediTekrarDeneyin": "Verileriniz silinmedi. Tekrar deneyin; sorun sürerse ",
   "ikonBulunamadi": "İkon bulunamadı",
-  "valueTostringasfixedCurrencysymbol": "{toStringAsFixed} {currencySymbol}",
-  "@valueTostringasfixedCurrencysymbol": {
-    "placeholders": {
-      "toStringAsFixed": {},
-      "currencySymbol": {}
-    }
-  },
   "butcePlanlama": "Bütçe Planlama",
   "henuzButceYok": "Henüz bütçe yok",
   "kategorilerinizeAylikHarcamaLimiti": "Kategorilerinize aylık harcama limiti koyun,\nharcamalarınızı buradan takip edin.",
@@ -1455,5 +1448,25 @@
   "privacyLastUpdated": "Son güncelleme: 30 Haziran 2026",
   "privacyConsentTitle": "Gizliliğiniz",
   "privacyConsentBody": "CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.",
-  "privacyConsentAcknowledge": "Anladım"
+  "privacyConsentAcknowledge": "Anladım",
+  "secenekler": "Seçenekler",
+  "tarihAraligiSecBaslik": "Tarih Aralığı Seç",
+  "takvimdenSec": "Takvimden seç",
+  "kategoriSecmeUyarisi": "Bir kategori seçin",
+  "yatirimSatOnayBaslik": "{name} satılsın mı?",
+  "@yatirimSatOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "yatirimSilOnayBaslik": "{name} kaydı silinsin mi?",
+  "@yatirimSilOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -6,6 +6,7 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
@@ -29,7 +30,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class TransactionReportPage extends StatelessWidget {
   final String userId;
@@ -149,7 +149,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   Future<void> _pickDateRange() async {
-    final picked = await IboDateRangePicker.pickDateRange(
+    final picked = await AppDateRangePicker.pick(
       context,
       initialDateRange: _range,
       quickOptions: DateRangeHelper.buildDateRangeQuickOptions(),

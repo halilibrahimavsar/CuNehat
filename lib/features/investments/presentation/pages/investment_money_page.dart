@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -44,46 +45,27 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       [_summaryCardKey, _portfolioHeaderKey, OnboardingKeys.addActionSlider];
 
   /// Satış onayı: güncel değer cüzdana gelir olarak işlenir.
-  Future<bool?> _confirmSell(InvestmentEntity investment) {
-    return IboDialog.showCustomDialog<bool>(
+  Future<bool> _confirmSell(InvestmentEntity investment) {
+    return ConfirmDialog.show(
       context,
-      title: '${investment.name} satılsın mı?',
-      content: Text(
-        context.l10n.guncelDegerFormatmoneyInvestment(
-            formatMoney(investment.currentValue)),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.vazgec),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(context.l10n.sat),
-        ),
-      ],
+      title: context.l10n.yatirimSatOnayBaslik(investment.name),
+      message: context.l10n.guncelDegerFormatmoneyInvestment(
+          formatMoney(investment.currentValue)),
+      confirmText: context.l10n.sat,
+      cancelText: context.l10n.vazgec,
     );
   }
 
   /// Kayıt silme onayı: hatalı girişler için, alım gideri iade edilir.
-  Future<bool?> _confirmDelete(InvestmentEntity investment) {
-    return IboDialog.showCustomDialog<bool>(
+  Future<bool> _confirmDelete(InvestmentEntity investment) {
+    return ConfirmDialog.show(
       context,
-      title: '${investment.name} kaydı silinsin mi?',
-      content: Text(
-        context.l10n.hataliGirislerIcinAlim(formatMoney(investment.amount)),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.vazgec),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(context.l10n.kaydiSil),
-        ),
-      ],
+      title: context.l10n.yatirimSilOnayBaslik(investment.name),
+      message:
+          context.l10n.hataliGirislerIcinAlim(formatMoney(investment.amount)),
+      confirmText: context.l10n.kaydiSil,
+      cancelText: context.l10n.vazgec,
+      danger: true,
     );
   }
 
@@ -218,13 +200,13 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         break;
       case InvestmentAction.sell:
         final confirmed = await _confirmSell(investment);
-        if (confirmed == true && mounted) {
+        if (confirmed && mounted) {
           _dispatchDelete(investment, sell: true);
         }
         break;
       case InvestmentAction.delete:
         final confirmed = await _confirmDelete(investment);
-        if (confirmed == true && mounted) {
+        if (confirmed && mounted) {
           _dispatchDelete(investment, sell: false);
         }
         break;

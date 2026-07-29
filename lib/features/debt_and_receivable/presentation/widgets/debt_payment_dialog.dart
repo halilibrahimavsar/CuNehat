@@ -8,12 +8,16 @@ import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
+import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
-/// Borç Ödeme Dialog'u - Kullanıcının borç ödemesi yapmasını sağlar
+/// Borç Ödeme Dialog'u - Kullanıcının borç ödemesi yapmasını sağlar.
+///
+/// Kabuk [AppDialogSurface]'tir: onay/bilgi diyaloglarıyla aynı düz yüzeyi
+/// paylaşır (eskiden IboDialog'un cam kabuğundaydı, ekranın geri kalanıyla
+/// ilgisiz duruyordu).
 class DebtPaymentDialog extends StatefulWidget {
   final DebtEntity debt;
 
@@ -24,45 +28,10 @@ class DebtPaymentDialog extends StatefulWidget {
 
   /// Static show metodu - Dialog'u açar
   static Future<bool?> show(BuildContext context, DebtEntity debt) {
-    final key = GlobalKey<_DebtPaymentDialogState>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return IboDialog.showCustomDialog<bool>(
-      context,
+    return showDialog<bool>(
+      context: context,
       barrierDismissible: false,
-      title: context.l10n.odemeYap,
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.green.withValues(alpha: 0.2)
-              : Colors.green.shade100,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          Icons.payment,
-          color: isDark ? Colors.greenAccent : Colors.green.shade700,
-        ),
-      ),
-      content: DebtPaymentDialog(key: key, debt: debt),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(context.l10n.iptal),
-        ),
-        ElevatedButton.icon(
-          onPressed: () => key.currentState?._handlePayment(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          icon: const Icon(Icons.check_circle, size: 20),
-          label: Text(context.l10n.odemeyiKaydet),
-        ),
-      ],
+      builder: (_) => DebtPaymentDialog(debt: debt),
     );
   }
 
@@ -146,8 +115,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    // IboDialog içeriğe sonsuz yükseklik veriyor; ConstrainedBox bunu filtreler
-    // ve SingleChildScrollView sınırlı alanda scroll eder → overflow yok.
+    // Diyalog kabuğu içeriğe sonsuz yükseklik veriyor; ConstrainedBox bunu
+    // filtreler ve SingleChildScrollView sınırlı alanda scroll eder → taşma yok.
     final maxH =
         (mq.size.height - mq.viewInsets.bottom - 250).clamp(380.0, 700.0);
 
@@ -157,154 +126,228 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxH),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Borç Özeti
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? cs.primary.withValues(alpha: 0.15)
-                      : cs.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark
-                        ? cs.primary.withValues(alpha: 0.35)
-                        : cs.primary.withValues(alpha: 0.2),
-                  ),
-                ),
+    return AppDialogSurface(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context, isDark),
+          const SizedBox(height: 12),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxH),
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.debt.title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                    // Borç Özeti
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? cs.primary.withValues(alpha: 0.15)
+                            : cs.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? cs.primary.withValues(alpha: 0.35)
+                              : cs.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.debt.title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildInfoRow(context.l10n.toplamBorcLabel,
+                              formatMoney(totalDebt)),
+                          _buildInfoRow(
+                              context.l10n.odenenLabel, formatMoney(totalPaid),
+                              color: Colors.green),
+                          const Divider(height: 16),
+                          _buildInfoRow(
+                              context.l10n.kalanLabel, formatMoney(remaining),
+                              color: Colors.red, isBold: true),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                        context.l10n.toplamBorcLabel, formatMoney(totalDebt)),
-                    _buildInfoRow(
-                        context.l10n.odenenLabel, formatMoney(totalPaid),
-                        color: Colors.green),
-                    const Divider(height: 16),
-                    _buildInfoRow(
-                        context.l10n.kalanLabel, formatMoney(remaining),
-                        color: Colors.red, isBold: true),
+
+                    const SizedBox(height: 16),
+
+                    // Hızlı seçim chip'leri
+                    _buildQuickPayOptions(remaining),
+
+                    const SizedBox(height: 12),
+
+                    // Ödeme Tutarı
+                    TextFormField(
+                      controller: _amountController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [AmountInputFormatter()],
+                      onChanged: (_) {
+                        if (_activeQuickPay != null) {
+                          setState(() => _activeQuickPay = null);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: context.l10n.labelOdemeTutari,
+                        hintText: '0,00',
+                        prefixIcon: const Icon(Icons.attach_money),
+                        suffixText: '₺',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        helperText: context.l10n.maksimumFormatmoneyRemaining(
+                            formatMoney(remaining)),
+                      ),
+                      validator: (value) => validateAmountInput(
+                        value ?? '',
+                        max: remaining,
+                        maxExceededMessage:
+                            context.l10n.kalanTutardanFazlaOlamaz,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Ödeme Tarihi
+                    InkWell(
+                      onTap: _selectDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: context.l10n.labelOdemeTarihi,
+                          prefixIcon: const Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          AppFormatters.dateLong.format(_paymentDate),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Notlar
+                    TextFormField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.labelNotOpsiyonel,
+                        hintText: context.l10n.hintOdemeIleIlgiliNotlar,
+                        prefixIcon: const Icon(Icons.note_alt),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+
+                    // Taksit Planı (foldable)
+                    if (widget.debt.termMonths > 1) ...[
+                      const SizedBox(height: 8),
+                      _buildCollapsibleSection(
+                        cs: cs,
+                        title: context.l10n.taksitPlaniFormat(
+                            widget.debt.termMonths.toString()),
+                        icon: Icons.calendar_month_rounded,
+                        isExpanded: _showInstallmentPlan,
+                        onToggle: () => setState(
+                            () => _showInstallmentPlan = !_showInstallmentPlan),
+                        child: _buildInstallmentPlanList(isDark),
+                      ),
+                    ],
+
+                    // Ödeme Geçmişi (foldable)
+                    if (widget.debt.payments.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      _buildCollapsibleSection(
+                        cs: cs,
+                        title: context.l10n.odemeGecmisiFormat(
+                            widget.debt.payments.length.toString()),
+                        icon: Icons.history_rounded,
+                        isExpanded: _showPaymentHistory,
+                        onToggle: () => setState(
+                            () => _showPaymentHistory = !_showPaymentHistory),
+                        child: _buildPaymentHistoryList(),
+                      ),
+                    ],
                   ],
                 ),
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildActions(context),
+        ],
+      ),
+    );
+  }
 
-              const SizedBox(height: 16),
+  // ----------------------------------------------------------------- Header
 
-              // Hızlı seçim chip'leri
-              _buildQuickPayOptions(remaining),
-
-              const SizedBox(height: 12),
-
-              // Ödeme Tutarı
-              TextFormField(
-                controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [AmountInputFormatter()],
-                onChanged: (_) {
-                  if (_activeQuickPay != null) {
-                    setState(() => _activeQuickPay = null);
-                  }
-                },
-                decoration: InputDecoration(
-                  labelText: context.l10n.labelOdemeTutari,
-                  hintText: '0,00',
-                  prefixIcon: const Icon(Icons.attach_money),
-                  suffixText: '₺',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  helperText: context.l10n
-                      .maksimumFormatmoneyRemaining(formatMoney(remaining)),
-                ),
-                validator: (value) => validateAmountInput(
-                  value ?? '',
-                  max: remaining,
-                  maxExceededMessage: context.l10n.kalanTutardanFazlaOlamaz,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Ödeme Tarihi
-              InkWell(
-                onTap: _selectDate,
-                borderRadius: BorderRadius.circular(12),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: context.l10n.labelOdemeTarihi,
-                    prefixIcon: const Icon(Icons.calendar_today),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    AppFormatters.dateLong.format(_paymentDate),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Notlar
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: context.l10n.labelNotOpsiyonel,
-                  hintText: context.l10n.hintOdemeIleIlgiliNotlar,
-                  prefixIcon: const Icon(Icons.note_alt),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-
-              // Taksit Planı (foldable)
-              if (widget.debt.termMonths > 1) ...[
-                const SizedBox(height: 8),
-                _buildCollapsibleSection(
-                  cs: cs,
-                  title: context.l10n
-                      .taksitPlaniFormat(widget.debt.termMonths.toString()),
-                  icon: Icons.calendar_month_rounded,
-                  isExpanded: _showInstallmentPlan,
-                  onToggle: () => setState(
-                      () => _showInstallmentPlan = !_showInstallmentPlan),
-                  child: _buildInstallmentPlanList(isDark),
-                ),
-              ],
-
-              // Ödeme Geçmişi (foldable)
-              if (widget.debt.payments.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                _buildCollapsibleSection(
-                  cs: cs,
-                  title: context.l10n.odemeGecmisiFormat(
-                      widget.debt.payments.length.toString()),
-                  icon: Icons.history_rounded,
-                  isExpanded: _showPaymentHistory,
-                  onToggle: () => setState(
-                      () => _showPaymentHistory = !_showPaymentHistory),
-                  child: _buildPaymentHistoryList(),
-                ),
-              ],
-            ],
+  Widget _buildHeader(BuildContext context, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.green.withValues(alpha: 0.2)
+                : Colors.green.shade100,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.payment,
+            color: isDark ? Colors.greenAccent : Colors.green.shade700,
           ),
         ),
-      ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            context.l10n.odemeYap,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------- Actions
+
+  Widget _buildActions(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(context.l10n.iptal),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _handlePayment,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.check_circle, size: 20),
+          label: Text(context.l10n.odemeyiKaydet),
+        ),
+      ],
     );
   }
 

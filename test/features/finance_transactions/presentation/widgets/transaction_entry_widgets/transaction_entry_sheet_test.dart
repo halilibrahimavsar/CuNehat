@@ -44,7 +44,8 @@ class FakeRecurringTransactionEntity extends Fake
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 /// Düzenli işlem seçilerek kaydedildiğinde sheet bekleyen listeyi tazeler
 /// (TransactionEntrySheet: `context.read<PendingRecurringBloc>()`).
@@ -221,6 +222,11 @@ void main() {
     await tester.enterText(amountTextField, '250');
     await tester.pumpAndSettle();
 
+    // Kategori zorunlu ve varsayılan seçili GELMEZ — kullanıcı seçmeli.
+    await tester.ensureVisible(find.text('Food'));
+    await tester.tap(find.text('Food'));
+    await tester.pumpAndSettle();
+
     // Tap save
     await tester.ensureVisible(find.text('Kaydet'));
     await tester.tap(find.text('Kaydet'));
@@ -332,6 +338,11 @@ void main() {
       (widget) => widget is TextField && widget.keyboardType.decimal == true,
     );
     await tester.enterText(amountTextField, '5000');
+    await tester.pumpAndSettle();
+
+    // Kategori zorunlu ve varsayılan seçili GELMEZ — kullanıcı seçmeli.
+    await tester.ensureVisible(find.text('Food'));
+    await tester.tap(find.text('Food'));
     await tester.pumpAndSettle();
 
     // Open recurring frequency dropdown

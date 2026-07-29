@@ -63,11 +63,13 @@ class TransactionFormController {
       if (_disposed) return;
       categories.value = list;
 
-      // Seçim yoksa ya da artık geçersizse ilk kategoriye düş.
+      // Kategori seçimi ZORUNLUDUR: hiçbir zaman otomatik doldurulmaz.
+      // Eskiden listenin ilkine ("Yemek") düşülüyordu; kullanıcı seçim
+      // yaptığını sanıp yanlış kategoriye kaydediyordu. Yalnız artık var
+      // olmayan bir seçim (silinmiş kategori) temizlenir.
       final current = categoryId.value;
-      final stillValid = current != null && list.any((c) => c.id == current);
-      if (!stillValid && list.isNotEmpty) {
-        categoryId.value = list.first.id;
+      if (current != null && !list.any((c) => c.id == current)) {
+        categoryId.value = null;
       }
     } catch (e) {
       debugPrint('Kategori yükleme hatası: $e');
@@ -79,11 +81,14 @@ class TransactionFormController {
   double? get parsedAmount => parseMoneyInput(amountController.text);
 
   /// Geçerliyse `null`, değilse hata mesajını döndürür.
-  String? validate() {
+  ///
+  /// Kategori mesajı dışarıdan verilir (l10n çağıran tarafta kalır —
+  /// bkz. [validateAmount]'ın `maxExceededMessage` parametresi).
+  String? validate({required String categoryRequiredMessage}) {
     // Not (title) zorunluluğu kaldırıldı
     final amountError = validateAmountInput(amountController.text);
     if (amountError != null) return amountError;
-    if (categoryId.value == null) return 'Bir kategori seçin';
+    if (categoryId.value == null) return categoryRequiredMessage;
     return null;
   }
 

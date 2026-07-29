@@ -1299,13 +1299,6 @@ abstract class AppLocalizations {
   /// **'İkon bulunamadı'**
   String get ikonBulunamadi;
 
-  /// No description provided for @valueTostringasfixedCurrencysymbol.
-  ///
-  /// In tr, this message translates to:
-  /// **'{toStringAsFixed} {currencySymbol}'**
-  String valueTostringasfixedCurrencysymbol(
-      Object toStringAsFixed, Object currencySymbol);
-
   /// No description provided for @butcePlanlama.
   ///
   /// In tr, this message translates to:
@@ -5323,6 +5316,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Anladım'**
   String get privacyConsentAcknowledge;
+
+  /// No description provided for @secenekler.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçenekler'**
+  String get secenekler;
+
+  /// No description provided for @tarihAraligiSecBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih Aralığı Seç'**
+  String get tarihAraligiSecBaslik;
+
+  /// No description provided for @takvimdenSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimden seç'**
+  String get takvimdenSec;
+
+  /// No description provided for @kategoriSecmeUyarisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir kategori seçin'**
+  String get kategoriSecmeUyarisi;
+
+  /// No description provided for @yatirimSatOnayBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} satılsın mı?'**
+  String yatirimSatOnayBaslik(String name);
+
+  /// No description provided for @yatirimSilOnayBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} kaydı silinsin mi?'**
+  String yatirimSilOnayBaslik(String name);
 }
 
 class _AppLocalizationsDelegate

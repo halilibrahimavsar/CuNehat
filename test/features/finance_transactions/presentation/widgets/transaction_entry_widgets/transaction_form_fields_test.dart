@@ -115,6 +115,69 @@ void main() {
     expect(find.text('Geçerli bir tutar girin'), findsOneWidget);
   });
 
+  testWidgets(
+      'kategori varsayılan seçili gelmez; seçilmeden kaydetmek engellenir',
+      (WidgetTester tester) async {
+    when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
+      (_) async => [
+        const CategoryEntity(
+          id: 'Food',
+          iconName: 'fastfood',
+          isExpense: true,
+          isDefault: true,
+        ),
+        const CategoryEntity(
+          id: 'Market',
+          iconName: 'shopping_cart',
+          isExpense: true,
+          isDefault: true,
+        ),
+      ],
+    );
+
+    var saveCalled = false;
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        TransactionFormSheet(
+          isExpense: true,
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          onSave: (tx, freq) => saveCalled = true,
+          onCancel: () {},
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final amountTextField = find.byWidgetPredicate(
+      (widget) => widget is TextField && widget.keyboardType.decimal == true,
+    );
+    await tester.enterText(amountTextField, '100');
+    await tester.pumpAndSettle();
+
+    // Tutar geçerli ama kategori seçilmedi → kayıt reddedilmeli.
+    await tester.ensureVisible(find.text('Kaydet'));
+    await tester.tap(find.text('Kaydet'));
+    await tester.pumpAndSettle();
+
+    expect(saveCalled, isFalse);
+    expect(find.text('Bir kategori seçin'), findsOneWidget);
+
+    // Kategoriye dokunmak uyarıyı kaldırır ve kayıt geçer.
+    await tester.ensureVisible(find.text('Market'));
+    await tester.tap(find.text('Market'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bir kategori seçin'), findsNothing);
+
+    await tester.ensureVisible(find.text('Kaydet'));
+    await tester.tap(find.text('Kaydet'));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(saveCalled, isTrue);
+  });
+
   testWidgets('calls onSave callback when input is valid and saved',
       (WidgetTester tester) async {
     when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
@@ -165,6 +228,11 @@ void main() {
     );
     await tester.enterText(noteTextField, 'Lunch out');
 
+    await tester.pumpAndSettle();
+
+    // Kategori zorunlu ve varsayılan seçili GELMEZ — kullanıcı seçmeli.
+    await tester.ensureVisible(find.text('Food'));
+    await tester.tap(find.text('Food'));
     await tester.pumpAndSettle();
 
     // Tap save button

@@ -1,4 +1,5 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
@@ -166,7 +167,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
       BuildContext context, CombinedFilter currentFilter) async {
     final cubit = context.read<TransactionFilterCubit>();
 
-    final dateRange = await IboDateRangePicker.pickDateRange(
+    final dateRange = await AppDateRangePicker.pick(
       context,
       initialDateRange: DateTimeRange(
         start: currentFilter.viewFilter.startDate,

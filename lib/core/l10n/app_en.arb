@@ -236,13 +236,6 @@
   "uygulamaBaslatilamadi": "App could not start",
   "verilerinizSilinmediTekrarDeneyin": "Your data was not deleted. Try again; if the problem persists ",
   "ikonBulunamadi": "Icon not found",
-  "valueTostringasfixedCurrencysymbol": "{toStringAsFixed} {currencySymbol}",
-  "@valueTostringasfixedCurrencysymbol": {
-    "placeholders": {
-      "toStringAsFixed": {},
-      "currencySymbol": {}
-    }
-  },
   "butcePlanlama": "Budget Planning",
   "henuzButceYok": "No budgets yet",
   "kategorilerinizeAylikHarcamaLimiti": "Set a monthly spending limit for your categories,\ntrack your spending here.",
@@ -1434,5 +1427,25 @@
   "privacyLastUpdated": "Last updated: 30 June 2026",
   "privacyConsentTitle": "Your privacy",
   "privacyConsentBody": "CuNehat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.",
-  "privacyConsentAcknowledge": "Got it"
+  "privacyConsentAcknowledge": "Got it",
+  "secenekler": "Options",
+  "tarihAraligiSecBaslik": "Select date range",
+  "takvimdenSec": "Choose from calendar",
+  "kategoriSecmeUyarisi": "Select a category",
+  "yatirimSatOnayBaslik": "Sell {name}?",
+  "@yatirimSatOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "yatirimSilOnayBaslik": "Delete the {name} record?",
+  "@yatirimSilOnayBaslik": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

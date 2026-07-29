@@ -251,7 +251,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Choose from calendar in the quick options sheet to open the dialog
-    await tester.tap(find.text('Choose from calendar'));
+    await tester.tap(find.text('Takvimden seç'));
     await tester.pumpAndSettle();
 
     // Verify DateRangePickerDialog is shown

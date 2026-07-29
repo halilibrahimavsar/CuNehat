@@ -42,6 +42,16 @@ class CategoryPicker extends StatelessWidget {
                 letterSpacing: 0.2,
               ),
             ),
+            // Kategori zorunlu; varsayılan seçim yok (bkz.
+            // [TransactionFormController.loadCategories]).
+            Text(
+              ' *',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: accent,
+              ),
+            ),
             const Spacer(),
             TextButton.icon(
               onPressed: () => _openManager(context),
@@ -95,7 +105,13 @@ class CategoryPicker extends StatelessWidget {
                             category: cat,
                             selected: selectedId == cat.id,
                             accent: accent,
-                            onTap: () => controller.categoryId.value = cat.id,
+                            onTap: () {
+                              controller.categoryId.value = cat.id;
+                              // "Bir kategori seçin" uyarısı ekranda kalmasın.
+                              if (controller.error.value != null) {
+                                controller.error.value = null;
+                              }
+                            },
                           );
                         },
                       );

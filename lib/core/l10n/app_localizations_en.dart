@@ -652,12 +652,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ikonBulunamadi => 'Icon not found';
 
   @override
-  String valueTostringasfixedCurrencysymbol(
-      Object toStringAsFixed, Object currencySymbol) {
-    return '$toStringAsFixed $currencySymbol';
-  }
-
-  @override
   String get butcePlanlama => 'Budget Planning';
 
   @override
@@ -2940,4 +2934,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyConsentAcknowledge => 'Got it';
+
+  @override
+  String get secenekler => 'Options';
+
+  @override
+  String get tarihAraligiSecBaslik => 'Select date range';
+
+  @override
+  String get takvimdenSec => 'Choose from calendar';
+
+  @override
+  String get kategoriSecmeUyarisi => 'Select a category';
+
+  @override
+  String yatirimSatOnayBaslik(String name) {
+    return 'Sell $name?';
+  }
+
+  @override
+  String yatirimSilOnayBaslik(String name) {
+    return 'Delete the $name record?';
+  }
 }
