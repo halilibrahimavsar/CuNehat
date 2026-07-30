@@ -7,6 +7,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/services/auto_backup_service.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
@@ -73,6 +74,11 @@ class AppInitialization {
       // defteri değişimlerini dinler ve eşik aşımında bildirim atar (Budgets
       // sayfası açık olmasa da). lazySingleton olduğundan bir kez touch edilir.
       getIt<BudgetAlertMonitor>();
+
+      // Otomatik Drive yedeği uygulama arka plana geçerken tetiklenir; dinleyici
+      // servisin kurucusunda kaydolduğu için servis en az bir kez oluşturulmalı.
+      // Ayar kapalıysa tur ilk kapıda döner, maliyeti yok.
+      getIt<AutoBackupService>();
 
       // Kur ısıtması: tek çağrı USD+EUR'u önbelleğe alır; açılışı bloklamaz,
       // hata durumunda servis sessizce bayat önbelleğe/null'a düşer.

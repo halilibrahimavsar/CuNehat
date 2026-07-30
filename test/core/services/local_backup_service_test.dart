@@ -107,4 +107,69 @@ void main() {
       await tempFile.delete();
     }
   });
+
+  // Cihaz yedeğinde de aynı dürüstlük kuralı: dosya sağlam, sürüm farklı.
+  // `failure` deyip ham istisna metnini göstermek kullanıcıyı "yedeğim bozuk"
+  // sanısına götürüyordu.
+  test('sürüm uyuşmazlığı ayrı durum olarak ve bulunan sürümle döner',
+      () async {
+    final tempFile = File('${Directory.systemTemp.path}/cunehat_eski.json');
+    await tempFile.writeAsString('{"version":2}');
+    filePickerResponse = [
+      {
+        'path': tempFile.path,
+        'name': 'cunehat_eski.json',
+        'size': await tempFile.length(),
+        'bytes': null,
+      }
+    ];
+    when(() => dataSerializationService.importDataFromJson(any()))
+        .thenAnswer((_) async => const DataRestoreResult.versionMismatch(2));
+
+    final result = await service.importFromDevice();
+
+    expect(result.status, LocalBackupStatus.versionMismatch);
+    expect(result.foundVersion, 2);
+
+    if (await tempFile.exists()) {
+      await tempFile.delete();
+    }
+  });
+
+  group('pickBackupJson (önizleme yolu)', () {
+    test('seçilen dosyanın adını ve içeriğini YAZMADAN döner', () async {
+      final tempFile = File('${Directory.systemTemp.path}/cunehat_onizle.json');
+      // Türkçe karakter: okuma utf8 olmalı, yoksa sessizce mojibake üretir.
+      const payload = '{"version":4,"note":"Şişli — İĞÜÖÇ"}';
+      await tempFile.writeAsString(payload);
+      filePickerResponse = [
+        {
+          'path': tempFile.path,
+          'name': 'cunehat_onizle.json',
+          'size': await tempFile.length(),
+          'bytes': null,
+        }
+      ];
+
+      final pick = await service.pickBackupJson();
+
+      expect(pick.isSuccess, isTrue);
+      expect(pick.fileName, 'cunehat_onizle.json');
+      expect(pick.content, payload);
+      verifyNever(() => dataSerializationService.importDataFromJson(any()));
+
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+    });
+
+    test('seçici kapatılırsa cancelled döner', () async {
+      filePickerResponse = null;
+
+      final pick = await service.pickBackupJson();
+
+      expect(pick.status, LocalBackupStatus.cancelled);
+      expect(pick.content, isNull);
+    });
+  });
 }

@@ -1,0 +1,9 @@
+/// Dosya boyutunu okunur biçime çevirir (yedek boyutları için).
+///
+/// Yerelleştirilmiş ondalık ayracı kullanmaz: birim kısaltmaları (B/KB/MB)
+/// zaten dile çevrilmiyor ve tek bir kısa etiket olarak okunuyor.
+String formatBytes(int bytes) {
+  if (bytes < 1024) return '$bytes B';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+}

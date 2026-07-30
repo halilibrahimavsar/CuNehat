@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
@@ -201,6 +202,18 @@ void main() {
 
     final result = await service.importDataFromJson(oldBackup);
 
+    // `invalidFormat` DEĞİL: dosya sapasağlam, yalnız şeması farklı. Kullanıcıya
+    // "yedek bozuk" demek yalan olurdu; bulunan sürüm de mesaja taşınır.
+    expect(result.status, DataRestoreStatus.versionMismatch);
+    expect(result.foundVersion, DataSerializationService.schemaVersion + 1);
+    expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
+  });
+
+  test('bozuk JSON sürüm uyuşmazlığından ayrı raporlanır', () async {
+    await Hive.box<WalletModel>('wallets').put('w1', _wallet());
+
+    final result = await service.importDataFromJson('{ bu json değil');
+
     expect(result.status, DataRestoreStatus.invalidFormat);
     expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
   });
@@ -334,6 +347,128 @@ void main() {
     verify(() => budgetBox.putAll(any())).called(1);
     verify(() => recurringBox.putAll(any())).called(1);
     expect(prefs.getString(CategoryService.backupKeys.first), 'old-cats');
+  });
+
+  // ===================================================== önizleme (inspect)
+
+  group('inspectBackup', () {
+    test('yedeği YAZMADAN özetler', () async {
+      await Hive.box<WalletModel>('wallets').put('w1', _wallet());
+      await Hive.box<TransactionModel>('transactions')
+          .put('t1', _transaction());
+      final backup = await service.exportDataToJson();
+
+      // Cihazı boşalt: inceleme yerel veriye dokunmamalı.
+      await _clearAllBoxes();
+
+      final inspection = service.inspectBackup(backup);
+
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.isRestorable, isTrue);
+
+      final summary = inspection.summary!;
+      expect(summary.walletCount, 1);
+      expect(summary.transactionCount, 1);
+      expect(summary.totalIncome, 1000);
+      expect(summary.totalExpense, 0);
+      expect(summary.firstTransactionDate, DateTime(2024, 1, 2));
+      expect(summary.lastTransactionDate, DateTime(2024, 1, 2));
+      expect(summary.wallets.single.name, 'Main');
+      expect(summary.wallets.single.currency, 'TRY');
+      expect(summary.createdAt, isNotNull);
+      expect(summary.isEmpty, isFalse);
+
+      // İncelemenin YAZMADIĞININ kanıtı: kutular hâlâ boş.
+      expect(Hive.box<WalletModel>('wallets').length, 0);
+      expect(Hive.box<TransactionModel>('transactions').length, 0);
+    });
+
+    test('fişli işlem sayısı uyarı için ayrı sayılır', () async {
+      await Hive.box<TransactionModel>('transactions').put(
+        't1',
+        TransactionModel(
+          id: 't1',
+          userId: 'u1',
+          walletId: 'w1',
+          title: 'Market',
+          tag: 'Yemek',
+          amount: 250,
+          date: DateTime(2024, 3, 4),
+          type: TransactionTypeModel.expense,
+          receiptFileName: 'fis1.jpg',
+        ),
+      );
+
+      final inspection =
+          service.inspectBackup(await service.exportDataToJson());
+
+      expect(inspection.summary!.transactionsWithReceipt, 1);
+      expect(inspection.summary!.totalExpense, 250);
+    });
+
+    test('sürüm uyuşmazlığı bozukluktan ayrı raporlanır', () {
+      final foreign = jsonEncode({
+        'version': DataSerializationService.schemaVersion + 1,
+        'wallets': <dynamic>[],
+      });
+
+      final inspection = service.inspectBackup(foreign);
+
+      expect(inspection.status, BackupInspectionStatus.versionMismatch);
+      expect(
+          inspection.foundVersion, DataSerializationService.schemaVersion + 1);
+      expect(
+          inspection.expectedVersion, DataSerializationService.schemaVersion);
+      expect(inspection.isRestorable, isFalse);
+      expect(inspection.summary, isNull);
+    });
+
+    // 0 baytlı/yarım yüklenmiş dosya: eski akışta "yedek bulunamadı" deniyordu.
+    test('boş veya bozuk içerik corrupt döner', () {
+      expect(service.inspectBackup('').status, BackupInspectionStatus.corrupt);
+      expect(service.inspectBackup('{ bozuk').status,
+          BackupInspectionStatus.corrupt);
+      expect(
+          service.inspectBackup('[]').status, BackupInspectionStatus.corrupt);
+    });
+
+    test('boş yedek geçerlidir ama isEmpty ile işaretlenir', () async {
+      await _clearAllBoxes();
+
+      final inspection =
+          service.inspectBackup(await service.exportDataToJson());
+
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.summary!.isEmpty, isTrue);
+      expect(inspection.summary!.recordCount, 0);
+    });
+  });
+
+  group('currentDataSummary', () {
+    test('cihazdaki veriyi yedek özetiyle aynı biçimde sayar', () async {
+      await Hive.box<WalletModel>('wallets').put('w1', _wallet());
+      await Hive.box<TransactionModel>('transactions')
+          .put('t1', _transaction());
+      await Hive.box<DebtModel>('debts').put('d1', _debt());
+
+      final summary = await service.currentDataSummary();
+
+      expect(summary.walletCount, 1);
+      expect(summary.transactionCount, 1);
+      expect(summary.debtCount, 1);
+      expect(summary.recordCount, 3);
+      expect(summary.isEmpty, isFalse);
+      // Cihaz özetinde "yedek tarihi" kavramı yok.
+      expect(summary.createdAt, isNull);
+    });
+
+    test('veri yokken isEmpty true — boş yedek kapısının dayanağı', () async {
+      await _clearAllBoxes();
+
+      final summary = await service.currentDataSummary();
+
+      expect(summary.isEmpty, isTrue);
+    });
   });
 }
 

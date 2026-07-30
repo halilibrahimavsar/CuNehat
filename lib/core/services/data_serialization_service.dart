@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
@@ -8,6 +9,7 @@ import 'package:cunehat/features/debt_and_receivable/data/models/receivable_mode
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/recurring_transactions/data/models/recurring_transaction_model.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
@@ -19,6 +21,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum DataRestoreStatus {
   success,
   invalidFormat,
+
+  /// Dosya sağlam ama şema sürümü bu sürümle eşleşmiyor. `invalidFormat`'tan
+  /// ayrı: kullanıcıya "yedek bozuk" demek yalan olurdu.
+  versionMismatch,
   writeFailure,
 }
 
@@ -26,11 +32,17 @@ class DataRestoreResult {
   final DataRestoreStatus status;
   final Object? error;
 
-  const DataRestoreResult._(this.status, [this.error]);
+  /// Yalnız [DataRestoreStatus.versionMismatch] durumunda dolu: dosyadan
+  /// okunan sürüm (int olmayabilir — bozuk/eski dosyada ne varsa).
+  final Object? foundVersion;
+
+  const DataRestoreResult._(this.status, [this.error, this.foundVersion]);
 
   const DataRestoreResult.success() : this._(DataRestoreStatus.success);
   const DataRestoreResult.invalidFormat([Object? error])
       : this._(DataRestoreStatus.invalidFormat, error);
+  const DataRestoreResult.versionMismatch(Object? foundVersion)
+      : this._(DataRestoreStatus.versionMismatch, null, foundVersion);
   const DataRestoreResult.writeFailure([Object? error])
       : this._(DataRestoreStatus.writeFailure, error);
 
@@ -48,6 +60,9 @@ class _ParsedBackup {
   final Map<String, Map> users;
   final Map<String, String> categories;
 
+  /// Yedeğin alındığı an (`timestamp`). Önizleme bunu gösterir; bozuksa null.
+  final DateTime? timestamp;
+
   const _ParsedBackup({
     required this.wallets,
     required this.transactions,
@@ -58,6 +73,7 @@ class _ParsedBackup {
     required this.recurringTransactions,
     required this.users,
     required this.categories,
+    required this.timestamp,
   });
 }
 
@@ -186,6 +202,9 @@ class DataSerializationService {
     final _ParsedBackup parsedBackup;
     try {
       parsedBackup = _parseBackup(jsonString);
+    } on BackupVersionMismatch catch (e) {
+      debugPrint('DataSerializationService version mismatch: $e');
+      return DataRestoreResult.versionMismatch(e.found);
     } catch (e, st) {
       debugPrint('DataSerializationService parse error: $e\n$st');
       return DataRestoreResult.invalidFormat(e);
@@ -318,6 +337,125 @@ class DataSerializationService {
     }
   }
 
+  /// Yedeği YAZMADAN okur ve özetler. Önizleme ekranının tek veri kaynağı.
+  ///
+  /// [importDataFromJson] ile aynı ayrıştırıcıyı (`_parseBackup`) kullanır —
+  /// yani önizlemenin "geri yüklenebilir" demesi ile geri yüklemenin gerçekten
+  /// çalışması aynı koda dayanır. Ayrı bir "hafif ayrıştırıcı" yazmak, tam da
+  /// önizlemenin engellemesi gereken sürprizi geri getirirdi.
+  BackupInspection inspectBackup(String jsonString) {
+    try {
+      final parsed = _parseBackup(jsonString);
+      return BackupInspection.ok(
+        _summarize(
+          wallets: parsed.wallets,
+          transactions: parsed.transactions,
+          investmentCount: parsed.investments.length,
+          debtCount: parsed.debts.length,
+          receivableCount: parsed.receivables.length,
+          budgetCount: parsed.budgets.length,
+          recurringCount: parsed.recurringTransactions.length,
+          categoryKeyCount: parsed.categories.length,
+          createdAt: parsed.timestamp,
+        ),
+        schemaVersion,
+      );
+    } on BackupVersionMismatch catch (e) {
+      return BackupInspection.versionMismatch(e.found, schemaVersion);
+    } catch (e, st) {
+      debugPrint('DataSerializationService inspect error: $e\n$st');
+      return BackupInspection.corrupt(e, schemaVersion);
+    }
+  }
+
+  /// Cihazdaki mevcut verinin aynı biçimdeki özeti. Önizlemedeki fark paneli
+  /// ("geri yüklersen 23 işlem kaybolur") ve otomatik yedeğin boş-veri kapısı
+  /// bunu kullanır.
+  Future<BackupSummary> currentDataSummary() async {
+    final walletBox = await _hive.openBox<WalletModel>('wallets');
+    final transactionBox =
+        await _hive.openBox<TransactionModel>('transactions');
+    final investmentBox =
+        await _hive.openBox<InvestmentModel>('investments_box');
+    final debtBox = await _hive.openBox<DebtModel>('debts');
+    final receivableBox = await _hive.openBox<ReceivableModel>('receivables');
+    final budgetBox = await _hive.openBox<BudgetModel>('budgets_box');
+    final recurringBox = await _hive
+        .openBox<RecurringTransactionModel>('recurring_transactions_box');
+
+    final prefs = await SharedPreferences.getInstance();
+    final categoryKeyCount = CategoryService.backupKeys
+        .where((key) => prefs.getString(key) != null)
+        .length;
+
+    return _summarize(
+      wallets: walletBox.values.toList(),
+      transactions: transactionBox.values.toList(),
+      investmentCount: investmentBox.length,
+      debtCount: debtBox.length,
+      receivableCount: receivableBox.length,
+      budgetCount: budgetBox.length,
+      recurringCount: recurringBox.length,
+      categoryKeyCount: categoryKeyCount,
+      createdAt: null,
+    );
+  }
+
+  BackupSummary _summarize({
+    required List<WalletModel> wallets,
+    required List<TransactionModel> transactions,
+    required int investmentCount,
+    required int debtCount,
+    required int receivableCount,
+    required int budgetCount,
+    required int recurringCount,
+    required int categoryKeyCount,
+    required DateTime? createdAt,
+  }) {
+    DateTime? first;
+    DateTime? last;
+    var income = 0.0;
+    var expense = 0.0;
+    var withReceipt = 0;
+
+    for (final t in transactions) {
+      if (first == null || t.date.isBefore(first)) first = t.date;
+      if (last == null || t.date.isAfter(last)) last = t.date;
+      if (t.type == TransactionTypeModel.income) {
+        income += t.amount;
+      } else {
+        expense += t.amount;
+      }
+      if (t.receiptFileName != null) withReceipt++;
+    }
+
+    return BackupSummary(
+      schemaVersion: schemaVersion,
+      createdAt: createdAt,
+      walletCount: wallets.length,
+      transactionCount: transactions.length,
+      investmentCount: investmentCount,
+      debtCount: debtCount,
+      receivableCount: receivableCount,
+      budgetCount: budgetCount,
+      recurringCount: recurringCount,
+      categoryKeyCount: categoryKeyCount,
+      wallets: [
+        for (final w in wallets)
+          BackupWalletSummary(
+            name: w.name,
+            currency: w.currency,
+            balance: w.balance,
+          ),
+      ],
+      firstTransactionDate: first,
+      lastTransactionDate: last,
+      totalIncome: income,
+      totalExpense: expense,
+      transactionsWithReceipt: withReceipt,
+    );
+  }
+
   _ParsedBackup _parseBackup(String jsonString) {
     final decoded = jsonDecode(jsonString);
     if (decoded is! Map<String, dynamic>) {
@@ -325,10 +463,11 @@ class DataSerializationService {
     }
 
     // Sürüm kapısı: farklı şema sessizce yanlış yorumlanmasın, açıkça reddet.
+    // Tipli istisna: `FormatException` ile aynı sepete düşerse çağıran
+    // "bozuk dosya" der ve kullanıcıya yalan söyler.
     final version = decoded['version'];
     if (version != schemaVersion) {
-      throw FormatException(
-          'Desteklenmeyen yedek sürümü: $version (beklenen: $schemaVersion)');
+      throw BackupVersionMismatch(version, schemaVersion);
     }
 
     final users = <String, Map>{};
@@ -374,6 +513,7 @@ class DataSerializationService {
           .toList(),
       users: users,
       categories: categories,
+      timestamp: DateTime.tryParse(decoded['timestamp'] as String? ?? ''),
     );
   }
 

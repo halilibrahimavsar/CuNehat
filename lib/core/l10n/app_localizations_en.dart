@@ -591,8 +591,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupFailed => 'Backup failed.';
 
   @override
-  String get dataRestoredSuccess =>
-      'Data successfully restored. Please restart the app for changes to take effect.';
+  String get dataRestoredSuccess => 'Data restored successfully.';
 
   @override
   String get restoreFailedNoBackup => 'Restore failed. No backup file found.';
@@ -3009,4 +3008,250 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletQuickStartSkip => 'Skip for now';
+
+  @override
+  String get driveErrNotSignedIn => 'You are not connected to Google Drive.';
+
+  @override
+  String get driveErrCancelled => 'Operation cancelled.';
+
+  @override
+  String get driveErrNoNetwork =>
+      'No internet connection. Reconnect and try again.';
+
+  @override
+  String get driveErrTimeout =>
+      'Google Drive did not respond in time. Check your connection and try again.';
+
+  @override
+  String get driveErrAuthExpired =>
+      'Your Google session expired. Disconnect and connect again.';
+
+  @override
+  String get driveErrScopeDenied =>
+      'Drive app-folder permission was not granted. Backup cannot work without it.';
+
+  @override
+  String get driveErrConfigError =>
+      'Google Drive is not configured in this build (the OAuth client does not match the package name/signature). This is a setup error; backup is unavailable for now.';
+
+  @override
+  String get driveErrQuotaExceeded =>
+      'Your Google Drive storage is full. Free up space and try again.';
+
+  @override
+  String get driveErrServerError =>
+      'Google Drive is not responding right now. Try again later.';
+
+  @override
+  String get driveErrEmptyLocalData =>
+      'There is nothing on this device to back up. An empty backup would replace the full backup in your Drive.';
+
+  @override
+  String get driveErrVerificationFailed =>
+      'The upload could not be verified; the backup may be incomplete. The new copy was rolled back and your previous backup is intact.';
+
+  @override
+  String get driveErrNotFound => 'No backup found in Google Drive.';
+
+  @override
+  String driveErrVersionMismatch(String found, int expected) {
+    return 'This backup belongs to a different app version (backup schema $found, this version $expected). It cannot be restored.';
+  }
+
+  @override
+  String get driveErrCorrupt =>
+      'The backup file could not be read; it is corrupt or incompletely written.';
+
+  @override
+  String get driveErrWriteFailure =>
+      'A write error occurred while restoring. Your previous data on this device was rolled back.';
+
+  @override
+  String get driveUnchanged =>
+      'Data has not changed since the last backup; no new backup was made.';
+
+  @override
+  String get backupEmptyConfirmTitle => 'Create an empty backup?';
+
+  @override
+  String get backupEmptyConfirmDesc =>
+      'There are no records on this device. If you continue, an empty backup will replace the newest backup in your Drive.';
+
+  @override
+  String get backupEmptyConfirmAction => 'Back up empty';
+
+  @override
+  String get viewBackups => 'View Backups';
+
+  @override
+  String get deleteAllBackups => 'Delete All Backups';
+
+  @override
+  String get deleteAllBackupsDesc =>
+      'Every backup copy in Google Drive will be permanently deleted. Data on your device is not affected.';
+
+  @override
+  String backupGenerationsKept(int count) {
+    return '$count copies kept';
+  }
+
+  @override
+  String get backupSizeLabel => 'Size';
+
+  @override
+  String get autoBackup => 'Automatic backup';
+
+  @override
+  String get autoBackupDesc =>
+      'When the app goes to the background, a backup is made silently if the data changed and the interval has elapsed.';
+
+  @override
+  String get autoBackupOff => 'Off';
+
+  @override
+  String get autoBackupDaily => 'Daily';
+
+  @override
+  String get autoBackupWeekly => 'Weekly';
+
+  @override
+  String get autoBackupLimitNote =>
+      'Automatic backup does not run if you never open the app.';
+
+  @override
+  String autoBackupFailureWarning(int count) {
+    return 'The last $count automatic backup attempts failed. Back up manually to see why.';
+  }
+
+  @override
+  String get autoBackupNeedsConnection =>
+      'Automatic backup requires a Google Drive connection.';
+
+  @override
+  String get backupPreviewTitle => 'Backups';
+
+  @override
+  String get backupPreviewDetailTitle => 'Backup preview';
+
+  @override
+  String get backupPreviewDriveSection => 'Copies in Google Drive';
+
+  @override
+  String get backupPreviewLocalButton => 'Preview a file from this device';
+
+  @override
+  String get backupPreviewEmpty => 'No backups in Google Drive yet.';
+
+  @override
+  String get backupPreviewLocalSource => 'Device file';
+
+  @override
+  String get backupPreviewOriginManual => 'Manual';
+
+  @override
+  String get backupPreviewOriginAuto => 'Automatic';
+
+  @override
+  String get backupPreviewLoading => 'Reading backup…';
+
+  @override
+  String get backupPreviewContents => 'Contents';
+
+  @override
+  String get backupPreviewWallets => 'Wallets';
+
+  @override
+  String get backupPreviewTransactions => 'Transactions';
+
+  @override
+  String get backupPreviewInvestments => 'Savings';
+
+  @override
+  String get backupPreviewDebts => 'Debts';
+
+  @override
+  String get backupPreviewReceivables => 'Receivables';
+
+  @override
+  String get backupPreviewBudgets => 'Budgets';
+
+  @override
+  String get backupPreviewRecurring => 'Recurring transactions';
+
+  @override
+  String get backupPreviewCategories => 'Category preferences';
+
+  @override
+  String get backupPreviewDateRange => 'Transaction date range';
+
+  @override
+  String get backupPreviewIncome => 'Total income';
+
+  @override
+  String get backupPreviewExpense => 'Total expense';
+
+  @override
+  String get backupPreviewTakenAt => 'Backup date';
+
+  @override
+  String get backupPreviewSchemaVersion => 'Schema version';
+
+  @override
+  String get backupPreviewDiffTitle => 'What changes if you restore';
+
+  @override
+  String get backupPreviewDiffOnDevice => 'On device';
+
+  @override
+  String get backupPreviewDiffInBackup => 'In backup';
+
+  @override
+  String backupPreviewReceiptWarning(int count) {
+    return '$count transactions have receipt images. Images are not included in the backup; if you restore on another device they will not appear.';
+  }
+
+  @override
+  String get backupPreviewEmptyWarning =>
+      'This backup is empty. Restoring it deletes every record on your device.';
+
+  @override
+  String get backupPreviewRestoreButton => 'Restore this backup';
+
+  @override
+  String get backupPreviewDeleteButton => 'Delete this copy';
+
+  @override
+  String get backupPreviewDeleteConfirmDesc =>
+      'This backup copy will be permanently deleted from Google Drive. Data on your device is not affected.';
+
+  @override
+  String get backupPreviewRestoreConfirmTitle => 'Restore this backup?';
+
+  @override
+  String get backupPreviewRestoreConfirmDesc =>
+      'Every wallet, transaction, saving, debt, receivable, budget and recurring template on this device will be REPLACED by the ones in this backup. This cannot be undone.';
+
+  @override
+  String get backupPreviewNoTransactions => 'This backup has no transactions.';
+
+  @override
+  String get backupPreviewUnknownCount => '?';
+
+  @override
+  String get disconnectConfirmTitle => 'Disconnect?';
+
+  @override
+  String disconnectConfirmDesc(String email) {
+    return 'You will be signed out of $email. Your backups in Google Drive are NOT deleted — reconnect with the same account to reach them. Automatic backup will stop.';
+  }
+
+  @override
+  String deleteAllBackupsDangerDesc(int count) {
+    return 'Once you confirm, all $count backup copies in Google Drive are permanently deleted. If the data on your device is corrupted or erased, no copy remains to restore from.';
+  }
+
+  @override
+  String get driveErrApiNotEnabled =>
+      'The Google Drive API is not enabled for this app. This is a setup gap; it cannot be fixed by granting permission.';
 }

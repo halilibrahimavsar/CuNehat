@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_state.dart';
@@ -59,6 +60,12 @@ class _DataExportImportCardContent extends StatelessWidget {
             case DataExportMessageType.fullBackupCancelled:
               AppMessenger.info(l.fullBackupCancelled);
           }
+        } else if (state is DataExportImportVersionMismatch) {
+          // Ham istisna metni yerine gerçek sebep: dosya sağlam, sürüm farklı.
+          AppMessenger.error(context.l10n.driveErrVersionMismatch(
+            state.foundVersion,
+            DataSerializationService.schemaVersion,
+          ));
         } else if (state is DataExportImportError) {
           AppMessenger.error(state.message);
         }

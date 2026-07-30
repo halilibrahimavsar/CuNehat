@@ -217,7 +217,7 @@
   "googleDriveDisconnected": "Google Drive disconnected.",
   "dataBackedUpSuccess": "Data successfully backed up to Google Drive.",
   "backupFailed": "Backup failed.",
-  "dataRestoredSuccess": "Data successfully restored. Please restart the app for changes to take effect.",
+  "dataRestoredSuccess": "Data restored successfully.",
   "restoreFailedNoBackup": "Restore failed. No backup file found.",
   "defaultUser": "User",
   "dataExportImport": "Device Backup / CSV",
@@ -1479,5 +1479,122 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "driveErrNotSignedIn": "You are not connected to Google Drive.",
+  "driveErrCancelled": "Operation cancelled.",
+  "driveErrNoNetwork": "No internet connection. Reconnect and try again.",
+  "driveErrTimeout": "Google Drive did not respond in time. Check your connection and try again.",
+  "driveErrAuthExpired": "Your Google session expired. Disconnect and connect again.",
+  "driveErrScopeDenied": "Drive app-folder permission was not granted. Backup cannot work without it.",
+  "driveErrConfigError": "Google Drive is not configured in this build (the OAuth client does not match the package name/signature). This is a setup error; backup is unavailable for now.",
+  "driveErrQuotaExceeded": "Your Google Drive storage is full. Free up space and try again.",
+  "driveErrServerError": "Google Drive is not responding right now. Try again later.",
+  "driveErrEmptyLocalData": "There is nothing on this device to back up. An empty backup would replace the full backup in your Drive.",
+  "driveErrVerificationFailed": "The upload could not be verified; the backup may be incomplete. The new copy was rolled back and your previous backup is intact.",
+  "driveErrNotFound": "No backup found in Google Drive.",
+  "driveErrVersionMismatch": "This backup belongs to a different app version (backup schema {found}, this version {expected}). It cannot be restored.",
+  "@driveErrVersionMismatch": {
+    "placeholders": {
+      "found": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "int"
+      }
+    }
+  },
+  "driveErrCorrupt": "The backup file could not be read; it is corrupt or incompletely written.",
+  "driveErrWriteFailure": "A write error occurred while restoring. Your previous data on this device was rolled back.",
+  "driveUnchanged": "Data has not changed since the last backup; no new backup was made.",
+  "backupEmptyConfirmTitle": "Create an empty backup?",
+  "backupEmptyConfirmDesc": "There are no records on this device. If you continue, an empty backup will replace the newest backup in your Drive.",
+  "backupEmptyConfirmAction": "Back up empty",
+  "viewBackups": "View Backups",
+  "deleteAllBackups": "Delete All Backups",
+  "deleteAllBackupsDesc": "Every backup copy in Google Drive will be permanently deleted. Data on your device is not affected.",
+  "backupGenerationsKept": "{count} copies kept",
+  "@backupGenerationsKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupSizeLabel": "Size",
+  "autoBackup": "Automatic backup",
+  "autoBackupDesc": "When the app goes to the background, a backup is made silently if the data changed and the interval has elapsed.",
+  "autoBackupOff": "Off",
+  "autoBackupDaily": "Daily",
+  "autoBackupWeekly": "Weekly",
+  "autoBackupLimitNote": "Automatic backup does not run if you never open the app.",
+  "autoBackupFailureWarning": "The last {count} automatic backup attempts failed. Back up manually to see why.",
+  "@autoBackupFailureWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoBackupNeedsConnection": "Automatic backup requires a Google Drive connection.",
+  "backupPreviewTitle": "Backups",
+  "backupPreviewDetailTitle": "Backup preview",
+  "backupPreviewDriveSection": "Copies in Google Drive",
+  "backupPreviewLocalButton": "Preview a file from this device",
+  "backupPreviewEmpty": "No backups in Google Drive yet.",
+  "backupPreviewLocalSource": "Device file",
+  "backupPreviewOriginManual": "Manual",
+  "backupPreviewOriginAuto": "Automatic",
+  "backupPreviewLoading": "Reading backup…",
+  "backupPreviewContents": "Contents",
+  "backupPreviewWallets": "Wallets",
+  "backupPreviewTransactions": "Transactions",
+  "backupPreviewInvestments": "Savings",
+  "backupPreviewDebts": "Debts",
+  "backupPreviewReceivables": "Receivables",
+  "backupPreviewBudgets": "Budgets",
+  "backupPreviewRecurring": "Recurring transactions",
+  "backupPreviewCategories": "Category preferences",
+  "backupPreviewDateRange": "Transaction date range",
+  "backupPreviewIncome": "Total income",
+  "backupPreviewExpense": "Total expense",
+  "backupPreviewTakenAt": "Backup date",
+  "backupPreviewSchemaVersion": "Schema version",
+  "backupPreviewDiffTitle": "What changes if you restore",
+  "backupPreviewDiffOnDevice": "On device",
+  "backupPreviewDiffInBackup": "In backup",
+  "backupPreviewReceiptWarning": "{count} transactions have receipt images. Images are not included in the backup; if you restore on another device they will not appear.",
+  "@backupPreviewReceiptWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPreviewEmptyWarning": "This backup is empty. Restoring it deletes every record on your device.",
+  "backupPreviewRestoreButton": "Restore this backup",
+  "backupPreviewDeleteButton": "Delete this copy",
+  "backupPreviewDeleteConfirmDesc": "This backup copy will be permanently deleted from Google Drive. Data on your device is not affected.",
+  "backupPreviewRestoreConfirmTitle": "Restore this backup?",
+  "backupPreviewRestoreConfirmDesc": "Every wallet, transaction, saving, debt, receivable, budget and recurring template on this device will be REPLACED by the ones in this backup. This cannot be undone.",
+  "backupPreviewNoTransactions": "This backup has no transactions.",
+  "backupPreviewUnknownCount": "?",
+  "disconnectConfirmTitle": "Disconnect?",
+  "disconnectConfirmDesc": "You will be signed out of {email}. Your backups in Google Drive are NOT deleted — reconnect with the same account to reach them. Automatic backup will stop.",
+  "@disconnectConfirmDesc": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAllBackupsDangerDesc": "Once you confirm, all {count} backup copies in Google Drive are permanently deleted. If the data on your device is corrupted or erased, no copy remains to restore from.",
+  "@deleteAllBackupsDangerDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "driveErrApiNotEnabled": "The Google Drive API is not enabled for this app. This is a setup gap; it cannot be fixed by granting permission."
 }

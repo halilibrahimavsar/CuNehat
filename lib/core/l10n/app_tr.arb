@@ -217,7 +217,7 @@
   "googleDriveDisconnected": "Google Drive bağlantısı kesildi.",
   "dataBackedUpSuccess": "Veriler Google Drive'a başarıyla yedeklendi.",
   "backupFailed": "Yedekleme başarısız oldu.",
-  "dataRestoredSuccess": "Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.",
+  "dataRestoredSuccess": "Veriler başarıyla geri yüklendi.",
   "restoreFailedNoBackup": "Geri yükleme başarısız oldu. Yedek dosyası bulunamadı.",
   "defaultUser": "Kullanıcı",
   "dataExportImport": "Cihaz Yedeği / CSV",
@@ -1500,5 +1500,122 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "driveErrNotSignedIn": "Google Drive'a bağlı değilsiniz.",
+  "driveErrCancelled": "İşlem iptal edildi.",
+  "driveErrNoNetwork": "İnternet bağlantısı yok. Bağlanıp tekrar deneyin.",
+  "driveErrTimeout": "Google Drive zamanında yanıt vermedi. Bağlantınızı kontrol edip tekrar deneyin.",
+  "driveErrAuthExpired": "Google oturumunuzun süresi doldu. Bağlantıyı kesip yeniden bağlanın.",
+  "driveErrScopeDenied": "Drive uygulama klasörü izni verilmedi. Yedekleme bu izin olmadan çalışamaz.",
+  "driveErrConfigError": "Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.",
+  "driveErrQuotaExceeded": "Google Drive depolama alanınız dolu. Yer açıp tekrar deneyin.",
+  "driveErrServerError": "Google Drive şu anda yanıt veremiyor. Daha sonra tekrar deneyin.",
+  "driveErrEmptyLocalData": "Cihazda yedeklenecek kayıt yok. Boş bir yedek, Drive'daki dolu yedeğinizin yerini alırdı.",
+  "driveErrVerificationFailed": "Yükleme doğrulanamadı; yedek eksik yazılmış olabilir. Yeni kopya geri alındı, önceki yedeğiniz duruyor.",
+  "driveErrNotFound": "Google Drive'da yedek bulunamadı.",
+  "driveErrVersionMismatch": "Bu yedek farklı bir uygulama sürümüne ait (yedek şeması {found}, bu sürüm {expected}). Geri yüklenemez.",
+  "@driveErrVersionMismatch": {
+    "placeholders": {
+      "found": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "int"
+      }
+    }
+  },
+  "driveErrCorrupt": "Yedek dosyası okunamadı; bozuk ya da eksik yazılmış.",
+  "driveErrWriteFailure": "Geri yükleme sırasında yazma hatası oldu. Cihazdaki eski verileriniz geri alındı.",
+  "driveUnchanged": "Veriler son yedekten beri değişmedi; yeni yedek alınmadı.",
+  "backupEmptyConfirmTitle": "Boş yedek alınsın mı?",
+  "backupEmptyConfirmDesc": "Cihazda hiç kayıt yok. Devam ederseniz Drive'daki en yeni yedeğin yerine boş bir yedek yazılır.",
+  "backupEmptyConfirmAction": "Boş yedek al",
+  "viewBackups": "Yedekleri Görüntüle",
+  "deleteAllBackups": "Tüm Yedekleri Sil",
+  "deleteAllBackupsDesc": "Google Drive'daki tüm yedek kopyaları kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.",
+  "backupGenerationsKept": "{count} kopya saklanıyor",
+  "@backupGenerationsKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupSizeLabel": "Boyut",
+  "autoBackup": "Otomatik yedekleme",
+  "autoBackupDesc": "Uygulama arka plana alındığında, veri değiştiyse ve aralık dolduysa sessizce yedek alınır.",
+  "autoBackupOff": "Kapalı",
+  "autoBackupDaily": "Günlük",
+  "autoBackupWeekly": "Haftalık",
+  "autoBackupLimitNote": "Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.",
+  "autoBackupFailureWarning": "Son {count} otomatik yedekleme denemesi başarısız oldu. Elle yedekleyerek sebebini görebilirsiniz.",
+  "@autoBackupFailureWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoBackupNeedsConnection": "Otomatik yedekleme için Google Drive bağlantısı gerekir.",
+  "backupPreviewTitle": "Yedekler",
+  "backupPreviewDetailTitle": "Yedek önizleme",
+  "backupPreviewDriveSection": "Google Drive'daki kopyalar",
+  "backupPreviewLocalButton": "Cihazdaki dosyadan önizle",
+  "backupPreviewEmpty": "Google Drive'da henüz yedek yok.",
+  "backupPreviewLocalSource": "Cihaz dosyası",
+  "backupPreviewOriginManual": "Elle",
+  "backupPreviewOriginAuto": "Otomatik",
+  "backupPreviewLoading": "Yedek okunuyor…",
+  "backupPreviewContents": "İçerik",
+  "backupPreviewWallets": "Cüzdanlar",
+  "backupPreviewTransactions": "İşlemler",
+  "backupPreviewInvestments": "Birikimler",
+  "backupPreviewDebts": "Borçlar",
+  "backupPreviewReceivables": "Alacaklar",
+  "backupPreviewBudgets": "Bütçeler",
+  "backupPreviewRecurring": "Düzenli işlemler",
+  "backupPreviewCategories": "Kategori tercihleri",
+  "backupPreviewDateRange": "İşlem tarih aralığı",
+  "backupPreviewIncome": "Toplam gelir",
+  "backupPreviewExpense": "Toplam gider",
+  "backupPreviewTakenAt": "Yedek tarihi",
+  "backupPreviewSchemaVersion": "Şema sürümü",
+  "backupPreviewDiffTitle": "Geri yüklerseniz ne değişir",
+  "backupPreviewDiffOnDevice": "Cihazda",
+  "backupPreviewDiffInBackup": "Yedekte",
+  "backupPreviewReceiptWarning": "{count} işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklerseniz bu görseller görünmez.",
+  "@backupPreviewReceiptWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPreviewEmptyWarning": "Bu yedek boş. Geri yüklerseniz cihazınızdaki tüm kayıtlar silinir.",
+  "backupPreviewRestoreButton": "Bu yedeği geri yükle",
+  "backupPreviewDeleteButton": "Bu kopyayı sil",
+  "backupPreviewDeleteConfirmDesc": "Bu yedek kopyası Google Drive'dan kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.",
+  "backupPreviewRestoreConfirmTitle": "Bu yedek geri yüklensin mi?",
+  "backupPreviewRestoreConfirmDesc": "Cihazdaki tüm cüzdanlar, işlemler, birikimler, borçlar, alacaklar, bütçeler ve düzenli işlem şablonları bu yedektekilerle DEĞİŞTİRİLİR. Bu işlem geri alınamaz.",
+  "backupPreviewNoTransactions": "Bu yedekte işlem yok.",
+  "backupPreviewUnknownCount": "?",
+  "disconnectConfirmTitle": "Bağlantı kesilsin mi?",
+  "disconnectConfirmDesc": "{email} hesabından çıkılacak. Google Drive'daki yedekleriniz SİLİNMEZ — aynı hesapla tekrar bağlandığınızda erişebilirsiniz. Otomatik yedekleme duracak.",
+  "@disconnectConfirmDesc": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAllBackupsDangerDesc": "Onayladığınızda Google Drive'daki {count} yedek kopyasının tamamı kalıcı olarak silinir. Cihazınızdaki veriler bozulur ya da silinirse geri dönebileceğiniz hiçbir kopya kalmaz.",
+  "@deleteAllBackupsDangerDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "driveErrApiNotEnabled": "Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez."
 }

@@ -1188,7 +1188,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataRestoredSuccess.
   ///
   /// In tr, this message translates to:
-  /// **'Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.'**
+  /// **'Veriler başarıyla geri yüklendi.'**
   String get dataRestoredSuccess;
 
   /// No description provided for @restoreFailedNoBackup.
@@ -5442,6 +5442,432 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Şimdilik atla'**
   String get walletQuickStartSkip;
+
+  /// No description provided for @driveErrNotSignedIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'a bağlı değilsiniz.'**
+  String get driveErrNotSignedIn;
+
+  /// No description provided for @driveErrCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem iptal edildi.'**
+  String get driveErrCancelled;
+
+  /// No description provided for @driveErrNoNetwork.
+  ///
+  /// In tr, this message translates to:
+  /// **'İnternet bağlantısı yok. Bağlanıp tekrar deneyin.'**
+  String get driveErrNoNetwork;
+
+  /// No description provided for @driveErrTimeout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive zamanında yanıt vermedi. Bağlantınızı kontrol edip tekrar deneyin.'**
+  String get driveErrTimeout;
+
+  /// No description provided for @driveErrAuthExpired.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google oturumunuzun süresi doldu. Bağlantıyı kesip yeniden bağlanın.'**
+  String get driveErrAuthExpired;
+
+  /// No description provided for @driveErrScopeDenied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive uygulama klasörü izni verilmedi. Yedekleme bu izin olmadan çalışamaz.'**
+  String get driveErrScopeDenied;
+
+  /// No description provided for @driveErrConfigError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.'**
+  String get driveErrConfigError;
+
+  /// No description provided for @driveErrQuotaExceeded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive depolama alanınız dolu. Yer açıp tekrar deneyin.'**
+  String get driveErrQuotaExceeded;
+
+  /// No description provided for @driveErrServerError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive şu anda yanıt veremiyor. Daha sonra tekrar deneyin.'**
+  String get driveErrServerError;
+
+  /// No description provided for @driveErrEmptyLocalData.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazda yedeklenecek kayıt yok. Boş bir yedek, Drive\'daki dolu yedeğinizin yerini alırdı.'**
+  String get driveErrEmptyLocalData;
+
+  /// No description provided for @driveErrVerificationFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme doğrulanamadı; yedek eksik yazılmış olabilir. Yeni kopya geri alındı, önceki yedeğiniz duruyor.'**
+  String get driveErrVerificationFailed;
+
+  /// No description provided for @driveErrNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'da yedek bulunamadı.'**
+  String get driveErrNotFound;
+
+  /// No description provided for @driveErrVersionMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedek farklı bir uygulama sürümüne ait (yedek şeması {found}, bu sürüm {expected}). Geri yüklenemez.'**
+  String driveErrVersionMismatch(String found, int expected);
+
+  /// No description provided for @driveErrCorrupt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek dosyası okunamadı; bozuk ya da eksik yazılmış.'**
+  String get driveErrCorrupt;
+
+  /// No description provided for @driveErrWriteFailure.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri yükleme sırasında yazma hatası oldu. Cihazdaki eski verileriniz geri alındı.'**
+  String get driveErrWriteFailure;
+
+  /// No description provided for @driveUnchanged.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veriler son yedekten beri değişmedi; yeni yedek alınmadı.'**
+  String get driveUnchanged;
+
+  /// No description provided for @backupEmptyConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş yedek alınsın mı?'**
+  String get backupEmptyConfirmTitle;
+
+  /// No description provided for @backupEmptyConfirmDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazda hiç kayıt yok. Devam ederseniz Drive\'daki en yeni yedeğin yerine boş bir yedek yazılır.'**
+  String get backupEmptyConfirmDesc;
+
+  /// No description provided for @backupEmptyConfirmAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş yedek al'**
+  String get backupEmptyConfirmAction;
+
+  /// No description provided for @viewBackups.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekleri Görüntüle'**
+  String get viewBackups;
+
+  /// No description provided for @deleteAllBackups.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm Yedekleri Sil'**
+  String get deleteAllBackups;
+
+  /// No description provided for @deleteAllBackupsDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'daki tüm yedek kopyaları kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.'**
+  String get deleteAllBackupsDesc;
+
+  /// No description provided for @backupGenerationsKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kopya saklanıyor'**
+  String backupGenerationsKept(int count);
+
+  /// No description provided for @backupSizeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyut'**
+  String get backupSizeLabel;
+
+  /// No description provided for @autoBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik yedekleme'**
+  String get autoBackup;
+
+  /// No description provided for @autoBackupDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama arka plana alındığında, veri değiştiyse ve aralık dolduysa sessizce yedek alınır.'**
+  String get autoBackupDesc;
+
+  /// No description provided for @autoBackupOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get autoBackupOff;
+
+  /// No description provided for @autoBackupDaily.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük'**
+  String get autoBackupDaily;
+
+  /// No description provided for @autoBackupWeekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık'**
+  String get autoBackupWeekly;
+
+  /// No description provided for @autoBackupLimitNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.'**
+  String get autoBackupLimitNote;
+
+  /// No description provided for @autoBackupFailureWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son {count} otomatik yedekleme denemesi başarısız oldu. Elle yedekleyerek sebebini görebilirsiniz.'**
+  String autoBackupFailureWarning(int count);
+
+  /// No description provided for @autoBackupNeedsConnection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik yedekleme için Google Drive bağlantısı gerekir.'**
+  String get autoBackupNeedsConnection;
+
+  /// No description provided for @backupPreviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekler'**
+  String get backupPreviewTitle;
+
+  /// No description provided for @backupPreviewDetailTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek önizleme'**
+  String get backupPreviewDetailTitle;
+
+  /// No description provided for @backupPreviewDriveSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'daki kopyalar'**
+  String get backupPreviewDriveSection;
+
+  /// No description provided for @backupPreviewLocalButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazdaki dosyadan önizle'**
+  String get backupPreviewLocalButton;
+
+  /// No description provided for @backupPreviewEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive\'da henüz yedek yok.'**
+  String get backupPreviewEmpty;
+
+  /// No description provided for @backupPreviewLocalSource.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihaz dosyası'**
+  String get backupPreviewLocalSource;
+
+  /// No description provided for @backupPreviewOriginManual.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle'**
+  String get backupPreviewOriginManual;
+
+  /// No description provided for @backupPreviewOriginAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get backupPreviewOriginAuto;
+
+  /// No description provided for @backupPreviewLoading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek okunuyor…'**
+  String get backupPreviewLoading;
+
+  /// No description provided for @backupPreviewContents.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçerik'**
+  String get backupPreviewContents;
+
+  /// No description provided for @backupPreviewWallets.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlar'**
+  String get backupPreviewWallets;
+
+  /// No description provided for @backupPreviewTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler'**
+  String get backupPreviewTransactions;
+
+  /// No description provided for @backupPreviewInvestments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birikimler'**
+  String get backupPreviewInvestments;
+
+  /// No description provided for @backupPreviewDebts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borçlar'**
+  String get backupPreviewDebts;
+
+  /// No description provided for @backupPreviewReceivables.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alacaklar'**
+  String get backupPreviewReceivables;
+
+  /// No description provided for @backupPreviewBudgets.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçeler'**
+  String get backupPreviewBudgets;
+
+  /// No description provided for @backupPreviewRecurring.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenli işlemler'**
+  String get backupPreviewRecurring;
+
+  /// No description provided for @backupPreviewCategories.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori tercihleri'**
+  String get backupPreviewCategories;
+
+  /// No description provided for @backupPreviewDateRange.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem tarih aralığı'**
+  String get backupPreviewDateRange;
+
+  /// No description provided for @backupPreviewIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam gelir'**
+  String get backupPreviewIncome;
+
+  /// No description provided for @backupPreviewExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam gider'**
+  String get backupPreviewExpense;
+
+  /// No description provided for @backupPreviewTakenAt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek tarihi'**
+  String get backupPreviewTakenAt;
+
+  /// No description provided for @backupPreviewSchemaVersion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şema sürümü'**
+  String get backupPreviewSchemaVersion;
+
+  /// No description provided for @backupPreviewDiffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri yüklerseniz ne değişir'**
+  String get backupPreviewDiffTitle;
+
+  /// No description provided for @backupPreviewDiffOnDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazda'**
+  String get backupPreviewDiffOnDevice;
+
+  /// No description provided for @backupPreviewDiffInBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekte'**
+  String get backupPreviewDiffInBackup;
+
+  /// No description provided for @backupPreviewReceiptWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklerseniz bu görseller görünmez.'**
+  String backupPreviewReceiptWarning(int count);
+
+  /// No description provided for @backupPreviewEmptyWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedek boş. Geri yüklerseniz cihazınızdaki tüm kayıtlar silinir.'**
+  String get backupPreviewEmptyWarning;
+
+  /// No description provided for @backupPreviewRestoreButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedeği geri yükle'**
+  String get backupPreviewRestoreButton;
+
+  /// No description provided for @backupPreviewDeleteButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kopyayı sil'**
+  String get backupPreviewDeleteButton;
+
+  /// No description provided for @backupPreviewDeleteConfirmDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedek kopyası Google Drive\'dan kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.'**
+  String get backupPreviewDeleteConfirmDesc;
+
+  /// No description provided for @backupPreviewRestoreConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedek geri yüklensin mi?'**
+  String get backupPreviewRestoreConfirmTitle;
+
+  /// No description provided for @backupPreviewRestoreConfirmDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazdaki tüm cüzdanlar, işlemler, birikimler, borçlar, alacaklar, bütçeler ve düzenli işlem şablonları bu yedektekilerle DEĞİŞTİRİLİR. Bu işlem geri alınamaz.'**
+  String get backupPreviewRestoreConfirmDesc;
+
+  /// No description provided for @backupPreviewNoTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedekte işlem yok.'**
+  String get backupPreviewNoTransactions;
+
+  /// No description provided for @backupPreviewUnknownCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'?'**
+  String get backupPreviewUnknownCount;
+
+  /// No description provided for @disconnectConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı kesilsin mi?'**
+  String get disconnectConfirmTitle;
+
+  /// No description provided for @disconnectConfirmDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'{email} hesabından çıkılacak. Google Drive\'daki yedekleriniz SİLİNMEZ — aynı hesapla tekrar bağlandığınızda erişebilirsiniz. Otomatik yedekleme duracak.'**
+  String disconnectConfirmDesc(String email);
+
+  /// No description provided for @deleteAllBackupsDangerDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onayladığınızda Google Drive\'daki {count} yedek kopyasının tamamı kalıcı olarak silinir. Cihazınızdaki veriler bozulur ya da silinirse geri dönebileceğiniz hiçbir kopya kalmaz.'**
+  String deleteAllBackupsDangerDesc(int count);
+
+  /// No description provided for @driveErrApiNotEnabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez.'**
+  String get driveErrApiNotEnabled;
 }
 
 class _AppLocalizationsDelegate

@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/services/local_backup_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
@@ -19,6 +20,7 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
   final WalletRepository walletRepository;
   final WalletMetricsService walletMetricsService;
   final TransactionsChangedNotifier transactionsChangedNotifier;
+  final CategoriesChangedNotifier categoriesChangedNotifier;
 
   DataExportImportCubit({
     required this.csvService,
@@ -27,6 +29,7 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
     required this.walletRepository,
     required this.walletMetricsService,
     required this.transactionsChangedNotifier,
+    required this.categoriesChangedNotifier,
   }) : super(DataExportImportInitial());
 
   Future<void> exportFullBackupToDevice() async {
@@ -51,7 +54,11 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
     emit(DataExportImportLoading());
     final result = await localBackupService.importFromDevice();
     if (result.isSuccess) {
+      // Geri yükleme defteri VE kategori tercihlerini değiştirir; bunlar ayrı
+      // yayın kanalları. Kategori kanalı bildirilmediği için açık sayfalar
+      // eski kategori adlarını basmaya devam ediyordu.
       transactionsChangedNotifier.notify(userId: userId);
+      categoriesChangedNotifier.notify();
     }
     _emitLocalBackupResult(
       result,
@@ -159,6 +166,9 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
         emit(const DataExportImportSuccess(
           DataExportMessageType.fullBackupCancelled,
         ));
+        return;
+      case LocalBackupStatus.versionMismatch:
+        emit(DataExportImportVersionMismatch('${result.foundVersion}'));
         return;
       case LocalBackupStatus.failure:
         emit(DataExportImportError(

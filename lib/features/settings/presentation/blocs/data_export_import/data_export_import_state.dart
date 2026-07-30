@@ -44,3 +44,15 @@ class DataExportImportError extends DataExportImportState {
   @override
   List<Object> get props => [message];
 }
+
+/// Dosya sağlam ama şema sürümü uyuşmuyor. Ayrı bir durum: kullanıcıya
+/// "yedek bozuk" ya da ham bir istisna metni göstermek yalan olurdu; mesaj
+/// widget katmanında bulunan/beklenen sürümle birlikte lokalize edilir.
+class DataExportImportVersionMismatch extends DataExportImportState {
+  final String foundVersion;
+
+  const DataExportImportVersionMismatch(this.foundVersion);
+
+  @override
+  List<Object> get props => [foundVersion];
+}

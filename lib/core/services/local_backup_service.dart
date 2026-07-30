@@ -11,6 +11,10 @@ import 'package:share_plus/share_plus.dart';
 enum LocalBackupStatus {
   success,
   cancelled,
+
+  /// Dosya sağlam ama şema sürümü bu uygulama sürümüyle uyuşmuyor.
+  /// `failure`'dan ayrı: "yedek bozuk" demek yalan olurdu.
+  versionMismatch,
   failure,
 }
 
@@ -18,12 +22,38 @@ class LocalBackupResult {
   final LocalBackupStatus status;
   final Object? error;
 
-  const LocalBackupResult._(this.status, [this.error]);
+  /// Yalnız [LocalBackupStatus.versionMismatch] durumunda dolu.
+  final Object? foundVersion;
+
+  const LocalBackupResult._(this.status, [this.error, this.foundVersion]);
 
   const LocalBackupResult.success() : this._(LocalBackupStatus.success);
   const LocalBackupResult.cancelled() : this._(LocalBackupStatus.cancelled);
+  const LocalBackupResult.versionMismatch(Object? foundVersion)
+      : this._(LocalBackupStatus.versionMismatch, null, foundVersion);
   const LocalBackupResult.failure([Object? error])
       : this._(LocalBackupStatus.failure, error);
+
+  bool get isSuccess => status == LocalBackupStatus.success;
+}
+
+/// Cihazdan seçilen yedek dosyasının ham içeriği. Önizleme bunu okur ve
+/// HİÇBİR ŞEY YAZMAZ; geri yükleme de aynı metni kullanır, böylece kullanıcının
+/// baktığı içerik ile yazılan içerik aynı olur.
+class LocalBackupPick {
+  final LocalBackupStatus status;
+  final String? fileName;
+  final String? content;
+  final Object? error;
+
+  const LocalBackupPick._(this.status,
+      {this.fileName, this.content, this.error});
+
+  const LocalBackupPick.success(String fileName, String content)
+      : this._(LocalBackupStatus.success, fileName: fileName, content: content);
+  const LocalBackupPick.cancelled() : this._(LocalBackupStatus.cancelled);
+  const LocalBackupPick.failure(Object? error)
+      : this._(LocalBackupStatus.failure, error: error);
 
   bool get isSuccess => status == LocalBackupStatus.success;
 }
@@ -56,26 +86,52 @@ class LocalBackupService {
     }
   }
 
-  Future<LocalBackupResult> importFromDevice() async {
+  /// Kullanıcıya dosya seçtirir ve içeriğini okur — yazmaz.
+  /// Hem önizleme hem geri yükleme bu tek yoldan geçer.
+  Future<LocalBackupPick> pickBackupJson() async {
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['json'],
       );
 
-      if (result == null || result.files.single.path == null) {
+      final path = result?.files.single.path;
+      if (result == null || path == null) {
+        return const LocalBackupPick.cancelled();
+      }
+
+      // `readAsString` varsayılan olarak utf8 çözer; yedekler her zaman utf8
+      // yazılır (Türkçe başlık/kategori adları buna bağlı).
+      return LocalBackupPick.success(
+        result.files.single.name,
+        await File(path).readAsString(),
+      );
+    } catch (e) {
+      return LocalBackupPick.failure(e);
+    }
+  }
+
+  Future<LocalBackupResult> importFromDevice() async {
+    final pick = await pickBackupJson();
+    switch (pick.status) {
+      case LocalBackupStatus.cancelled:
         return const LocalBackupResult.cancelled();
-      }
+      case LocalBackupStatus.success:
+        break;
+      default:
+        return LocalBackupResult.failure(pick.error);
+    }
 
-      final backupJson = await File(result.files.single.path!).readAsString();
+    try {
       final restoreResult =
-          await _dataSerializationService.importDataFromJson(backupJson);
+          await _dataSerializationService.importDataFromJson(pick.content!);
 
-      if (!restoreResult.isSuccess) {
-        return LocalBackupResult.failure(restoreResult.error);
-      }
-
-      return const LocalBackupResult.success();
+      return switch (restoreResult.status) {
+        DataRestoreStatus.success => const LocalBackupResult.success(),
+        DataRestoreStatus.versionMismatch =>
+          LocalBackupResult.versionMismatch(restoreResult.foundVersion),
+        _ => LocalBackupResult.failure(restoreResult.error),
+      };
     } catch (e) {
       return LocalBackupResult.failure(e);
     }

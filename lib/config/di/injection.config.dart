@@ -16,6 +16,7 @@ import 'package:cunehat/core/notifications/notification_permission_channel.dart'
     as _i477;
 import 'package:cunehat/core/notifications/notification_service.dart' as _i551;
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart' as _i371;
+import 'package:cunehat/core/services/auto_backup_service.dart' as _i530;
 import 'package:cunehat/core/services/categories_changed_notifier.dart'
     as _i520;
 import 'package:cunehat/core/services/csv_service.dart' as _i530;
@@ -142,6 +143,8 @@ import 'package:cunehat/features/recurring_transactions/presentation/bloc/pendin
     as _i494;
 import 'package:cunehat/features/settings/presentation/bloc/notification_settings/notification_settings_bloc.dart'
     as _i1021;
+import 'package:cunehat/features/settings/presentation/blocs/backup_preview/backup_preview_cubit.dart'
+    as _i125;
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart'
     as _i407;
 import 'package:cunehat/features/settings/presentation/blocs/language_bloc/language_bloc.dart'
@@ -519,10 +522,20 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i239.WalletMetricsService>(),
           gh<_i777.TransactionsChangedNotifier>(),
         ));
-    gh.lazySingleton<_i186.GoogleDriveBackupService>(() =>
-        _i186.GoogleDriveBackupService(gh<_i348.DataSerializationService>()));
+    gh.lazySingleton<_i186.GoogleDriveBackupService>(
+      () =>
+          _i186.GoogleDriveBackupService(gh<_i348.DataSerializationService>()),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i266.LocalBackupService>(
         () => _i266.LocalBackupService(gh<_i348.DataSerializationService>()));
+    gh.lazySingleton<_i530.AutoBackupService>(
+      () => _i530.AutoBackupService(
+        gh<_i186.GoogleDriveBackupService>(),
+        gh<_i460.SharedPreferences>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i407.DataExportImportCubit>(() => _i407.DataExportImportCubit(
           csvService: gh<_i530.CsvService>(),
           localBackupService: gh<_i266.LocalBackupService>(),
@@ -530,6 +543,14 @@ extension GetItInjectableX on _i174.GetIt {
           walletRepository: gh<_i504.WalletRepository>(),
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
+          categoriesChangedNotifier: gh<_i520.CategoriesChangedNotifier>(),
+        ));
+    gh.factory<_i125.BackupPreviewCubit>(() => _i125.BackupPreviewCubit(
+          gh<_i186.GoogleDriveBackupService>(),
+          gh<_i348.DataSerializationService>(),
+          gh<_i266.LocalBackupService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+          gh<_i520.CategoriesChangedNotifier>(),
         ));
     return this;
   }

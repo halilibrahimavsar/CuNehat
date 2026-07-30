@@ -594,8 +594,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get backupFailed => 'Yedekleme başarısız oldu.';
 
   @override
-  String get dataRestoredSuccess =>
-      'Veriler başarıyla geri yüklendi. Değişikliklerin görünmesi için lütfen uygulamayı yeniden başlatın.';
+  String get dataRestoredSuccess => 'Veriler başarıyla geri yüklendi.';
 
   @override
   String get restoreFailedNoBackup =>
@@ -3011,4 +3010,250 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get walletQuickStartSkip => 'Şimdilik atla';
+
+  @override
+  String get driveErrNotSignedIn => 'Google Drive\'a bağlı değilsiniz.';
+
+  @override
+  String get driveErrCancelled => 'İşlem iptal edildi.';
+
+  @override
+  String get driveErrNoNetwork =>
+      'İnternet bağlantısı yok. Bağlanıp tekrar deneyin.';
+
+  @override
+  String get driveErrTimeout =>
+      'Google Drive zamanında yanıt vermedi. Bağlantınızı kontrol edip tekrar deneyin.';
+
+  @override
+  String get driveErrAuthExpired =>
+      'Google oturumunuzun süresi doldu. Bağlantıyı kesip yeniden bağlanın.';
+
+  @override
+  String get driveErrScopeDenied =>
+      'Drive uygulama klasörü izni verilmedi. Yedekleme bu izin olmadan çalışamaz.';
+
+  @override
+  String get driveErrConfigError =>
+      'Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.';
+
+  @override
+  String get driveErrQuotaExceeded =>
+      'Google Drive depolama alanınız dolu. Yer açıp tekrar deneyin.';
+
+  @override
+  String get driveErrServerError =>
+      'Google Drive şu anda yanıt veremiyor. Daha sonra tekrar deneyin.';
+
+  @override
+  String get driveErrEmptyLocalData =>
+      'Cihazda yedeklenecek kayıt yok. Boş bir yedek, Drive\'daki dolu yedeğinizin yerini alırdı.';
+
+  @override
+  String get driveErrVerificationFailed =>
+      'Yükleme doğrulanamadı; yedek eksik yazılmış olabilir. Yeni kopya geri alındı, önceki yedeğiniz duruyor.';
+
+  @override
+  String get driveErrNotFound => 'Google Drive\'da yedek bulunamadı.';
+
+  @override
+  String driveErrVersionMismatch(String found, int expected) {
+    return 'Bu yedek farklı bir uygulama sürümüne ait (yedek şeması $found, bu sürüm $expected). Geri yüklenemez.';
+  }
+
+  @override
+  String get driveErrCorrupt =>
+      'Yedek dosyası okunamadı; bozuk ya da eksik yazılmış.';
+
+  @override
+  String get driveErrWriteFailure =>
+      'Geri yükleme sırasında yazma hatası oldu. Cihazdaki eski verileriniz geri alındı.';
+
+  @override
+  String get driveUnchanged =>
+      'Veriler son yedekten beri değişmedi; yeni yedek alınmadı.';
+
+  @override
+  String get backupEmptyConfirmTitle => 'Boş yedek alınsın mı?';
+
+  @override
+  String get backupEmptyConfirmDesc =>
+      'Cihazda hiç kayıt yok. Devam ederseniz Drive\'daki en yeni yedeğin yerine boş bir yedek yazılır.';
+
+  @override
+  String get backupEmptyConfirmAction => 'Boş yedek al';
+
+  @override
+  String get viewBackups => 'Yedekleri Görüntüle';
+
+  @override
+  String get deleteAllBackups => 'Tüm Yedekleri Sil';
+
+  @override
+  String get deleteAllBackupsDesc =>
+      'Google Drive\'daki tüm yedek kopyaları kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.';
+
+  @override
+  String backupGenerationsKept(int count) {
+    return '$count kopya saklanıyor';
+  }
+
+  @override
+  String get backupSizeLabel => 'Boyut';
+
+  @override
+  String get autoBackup => 'Otomatik yedekleme';
+
+  @override
+  String get autoBackupDesc =>
+      'Uygulama arka plana alındığında, veri değiştiyse ve aralık dolduysa sessizce yedek alınır.';
+
+  @override
+  String get autoBackupOff => 'Kapalı';
+
+  @override
+  String get autoBackupDaily => 'Günlük';
+
+  @override
+  String get autoBackupWeekly => 'Haftalık';
+
+  @override
+  String get autoBackupLimitNote =>
+      'Uygulamayı hiç açmazsanız otomatik yedek çalışmaz.';
+
+  @override
+  String autoBackupFailureWarning(int count) {
+    return 'Son $count otomatik yedekleme denemesi başarısız oldu. Elle yedekleyerek sebebini görebilirsiniz.';
+  }
+
+  @override
+  String get autoBackupNeedsConnection =>
+      'Otomatik yedekleme için Google Drive bağlantısı gerekir.';
+
+  @override
+  String get backupPreviewTitle => 'Yedekler';
+
+  @override
+  String get backupPreviewDetailTitle => 'Yedek önizleme';
+
+  @override
+  String get backupPreviewDriveSection => 'Google Drive\'daki kopyalar';
+
+  @override
+  String get backupPreviewLocalButton => 'Cihazdaki dosyadan önizle';
+
+  @override
+  String get backupPreviewEmpty => 'Google Drive\'da henüz yedek yok.';
+
+  @override
+  String get backupPreviewLocalSource => 'Cihaz dosyası';
+
+  @override
+  String get backupPreviewOriginManual => 'Elle';
+
+  @override
+  String get backupPreviewOriginAuto => 'Otomatik';
+
+  @override
+  String get backupPreviewLoading => 'Yedek okunuyor…';
+
+  @override
+  String get backupPreviewContents => 'İçerik';
+
+  @override
+  String get backupPreviewWallets => 'Cüzdanlar';
+
+  @override
+  String get backupPreviewTransactions => 'İşlemler';
+
+  @override
+  String get backupPreviewInvestments => 'Birikimler';
+
+  @override
+  String get backupPreviewDebts => 'Borçlar';
+
+  @override
+  String get backupPreviewReceivables => 'Alacaklar';
+
+  @override
+  String get backupPreviewBudgets => 'Bütçeler';
+
+  @override
+  String get backupPreviewRecurring => 'Düzenli işlemler';
+
+  @override
+  String get backupPreviewCategories => 'Kategori tercihleri';
+
+  @override
+  String get backupPreviewDateRange => 'İşlem tarih aralığı';
+
+  @override
+  String get backupPreviewIncome => 'Toplam gelir';
+
+  @override
+  String get backupPreviewExpense => 'Toplam gider';
+
+  @override
+  String get backupPreviewTakenAt => 'Yedek tarihi';
+
+  @override
+  String get backupPreviewSchemaVersion => 'Şema sürümü';
+
+  @override
+  String get backupPreviewDiffTitle => 'Geri yüklerseniz ne değişir';
+
+  @override
+  String get backupPreviewDiffOnDevice => 'Cihazda';
+
+  @override
+  String get backupPreviewDiffInBackup => 'Yedekte';
+
+  @override
+  String backupPreviewReceiptWarning(int count) {
+    return '$count işlemin fiş görseli var. Görseller yedeğe dahil edilmez; başka bir cihaza geri yüklerseniz bu görseller görünmez.';
+  }
+
+  @override
+  String get backupPreviewEmptyWarning =>
+      'Bu yedek boş. Geri yüklerseniz cihazınızdaki tüm kayıtlar silinir.';
+
+  @override
+  String get backupPreviewRestoreButton => 'Bu yedeği geri yükle';
+
+  @override
+  String get backupPreviewDeleteButton => 'Bu kopyayı sil';
+
+  @override
+  String get backupPreviewDeleteConfirmDesc =>
+      'Bu yedek kopyası Google Drive\'dan kalıcı olarak silinecek. Cihazınızdaki veriler etkilenmez.';
+
+  @override
+  String get backupPreviewRestoreConfirmTitle => 'Bu yedek geri yüklensin mi?';
+
+  @override
+  String get backupPreviewRestoreConfirmDesc =>
+      'Cihazdaki tüm cüzdanlar, işlemler, birikimler, borçlar, alacaklar, bütçeler ve düzenli işlem şablonları bu yedektekilerle DEĞİŞTİRİLİR. Bu işlem geri alınamaz.';
+
+  @override
+  String get backupPreviewNoTransactions => 'Bu yedekte işlem yok.';
+
+  @override
+  String get backupPreviewUnknownCount => '?';
+
+  @override
+  String get disconnectConfirmTitle => 'Bağlantı kesilsin mi?';
+
+  @override
+  String disconnectConfirmDesc(String email) {
+    return '$email hesabından çıkılacak. Google Drive\'daki yedekleriniz SİLİNMEZ — aynı hesapla tekrar bağlandığınızda erişebilirsiniz. Otomatik yedekleme duracak.';
+  }
+
+  @override
+  String deleteAllBackupsDangerDesc(int count) {
+    return 'Onayladığınızda Google Drive\'daki $count yedek kopyasının tamamı kalıcı olarak silinir. Cihazınızdaki veriler bozulur ya da silinirse geri dönebileceğiniz hiçbir kopya kalmaz.';
+  }
+
+  @override
+  String get driveErrApiNotEnabled =>
+      'Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez.';
 }

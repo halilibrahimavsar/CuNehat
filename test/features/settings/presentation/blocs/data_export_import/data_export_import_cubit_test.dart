@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/csv_service.dart';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -33,6 +34,7 @@ void main() {
   late MockWalletMetricsService mockMetricsService;
   late MockLocalBackupService mockLocalBackupService;
   late TransactionsChangedNotifier changedNotifier;
+  late CategoriesChangedNotifier categoriesNotifier;
   late DataExportImportCubit cubit;
 
   setUpAll(() {
@@ -72,6 +74,7 @@ void main() {
     mockMetricsService = MockWalletMetricsService();
     mockLocalBackupService = MockLocalBackupService();
     changedNotifier = TransactionsChangedNotifier();
+    categoriesNotifier = CategoriesChangedNotifier();
 
     cubit = DataExportImportCubit(
       csvService: mockCsvService,
@@ -80,12 +83,14 @@ void main() {
       walletRepository: mockWalletRepo,
       walletMetricsService: mockMetricsService,
       transactionsChangedNotifier: changedNotifier,
+      categoriesChangedNotifier: categoriesNotifier,
     );
   });
 
   tearDown(() {
     cubit.close();
     changedNotifier.dispose();
+    categoriesNotifier.dispose();
   });
 
   final testTx = TransactionEntity(
