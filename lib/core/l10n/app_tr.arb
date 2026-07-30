@@ -1411,6 +1411,26 @@
   "reportIncomesTitle": "Gelirler",
   "reportNoDataTitle": "Rapor Oluşturmak İçin Veri Yok",
   "reportNetLabel": "Net",
+  "reportCompareTopSlice": "En büyük: {ad} · {tutar}",
+  "@reportCompareTopSlice": {
+    "placeholders": {
+      "ad": {
+        "type": "String"
+      },
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "reportCompareOverspend": "Gelirin %{oran} üzerinde",
+  "@reportCompareOverspend": {
+    "placeholders": {
+      "oran": {
+        "type": "String"
+      }
+    }
+  },
+  "reportCompareScaleHint": "İki çubuk aynı ölçekte",
   "debtHistoryEmptyTitle": "Henüz Kapanan Borç Yok",
   "receivableHistoryEmptyTitle": "Henüz Tahsil Edilen Alacak Yok",
   "badgeOdendi": "Ödendi",

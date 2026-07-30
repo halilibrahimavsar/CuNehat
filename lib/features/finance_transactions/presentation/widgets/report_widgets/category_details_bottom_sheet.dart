@@ -1,3 +1,4 @@
+import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
@@ -18,9 +19,10 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   final CategoryData initialCategory;
   final bool isExpense;
 
-  /// true = bar grafikten açıldı (tam liste), false = pastadan açıldı
-  /// (küçük kategoriler "Diğer"de toplanmış liste).
-  final bool useFullData;
+  /// Dilimin geldiği kırılım. Liste bloc değiştikçe yeniden hesaplandığı için
+  /// AYNI kırılımdan hesaplanmak zorundadır: pastanın veya karşılaştırma
+  /// çubuğunun "Diğer" kovası tam listede karşılığını bulamaz.
+  final ReportSliceMode sliceMode;
   final Map<String, IconData> categoryIcons;
   final ReportCategoryDataBuilder dataBuilder;
 
@@ -31,7 +33,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     super.key,
     required this.initialCategory,
     required this.isExpense,
-    required this.useFullData,
+    required this.sliceMode,
     required this.categoryIcons,
     required this.dataBuilder,
     this.categoryLabels = const {},
@@ -41,7 +43,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     required BuildContext context,
     required CategoryData initialCategory,
     required bool isExpense,
-    required bool useFullData,
+    required ReportSliceMode sliceMode,
     required Map<String, IconData> categoryIcons,
     required ReportCategoryDataBuilder dataBuilder,
     Map<String, String> categoryLabels = const {},
@@ -60,7 +62,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
           child: CategoryDetailsBottomSheet(
             initialCategory: initialCategory,
             isExpense: isExpense,
-            useFullData: useFullData,
+            sliceMode: sliceMode,
             categoryIcons: categoryIcons,
             dataBuilder: dataBuilder,
             categoryLabels: categoryLabels,
@@ -77,6 +79,8 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final brightness =
+        (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
 
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
@@ -84,8 +88,15 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             dataBuilder.filterByRange(state.currentTransactions);
         final fullList =
             dataBuilder.buildFull(filteredTransactions, isExpense: isExpense);
-        final categoryDataList =
-            useFullData ? fullList : dataBuilder.buildPie(fullList);
+        final categoryDataList = switch (sliceMode) {
+          ReportSliceMode.full => fullList,
+          ReportSliceMode.pie => dataBuilder.buildPie(fullList),
+          ReportSliceMode.ranked => dataBuilder.buildRanked(
+              fullList,
+              isExpense: isExpense,
+              brightness: brightness,
+            ),
+        };
 
         final updatedCategory = categoryDataList.firstWhere(
           (c) =>

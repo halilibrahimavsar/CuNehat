@@ -39,6 +39,86 @@ extension CategoryDataLabel on CategoryData {
       isOther ? name : context.categoryLabelForTag(name, labels: labels);
 }
 
+/// Bir kategori diliminin hangi listeden geldiği. Detay sayfası listeyi
+/// TransactionBloc her değiştiğinde yeniden hesapladığı için, hangi kırılımın
+/// içinde durduğunu bilmek zorundadır — aksi hâlde pastadan açılan "Diğer"
+/// kovası tam listede karşılığını bulamaz.
+enum ReportSliceMode {
+  /// Tüm kategoriler, eşiksiz (çubuk grafiği).
+  full,
+
+  /// Payı eşiğin altındakiler "Diğer"de toplanmış (pasta).
+  pie,
+
+  /// İlk N kalem + "Diğer" (karşılaştırma çubuğu).
+  ranked,
+}
+
+/// Karşılaştırma çubuğunun gelir(yeşil)/gider(kırmızı) renk rampaları.
+///
+/// Adımlar GÖZLE seçilmedi. `AppCard(section: transactions)`'ın gerçek zemini
+/// üzerinde — light `#DCE9FD`, dark `#213B69`; ikisi de kartın accent
+/// gradyanının kontrast açısından en kötü köşesi — sıralı (ordinal) rampa
+/// kapısından geçirilerek OKLCH'de üretildi: tek hue, monoton açıklık, komşu
+/// adımlar arası ΔL ≥ 0.06, yüzeye en yakın uç ≥ 2:1 kontrast.
+///
+/// Neden Material `Colors.green/red` swatch'ı değil: bu zeminde swatch 2:1
+/// tabanının üstünde yalnız **3** adım bırakıyor (yeşil 900/800/600). Amaca
+/// göre üretilen adımlar **5**'e çıkarır — bir taraftaki dilim sayısının
+/// tavanı budur, keyfi bir sınır değil.
+///
+/// UYARI — renk tek başına gelir/gideri ANLATMAZ: tam şiddette deuteranopia
+/// altında bu iki rampa çakışır (ölçülen ΔE 1.2–4.6; taban 6). Kutupluluğu
+/// taşıyan şey konum + satır etiketi + ikondur; renk yalnız pekiştirir.
+abstract final class ReportCompareRamp {
+  /// Bir tarafta gösterilebilen en fazla dilim. Rampanın adım sayısıyla
+  /// birebir: her dilim kendi adımını alır, renk asla tekrar etmez.
+  static int get maxSlices => _incomeLight.length;
+
+  // rank 1 (en büyük kalem) → rank 5 ("Diğer"): light modda koyudan açığa.
+  static const _incomeLight = [
+    Color(0xFF215E2E),
+    Color(0xFF2A733A),
+    Color(0xFF338846),
+    Color(0xFF3D9F52),
+    Color(0xFF47B55F),
+  ];
+  static const _expenseLight = [
+    Color(0xFF8D2525),
+    Color(0xFFAA2E2F),
+    Color(0xFFC93839),
+    Color(0xFFE94344),
+    Color(0xFFEE6E67),
+  ];
+
+  // Dark modda yön TERSİNE döner: koyu zeminde "daha çok" = daha parlak.
+  // Rampa otomatik çevrilmedi, kendi zeminine göre ayrı seçildi.
+  static const _incomeDark = [
+    Color(0xFF59DF76),
+    Color(0xFF4FC86A),
+    Color(0xFF45B25D),
+    Color(0xFF3C9D51),
+    Color(0xFF338745),
+  ];
+  static const _expenseDark = [
+    Color(0xFFF3A9A3),
+    Color(0xFFF08B83),
+    Color(0xFFED6862),
+    Color(0xFFE64243),
+    Color(0xFFC83839),
+  ];
+
+  static List<Color> of({
+    required bool isExpense,
+    required Brightness brightness,
+  }) {
+    if (brightness == Brightness.dark) {
+      return isExpense ? _expenseDark : _incomeDark;
+    }
+    return isExpense ? _expenseLight : _incomeLight;
+  }
+}
+
 /// Rapor sayfasının kategori kırılımını üreten yardımcı: seçili tarih aralığı,
 /// bütçe limitleri ve renk paletini tek yerde tutar.
 ///
@@ -137,6 +217,70 @@ class ReportCategoryDataBuilder {
       ...major,
       CategoryData(otherCategoryLabel, otherTotal, otherTx, _otherColor,
           isOther: true),
+    ];
+  }
+
+  /// Karşılaştırma çubuğunun dilimleri: ilk [ReportCompareRamp.maxSlices] − 1
+  /// kalem + kalanların "Diğer" kovası, renkler o tarafın rampasından.
+  ///
+  /// Sayı tavanının yanında [_pieThresholdPercent] eşiği de uygulanır: 2px
+  /// boşluklu yığılmış çubukta payı %3'ün altında kalan bir dilim telefonda
+  /// ~9dp'den ince kalır, ne okunur ne dokunulur — kovaya iner.
+  ///
+  /// Kovaya TEK bir kategori düşerse kova KURULMAZ, kategori kendi adıyla
+  /// gösterilir: tek bir kalemin adını "Diğer" ardında saklamanın kazancı yok.
+  List<CategoryData> buildRanked(
+    List<CategoryData> fullData, {
+    required bool isExpense,
+    required Brightness brightness,
+  }) {
+    if (fullData.isEmpty) return const [];
+
+    final total =
+        fullData.fold<double>(0.0, (sum, item) => sum + item.totalAmount);
+    if (total <= 0) return const [];
+
+    final ramp =
+        ReportCompareRamp.of(isExpense: isExpense, brightness: brightness);
+
+    final kept = <CategoryData>[];
+    final folded = <CategoryData>[];
+    for (final item in fullData) {
+      final percent = (item.totalAmount / total) * 100;
+      final hasRoom = kept.length < ramp.length - 1;
+      if (hasRoom && percent >= _pieThresholdPercent) {
+        kept.add(item);
+      } else {
+        folded.add(item);
+      }
+    }
+
+    final slices = <CategoryData>[
+      ...kept,
+      if (folded.length == 1)
+        folded.single
+      else if (folded.length > 1)
+        CategoryData(
+          otherCategoryLabel,
+          folded.fold<double>(0.0, (sum, item) => sum + item.totalAmount),
+          [for (final item in folded) ...item.transactions],
+          ramp.last,
+          isOther: true,
+        ),
+    ];
+
+    // Renk sırayı izler: rank 1 rampanın ilk adımını alır. Sıralama anlamlı
+    // olduğu için bu bir sıralı (ordinal) kodlamadır, kimlik kodlaması değil —
+    // kimliği efsane ve etiketler taşır.
+    return [
+      for (int i = 0; i < slices.length; i++)
+        CategoryData(
+          slices[i].name,
+          slices[i].totalAmount,
+          slices[i].transactions,
+          ramp[i],
+          isOther: slices[i].isOther,
+        ),
     ];
   }
 

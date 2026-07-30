@@ -5215,6 +5215,24 @@ abstract class AppLocalizations {
   /// **'Net'**
   String get reportNetLabel;
 
+  /// No description provided for @reportCompareTopSlice.
+  ///
+  /// In tr, this message translates to:
+  /// **'En büyük: {ad} · {tutar}'**
+  String reportCompareTopSlice(String ad, String tutar);
+
+  /// No description provided for @reportCompareOverspend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelirin %{oran} üzerinde'**
+  String reportCompareOverspend(String oran);
+
+  /// No description provided for @reportCompareScaleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İki çubuk aynı ölçekte'**
+  String get reportCompareScaleHint;
+
   /// No description provided for @debtHistoryEmptyTitle.
   ///
   /// In tr, this message translates to:

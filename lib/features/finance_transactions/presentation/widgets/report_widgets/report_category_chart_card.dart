@@ -15,7 +15,8 @@ class ReportCategoryChartCard extends StatefulWidget {
   final bool isExpense;
   final bool showBarChart;
   final ValueChanged<bool> onToggleBarChart;
-  final void Function(CategoryData cat, bool useFullData) onCategoryTap;
+  final void Function(CategoryData cat, ReportSliceMode sliceMode)
+      onCategoryTap;
   final ({double progress, bool isExceeded, double limit})? Function(
       String tag, double spent) budgetProgressFor;
 
@@ -234,8 +235,8 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                           });
 
                           if (tappedIndex != null) {
-                            widget.onCategoryTap(
-                                widget.pieData[tappedIndex!], false);
+                            widget.onCategoryTap(widget.pieData[tappedIndex!],
+                                ReportSliceMode.pie);
                           }
                         },
                       ),
@@ -312,7 +313,8 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                         barTouchResponse.spot != null) {
                       final index = barTouchResponse.spot!.touchedBarGroupIndex;
                       if (index >= 0 && index < widget.fullData.length) {
-                        widget.onCategoryTap(widget.fullData[index], true);
+                        widget.onCategoryTap(
+                            widget.fullData[index], ReportSliceMode.full);
                       }
                     }
                   },
@@ -355,7 +357,11 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
           padding: const EdgeInsets.only(bottom: 12.0),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => widget.onCategoryTap(item, widget.showBarChart),
+            onTap: () => widget.onCategoryTap(
+                item,
+                widget.showBarChart
+                    ? ReportSliceMode.full
+                    : ReportSliceMode.pie),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

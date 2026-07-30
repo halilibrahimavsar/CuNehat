@@ -15,6 +15,9 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -200,14 +203,88 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify summary values
-    expect(find.text('Gelir'), findsOneWidget);
-    expect(find.text('Gider'), findsOneWidget);
-    expect(find.text('Net'), findsOneWidget);
+    // Varsayılan mod Karşılaştırma: kategori dağılımı TEK kart çizer.
+    // 'Gelir'/'Gider' hem özet kartında hem karşılaştırma kartının çubuk
+    // etiketinde ve efsane başlığında geçer.
+    expect(find.text('Gelir'), findsNWidgets(3));
+    expect(find.text('Gider'), findsNWidgets(3));
+    expect(find.text('Net'), findsNWidgets(2));
 
-    // Verify list of category distributions / chart titles
+    expect(find.byType(ReportCompareChartCard), findsOneWidget);
+    // Karşılaştırma modunda tek taraflı pasta kartları GÖSTERİLMEZ — eskiden
+    // "compare" sadece ikisini alt alta diziyordu.
+    expect(find.byType(ReportCategoryChartCard), findsNothing);
+    expect(find.text('Giderler'), findsNothing);
+    expect(find.text('Gelirler'), findsNothing);
+
+    // İki taraf da kendi toplamını yazar (özet kartıyla birlikte iki kez).
+    expect(find.text('200.00 ₺'), findsNWidgets(2));
+    expect(find.text('50.00 ₺'), findsNWidgets(2));
+  });
+
+  testWidgets('mod Gidere alınınca tek taraflı pasta kartına dönülür',
+      (WidgetTester tester) async {
+    // Mod seçici varsayılan 800x600 görünümde katlamanın altında kalıyor;
+    // dokunma isabet etmiyor.
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final now = DateTime.now();
+    final transactions = [
+      TransactionEntity(
+        id: 'tx_1',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Lunch',
+        tag: 'Food',
+        amount: 50.0,
+        date: now,
+        type: TransactionTypeModel.expense,
+      ),
+      TransactionEntity(
+        id: 'tx_2',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Salary',
+        tag: 'Salary',
+        amount: 200.0,
+        date: now,
+        type: TransactionTypeModel.income,
+      ),
+    ];
+
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {now: transactions},
+        allTransactions: transactions,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const TransactionReportPage(
+          userId: 'user_123',
+          walletId: 'wallet_123',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final expenseModeIcon = find.byIcon(FinanceMode.expense.icon);
+    await tester.ensureVisible(expenseModeIcon);
+    await tester.pumpAndSettle();
+    await tester.tap(expenseModeIcon);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ReportCompareChartCard), findsNothing);
+    expect(find.byType(ReportCategoryChartCard), findsOneWidget);
     expect(find.text('Giderler'), findsOneWidget);
-    expect(find.text('Gelirler'), findsOneWidget);
+    // Yalnız gider tarafı — gelir kartı bu modda yok.
+    expect(find.text('Gelirler'), findsNothing);
   });
 
   testWidgets('opens DateRangePickerDialog on Değiştir tap',
@@ -266,6 +343,54 @@ void main() {
   testWidgets('groups minor categories (<3%) into Diğer',
       (WidgetTester tester) async {
     final now = DateTime.now();
+    TransactionEntity expense(String id, String tag, double amount) =>
+        TransactionEntity(
+          id: id,
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: id,
+          tag: tag,
+          amount: amount,
+          date: now,
+          type: TransactionTypeModel.expense,
+        );
+
+    // İKİ küçük kategori: kovaya birden fazla kalem düştüğü için "Diğer"
+    // gerçekten kurulur (tek kalem düşseydi kendi adıyla kalırdı — aşağıdaki
+    // teste bakın).
+    final transactions = [
+      expense('tx_large', 'Main', 1000.0),
+      expense('tx_small', 'Tiny', 1.0),
+      expense('tx_small_2', 'Tiny2', 1.0),
+    ];
+
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {now: transactions},
+        allTransactions: transactions,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const TransactionReportPage(
+          userId: 'user_123',
+          walletId: 'wallet_123',
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Verify 'Diğer' is rendered in the legend for <3% categories
+    expect(find.text('Diğer'), findsOneWidget);
+    expect(find.text('Tiny'), findsNothing);
+    expect(find.text('Tiny2'), findsNothing);
+  });
+
+  testWidgets('kovaya TEK kategori düşerse adı "Diğer" ardına saklanmaz',
+      (WidgetTester tester) async {
+    final now = DateTime.now();
     final transactions = [
       TransactionEntity(
         id: 'tx_large',
@@ -307,8 +432,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify 'Diğer' is rendered in the legend for <3% category
-    expect(find.text('Diğer'), findsOneWidget);
+    expect(find.text('Diğer'), findsNothing);
+    expect(find.text('Tiny'), findsOneWidget);
   });
 
   testWidgets(

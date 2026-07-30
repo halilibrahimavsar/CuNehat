@@ -2872,6 +2872,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportNetLabel => 'Net';
 
   @override
+  String reportCompareTopSlice(String ad, String tutar) {
+    return 'Largest: $ad · $tutar';
+  }
+
+  @override
+  String reportCompareOverspend(String oran) {
+    return '$oran% over income';
+  }
+
+  @override
+  String get reportCompareScaleHint => 'Both bars share one scale';
+
+  @override
   String get debtHistoryEmptyTitle => 'No Closed Debts Yet';
 
   @override

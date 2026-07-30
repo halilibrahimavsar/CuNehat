@@ -2874,6 +2874,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportNetLabel => 'Net';
 
   @override
+  String reportCompareTopSlice(String ad, String tutar) {
+    return 'En büyük: $ad · $tutar';
+  }
+
+  @override
+  String reportCompareOverspend(String oran) {
+    return 'Gelirin %$oran üzerinde';
+  }
+
+  @override
+  String get reportCompareScaleHint => 'İki çubuk aynı ölçekte';
+
+  @override
   String get debtHistoryEmptyTitle => 'Henüz Kapanan Borç Yok';
 
   @override

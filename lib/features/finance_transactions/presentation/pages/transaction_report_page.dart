@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
@@ -24,6 +25,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/finan
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/category_details_bottom_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
@@ -242,12 +244,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   void _openCategoryDetails(
-      CategoryData cat, bool isExpense, bool useFullData) {
+      CategoryData cat, bool isExpense, ReportSliceMode sliceMode) {
     CategoryDetailsBottomSheet.show(
       context: context,
       initialCategory: cat,
       isExpense: isExpense,
-      useFullData: useFullData,
+      sliceMode: sliceMode,
       categoryIcons: _categoryIcons,
       categoryLabels: _categoryLabels,
       dataBuilder: _dataBuilder(context),
@@ -313,8 +315,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               final expensePie = dataBuilder.buildPie(expenseFull);
               final incomePie = dataBuilder.buildPie(incomeFull);
 
-              final showExpense = _categoryMode != FinanceMode.income;
-              final showIncome = _categoryMode != FinanceMode.expense;
+              // Karşılaştırma modu tek bir kart çizer (bkz.
+              // [ReportCompareChartCard]); tek taraflı modlar eskisi gibi
+              // pasta/çubuk kartını gösterir.
+              final isCompare = _categoryMode == FinanceMode.compare;
+              final brightness =
+                  (theme.extension<AppSurface>() ?? AppSurface.light)
+                      .brightness;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -387,8 +394,24 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      // Gider kategorileri
-                      if (showExpense)
+                      if (isCompare)
+                        ReportCompareChartCard(
+                          incomeSlices: dataBuilder.buildRanked(
+                            incomeFull,
+                            isExpense: false,
+                            brightness: brightness,
+                          ),
+                          expenseSlices: dataBuilder.buildRanked(
+                            expenseFull,
+                            isExpense: true,
+                            brightness: brightness,
+                          ),
+                          categoryLabels: _categoryLabels,
+                          onSliceTap: (slice, isExpense) =>
+                              _openCategoryDetails(
+                                  slice, isExpense, ReportSliceMode.ranked),
+                        )
+                      else if (_categoryMode == FinanceMode.expense)
                         ReportCategoryChartCard(
                           title: context.l10n.reportExpensesTitle,
                           fullData: expenseFull,
@@ -397,14 +420,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                           showBarChart: _showExpenseBarChart,
                           onToggleBarChart: (v) =>
                               setState(() => _showExpenseBarChart = v),
-                          onCategoryTap: (cat, useFull) =>
-                              _openCategoryDetails(cat, true, useFull),
+                          onCategoryTap: (cat, mode) =>
+                              _openCategoryDetails(cat, true, mode),
                           budgetProgressFor: dataBuilder.budgetProgressFor,
                           categoryLabels: _categoryLabels,
-                        ),
-                      if (showExpense && showIncome) const SizedBox(height: 16),
-                      // Gelir kategorileri (giderin altında, dikey yığın)
-                      if (showIncome)
+                        )
+                      else
                         ReportCategoryChartCard(
                           title: context.l10n.reportIncomesTitle,
                           fullData: incomeFull,
@@ -413,8 +434,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                           showBarChart: _showIncomeBarChart,
                           onToggleBarChart: (v) =>
                               setState(() => _showIncomeBarChart = v),
-                          onCategoryTap: (cat, useFull) =>
-                              _openCategoryDetails(cat, false, useFull),
+                          onCategoryTap: (cat, mode) =>
+                              _openCategoryDetails(cat, false, mode),
                           budgetProgressFor: dataBuilder.budgetProgressFor,
                           categoryLabels: _categoryLabels,
                         ),

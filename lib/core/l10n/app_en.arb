@@ -1390,6 +1390,26 @@
   "reportIncomesTitle": "Incomes",
   "reportNoDataTitle": "No Data to Build a Report",
   "reportNetLabel": "Net",
+  "reportCompareTopSlice": "Largest: {ad} · {tutar}",
+  "@reportCompareTopSlice": {
+    "placeholders": {
+      "ad": {
+        "type": "String"
+      },
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "reportCompareOverspend": "{oran}% over income",
+  "@reportCompareOverspend": {
+    "placeholders": {
+      "oran": {
+        "type": "String"
+      }
+    }
+  },
+  "reportCompareScaleHint": "Both bars share one scale",
   "debtHistoryEmptyTitle": "No Closed Debts Yet",
   "receivableHistoryEmptyTitle": "No Collected Receivables Yet",
   "badgeOdendi": "Paid",
