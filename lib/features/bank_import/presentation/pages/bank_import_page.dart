@@ -18,6 +18,7 @@ import 'package:cunehat/features/bank_import/presentation/pages/bank_import_mapp
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_review_view.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Banka ekstresi içe aktarma akışı (Ayarlar → Banka ekstresi içe aktar).
 class BankImportPage extends StatelessWidget {
@@ -51,8 +52,7 @@ class BankImportPage extends StatelessWidget {
             BankImportLegacyExcel() => _BlockedView(
                 icon: Icons.table_chart_outlined,
                 title: context.l10n.bankImportLegacyExcelTitle,
-                message:
-                    context.l10n.bankImportLegacyExcelHint(state.reason),
+                message: context.l10n.bankImportLegacyExcelHint(state.reason),
               ),
             BankImportUnsupportedFile() => _BlockedView(
                 icon: Icons.help_outline_rounded,
@@ -422,10 +422,9 @@ class _Done extends StatelessWidget {
   /// Son içe aktarımı geri alır (yalnız az önce eklenen işlemleri siler) ve
   /// başa döner; kullanıcıya kısa bir onay gösterir.
   Future<void> _undo(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
     final undoneMsg = context.l10n.bankImportUndoDone;
     await context.read<BankImportCubit>().undoImport();
-    messenger.showSnackBar(SnackBar(content: Text(undoneMsg)));
+    AppMessenger.success(undoneMsg);
   }
 
   /// İçe aktarım sonrası hesaplanan bakiyeyi gösterir + isteğe bağlı olarak
@@ -556,9 +555,7 @@ class _Done extends StatelessWidget {
               baselineBalance: state.balance,
             ),
           );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bankImportSyncSuccess)),
-      );
+      AppMessenger.success(context.l10n.bankImportSyncSuccess);
     }
   }
 }
@@ -618,8 +615,7 @@ class _RawTextView extends StatelessWidget {
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: text));
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(context.l10n.bankImportCopied)));
+                      AppMessenger.info(context.l10n.bankImportCopied);
                     }
                   },
                   icon: const Icon(Icons.copy_rounded),

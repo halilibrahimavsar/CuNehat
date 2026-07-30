@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/dynamic_slider.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Slider button view with vertical stack navigation
 ///
@@ -178,9 +179,7 @@ class SliderButtonView extends StatelessWidget {
   bool _blockIfNonTry(
       BuildContext context, dynamic activeWallet, String message) {
     if (activeWallet.currency == kDefaultCurrency) return false;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
+    AppMessenger.warning(message);
     return true;
   }
 

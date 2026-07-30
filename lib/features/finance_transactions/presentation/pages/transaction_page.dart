@@ -28,7 +28,8 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 
 class TransactionsPage extends StatelessWidget {
   final String userId;
@@ -259,12 +260,13 @@ class _TransactionsViewState extends State<_TransactionsView> {
         return BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, state) {
             if (state is TransactionError) {
-              IboSnackbar.showError(context, state.message);
+              AppMessenger.error(state.message);
             } else if (state is TransactionActionSuccess) {
               if (state.warning != null) {
-                IboSnackbar.showError(context, state.warning!);
+                AppMessenger.error(state.warning!);
               } else {
-                IboSnackbar.showSuccess(context, state.message);
+                showDeletionMessage(context,
+                    message: state.message, undo: state.undo);
               }
               _loadData();
               _loadCategoryIcons();

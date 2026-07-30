@@ -8,6 +8,9 @@
   "islemGecmisiCsv": "İşlem Geçmişi (CSV)",
   "duzenle": "Düzenle",
   "sil": "Sil",
+  "geriAl": "Geri al",
+  "silmeGeriAlindi": "Silme geri alındı",
+  "silmeGeriAlinamadi": "Geri alma başarısız oldu; kayıt geri getirilemedi",
   "hintIkonAra": "İkon ara...",
   "hataStateFailureMessage": "Hata: {message}",
   "@hataStateFailureMessage": {
@@ -140,7 +143,6 @@
   "metinGiris": "Metin Giriş",
   "yukle": "Yükle",
   "basarili": "Başarılı",
-  "hata": "Hata",
   "yuklemeButonu": "Yükleme Butonu",
   "onayDialog": "Onay Dialog",
   "logoutLabel": "Çıkış Yap",
@@ -521,9 +523,6 @@
   "sharedFeatures": "Paylaşılan Özellikler",
   "tarihAraligi": "Tarih Aralığı",
   "butonGalerisi": "Buton Galerisi",
-  "internetBaglantisiAktif": "İnternet bağlantısı aktif",
-  "internetBaglantisiYok": "İnternet bağlantısı yok",
-  "baglantiKontrolEdiliyor": "Bağlantı kontrol ediliyor...",
   "taksit1": "1 taksit",
   "taksit2": "2 taksit",
   "tamaminiOde": "Tamamını öde",
@@ -1331,15 +1330,6 @@
   "@budgetDeleteConfirmMessage": {
     "placeholders": {
       "kategori": {
-        "type": "String"
-      }
-    }
-  },
-  "islemSilBaslik": "İşlem Sil",
-  "islemSilOnayMesaji": "{baslik} işlemini silmek istediğinizden emin misiniz?",
-  "@islemSilOnayMesaji": {
-    "placeholders": {
-      "baslik": {
         "type": "String"
       }
     }

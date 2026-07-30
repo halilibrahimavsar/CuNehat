@@ -12,7 +12,7 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Cüzdanlar arası transfer sheet'i.
 ///
@@ -143,11 +143,11 @@ class _TransferSheetState extends State<TransferSheet> {
     Navigator.pop(context);
     switch (result) {
       case TransferResult.success:
-        IboSnackbar.showSuccess(context, context.l10n.transferBasarili);
+        AppMessenger.success(context.l10n.transferBasarili);
       case TransferResult.rateUnavailable:
-        IboSnackbar.showError(context, context.l10n.transferKurYok);
+        AppMessenger.error(context.l10n.transferKurYok);
       case TransferResult.failed:
-        IboSnackbar.showError(context, context.l10n.transferBasarisiz);
+        AppMessenger.error(context.l10n.transferBasarisiz);
     }
   }
 

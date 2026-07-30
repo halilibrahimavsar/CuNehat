@@ -7,6 +7,7 @@ import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivabl
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 
 class MockGetReceivablesUseCase extends Mock implements GetReceivablesUseCase {}
 
@@ -27,6 +28,7 @@ void main() {
   late MockDeleteReceivableUseCase mockDeleteUseCase;
   late MockWalletMetricsService mockMetricsService;
   late ReceivableBloc receivableBloc;
+  late TransactionsChangedNotifier changedNotifier;
 
   setUpAll(() {
     registerFallbackValue(
@@ -43,6 +45,7 @@ void main() {
   });
 
   setUp(() {
+    changedNotifier = TransactionsChangedNotifier();
     mockGetUseCase = MockGetReceivablesUseCase();
     mockAddUseCase = MockAddReceivableUseCase();
     mockUpdateUseCase = MockUpdateReceivableUseCase();
@@ -55,6 +58,7 @@ void main() {
       updateReceivableUseCase: mockUpdateUseCase,
       deleteReceivableUseCase: mockDeleteUseCase,
       walletMetricsService: mockMetricsService,
+      transactionsChangedNotifier: changedNotifier,
     );
   });
 
@@ -210,7 +214,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => true);
+            )).thenAnswer((_) async => CashWriteResult(ok: true));
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))
@@ -238,7 +242,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => true);
+            )).thenAnswer((_) async => CashWriteResult(ok: true));
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))
@@ -299,7 +303,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => true);
+            )).thenAnswer((_) async => CashWriteResult(ok: true));
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))
@@ -352,7 +356,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => false);
+            )).thenAnswer((_) async => CashWriteResult(ok: false));
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))
@@ -401,7 +405,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => true);
+            )).thenAnswer((_) async => CashWriteResult(ok: true));
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))
@@ -510,7 +514,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => false);
+            )).thenAnswer((_) async => CashWriteResult(ok: false));
         when(() => mockMetricsService.syncCredit('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetUseCase('wallet_123'))

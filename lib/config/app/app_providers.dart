@@ -55,7 +55,6 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => getIt<AmountVisibilityCubit>()),
         BlocProvider(create: (_) => getIt<WalletBloc>()),
         BlocProvider(create: (_) => getIt<PendingRecurringBloc>()),
-        BlocProvider(create: (_) => getIt<ConnectionCubit>()),
         BlocProvider(
             create: (_) => getIt<NotificationSettingsBloc>()
               ..add(const LoadNotificationSettings())),

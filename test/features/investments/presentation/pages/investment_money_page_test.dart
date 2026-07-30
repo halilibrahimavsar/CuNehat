@@ -17,6 +17,7 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class MockInvestmentBloc extends MockBloc<InvestmentEvent, InvestmentState>
     implements InvestmentBloc {}
@@ -73,6 +74,9 @@ void main() {
 
   Widget buildTestableWidget(Widget child) {
     return MaterialApp(
+      // Mesajlar [AppMessenger] üzerinden gösterilir; anahtar üretimde
+      // olduğu gibi burada da bağlanmalı, yoksa snackbar hiç doğmaz.
+      scaffoldMessengerKey: appMessengerKey,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

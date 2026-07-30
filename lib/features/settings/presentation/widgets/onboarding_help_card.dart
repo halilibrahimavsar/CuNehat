@@ -8,6 +8,7 @@ import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Gizlilik/bildirim tanıtımını ve üç ana ekranın interaktif turlarını
 /// istenildiğinde yeniden başlatma imkanı sunan kart. `DataPrivacyCard`
@@ -44,9 +45,7 @@ class OnboardingHelpCard extends StatelessWidget {
 
     await getIt<OnboardingCoordinator>().resetAll();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.tumTurlarSifirlandi)),
-    );
+    AppMessenger.success(context.l10n.tumTurlarSifirlandi);
   }
 
   @override

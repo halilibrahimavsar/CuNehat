@@ -27,7 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class WalletSheetContent extends StatefulWidget {
   final String userId;
@@ -110,22 +110,22 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       listener: (context, state) {
         if (state is WalletLoadedSt) {
           if (state.messageType != null) {
-            IboSnackbar.showSuccess(
-                context, _getLocalizedMessage(context, state.messageType!));
+            AppMessenger.success(
+                _getLocalizedMessage(context, state.messageType!));
           }
           if (state.error != null) {
-            IboSnackbar.showError(context, state.error!);
+            AppMessenger.error(state.error!);
           }
         } else if (state is NoWalletSt) {
           if (state.messageType != null) {
-            IboSnackbar.showSuccess(
-                context, _getLocalizedMessage(context, state.messageType!));
+            AppMessenger.success(
+                _getLocalizedMessage(context, state.messageType!));
           }
           if (state.error != null) {
-            IboSnackbar.showError(context, state.error!);
+            AppMessenger.error(state.error!);
           }
         } else if (state is WalletErrorSt) {
-          IboSnackbar.showError(context, state.err);
+          AppMessenger.error(state.err);
         }
       },
       builder: (context, state) {
@@ -433,7 +433,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
   void _openTransferSheet(BuildContext context, WalletState state) {
     if (state is! WalletLoadedSt || state.wallets.length < 2) {
-      IboSnackbar.showError(context, context.l10n.transferIcinIkiCuzdanGerekli);
+      AppMessenger.error(context.l10n.transferIcinIkiCuzdanGerekli);
       return;
     }
     TransferSheet.show(

@@ -10,7 +10,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
@@ -62,18 +61,13 @@ class TransactionCard extends StatelessWidget {
         );
         break;
       case TransactionAction.delete:
-        final confirmed = await ConfirmDialog.show(
-          context,
-          title: context.l10n.islemSilBaslik,
-          message: context.l10n.islemSilOnayMesaji(t.title),
-          confirmText: context.l10n.sil,
-          danger: true,
-        );
-
-        if (confirmed && context.mounted) {
-          if (t.id != null) {
-            context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
-          }
+        // Onay diyaloğu YOK: silme anında yapılır, snackbar 6 saniye boyunca
+        // "Geri al" sunar (bkz. showDeletionMessage). İşlem silme en sık ve
+        // en hafif yıkıcı eylem; modal onay burada geri almanın yerini
+        // tutmuyor, yalnız akışı yavaşlatıyordu. Borç/alacak/birikim ödeme
+        // geçmişi taşıdığı için onaylarını KORUR.
+        if (t.id != null) {
+          context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
         }
         break;
     }

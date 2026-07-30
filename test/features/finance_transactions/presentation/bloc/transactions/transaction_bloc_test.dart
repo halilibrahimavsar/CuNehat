@@ -12,6 +12,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
 
 class MockGetTransactionsGroupedUseCase extends Mock
     implements GetTransactionsGroupedUseCase {}
@@ -362,17 +363,30 @@ void main() {
             .thenAnswer((_) async => Right(testTransaction));
         when(() => mockMetricsService.syncBalance('wallet_123'))
             .thenAnswer((_) async => true);
-        when(() => mockDeleteUseCase('tx_123'))
+        when(() => mockDeleteUseCase('tx_123',
+                keepReceiptFile: any(named: 'keepReceiptFile')))
             .thenAnswer((_) async => const Right(null));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
       expect: () => [
-        const TransactionActionSuccess('Grocery silindi', transactions: []),
+        TransactionActionSuccess(
+          'Grocery silindi',
+          transactions: const [],
+          // Geri alma silinen kaydın TAMAMINI taşır: aynı id ile geri
+          // yazılacak.
+          undo: TransactionDeletionUndo(
+            transaction: testTransaction,
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          ),
+        ),
       ],
       verify: (_) {
         verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
-        verify(() => mockDeleteUseCase('tx_123')).called(1);
+        // Fiş dosyası geri alma penceresi boyunca diskte kalmalı.
+        verify(() => mockDeleteUseCase('tx_123', keepReceiptFile: true))
+            .called(1);
       },
     );
 
@@ -383,8 +397,10 @@ void main() {
             .thenAnswer((_) async => Right(testTransaction));
         when(() => mockMetricsService.syncBalance('wallet_123'))
             .thenAnswer((_) async => true);
-        when(() => mockDeleteUseCase('tx_123')).thenAnswer(
-            (_) async => const Left(ServerFailure('Delete failed')));
+        when(() => mockDeleteUseCase('tx_123',
+                keepReceiptFile: any(named: 'keepReceiptFile')))
+            .thenAnswer(
+                (_) async => const Left(ServerFailure('Delete failed')));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
@@ -401,17 +417,23 @@ void main() {
             .thenAnswer((_) async => Right(testTransaction));
         when(() => mockMetricsService.syncBalance('wallet_123'))
             .thenAnswer((_) async => false);
-        when(() => mockDeleteUseCase('tx_123'))
+        when(() => mockDeleteUseCase('tx_123',
+                keepReceiptFile: any(named: 'keepReceiptFile')))
             .thenAnswer((_) async => const Right(null));
         return transactionBloc;
       },
       act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
       expect: () => [
-        const TransactionActionSuccess(
+        TransactionActionSuccess(
           'Grocery silindi',
-          transactions: [],
+          transactions: const [],
           warning:
               'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
+          undo: TransactionDeletionUndo(
+            transaction: testTransaction,
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          ),
         ),
       ],
     );

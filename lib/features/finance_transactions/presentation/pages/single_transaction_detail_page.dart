@@ -16,7 +16,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Tek bir işlemin premium detay ekranı.
@@ -263,15 +262,11 @@ class SingleTransactionDetailPage extends StatelessWidget {
     );
   }
 
-  Future<void> _delete(BuildContext context, TransactionEntity t) async {
-    final confirmed = await ConfirmDialog.show(
-      context,
-      title: context.l10n.islemSilBaslik,
-      message: context.l10n.islemSilOnayMesaji(t.title),
-      confirmText: context.l10n.sil,
-      danger: true,
-    );
-    if (confirmed && context.mounted && t.id != null) {
+  /// Onay diyaloğu YOK: silme anında yapılır, snackbar 6 saniye boyunca
+  /// "Geri al" sunar (bkz. `showDeletionMessage`). Sayfa silme sonrası
+  /// kapandığı için mesaj listenin üstünde görünür.
+  void _delete(BuildContext context, TransactionEntity t) {
+    if (t.id != null) {
       context.read<TransactionBloc>().add(DeleteTransactionEvent(t.id!));
     }
   }

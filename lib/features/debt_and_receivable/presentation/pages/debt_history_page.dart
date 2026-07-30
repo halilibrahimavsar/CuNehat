@@ -17,7 +17,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 
 class DebtHistoryPage extends StatelessWidget {
   final String userId;
@@ -125,9 +126,10 @@ class _DebtHistoryTab extends StatelessWidget {
     return BlocConsumer<DebtBloc, DebtState>(
       listener: (context, state) {
         if (state is DebtOperationSuccess) {
-          IboSnackbar.showSuccess(context, state.message);
+          showDeletionMessage(context,
+              message: state.message, undo: state.undo);
         } else if (state is DebtError) {
-          IboSnackbar.showError(context, state.message);
+          AppMessenger.error(state.message);
         }
       },
       // DebtOperationSuccess yalnız snackbar taşıyan geçici bir durumdur; liste
@@ -211,7 +213,7 @@ class _DebtHistoryTab extends StatelessWidget {
                     );
                   } else if (value == 'delete') {
                     // Borç silmek cüzdanın nakit hareketini de geri alır
-                    // (bkz. DebtBloc._onDeleteDebt) → geri alınamaz.
+                    // (bkz. DebtBloc._onDeleteDebt); onay + 6 sn "Geri al" ile korunur.
                     final confirmed = await ConfirmDialog.show(
                       context,
                       title: context.l10n.borcSilBaslik,
@@ -261,9 +263,10 @@ class _ReceivableHistoryTab extends StatelessWidget {
     return BlocConsumer<ReceivableBloc, ReceivableState>(
       listener: (context, state) {
         if (state is ReceivableOperationSuccess) {
-          IboSnackbar.showSuccess(context, state.message);
+          showDeletionMessage(context,
+              message: state.message, undo: state.undo);
         } else if (state is ReceivableError) {
-          IboSnackbar.showError(context, state.message);
+          AppMessenger.error(state.message);
         }
       },
       // Bkz. _DebtHistoryTab: OperationSuccess yalnız snackbar durumudur.

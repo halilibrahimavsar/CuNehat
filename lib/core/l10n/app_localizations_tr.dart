@@ -33,6 +33,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sil => 'Sil';
 
   @override
+  String get geriAl => 'Geri al';
+
+  @override
+  String get silmeGeriAlindi => 'Silme geri alındı';
+
+  @override
+  String get silmeGeriAlinamadi =>
+      'Geri alma başarısız oldu; kayıt geri getirilemedi';
+
+  @override
   String get hintIkonAra => 'İkon ara...';
 
   @override
@@ -361,9 +371,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get basarili => 'Başarılı';
-
-  @override
-  String get hata => 'Hata';
 
   @override
   String get yuklemeButonu => 'Yükleme Butonu';
@@ -1088,15 +1095,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get butonGalerisi => 'Buton Galerisi';
-
-  @override
-  String get internetBaglantisiAktif => 'İnternet bağlantısı aktif';
-
-  @override
-  String get internetBaglantisiYok => 'İnternet bağlantısı yok';
-
-  @override
-  String get baglantiKontrolEdiliyor => 'Bağlantı kontrol ediliyor...';
 
   @override
   String get taksit1 => '1 taksit';
@@ -2775,14 +2773,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String budgetDeleteConfirmMessage(String kategori) {
     return '$kategori bütçesini silmek istediğinizden emin misiniz?';
-  }
-
-  @override
-  String get islemSilBaslik => 'İşlem Sil';
-
-  @override
-  String islemSilOnayMesaji(String baslik) {
-    return '$baslik işlemini silmek istediğinizden emin misiniz?';
   }
 
   @override

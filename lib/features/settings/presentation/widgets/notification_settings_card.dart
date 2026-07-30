@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/shared/widgets/app_card.dart';
 import '../../../../../core/enums/notification_frequency.dart';
 import '../bloc/notification_settings/notification_settings_bloc.dart';
 import '../bloc/notification_settings/notification_settings_event.dart';
 import '../bloc/notification_settings/notification_settings_state.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class NotificationSettingsCard extends StatefulWidget {
   const NotificationSettingsCard({super.key});
@@ -47,11 +47,10 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
           previous.testNotificationSentAt != current.testNotificationSentAt,
       listener: (context, state) {
         if (state.testNotificationDelivered) {
-          IboSnackbar.showSuccess(context, context.l10n.notificationTestSent);
+          AppMessenger.success(context.l10n.notificationTestSent);
           return;
         }
-        IboSnackbar.showError(
-          context,
+        AppMessenger.error(
           state.systemPermissionGranted
               ? context.l10n.notificationTestFailed
               : context.l10n.notificationTestFailedNoPermission,

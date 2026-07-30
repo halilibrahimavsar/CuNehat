@@ -23,10 +23,14 @@ class ReceivableLoaded extends ReceivableState {
 /// İşlem başarılı olduğunda (Ekleme/Silme/Güncelleme)
 class ReceivableOperationSuccess extends ReceivableState {
   final String message;
-  const ReceivableOperationSuccess(this.message);
+
+  /// Yalnız silmede dolu: UI bunu "Geri al" eylemine bağlar.
+  final DeletionUndo? undo;
+
+  const ReceivableOperationSuccess(this.message, {this.undo});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, undo];
 }
 
 class ReceivableError extends ReceivableState {

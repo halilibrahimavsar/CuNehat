@@ -1,12 +1,19 @@
 // lib/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart
 
+import 'dart:async';
+
 import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/receivable_usecases.dart';
 import 'package:injectable/injectable.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
+import 'package:dartz/dartz.dart';
+import 'package:cunehat/core/error/failure.dart';
+import 'package:flutter/foundation.dart';
 
 part 'receivable_event.dart';
 part 'receivable_state.dart';
@@ -19,6 +26,11 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
   final UpdateReceivableUseCase updateReceivableUseCase;
   final DeleteReceivableUseCase deleteReceivableUseCase;
   final WalletMetricsService walletMetricsService;
+  final TransactionsChangedNotifier transactionsChangedNotifier;
+
+  /// Defter dışarıdan değişince aynı listeyi tazelemek için son cüzdan.
+  String? _lastWalletId;
+  StreamSubscription<TransactionsChange>? _changedSubscription;
 
   ReceivableBloc({
     required this.getReceivablesUseCase,
@@ -26,16 +38,31 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
     required this.updateReceivableUseCase,
     required this.deleteReceivableUseCase,
     required this.walletMetricsService,
+    required this.transactionsChangedNotifier,
   }) : super(ReceivableInitial()) {
     on<GetReceivablesEvent>(_onGetReceivables);
     on<AddReceivableEvent>(_onAddReceivable);
     on<UpdateReceivableEvent>(_onUpdateReceivable);
     on<DeleteReceivableEvent>(_onDeleteReceivable);
     on<MarkReceivableAsPaidEvent>(_onMarkAsPaid);
+
+    // Alacak listesi defterin türevi: silme geri alındığında (bkz.
+    // DeletionUndoService) liste kendi kendine tazelenmeli.
+    _changedSubscription = transactionsChangedNotifier.stream.listen((_) {
+      final walletId = _lastWalletId;
+      if (walletId != null) add(GetReceivablesEvent(walletId));
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _changedSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onGetReceivables(
       GetReceivablesEvent event, Emitter<ReceivableState> emit) async {
+    _lastWalletId = event.walletId;
     emit(ReceivableLoading());
     final result = await getReceivablesUseCase(event.walletId);
     result.fold(
@@ -91,7 +118,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         var cashOk = true;
         final diff = event.receivable.amount - event.prevAmount;
         if (diff != 0) {
-          cashOk = await walletMetricsService.recordCashMovements(
+          final cashResult = await walletMetricsService.recordCashMovements(
             walletId: event.receivable.walletId,
             entries: [
               CashMovement(
@@ -118,6 +145,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
                 ),
             ],
           );
+          cashOk = cashResult.ok;
         }
         await _safeSyncCredit(event.receivable.walletId);
 
@@ -131,6 +159,11 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
   Future<void> _onDeleteReceivable(
       DeleteReceivableEvent event, Emitter<ReceivableState> emit) async {
     emit(ReceivableLoading());
+
+    // Geri alma kaydın tamamını ister (tahsilat durumu, vade, notlar…);
+    // silmeden önce defterdeki hali okunur.
+    final snapshot = await _receivableSnapshot(event.walletId, event.id);
+
     final result = await deleteReceivableUseCase(event.id);
 
     await result.fold(
@@ -140,9 +173,9 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         // Ters kayıt paranın ÇIKTIĞI tarihe yazılır (bugüne değil): aksi hâlde
         // bakiye doğru çıksa bile o ayın gider toplamı şişik kalırdı.
         // Tahsil edilmişte defter zaten -tutar/+tutar ile sıfırlanmıştır.
-        var cashOk = true;
+        var cashResult = const CashWriteResult(ok: true);
         if (!event.isPaid && event.amount != 0) {
-          cashOk = await walletMetricsService.recordCashMovements(
+          cashResult = await walletMetricsService.recordCashMovements(
             walletId: event.walletId,
             entries: [
               CashMovement(
@@ -159,7 +192,17 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         await _safeSyncCredit(event.walletId);
 
         emit(ReceivableOperationSuccess(
-            'Alacak silindi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+          'Alacak silindi.'
+          '${cashResult.ok ? '' : CashCouplingMixin.cashWarning}',
+          undo: snapshot == null
+              ? null
+              : ReceivableDeletionUndo(
+                  receivable: snapshot,
+                  userId: event.userId,
+                  walletId: event.walletId,
+                  reversalTransactionIds: cashResult.transactionIds,
+                ),
+        ));
         add(GetReceivablesEvent(event.walletId));
       },
     );
@@ -207,4 +250,26 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
 
   Future<void> _safeSyncCredit(String walletId) =>
       safeSyncMetric(() => walletMetricsService.syncCredit(walletId), 'credit');
+
+  /// Silinecek alacağın defterdeki hali; bulunamazsa `null` (geri alma
+  /// sunulmaz, silme yine yapılır).
+  Future<ReceivableEntity?> _receivableSnapshot(
+      String walletId, String id) async {
+    final Either<Failure, List<ReceivableEntity>> result;
+    try {
+      result = await getReceivablesUseCase(walletId);
+    } catch (e) {
+      debugPrint('Geri alma anlık görüntüsü alınamadı (alacak): $e');
+      return null;
+    }
+    return result.fold(
+      (_) => null,
+      (receivables) {
+        for (final r in receivables) {
+          if (r.id == id) return r;
+        }
+        return null;
+      },
+    );
+  }
 }

@@ -6,6 +6,7 @@ import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Gizlilik politikası erişimi ve "tüm veriyi sil" (geri alınamaz) eylemini
 /// tek kartta toplar. Veri silme [DataSerializationService.clearAllLocalData]
@@ -37,16 +38,12 @@ class DataPrivacyCard extends StatelessWidget {
       await getIt<DataSerializationService>().clearAllLocalData();
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.dataDeleteError)),
-      );
+      AppMessenger.error(context.l10n.dataDeleteError);
       return;
     }
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.dataDeletedSuccess)),
-    );
+    AppMessenger.success(context.l10n.dataDeletedSuccess);
     context.go(AppRoutes.home);
   }
 

@@ -30,5 +30,13 @@ abstract class TransactionsRepository {
       List<TransactionEntity> transactions);
   Future<Either<Failure, void>> updateTransaction(
       TransactionEntity transaction);
-  Future<Either<Failure, void>> deleteTransaction(String id);
+
+  /// [keepReceiptFile] true ise iliştirilmiş fiş görseli diskte BIRAKILIR.
+  /// "Geri al" akışı bunu kullanır: unlink tek yönlüdür, geri alınan işlem
+  /// eki kopmuş halde geri dönerdi. Dosyayı silme sorumluluğu o durumda
+  /// `DeletionUndoService.commit`e geçer.
+  Future<Either<Failure, void>> deleteTransaction(
+    String id, {
+    bool keepReceiptFile = false,
+  });
 }

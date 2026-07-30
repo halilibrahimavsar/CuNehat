@@ -146,6 +146,24 @@ abstract class AppLocalizations {
   /// **'Sil'**
   String get sil;
 
+  /// No description provided for @geriAl.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri al'**
+  String get geriAl;
+
+  /// No description provided for @silmeGeriAlindi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silme geri alındı'**
+  String get silmeGeriAlindi;
+
+  /// No description provided for @silmeGeriAlinamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri alma başarısız oldu; kayıt geri getirilemedi'**
+  String get silmeGeriAlinamadi;
+
   /// No description provided for @hintIkonAra.
   ///
   /// In tr, this message translates to:
@@ -752,12 +770,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Başarılı'**
   String get basarili;
-
-  /// No description provided for @hata.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hata'**
-  String get hata;
 
   /// No description provided for @yuklemeButonu.
   ///
@@ -1997,24 +2009,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Buton Galerisi'**
   String get butonGalerisi;
-
-  /// No description provided for @internetBaglantisiAktif.
-  ///
-  /// In tr, this message translates to:
-  /// **'İnternet bağlantısı aktif'**
-  String get internetBaglantisiAktif;
-
-  /// No description provided for @internetBaglantisiYok.
-  ///
-  /// In tr, this message translates to:
-  /// **'İnternet bağlantısı yok'**
-  String get internetBaglantisiYok;
-
-  /// No description provided for @baglantiKontrolEdiliyor.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bağlantı kontrol ediliyor...'**
-  String get baglantiKontrolEdiliyor;
 
   /// No description provided for @taksit1.
   ///
@@ -5052,18 +5046,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{kategori} bütçesini silmek istediğinizden emin misiniz?'**
   String budgetDeleteConfirmMessage(String kategori);
-
-  /// No description provided for @islemSilBaslik.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşlem Sil'**
-  String get islemSilBaslik;
-
-  /// No description provided for @islemSilOnayMesaji.
-  ///
-  /// In tr, this message translates to:
-  /// **'{baslik} işlemini silmek istediğinizden emin misiniz?'**
-  String islemSilOnayMesaji(String baslik);
 
   /// No description provided for @borcSilBaslik.
   ///

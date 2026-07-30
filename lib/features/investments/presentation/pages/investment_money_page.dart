@@ -2,7 +2,6 @@ import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/contribute_sheet.dart';
@@ -23,6 +22,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:confetti/confetti.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'dart:math' as math;
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 
 class InvestmentMoneyPage extends StatefulWidget {
   final WalletEntity activeWallet;
@@ -236,10 +237,11 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
         if (state is InvestmentActionSuccess) {
-          IboSnackbar.showSuccess(context, state.message);
+          showDeletionMessage(context,
+              message: state.message, undo: state.undo);
           _loadInvestments();
         } else if (state is InvestmentError) {
-          IboSnackbar.showError(context, state.message);
+          AppMessenger.error(state.message);
         }
       },
       builder: (context, investmentState) {

@@ -91,7 +91,10 @@ class FakeTransactionsRepository implements TransactionsRepository {
           .toList());
 
   @override
-  Future<Either<Failure, void>> deleteTransaction(String id) async {
+  Future<Either<Failure, void>> deleteTransaction(
+    String id, {
+    bool keepReceiptFile = false,
+  }) async {
     store.removeWhere((t) => t.id == id);
     return const Right(null);
   }

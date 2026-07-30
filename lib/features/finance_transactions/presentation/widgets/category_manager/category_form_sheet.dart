@@ -3,11 +3,11 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart'
     show CashMovementTags;
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 Future<bool?> showCategoryForm({
   required BuildContext context,
@@ -371,13 +371,13 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
         // Bir sonraki frame'de göstermek için Future.microtask kullan
         Future.microtask(() {
           if (mounted) {
-            IboSnackbar.showSuccess(context, message);
+            AppMessenger.success(message);
           }
         });
       }
     } catch (e) {
       if (mounted) {
-        IboSnackbar.showError(context, context.l10n.hataError(e.toString()));
+        AppMessenger.error(context.l10n.hataError(e.toString()));
       }
     } finally {
       setState(() => _isLoading = false);

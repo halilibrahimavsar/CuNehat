@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/transaction_entity.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
 
 abstract class TransactionState extends Equatable {
   const TransactionState();
@@ -60,15 +61,19 @@ class TransactionActionSuccess extends TransactionState {
   /// kullanıcıya para tutarlılığı uyarısı göstermek için.
   final String? warning;
 
+  /// Yalnız silmede dolu: UI bunu "Geri al" eylemine bağlar.
+  final DeletionUndo? undo;
+
   const TransactionActionSuccess(
     this.message, {
     this.transactions = const [],
     this.warning,
+    this.undo,
   });
 
   @override
   List<TransactionEntity> get currentTransactions => transactions;
 
   @override
-  List<Object?> get props => [message, transactions, warning];
+  List<Object?> get props => [message, transactions, warning, undo];
 }

@@ -14,9 +14,6 @@ abstract class AppModule {
   @lazySingleton
   AmountVisibilityCubit get amountVisibilityCubit => AmountVisibilityCubit();
 
-  @lazySingleton
-  ConnectionCubit get connectionCubit => ConnectionCubit();
-
   // Local Auth Repository
   @lazySingleton
   LocalAuthRepository localAuthRepository(SharedPreferences prefs) {

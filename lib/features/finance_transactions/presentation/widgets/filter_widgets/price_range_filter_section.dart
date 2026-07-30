@@ -4,7 +4,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/filter_ent
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// filter_view.dart'tan bölündü (v1 temizliği): davranış aynı.
 class PriceRangeFilterSection extends StatelessWidget {
@@ -106,8 +106,7 @@ class PriceRangeFilterSection extends StatelessWidget {
                 final min = parseAmountInput(minController.text);
                 final max = parseAmountInput(maxController.text);
                 if (min != null && max != null && min > max) {
-                  IboSnackbar.showError(
-                    context,
+                  AppMessenger.error(
                     'Minimum tutar, maksimum tutardan büyük olamaz',
                   );
                   return;

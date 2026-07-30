@@ -247,7 +247,7 @@ void main() {
     expect(find.text('Güncelle'), findsOneWidget);
   });
 
-  testWidgets('tapping Sil and cancelling confirmation dialog does nothing',
+  testWidgets('tapping Sil dispatches immediately, no confirmation dialog',
       (WidgetTester tester) async {
     final now = DateTime(2026, 6, 13, 14, 30);
     final tx = TransactionEntity(
@@ -285,14 +285,16 @@ void main() {
     await tester.tap(find.text('Sil'));
     await tester.pumpAndSettle();
 
-    // Tap Cancel in dialog
-    await tester.tap(find.text('İptal'));
-    await tester.pumpAndSettle();
-
-    verifyNever(() => mockTransactionBloc.add(any()));
+    // Onay diyaloğu YOK: koruma modal değil, 6 saniyelik "Geri al" penceresi
+    // (bkz. showDeletionMessage). Modal çıkarsa akış eski davranışa dönmüş
+    // demektir.
+    expect(find.text('İptal'), findsNothing);
+    verify(() =>
+            mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
+        .called(1);
   });
 
-  testWidgets('tapping Sil and confirming dispatches DeleteTransactionEvent',
+  testWidgets('tapping Sil dispatches DeleteTransactionEvent',
       (WidgetTester tester) async {
     final now = DateTime(2026, 6, 13, 14, 30);
     final tx = TransactionEntity(
@@ -328,11 +330,6 @@ void main() {
     );
 
     await tester.tap(find.text('Sil'));
-    await tester.pumpAndSettle();
-
-    // Tap Confirm in dialog (ConfirmDialog onay butonu FilledButton + 'Sil')
-    final confirmButton = find.widgetWithText(FilledButton, 'Sil');
-    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
     verify(() =>

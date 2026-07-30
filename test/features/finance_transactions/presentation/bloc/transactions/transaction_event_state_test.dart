@@ -3,6 +3,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
 
 class MockTransactionEvent extends TransactionEvent {
   const MockTransactionEvent();
@@ -113,18 +114,26 @@ void main() {
     test('TransactionActionSuccess defaults and props', () {
       const state = TransactionActionSuccess('success');
       expect(state.currentTransactions, isEmpty);
-      expect(state.props, ['success', const <TransactionEntity>[], null]);
+      // undo yalnız silmede dolar; ekleme/güncelleme durumlarında null.
+      expect(state.props, ['success', const <TransactionEntity>[], null, null]);
 
+      final undo = TransactionDeletionUndo(
+        transaction: testTransaction,
+        userId: testTransaction.userId,
+        walletId: testTransaction.walletId,
+      );
       final stateWithData = TransactionActionSuccess(
         'success',
         transactions: [testTransaction],
         warning: 'warning',
+        undo: undo,
       );
       expect(stateWithData.currentTransactions, [testTransaction]);
       expect(stateWithData.props, [
         'success',
         [testTransaction],
-        'warning'
+        'warning',
+        undo,
       ]);
     });
   });

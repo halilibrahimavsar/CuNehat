@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/notifications/notification_constants.dart';
@@ -10,6 +9,7 @@ import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Yalnızca debug derlemede görünen duman testi paneli.
 ///
@@ -99,8 +99,7 @@ class NotificationDebugCard extends StatelessWidget {
       channel: NotificationChannelKind.recurring,
     );
     if (!context.mounted) return;
-    IboSnackbar.showSuccess(
-      context,
+    AppMessenger.success(
       '${_delay.inSeconds} sn içinde gelecek — şimdi uygulamayı arka plana al '
       'veya kapat.',
     );

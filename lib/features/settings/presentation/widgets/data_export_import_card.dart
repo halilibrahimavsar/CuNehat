@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/data_export_import/data_export_import_state.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class DataExportImportCard extends StatelessWidget {
   const DataExportImportCard({super.key});
@@ -36,31 +36,31 @@ class _DataExportImportCardContent extends StatelessWidget {
           final l = context.l10n;
           switch (state.messageType) {
             case DataExportMessageType.noTransactionsToExport:
-              IboSnackbar.showError(context, l.disaAktarilacakIslemBulunamadi);
+              AppMessenger.error(l.disaAktarilacakIslemBulunamadi);
             case DataExportMessageType.noValidTransactionsInCsv:
-              IboSnackbar.showError(context, l.csvGecerliIslemBulunamadi);
+              AppMessenger.error(l.csvGecerliIslemBulunamadi);
             case DataExportMessageType.exportSuccess:
-              IboSnackbar.showSuccess(context, l.islemlerDisaAktarildi);
+              AppMessenger.success(l.islemlerDisaAktarildi);
             case DataExportMessageType.importSuccess:
               final msg = state.skippedRows > 0
                   ? '${l.verilerIceAktarildi} ${l.satirAtlandi(state.skippedRows)}'
                   : l.verilerIceAktarildi;
-              IboSnackbar.showSuccess(context, msg);
+              AppMessenger.success(msg);
             case DataExportMessageType.fullBackupExportSuccess:
-              IboSnackbar.showSuccess(context, l.fullBackupSaved);
+              AppMessenger.success(l.fullBackupSaved);
             case DataExportMessageType.fullBackupImportSuccess:
               final userId = _currentUserId(context);
               if (userId != null) {
                 context.read<WalletBloc>().add(GetWalletsEvent(userId));
               }
-              IboSnackbar.showSuccess(context, l.fullBackupRestored);
+              AppMessenger.success(l.fullBackupRestored);
             case DataExportMessageType.fullBackupShareSuccess:
-              IboSnackbar.showSuccess(context, l.fullBackupShared);
+              AppMessenger.success(l.fullBackupShared);
             case DataExportMessageType.fullBackupCancelled:
-              IboSnackbar.showInfo(context, l.fullBackupCancelled);
+              AppMessenger.info(l.fullBackupCancelled);
           }
         } else if (state is DataExportImportError) {
-          IboSnackbar.showError(context, state.message);
+          AppMessenger.error(state.message);
         }
       },
       builder: (context, state) {
@@ -256,7 +256,7 @@ class _DataExportImportCardContent extends StatelessWidget {
                                         shareText:
                                             context.l10n.islemGecmisiCsv);
                               } else {
-                                IboSnackbar.showWarning(context,
+                                AppMessenger.warning(
                                     context.l10n.activeWalletRequiredForExport);
                               }
                             },

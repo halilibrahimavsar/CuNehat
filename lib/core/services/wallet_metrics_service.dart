@@ -67,6 +67,22 @@ class CashMovement {
   });
 }
 
+/// Nakit hareketi yazımının sonucu.
+///
+/// [ok] eski `bool` sözleşmesinin aynısı (hata bacağında `false`, fırlatmaz).
+/// [transactionIds] yazılan sistem işlemlerinin kimlikleridir; silme akışları
+/// bunları saklayıp "geri al"da o kayıtları temizler.
+@immutable
+class CashWriteResult {
+  final bool ok;
+  final List<String> transactionIds;
+
+  const CashWriteResult({
+    required this.ok,
+    this.transactionIds = const <String>[],
+  });
+}
+
 /// Kasıtlı cross-feature orkestratör: cüzdan defteri (balance/debt/credit/
 /// investment) birden çok feature'ın repolarından beslenir; bu yüzden core'da
 /// yaşar ve feature repolarına bağımlılığı mimari bir kabul olarak belgelidir.
@@ -145,20 +161,22 @@ class WalletMetricsService {
     required String title,
     required String tag,
     DateTime? date,
-  }) =>
-      _writeCashMovements(
-        walletId: walletId,
-        entries: [
-          CashMovement(
-            userId: userId,
-            amount: amount,
-            isIncome: isIncome,
-            title: title,
-            tag: tag,
-            date: date,
-          ),
-        ],
-      );
+  }) async {
+    final result = await _writeCashMovements(
+      walletId: walletId,
+      entries: [
+        CashMovement(
+          userId: userId,
+          amount: amount,
+          isIncome: isIncome,
+          title: title,
+          tag: tag,
+          date: date,
+        ),
+      ],
+    );
+    return result.ok;
+  }
 
   /// Birden çok nakit hareketini TEK defter senkronuyla yazar.
   ///
@@ -167,9 +185,14 @@ class WalletMetricsService {
   /// bakiye yazma turu demekti. Burada işlemler yazılır, dinleyiciler bir kez
   /// uyarılır ve bakiye bir kez yeniden hesaplanır.
   ///
-  /// Herhangi bir işlem yazılamazsa `false` döner; yazılabilenler geri
+  /// Herhangi bir işlem yazılamazsa `ok == false` döner; yazılabilenler geri
   /// alınmaz — bakiye zaten defterden türetildiği için tutarlı kalır.
-  Future<bool> recordCashMovements({
+  ///
+  /// Dönen [CashWriteResult.transactionIds] "geri al" için zorunludur: silme
+  /// akışlarının yazdığı ters kayıtlar sistem işlemi olduğu için UI'dan
+  /// silinemez, geri alma da onları id ile bulmak zorundadır (tag+tarih+tutar
+  /// eşleşmesi aynı gün aynı tutarlı iki hareketi ayırt edemez).
+  Future<CashWriteResult> recordCashMovements({
     required String walletId,
     required List<CashMovement> entries,
   }) =>
@@ -178,11 +201,11 @@ class WalletMetricsService {
         () => _writeCashMovements(walletId: walletId, entries: entries),
       );
 
-  Future<bool> _writeCashMovements({
+  Future<CashWriteResult> _writeCashMovements({
     required String walletId,
     required List<CashMovement> entries,
   }) async {
-    if (entries.isEmpty) return true;
+    if (entries.isEmpty) return const CashWriteResult(ok: true);
 
     try {
       final transactions = [
@@ -224,10 +247,17 @@ class WalletMetricsService {
       // ve diğer dinleyiciler canlı yenilensin.
       transactionsChangedNotifier.notify();
       final synced = await _syncBalanceImpl(walletId);
-      return allWritten && synced;
+      return CashWriteResult(
+        ok: allWritten && synced,
+        // Yazım başarısızsa id vermek yanıltıcı olurdu: geri alma var olmayan
+        // kayıtları silmeye çalışırdı.
+        transactionIds: allWritten
+            ? [for (final t in transactions) t.id!]
+            : const <String>[],
+      );
     } catch (e) {
       debugPrint('recordCashMovement başarısız: $e');
-      return false;
+      return const CashWriteResult(ok: false);
     }
   }
 

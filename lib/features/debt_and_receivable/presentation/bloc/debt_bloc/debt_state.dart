@@ -24,10 +24,16 @@ class DebtLoaded extends DebtState {
 /// UI tarafında SnackBar göstermek için kullanılabilir.
 class DebtOperationSuccess extends DebtState {
   final String message;
-  const DebtOperationSuccess(this.message);
+
+  /// Yalnız silmede dolu: UI bunu "Geri al" eylemine bağlar. `null` →
+  /// geri alınabilir bir şey yok (ekleme/güncelleme) ya da geri alma için
+  /// gereken bilgi toplanamadı.
+  final DeletionUndo? undo;
+
+  const DebtOperationSuccess(this.message, {this.undo});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, undo];
 }
 
 class DebtError extends DebtState {

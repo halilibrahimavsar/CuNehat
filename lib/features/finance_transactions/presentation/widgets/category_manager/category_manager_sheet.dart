@@ -3,13 +3,13 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 Future<bool?> showCategoryManager({
   required BuildContext context,
@@ -66,8 +66,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        IboSnackbar.showError(
-            context, context.l10n.kategorilerYuklenemedi(e.toString()));
+        AppMessenger.error(context.l10n.kategorilerYuklenemedi(e.toString()));
       }
     }
   }
@@ -381,13 +380,12 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
         }
         _loadCategories();
         if (mounted) {
-          IboSnackbar.showSuccess(
-              context, '🗑️ ${context.l10n.kategoriSilindi}');
+          AppMessenger.success('🗑️ ${context.l10n.kategoriSilindi}');
         }
         return true;
       } catch (e) {
         if (mounted) {
-          IboSnackbar.showError(context, context.l10n.hataError(e.toString()));
+          AppMessenger.error(context.l10n.hataError(e.toString()));
         }
         return false;
       }

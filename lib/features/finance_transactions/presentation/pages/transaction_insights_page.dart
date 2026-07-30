@@ -34,6 +34,7 @@ import 'package:cunehat/features/finance_transactions/presentation/category_labe
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// "Akıllı İçgörüler" — transactions sekmesinin ilk swipe sayfası.
 ///
@@ -154,7 +155,6 @@ class _InsightsViewState extends State<_InsightsView> {
 
   Future<void> _addAsRecurring(RecurringSuggestion s) async {
     final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final pendingBloc = context.read<PendingRecurringBloc>();
 
     final entity = RecurringTransactionEntity(
@@ -174,17 +174,13 @@ class _InsightsViewState extends State<_InsightsView> {
     if (!mounted) return;
 
     res.fold(
-      (_) => messenger.showSnackBar(
-        SnackBar(content: Text(l10n.duzenliOdemeEklenemedi)),
-      ),
+      (_) => AppMessenger.error(l10n.duzenliOdemeEklenemedi),
       (_) {
         // Öneri geçmiş bir örüntüden türer; şablon anında vadesi gelmiş
         // olabilir. Bekleyen liste tazelenmezse hatırlatma gecikirdi.
         pendingBloc.add(const LoadPendingTransactionsEvent());
         setState(() => _dismissed.add(_suggestionKey(s)));
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.duzenliOdemeEklendi(s.title))),
-        );
+        AppMessenger.success(l10n.duzenliOdemeEklendi(s.title));
       },
     );
   }

@@ -28,8 +28,16 @@ class DeleteTransactionUseCase {
 
   DeleteTransactionUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String params) async {
-    return await repository.deleteTransaction(params);
+  /// [keepReceiptFile]: bkz. [TransactionsRepository.deleteTransaction] —
+  /// "geri al" penceresi boyunca fiş görseli diskte kalır.
+  Future<Either<Failure, void>> call(
+    String params, {
+    bool keepReceiptFile = false,
+  }) async {
+    return await repository.deleteTransaction(
+      params,
+      keepReceiptFile: keepReceiptFile,
+    );
   }
 }
 

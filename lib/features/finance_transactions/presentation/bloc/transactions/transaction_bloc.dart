@@ -10,6 +10,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
 
 @injectable
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
@@ -182,9 +183,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           return;
         }
 
-        // 2. Delete from database
-        final deleteResult =
-            await deleteTransactionUseCase(event.transactionId);
+        // 2. Delete from database.
+        //
+        // Fiş görseli diskte BIRAKILIR: geri alma penceresi boyunca unlink
+        // edilirse geri gelen işlemin eki kopmuş olur. Dosyayı silme
+        // sorumluluğu DeletionUndoService.commit'e geçer.
+        final deleteResult = await deleteTransactionUseCase(
+          event.transactionId,
+          keepReceiptFile: true,
+        );
 
         await deleteResult.fold(
           (failure) async => emit(TransactionError(
@@ -199,6 +206,11 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
               "${transaction.title} silindi",
               transactions: currentData,
               warning: synced ? null : _syncWarning,
+              undo: TransactionDeletionUndo(
+                transaction: transaction,
+                userId: transaction.userId,
+                walletId: transaction.walletId,
+              ),
             ));
             transactionsChangedNotifier.notify(
               userId: transaction.userId,

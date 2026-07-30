@@ -8,6 +8,9 @@
   "islemGecmisiCsv": "Transaction History (CSV)",
   "duzenle": "Edit",
   "sil": "Delete",
+  "geriAl": "Undo",
+  "silmeGeriAlindi": "Deletion undone",
+  "silmeGeriAlinamadi": "Undo failed; the record could not be restored",
   "hintIkonAra": "Search icon...",
   "hataStateFailureMessage": "Error: {message}",
   "@hataStateFailureMessage": {
@@ -140,7 +143,6 @@
   "metinGiris": "Text Input",
   "yukle": "Load",
   "basarili": "Success",
-  "hata": "Error",
   "yuklemeButonu": "Loading Button",
   "onayDialog": "Confirmation Dialog",
   "logoutLabel": "Logout",
@@ -521,9 +523,6 @@
   "sharedFeatures": "Shared Features",
   "tarihAraligi": "Date Range",
   "butonGalerisi": "Button Gallery",
-  "internetBaglantisiAktif": "Internet connection is active",
-  "internetBaglantisiYok": "No internet connection",
-  "baglantiKontrolEdiliyor": "Checking connection...",
   "taksit1": "1 installment",
   "taksit2": "2 installments",
   "tamaminiOde": "Pay all",
@@ -1310,15 +1309,6 @@
   "@budgetDeleteConfirmMessage": {
     "placeholders": {
       "kategori": {
-        "type": "String"
-      }
-    }
-  },
-  "islemSilBaslik": "Delete Transaction",
-  "islemSilOnayMesaji": "Are you sure you want to delete the transaction {baslik}?",
-  "@islemSilOnayMesaji": {
-    "placeholders": {
-      "baslik": {
         "type": "String"
       }
     }

@@ -4,12 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Main application widget.
 ///
 /// This widget wraps the MaterialApp with security features:
 /// - LocalAuthSecurityLayer: Handles privacy guard and background lock
-/// - ConnectionSnackbarHandler: Shows connection status
+///
+/// Kısa mesajlar [appMessengerKey] üzerinden gösterilir (bkz.
+/// [AppMessenger]); çağıranların `BuildContext` taşımasına gerek yoktur.
 class CuNehatApp extends StatelessWidget {
   final GoRouter router;
   final ThemeData theme;
@@ -26,6 +29,7 @@ class CuNehatApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       routerConfig: router,
+      scaffoldMessengerKey: appMessengerKey,
       themeMode: ThemeMode.light,
       theme: theme,
       locale: locale,
@@ -128,23 +132,10 @@ class CuNehatApp extends StatelessWidget {
                   )
                 : const LocalAuthTexts();
 
-            final connectionTexts = l10n != null
-                ? ConnectionTexts(
-                    connectedMessage: l10n.internetBaglantisiAktif,
-                    disconnectedMessage: l10n.internetBaglantisiYok,
-                    checkingMessage: l10n.baglantiKontrolEdiliyor,
-                    retryActionLabel: l10n.tekrarDene,
-                    checkFailedPrefix: l10n.hata,
-                  )
-                : const ConnectionTexts();
-
             return LocalAuthSecurityLayer(
               repository: getIt<LocalAuthRepository>(),
               texts: localAuthTexts,
-              child: ConnectionSnackbarHandler(
-                texts: connectionTexts,
-                child: child!,
-              ),
+              child: child!,
             );
           },
         );

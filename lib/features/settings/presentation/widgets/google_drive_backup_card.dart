@@ -9,7 +9,7 @@ import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class GoogleDriveBackupCard extends StatefulWidget {
   const GoogleDriveBackupCard({super.key});
@@ -66,11 +66,11 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
 
     if (success) {
       if (mounted) {
-        _showSnackBar(context.l10n.googleDriveConnected, Colors.green);
+        AppMessenger.success(context.l10n.googleDriveConnected);
       }
     } else {
       if (mounted) {
-        _showSnackBar(context.l10n.googleDriveConnectionFailed, Colors.red);
+        AppMessenger.error(context.l10n.googleDriveConnectionFailed);
       }
     }
   }
@@ -84,7 +84,7 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
       _isLoading = false;
     });
     if (mounted) {
-      _showSnackBar(context.l10n.googleDriveDisconnected, Colors.orange);
+      AppMessenger.warning(context.l10n.googleDriveDisconnected);
     }
   }
 
@@ -98,11 +98,11 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
         _lastBackup = nowStr;
       });
       if (mounted) {
-        _showSnackBar(context.l10n.dataBackedUpSuccess, Colors.green);
+        AppMessenger.success(context.l10n.dataBackedUpSuccess);
       }
     } else {
       if (mounted) {
-        _showSnackBar(context.l10n.backupFailed, Colors.red);
+        AppMessenger.error(context.l10n.backupFailed);
       }
     }
     setState(() => _isLoading = false);
@@ -137,14 +137,11 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
           context.read<WalletBloc>().add(GetWalletsEvent(userId));
         }
 
-        _showSnackBar(
-          context.l10n.dataRestoredSuccess,
-          Colors.green,
-        );
+        AppMessenger.success(context.l10n.dataRestoredSuccess);
       }
     } else {
       if (mounted) {
-        _showSnackBar(context.l10n.restoreFailedNoBackup, Colors.red);
+        AppMessenger.error(context.l10n.restoreFailedNoBackup);
       }
     }
     setState(() => _isLoading = false);
@@ -168,11 +165,11 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
       await _prefs.remove(_lastBackupKey);
       if (mounted) {
         setState(() => _lastBackup = null);
-        _showSnackBar(context.l10n.backupDeleted, Colors.green);
+        AppMessenger.success(context.l10n.backupDeleted);
       }
     } else {
       if (mounted) {
-        _showSnackBar(context.l10n.deleteBackupFailed, Colors.red);
+        AppMessenger.error(context.l10n.deleteBackupFailed);
       }
     }
     if (mounted) setState(() => _isLoading = false);
@@ -180,18 +177,6 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
 
   String _formatDateTime(DateTime dt) {
     return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _showSnackBar(String message, Color color) {
-    if (color == Colors.green) {
-      IboSnackbar.showSuccess(context, message);
-    } else if (color == Colors.red) {
-      IboSnackbar.showError(context, message);
-    } else if (color == Colors.orange) {
-      IboSnackbar.showWarning(context, message);
-    } else {
-      IboSnackbar.showInfo(context, message);
-    }
   }
 
   @override

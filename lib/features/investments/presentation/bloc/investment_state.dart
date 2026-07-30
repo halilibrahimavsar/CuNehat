@@ -4,7 +4,7 @@ sealed class InvestmentState extends Equatable {
   const InvestmentState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 final class InvestmentInitial extends InvestmentState {}
@@ -42,8 +42,12 @@ final class InvestmentError extends InvestmentState {
 final class InvestmentActionSuccess extends InvestmentState {
   final String message;
 
-  const InvestmentActionSuccess(this.message);
+  /// Yalnız silmede dolu: UI bunu "Geri al" eylemine bağlar. Satışta da
+  /// dolu — satış da kaydı defterden kaldırıp gelir yazar, geri alınabilir.
+  final DeletionUndo? undo;
+
+  const InvestmentActionSuccess(this.message, {this.undo});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, undo];
 }

@@ -13,6 +13,7 @@ import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.d
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 
 class MockGetInvestmentsUseCase extends Mock implements GetInvestmentsUseCase {}
 
@@ -36,6 +37,7 @@ void main() {
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
   late MockWalletMetricsService mockMetricsService;
   late InvestmentBloc investmentBloc;
+  late TransactionsChangedNotifier changedNotifier;
 
   setUpAll(() {
     registerFallbackValue(InvestmentType.stock);
@@ -55,6 +57,7 @@ void main() {
   });
 
   setUp(() {
+    changedNotifier = TransactionsChangedNotifier();
     mockGetInvestmentsUseCase = MockGetInvestmentsUseCase();
     mockAddInvestmentUseCase = MockAddInvestmentUseCase();
     mockUpdateUseCase = MockUpdateInvestmentUseCase();
@@ -69,6 +72,7 @@ void main() {
       deleteInvestmentUseCase: mockDeleteUseCase,
       getLiveQuoteUseCase: mockGetLiveQuoteUseCase,
       walletMetricsService: mockMetricsService,
+      transactionsChangedNotifier: changedNotifier,
     );
   });
 
@@ -607,14 +611,10 @@ void main() {
       build: () {
         when(() => mockDeleteUseCase('inv_123'))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
-              walletId: 'wallet_123',
-              userId: 'user_123',
-              amount: 1200.0, // currentValue is 1200.0
-              isIncome: true,
-              title: 'Yatırım Satışı',
-              tag: CashMovementTags.investmentSell,
-            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            )).thenAnswer((_) async => const CashWriteResult(ok: true));
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetInvestmentsUseCase(
@@ -638,6 +638,18 @@ void main() {
         InvestmentLoading(),
         const InvestmentLoaded([], totalAmount: 0.0),
       ],
+      verify: (_) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(1));
+        expect(entries.single.amount, 1200.0); // currentValue
+        expect(entries.single.isIncome, isTrue);
+        expect(entries.single.tag, CashMovementTags.investmentSell);
+        // Satış BUGÜN gerçekleşen bir olay: tarih verilmez, "şimdi" olur.
+        expect(entries.single.date, isNull);
+      },
     );
 
     blocTest<InvestmentBloc, InvestmentState>(
@@ -648,7 +660,7 @@ void main() {
         when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
               entries: any(named: 'entries'),
-            )).thenAnswer((_) async => true);
+            )).thenAnswer((_) async => const CashWriteResult(ok: true));
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetInvestmentsUseCase(
@@ -692,14 +704,10 @@ void main() {
       build: () {
         when(() => mockDeleteUseCase('inv_123'))
             .thenAnswer((_) async => const Right(null));
-        when(() => mockMetricsService.recordCashMovement(
+        when(() => mockMetricsService.recordCashMovements(
               walletId: any(named: 'walletId'),
-              userId: any(named: 'userId'),
-              amount: any(named: 'amount'),
-              isIncome: any(named: 'isIncome'),
-              title: any(named: 'title'),
-              tag: any(named: 'tag'),
-            )).thenAnswer((_) async => false);
+              entries: any(named: 'entries'),
+            )).thenAnswer((_) async => const CashWriteResult(ok: false));
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
         when(() => mockGetInvestmentsUseCase(

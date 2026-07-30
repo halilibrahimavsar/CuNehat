@@ -9,7 +9,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/filte
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/price_range_filter_section.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 class FilterView extends StatefulWidget {
   final CombinedFilter filter;
@@ -156,8 +156,7 @@ class _FilterViewState extends State<FilterView> {
     final max = parseAmountInput(_maxPriceController.text);
 
     if (min != null && max != null && min > max) {
-      IboSnackbar.showError(
-        context,
+      AppMessenger.error(
         'Minimum tutar, maksimum tutardan büyük olamaz',
       );
       return;

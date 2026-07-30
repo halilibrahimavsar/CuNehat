@@ -41,7 +41,8 @@ class FakeRecurringTransactionEntity extends Fake
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 void main() {
   late MockTransactionBloc mockTransactionBloc;
@@ -279,7 +280,7 @@ void main() {
   });
 
   testWidgets(
-      'long press delete non-system transaction and cancel does nothing',
+      'long press delete dispatches immediately, no confirmation dialog',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: false, id: 'tx_123');
     final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
@@ -312,16 +313,16 @@ void main() {
     await tester.tap(find.text('İşlemi Sil'));
     await tester.pumpAndSettle();
 
-    // Tap Cancel in confirmation dialog
-    await tester.tap(find.text('İptal'));
-    await tester.pumpAndSettle();
-
-    // Verify DeleteTransactionEvent was NOT dispatched
-    verifyNever(() => mockTransactionBloc.add(any()));
+    // Onay diyaloğu YOK: koruma modal değil, 6 saniyelik "Geri al" penceresi
+    // (bkz. showDeletionMessage).
+    expect(find.text('İptal'), findsNothing);
+    verify(() =>
+            mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
+        .called(1);
   });
 
   testWidgets(
-      'long press delete non-system transaction and confirm dispatches DeleteTransactionEvent',
+      'long press delete non-system transaction dispatches DeleteTransactionEvent',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: false, id: 'tx_123');
     final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
@@ -352,14 +353,6 @@ void main() {
 
     // Tap İşlemi Sil
     await tester.tap(find.text('İşlemi Sil'));
-    await tester.pumpAndSettle();
-
-    // ConfirmDialog'da iptal TextButton, onay FilledButton'dur.
-    final confirmButton = find.descendant(
-      of: find.byType(FilledButton),
-      matching: find.text('Sil'),
-    );
-    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
     // Verify DeleteTransactionEvent was dispatched

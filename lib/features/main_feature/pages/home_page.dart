@@ -36,6 +36,7 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/main_feature/widgets/onboarding_navigation_hint_card.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// HomePage with vertical list navigation
 ///
@@ -307,19 +308,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (state is WalletLoadedSt) {
       final msg =
           _resolveWalletMessage(context, state.messageType, state.message);
-      if (msg != null) IboSnackbar.showSuccess(context, msg);
+      if (msg != null) AppMessenger.success(msg);
       if (state.error != null) {
-        IboSnackbar.showError(context, state.error!);
+        AppMessenger.error(state.error!);
       }
     } else if (state is NoWalletSt) {
       final msg =
           _resolveWalletMessage(context, state.messageType, state.message);
-      if (msg != null) IboSnackbar.showSuccess(context, msg);
+      if (msg != null) AppMessenger.success(msg);
       if (state.error != null) {
-        IboSnackbar.showError(context, state.error!);
+        AppMessenger.error(state.error!);
       }
     } else if (state is WalletErrorSt) {
-      IboSnackbar.showError(context, state.err);
+      AppMessenger.error(state.err);
     }
   }
 

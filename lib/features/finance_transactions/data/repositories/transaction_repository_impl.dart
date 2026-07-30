@@ -61,10 +61,14 @@ class TransactionRepositoryImpl implements TransactionsRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteTransaction(String id) async {
+  Future<Either<Failure, void>> deleteTransaction(
+    String id, {
+    bool keepReceiptFile = false,
+  }) async {
     try {
       // İşlemin fişini de sil (varsa) — önce dosya adını al.
-      final receipt = await _existingReceiptFileName(id);
+      final receipt =
+          keepReceiptFile ? null : await _existingReceiptFileName(id);
       await localDatasource.deleteTransaction(id);
       if (receipt != null) {
         await receiptStorage.delete(receipt);

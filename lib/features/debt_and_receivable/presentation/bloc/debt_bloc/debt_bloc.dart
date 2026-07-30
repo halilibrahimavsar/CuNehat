@@ -1,11 +1,18 @@
+import 'dart:async';
+
 import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
 import 'package:injectable/injectable.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
+import 'package:dartz/dartz.dart';
+import 'package:cunehat/core/error/failure.dart';
+import 'package:flutter/foundation.dart';
 
 part 'debt_event.dart';
 part 'debt_state.dart';
@@ -17,6 +24,11 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
   final UpdateDebtUseCase updateDebtUseCase;
   final DeleteDebtUseCase deleteDebtUseCase;
   final WalletMetricsService walletMetricsService;
+  final TransactionsChangedNotifier transactionsChangedNotifier;
+
+  /// Defter dışarıdan değişince aynı listeyi tazelemek için son cüzdan.
+  String? _lastWalletId;
+  StreamSubscription<TransactionsChange>? _changedSubscription;
 
   DebtBloc({
     required this.getDebtsUseCase,
@@ -24,15 +36,32 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     required this.updateDebtUseCase,
     required this.deleteDebtUseCase,
     required this.walletMetricsService,
+    required this.transactionsChangedNotifier,
   }) : super(DebtInitial()) {
     on<GetDebtsEvent>(_onGetDebts);
     on<AddDebtEvent>(_onAddDebt);
     on<UpdateDebtEvent>(_onUpdateDebt);
     on<PayDebtEvent>(_onPayDebt);
     on<DeleteDebtEvent>(_onDeleteDebt);
+
+    // Borç listesi defterin türevi: silme geri alındığında (bkz.
+    // DeletionUndoService) ya da kuplaj kaydı başka bir akıştan yazıldığında
+    // liste kendi kendine tazelenmeli. Aksi hâlde geri alınan borç, sayfa
+    // yeniden kurulana kadar ekranda görünmüyordu.
+    _changedSubscription = transactionsChangedNotifier.stream.listen((_) {
+      final walletId = _lastWalletId;
+      if (walletId != null) add(GetDebtsEvent(walletId));
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _changedSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onGetDebts(GetDebtsEvent event, Emitter<DebtState> emit) async {
+    _lastWalletId = event.walletId;
     emit(DebtLoading());
     final result = await getDebtsUseCase(event.walletId);
     result.fold(
@@ -166,10 +195,11 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
           }
 
           if (entries.isNotEmpty) {
-            cashOk = await walletMetricsService.recordCashMovements(
+            cashOk = (await walletMetricsService.recordCashMovements(
               walletId: event.debt.walletId,
               entries: entries,
-            );
+            ))
+                .ok;
           }
         }
         await _safeSyncDebt(event.debt.walletId);
@@ -184,6 +214,12 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
   Future<void> _onDeleteDebt(
       DeleteDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
+
+    // Geri alma kaydın TAMAMINI ister (ödeme geçmişi, faiz, vade…); event
+    // yalnız mutabakat alanlarını taşıyor. Silmeden önce defterdeki hali
+    // okunur — UI'ın elindeki kopya değil, gerçekten saklanan kayıt.
+    final snapshot = await _debtSnapshot(event.walletId, event.id);
+
     final result = await deleteDebtUseCase(event.id);
 
     await result.fold(
@@ -218,14 +254,23 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
               ),
         ];
 
-        final cashOk = await walletMetricsService.recordCashMovements(
+        final cashResult = await walletMetricsService.recordCashMovements(
           walletId: event.walletId,
           entries: reversals,
         );
         await _safeSyncDebt(event.walletId);
 
         emit(DebtOperationSuccess(
-            'Borç silindi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+          'Borç silindi.${cashResult.ok ? '' : CashCouplingMixin.cashWarning}',
+          undo: snapshot == null
+              ? null
+              : DebtDeletionUndo(
+                  debt: snapshot,
+                  userId: event.userId,
+                  walletId: event.walletId,
+                  reversalTransactionIds: cashResult.transactionIds,
+                ),
+        ));
         add(GetDebtsEvent(event.walletId));
       },
     );
@@ -233,6 +278,27 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
 
   Future<void> _safeSyncDebt(String walletId) =>
       safeSyncMetric(() => walletMetricsService.syncDebt(walletId), 'debt');
+
+  /// Silinecek borcun defterdeki hali; bulunamazsa `null` (geri alma sunulmaz,
+  /// silme yine yapılır — okunamayan bir kayıt yüzünden silme engellenmemeli).
+  Future<DebtEntity?> _debtSnapshot(String walletId, String id) async {
+    final Either<Failure, List<DebtEntity>> result;
+    try {
+      result = await getDebtsUseCase(walletId);
+    } catch (e) {
+      debugPrint('Geri alma anlık görüntüsü alınamadı (borç): $e');
+      return null;
+    }
+    return result.fold(
+      (_) => null,
+      (debts) {
+        for (final d in debts) {
+          if (d.id == id) return d;
+        }
+        return null;
+      },
+    );
+  }
 
   /// Defter dönemi gün çözünürlüğündedir; aynı gün yeniden seçilirse (tarih
   /// seçici gece yarısına sabitler) taşıma sayılmaz.

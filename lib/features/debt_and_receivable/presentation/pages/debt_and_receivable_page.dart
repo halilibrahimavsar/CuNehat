@@ -6,7 +6,6 @@ import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_math.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -21,6 +20,8 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 
 class DebtAndReceivablePage extends StatefulWidget {
   final String userId;
@@ -154,9 +155,10 @@ class DebtListSection extends StatelessWidget {
     return BlocConsumer<DebtBloc, DebtState>(
       listener: (context, state) {
         if (state is DebtOperationSuccess) {
-          IboSnackbar.showSuccess(context, state.message);
+          showDeletionMessage(context,
+              message: state.message, undo: state.undo);
         } else if (state is DebtError) {
-          IboSnackbar.showError(context, state.message);
+          AppMessenger.error(state.message);
         }
       },
       builder: (context, state) {
@@ -263,7 +265,7 @@ class DebtListSection extends StatelessWidget {
           );
         } else if (value == 'delete') {
           // Borç silmek cüzdanın nakit hareketini de geri alır
-          // (bkz. DebtBloc._onDeleteDebt) → geri alınamaz.
+          // (bkz. DebtBloc._onDeleteDebt); onay + 6 sn "Geri al" ile korunur.
           final confirmed = await ConfirmDialog.show(
             context,
             title: context.l10n.borcSilBaslik,
@@ -459,9 +461,10 @@ class ReceivableListSection extends StatelessWidget {
     return BlocConsumer<ReceivableBloc, ReceivableState>(
       listener: (context, state) {
         if (state is ReceivableOperationSuccess) {
-          IboSnackbar.showSuccess(context, state.message);
+          showDeletionMessage(context,
+              message: state.message, undo: state.undo);
         } else if (state is ReceivableError) {
-          IboSnackbar.showError(context, state.message);
+          AppMessenger.error(state.message);
         }
       },
       builder: (context, state) {
