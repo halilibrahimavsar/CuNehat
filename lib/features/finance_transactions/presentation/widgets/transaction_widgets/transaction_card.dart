@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
@@ -10,7 +11,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Premium işlem kartı: kategori glyph'i, marka renkleri, baskın tutar.
@@ -165,10 +165,10 @@ class TransactionCard extends StatelessWidget {
           const SizedBox(width: 12),
 
           // Baskın tutar
-          SignedAmountDisplay(
+          SignedMoneyText(
             amount: t.amount,
             isExpense: t.isExpense,
-            currencySymbol: context.activeWalletCurrencySymbol,
+            currency: context.activeWalletCurrency,
             style: TextStyle(
               color: accent,
               fontWeight: FontWeight.w900,

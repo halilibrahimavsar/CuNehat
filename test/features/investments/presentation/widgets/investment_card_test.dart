@@ -4,8 +4,14 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_car
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   Widget buildTestableWidget(Widget child) {
     return MaterialApp(
       localizationsDelegates: const [
@@ -62,13 +68,13 @@ void main() {
 
     // Verify Current Value & Profit details
     expect(find.text('Mevcut Değer'), findsOneWidget);
-    expect(find.text('₺6.000'), findsOneWidget);
+    expect(find.text('6.000,00 ₺'), findsOneWidget);
     expect(find.text('Kar/Zarar'), findsOneWidget);
-    expect(find.text('₺1.000'), findsOneWidget);
+    expect(find.text('1.000,00 ₺'), findsOneWidget);
     expect(find.text('20.00%'), findsOneWidget);
 
     // Verify Target progress labels
-    expect(find.text('Hedef: ₺10.000'), findsOneWidget);
+    expect(find.text('Hedef: 10.000,00 ₺'), findsOneWidget);
     expect(find.text('60.0%'), findsOneWidget);
   });
 
@@ -103,7 +109,7 @@ void main() {
     expect(find.byIcon(Icons.trending_up), findsOneWidget);
 
     // Verify negative profit rendering
-    expect(find.text('-₺200'), findsOneWidget);
+    expect(find.text('-200,00 ₺'), findsOneWidget);
     expect(find.text('-10.00%'), findsOneWidget);
 
     // Verify no target indicators are shown since targetAmount is null
@@ -138,7 +144,7 @@ void main() {
     expect(find.byIcon(Icons.account_balance_wallet), findsOneWidget);
 
     // Verify target reached progress (100.0%)
-    expect(find.text('Hedef: ₺800'), findsOneWidget);
+    expect(find.text('Hedef: 800,00 ₺'), findsOneWidget);
     expect(find.text('100.0%'), findsOneWidget);
   });
 }

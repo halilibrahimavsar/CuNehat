@@ -1,9 +1,9 @@
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class InvestmentCard extends StatelessWidget {
   final InvestmentEntity investment;
@@ -37,11 +37,6 @@ class InvestmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'tr_TR',
-      symbol: '₺',
-      decimalDigits: 0,
-    );
     final scheme = Theme.of(context).colorScheme;
     final accent = investment.color;
     final profitColor = investment.isProfitable ? Colors.green : Colors.red;
@@ -164,7 +159,7 @@ class InvestmentCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          currencyFormat.format(investment.currentValue),
+                          formatMoney(investment.currentValue),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -184,7 +179,7 @@ class InvestmentCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          currencyFormat.format(investment.profit),
+                          formatMoney(investment.profit),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -213,7 +208,7 @@ class InvestmentCard extends StatelessWidget {
                     children: [
                       Text(
                         context.l10n.hedefCurrencyformatFormatInvestment(
-                            currencyFormat.format(investment.targetAmount)),
+                            formatMoney(investment.targetAmount!)),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

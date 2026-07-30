@@ -2,6 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
@@ -68,9 +69,9 @@ class WalletCardWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    AmountDisplay(
+                    MoneyText(
                       amount: wallet.balance,
-                      currencySymbol: currencySymbol(wallet.currency),
+                      currency: wallet.currency,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -234,9 +235,9 @@ class WalletCardWidget extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 2),
-        AmountDisplay(
+        MoneyText(
           amount: amount,
-          currencySymbol: currencySymbol(wallet.currency),
+          currency: wallet.currency,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,

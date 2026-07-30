@@ -103,11 +103,10 @@ class _ContributeSheetState extends State<ContributeSheet> {
         }
         setState(() {
           _priceMessage = quote.currency == 'TRY'
-              ? context.l10n.guncelFiyatFormatTry(quote.priceTl.toString())
+              ? context.l10n.guncelFiyatFormatTry(formatMoney(quote.priceTl))
               : context.l10n.guncelFiyatFormatForeign(
-                  quote.price.toString(),
-                  quote.currency,
-                  quote.priceTl.toStringAsFixed(2),
+                  formatMoney(quote.price, currency: quote.currency),
+                  formatMoney(quote.priceTl),
                 );
           _priceColor = Colors.green;
           _isLoading = false;

@@ -7,6 +7,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -485,7 +486,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
           Text(label, style: TextStyle(fontSize: 14, color: cs.onSurface)),
           const Spacer(),
           Text(
-            AppFormatters.currency.format(value),
+            formatMoney(value),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

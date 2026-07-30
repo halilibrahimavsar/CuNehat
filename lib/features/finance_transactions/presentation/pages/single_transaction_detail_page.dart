@@ -6,6 +6,7 @@ import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/receipt_viewer_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -16,7 +17,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Tek bir işlemin premium detay ekranı.
 ///
@@ -118,10 +118,10 @@ class SingleTransactionDetailPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      SignedAmountDisplay(
+                      SignedMoneyText(
                         amount: t.amount,
                         isExpense: t.isExpense,
-                        currencySymbol: context.activeWalletCurrencySymbol,
+                        currency: context.activeWalletCurrency,
                         style: TextStyle(
                           color: accent,
                           fontWeight: FontWeight.w900,
@@ -183,9 +183,9 @@ class SingleTransactionDetailPage extends StatelessWidget {
                       _infoRow(context,
                           icon: Icons.account_balance_wallet_rounded,
                           label: context.l10n.detailLabelIslemSonrasiBakiye,
-                          valueWidget: AmountDisplay(
+                          valueWidget: MoneyText(
                             amount: item.balanceAfter,
-                            currencySymbol: context.activeWalletCurrencySymbol,
+                            currency: context.activeWalletCurrency,
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 14,

@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:intl/intl.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
@@ -45,6 +46,11 @@ class _MockOnboardingCoordinator extends Mock
     implements OnboardingCoordinator {}
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   late MockTransactionBloc mockTransactionBloc;
   late MockCategoryRepository mockCategoryRepository;
   late MockSaveRecurringTransactionUsecase mockSaveRecurringTransactionUsecase;

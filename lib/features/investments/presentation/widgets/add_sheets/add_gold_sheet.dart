@@ -7,6 +7,7 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
@@ -126,7 +127,6 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     }
     // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
     _targetAmountController.addListener(() => setState(() {}));
-
   }
 
   @override
@@ -185,7 +185,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
         }
         setState(() {
           _fetchedPriceMessage =
-              context.l10n.guncelFiyatFormatTry(_fmt(quote.priceTl));
+              context.l10n.guncelFiyatFormatTry(formatMoney(quote.priceTl));
           _fetchedPriceColor = Colors.green;
           _isLoading = false;
         });
@@ -250,7 +250,8 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     );
   }
 
-  Widget _buildContent(BuildContext context, AppSurface surface, ColorScheme cs) {
+  Widget _buildContent(
+      BuildContext context, AppSurface surface, ColorScheme cs) {
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),

@@ -6,11 +6,11 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
@@ -284,8 +284,7 @@ class _BudgetSummaryCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              AppFormatters.currencyFor(context.activeWalletCurrency)
-                  .format(totalSpent),
+              formatMoney(totalSpent, currency: context.activeWalletCurrency),
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: -1,
@@ -295,9 +294,9 @@ class _BudgetSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            context.l10n.toplamLimitAppformattersCurrency(
-                AppFormatters.currencyFor(context.activeWalletCurrency)
-                    .format(totalLimit)),
+            context.l10n.toplamLimitAppformattersCurrency(formatMoney(
+                totalLimit,
+                currency: context.activeWalletCurrency)),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -441,9 +440,9 @@ class _BudgetListItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                context.l10n.harcananAppformattersCurrencyFormat(
-                    AppFormatters.currencyFor(context.activeWalletCurrency)
-                        .format(budget.spentAmount)),
+                context.l10n.harcananAppformattersCurrencyFormat(formatMoney(
+                    budget.spentAmount,
+                    currency: context.activeWalletCurrency)),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: budget.isExceeded
                       ? Colors.red
@@ -454,9 +453,9 @@ class _BudgetListItem extends StatelessWidget {
                 ),
               ),
               Text(
-                context.l10n.limitAppformattersCurrencyFormat(
-                    AppFormatters.currencyFor(context.activeWalletCurrency)
-                        .format(budget.limitAmount)),
+                context.l10n.limitAppformattersCurrencyFormat(formatMoney(
+                    budget.limitAmount,
+                    currency: context.activeWalletCurrency)),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),

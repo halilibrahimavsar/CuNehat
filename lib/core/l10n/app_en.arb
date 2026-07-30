@@ -614,17 +614,16 @@
   "ataAltin": "Ata Gold",
   "fiyatAliniyor": "Fetching price...",
   "fiyatAlinamadi": "Failed to fetch price.",
-  "guncelFiyatFormatTry": "Current Price: {price} ₺",
+  "guncelFiyatFormatTry": "Current Price: {price}",
   "@guncelFiyatFormatTry": {
     "placeholders": {
       "price": {}
     }
   },
-  "guncelFiyatFormatForeign": "Current Price: {price} {currency} (≈{priceTl} ₺)",
+  "guncelFiyatFormatForeign": "Current Price: {price} (≈{priceTl})",
   "@guncelFiyatFormatForeign": {
     "placeholders": {
       "price": {},
-      "currency": {},
       "priceTl": {}
     }
   },

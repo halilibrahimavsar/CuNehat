@@ -1,6 +1,7 @@
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
 base class MockBaseFilter extends BaseFilter {
   const MockBaseFilter();
@@ -11,6 +12,11 @@ base class MockBaseFilter extends BaseFilter {
 }
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   group('BaseFilter', () {
     test('props returns empty list', () {
       expect(const MockBaseFilter().props, isEmpty);
@@ -54,10 +60,10 @@ void main() {
     test('toString formats correctly', () {
       expect(
           const PriceRangeFilter(minPrice: 100.0, maxPrice: 500.0).toString(),
-          '100₺ - 500₺');
-      expect(const PriceRangeFilter(minPrice: 100.0).toString(), '100₺+');
-      expect(
-          const PriceRangeFilter(maxPrice: 500.0).toString(), '500₺\'ye kadar');
+          '100 ₺ - 500 ₺');
+      expect(const PriceRangeFilter(minPrice: 100.0).toString(), '100 ₺+');
+      expect(const PriceRangeFilter(maxPrice: 500.0).toString(),
+          '500 ₺\'ye kadar');
       expect(const PriceRangeFilter().toString(), '');
     });
 

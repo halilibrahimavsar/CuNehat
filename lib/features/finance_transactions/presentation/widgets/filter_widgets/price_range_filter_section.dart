@@ -157,7 +157,7 @@ class PriceRangeFilterSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     filter.dataFilter.priceRange!
-                        .label(symbol: context.activeWalletCurrencySymbol),
+                        .label(currency: context.activeWalletCurrency),
                     style: TextStyle(
                       color: Colors.green.shade900,
                       fontWeight: FontWeight.w700,

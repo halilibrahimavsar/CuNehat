@@ -1329,13 +1329,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String guncelFiyatFormatTry(Object price) {
-    return 'Güncel Fiyat: $price ₺';
+    return 'Güncel Fiyat: $price';
   }
 
   @override
-  String guncelFiyatFormatForeign(
-      Object price, Object currency, Object priceTl) {
-    return 'Güncel Fiyat: $price $currency (≈$priceTl ₺)';
+  String guncelFiyatFormatForeign(Object price, Object priceTl) {
+    return 'Güncel Fiyat: $price (≈$priceTl)';
   }
 
   @override

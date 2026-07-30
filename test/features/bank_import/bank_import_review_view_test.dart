@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:intl/intl.dart';
 
 class MockBankImportCubit extends MockCubit<BankImportState>
     implements BankImportCubit {}
@@ -40,6 +41,11 @@ ImportDraft _draft({
     );
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   late MockBankImportCubit cubit;
 
   setUp(() {

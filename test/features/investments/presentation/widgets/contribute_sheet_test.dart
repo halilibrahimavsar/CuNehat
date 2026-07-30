@@ -11,10 +11,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:intl/intl.dart';
 
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
   setUpAll(() {
@@ -171,7 +177,7 @@ void main() {
     await tester.pumpAndSettle(); // Settle live price response
 
     // Verify price message and amount autofill (0.5 * 1800 = 900)
-    expect(find.text('Güncel Fiyat: 1800.0 ₺'), findsOneWidget);
+    expect(find.text('Güncel Fiyat: 1.800,00 ₺'), findsOneWidget);
 
     // Tap Ekle
     await tester.tap(find.text('Ekle'));

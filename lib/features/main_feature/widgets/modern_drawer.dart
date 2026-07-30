@@ -6,6 +6,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/models/local_user.dart';
 import 'package:cunehat/core/services/google_drive_backup_service.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart'
     as constants;
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
@@ -134,8 +135,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                         index: 0,
                         icon: Icons.pie_chart_outline_rounded,
                         title: context.l10n.budgetPlanning,
-                        subtitle:
-                            context.l10n.drawerBudgetSubtitle,
+                        subtitle: context.l10n.drawerBudgetSubtitle,
                         gradientColors: const [
                           Color(0xFF8E2DE2),
                           Color(0xFF4A00E0),
@@ -545,8 +545,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                       const Spacer(),
                       Text(
-                        AppFormatters.currencyFor(wallet.currency)
-                            .format(wallet.balance),
+                        formatMoney(wallet.balance, currency: wallet.currency),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -645,7 +644,7 @@ class _ModernDrawerState extends State<ModernDrawer>
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              AppFormatters.currencyFor(currencyCode).format(amount),
+              formatMoney(amount, currency: currencyCode),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,

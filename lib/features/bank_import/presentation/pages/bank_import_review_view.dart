@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,7 +42,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   BankImportReview get _s => widget.state;
 
   String get _currency => _s.walletCurrency ?? kDefaultCurrency;
-  String _money(double v) => AppFormatters.currencyFor(_currency).format(v);
+  String _money(double v) => formatMoney(v, currency: _currency);
 
   @override
   void dispose() {

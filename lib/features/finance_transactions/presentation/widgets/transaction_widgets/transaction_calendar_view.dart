@@ -430,7 +430,8 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
   /// net rozeti. Tutarlar aktif cüzdan birimiyle (liste ile birebir).
   Widget _buildSummaryRow(DaySummary s) {
     final scheme = Theme.of(context).colorScheme;
-    final money = AppFormatters.currencyFor(context.activeWalletCurrency);
+    String money(double v) =>
+        formatMoney(v, currency: context.activeWalletCurrency);
     final netColor = s.net >= 0 ? AppGradients.savings : AppGradients.debt;
 
     return Row(
@@ -441,7 +442,7 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
               size: 11, color: AppGradients.savings.withValues(alpha: 0.85)),
           const SizedBox(width: 2),
           Text(
-            money.format(s.income),
+            money(s.income),
             style: TextStyle(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
               fontSize: 10.5,
@@ -455,7 +456,7 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
               size: 11, color: AppGradients.debt.withValues(alpha: 0.85)),
           const SizedBox(width: 2),
           Text(
-            money.format(s.expense),
+            money(s.expense),
             style: TextStyle(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
               fontSize: 10.5,
@@ -476,7 +477,7 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
           ),
           child: Text(
             context.l10n.netNetAppformattersCurrency(
-                '${s.net >= 0 ? "+" : ""}${money.format(s.net)}'),
+                '${s.net >= 0 ? "+" : ""}${money(s.net)}'),
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,

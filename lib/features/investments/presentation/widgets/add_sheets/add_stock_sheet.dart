@@ -9,6 +9,7 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
@@ -113,7 +114,6 @@ class _AddStockSheetState extends State<AddStockSheet> {
     }
     // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
     _targetAmountController.addListener(() => setState(() {}));
-
   }
 
   @override
@@ -204,11 +204,10 @@ class _AddStockSheetState extends State<AddStockSheet> {
         setState(() {
           _fetchedCurrency = quote.currency;
           _fetchedPriceMessage = quote.currency == 'TRY'
-              ? context.l10n.guncelFiyatFormatTry(_fmt(quote.priceTl))
+              ? context.l10n.guncelFiyatFormatTry(formatMoney(quote.priceTl))
               : context.l10n.guncelFiyatFormatForeign(
-                  quote.price.toString(),
-                  quote.currency,
-                  quote.priceTl.toStringAsFixed(2),
+                  formatMoney(quote.price, currency: quote.currency),
+                  formatMoney(quote.priceTl),
                 );
           _fetchedPriceColor = Colors.green;
           _isLoading = false;
@@ -278,7 +277,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
     );
   }
 
-  Widget _buildContent(BuildContext context, AppSurface surface, ColorScheme cs) {
+  Widget _buildContent(
+      BuildContext context, AppSurface surface, ColorScheme cs) {
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),

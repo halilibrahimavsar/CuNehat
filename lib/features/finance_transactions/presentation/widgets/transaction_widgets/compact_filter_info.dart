@@ -119,8 +119,7 @@ class CompactFilterInfo extends StatelessWidget {
       chips.add(const SizedBox(width: 8));
       chips.add(_buildInfoChip(
         icon: isLightMode ? Icons.attach_money_rounded : Icons.attach_money,
-        text: filter.priceRange!
-            .label(symbol: context.activeWalletCurrencySymbol),
+        text: filter.priceRange!.label(currency: context.activeWalletCurrency),
         backgroundColor: isLightMode
             ? Colors.green.shade400.withValues(alpha: 0.9)
             : Colors.green.shade100,

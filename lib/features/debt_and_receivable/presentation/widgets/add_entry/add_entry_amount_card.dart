@@ -1,8 +1,8 @@
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/repayment_breakdown_card.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 
 /// Üst ana tutar giriş kartı ve (varsa) borç geri ödeme hesaplama özeti.
@@ -110,7 +110,7 @@ class AddEntryAmountCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),
                 child: Text(
-                  AppConstants.currency,
+                  context.activeWalletCurrencySymbol,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,

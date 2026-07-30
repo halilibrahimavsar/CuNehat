@@ -14,14 +14,21 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:intl/intl.dart';
 
 class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
   setUpAll(() {
@@ -128,7 +135,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify fetched price message
-    expect(find.text('Güncel Fiyat: 1.500 ₺'), findsOneWidget);
+    expect(find.text('Güncel Fiyat: 1.500,00 ₺'), findsOneWidget);
 
     // Verify currentValue and amount TextFields have auto-filled '3000'
     // currentValue: has hintText: '0'

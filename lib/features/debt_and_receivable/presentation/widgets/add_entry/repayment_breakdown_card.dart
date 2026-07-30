@@ -1,6 +1,6 @@
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
 import 'package:flutter/material.dart';
@@ -73,15 +73,13 @@ class RepaymentBreakdownCard extends StatelessWidget {
                       !isInstallmentAmortized
                   ? context.l10n.vadeFarkiLabel
                   : context.l10n.toplamFaizLabel,
-              value: hasData
-                  ? '+ ${AppFormatters.currency.format(totalInterest)}'
-                  : '—',
+              value: hasData ? '+ ${formatMoney(totalInterest)}' : '—',
             ),
             if (term > 0) ...[
               const SizedBox(height: 8),
               _SummaryRow(
                 label: context.l10n.aylikTaksitLabel,
-                value: hasData ? AppFormatters.currency.format(monthly) : '—',
+                value: hasData ? formatMoney(monthly) : '—',
               ),
             ],
             const SizedBox(height: 12),
@@ -97,7 +95,7 @@ class RepaymentBreakdownCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  hasData ? AppFormatters.currency.format(total) : '—',
+                  hasData ? formatMoney(total) : '—',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,

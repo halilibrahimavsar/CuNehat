@@ -1,12 +1,13 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 
 // Timeline yerleşim sabitleri (önceki magic offset'ler yerine).
 const double _kNodeSize = 32;
@@ -170,9 +171,9 @@ class _DetailedListViewState extends State<DetailedListView> {
               color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
-          AmountDisplay(
+          MoneyText(
             amount: balance,
-            currencySymbol: context.activeWalletCurrencySymbol,
+            currency: context.activeWalletCurrency,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -276,7 +277,8 @@ class _DetailedListViewState extends State<DetailedListView> {
   ) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final money = AppFormatters.currencyFor(context.activeWalletCurrency);
+    String money(double v) =>
+        formatMoney(v, currency: context.activeWalletCurrency);
     final netColor = net >= 0 ? AppGradients.savings : AppGradients.debt;
 
     return Row(
@@ -286,7 +288,7 @@ class _DetailedListViewState extends State<DetailedListView> {
               size: 11, color: AppGradients.savings.withValues(alpha: 0.8)),
           const SizedBox(width: 2),
           Text(
-            money.format(income),
+            money(income),
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               fontSize: 10.5,
@@ -300,7 +302,7 @@ class _DetailedListViewState extends State<DetailedListView> {
               size: 11, color: AppGradients.debt.withValues(alpha: 0.8)),
           const SizedBox(width: 2),
           Text(
-            money.format(expense),
+            money(expense),
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               fontSize: 10.5,
@@ -321,7 +323,7 @@ class _DetailedListViewState extends State<DetailedListView> {
           ),
           child: Text(
             context.l10n.netNetAppformattersCurrency(
-                '${net >= 0 ? "+" : ""}${money.format(net)}'),
+                '${net >= 0 ? "+" : ""}${money(net)}'),
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,

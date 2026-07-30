@@ -1,10 +1,10 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
 import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -361,7 +361,7 @@ class DebtListSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AppFormatters.currency.format(debt.remainingAmount),
+                      formatMoney(debt.remainingAmount),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: Colors.redAccent,
@@ -667,7 +667,7 @@ class ReceivableListSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  AppFormatters.currency.format(receivable.amount),
+                  formatMoney(receivable.amount),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,

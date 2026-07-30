@@ -1,5 +1,5 @@
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:flutter/material.dart';
 
 /// Borç eklenirken kullanıcının seçtiği bakiye etkisi:
@@ -54,7 +54,7 @@ class DebtCashImpactDialog extends StatelessWidget {
             icon: Icons.payments_rounded,
             title: context.l10n.borcNakitSecenekBaslik,
             body: context.l10n.borcNakitSecenekGovde(
-              AppFormatters.currency.format(amount),
+              formatMoney(amount),
             ),
             accent: accent,
           ),

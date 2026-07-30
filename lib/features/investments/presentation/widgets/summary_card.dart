@@ -1,8 +1,8 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 /// A dashboard-style premium summary card for investment metrics.
 class SummaryCard extends StatelessWidget {
@@ -21,11 +21,6 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'tr_TR',
-      symbol: '₺',
-      decimalDigits: 0,
-    );
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isProfit = totalProfit >= 0;
@@ -69,7 +64,7 @@ class SummaryCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              currencyFormat.format(totalCurrentValue),
+              formatMoney(totalCurrentValue),
               style: theme.textTheme.displayMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 fontSize: 48,
@@ -106,7 +101,7 @@ class SummaryCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    currencyFormat.format(totalInvestment),
+                    formatMoney(totalInvestment),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: scheme.onSurface,
@@ -158,7 +153,7 @@ class SummaryCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        currencyFormat.format(totalProfit),
+                        formatMoney(totalProfit),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: profitColor,

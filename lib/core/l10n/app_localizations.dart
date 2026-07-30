@@ -2457,15 +2457,14 @@ abstract class AppLocalizations {
   /// No description provided for @guncelFiyatFormatTry.
   ///
   /// In tr, this message translates to:
-  /// **'Güncel Fiyat: {price} ₺'**
+  /// **'Güncel Fiyat: {price}'**
   String guncelFiyatFormatTry(Object price);
 
   /// No description provided for @guncelFiyatFormatForeign.
   ///
   /// In tr, this message translates to:
-  /// **'Güncel Fiyat: {price} {currency} (≈{priceTl} ₺)'**
-  String guncelFiyatFormatForeign(
-      Object price, Object currency, Object priceTl);
+  /// **'Güncel Fiyat: {price} (≈{priceTl})'**
+  String guncelFiyatFormatForeign(Object price, Object priceTl);
 
   /// No description provided for @gecerliYatirimMiktariGirin.
   ///

@@ -614,17 +614,16 @@
   "ataAltin": "Ata Altın",
   "fiyatAliniyor": "Fiyat alınıyor...",
   "fiyatAlinamadi": "Fiyat alınamadı.",
-  "guncelFiyatFormatTry": "Güncel Fiyat: {price} ₺",
+  "guncelFiyatFormatTry": "Güncel Fiyat: {price}",
   "@guncelFiyatFormatTry": {
     "placeholders": {
       "price": {}
     }
   },
-  "guncelFiyatFormatForeign": "Güncel Fiyat: {price} {currency} (≈{priceTl} ₺)",
+  "guncelFiyatFormatForeign": "Güncel Fiyat: {price} (≈{priceTl})",
   "@guncelFiyatFormatForeign": {
     "placeholders": {
       "price": {},
-      "currency": {},
       "priceTl": {}
     }
   },

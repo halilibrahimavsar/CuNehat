@@ -27,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
+import 'package:intl/intl.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
@@ -38,6 +39,11 @@ class MockBudgetRepository extends Mock implements BudgetRepository {}
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   late MockTransactionBloc mockTransactionBloc;
   late MockCategoryRepository mockCategoryRepository;
   late MockBudgetRepository mockBudgetRepository;
@@ -204,10 +210,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Varsayılan mod Karşılaştırma: kategori dağılımı TEK kart çizer.
-    // 'Gelir'/'Gider' hem özet kartında hem karşılaştırma kartının çubuk
-    // etiketinde ve efsane başlığında geçer.
-    expect(find.text('Gelir'), findsNWidgets(3));
-    expect(find.text('Gider'), findsNWidgets(3));
+    // 'Gelir'/'Gider' özet kartında, karşılaştırma kartının çubuk etiketinde,
+    // efsane başlığında ve haftalık net akış grafiğinin açıklamasında geçer.
+    expect(find.text('Gelir'), findsNWidgets(4));
+    expect(find.text('Gider'), findsNWidgets(4));
     expect(find.text('Net'), findsNWidgets(2));
 
     expect(find.byType(ReportCompareChartCard), findsOneWidget);
@@ -218,8 +224,8 @@ void main() {
     expect(find.text('Gelirler'), findsNothing);
 
     // İki taraf da kendi toplamını yazar (özet kartıyla birlikte iki kez).
-    expect(find.text('200.00 ₺'), findsNWidgets(2));
-    expect(find.text('50.00 ₺'), findsNWidgets(2));
+    expect(find.text('200,00 ₺'), findsNWidgets(2));
+    expect(find.text('50,00 ₺'), findsNWidgets(2));
   });
 
   testWidgets('mod Gidere alınınca tek taraflı pasta kartına dönülür',
@@ -524,6 +530,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Food'), findsWidgets);
-    expect(find.text('50.00 ₺'), findsWidgets);
+    expect(find.text('50,00 ₺'), findsWidgets);
   });
 }

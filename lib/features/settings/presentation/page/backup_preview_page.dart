@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
@@ -14,6 +13,7 @@ import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/byte_format.dart';
 import 'package:cunehat/core/utils/drive_status_messages.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/settings/presentation/blocs/backup_preview/backup_preview_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/backup_preview/backup_preview_state.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -551,8 +551,7 @@ class _WalletsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    AppFormatters.currencyFor(wallet.currency)
-                        .format(wallet.balance),
+                    formatMoney(wallet.balance, currency: wallet.currency),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
@@ -577,9 +576,9 @@ class _TotalsCard extends StatelessWidget {
     // YANLIŞ olurdu (60 USD + 40 TRY = 100 ₺ değil). Bu durumda sembolsüz
     // sayı gösterilir; tek para birimi varsa onun sembolüyle biçimlenir.
     final currencies = summary.wallets.map((w) => w.currency).toSet();
-    final format = currencies.length == 1
-        ? AppFormatters.currencyFor(currencies.first)
-        : NumberFormat.decimalPattern(Intl.defaultLocale);
+    String money(double v) => currencies.length == 1
+        ? formatMoney(v, currency: currencies.first)
+        : formatMoney(v, symbol: false);
 
     return AppCard(
       child: Column(
@@ -600,11 +599,9 @@ class _TotalsCard extends StatelessWidget {
                     '${AppFormatters.dateShort.format(summary.lastTransactionDate!)}',
           ),
           const SizedBox(height: 6),
-          _line(context, l.backupPreviewIncome,
-              format.format(summary.totalIncome)),
+          _line(context, l.backupPreviewIncome, money(summary.totalIncome)),
           const SizedBox(height: 6),
-          _line(context, l.backupPreviewExpense,
-              format.format(summary.totalExpense)),
+          _line(context, l.backupPreviewExpense, money(summary.totalExpense)),
           const SizedBox(height: 6),
           _line(context, l.backupPreviewCategories,
               '${summary.categoryKeyCount}'),

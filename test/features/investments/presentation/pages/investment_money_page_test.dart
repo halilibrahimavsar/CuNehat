@@ -18,6 +18,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:intl/intl.dart';
 
 class MockInvestmentBloc extends MockBloc<InvestmentEvent, InvestmentState>
     implements InvestmentBloc {}
@@ -30,6 +31,11 @@ class _MockOnboardingCoordinator extends Mock
     implements OnboardingCoordinator {}
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   late MockInvestmentBloc mockInvestmentBloc;
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
@@ -167,9 +173,9 @@ void main() {
 
     // Verify SummaryCard rendering
     expect(find.text('TOPLAM PORTFÖY DEĞERİ'), findsOneWidget);
-    expect(find.text('₺3.250'),
+    expect(find.text('3.250,00 ₺'),
         findsOneWidget); // totalCurrentValue = 1250 + 2000 = 3250
-    expect(find.text('₺3.000'), findsOneWidget); // totalInvestment = 3000
+    expect(find.text('3.000,00 ₺'), findsOneWidget); // totalInvestment = 3000
 
     // Verify Portföyüm header
     expect(find.text('Portföyüm'), findsOneWidget);

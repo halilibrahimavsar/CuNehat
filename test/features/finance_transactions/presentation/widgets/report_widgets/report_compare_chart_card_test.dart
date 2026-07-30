@@ -4,8 +4,14 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
 void main() {
+  // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
+  // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
+  // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
+  setUpAll(() => Intl.defaultLocale = 'tr');
+
   List<CategoryData> slices(Map<String, double> amounts,
       {required bool expense}) {
     final ramp =
@@ -172,7 +178,7 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    expect(find.text('+150.00 ₺'), findsOneWidget);
+    expect(find.text('+150,00 ₺'), findsOneWidget);
     expect(find.textContaining('%75 Birikim'), findsOneWidget);
 
     await tester.pumpWidget(wrap(ReportCompareChartCard(
@@ -182,7 +188,7 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    expect(find.text('−50.00 ₺'), findsOneWidget);
+    expect(find.text('−50,00 ₺'), findsOneWidget);
     expect(find.textContaining('Gelirin %50 üzerinde'), findsOneWidget);
   });
 
@@ -199,7 +205,7 @@ void main() {
     expect(find.byKey(ReportCompareChartCard.incomeBarKey), findsNothing);
     // Gider tarafı normal çizilir; net tüm gider kadar eksidedir.
     expect(find.byKey(ReportCompareChartCard.expenseBarKey), findsOneWidget);
-    expect(find.text('−50.00 ₺'), findsOneWidget);
+    expect(find.text('−50,00 ₺'), findsOneWidget);
   });
 
   // Kartın en zorlandığı hâl: 360dp telefon, uzun Türkçe kategori adları ve
@@ -253,8 +259,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Her dilime değer basmak okunmaz; kalanları efsane taşır.
-    expect(find.text('En büyük: Maaş · 150.00 ₺'), findsOneWidget);
-    expect(find.text('En büyük: Kira · 30.00 ₺'), findsOneWidget);
+    expect(find.text('En büyük: Maaş · 150,00 ₺'), findsOneWidget);
+    expect(find.text('En büyük: Kira · 30,00 ₺'), findsOneWidget);
     expect(find.textContaining('En büyük: Ek iş'), findsNothing);
     expect(find.textContaining('En büyük: Market'), findsNothing);
   });

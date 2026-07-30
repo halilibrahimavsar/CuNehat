@@ -5,6 +5,7 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
@@ -236,7 +237,7 @@ class _AppBarContentState extends State<AppBarContent> {
             children: [
               _buildWalletNameBadge(context, state.activeWallet, valueName, st),
               const SizedBox(height: 2),
-              _buildAmountDisplay(value),
+              _buildMoneyText(value),
               // Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı;
               // kur yoksa satır gizlenir.
               if (st == SliderState.transactions &&
@@ -300,12 +301,12 @@ class _AppBarContentState extends State<AppBarContent> {
     );
   }
 
-  Widget _buildAmountDisplay(double value) {
+  Widget _buildMoneyText(double value) {
     return BlocBuilder<AmountVisibilityCubit, bool>(
       builder: (context, isVisible) {
-        return AmountDisplay(
+        return MoneyText(
           amount: value,
-          currencySymbol: context.activeWalletCurrencySymbol,
+          currency: context.activeWalletCurrency,
           animationCurve: Curves.decelerate,
           obscureMode: AmountObscureMode.blur,
           alignment: Alignment.center,

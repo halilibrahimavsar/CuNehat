@@ -179,7 +179,7 @@ void main() {
     expect(find.text('Araba Kredisi'), findsOneWidget);
     expect(find.text('Ziraat Bankası'), findsOneWidget);
     expect(find.text('Ödendi'), findsWidgets);
-    expect(find.text('₺150.000,00'), findsWidgets);
+    expect(find.text('150.000,00 ₺'), findsWidgets);
 
     // Switch to Receivables Tab
     await tester.tap(find.text('Alacak Geçmişi'));
@@ -188,6 +188,6 @@ void main() {
     // Verify Receivable history summary and card
     expect(find.text('Ahmet Yılmaz'), findsOneWidget);
     expect(find.text('Tahsil Edildi'), findsWidgets);
-    expect(find.text('₺5.000,00'), findsWidgets);
+    expect(find.text('5.000,00 ₺'), findsWidgets);
   });
 }

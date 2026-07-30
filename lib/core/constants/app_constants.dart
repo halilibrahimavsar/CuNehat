@@ -1,5 +1,4 @@
 import 'package:cunehat/config/theme/app_surface_theme.dart';
-import 'package:cunehat/core/utils/currencies.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -61,26 +60,14 @@ class WalletColors {
   }
 }
 
-class AppConstants {
-  static const String currency = '₺';
-}
-
+/// Yalnız TARİH biçimleyicileri. Para biçimlendirme buraya EKLENMEZ —
+/// tek nokta `core/utils/money_format.dart`'taki `formatMoney`'dir.
 class AppFormatters {
   static DateFormat get dateShort => DateFormat('dd.MM.yy', Intl.defaultLocale);
   static DateFormat get dateLong => DateFormat.yMMMMd(Intl.defaultLocale);
   static DateFormat get dateTime =>
       DateFormat('dd.MM.yyyy HH:mm', Intl.defaultLocale);
   static DateFormat get time => DateFormat('HH:mm', Intl.defaultLocale);
-
-  static NumberFormat get currency => currencyFor(kDefaultCurrency);
-
-  /// Cüzdan birimine göre binlik ayraçlı para formatlayıcı; cüzdan
-  /// kapsamlı görünümler aktif birimi geçer.
-  static NumberFormat currencyFor(String code) => NumberFormat.currency(
-        locale: Intl.defaultLocale,
-        symbol: currencySymbol(code),
-        decimalDigits: 2,
-      );
 }
 
 class AppRoutes {

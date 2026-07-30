@@ -1,3 +1,4 @@
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -5,7 +6,6 @@ import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 
 /// Salt-veri finansal özet kartı.
@@ -98,7 +98,7 @@ class TransactionHeader extends StatelessWidget {
                     amount: totalIncome,
                     color: incomeColor,
                     icon: Icons.arrow_upward_rounded,
-                    currencySymbol: context.activeWalletCurrencySymbol,
+                    currency: context.activeWalletCurrency,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -108,7 +108,7 @@ class TransactionHeader extends StatelessWidget {
                     amount: totalExpense,
                     color: expenseColor,
                     icon: Icons.arrow_downward_rounded,
-                    currencySymbol: context.activeWalletCurrencySymbol,
+                    currency: context.activeWalletCurrency,
                   ),
                 ),
               ],
@@ -171,9 +171,9 @@ class TransactionHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              AmountDisplay(
+              MoneyText(
                 amount: amount,
-                currencySymbol: context.activeWalletCurrencySymbol,
+                currency: context.activeWalletCurrency,
                 style: TextStyle(
                   color: amountColor,
                   fontSize: 32,
@@ -247,7 +247,7 @@ class TransactionHeader extends StatelessWidget {
     required double amount,
     required Color color,
     required IconData icon,
-    required String currencySymbol,
+    required String currency,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -276,9 +276,9 @@ class TransactionHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          AmountDisplay(
+          MoneyText(
             amount: amount,
-            currencySymbol: currencySymbol,
+            currency: currency,
             style: TextStyle(
               color: color,
               fontSize: 18,

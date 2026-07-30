@@ -1,3 +1,5 @@
+import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:equatable/equatable.dart';
 
@@ -34,18 +36,23 @@ class PriceRangeFilter extends Equatable {
   @override
   List<Object?> get props => [minPrice, maxPrice];
 
-  /// Rozet/çip etiketi; cüzdan kapsamlı görünümler aktif birim sembolünü
-  /// geçer (varsayılan ₺ eski davranışı korur).
-  String label({String symbol = '₺'}) {
+  /// Rozet/çip etiketi; cüzdan kapsamlı görünümler aktif birim kodunu geçer.
+  ///
+  /// Çip dar olduğu için kuruş YAZILMAZ (`decimals: 0`) — burası tam tutar
+  /// değil aralık göstergesi. Biçim yine de [formatMoney]'den gelir, yani
+  /// binlik ayracı ve sembol yerleşimi uygulamanın geri kalanıyla aynıdır.
+  String label({String currency = kDefaultCurrency}) {
+    String money(double v) => formatMoney(v, decimals: 0, currency: currency);
+
     if (minPrice != null && maxPrice != null) {
       if (minPrice == maxPrice) {
-        return '${minPrice!.toStringAsFixed(0)}$symbol';
+        return money(minPrice!);
       }
-      return '${minPrice!.toStringAsFixed(0)}$symbol - ${maxPrice!.toStringAsFixed(0)}$symbol';
+      return '${money(minPrice!)} - ${money(maxPrice!)}';
     } else if (minPrice != null) {
-      return '${minPrice!.toStringAsFixed(0)}$symbol+';
+      return '${money(minPrice!)}+';
     } else if (maxPrice != null) {
-      return '${maxPrice!.toStringAsFixed(0)}$symbol\'ye kadar';
+      return '${money(maxPrice!)}\'ye kadar';
     }
     return '';
   }

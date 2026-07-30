@@ -1,7 +1,7 @@
 // transaction_form_fields.dart'tan bölündü (v1 temizliği): davranış aynı.
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 
 // ============================================================ Amount hero
@@ -122,7 +122,7 @@ class AmountHero extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    AppConstants.currency,
+                    context.activeWalletCurrencySymbol,
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,

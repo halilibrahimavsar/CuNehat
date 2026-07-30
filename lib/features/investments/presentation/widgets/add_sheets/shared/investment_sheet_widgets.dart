@@ -1,7 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
-import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -160,7 +160,7 @@ class InvestmentAmountCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),
                 child: Text(
-                  AppConstants.currency,
+                  context.activeWalletCurrencySymbol,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
