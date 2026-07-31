@@ -2646,6 +2646,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verified against balance: the income/expense direction of transactions matches the bank\'s balance column.';
 
   @override
+  String get bankImportVerified => 'Arithmetically verified';
+
+  @override
+  String get bankImportVerifiedHint =>
+      'The amounts read match the statement\'s own balance and total figures exactly.';
+
+  @override
+  String get bankImportVerifyFailed => 'Could not be verified';
+
+  @override
+  String get bankImportVerifyFailedHint =>
+      'Some checks disagree with the statement\'s own figures; review the amounts before importing.';
+
+  @override
+  String get bankImportCheckBalanceChain => 'Balance chain';
+
+  @override
+  String get bankImportCheckRecordCount => 'Record count';
+
+  @override
+  String get bankImportCheckOpeningBalance => 'Opening balance';
+
+  @override
+  String get bankImportCheckClosingBalance => 'Closing balance';
+
+  @override
+  String get bankImportCheckTotals => 'Debit/credit totals';
+
+  @override
   String bankImportReconcileMismatch(int count) {
     return 'Balance mismatch: $count row(s) don\'t reconcile with the balance column. The statement may be misread; check the signs.';
   }

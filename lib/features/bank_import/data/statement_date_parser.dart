@@ -15,7 +15,41 @@ final _isoPrefixRe = RegExp(r'^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})');
 /// kayda dönüşür — gerçek bir Akbank CSV'sinde `2026-07-16-10.53.10.816925`
 /// hücresi, içindeki `26-07-16` alt dizesi yüzünden 2016-07-26 olarak
 /// ayrıştırılıyordu (75 satırın tamamı 2003–2030'a dağılmıştı).
-final _re = RegExp(r'(?<![\d./-])(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})(?![\d./-])');
+final _re =
+    RegExp(r'(?<![\d./-])(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})(?![\d./-])');
+
+/// Tarih SÜTUNUNUN tamamına bakarak gün-önce/ay-önce kararını BİR KEZ verir.
+///
+/// Neden gerekli: [StatementDateFormat.auto] hücre bazında karar verirse aynı
+/// dosya satır satır farklı yorumlanabilir. Ay-önce (MM/DD) bir kaynakta
+/// `01/15/2026` ikinci grup 12'yi aştığı için doğru okunur, ama bir sonraki
+/// satırdaki `01/05/2026` belirsiz olduğu için TR varsayılanıyla gün-önce
+/// sayılır: **aynı sütunda 15 Ocak ile 1 Mayıs yan yana** çıkar ve hiçbir
+/// uyarı verilmez. Karar sütuna ait olduğu için sütuna ait bir kanıtla
+/// verilmelidir.
+///
+/// Kanıt: yalnız 12'yi aşan gruplar. İki yönde de kanıt varsa (bozuk/karışık
+/// kaynak) TR varsayılanına düşülür — sessizce yarısını ters çevirmektense
+/// tutarlı davranmak yeğdir; kullanıcı eşleme ekranından değiştirebilir.
+StatementDateFormat resolveStatementDateFormat(Iterable<String> cells) {
+  var dayFirstEvidence = 0;
+  var monthFirstEvidence = 0;
+  for (final cell in cells) {
+    final s = cell.trim();
+    if (s.isEmpty) continue;
+    if (_isoPrefixRe.hasMatch(s)) continue; // ISO: sıra zaten belirsiz değil
+    final m = _re.firstMatch(s);
+    if (m == null) continue;
+    final a = int.parse(m.group(1)!);
+    final b = int.parse(m.group(2)!);
+    if (a > 12 && b <= 12) dayFirstEvidence++;
+    if (b > 12 && a <= 12) monthFirstEvidence++;
+  }
+  if (monthFirstEvidence > 0 && dayFirstEvidence == 0) {
+    return StatementDateFormat.monthFirst;
+  }
+  return StatementDateFormat.dayFirst;
+}
 
 DateTime? parseStatementDate(String raw, StatementDateFormat fmt) {
   final s = raw.trim();

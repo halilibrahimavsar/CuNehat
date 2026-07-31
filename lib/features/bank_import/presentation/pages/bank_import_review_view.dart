@@ -9,6 +9,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
+import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
@@ -151,11 +152,18 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
               if (_s.skippedRows > 0)
                 _stat(context, '${_s.skippedRows}',
                     context.l10n.bankImportStatSkipped, cs.onSurfaceVariant),
-              if (_s.reconciliation?.status == ReconcileStatus.matched)
+              if (_s.verification.status ==
+                      StatementVerificationStatus.unavailable &&
+                  _s.reconciliation?.status == ReconcileStatus.matched)
                 _chip(context, Icons.verified_rounded,
                     context.l10n.bankImportRoleBalance, Colors.green),
             ],
           ),
+          if (_s.verification.status !=
+              StatementVerificationStatus.unavailable) ...[
+            const SizedBox(height: 10),
+            _verificationBanner(context),
+          ],
           if (warnings.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
@@ -191,6 +199,92 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       ),
     );
   }
+
+  /// Ekstrenin KENDİ verileriyle yapılan aritmetik doğrulamanın sonucu.
+  ///
+  /// Buradaki iddia "muhtemelen doğru okuduk" değil, kanıtlanabilir bir
+  /// eşitliktir: bakiye zinciri her satırın tutar+işaretini, beyan edilen
+  /// kayıt sayısı hiçbir satırın kaçmadığını, devreden/kapanış bakiyesi ve
+  /// Borç/Alacak toplamları da bütünü doğrular. Kontrollerin dökümü
+  /// gösterilir ki kullanıcı neye güvendiğini görebilsin.
+  Widget _verificationBanner(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final v = _s.verification;
+    final ok = v.status == StatementVerificationStatus.verified;
+    final color = ok ? Colors.green : cs.error;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(ok ? Icons.verified_rounded : Icons.error_outline_rounded,
+                  size: 16, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  ok
+                      ? context.l10n.bankImportVerified
+                      : context.l10n.bankImportVerifyFailed,
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w800, color: color),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            ok
+                ? context.l10n.bankImportVerifiedHint
+                : context.l10n.bankImportVerifyFailedHint,
+            style: const TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 6),
+          for (final c in v.checks)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 1),
+              child: Row(
+                children: [
+                  Icon(
+                    c.passed ? Icons.check_rounded : Icons.close_rounded,
+                    size: 13,
+                    color: c.passed ? Colors.green : cs.error,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${_checkLabel(context, c.kind)}: ${c.detail}',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _checkLabel(BuildContext context, StatementCheckKind kind) =>
+      switch (kind) {
+        StatementCheckKind.balanceChain =>
+          context.l10n.bankImportCheckBalanceChain,
+        StatementCheckKind.recordCount =>
+          context.l10n.bankImportCheckRecordCount,
+        StatementCheckKind.openingBalance =>
+          context.l10n.bankImportCheckOpeningBalance,
+        StatementCheckKind.closingBalance =>
+          context.l10n.bankImportCheckClosingBalance,
+        StatementCheckKind.totals => context.l10n.bankImportCheckTotals,
+      };
 
   /// Gösterilecek uyarılar: genel "otomatik algılandı" uyarısı HER ZAMAN
   /// (kullanıcı talebi), bakiye tutmazsa ve para birimi uyuşmazsa ek olarak.

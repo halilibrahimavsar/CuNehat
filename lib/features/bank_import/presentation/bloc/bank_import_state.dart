@@ -1,6 +1,7 @@
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
+import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -50,10 +51,16 @@ class BankImportReview extends BankImportState {
   final List<CategoryEntity> incomeCategories;
   final int skippedRows;
 
-  /// Bakiye sütunuyla mutabakat sonucu (CSV/Excel yolunda). PDF/başlıksız
-  /// yolda `null`. `matched` → işaretler bakiyeden türetildi (güven yüksek);
+  /// Bakiye sütunuyla mutabakat sonucu. Bakiye sütunu yoksa `null`.
+  /// `matched` → işaretler bakiyeden türetildi (güven yüksek);
   /// `mismatch` → bakiye var ama tutmadı, kullanıcı kontrol etmeli.
   final BalanceReconciliation? reconciliation;
+
+  /// Ekstrenin KENDİ beyanlarıyla yapılan aritmetik doğrulama (bakiye zinciri,
+  /// "N kayıt bulunmuştur", devreden/kapanış bakiyesi, Borç/Alacak toplamları).
+  /// Kullanıcıya "muhtemelen doğru" değil, kanıtlanmış bir sonuç göstermek
+  /// için — bkz. [StatementVerification].
+  final StatementVerification verification;
 
   /// Ekstrede sezilen para birimi hedef cüzdanınkinden farklıysa dolu gelir
   /// (uyarı için); aksi halde `null`.
@@ -83,6 +90,7 @@ class BankImportReview extends BankImportState {
     required this.incomeCategories,
     required this.skippedRows,
     this.reconciliation,
+    this.verification = StatementVerification.none,
     this.foreignCurrency,
     this.walletCurrency,
     this.sourceTruncated = false,
@@ -106,6 +114,7 @@ class BankImportReview extends BankImportState {
         incomeCategories: incomeCategories,
         skippedRows: skippedRows,
         reconciliation: reconciliation,
+        verification: verification,
         foreignCurrency: foreignCurrency,
         walletCurrency: walletCurrency,
         sourceTruncated: sourceTruncated,

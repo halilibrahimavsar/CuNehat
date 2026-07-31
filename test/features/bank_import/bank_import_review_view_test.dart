@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
@@ -62,6 +63,7 @@ void main() {
     bool fromOcr = false,
     bool sourceTruncated = false,
     int sourceUnresolvedCells = 0,
+    StatementVerification verification = StatementVerification.none,
   }) =>
       BankImportReview(
         drafts: drafts,
@@ -73,6 +75,7 @@ void main() {
         fromOcr: fromOcr,
         sourceTruncated: sourceTruncated,
         sourceUnresolvedCells: sourceUnresolvedCells,
+        verification: verification,
       );
 
   Future<void> pump(WidgetTester tester, BankImportReview state) async {
@@ -220,6 +223,67 @@ void main() {
     );
     expect(find.byIcon(Icons.broken_image_outlined), findsOneWidget);
     expect(find.byIcon(Icons.help_outline_rounded), findsOneWidget);
+  });
+
+  testWidgets('doğrulama geçtiyse yeşil kanıt kartı ve kontrol dökümü',
+      (tester) async {
+    await pump(
+      tester,
+      review(
+        drafts: [_draft(description: 'MARKET')],
+        verification: const StatementVerification(
+          status: StatementVerificationStatus.verified,
+          checks: [
+            StatementCheck(
+              kind: StatementCheckKind.balanceChain,
+              passed: true,
+              detail: '84 / 84',
+            ),
+            StatementCheck(
+              kind: StatementCheckKind.recordCount,
+              passed: true,
+              detail: '85 / 85',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.text('Aritmetik olarak doğrulandı'), findsOneWidget);
+    // Kullanıcı neye güvendiğini görebilmeli: kontrollerin dökümü de basılır.
+    expect(find.text('Bakiye zinciri: 84 / 84'), findsOneWidget);
+    expect(find.text('Kayıt sayısı: 85 / 85'), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsNothing);
+  });
+
+  testWidgets('doğrulama tutmazsa kırmızı uyarı ve tutmayan kontrol işaretli',
+      (tester) async {
+    await pump(
+      tester,
+      review(
+        drafts: [_draft(description: 'MARKET')],
+        verification: const StatementVerification(
+          status: StatementVerificationStatus.failed,
+          checks: [
+            StatementCheck(
+              kind: StatementCheckKind.balanceChain,
+              passed: false,
+              detail: '80 / 84',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.text('Doğrulanamadı'), findsOneWidget);
+    expect(find.text('Bakiye zinciri: 80 / 84'), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+  });
+
+  testWidgets('doğrulama yapılamadıysa kart hiç çizilmez', (tester) async {
+    await pump(tester, review(drafts: [_draft(description: 'MARKET')]));
+    expect(find.text('Aritmetik olarak doğrulandı'), findsNothing);
+    expect(find.text('Doğrulanamadı'), findsNothing);
   });
 
   testWidgets('taslak yoksa boş durum mesajı', (tester) async {

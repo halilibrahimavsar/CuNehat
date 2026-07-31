@@ -2650,6 +2650,35 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.';
 
   @override
+  String get bankImportVerified => 'Aritmetik olarak doğrulandı';
+
+  @override
+  String get bankImportVerifiedHint =>
+      'Okunan tutarlar ekstrenin kendi bakiye/toplam bilgileriyle birebir tutuyor.';
+
+  @override
+  String get bankImportVerifyFailed => 'Doğrulanamadı';
+
+  @override
+  String get bankImportVerifyFailedHint =>
+      'Ekstrenin kendi bilgileriyle tutmayan kontroller var; aktarmadan önce tutarları gözden geçir.';
+
+  @override
+  String get bankImportCheckBalanceChain => 'Bakiye zinciri';
+
+  @override
+  String get bankImportCheckRecordCount => 'Kayıt sayısı';
+
+  @override
+  String get bankImportCheckOpeningBalance => 'Devreden bakiye';
+
+  @override
+  String get bankImportCheckClosingBalance => 'Kapanış bakiyesi';
+
+  @override
+  String get bankImportCheckTotals => 'Borç/Alacak toplamı';
+
+  @override
   String bankImportReconcileMismatch(int count) {
     return 'Bakiye uyuşmadı: $count satırda bakiye ile tutar tutmuyor. Ekstre eksik/hatalı okunmuş olabilir; işaretleri kontrol et.';
   }

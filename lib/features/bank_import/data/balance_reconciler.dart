@@ -38,11 +38,17 @@ class BalanceReconciliation {
   final int checked;
   final int matched;
 
+  /// Kazanan hipotez azalan sıralama mıydı (yeniden eskiye)? Doğrulama
+  /// katmanı açılış/kapanış bakiyesini bu yöne göre okur: artan sırada kapanış
+  /// SON satırın bakiyesi, azalan sırada İLK satırınkidir.
+  final bool reverseOrder;
+
   const BalanceReconciliation({
     required this.status,
     required this.derivedSigned,
     required this.checked,
     required this.matched,
+    this.reverseOrder = false,
   });
 
   int get mismatchCount => checked - matched;
@@ -73,7 +79,8 @@ BalanceReconciliation reconcileBalances({
 
   // Daha çok satır eşleştiren hipotezi seç; berabere kalırsa forward (TR
   // ekstrelerinde eskiden-yeniye daha yaygın).
-  final best = reverse.matched > forward.matched ? reverse : forward;
+  final isReverse = reverse.matched > forward.matched;
+  final best = isReverse ? reverse : forward;
 
   if (best.checked == 0) {
     return BalanceReconciliation(
@@ -93,6 +100,7 @@ BalanceReconciliation reconcileBalances({
       derivedSigned: best.derivedSigned,
       checked: best.checked,
       matched: best.matched,
+      reverseOrder: isReverse,
     );
   }
   return BalanceReconciliation(
@@ -100,6 +108,7 @@ BalanceReconciliation reconcileBalances({
     derivedSigned: empty,
     checked: best.checked,
     matched: best.matched,
+    reverseOrder: isReverse,
   );
 }
 

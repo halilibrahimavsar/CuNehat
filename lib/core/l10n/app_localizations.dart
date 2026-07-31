@@ -4836,6 +4836,60 @@ abstract class AppLocalizations {
   /// **'Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.'**
   String get bankImportReconcileMatched;
 
+  /// No description provided for @bankImportVerified.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aritmetik olarak doğrulandı'**
+  String get bankImportVerified;
+
+  /// No description provided for @bankImportVerifiedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okunan tutarlar ekstrenin kendi bakiye/toplam bilgileriyle birebir tutuyor.'**
+  String get bankImportVerifiedHint;
+
+  /// No description provided for @bankImportVerifyFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulanamadı'**
+  String get bankImportVerifyFailed;
+
+  /// No description provided for @bankImportVerifyFailedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstrenin kendi bilgileriyle tutmayan kontroller var; aktarmadan önce tutarları gözden geçir.'**
+  String get bankImportVerifyFailedHint;
+
+  /// No description provided for @bankImportCheckBalanceChain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye zinciri'**
+  String get bankImportCheckBalanceChain;
+
+  /// No description provided for @bankImportCheckRecordCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt sayısı'**
+  String get bankImportCheckRecordCount;
+
+  /// No description provided for @bankImportCheckOpeningBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devreden bakiye'**
+  String get bankImportCheckOpeningBalance;
+
+  /// No description provided for @bankImportCheckClosingBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapanış bakiyesi'**
+  String get bankImportCheckClosingBalance;
+
+  /// No description provided for @bankImportCheckTotals.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç/Alacak toplamı'**
+  String get bankImportCheckTotals;
+
   /// No description provided for @bankImportReconcileMismatch.
   ///
   /// In tr, this message translates to:

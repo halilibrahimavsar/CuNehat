@@ -1247,6 +1247,15 @@
   },
   "bankImportDonePastDatesHint": "Bazı hareketler geçmiş aylara ait. İşlemler listesi varsayılan olarak içinde bulunduğun ayı gösterir; hepsini görmek için tarih filtresini genişlet.",
   "bankImportReconcileMatched": "Bakiye ile doğrulandı: işlemlerin gider/gelir yönü bankanın bakiye sütunuyla eşleşiyor.",
+  "bankImportVerified": "Aritmetik olarak doğrulandı",
+  "bankImportVerifiedHint": "Okunan tutarlar ekstrenin kendi bakiye/toplam bilgileriyle birebir tutuyor.",
+  "bankImportVerifyFailed": "Doğrulanamadı",
+  "bankImportVerifyFailedHint": "Ekstrenin kendi bilgileriyle tutmayan kontroller var; aktarmadan önce tutarları gözden geçir.",
+  "bankImportCheckBalanceChain": "Bakiye zinciri",
+  "bankImportCheckRecordCount": "Kayıt sayısı",
+  "bankImportCheckOpeningBalance": "Devreden bakiye",
+  "bankImportCheckClosingBalance": "Kapanış bakiyesi",
+  "bankImportCheckTotals": "Borç/Alacak toplamı",
   "bankImportReconcileMismatch": "Bakiye uyuşmadı: {count} satırda bakiye ile tutar tutmuyor. Ekstre eksik/hatalı okunmuş olabilir; işaretleri kontrol et.",
   "@bankImportReconcileMismatch": {
     "placeholders": {

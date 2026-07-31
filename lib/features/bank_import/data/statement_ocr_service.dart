@@ -1,42 +1,53 @@
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:injectable/injectable.dart';
 
-import 'package:cunehat/features/bank_import/data/ocr_layout.dart';
+import 'package:cunehat/features/bank_import/data/layout/layout_word.dart';
 
-/// Ekstre GÖRSELİNDEN (ekran görüntüsü / taranmış sayfa) düzen korunmuş metin
+/// Ekstre GÖRSELİNDEN (ekran görüntüsü / taranmış sayfa) KONUMLU kelimeler
 /// çıkarır. Cihaz-içi ML Kit; görüntü cihazdan çıkmaz.
 ///
 /// `ReceiptOcrService`'ten ayrı olmasının nedeni çıktının farklı olması: fiş
 /// tarafı TEK tutar arar ve düz `recognized.text` yeter; ekstre tarafında
-/// satır düzeni korunmalıdır (bkz. [layoutTextFromLines]).
+/// TABLO YAPISI gerekir.
 ///
-/// Çıkan metin, PDF yolundakiyle aynı `PdfStatementParser.parseText`'e verilir
-/// — böylece banka stratejileri, işaret sezgisi ve etiket ayırma yeniden
-/// kullanılır. OCR best-effort'tur; sonuç HER ZAMAN inceleme ekranından geçer.
+/// Kelime kutuları (`TextElement.boundingBox`) döndürülür, düz metin değil:
+/// PDF yolundaki aynı [analyzeStatementLayout] motoru sütunları buradan da
+/// kurar. `recognized.text` blokları okuma sırasına göre birleştirdiği için
+/// bir tablo satırının tarihi, açıklaması ve tutarı düz metinde birbirinden
+/// kopuk düşer — düzen kelime konumlarından yeniden kurulmalıdır.
+///
+/// OCR yine de en düşük güvenilirlikli yoldur (rakam karışması); sonuç HER
+/// ZAMAN inceleme ekranından ve doğrulama kapısından geçer.
 @lazySingleton
 class StatementOcrService {
-  /// [imagePaths]'teki görselleri sırayla okur ve tek bir metinde birleştirir
-  /// (çok sayfalı taranmış PDF için sayfa sırası korunur).
-  Future<String> extractLayoutText(List<String> imagePaths) async {
-    if (imagePaths.isEmpty) return '';
+  /// [imagePaths]'teki görselleri sırayla okur. Her görüntü ayrı bir "sayfa"
+  /// olur ([LayoutWord.page]); satır kümeleme sayfa sınırını aşmaz.
+  Future<List<LayoutWord>> extractWords(List<String> imagePaths) async {
+    if (imagePaths.isEmpty) return const [];
     final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
     try {
-      final pages = <String>[];
-      for (final path in imagePaths) {
-        final recognized =
-            await recognizer.processImage(InputImage.fromFilePath(path));
-        pages.add(layoutTextFromLines([
-          for (final block in recognized.blocks)
-            for (final line in block.lines)
-              OcrLine(
-                text: line.text,
-                top: line.boundingBox.top.toDouble(),
-                height: line.boundingBox.height.toDouble(),
-                left: line.boundingBox.left.toDouble(),
-              ),
-        ]));
+      final words = <LayoutWord>[];
+      for (var page = 0; page < imagePaths.length; page++) {
+        final recognized = await recognizer
+            .processImage(InputImage.fromFilePath(imagePaths[page]));
+        for (final block in recognized.blocks) {
+          for (final line in block.lines) {
+            for (final element in line.elements) {
+              if (element.text.trim().isEmpty) continue;
+              final b = element.boundingBox;
+              words.add(LayoutWord(
+                text: element.text.trim(),
+                left: b.left,
+                right: b.right,
+                top: b.top,
+                bottom: b.bottom,
+                page: page,
+              ));
+            }
+          }
+        }
       }
-      return pages.where((p) => p.trim().isNotEmpty).join('\n');
+      return words;
     } finally {
       await recognizer.close();
     }

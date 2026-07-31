@@ -14,11 +14,13 @@ import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/draft_dedup.dart';
+import 'package:cunehat/features/bank_import/data/layout/statement_layout_engine.dart';
 import 'package:cunehat/features/bank_import/data/pdf_rasterizer.dart';
 import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart';
 import 'package:cunehat/features/bank_import/data/statement_ocr_service.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/data/statement_currency_detector.dart';
+import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/data/xls/biff8_reader.dart';
 import 'package:cunehat/features/bank_import/data/xls/ole2_reader.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
@@ -70,9 +72,14 @@ class BankImportCubit extends Cubit<BankImportState> {
   String? _lastPdfRawText;
   String? get lastPdfRawText => _lastPdfRawText;
 
-  /// Son CSV/Excel eşlemesinin bakiye-mutabakat sonucu; inceleme durumuna
-  /// taşınır. PDF/başlıksız yolda `null` kalır.
+  /// Son eşlemenin bakiye-mutabakat sonucu; inceleme durumuna taşınır.
+  /// Bakiye sütunu olmayan ekstrelerde `null` kalır.
   BalanceReconciliation? _reconciliation;
+
+  /// Ekstrenin KENDİ beyanlarıyla (bakiye zinciri, "N kayıt bulunmuştur",
+  /// devreden/kapanış bakiyesi, Borç/Alacak toplamları) yapılan doğrulama.
+  /// İnceleme ekranında "doğrulandı"/"doğrulanamadı" olarak gösterilir.
+  StatementVerification _verification = StatementVerification.none;
 
   /// Ekstrede sezilen baskın para birimi (₺/$/€ ya da kod). Cüzdan biriminden
   /// farklıysa inceleme ekranında uyarı gösterilir; sinyal yoksa `null`.
@@ -102,6 +109,7 @@ class BankImportCubit extends Cubit<BankImportState> {
     _userId = userId;
     _walletId = walletId;
     _reconciliation = null;
+    _verification = StatementVerification.none;
     _statementCurrency = null;
     _fromOcr = false;
 
@@ -163,6 +171,7 @@ class BankImportCubit extends Cubit<BankImportState> {
           emit(BankImportRawText(result.rawText));
           return;
         }
+        _applyParseDiagnostics(result);
         await _afterParse(result.drafts, result.skippedLines);
         return;
       }
@@ -240,20 +249,30 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// mutabakat güvenlik ağı da devrede olmaz. Bu yüzden inceleme ekranında
   /// [BankImportReview.fromOcr] ile ayrıca uyarılır.
   Future<void> _parseFromOcr(List<String> imagePaths) async {
-    final text = await _ocr.extractLayoutText(imagePaths);
-    _lastPdfRawText = text.trim().isEmpty ? null : text;
-    _statementCurrency = detectDominantCurrency(text);
-    if (text.trim().isEmpty) {
+    final words = await _ocr.extractWords(imagePaths);
+    if (words.isEmpty) {
+      _lastPdfRawText = null;
       emit(const BankImportScannedPdf());
       return;
     }
-    final result = _pdfParser.parseText(text);
+    final result = _pdfParser.parseWords(words);
+    _lastPdfRawText = result.rawText.trim().isEmpty ? null : result.rawText;
+    _statementCurrency = detectDominantCurrency(result.rawText);
     if (result.drafts.isEmpty) {
       emit(BankImportRawText(result.rawText));
       return;
     }
     _fromOcr = true;
+    _applyParseDiagnostics(result);
     await _afterParse(result.drafts, result.skippedLines);
+  }
+
+  /// PDF/OCR yolunun mutabakat + doğrulama sonuçlarını inceleme durumuna
+  /// taşınmak üzere saklar. (CSV/Excel yolu bunları `applyMapping`'de kendi
+  /// kurar.)
+  void _applyParseDiagnostics(PdfParseResult result) {
+    _reconciliation = result.reconciliation;
+    _verification = result.verification;
   }
 
   /// Biçim imzası için dosyanın ilk baytları. 512 bayt hem her imzayı hem de
@@ -273,6 +292,7 @@ class BankImportCubit extends Cubit<BankImportState> {
   void reset() {
     _lastPdfRawText = null;
     _reconciliation = null;
+    _verification = StatementVerification.none;
     _statementCurrency = null;
     emit(const BankImportInitial());
   }
@@ -323,8 +343,19 @@ class BankImportCubit extends Cubit<BankImportState> {
     try {
       final result = _mapper.apply(s.table, s.mapping);
       _reconciliation = result.reconciliation;
-      _statementCurrency = detectDominantCurrency(
-        s.table.rows.map((r) => r.join(' ')).join('\n'),
+      final sourceText = s.table.rows.map((r) => r.join(' ')).join('\n');
+      _statementCurrency = detectDominantCurrency(sourceText);
+      // CSV/Excel de PDF ile aynı doğrulama kapısından geçer: bakiye zinciri
+      // + ekstrenin kendi beyanları (kayıt sayısı, devreden/kapanış bakiyesi,
+      // Borç/Alacak toplamları).
+      _verification = verifyStatement(
+        signedAmounts: [
+          for (final d in result.drafts) d.isIncome ? d.amount : -d.amount,
+        ],
+        balances: result.balances,
+        reconciliation: result.reconciliation,
+        sourceText: sourceText,
+        englishGrouping: detectEnglishGrouping(sourceText),
       );
       // Kullanıcının onayladığı eşlemeyi hatırla (sonraki içe aktarım için).
       await _saveMapping(s.mapping, s.table.columnCount);
@@ -453,6 +484,7 @@ class BankImportCubit extends Cubit<BankImportState> {
       incomeCategories: _incomeCats,
       skippedRows: skipped,
       reconciliation: _reconciliation,
+      verification: _verification,
       foreignCurrency: foreignCurrency,
       walletCurrency: walletCurrency,
       sourceTruncated: _sourceTruncated,

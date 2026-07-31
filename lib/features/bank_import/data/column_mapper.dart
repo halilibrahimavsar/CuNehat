@@ -19,7 +19,16 @@ class MappingResult {
   /// `matched`; bakiye var ama tutmuyorsa `mismatch` → inceleme ekranında uyarı.
   final BalanceReconciliation reconciliation;
 
-  const MappingResult(this.drafts, this.skippedRows, this.reconciliation);
+  /// Taslaklarla AYNI sırada, satır başına okunan bakiye (sütun yoksa null
+  /// dolu liste). Doğrulama kapısı açılış/kapanış bakiyesini bundan okur.
+  final List<double?> balances;
+
+  const MappingResult(
+    this.drafts,
+    this.skippedRows,
+    this.reconciliation,
+    this.balances,
+  );
 }
 
 /// CSV/Excel ham tablosunu [ImportDraft]'lara çeviren eşleyici + otomatik
@@ -84,9 +93,20 @@ class ColumnMapper {
           {dateCol, amountCol, debitCol, creditCol, balanceCol, referenceCol});
     }
 
+    // Gün-önce/ay-önce kararı SÜTUNUN tamamına bakılarak bir kez verilir;
+    // hücre bazında `auto` aynı dosyada tutarsız tarihler üretebiliyordu
+    // (bkz. [resolveStatementDateFormat]).
+    final dateFormat = dateCol >= 0
+        ? resolveStatementDateFormat([
+            for (final r in dataRows)
+              if (dateCol < r.length) r[dateCol],
+          ])
+        : StatementDateFormat.dayFirst;
+
     final useDebitCredit = debitCol >= 0 || creditCol >= 0;
     return ColumnMapping(
       dateCol: dateCol,
+      dateFormat: dateFormat,
       descCol: descCol,
       amountCol: useDebitCredit ? null : (amountCol >= 0 ? amountCol : null),
       debitCol: useDebitCredit && debitCol >= 0 ? debitCol : null,
@@ -132,9 +152,8 @@ class ColumnMapper {
         columnSigned: signed,
         magnitude: signed.abs(),
         balance: balance,
-        reference: m.referenceCol != null
-            ? _nullIfEmpty(cell(m.referenceCol!))
-            : null,
+        reference:
+            m.referenceCol != null ? _nullIfEmpty(cell(m.referenceCol!)) : null,
       ));
     }
 
@@ -164,7 +183,12 @@ class ColumnMapper {
           );
         }(),
     ];
-    return MappingResult(drafts, skipped, reconciliation);
+    return MappingResult(
+      drafts,
+      skipped,
+      reconciliation,
+      [for (final r in rows) r.balance],
+    );
   }
 
   double? _signedAmount(ColumnMapping m, String Function(int) cell) {
