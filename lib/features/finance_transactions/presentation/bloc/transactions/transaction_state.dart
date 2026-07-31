@@ -55,6 +55,14 @@ class TransactionError extends TransactionState {
 
 class TransactionActionSuccess extends TransactionState {
   final String message;
+
+  /// Defter EYLEMDEN SONRAKİ hâliyle: silinen kayıt çıkarılmış, güncellenen
+  /// kayıt yenisiyle değiştirilmiş, eklenen kayıt eklenmiş olarak taşınır.
+  ///
+  /// Eskiden eylem ÖNCESİNDEKİ liste taşınıyordu; "bu kayıt hâlâ defterde mi?"
+  /// diye soran her tüketici (ör. silme sonrası kendini kapatan detay sayfası)
+  /// yapısal olarak yanlış cevap alıyordu. Yenilenmiş listeyi ayrıca beklemek
+  /// gerekmesin diye eylemin sonucu doğrudan bu state'te görünür.
   final List<TransactionEntity> transactions;
 
   /// İşlem kaydedildi ama bakiye senkronizasyonu başarısız olduysa dolu;

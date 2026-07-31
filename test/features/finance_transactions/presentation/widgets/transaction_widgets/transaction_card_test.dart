@@ -18,6 +18,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -78,9 +79,17 @@ void main() {
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    // Detay sayfası kategori indeksini kendi yükler ve kategori
+    // değişimlerinde tazeler.
+    getIt.registerSingleton<CategoriesChangedNotifier>(
+        CategoriesChangedNotifier());
     getIt.registerSingleton<SaveRecurringTransactionUsecase>(
         mockSaveRecurringTransactionUsecase);
 
+    when(() => mockCategoryRepository.getExpenseCategories())
+        .thenAnswer((_) async => const []);
+    when(() => mockCategoryRepository.getIncomeCategories())
+        .thenAnswer((_) async => const []);
     when(() => mockCategoryRepository.getCategories(any())).thenAnswer(
       (_) async => [
         const CategoryEntity(

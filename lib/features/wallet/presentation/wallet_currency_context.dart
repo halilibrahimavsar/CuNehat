@@ -29,6 +29,25 @@ extension ActiveWalletCurrencyX on BuildContext {
   /// Aktif birimin sembolü ('₺' | '\$' | '€').
   String get activeWalletCurrencySymbol => currencySymbol(activeWalletCurrency);
 
+  /// [walletId]'nin CANLI bakiyesi; cüzdan (ya da WalletBloc) yoksa null.
+  ///
+  /// Birimin aksine bakiye her para mutasyonunda değişir — bu yüzden `read`
+  /// değil `watch`: bakiyeye çapalanan hesaplar (defterdeki "işlem sonrası
+  /// bakiye") işlem eklendiğinde/silindiğinde yeniden çizilmeli. Yalnız
+  /// `build` içinden çağrılabilir.
+  double? watchWalletBalance(String walletId) {
+    try {
+      final s = watch<WalletBloc>().state;
+      if (s is! WalletLoadedSt) return null;
+      for (final w in s.wallets) {
+        if (w.id == walletId) return w.balance;
+      }
+      return null;
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
   /// id'ye göre cüzdan. Cüzdanlar-arası (global) listelerde — ör. düzenli
   /// işlem şablonları — kaydın ait olduğu cüzdanın adını/birimini göstermek
   /// için. Cüzdan bulunamazsa veya WalletBloc yüklü değilse null.

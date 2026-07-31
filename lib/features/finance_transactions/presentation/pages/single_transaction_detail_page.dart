@@ -1,12 +1,16 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/receipt_viewer_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -22,7 +26,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// Karttan [Navigator.push] ile açılır; düzenleme/silme için aktif
 /// [TransactionBloc] `BlocProvider.value` ile sağlanmalıdır.
-class SingleTransactionDetailPage extends StatelessWidget {
+///
+/// Sayfa açılış anındaki [item]'ı DEĞİL, bloc'taki canlı defteri gösterir:
+/// buradan yapılan düzenleme aynı sayfada anında yansımalı. Karttan taşınan
+/// değerler (kategori adı/ikonu, işlem sonrası bakiye) yalnız ilk kareyi
+/// doldurur; sonrasında canlı kaynaklardan yeniden çözülürler.
+class SingleTransactionDetailPage extends StatefulWidget {
   final TransactionWithBalance item;
   final IconData? categoryIcon;
 
@@ -42,22 +51,110 @@ class SingleTransactionDetailPage extends StatelessWidget {
   });
 
   @override
+  State<SingleTransactionDetailPage> createState() =>
+      _SingleTransactionDetailPageState();
+}
+
+class _SingleTransactionDetailPageState
+    extends State<SingleTransactionDetailPage> {
+  /// Kategori kimliği → görünen ad/ikon.
+  ///
+  /// Karttan gelen [SingleTransactionDetailPage.categoryLabel]/`categoryIcon`
+  /// AÇILIŞ etiketine donmuştur; kullanıcı bu sayfadan kategoriyi
+  /// değiştirdiğinde donmuş değer yanlışa döner. İndeks yüklenene kadar
+  /// karttan gelen değer kullanılır (ilk karede boşluk olmasın), sonrasında
+  /// `tag` üzerinden canlı çözüm yapılır.
+  Map<String, IconData> _icons = const {};
+  Map<String, String> _labels = const {};
+
+  StreamSubscription<void>? _categoriesSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategoryIndex();
+    // Düzenleme sayfasından kategori yöneticisi açılabiliyor; yeniden
+    // adlandırma bu sayfa açıkken de yansımalı.
+    _categoriesSub = getIt<CategoriesChangedNotifier>()
+        .stream
+        .listen((_) => _loadCategoryIndex());
+  }
+
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadCategoryIndex() async {
+    final categories = await fetchAllCategories(getIt<CategoryRepository>());
+    if (!mounted) return;
+    final index = buildCategoryDisplayIndex(context, categories);
+    setState(() {
+      _icons = index.icons;
+      _labels = index.labels;
+    });
+  }
+
+  /// Etiket açılıştakiyle aynıysa karttan gelen çözülmüş değer güvenlidir;
+  /// değiştiyse yalnız canlı indeks doğru cevabı verir.
+  bool _tagUnchanged(TransactionEntity t) =>
+      t.tag == widget.item.transaction.tag;
+
+  String _categoryLabelOf(BuildContext context, TransactionEntity t) =>
+      _labels[t.tag] ??
+      (_tagUnchanged(t) ? widget.categoryLabel : null) ??
+      context.translateCategory(t.tag);
+
+  IconData? _categoryIconOf(TransactionEntity t) =>
+      _icons[t.tag] ?? (_tagUnchanged(t) ? widget.categoryIcon : null);
+
+  /// "İşlem sonrası bakiye"yi CANLI defterden hesaplar.
+  ///
+  /// Karttan gelen `balanceAfter` sayfa açıldığı ana donmuştur: tutar
+  /// düzenlenince ya da araya işlem girince yanlışa döner. Cüzdanın canlı
+  /// bakiyesi okunamıyorsa (WalletBloc sağlanmamış) donmuş değere düşülür —
+  /// hiç göstermemektense açılıştaki doğru değeri göstermek yeğdir.
+  double _balanceAfter(
+    BuildContext context,
+    List<TransactionEntity> ledger,
+    TransactionEntity t,
+  ) {
+    final balance = context.watchWalletBalance(t.walletId);
+    if (balance == null) return widget.item.balanceAfter;
+
+    final view = buildLedgerView(
+      allTransactions: ledger.where((e) => e.walletId == t.walletId).toList(),
+      currentBalance: balance,
+    );
+    for (final e in view) {
+      if (e.transaction.id == t.id) return e.balanceAfter;
+    }
+    return widget.item.balanceAfter;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<TransactionBloc, TransactionState>(
       listener: (context, state) {
-        if (state is TransactionActionSuccess) {
-          final isDeleted = !state.currentTransactions
-              .any((tx) => tx.id == item.transaction.id);
-          if (isDeleted && Navigator.canPop(context)) {
-            Navigator.pop(context);
-          }
+        // İşlem defterden gittiyse sayfanın gösterecek bir şeyi kalmaz.
+        // Yalnız YERLEŞİK durumlara bakılır: TransactionLoading yükleme
+        // sırasında listeyi boş taşıyabilir, TransactionError ise eylem
+        // ÖNCESİNDEKİ listeyi taşır; ikisi de yanlış kapanmaya yol açardı.
+        if (state is! TransactionActionSuccess && state is! TransactionLoaded) {
+          return;
+        }
+        final isDeleted = !state.currentTransactions
+            .any((tx) => tx.id == widget.item.transaction.id);
+        if (isDeleted && Navigator.canPop(context)) {
+          Navigator.pop(context);
         }
       },
       builder: (context, state) {
         final tList = state.currentTransactions;
         final t = tList.firstWhere(
-          (x) => x.id == item.transaction.id,
-          orElse: () => item.transaction,
+          (x) => x.id == widget.item.transaction.id,
+          orElse: () => widget.item.transaction,
         );
 
         final theme = Theme.of(context);
@@ -89,7 +186,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                   child: Column(
                     children: [
                       Hero(
-                        tag: heroTag,
+                        tag: widget.heroTag,
                         child: Container(
                           width: 84,
                           height: 84,
@@ -108,7 +205,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                                 width: 1.5),
                           ),
                           child: Icon(
-                            categoryIcon ??
+                            _categoryIconOf(t) ??
                                 (t.isIncome
                                     ? Icons.arrow_upward_rounded
                                     : Icons.arrow_downward_rounded),
@@ -157,8 +254,7 @@ class SingleTransactionDetailPage extends StatelessWidget {
                       _infoRow(context,
                           icon: Icons.sell_rounded,
                           label: context.l10n.labelKategori,
-                          value: categoryLabel ??
-                              context.translateCategory(t.tag)),
+                          value: _categoryLabelOf(context, t)),
                       _divider(scheme),
                       _infoRow(context,
                           icon: Icons.event_rounded,
@@ -180,20 +276,23 @@ class SingleTransactionDetailPage extends StatelessWidget {
                               : context.l10n.detailLabelGider,
                           valueColor: accent),
                       _divider(scheme),
-                      _infoRow(context,
-                          icon: Icons.account_balance_wallet_rounded,
-                          label: context.l10n.detailLabelIslemSonrasiBakiye,
-                          valueWidget: MoneyText(
-                            amount: item.balanceAfter,
-                            currency: context.activeWalletCurrency,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
-                              color: item.balanceAfter >= 0
-                                  ? scheme.onSurface
-                                  : AppGradients.debt,
-                            ),
-                          )),
+                      Builder(builder: (context) {
+                        final balanceAfter = _balanceAfter(context, tList, t);
+                        return _infoRow(context,
+                            icon: Icons.account_balance_wallet_rounded,
+                            label: context.l10n.detailLabelIslemSonrasiBakiye,
+                            valueWidget: MoneyText(
+                              amount: balanceAfter,
+                              currency: context.activeWalletCurrency,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: balanceAfter >= 0
+                                    ? scheme.onSurface
+                                    : AppGradients.debt,
+                              ),
+                            ));
+                      }),
                     ],
                   ),
                 ),

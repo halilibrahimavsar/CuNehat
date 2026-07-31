@@ -104,12 +104,15 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
         'İşlem eklenirken hata oluştu: ${failure.message}',
         transactions: currentData,
       )),
-      (_) async {
+      (newId) async {
         final synced = await _safeSyncBalance(event.transaction.walletId);
 
         emit(TransactionActionSuccess(
           '${event.transaction.title} başarıyla eklendi',
-          transactions: currentData,
+          transactions: [
+            ...currentData,
+            event.transaction.copyWith(id: newId),
+          ],
           warning: synced ? null : _syncWarning,
         ));
         transactionsChangedNotifier.notify(
@@ -148,7 +151,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
         emit(TransactionActionSuccess(
           '${event.newTransaction.title} başarıyla güncellendi',
-          transactions: currentData,
+          transactions: [
+            for (final t in currentData)
+              if (t.id == event.newTransaction.id) event.newTransaction else t,
+          ],
           warning: synced ? null : _syncWarning,
         ));
         transactionsChangedNotifier.notify(
@@ -204,7 +210,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             // 3 Başarılı
             emit(TransactionActionSuccess(
               "${transaction.title} silindi",
-              transactions: currentData,
+              transactions: currentData
+                  .where((t) => t.id != event.transactionId)
+                  .toList(),
               warning: synced ? null : _syncWarning,
               undo: TransactionDeletionUndo(
                 transaction: transaction,

@@ -173,8 +173,10 @@ void main() {
       },
       act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
       expect: () => [
-        const TransactionActionSuccess('Grocery başarıyla eklendi',
-            transactions: []),
+        // Eklenen kayıt state'e ANINDA girer: tüketiciler yenilenmiş listeyi
+        // beklemek zorunda kalmasın.
+        TransactionActionSuccess('Grocery başarıyla eklendi',
+            transactions: [testTransaction]),
       ],
       verify: (_) {
         verify(() => mockMetricsService.syncBalance('wallet_123')).called(1);
@@ -193,9 +195,9 @@ void main() {
       },
       act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
       expect: () => [
-        const TransactionActionSuccess(
+        TransactionActionSuccess(
           'Grocery başarıyla eklendi',
-          transactions: [],
+          transactions: [testTransaction],
           warning:
               'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
         ),
@@ -213,9 +215,9 @@ void main() {
       },
       act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
       expect: () => [
-        const TransactionActionSuccess(
+        TransactionActionSuccess(
           'Grocery başarıyla eklendi',
-          transactions: [],
+          transactions: [testTransaction],
           warning:
               'Bakiye senkronizasyonu başarısız; cüzdan ekranına dönüp tekrar deneyin.',
         ),
@@ -481,5 +483,100 @@ void main() {
         ]),
       );
     });
+  });
+
+  group('TransactionActionSuccess eylemden SONRAKİ defteri taşır', () {
+    // Regresyon: eskiden eylem ÖNCESİNDEKİ liste taşınıyordu. "Bu kayıt hâlâ
+    // defterde mi?" diye soran tüketiciler (silme sonrası kendini kapatan
+    // işlem detay sayfası) yapısal olarak YANLIŞ cevap alıyordu; silinen
+    // kayıt listede görünmeye devam ettiği için sayfa hiç kapanmıyordu.
+    final otherTransaction = TransactionEntity(
+      id: 'tx_999',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Other',
+      tag: 'Food',
+      amount: 20.0,
+      date: DateTime(2026, 6, 13),
+      type: TransactionTypeModel.expense,
+    );
+
+    TransactionLoaded seedLedger(List<TransactionEntity> list) =>
+        TransactionLoaded(
+          groupedTransactions: {DateTime(2026, 6, 13): list},
+          allTransactions: list,
+        );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'silme: silinen kayıt listeden ÇIKARILMIŞ gelir',
+      build: () {
+        when(() => mockGetByIdUseCase('tx_123'))
+            .thenAnswer((_) async => Right(testTransaction));
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockDeleteUseCase('tx_123',
+                keepReceiptFile: any(named: 'keepReceiptFile')))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      seed: () => seedLedger([testTransaction, otherTransaction]),
+      act: (bloc) => bloc.add(const DeleteTransactionEvent('tx_123')),
+      expect: () => [
+        TransactionActionSuccess(
+          'Grocery silindi',
+          transactions: [otherTransaction],
+          undo: TransactionDeletionUndo(
+            transaction: testTransaction,
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          ),
+        ),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'güncelleme: yeni kayıt eskisinin YERİNE geçmiş gelir',
+      build: () {
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return transactionBloc;
+      },
+      seed: () => seedLedger([testTransaction, otherTransaction]),
+      act: (bloc) => bloc.add(UpdateTransactionEvent(
+        previousTransaction: testTransaction,
+        newTransaction:
+            testTransaction.copyWith(title: 'Yeni', amount: 900, tag: 'Ulaşım'),
+      )),
+      expect: () => [
+        TransactionActionSuccess(
+          'Yeni başarıyla güncellendi',
+          transactions: [
+            testTransaction.copyWith(title: 'Yeni', amount: 900, tag: 'Ulaşım'),
+            otherTransaction,
+          ],
+        ),
+      ],
+    );
+
+    blocTest<TransactionBloc, TransactionState>(
+      'ekleme: yeni kayıt listeye EKLENMİŞ gelir',
+      build: () {
+        when(() => mockMetricsService.syncBalance('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockAddUseCase(any()))
+            .thenAnswer((_) async => const Right('tx_123'));
+        return transactionBloc;
+      },
+      seed: () => seedLedger([otherTransaction]),
+      act: (bloc) => bloc.add(AddTransactionEvent(testTransaction)),
+      expect: () => [
+        TransactionActionSuccess(
+          'Grocery başarıyla eklendi',
+          transactions: [otherTransaction, testTransaction],
+        ),
+      ],
+    );
   });
 }
