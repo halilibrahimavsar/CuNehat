@@ -71,6 +71,7 @@ void main() {
         'type': 'expense',
         'isSystem': false,
         'receiptFileName': null,
+        'reference': null,
       });
     });
 
@@ -171,6 +172,39 @@ void main() {
         final model = TransactionModel.fromEntity(withReceipt);
         expect(model.receiptFileName, 'r.jpg');
         expect(model.toEntity().receiptFileName, 'r.jpg');
+      });
+    });
+
+    group('reference (banka hareket no — şema v5)', () {
+      /// Yedek gidiş-dönüşü bu alanı taşımazsa, geri yüklenen defterde
+      /// içe aktarımlar arası tekrar tespiti sessizce zayıf anahtara düşer.
+      test('toJson/fromJson referansı korur', () {
+        final model = TransactionModel(
+          id: 'tx_9',
+          userId: 'user_1',
+          walletId: 'wallet_1',
+          title: 'SATIŞ-KARACA OTOMAT',
+          tag: 'Market',
+          amount: 40,
+          date: date,
+          type: TransactionTypeModel.expense,
+          reference: '2025-07-07-16.45.14.329462',
+        );
+        final restored = TransactionModel.fromJson('tx_9', model.toJson());
+        expect(restored.reference, '2025-07-07-16.45.14.329462');
+      });
+
+      test('elle girilen işlemde referans null kalır', () {
+        expect(TransactionModel.fromEntity(entity).reference, isNull);
+        expect(TransactionModel.fromJson('tx_1', entity.toJson()).reference,
+            isNull);
+      });
+
+      test('entity <-> model referansı korur', () {
+        final withRef = entity.copyWith(reference: 'DEKONT-7');
+        final model = TransactionModel.fromEntity(withRef);
+        expect(model.reference, 'DEKONT-7');
+        expect(model.toEntity().reference, 'DEKONT-7');
       });
     });
   });

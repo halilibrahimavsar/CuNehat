@@ -1,25 +1,32 @@
-/// Taslakları olası tekrarlara göre işaretler.
+/// Taslakları, mevcut deftere ve dosyanın kendisine karşı olası tekrarlara
+/// göre işaretler.
 ///
-/// Temel anahtar: (gün, işaretli-kuruş, normalize-açıklama). Banka referansı
-/// (Dekont/İşlem No) varsa bu anahtara EKLENİR — yerine geçmez.
+/// **İki kimlik, güç sırasıyla:**
+///  1. **Güçlü anahtar** — `(gün, işaretli kuruş, banka referansı)`. Referans
+///     (Dekont/Fiş/İşlem No) `TransactionEntity.reference` olarak deftere de
+///     yazıldığı için (şema v5) artık İÇE AKTARIMLAR ARASI karşılaştırılabilir.
+///     Başlık içermez: **kullanıcı başlığı düzenleyebilir** (inceleme ekranı
+///     bunu zaten yaptırıyor) ve düzenlenmiş bir işlem yeniden aktarımda
+///     ikinci kez yazılıyordu.
+///  2. **Zayıf anahtar** — `(gün, işaretli kuruş, normalize başlık)`.
+///     Referansı olmayan taraflar için: elle girilen işlemler ve referans
+///     sütunu taşımayan ekstreler (ör. Garanti'nin PDF'i Dekont No vermez,
+///     `.xls`'i verir — aynı hesabın iki biçimi birbirini yine bulmalı).
 ///
-/// **Referans neden tek başına anahtar DEĞİL:** gerçek bir Garanti BBVA
-/// ekstresinde dekont numarası işlem başına değil OPERASYON başına veriliyor;
-/// bir havalenin masraf satırı ("KESİNTİ VE EKLERİ") ana havaleyle AYNI dekont
-/// numarasını taşıyor. Referansı kesin eşitlik anahtarı yapmak, 85 satırlık o
-/// ekstrede 3 gerçek hareketi "tekrar" işaretleyip seçimden düşürüyordu
-/// (sessiz veri kaybı).
+/// **Referans TEK BAŞINA anahtar DEĞİLDİR.** Gerçek bir Garanti ekstresinde
+/// dekont numarası işlem başına değil OPERASYON başına veriliyor: bir havalenin
+/// masraf satırı ("KESİNTİ VE EKLERİ") ana havaleyle AYNI numarayı taşıyor.
+/// Tutar anahtara dahil olduğu için bu iki satır yine ayrışır.
 ///
-/// Referansın rolü bu yüzden yalnız AYIRICI: aynı gün, aynı tutar ve aynı
-/// açıklamayla yapılmış GERÇEKTEN iki ayrı hareketi (gerçek ekstrede aynı gün
-/// iki kez 40,00 TL "KARACA OTOMAT") artık birbirinden ayırabiliyoruz. Yani
-/// referans yanlış-pozitif tekrarı azaltabilir, asla yenisini yaratamaz.
+/// **Eşleşme TÜKETİMLİDİR (sayaç, küme değil).** Eski sürüm defteri bir `Set`e
+/// koyuyordu; aynı gün, aynı tutar, aynı açıklamalı İKİ GERÇEK hareket varsa
+/// (ölçüldü: bir Garanti ekstresinde "KARACA OTOMAT" 40,00 ve "MACGAL GIDA"
+/// 30,00 çiftleri) defterdeki tek kayıt ikisini birden "tekrar" işaretliyor,
+/// ikinci gerçek hareket sessizce düşüyordu. Artık her defter kaydı yalnız BİR
+/// taslağı eşleştirebilir.
 ///
-/// İki ayrı karşılaştırma yapılır:
-///  1. **Dosya içi** — referans dahil bileşik anahtarla.
-///  2. **Mevcut cüzdana karşı** — referanssız temel anahtarla: kayıtlı
-///     işlemlerde banka referansı SAKLANMIYOR (`TransactionEntity`'de böyle bir
-///     alan yok), dolayısıyla geçmişle karşılaştırmada kullanılamaz.
+/// **İki taraf da referans taşıyor ve güçlü anahtar tutmadıysa zayıf anahtara
+/// düşülmez:** banka onlara ayrı numara verdiyse ayrı hareketlerdir.
 ///
 /// Eşleşen taslak `isDuplicate=true, selected=false` döner (kullanıcı isterse
 /// incelemede yeniden işaretler). Muhafazakâr: fazladan tekrar işaretlemez,
@@ -33,29 +40,76 @@ List<ImportDraft> markDuplicateDrafts(
   List<ImportDraft> drafts,
   List<TransactionEntity> existing,
 ) {
-  final seen = <String>{
-    for (final t in existing) _key(t.date, t.amount, t.isExpense, t.title),
-  };
+  // Defterdeki her kayıt tek kullanımlık: eşleşince tüketilir.
+  final pool = <_Existing>[];
+  final byStrong = <String, List<_Existing>>{};
+  final byWeak = <String, List<_Existing>>{};
+  for (final t in existing) {
+    final money = _money(t.date, t.amount, t.isExpense);
+    final reference = _norm(t.reference);
+    final entry = _Existing(hasReference: reference != null);
+    pool.add(entry);
+    if (reference != null) {
+      (byStrong['$money|$reference'] ??= []).add(entry);
+    }
+    (byWeak['$money|${_normTitle(t.title)}'] ??= []).add(entry);
+  }
 
   final result = <ImportDraft>[];
   final withinFile = <String>{};
 
   for (final d in drafts) {
-    final key = _key(d.date, d.amount, d.type.name == 'expense', d.description);
-    final reference = d.reference?.trim() ?? '';
-    final fileKey = '$key|$reference';
+    final money = _money(d.date, d.amount, d.type.name == 'expense');
+    final reference = _norm(d.reference);
+    final weakKey = '$money|${_normTitle(d.description)}';
 
-    final isDup = seen.contains(key) || withinFile.contains(fileKey);
-    withinFile.add(fileKey);
+    // Dosya içi tekrar: referans yalnız AYIRICIDIR, yerine geçmez — aksi halde
+    // dekontu paylaşan havale+masraf çifti tek satır sanılır.
+    var isDuplicate = !withinFile.add('$weakKey|${reference ?? ''}');
 
-    result.add(isDup ? d.copyWith(isDuplicate: true, selected: false) : d);
+    if (!isDuplicate) {
+      final matched =
+          (reference != null && _consume(byStrong['$money|$reference'])) ||
+              // Referanslı bir taslak, referanslı FARKLI bir kayda zayıf
+              // anahtardan bağlanamaz.
+              _consume(byWeak[weakKey], skipReferenced: reference != null);
+      isDuplicate = matched;
+    }
+
+    result
+        .add(isDuplicate ? d.copyWith(isDuplicate: true, selected: false) : d);
   }
   return result;
 }
 
-String _key(DateTime date, double amount, bool isExpense, String desc) {
+/// Havuzdan ilk tüketilmemiş kaydı tüketir; bulduysa `true`.
+bool _consume(List<_Existing>? candidates, {bool skipReferenced = false}) {
+  if (candidates == null) return false;
+  for (final c in candidates) {
+    if (c.consumed) continue;
+    if (skipReferenced && c.hasReference) continue;
+    c.consumed = true;
+    return true;
+  }
+  return false;
+}
+
+class _Existing {
+  final bool hasReference;
+  bool consumed = false;
+  _Existing({required this.hasReference});
+}
+
+String? _norm(String? raw) {
+  final s = raw?.trim();
+  return (s == null || s.isEmpty) ? null : s;
+}
+
+String _money(DateTime date, double amount, bool isExpense) {
   final day = DateTime(date.year, date.month, date.day).toIso8601String();
   final cents = (amount.abs() * 100).round() * (isExpense ? -1 : 1);
-  final normDesc = desc.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
-  return '$day|$cents|$normDesc';
+  return '$day|$cents';
 }
+
+String _normTitle(String desc) =>
+    desc.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');

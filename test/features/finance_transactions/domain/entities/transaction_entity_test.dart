@@ -94,6 +94,7 @@ void main() {
         'type': 'expense',
         'isSystem': false,
         'receiptFileName': null,
+        'reference': null,
       });
     });
   });

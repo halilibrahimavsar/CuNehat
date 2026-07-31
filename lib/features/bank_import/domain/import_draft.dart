@@ -23,10 +23,11 @@ class ImportDraft extends Equatable {
   /// kullanılır; işleme yazılmaz. Ekstrede böyle bir sütun yoksa `null`.
   final String? sourceTag;
 
-  /// Bankanın hareket referansı (dekont/fiş/işlem no). Ekstre içinde her
-  /// hareket için BENZERSİZDİR, dolayısıyla dosya içi tekrarları
-  /// (gün+tutar+açıklama sezgisinin aksine) KESİN olarak yakalar.
-  /// Sütun yoksa `null`. İşleme yazılmaz — bkz. [toEntity].
+  /// Bankanın hareket referansı (dekont/fiş/işlem no). Ekstre içinde bir
+  /// hareketi KESİN olarak tanımlar; gün+tutar+açıklama sezgisinin aksine
+  /// kullanıcı düzenlemesinden ve biçim farklarından etkilenmez.
+  /// Sütun yoksa `null`. Deftere de yazılır ([toEntity]) — içe aktarımlar
+  /// ARASI tekrar tespiti buna dayanır (bkz. `markDuplicateDrafts`).
   final String? reference;
 
   /// Dedup tarafından mevcut cüzdanda ya da dosya içinde eşi bulunduysa true.
@@ -93,6 +94,7 @@ class ImportDraft extends Equatable {
       date: date,
       type: type,
       isSystem: false,
+      reference: reference,
     );
   }
 

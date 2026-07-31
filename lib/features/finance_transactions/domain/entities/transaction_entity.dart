@@ -23,6 +23,21 @@ class TransactionEntity extends Equatable {
   /// "görsel bu cihazda yok" gösterilir). Ek yoksa null.
   final String? receiptFileName;
 
+  /// Bankanın bu harekete verdiği kendi numarası (Dekont No / Fiş No / İşlem
+  /// No) — yalnız banka ekstresinden içe aktarılan işlemlerde dolu.
+  ///
+  /// **Neden defterde tutuluyor:** içe aktarımlar arası "bu hareketi zaten
+  /// aldım mı" sorusunun tek KESİN yanıtı budur. Alternatif kimlik
+  /// (gün + tutar + başlık) iki yönden de kırılgan: başlık kullanıcı
+  /// tarafından düzenlenebilir (inceleme ekranı bunu zaten yaptırıyor) ve
+  /// gerçek ekstrelerde aynı gün, aynı tutar, aynı açıklamalı FARKLI
+  /// hareketler bulunuyor (ölçüldü: bir Garanti ekstresinde 2 çift —
+  /// "KARACA OTOMAT" 40,00 ve "MACGAL GIDA" 30,00). Banka numarası ise
+  /// değişmez. Bkz. `markDuplicateDrafts`.
+  ///
+  /// Elle girilen işlemlerde ve referans sütunu olmayan ekstrelerde `null`.
+  final String? reference;
+
   const TransactionEntity({
     required this.id,
     required this.userId,
@@ -34,6 +49,7 @@ class TransactionEntity extends Equatable {
     required this.type,
     this.isSystem = false,
     this.receiptFileName,
+    this.reference,
   });
 
   TransactionEntity copyWith({
@@ -47,6 +63,7 @@ class TransactionEntity extends Equatable {
     TransactionTypeModel? type,
     bool? isSystem,
     String? receiptFileName,
+    String? reference,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -59,6 +76,7 @@ class TransactionEntity extends Equatable {
       type: type ?? this.type,
       isSystem: isSystem ?? this.isSystem,
       receiptFileName: receiptFileName ?? this.receiptFileName,
+      reference: reference ?? this.reference,
     );
   }
 
@@ -77,6 +95,7 @@ class TransactionEntity extends Equatable {
       'type': type.name,
       'isSystem': isSystem,
       'receiptFileName': receiptFileName,
+      'reference': reference,
     };
   }
 
@@ -92,5 +111,6 @@ class TransactionEntity extends Equatable {
         type,
         isSystem,
         receiptFileName,
+        reference,
       ];
 }

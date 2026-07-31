@@ -96,7 +96,13 @@ class DataSerializationService {
   ///   bu tarihe yazılır, yoksa iki bacak farklı dönemlere düşer.
   /// - Kategorilere `displayName` (nullable): `id` artık sabit opak anahtar,
   ///   yeniden adlandırma bu alandan geçer.
-  static const int schemaVersion = 4;
+  ///
+  /// v5 (2026-07-31): işlemlere `reference` (nullable) — bankanın ekstredeki
+  /// kendi hareket numarası (Dekont/Fiş/İşlem No). İçe aktarımlar arası
+  /// tekrar tespitinin KESİN anahtarı; gün+tutar+başlık üçlüsü hem kullanıcı
+  /// düzenlemesiyle bozulabildiği hem de gerçek ekstrelerde çakışabildiği için
+  /// tek başına yetmiyordu (bkz. `TransactionEntity.reference`).
+  static const int schemaVersion = 5;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;
