@@ -22,12 +22,22 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Banka ekstresi içe aktarma akışı (Ayarlar → Banka ekstresi içe aktar).
 class BankImportPage extends StatelessWidget {
-  const BankImportPage({super.key});
+  /// Paylaş menüsünden gelen ekstrenin önbellekteki kopyası (bkz.
+  /// `SharedStatementListener`). `null` ise akış dosya seçiciyle başlar —
+  /// dosya seçici yolu kaldırılmadı, paylaşım ona ek bir giriş kapısı.
+  final String? sharedFilePath;
+
+  const BankImportPage({super.key, this.sharedFilePath});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<BankImportCubit>(),
+      create: (_) {
+        final cubit = getIt<BankImportCubit>();
+        final shared = sharedFilePath;
+        if (shared != null) cubit.attachSharedFile(shared);
+        return cubit;
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.l10n.bankImportTitle),
@@ -152,12 +162,26 @@ class _SetupStepState extends State<_SetupStep> {
       return Center(child: Text(context.l10n.bankImportNoWallet));
     }
 
+    // Paylaş menüsünden gelindiyse dosya zaten elimizde: kurulum adımı seçici
+    // yerine "gelen dosya + hedef cüzdan" onayına dönüşür. Cüzdan seçimi
+    // BİLEREK atlanmıyor — hareketlerin hangi deftere yazılacağı kullanıcının
+    // kararı.
+    final sharedPath = context.read<BankImportCubit>().sharedFilePath;
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Text(context.l10n.bankImportSetupHint,
-            style: Theme.of(context).textTheme.bodyMedium),
+        Text(
+          sharedPath == null
+              ? context.l10n.bankImportSetupHint
+              : context.l10n.bankImportSharedSetupHint,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         const SizedBox(height: 20),
+        if (sharedPath != null) ...[
+          _SharedFileCard(fileName: _fileNameOf(sharedPath)),
+          const SizedBox(height: 16),
+        ],
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,37 +205,61 @@ class _SetupStepState extends State<_SetupStep> {
         // Desteklenen biçimleri açıkça göster: dosya seçici artık her şeyi
         // seçilebilir bıraktığı için (bkz. cubit) kullanıcı neyi indirmesi
         // gerektiğini burada görmeli — özellikle eski `.xls` karışıklığında.
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final ext in StatementFormat.supportedExtensions)
-              Chip(
-                label: Text('.$ext', style: const TextStyle(fontSize: 12)),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-              ),
-          ],
-        ),
+        // Paylaşımla gelindiğinde dosya zaten belli; liste gereksiz gürültü.
+        if (sharedPath == null)
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final ext in StatementFormat.supportedExtensions)
+                Chip(
+                  label: Text('.$ext', style: const TextStyle(fontSize: 12)),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                ),
+            ],
+          ),
         const SizedBox(height: 28),
         FilledButton.icon(
-          onPressed: _walletId == null ? null : () => _start(context),
-          icon: const Icon(Icons.upload_file_rounded),
-          label: Text(context.l10n.bankImportPickFile),
+          onPressed: _walletId == null
+              ? null
+              : () => _start(context, sharedPath: sharedPath),
+          icon: Icon(sharedPath == null
+              ? Icons.upload_file_rounded
+              : Icons.document_scanner_outlined),
+          label: Text(sharedPath == null
+              ? context.l10n.bankImportPickFile
+              : context.l10n.bankImportSharedImport),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
+        if (sharedPath != null)
+          TextButton.icon(
+            onPressed: _walletId == null
+                ? null
+                : () => _start(context, sharedPath: null),
+            icon: const Icon(Icons.folder_open_rounded, size: 18),
+            label: Text(context.l10n.bankImportPickAnother),
+          ),
       ],
     );
   }
 
-  void _start(BuildContext context) {
+  /// [sharedPath] doluysa paylaşılan dosya ayrıştırılır, boşsa dosya seçici
+  /// açılır. İkisi de aynı ayrıştırma yolundan geçer.
+  void _start(BuildContext context, {required String? sharedPath}) {
     final userId = _currentUserId(context) ?? 'local_user';
-    context.read<BankImportCubit>().pickAndParse(
-          userId: userId,
-          walletId: _walletId!,
-        );
+    final cubit = context.read<BankImportCubit>();
+    if (sharedPath == null) {
+      cubit.pickAndParse(userId: userId, walletId: _walletId!);
+    } else {
+      cubit.parseFile(
+        userId: userId,
+        walletId: _walletId!,
+        path: sharedPath,
+      );
+    }
   }
 
   String? _currentUserId(BuildContext context) {
@@ -220,6 +268,51 @@ class _SetupStepState extends State<_SetupStep> {
     if (s is AppAuthLocked) return s.user.uid;
     return null;
   }
+}
+
+/// Paylaş menüsünden gelen dosyayı gösterir: kullanıcı cüzdanı seçmeden önce
+/// "hangi dosyayı aktarıyorum" sorusunun cevabını görmeli — paylaşımı yanlış
+/// dosyayla yapmak kolay.
+class _SharedFileCard extends StatelessWidget {
+  final String fileName;
+  const _SharedFileCard({required this.fileName});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return AppCard(
+      child: Row(
+        children: [
+          Icon(Icons.attach_file_rounded, color: cs.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.bankImportSharedFileTitle,
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  fileName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Yol → görünen dosya adı. `path` paketine bağımlılık eklememek için elle
+/// (aynı yaklaşım `statement_format.dart` içinde de var).
+String _fileNameOf(String path) {
+  final slash = path.lastIndexOf(RegExp(r'[/\\]'));
+  return slash == -1 ? path : path.substring(slash + 1);
 }
 
 // ============================================================ Category suggestion

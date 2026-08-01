@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/notifications/notification_tap_listener.dart';
+import 'package:cunehat/features/bank_import/data/shared_statement_channel.dart';
+import 'package:cunehat/features/bank_import/presentation/shared_statement_listener.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
@@ -63,9 +65,17 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => getIt<LocalAuthSettingsBloc>()),
         BlocProvider(create: (_) => getIt<LocalAuthLoginBloc>()),
       ],
-      // Bloc'ların ALTINDA: bildirim dokunuşunu PendingRecurringBloc'a
-      // iletebilmesi için context'ten bloc okuyabilmeli.
-      child: NotificationTapListener(router: router, child: child),
+      // Bloc'ların ALTINDA: bildirim dokunuşunu PendingRecurringBloc'a,
+      // paylaşılan ekstreyi de AppAuthBloc'un kilit durumuna bağlayabilmek
+      // için context'ten bloc okuyabilmeliler.
+      child: NotificationTapListener(
+        router: router,
+        child: SharedStatementListener(
+          router: router,
+          channel: getIt<SharedStatementChannel>(),
+          child: child,
+        ),
+      ),
     );
   }
 }

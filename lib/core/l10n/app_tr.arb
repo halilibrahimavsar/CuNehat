@@ -1180,6 +1180,9 @@
   "bankImportScannedPdfHint": "Dosyanın içinde metin yok, yalnızca fotoğraf/tarama var. Görüntüden okumayı denedik ama hareket satırı çıkaramadık. Bankanın internet şubesinden ekstreyi Excel (.xls/.xlsx) ya da CSV olarak indirirsen çok daha isabetli sonuç alırsın.",
   "bankImportOcrWarning": "Bu hareketler bir GÖRÜNTÜDEN okundu. Görüntü tanımada rakamlar sık karışır (virgül/nokta, 1/7, 0/O) ve doğrulayacak bakiye sütunu genelde yoktur — eklemeden önce her tutarı tek tek kontrol et.",
   "bankImportPickAnother": "Başka dosya seç",
+  "bankImportSharedSetupHint": "Paylaştığın ekstre alındı. Hedef cüzdanı seçip taramayı başlat — hiçbir hareket eklenmeden önce hepsini incelemene sunacağız.",
+  "bankImportSharedFileTitle": "Paylaşılan dosya",
+  "bankImportSharedImport": "Bu dosyayı tara",
   "bankImportLegacyExcelTitle": "Excel dosyası açılamadı",
   "bankImportLegacyExcelHint": "{reason}\n\nBankandan ekstreyi .xlsx ya da CSV olarak indir; ya da dosyayı Excel/Google E-Tablolar'da açıp .xlsx olarak kaydet.",
   "@bankImportLegacyExcelHint": {

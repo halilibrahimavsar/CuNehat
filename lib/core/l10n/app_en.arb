@@ -1159,6 +1159,9 @@
   "bankImportScannedPdfHint": "The file contains no text — only a photo or scan. We tried reading it as an image but couldn't extract any transaction rows. Download the statement as Excel (.xls/.xlsx) or CSV from your bank's online banking for a much more accurate result.",
   "bankImportOcrWarning": "These transactions were read from an IMAGE. Image recognition often confuses digits (comma/dot, 1/7, 0/O) and there is usually no balance column to verify against — check every amount before adding.",
   "bankImportPickAnother": "Pick another file",
+  "bankImportSharedSetupHint": "Got the statement you shared. Pick the target wallet and start the scan — you'll review every transaction before anything is added.",
+  "bankImportSharedFileTitle": "Shared file",
+  "bankImportSharedImport": "Scan this file",
   "bankImportLegacyExcelTitle": "Couldn't open the Excel file",
   "bankImportLegacyExcelHint": "{reason}\n\nDownload the statement as .xlsx or CSV from your bank, or open the file in Excel/Google Sheets and save it as .xlsx.",
   "@bankImportLegacyExcelHint": {

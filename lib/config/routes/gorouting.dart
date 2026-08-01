@@ -121,9 +121,12 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
       GoRoute(
         path: AppRoutes.bankStatementImport,
         pageBuilder: (context, state) {
+          // `extra`, paylaş menüsünden gelen ekstrenin önbellek kopyasının
+          // yolu (bkz. SharedStatementListener). Ayarlar'dan normal girişte
+          // boştur ve akış dosya seçiciyle başlar.
           return MaterialPage(
             key: state.pageKey,
-            child: const BankImportPage(),
+            child: BankImportPage(sharedFilePath: state.extra as String?),
           );
         },
       ),

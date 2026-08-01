@@ -2596,6 +2596,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportPickAnother => 'Başka dosya seç';
 
   @override
+  String get bankImportSharedSetupHint =>
+      'Paylaştığın ekstre alındı. Hedef cüzdanı seçip taramayı başlat — hiçbir hareket eklenmeden önce hepsini incelemene sunacağız.';
+
+  @override
+  String get bankImportSharedFileTitle => 'Paylaşılan dosya';
+
+  @override
+  String get bankImportSharedImport => 'Bu dosyayı tara';
+
+  @override
   String get bankImportLegacyExcelTitle => 'Excel dosyası açılamadı';
 
   @override

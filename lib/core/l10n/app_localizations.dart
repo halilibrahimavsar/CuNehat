@@ -4758,6 +4758,24 @@ abstract class AppLocalizations {
   /// **'Başka dosya seç'**
   String get bankImportPickAnother;
 
+  /// No description provided for @bankImportSharedSetupHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaştığın ekstre alındı. Hedef cüzdanı seçip taramayı başlat — hiçbir hareket eklenmeden önce hepsini incelemene sunacağız.'**
+  String get bankImportSharedSetupHint;
+
+  /// No description provided for @bankImportSharedFileTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan dosya'**
+  String get bankImportSharedFileTitle;
+
+  /// No description provided for @bankImportSharedImport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosyayı tara'**
+  String get bankImportSharedImport;
+
   /// No description provided for @bankImportLegacyExcelTitle.
   ///
   /// In tr, this message translates to:

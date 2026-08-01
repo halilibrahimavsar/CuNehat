@@ -2592,6 +2592,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportPickAnother => 'Pick another file';
 
   @override
+  String get bankImportSharedSetupHint =>
+      'Got the statement you shared. Pick the target wallet and start the scan — you\'ll review every transaction before anything is added.';
+
+  @override
+  String get bankImportSharedFileTitle => 'Shared file';
+
+  @override
+  String get bankImportSharedImport => 'Scan this file';
+
+  @override
   String get bankImportLegacyExcelTitle => 'Couldn\'t open the Excel file';
 
   @override

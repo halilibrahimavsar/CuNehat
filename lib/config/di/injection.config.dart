@@ -43,6 +43,8 @@ import 'package:cunehat/features/bank_import/data/pdf_statement_parser.dart'
     as _i512;
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart'
     as _i1065;
+import 'package:cunehat/features/bank_import/data/shared_statement_channel.dart'
+    as _i295;
 import 'package:cunehat/features/bank_import/data/statement_ocr_service.dart'
     as _i344;
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart'
@@ -224,6 +226,8 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i520.CategoriesChangedNotifier(),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_i295.SharedStatementChannel>(
+        () => _i295.SharedStatementChannel());
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(

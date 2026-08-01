@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -100,19 +101,22 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// bu partiyi (yalnız az önce eklenenleri) siler. Oturum-içi (Hive alanı yok).
   List<String> _lastImportedIds = const [];
 
+  /// Paylaş menüsünden gelen ekstrenin önbellekteki TEK KULLANIMLIK kopyası
+  /// (bkz. `SharedStatementPlugin.kt`). Finansal belge: akış başa dönünce
+  /// ([reset]) ya da cubit kapanınca silinir.
+  String? _sharedFilePath;
+  String? get sharedFilePath => _sharedFilePath;
+
+  /// Paylaşılan dosyayı bu akışa bağlar; kurulum adımı dosya seçici yerine
+  /// bunu kullanır. Dosya seçici yolu olduğu gibi durmaya devam eder.
+  void attachSharedFile(String path) => _sharedFilePath = path;
+
   /// Dosya seç + biçimi uzantısından otomatik algıla + ayrıştır.
   /// CSV/Excel → kolon eşleme; PDF → doğrudan inceleme.
   Future<void> pickAndParse({
     required String userId,
     required String walletId,
   }) async {
-    _userId = userId;
-    _walletId = walletId;
-    _reconciliation = null;
-    _verification = StatementVerification.none;
-    _statementCurrency = null;
-    _fromOcr = false;
-
     // Uzantı BAZLI süzme (FileType.custom) bilerek kullanılmıyor: Android'de
     // file_picker bunu `EXTRA_MIME_TYPES` MIME süzgecine çeviriyor ve SAF,
     // dosyayı sağlayıcının bildirdiği MIME'a göre eliyor. Banka uygulamasından/
@@ -126,6 +130,23 @@ class BankImportCubit extends Cubit<BankImportState> {
       emit(const BankImportInitial());
       return;
     }
+    await parseFile(userId: userId, walletId: walletId, path: path);
+  }
+
+  /// Belirli bir dosyayı ayrıştırır. Dosya seçici de, paylaş menüsünden gelen
+  /// ekstre de buradan geçer — kaynak ne olursa olsun biçim tespiti, doğrulama
+  /// ve inceleme akışı AYNIDIR.
+  Future<void> parseFile({
+    required String userId,
+    required String walletId,
+    required String path,
+  }) async {
+    _userId = userId;
+    _walletId = walletId;
+    _reconciliation = null;
+    _verification = StatementVerification.none;
+    _statementCurrency = null;
+    _fromOcr = false;
 
     final DetectedStatementFormat detected;
     try {
@@ -289,12 +310,37 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// Başa dön (hata sonrası tekrar dene / yeni dosya). Önceki PDF denemesinin
   /// ham metnini de temizler; aksi halde sonraki CSV/Excel akışında AppBar'daki
   /// "ham metni göster" düğmesi eski PDF'e ait metni göstermeye devam eder.
+  ///
+  /// Paylaşılan dosya da burada bırakılır: "başka dosya seç" demek onunla işin
+  /// bittiği anlamına gelir, kurulum adımı normal dosya seçiciye döner.
   void reset() {
     _lastPdfRawText = null;
     _reconciliation = null;
     _verification = StatementVerification.none;
     _statementCurrency = null;
+    unawaited(_discardSharedCopy());
     emit(const BankImportInitial());
+  }
+
+  /// Paylaşılan ekstrenin önbellekteki kopyasını siler. Kopya uygulamanın özel
+  /// alanında ve `allowBackup=false` olduğu için dışarı sızmaz; yine de
+  /// finansal bir belge, gerekmediği anda durmasın.
+  Future<void> _discardSharedCopy() async {
+    final path = _sharedFilePath;
+    if (path == null) return;
+    _sharedFilePath = null;
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } catch (_) {
+      // Silinemedi: native taraf bir sonraki paylaşımda dizini zaten temizler.
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _discardSharedCopy();
+    return super.close();
   }
 
   void updateMapping(ColumnMapping mapping) {
