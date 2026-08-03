@@ -23,6 +23,12 @@ import java.util.concurrent.Executors
  * seçtiğinde Android o TEK öğe için tek seferlik, salt-okunur bir URI izni
  * verir — dosya seçicinin (SAF) verdiğinden daha geniş değil, daha dardır.
  *
+ * **İki giriş kapısı.** `ACTION_SEND` (paylaş menüsü) ve `ACTION_VIEW` (aç /
+ * aç ile). İkincisi gerekli: her uygulama sistemin paylaş sayfasını
+ * kullanmıyor; kendi listesini kuranlar (ör. QNB) Android 11 paket
+ * görünürlüğü yüzünden çoğu uygulamayı hiç göremiyor, ama "Aç" yolu
+ * sistemin kendi çözümlemesinden geçtiği için etkilenmiyor.
+ *
  * **Tampon-ve-çek (push değil pull).** Paylaşım intent'i Dart tarafı hazır
  * olmadan da gelebilir (soğuk açılış); URI burada tamponlanır ve Dart hazır
  * olduğunda [consume] ile çeker. Bu, "kanala yazdık ama dinleyen yoktu"
@@ -68,8 +74,15 @@ class SharedStatementPlugin(
      * Paylaşım değilse (normal başlatma) sessizce yok sayılır.
      */
     fun handleIntent(intent: Intent?) {
-        if (intent == null || intent.action != Intent.ACTION_SEND) return
-        val uri = extraStream(intent) ?: return
+        if (intent == null) return
+        val uri = when (intent.action) {
+            Intent.ACTION_SEND -> extraStream(intent)
+            // "Aç / Aç ile" yolu: bazı banka uygulamaları ve dosya
+            // yöneticileri paylaşmak yerine dosyayı AÇTIRIR; orada URI
+            // EXTRA_STREAM'de değil intent.data'da gelir.
+            Intent.ACTION_VIEW -> intent.data
+            else -> null
+        } ?: return
         pending = uri
     }
 

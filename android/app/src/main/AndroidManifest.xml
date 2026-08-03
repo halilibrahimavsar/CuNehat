@@ -60,6 +60,27 @@
                 <data android:mimeType="application/csv"/>
                 <data android:mimeType="application/octet-stream"/>
             </intent-filter>
+            <!-- "Aç / Aç ile" yolu. Paylaş menüsünü kendi kuran uygulamalar
+                 (Android 11 paket görünürlüğü yüzünden listeleri çok kısa
+                 kalıyor) bu yoldan bize ulaşabiliyor; ayrıca dosya
+                 yöneticisinden ekstreye dokunmak da buraya düşer.
+
+                 SEND'den DAHA DAR: burada `image/*`, `text/*` ve
+                 `octet-stream` YOK. Onları eklemek CuNehat'i her fotoğrafın
+                 ve her indirilen dosyanın "aç ile" listesine sokardı. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="application/pdf"/>
+                <data android:mimeType="text/csv"/>
+                <data android:mimeType="text/comma-separated-values"/>
+                <data android:mimeType="application/csv"/>
+                <data android:mimeType="application/vnd.ms-excel"/>
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
