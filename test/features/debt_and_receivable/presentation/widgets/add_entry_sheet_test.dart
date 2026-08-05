@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockDebtBloc extends Mock implements DebtBloc {}
@@ -30,6 +31,9 @@ void main() {
   });
 
   setUp(() {
+    // Para metinleri locale'e bağlı; sabitlenmezse intl ilk biçimlendirmede
+    // sistem locale'ine kilitlenir (bkz. money_format.dart notu).
+    Intl.defaultLocale = 'tr_TR';
     mockDebtBloc = MockDebtBloc();
     mockReceivableBloc = MockReceivableBloc();
     mockOnboardingCoordinator = MockOnboardingCoordinator();
@@ -77,6 +81,7 @@ void main() {
       const AddEntrySheet(
         walletId: 'w1',
         userId: 'u1',
+        currency: 'TRY',
         initialIsDebt: true,
       ),
     ));
@@ -91,6 +96,7 @@ void main() {
       const AddEntrySheet(
         walletId: 'w1',
         userId: 'u1',
+        currency: 'TRY',
         initialIsDebt: false,
       ),
     ));
@@ -107,7 +113,8 @@ void main() {
   testWidgets('banka kredisinde canlı geri ödeme özeti hesaplanır',
       (tester) async {
     await tester.pumpWidget(buildTestableWidget(
-      const AddEntrySheet(walletId: 'w1', userId: 'u1', initialIsDebt: true),
+      const AddEntrySheet(
+          walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: true),
     ));
     await tester.pumpAndSettle();
 
@@ -134,7 +141,8 @@ void main() {
     final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
 
     await tester.pumpWidget(buildTestableWidget(
-      const AddEntrySheet(walletId: 'w1', userId: 'u1', initialIsDebt: true),
+      const AddEntrySheet(
+          walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: true),
     ));
     await tester.pumpAndSettle();
 
@@ -154,12 +162,92 @@ void main() {
     final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
 
     await tester.pumpWidget(buildTestableWidget(
-      const AddEntrySheet(walletId: 'w1', userId: 'u1', initialIsDebt: false),
+      const AddEntrySheet(
+          walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: false),
     ));
     await tester.pumpAndSettle();
 
     expect(find.text(l10n.alacakTutari), findsOneWidget);
     expect(find.text(l10n.borcTuruLabel), findsNothing);
     expect(find.text(l10n.toplamGeriOdeme), findsNothing);
+  });
+
+  // ------------------------------------------------------- Çoklu para birimi
+  // Kayıtta ayrı bir birim alanı yok: birim CÜZDANDAN gelir ve yalnız gösterime
+  // akar. Aritmetik (faiz/taksit) birimden bağımsızdır.
+
+  testWidgets('döviz cüzdanda tutar kartı ve geri ödeme özeti o birimde yazar',
+      (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+    await tester.pumpWidget(buildTestableWidget(
+      const AddEntrySheet(
+          walletId: 'w1', userId: 'u1', currency: 'EUR', initialIsDebt: true),
+    ));
+    await tester.pumpAndSettle();
+
+    // Tutar kartının birim rozeti cüzdanın sembolü (₺ değil).
+    expect(find.text('€'), findsOneWidget);
+    expect(find.text('₺'), findsNothing);
+
+    await tester.enterText(find.byType(TextField).first, '12000');
+    await tester.enterText(
+      find.ancestor(
+          of: find.text(l10n.vadeAyHint), matching: find.byType(TextField)),
+      '12',
+    );
+    await tester.pumpAndSettle();
+
+    // 12.000 / 12 ay → taksit 1.000; toplam geri ödeme 12.000, hepsi €.
+    expect(find.text('12.000,00 €'), findsOneWidget);
+    expect(find.text('1.000,00 €'), findsOneWidget);
+  });
+
+  testWidgets(
+      'uzun vadede otomatik taksit önerisi kendi doğrulamasına takılmaz',
+      (tester) async {
+    // Regresyon: tolerans sabit 1 birimdi. Öneri `anapara / vade`yi kuruşa
+    // yuvarladığından sapma vadeyle büyür (360 ay → 1,80) ve uygulamanın kendi
+    // önerdiği taksit "kredi tutarından küçük" hatasına takılıyordu.
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+
+    await tester.pumpWidget(buildTestableWidget(
+      const AddEntrySheet(
+          walletId: 'w1', userId: 'u1', currency: 'TRY', initialIsDebt: true),
+    ));
+    await tester.pumpAndSettle();
+
+    // 999.998,64 / 360 = 2.777,774 → öneri 2.777,77 (aşağı yuvarlar).
+    await tester.enterText(find.byType(TextField).first, '999998,64');
+    await tester.enterText(
+      find.ancestor(
+          of: find.text(l10n.vadeAyHint), matching: find.byType(TextField)),
+      '360',
+    );
+    await tester.enterText(
+      find.ancestor(
+          of: find.text(l10n.borcBaslikHint), matching: find.byType(TextField)),
+      'Konut Kredisi',
+    );
+    await tester.enterText(
+      find.ancestor(
+          of: find.text(l10n.kurumKisiHint), matching: find.byType(TextField)),
+      'Banka',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2.777,77'), findsOneWidget,
+        reason: 'otomatik öneri kuruşa yuvarlanmış olmalı');
+
+    // Kaydet butonu form uzunluğu yüzünden görünür alanın altında kalır;
+    // kaydırılmadan yapılan tap sessizce ıskalar ve test hiçbir şey ölçmez.
+    await tester.ensureVisible(find.text(l10n.kaydet));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.kaydet));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.aylikTaksitKrediTutarindanKucuk), findsNothing);
+    // Doğrulama gerçekten koştu: hata yoksa nakit etki diyaloğu açılır.
+    expect(find.text(l10n.borcNakitEtkiBaslik), findsOneWidget);
   });
 }

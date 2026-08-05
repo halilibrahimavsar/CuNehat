@@ -1889,10 +1889,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'İşlem geçmişi olan cüzdanın para birimi değiştirilemez';
 
   @override
-  String get sadeceTlCuzdanBorc =>
-      'Borç/alacak takibi şimdilik yalnız TL cüzdanlarda kullanılabilir';
-
-  @override
   String get sadeceTlCuzdanYatirim =>
       'Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir';
 

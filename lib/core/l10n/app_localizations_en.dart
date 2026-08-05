@@ -1886,10 +1886,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The currency of a wallet with transaction history can\'t be changed';
 
   @override
-  String get sadeceTlCuzdanBorc =>
-      'Debt & receivable tracking is only available in TRY wallets for now';
-
-  @override
   String get sadeceTlCuzdanYatirim =>
       'Investment tracking is only available in TRY wallets for now';
 

@@ -1,8 +1,8 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/repayment_breakdown_card.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 
 /// Üst ana tutar giriş kartı ve (varsa) borç geri ödeme hesaplama özeti.
@@ -19,6 +19,11 @@ class AddEntryAmountCard extends StatelessWidget {
   final Color accent;
   final VoidCallback onChanged;
 
+  /// Kaydın ait olduğu cüzdanın para birimi. Aktif cüzdandan okumak yerine
+  /// açıkça geçilir: kayıt her zaman KENDİ cüzdanının birimindedir ve
+  /// `context.activeWalletCurrency` WalletBloc yoksa sessizce TRY'ye düşerdi.
+  final String currency;
+
   const AddEntryAmountCard({
     super.key,
     required this.isDebt,
@@ -32,6 +37,7 @@ class AddEntryAmountCard extends StatelessWidget {
     required this.includeBankTaxes,
     required this.accent,
     required this.onChanged,
+    required this.currency,
   });
 
   String _title(BuildContext context) {
@@ -110,7 +116,7 @@ class AddEntryAmountCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),
                 child: Text(
-                  context.activeWalletCurrencySymbol,
+                  currencySymbol(currency),
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -131,6 +137,7 @@ class AddEntryAmountCard extends StatelessWidget {
               isBankLoanMonthly: isBankLoanMonthly,
               includeBankTaxes: includeBankTaxes,
               accent: accent,
+              currency: currency,
             ),
         ],
       ),

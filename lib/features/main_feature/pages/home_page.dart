@@ -416,10 +416,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // Cüzdan değişiminde fabrika YENİDEN kurulmalı; yoksa alt sayfalar
     // (detay/rapor/borç geçmişi...) sonsuza dek ilk cüzdanın walletId'siyle
     // veri çeker (cüzdan verileri karışıyor hatasının kökü buydu).
+    // Birim de karşılaştırılır: boş cüzdanın para birimi değiştirilebiliyor,
+    // fabrika yenilenmezse alt sayfalar eski sembolle yazmaya devam ederdi.
     if (_subViewFactory == null ||
-        _subViewFactory!.walletId != activeWallet.id) {
-      _subViewFactory =
-          SubViewFactory(userId: userId, walletId: activeWallet.id!);
+        _subViewFactory!.walletId != activeWallet.id ||
+        _subViewFactory!.walletCurrency != activeWallet.currency) {
+      _subViewFactory = SubViewFactory(
+        userId: userId,
+        walletId: activeWallet.id!,
+        walletCurrency: activeWallet.currency,
+      );
     }
 
     return Column(

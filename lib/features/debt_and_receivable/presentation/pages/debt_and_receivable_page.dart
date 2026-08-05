@@ -2,8 +2,6 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
-import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
-import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -27,15 +25,16 @@ class DebtAndReceivablePage extends StatefulWidget {
   final String userId;
   final String walletId;
 
-  /// Aktif cüzdanın para birimi; TL değilse özellik bilgilendirmeyle kapalı
-  /// (v1 kısıtı — nakit kuplajı TL varsayar).
+  /// Cüzdanın para birimi. Borç/alacak tutarları cüzdanın biriminde tutulur
+  /// (kayıtta ayrı bir birim alanı YOK — birim cüzdandan türetilir); faiz ve
+  /// taksit aritmetiği birimden bağımsızdır, burası yalnız gösterime akar.
   final String walletCurrency;
 
   const DebtAndReceivablePage({
     super.key,
     required this.userId,
     required this.walletId,
-    this.walletCurrency = kDefaultCurrency,
+    required this.walletCurrency,
   });
 
   @override
@@ -78,19 +77,10 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
 
   @override
   Widget build(BuildContext context) {
-    // v1 kısıtı: TL dışı cüzdanda bu sayfa TryOnlyFeatureView gösterir,
-    // showcase hedefleri hiç mount olmaz; tur da istenmez.
-    final isTryWallet = widget.walletCurrency == kDefaultCurrency;
     return OnboardingTour(
       flow: OnboardingFlow.debt,
       keys: _tourKeys,
-      enabled: isTryWallet,
-      child: isTryWallet
-          ? _buildContent(context)
-          : Scaffold(
-              body:
-                  TryOnlyFeatureView(message: context.l10n.sadeceTlCuzdanBorc),
-            ),
+      child: _buildContent(context),
     );
   }
 
@@ -131,9 +121,16 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          DebtListSection(walletId: widget.walletId, userId: widget.userId),
+          DebtListSection(
+            walletId: widget.walletId,
+            userId: widget.userId,
+            currency: widget.walletCurrency,
+          ),
           ReceivableListSection(
-              walletId: widget.walletId, userId: widget.userId),
+            walletId: widget.walletId,
+            userId: widget.userId,
+            currency: widget.walletCurrency,
+          ),
         ],
       ),
     );
@@ -144,10 +141,15 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
 class DebtListSection extends StatelessWidget {
   final String walletId;
   final String userId;
+
+  /// Cüzdanın para birimi; listedeki tüm tutarlar bu birimde yazılır.
+  final String currency;
+
   const DebtListSection({
     super.key,
     required this.walletId,
     required this.userId,
+    required this.currency,
   });
 
   @override
@@ -251,7 +253,7 @@ class DebtListSection extends StatelessWidget {
       onSelected: (value) async {
         final debtBloc = context.read<DebtBloc>();
         if (value == 'payment') {
-          DebtPaymentDialog.show(context, debt);
+          DebtPaymentDialog.show(context, debt, currency: currency);
         } else if (value == 'edit') {
           showModalBottomSheet(
             context: context,
@@ -260,6 +262,7 @@ class DebtListSection extends StatelessWidget {
             builder: (context) => AddEntrySheet(
               walletId: walletId,
               userId: userId,
+              currency: currency,
               debtToEdit: debt,
             ),
           );
@@ -361,7 +364,7 @@ class DebtListSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      formatMoney(debt.remainingAmount),
+                      formatMoney(debt.remainingAmount, currency: currency),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: Colors.redAccent,
@@ -424,7 +427,8 @@ class DebtListSection extends StatelessWidget {
                 ),
                 if (!debt.isPaid)
                   FilledButton.icon(
-                    onPressed: () => DebtPaymentDialog.show(context, debt),
+                    onPressed: () => DebtPaymentDialog.show(context, debt,
+                        currency: currency),
                     icon: const Icon(Icons.payment, size: 16),
                     label: Text(context.l10n.ode),
                     style: FilledButton.styleFrom(
@@ -450,10 +454,15 @@ class DebtListSection extends StatelessWidget {
 class ReceivableListSection extends StatelessWidget {
   final String walletId;
   final String userId;
+
+  /// Cüzdanın para birimi; listedeki tüm tutarlar bu birimde yazılır.
+  final String currency;
+
   const ReceivableListSection({
     super.key,
     required this.walletId,
     required this.userId,
+    required this.currency,
   });
 
   @override
@@ -567,6 +576,7 @@ class ReceivableListSection extends StatelessWidget {
             builder: (context) => AddEntrySheet(
               walletId: walletId,
               userId: userId,
+              currency: currency,
               receivableToEdit: receivable,
             ),
           );
@@ -667,7 +677,7 @@ class ReceivableListSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  formatMoney(receivable.amount),
+                  formatMoney(receivable.amount, currency: currency),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,

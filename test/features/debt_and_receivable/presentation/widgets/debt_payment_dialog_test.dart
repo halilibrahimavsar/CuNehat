@@ -43,7 +43,7 @@ void main() {
 
   /// Diyalog kök Navigator'da açılır; bloc'lar uygulamada da MaterialApp'in
   /// ÜSTÜNDE sağlanır (bkz. `AppProviders`), burada da öyle kurulur.
-  Widget buildTestableWidget() {
+  Widget buildTestableWidget({String currency = 'TRY'}) {
     return BlocProvider<DebtBloc>.value(
       value: mockDebtBloc,
       child: MaterialApp(
@@ -58,7 +58,8 @@ void main() {
         home: Scaffold(
           body: Builder(
             builder: (context) => ElevatedButton(
-              onPressed: () => DebtPaymentDialog.show(context, testDebt),
+              onPressed: () =>
+                  DebtPaymentDialog.show(context, testDebt, currency: currency),
               child: const Text('Aç'),
             ),
           ),
@@ -106,5 +107,29 @@ void main() {
 
     verifyNever(() => mockDebtBloc.add(any(that: isA<PayDebtEvent>())));
     expect(find.byType(AppDialogSurface), findsNothing);
+  });
+
+  testWidgets('döviz cüzdanda tüm tutarlar cüzdanın biriminde yazılır',
+      (tester) async {
+    await tester.pumpWidget(buildTestableWidget(currency: 'USD'));
+    await tester.tap(find.text('Aç'));
+    await tester.pumpAndSettle();
+
+    // Özet satırları (toplam/ödenen/kalan) ve giriş alanının sonek sembolü.
+    expect(find.text('1.200,00 \$'), findsNWidgets(2)); // toplam + kalan
+    expect(find.text('0,00 \$'), findsOneWidget); // ödenen
+    expect(find.text('\$'), findsOneWidget); // suffixText
+    expect(find.textContaining('₺'), findsNothing);
+  });
+
+  testWidgets('döviz cüzdanda hızlı ödeme seçenekleri de o birimde yazar',
+      (tester) async {
+    await tester.pumpWidget(buildTestableWidget(currency: 'EUR'));
+    await tester.tap(find.text('Aç'));
+    await tester.pumpAndSettle();
+
+    // 1.200 / 12 ay → taksit 100; "1 Taksit" chip'i ve plan satırları €.
+    expect(find.textContaining('100,00 €'), findsWidgets);
+    expect(find.textContaining('₺'), findsNothing);
   });
 }

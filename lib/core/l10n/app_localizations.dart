@@ -3510,12 +3510,6 @@ abstract class AppLocalizations {
   /// **'İşlem geçmişi olan cüzdanın para birimi değiştirilemez'**
   String get paraBirimiKilitliHint;
 
-  /// No description provided for @sadeceTlCuzdanBorc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borç/alacak takibi şimdilik yalnız TL cüzdanlarda kullanılabilir'**
-  String get sadeceTlCuzdanBorc;
-
   /// No description provided for @sadeceTlCuzdanYatirim.
   ///
   /// In tr, this message translates to:

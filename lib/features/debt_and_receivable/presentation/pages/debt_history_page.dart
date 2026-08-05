@@ -25,10 +25,14 @@ class DebtHistoryPage extends StatelessWidget {
   final String walletId;
   final bool showAppBar;
 
+  /// Cüzdanın para birimi; kapanmış borç/alacak tutarları bu birimde yazılır.
+  final String walletCurrency;
+
   const DebtHistoryPage({
     super.key,
     required this.userId,
     required this.walletId,
+    required this.walletCurrency,
     this.showAppBar = false,
   });
 
@@ -46,6 +50,7 @@ class DebtHistoryPage extends StatelessWidget {
         showAppBar: showAppBar,
         userId: userId,
         walletId: walletId,
+        currency: walletCurrency,
       ),
     );
   }
@@ -55,11 +60,13 @@ class _DebtHistoryView extends StatelessWidget {
   final bool showAppBar;
   final String userId;
   final String walletId;
+  final String currency;
 
   const _DebtHistoryView({
     required this.showAppBar,
     required this.userId,
     required this.walletId,
+    required this.currency,
   });
 
   @override
@@ -98,8 +105,14 @@ class _DebtHistoryView extends StatelessWidget {
                 Expanded(
                   child: TabBarView(
                     children: [
-                      _DebtHistoryTab(userId: userId, walletId: walletId),
-                      _ReceivableHistoryTab(userId: userId, walletId: walletId),
+                      _DebtHistoryTab(
+                          userId: userId,
+                          walletId: walletId,
+                          currency: currency),
+                      _ReceivableHistoryTab(
+                          userId: userId,
+                          walletId: walletId,
+                          currency: currency),
                     ],
                   ),
                 ),
@@ -115,10 +128,12 @@ class _DebtHistoryView extends StatelessWidget {
 class _DebtHistoryTab extends StatelessWidget {
   final String userId;
   final String walletId;
+  final String currency;
 
   const _DebtHistoryTab({
     required this.userId,
     required this.walletId,
+    required this.currency,
   });
 
   @override
@@ -163,6 +178,7 @@ class _DebtHistoryTab extends StatelessWidget {
             _HistorySummaryCard(
               text: context.l10n.paidDebtsLengthBorcKapandi(paidDebts.length),
               amount: totalPaid,
+              currency: currency,
             ),
             const SizedBox(height: 16),
             ...paidDebts.map(
@@ -207,6 +223,7 @@ class _DebtHistoryTab extends StatelessWidget {
                         child: AddEntrySheet(
                           walletId: walletId,
                           userId: userId,
+                          currency: currency,
                           debtToEdit: debt,
                         ),
                       ),
@@ -238,6 +255,7 @@ class _DebtHistoryTab extends StatelessWidget {
                   title: debt.title,
                   subtitle: debt.counterparty,
                   amount: debt.totalPaidAmount,
+                  currency: currency,
                   badge: context.l10n.badgeOdendi,
                 ),
               ),
@@ -252,10 +270,12 @@ class _DebtHistoryTab extends StatelessWidget {
 class _ReceivableHistoryTab extends StatelessWidget {
   final String userId;
   final String walletId;
+  final String currency;
 
   const _ReceivableHistoryTab({
     required this.userId,
     required this.walletId,
+    required this.currency,
   });
 
   @override
@@ -300,6 +320,7 @@ class _ReceivableHistoryTab extends StatelessWidget {
               text: context.l10n
                   .paidReceivablesLengthAlacakTahsil(paidReceivables.length),
               amount: totalCollected,
+              currency: currency,
             ),
             const SizedBox(height: 16),
             ...paidReceivables.map(
@@ -342,6 +363,7 @@ class _ReceivableHistoryTab extends StatelessWidget {
                         child: AddEntrySheet(
                           walletId: walletId,
                           userId: userId,
+                          currency: currency,
                           receivableToEdit: receivable,
                         ),
                       ),
@@ -372,6 +394,7 @@ class _ReceivableHistoryTab extends StatelessWidget {
                   subtitle: context.l10n.vadeTarihLabel(
                       DateFormat('dd MMM yyyy').format(receivable.dueDate)),
                   amount: receivable.amount,
+                  currency: currency,
                   badge: context.l10n.badgeTahsilEdildi,
                 ),
               ),
@@ -386,8 +409,13 @@ class _ReceivableHistoryTab extends StatelessWidget {
 class _HistorySummaryCard extends StatelessWidget {
   final String text;
   final double amount;
+  final String currency;
 
-  const _HistorySummaryCard({required this.text, required this.amount});
+  const _HistorySummaryCard({
+    required this.text,
+    required this.amount,
+    required this.currency,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -412,7 +440,7 @@ class _HistorySummaryCard extends StatelessWidget {
             ),
           ),
           Text(
-            formatMoney(amount),
+            formatMoney(amount, currency: currency),
             style: const TextStyle(
               fontWeight: FontWeight.w900,
               color: Colors.green,
@@ -430,6 +458,7 @@ class _HistoryCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final double amount;
+  final String currency;
   final String badge;
 
   const _HistoryCard({
@@ -437,6 +466,7 @@ class _HistoryCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.amount,
+    required this.currency,
     required this.badge,
   });
 
@@ -486,7 +516,7 @@ class _HistoryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                formatMoney(amount),
+                formatMoney(amount, currency: currency),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.green,

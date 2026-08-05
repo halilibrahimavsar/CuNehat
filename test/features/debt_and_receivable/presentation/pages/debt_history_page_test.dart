@@ -108,6 +108,7 @@ void main() {
         const DebtHistoryPage(
           userId: 'user_123',
           walletId: 'wallet_123',
+          walletCurrency: 'TRY',
         ),
       ),
     );
@@ -127,6 +128,7 @@ void main() {
         const DebtHistoryPage(
           userId: 'user_123',
           walletId: 'wallet_123',
+          walletCurrency: 'TRY',
         ),
       ),
     );
@@ -165,6 +167,7 @@ void main() {
         const DebtHistoryPage(
           userId: 'user_123',
           walletId: 'wallet_123',
+          walletCurrency: 'TRY',
           showAppBar: true,
         ),
       ),
@@ -189,5 +192,34 @@ void main() {
     expect(find.text('Ahmet Yılmaz'), findsOneWidget);
     expect(find.text('Tahsil Edildi'), findsWidgets);
     expect(find.text('5.000,00 ₺'), findsWidgets);
+  });
+
+  testWidgets('döviz cüzdanda geçmiş tutarları cüzdanın biriminde yazılır',
+      (WidgetTester tester) async {
+    when(() => mockDebtBloc.state).thenReturn(DebtLoaded([testPaidDebt]));
+    when(() => mockReceivableBloc.state)
+        .thenReturn(ReceivableLoaded([testPaidReceivable]));
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const DebtHistoryPage(
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          walletCurrency: 'USD',
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Özet kartı + borç kartı: ikisi de aynı tutarı $ ile yazar.
+    expect(find.text('150.000,00 \$'), findsNWidgets(2));
+    expect(find.textContaining('₺'), findsNothing);
+
+    await tester.tap(find.text('Alacak Geçmişi'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('5.000,00 \$'), findsNWidgets(2));
+    expect(find.textContaining('₺'), findsNothing);
   });
 }

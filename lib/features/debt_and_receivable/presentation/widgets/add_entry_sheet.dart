@@ -38,10 +38,16 @@ class AddEntrySheet extends StatefulWidget {
   /// Düzenlemede dikkate alınmaz; tür kayda göre sabittir.
   final bool initialIsDebt;
 
+  /// [walletId] cüzdanının para birimi. Kayıt her zaman kendi cüzdanının
+  /// birimindedir; girilen tutar dönüştürülmez, yalnız doğru sembolle
+  /// gösterilir.
+  final String currency;
+
   const AddEntrySheet({
     super.key,
     required this.walletId,
     required this.userId,
+    required this.currency,
     this.debtToEdit,
     this.receivableToEdit,
     this.initialIsDebt = true,
@@ -210,9 +216,18 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
         }
         // Toplam geri ödeme (taksit × vade) kredi tutarının altında kalamaz;
         // aksi halde borçtan az geri ödeme gibi imkânsız bir sonuç doğar.
-        // ±1 ₺ tolerans otomatik önerideki yuvarlamayı soğurur.
+        //
+        // Tolerans otomatik önerinin yuvarlamasını soğurur ve VADEYLE
+        // ÖLÇEKLENİR: öneri `anapara / vade`yi kuruşa yuvarlar (bkz.
+        // formatAmountForInput), yani `taksit × vade` anaparanın en çok
+        // `vade × yarım kuruş` altına düşer. Sabit 1 birimlik tolerans uzun
+        // vadede yetmiyordu — 360 ay için sapma 1,80'e çıkıp uygulamanın
+        // KENDİ önerisi hataya takılıyordu.
+        // Para birimi cinsinden değil kuruş cinsinden olduğundan TRY/USD/EUR
+        // farkı da ortadan kalkar.
         final principal = _parsedAmount ?? 0;
-        if (installment * t < principal - 1.0) {
+        final tolerance = t * kMoneyEpsilon;
+        if (installment * t < principal - tolerance) {
           return context.l10n.aylikTaksitKrediTutarindanKucuk;
         }
       }
@@ -337,6 +352,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           context,
           amount: amount,
           accent: _accent,
+          currency: widget.currency,
         );
         if (!mounted || impact == null) return;
         context.read<DebtBloc>().add(AddDebtEvent(debt.copyWith(
@@ -433,6 +449,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           includeBankTaxes: _includeBankTaxes,
                           accent: _accent,
                           onChanged: _clearError,
+                          currency: widget.currency,
                         ),
                       ),
                       const SizedBox(height: 20),

@@ -12,20 +12,29 @@ class DebtCashImpactDialog extends StatelessWidget {
   final double amount;
   final Color accent;
 
+  /// Borcun ait olduğu cüzdanın para birimi.
+  final String currency;
+
   const DebtCashImpactDialog({
     super.key,
     required this.amount,
     required this.accent,
+    required this.currency,
   });
 
   static Future<DebtCashImpact?> show(
     BuildContext context, {
     required double amount,
     required Color accent,
+    required String currency,
   }) {
     return showDialog<DebtCashImpact>(
       context: context,
-      builder: (_) => DebtCashImpactDialog(amount: amount, accent: accent),
+      builder: (_) => DebtCashImpactDialog(
+        amount: amount,
+        accent: accent,
+        currency: currency,
+      ),
     );
   }
 
@@ -54,7 +63,7 @@ class DebtCashImpactDialog extends StatelessWidget {
             icon: Icons.payments_rounded,
             title: context.l10n.borcNakitSecenekBaslik,
             body: context.l10n.borcNakitSecenekGovde(
-              formatMoney(amount),
+              formatMoney(amount, currency: currency),
             ),
             accent: accent,
           ),

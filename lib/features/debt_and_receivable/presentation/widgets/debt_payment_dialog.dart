@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -23,17 +24,26 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 class DebtPaymentDialog extends StatefulWidget {
   final DebtEntity debt;
 
+  /// Borcun ait olduğu cüzdanın para birimi; tutarların tamamı bu birimdedir
+  /// (taksit aritmetiği birimden bağımsız, yalnız gösterim bunu kullanır).
+  final String currency;
+
   const DebtPaymentDialog({
     super.key,
     required this.debt,
+    required this.currency,
   });
 
   /// Static show metodu - Dialog'u açar
-  static Future<bool?> show(BuildContext context, DebtEntity debt) {
+  static Future<bool?> show(
+    BuildContext context,
+    DebtEntity debt, {
+    required String currency,
+  }) {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => DebtPaymentDialog(debt: debt),
+      builder: (_) => DebtPaymentDialog(debt: debt, currency: currency),
     );
   }
 
@@ -49,6 +59,10 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   double? _activeQuickPay;
   bool _showInstallmentPlan = false;
   bool _showPaymentHistory = false;
+
+  /// Diyalogdaki her tutar borcun cüzdan biriminde yazılır.
+  String _money(double amount) =>
+      formatMoney(amount, currency: widget.currency);
 
   void _applyQuickPay(double amount) {
     // Önce kuruşa yuvarla: metin, seçili chip ve kaydedilecek tutar
@@ -170,13 +184,13 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                           ),
                           const SizedBox(height: 8),
                           _buildInfoRow(context.l10n.toplamBorcLabel,
-                              formatMoney(totalDebt)),
+                              _money(totalDebt)),
                           _buildInfoRow(
-                              context.l10n.odenenLabel, formatMoney(totalPaid),
+                              context.l10n.odenenLabel, _money(totalPaid),
                               color: Colors.green),
                           const Divider(height: 16),
                           _buildInfoRow(
-                              context.l10n.kalanLabel, formatMoney(remaining),
+                              context.l10n.kalanLabel, _money(remaining),
                               color: Colors.red, isBold: true),
                         ],
                       ),
@@ -204,11 +218,11 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                         labelText: context.l10n.labelOdemeTutari,
                         hintText: '0,00',
                         prefixIcon: const Icon(Icons.attach_money),
-                        suffixText: '₺',
+                        suffixText: currencySymbol(widget.currency),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
-                        helperText: context.l10n.maksimumFormatmoneyRemaining(
-                            formatMoney(remaining)),
+                        helperText: context.l10n
+                            .maksimumFormatmoneyRemaining(_money(remaining)),
                       ),
                       validator: (value) => validateAmountInput(
                         value ?? '',
@@ -432,7 +446,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               ),
               subtitle: Text(
                 context.l10n
-                    .formatMoneyMonthlyamount(formatMoney(row.scheduledAmount)),
+                    .formatMoneyMonthlyamount(_money(row.scheduledAmount)),
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -469,9 +483,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   /// Kısmi ödemede tutar gösterilir ("300,00 ₺ / 1.000,00 ₺"); gecikme
   /// ayrı bir eksen olduğundan renk/ikon uyarıyı ayrıca taşır.
   String _statusText(InstallmentProgress row) => switch (row.status) {
-        InstallmentStatus.paid => formatMoney(row.paidAmount),
+        InstallmentStatus.paid => _money(row.paidAmount),
         InstallmentStatus.partial =>
-          '${formatMoney(row.paidAmount)} / ${formatMoney(row.scheduledAmount)}',
+          '${_money(row.paidAmount)} / ${_money(row.scheduledAmount)}',
         InstallmentStatus.unpaid =>
           row.isOverdue ? context.l10n.gecikmis : context.l10n.bekleniyor,
       };
@@ -499,7 +513,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               ),
             ),
             title: Text(
-              formatMoney(payment.amount),
+              _money(payment.amount),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
@@ -585,8 +599,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                   ),
                 ),
                 child: Text(
-                  context.l10n.optLabelFormatmoneyOpt(
-                      opt.label, formatMoney(opt.amount)),
+                  context.l10n
+                      .optLabelFormatmoneyOpt(opt.label, _money(opt.amount)),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,

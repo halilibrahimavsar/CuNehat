@@ -10,7 +10,12 @@ void main() {
   group('SubViewFactory', () {
     const userId = 'user_123';
     const walletId = 'wallet_456';
-    const factory = SubViewFactory(userId: userId, walletId: walletId);
+    const walletCurrency = 'USD';
+    const factory = SubViewFactory(
+      userId: userId,
+      walletId: walletId,
+      walletCurrency: walletCurrency,
+    );
 
     test(
         'createSubViewsForState returns InvestmentDetailPage for savedMoney state',
@@ -53,6 +58,9 @@ void main() {
       expect(page.userId, userId);
       expect(page.walletId, walletId);
       expect(page.key, const ValueKey('debtHistory-wallet_456'));
+      // Geçmişteki tutarlar cüzdanın kendi biriminde yazılmalı; birim
+      // fabrikadan geçmezse sayfa sessizce TL sembolüne düşerdi.
+      expect(page.walletCurrency, walletCurrency);
     });
 
     test('createSubViewsForState returns empty list for unknown state', () {

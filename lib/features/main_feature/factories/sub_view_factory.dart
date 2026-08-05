@@ -13,9 +13,14 @@ class SubViewFactory {
   final String userId;
   final String walletId;
 
+  /// Cüzdanın para birimi; alt görünümlerdeki tutarların gösterimi buna bağlı
+  /// (borç/alacak geçmişi kaydın kendi cüzdanının biriminde yazar).
+  final String walletCurrency;
+
   const SubViewFactory({
     required this.userId,
     required this.walletId,
+    required this.walletCurrency,
   });
 
   /// Create all subviews for a slider state.
@@ -45,7 +50,8 @@ class SubViewFactory {
           DebtHistoryPage(
               key: ValueKey('debtHistory-$walletId'),
               userId: userId,
-              walletId: walletId),
+              walletId: walletId,
+              walletCurrency: walletCurrency),
         ],
       _ => [],
     };

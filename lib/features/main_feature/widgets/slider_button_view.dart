@@ -173,9 +173,9 @@ class SliderButtonView extends StatelessWidget {
     );
   }
 
-  /// v1 kısıtı: borç/alacak ve yatırım akışları TL'ye bağlı (değerleme ve
-  /// nakit kuplajı TL varsayar); döviz cüzdanında mesajla engellenir.
-  /// Gelir/gider serbesttir — tutar cüzdanın kendi birimindedir.
+  /// v1 kısıtı: yatırım akışı TL'ye bağlı (değerleme ve canlı fiyat TL'ye
+  /// çıpalı); döviz cüzdanında mesajla engellenir. Gelir/gider ve borç/alacak
+  /// serbesttir — tutar cüzdanın kendi birimindedir.
   bool _blockIfNonTry(
       BuildContext context, dynamic activeWallet, String message) {
     if (activeWallet.currency == kDefaultCurrency) return false;
@@ -192,13 +192,6 @@ class SliderButtonView extends StatelessWidget {
       case 'add_custom_investment':
         if (_blockIfNonTry(
             context, activeWallet, context.l10n.sadeceTlCuzdanYatirim)) {
-          return;
-        }
-        break;
-      case 'add_debt':
-      case 'add_receivable':
-        if (_blockIfNonTry(
-            context, activeWallet, context.l10n.sadeceTlCuzdanBorc)) {
           return;
         }
         break;
@@ -298,6 +291,7 @@ class SliderButtonView extends StatelessWidget {
       builder: (sheetContext) => AddEntrySheet(
         walletId: activeWallet.id!,
         userId: activeWallet.userId,
+        currency: activeWallet.currency,
         initialIsDebt: isDebt,
       ),
     );

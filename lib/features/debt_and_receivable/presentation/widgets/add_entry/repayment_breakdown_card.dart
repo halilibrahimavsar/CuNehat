@@ -19,6 +19,10 @@ class RepaymentBreakdownCard extends StatelessWidget {
   final bool includeBankTaxes;
   final Color accent;
 
+  /// Kaydın ait olduğu cüzdanın para birimi; hesaplama birimden bağımsızdır,
+  /// yalnız gösterim bunu kullanır.
+  final String currency;
+
   const RepaymentBreakdownCard({
     super.key,
     required this.amountController,
@@ -30,6 +34,7 @@ class RepaymentBreakdownCard extends StatelessWidget {
     required this.isBankLoanMonthly,
     required this.includeBankTaxes,
     required this.accent,
+    required this.currency,
   });
 
   @override
@@ -73,13 +78,15 @@ class RepaymentBreakdownCard extends StatelessWidget {
                       !isInstallmentAmortized
                   ? context.l10n.vadeFarkiLabel
                   : context.l10n.toplamFaizLabel,
-              value: hasData ? '+ ${formatMoney(totalInterest)}' : '—',
+              value: hasData
+                  ? '+ ${formatMoney(totalInterest, currency: currency)}'
+                  : '—',
             ),
             if (term > 0) ...[
               const SizedBox(height: 8),
               _SummaryRow(
                 label: context.l10n.aylikTaksitLabel,
-                value: hasData ? formatMoney(monthly) : '—',
+                value: hasData ? formatMoney(monthly, currency: currency) : '—',
               ),
             ],
             const SizedBox(height: 12),
@@ -95,7 +102,7 @@ class RepaymentBreakdownCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  hasData ? formatMoney(total) : '—',
+                  hasData ? formatMoney(total, currency: currency) : '—',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,
