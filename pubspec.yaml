@@ -133,12 +133,18 @@ dev_dependencies:
   build_runner: ^2.4.9
   # injactable kod üretimi için eklendi
   injectable_generator: ^2.6.2
-  flutter_launcher_icons: ^0.13.1
+  # 0.14+ şart: adaptive_icon_monochrome (Android 13 temalı ikon) 0.13'te yok.
+  flutter_launcher_icons: ^0.14.4
 
 
 flutter_native_splash:
-  color: "#000000"
-  image: "assets/images/app_icon.png"
+  # Açılış ekranı ikonla aynı kimliği taşımalı: siyah zemine oturtulan tam
+  # ikon (kendi zemini olduğu için) ekranın ortasında kutu gibi duruyordu.
+  # Zemin ikonun mavisi, görsel de şeffaf foreground katmanı.
+  # Gradyanın görsel ortasından örneklenen düz renk. Gradyan bitmap'i zemin
+  # olarak verilirse uzun ekranlarda gerilip ikondan farklı görünüyor.
+  color: "#3054BB"
+  image: "assets/images/app_icon_foreground.png"
   fullscreen: true
 
 
@@ -162,6 +168,19 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/images/app_icon.png"
+  # Adaptive ikon (Android 8+): launcher kendi maskesini uygular ve
+  # foreground'un kenarlarından ~%17 kırpar. app_icon_foreground.png bu
+  # yüzden şeffaf zeminli ve içerik tuvalin ortadaki %56'sında.
+  # Bu katmanlar olmadan launcher legacy bitmap'i beyaz bir rozetin içine
+  # küçültüyor ve ikon diğer uygulamaların yanında bariz bozuk duruyor.
+  # Arka plan düz renk değil görsel: işaretin altındaki gradyan kimliğin
+  # yarısı, düz renge düşürülürse ikon cansızlaşıyor.
+  adaptive_icon_background: "assets/images/app_icon_background.png"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  # Android 13+ temalı ikon: sistem alfa kanalını duvar kağıdından türettiği
+  # tek renge boyar, o yüzden katman düz siluet.
+  adaptive_icon_monochrome: "assets/images/app_icon_monochrome.png"
+  min_sdk_android: 24
      
   #   - images/a_dot_ham.jpeg
 
