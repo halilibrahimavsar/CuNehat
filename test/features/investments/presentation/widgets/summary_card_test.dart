@@ -39,6 +39,7 @@ void main() {
           totalCurrentValue: 12500.0,
           totalProfit: 2500.0,
           totalProfitPercentage: 25.0,
+          currency: 'TRY',
         ),
       ),
     );
@@ -67,6 +68,7 @@ void main() {
           totalCurrentValue: 8000.0,
           totalProfit: -2000.0,
           totalProfitPercentage: -20.0,
+          currency: 'TRY',
         ),
       ),
     );

@@ -50,7 +50,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        InvestmentCard(investment: goldInvestment),
+        InvestmentCard(investment: goldInvestment, currency: 'TRY'),
       ),
     );
 
@@ -96,7 +96,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        InvestmentCard(investment: stockInvestment),
+        InvestmentCard(investment: stockInvestment, currency: 'TRY'),
       ),
     );
 
@@ -135,7 +135,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        InvestmentCard(investment: customInvestment),
+        InvestmentCard(investment: customInvestment, currency: 'TRY'),
       ),
     );
 

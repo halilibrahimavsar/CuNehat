@@ -5,8 +5,12 @@ void main() {
   group('LivePriceQuote', () {
     test('supports value comparisons (Equatable)', () {
       expect(
-        const LivePriceQuote(price: 100.0, currency: 'USD', priceTl: 3200.0),
-        const LivePriceQuote(price: 100.0, currency: 'USD', priceTl: 3200.0),
+        const LivePriceQuote(price: 100.0, currency: 'USD',
+ convertedPrice: 3200.0,
+ targetCurrency: 'TRY'),
+        const LivePriceQuote(price: 100.0, currency: 'USD',
+ convertedPrice: 3200.0,
+ targetCurrency: 'TRY'),
       );
     });
   });

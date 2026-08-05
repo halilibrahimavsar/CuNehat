@@ -73,11 +73,13 @@ class InvestmentRepositoryImpl implements InvestmentRepository {
   Future<Either<Failure, LivePriceQuote>> getLiveQuote({
     required String symbol,
     required InvestmentType type,
+    required String targetCurrency,
   }) async {
     try {
       final quote = await remoteDataSource.getLiveQuote(
         symbol: symbol,
         type: type,
+        targetCurrency: targetCurrency,
       );
       return Right(quote);
     } catch (e) {

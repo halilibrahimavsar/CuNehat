@@ -12,9 +12,11 @@ abstract class InvestmentRepository {
   });
   Future<Either<Failure, void>> updateInvestment(InvestmentEntity investment);
 
-  /// Sembol/altın türü için canlı fiyatı (TL karşılığıyla) getirir.
+  /// Sembol/altın türü için canlı fiyatı, [targetCurrency] (cüzdanın birimi)
+  /// karşılığıyla birlikte getirir.
   Future<Either<Failure, LivePriceQuote>> getLiveQuote({
     required String symbol,
     required InvestmentType type,
+    required String targetCurrency,
   });
 }

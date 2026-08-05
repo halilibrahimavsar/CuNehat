@@ -1323,13 +1323,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fiyatAlinamadi => 'Failed to fetch price.';
 
   @override
-  String guncelFiyatFormatTry(Object price) {
+  String guncelFiyatFormat(Object price) {
     return 'Current Price: $price';
   }
 
   @override
-  String guncelFiyatFormatForeign(Object price, Object priceTl) {
-    return 'Current Price: $price (≈$priceTl)';
+  String guncelFiyatFormatCevrimli(Object price, Object converted) {
+    return 'Current Price: $price (≈$converted)';
   }
 
   @override
@@ -1884,10 +1884,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paraBirimiKilitliHint =>
       'The currency of a wallet with transaction history can\'t be changed';
-
-  @override
-  String get sadeceTlCuzdanYatirim =>
-      'Investment tracking is only available in TRY wallets for now';
 
   @override
   String yaklasikKarsilikFormat(String tutar) {

@@ -11,9 +11,12 @@ class GetLiveQuoteUseCase {
 
   GetLiveQuoteUseCase(this.repository);
 
+  /// [targetCurrency] fiyatın çevrileceği birim — her zaman kaydın
+  /// cüzdanınınki. Değerleme cüzdanın biriminde yapılır.
   Future<Either<Failure, LivePriceQuote>> call({
     required String symbol,
     required InvestmentType type,
+    required String targetCurrency,
   }) async {
     if (symbol.trim().isEmpty) {
       return Left(ValidationFailure('Sembol boş olamaz'));
@@ -21,6 +24,7 @@ class GetLiveQuoteUseCase {
     return await repository.getLiveQuote(
       symbol: symbol.trim(),
       type: type,
+      targetCurrency: targetCurrency,
     );
   }
 }

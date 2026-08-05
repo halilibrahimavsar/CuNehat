@@ -7,6 +7,14 @@ enum InvestmentType {
   custom,
 }
 
+/// Bir yatırım kaydı.
+///
+/// PARA BİRİMİ: [amount] (maliyet) ve [currentValue] (güncel değer) her zaman
+/// kaydın CÜZDANININ birimindedir — kayıtta ayrı bir değerleme birimi alanı
+/// yoktur, birim `walletId`'den türetilir. Canlı fiyat başka bir birimden
+/// geliyorsa çapraz kurla cüzdanın birimine çevrilerek yazılır (bkz.
+/// `LivePriceQuote.convertedPrice`). [currency] ise yalnız fiyat KAYNAĞININ
+/// birimidir; bilgi amaçlıdır, değerlemeye girmez.
 class InvestmentEntity extends Equatable {
   final String? id;
   final String userId;
@@ -28,7 +36,8 @@ class InvestmentEntity extends Equatable {
   /// Hedef kategorisi anahtarı (ev, dugun, araba, acil_fon, egitim, diger).
   final String? goalCategory;
 
-  /// Fiyat kaynağının para birimi (örn. 'TRY', 'USD'). null ⇒ TRY varsayılır.
+  /// Fiyat KAYNAĞININ para birimi (örn. AAPL → 'USD', altın → 'TRY').
+  /// Kaydın değerleme birimi DEĞİLDİR — o cüzdandan gelir; bkz. sınıf notu.
   final String? currency;
 
   const InvestmentEntity({

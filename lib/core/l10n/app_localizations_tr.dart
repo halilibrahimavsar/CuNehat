@@ -1328,13 +1328,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get fiyatAlinamadi => 'Fiyat alınamadı.';
 
   @override
-  String guncelFiyatFormatTry(Object price) {
+  String guncelFiyatFormat(Object price) {
     return 'Güncel Fiyat: $price';
   }
 
   @override
-  String guncelFiyatFormatForeign(Object price, Object priceTl) {
-    return 'Güncel Fiyat: $price (≈$priceTl)';
+  String guncelFiyatFormatCevrimli(Object price, Object converted) {
+    return 'Güncel Fiyat: $price (≈$converted)';
   }
 
   @override
@@ -1887,10 +1887,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get paraBirimiKilitliHint =>
       'İşlem geçmişi olan cüzdanın para birimi değiştirilemez';
-
-  @override
-  String get sadeceTlCuzdanYatirim =>
-      'Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir';
 
   @override
   String yaklasikKarsilikFormat(String tutar) {

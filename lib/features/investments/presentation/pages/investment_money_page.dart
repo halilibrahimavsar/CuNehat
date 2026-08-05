@@ -1,6 +1,4 @@
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
-import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
-import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
@@ -51,7 +49,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       title: context.l10n.yatirimSatOnayBaslik(investment.name),
       message: context.l10n.guncelDegerFormatmoneyInvestment(
-          formatMoney(investment.currentValue)),
+          formatMoney(investment.currentValue, currency: _currency)),
       confirmText: context.l10n.sat,
       cancelText: context.l10n.vazgec,
     );
@@ -63,7 +61,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       title: context.l10n.yatirimSilOnayBaslik(investment.name),
       message:
-          context.l10n.hataliGirislerIcinAlim(formatMoney(investment.amount)),
+          context.l10n.hataliGirislerIcinAlim(
+              formatMoney(investment.amount, currency: _currency)),
       confirmText: context.l10n.kaydiSil,
       cancelText: context.l10n.vazgec,
       danger: true,
@@ -118,6 +117,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     ContributeSheet.show(
       context,
       investment: investment,
+      walletCurrency: _currency,
       onSave: (updated) {
         bloc.add(UpdateInvestmentEvent(
           investment: updated,
@@ -154,6 +154,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           context,
           userId: item.userId,
           walletId: item.walletId,
+          walletCurrency: _currency,
           investmentToEdit: item,
           onSave: onSave,
         );
@@ -163,6 +164,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           context,
           userId: item.userId,
           walletId: item.walletId,
+          walletCurrency: _currency,
           investmentToEdit: item,
           onSave: onSave,
         );
@@ -172,6 +174,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           context,
           userId: item.userId,
           walletId: item.walletId,
+          walletCurrency: _currency,
           investmentToEdit: item,
           onSave: onSave,
         );
@@ -194,6 +197,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         context.read<InvestmentBloc>().add(RefreshPricesEvent(
               userId: widget.activeWallet.userId,
               walletId: widget.activeWallet.id!,
+              walletCurrency: _currency,
               investmentId: investment.id,
             ));
         break;
@@ -215,21 +219,16 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     }
   }
 
+  /// Değerlemenin yapıldığı birim: cüzdanın kendi birimi. Maliyet, güncel
+  /// değer ve kâr/zarar bu birimdedir; canlı fiyat da buna çevrilir.
+  String get _currency => widget.activeWallet.currency;
+
   @override
   Widget build(BuildContext context) {
-    // v1 kısıtı: yatırım değerlemesi ve nakit kuplajı TL varsayar. TL dışı
-    // cüzdanda showcase hedefleri hiç mount olmaz; tur da istenmez.
-    final isTryWallet = widget.activeWallet.currency == kDefaultCurrency;
     return OnboardingTour(
       flow: OnboardingFlow.investment,
       keys: _tourKeys,
-      enabled: isTryWallet,
-      child: isTryWallet
-          ? _buildContent(context)
-          : Scaffold(
-              body: TryOnlyFeatureView(
-                  message: context.l10n.sadeceTlCuzdanYatirim),
-            ),
+      child: _buildContent(context),
     );
   }
 
@@ -282,6 +281,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                 totalCurrentValue: totalCurrentValue,
                                 totalProfit: totalProfit,
                                 totalProfitPercentage: totalProfitPercentage,
+                                currency: _currency,
                               ),
                             ),
 
@@ -333,6 +333,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                                     widget.activeWallet.userId,
                                                 walletId:
                                                     widget.activeWallet.id!,
+                                                walletCurrency: _currency,
                                               )),
                                           icon: const Icon(
                                             Icons.refresh_rounded,
@@ -358,6 +359,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                                     onTap: () => _showActionSheet(investment),
                                     child: InvestmentCard(
                                       investment: investment,
+                                      currency: _currency,
                                     ),
                                   ),
                                   const SizedBox(height: 12),

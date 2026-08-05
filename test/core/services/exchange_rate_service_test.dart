@@ -172,6 +172,77 @@ void main() {
 
     expect(result, 41.0);
   });
+
+  // --------------------------------------------------------- Çapraz kur
+  // Kaynak yalnız X→TRY yayımlar; çapraz kur TRY üzerinden köprülenir.
+
+  group('rateBetween', () {
+    test('aynı kod ağa çıkmadan 1.0 döner', () async {
+      final svc = await makeService();
+      expect(await svc.rateBetween('USD', 'usd'), 1.0);
+      expect(svc.cachedRateBetween('EUR', 'eur'), 1.0);
+      verifyNever(() => client.get(any()));
+    });
+
+    test('TRY bacağı çevrim yapmadan doğrudan kuru verir', () async {
+      final svc = await makeService();
+      stubResponse({
+        'USD': {'Satış': '40,00'},
+        'EUR': {'Satış': '50,00'},
+      });
+
+      expect(await svc.rateBetween('USD', 'TRY'), 40.0);
+      // Ters yön: 1 TRY = 1/40 USD
+      expect(await svc.rateBetween('TRY', 'USD'), closeTo(0.025, 1e-12));
+    });
+
+    test('USD→EUR iki kurun oranı olarak hesaplanır', () async {
+      final svc = await makeService();
+      stubResponse({
+        'USD': {'Satış': '40,00'},
+        'EUR': {'Satış': '50,00'},
+      });
+
+      // 1 USD = 40 ₺, 1 EUR = 50 ₺ → 1 USD = 0,8 EUR
+      expect(await svc.rateBetween('USD', 'EUR'), closeTo(0.8, 1e-12));
+      expect(await svc.rateBetween('EUR', 'USD'), closeTo(1.25, 1e-12));
+    });
+
+    test('bacaklardan biri alınamazsa null döner', () async {
+      final svc = await makeService();
+      // Yalnız USD var; EUR eksik → çapraz kur kurulamaz.
+      stubResponse({
+        'USD': {'Satış': '40,00'},
+      });
+
+      expect(await svc.rateBetween('USD', 'EUR'), isNull);
+      expect(await svc.rateBetween('EUR', 'USD'), isNull);
+      // USD bacağı yine tek başına çalışır.
+      expect(await svc.rateBetween('USD', 'TRY'), 40.0);
+    });
+
+    test('desteklenmeyen kod null döner', () async {
+      final svc = await makeService();
+      stubResponse({
+        'USD': {'Satış': '40,00'},
+      });
+
+      expect(await svc.rateBetween('GBP', 'TRY'), isNull);
+      expect(await svc.rateBetween('USD', 'GBP'), isNull);
+    });
+
+    test('cachedRateBetween ağa çıkmadan önbellekten köprüler', () async {
+      final svc = await makeService(prefsSeed: {
+        'exchange_rates_cache_v1': json.encode({
+          'rates': {'USD': 40.0, 'EUR': 50.0},
+          'ts': '2026-01-01T00:00:00.000',
+        }),
+      });
+
+      expect(svc.cachedRateBetween('USD', 'EUR'), closeTo(0.8, 1e-12));
+      verifyNever(() => client.get(any()));
+    });
+  });
 }
 
 const _epsilon = Duration(milliseconds: 100);

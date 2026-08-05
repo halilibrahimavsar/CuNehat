@@ -49,7 +49,8 @@ void main() {
       GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123'),
     );
     registerFallbackValue(
-      RefreshPricesEvent(userId: 'user_123', walletId: 'wallet_123'),
+      RefreshPricesEvent(
+          userId: 'user_123', walletId: 'wallet_123', walletCurrency: 'TRY'),
     );
     registerFallbackValue(
       DeleteInvestmentEvent(
@@ -768,6 +769,64 @@ void main() {
     verify(() => mockInvestmentBloc.add(any(
           that: isA<RefreshPricesEvent>()
               .having((e) => e.investmentId, 'investmentId', 'inv_1'),
+        ))).called(1);
+  });
+
+  // ------------------------------------------------------- Çoklu para birimi
+  // Portföy her cüzdanda açılır; değerleme cüzdanın kendi birimindedir.
+
+  final usdWallet = WalletEntity(
+    id: 'wallet_usd',
+    userId: 'user_123',
+    name: 'Dolar Cüzdanı',
+    balance: 500.0,
+    debt: 0.0,
+    credit: 0.0,
+    investment: 1250.0,
+    colorHex: '#123456',
+    iconName: 'wallet',
+    createdAt: DateTime(2026, 1, 1),
+    openingBalance: 500.0,
+    currency: 'USD',
+  );
+
+  testWidgets('döviz cüzdanda portföy açılır ve tutarlar o birimde yazar',
+      (WidgetTester tester) async {
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded([testInvestment1], totalAmount: 1000.0),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: usdWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    // Eskiden burada "yalnız TL cüzdan" bilgilendirmesi vardı; liste hiç
+    // kurulmuyordu.
+    expect(find.byType(InvestmentCard), findsOneWidget);
+    expect(find.textContaining('1.250,00 \$'), findsWidgets);
+    expect(find.textContaining('₺'), findsNothing);
+  });
+
+  testWidgets('fiyat yenileme olayına cüzdanın birimi geçirilir',
+      (WidgetTester tester) async {
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded([testInvestment1], totalAmount: 1000.0),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: usdWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    final refreshButton = find.byIcon(Icons.refresh_rounded);
+    await tester.ensureVisible(refreshButton);
+    await tester.tap(refreshButton);
+    await tester.pumpAndSettle();
+
+    verify(() => mockInvestmentBloc.add(any(
+          that: isA<RefreshPricesEvent>()
+              .having((e) => e.walletCurrency, 'walletCurrency', 'USD'),
         ))).called(1);
   });
 }

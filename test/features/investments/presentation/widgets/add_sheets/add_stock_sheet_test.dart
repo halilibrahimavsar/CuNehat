@@ -127,13 +127,15 @@ void main() {
 
     when(() => mockGetLiveQuoteUseCase(
         symbol: 'THYAO.IS',
-        type: InvestmentType.stock)).thenAnswer((_) => completer.future);
+        type: InvestmentType.stock,
+        targetCurrency: 'TRY')).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
         AddStockSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (inv) => savedInvestment = inv,
         ),
       ),
@@ -164,7 +166,9 @@ void main() {
 
     // Complete quote call
     completer.complete(const Right(
-      LivePriceQuote(price: 300.0, currency: 'TRY', priceTl: 300.0),
+      LivePriceQuote(price: 300.0, currency: 'TRY',
+ convertedPrice: 300.0,
+ targetCurrency: 'TRY'),
     ));
     await tester.pumpAndSettle();
 
@@ -215,7 +219,8 @@ void main() {
     });
 
     when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
+            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock,
+    targetCurrency: 'TRY'))
         .thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
@@ -225,6 +230,7 @@ void main() {
         AddStockSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (_) {},
         ),
       ),
@@ -282,6 +288,7 @@ void main() {
         AddStockSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
           onSave: (inv) => updatedInvestment = inv,
         ),
@@ -355,9 +362,12 @@ void main() {
     InvestmentEntity? savedInvestment;
 
     when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock))
+            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock,
+    targetCurrency: 'TRY'))
         .thenAnswer((_) async => const Right(
-              LivePriceQuote(price: 150.0, currency: 'USD', priceTl: 4875.0),
+              LivePriceQuote(price: 150.0, currency: 'USD',
+ convertedPrice: 4875.0,
+ targetCurrency: 'TRY'),
             ));
 
     await tester.pumpWidget(
@@ -365,6 +375,7 @@ void main() {
         AddStockSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (inv) => savedInvestment = inv,
         ),
       ),
@@ -385,7 +396,8 @@ void main() {
     await tester.tap(find.text('Hesapla'));
     await tester.pumpAndSettle();
 
-    // Verify foreign price message shows USD and price and priceTl with approximation sign
+    // Kaynak birim hedeften farklı: mesaj hem ham fiyatı hem yaklaşık
+    // karşılığını gösterir.
     expect(find.text('Güncel Fiyat: 150,00 \$ (≈4.875,00 ₺)'), findsOneWidget);
 
     // Save should succeed with name field empty (which uses localized fallback "Hisse Yatırımı")
@@ -461,6 +473,7 @@ void main() {
         AddStockSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (_) {},
         ),
       ),

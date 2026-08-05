@@ -614,17 +614,17 @@
   "ataAltin": "Ata Altın",
   "fiyatAliniyor": "Fiyat alınıyor...",
   "fiyatAlinamadi": "Fiyat alınamadı.",
-  "guncelFiyatFormatTry": "Güncel Fiyat: {price}",
-  "@guncelFiyatFormatTry": {
+  "guncelFiyatFormat": "Güncel Fiyat: {price}",
+  "@guncelFiyatFormat": {
     "placeholders": {
       "price": {}
     }
   },
-  "guncelFiyatFormatForeign": "Güncel Fiyat: {price} (≈{priceTl})",
-  "@guncelFiyatFormatForeign": {
+  "guncelFiyatFormatCevrimli": "Güncel Fiyat: {price} (≈{converted})",
+  "@guncelFiyatFormatCevrimli": {
     "placeholders": {
       "price": {},
-      "priceTl": {}
+      "converted": {}
     }
   },
   "gecerliYatirimMiktariGirin": "Geçerli bir yatırım miktarı girin",
@@ -849,7 +849,6 @@
   "toplamMaliyetAciklama": "Bu yatırıma ödediğin toplam tutar (maliyetin). 'Hesapla' bunu değiştirmez; kâr/zarar bununla hesaplanır.",
   "paraBirimiLabel": "Para Birimi",
   "paraBirimiKilitliHint": "İşlem geçmişi olan cüzdanın para birimi değiştirilemez",
-  "sadeceTlCuzdanYatirim": "Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir",
   "yaklasikKarsilikFormat": "≈ {tutar}",
   "@yaklasikKarsilikFormat": {
     "placeholders": {

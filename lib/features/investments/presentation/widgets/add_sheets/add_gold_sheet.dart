@@ -21,11 +21,16 @@ class AddGoldSheet extends StatefulWidget {
   final InvestmentEntity? investmentToEdit;
   final Function(InvestmentEntity) onSave;
 
+  /// Cüzdanın para birimi: maliyet ve güncel değer bu birimdedir, canlı fiyat
+  /// da buna çevrilir (altın fiyatı kaynağında TL'dir).
+  final String walletCurrency;
+
   const AddGoldSheet({
     super.key,
     required this.walletId,
     required this.userId,
     required this.onSave,
+    required this.walletCurrency,
     this.investmentToEdit,
   });
 
@@ -34,6 +39,7 @@ class AddGoldSheet extends StatefulWidget {
     required String walletId,
     required String userId,
     required Function(InvestmentEntity) onSave,
+    required String walletCurrency,
     InvestmentEntity? investmentToEdit,
   }) {
     return showModalBottomSheet(
@@ -44,6 +50,7 @@ class AddGoldSheet extends StatefulWidget {
         walletId: walletId,
         userId: userId,
         onSave: onSave,
+        walletCurrency: walletCurrency,
         investmentToEdit: investmentToEdit,
       ),
     );
@@ -163,6 +170,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     final result = await getIt<GetLiveQuoteUseCase>()(
       symbol: _selectedGoldType,
       type: InvestmentType.gold,
+      targetCurrency: widget.walletCurrency,
     );
     // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
     // release'te çöker.
@@ -177,15 +185,23 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       (quote) {
         final qty = _parsedQuantity ?? 0.0;
         if (qty > 0) {
-          final total = quote.priceTl * qty;
+          final total = quote.convertedPrice * qty;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
             _amountController.text = _fmt(total);
           }
         }
         setState(() {
-          _fetchedPriceMessage =
-              context.l10n.guncelFiyatFormatTry(formatMoney(quote.priceTl));
+          // Altın TL fiyatlı; TL dışı cüzdanda çevrilmiş fiyatın yanında
+          // kaynak fiyat da gösterilir.
+          _fetchedPriceMessage = quote.isSameCurrency
+              ? context.l10n.guncelFiyatFormat(
+                  formatMoney(quote.price, currency: quote.currency))
+              : context.l10n.guncelFiyatFormatCevrimli(
+                  formatMoney(quote.price, currency: quote.currency),
+                  formatMoney(quote.convertedPrice,
+                      currency: quote.targetCurrency),
+                );
           _fetchedPriceColor = Colors.green;
           _isLoading = false;
         });
@@ -293,6 +309,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                           valueColor: Colors.orange,
                           controller: _currentValueController,
                           onChanged: _clearError,
+                          currency: widget.walletCurrency,
                         ),
                       ),
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),

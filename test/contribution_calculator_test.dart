@@ -55,7 +55,7 @@ void main() {
         _inv(),
         qtyAdded: 2,
         paid: 9000,
-        livePriceTl: 4500,
+        livePrice: 4500,
         liveCurrency: 'TRY',
       );
       expect(updated.quantity, 12);
@@ -77,7 +77,7 @@ void main() {
         _inv(),
         qtyAdded: 2,
         paid: 0,
-        livePriceTl: 4500,
+        livePrice: 4500,
       );
       expect(updated.amount, 40000);
       expect(updated.currentValue, 54000);
@@ -89,7 +89,7 @@ void main() {
         _inv(quantity: null),
         qtyAdded: 3,
         paid: 13500,
-        livePriceTl: 4500,
+        livePrice: 4500,
       );
       expect(updated.quantity, 3);
       expect(updated.currentValue, 13500);

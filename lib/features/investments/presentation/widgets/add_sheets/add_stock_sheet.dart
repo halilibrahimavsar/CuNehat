@@ -23,11 +23,16 @@ class AddStockSheet extends StatefulWidget {
   final InvestmentEntity? investmentToEdit;
   final Function(InvestmentEntity) onSave;
 
+  /// Cüzdanın para birimi: maliyet ve güncel değer bu birimdedir; borsadan
+  /// gelen fiyat başka bir birimdeyse çapraz kurla buna çevrilir.
+  final String walletCurrency;
+
   const AddStockSheet({
     super.key,
     required this.walletId,
     required this.userId,
     required this.onSave,
+    required this.walletCurrency,
     this.investmentToEdit,
   });
 
@@ -36,6 +41,7 @@ class AddStockSheet extends StatefulWidget {
     required String walletId,
     required String userId,
     required Function(InvestmentEntity) onSave,
+    required String walletCurrency,
     InvestmentEntity? investmentToEdit,
   }) {
     return showModalBottomSheet(
@@ -46,6 +52,7 @@ class AddStockSheet extends StatefulWidget {
         walletId: walletId,
         userId: userId,
         onSave: onSave,
+        walletCurrency: walletCurrency,
         investmentToEdit: investmentToEdit,
       ),
     );
@@ -64,8 +71,8 @@ class _AddStockSheetState extends State<AddStockSheet> {
   String? _fetchedPriceMessage;
   Color _fetchedPriceColor = Colors.blue;
 
-  /// Son başarılı fiyat sorgusunun para birimi; kayıtta saklanır ki
-  /// sonraki yenilemelerde TL çevrimi bilinçli yapılabilsin.
+  /// Son başarılı fiyat sorgusunun KAYNAK para birimi (borsanın birimi);
+  /// kayıtta bilgi olarak saklanır. Değerleme birimi bu değil, cüzdanınkidir.
   String? _fetchedCurrency;
   String? _selectedGoalCategory;
 
@@ -188,6 +195,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
     final result = await getIt<GetLiveQuoteUseCase>()(
       symbol: symbol,
       type: InvestmentType.stock,
+      targetCurrency: widget.walletCurrency,
     );
     // Sheet, yanıt gelmeden kapatılmış olabilir; unmounted setState
     // release'te çöker.
@@ -202,7 +210,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
       (quote) {
         final qty = _parsedQuantity ?? 0.0;
         if (qty > 0) {
-          final total = quote.priceTl * qty;
+          final total = quote.convertedPrice * qty;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
             _amountController.text = _fmt(total);
@@ -210,11 +218,13 @@ class _AddStockSheetState extends State<AddStockSheet> {
         }
         setState(() {
           _fetchedCurrency = quote.currency;
-          _fetchedPriceMessage = quote.currency == 'TRY'
-              ? context.l10n.guncelFiyatFormatTry(formatMoney(quote.priceTl))
-              : context.l10n.guncelFiyatFormatForeign(
+          _fetchedPriceMessage = quote.isSameCurrency
+              ? context.l10n.guncelFiyatFormat(
+                  formatMoney(quote.price, currency: quote.currency))
+              : context.l10n.guncelFiyatFormatCevrimli(
                   formatMoney(quote.price, currency: quote.currency),
-                  formatMoney(quote.priceTl),
+                  formatMoney(quote.convertedPrice,
+                      currency: quote.targetCurrency),
                 );
           _fetchedPriceColor = Colors.green;
           _isLoading = false;
@@ -327,6 +337,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                           valueColor: Colors.indigo,
                           controller: _currentValueController,
                           onChanged: _clearError,
+                          currency: widget.walletCurrency,
                         ),
                       ),
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),

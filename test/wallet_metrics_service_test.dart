@@ -214,9 +214,12 @@ class FakeInvestmentRepository implements InvestmentRepository {
   Future<Either<Failure, LivePriceQuote>> getLiveQuote({
     required String symbol,
     required InvestmentType type,
+    required String targetCurrency,
   }) async =>
       const Right<Failure, LivePriceQuote>(
-          LivePriceQuote(price: 0, currency: 'TRY', priceTl: 0));
+          LivePriceQuote(price: 0, currency: 'TRY',
+ convertedPrice: 0,
+ targetCurrency: 'TRY'));
 }
 
 /// Yazmayı her zaman başarısız kılan varyant (hata yolu testi).
@@ -1145,8 +1148,8 @@ void main() {
     });
 
     test(
-        'syncInvestment farklı currency etiketli yatırımları currentValue (TL) '
-        'üzerinden toplar', () async {
+        'syncInvestment farklı currency etiketli yatırımları currentValue '
+        '(cüzdanın birimi) üzerinden toplar', () async {
       final investments = FakeInvestmentRepository();
       final svc = WalletMetricsService(
         walletRepository: wallets,
@@ -1158,14 +1161,15 @@ void main() {
       );
 
       wallets.store['w'] = _wallet(id: 'w');
-      // currency yalnız fiyat-kaynağı etiketi; currentValue daima TL.
+      // currency yalnız fiyat-KAYNAĞININ etiketi (AAPL → USD); değerleme
+      // birimi cüzdandan gelir ve currentValue hep o birimdedir.
       investments.store.add(InvestmentEntity(
         id: 'usd',
         userId: 'u',
         walletId: 'w',
         name: 'Apple',
         amount: 1000,
-        currentValue: 2500, // TL karşılığı
+        currentValue: 2500, // cüzdanın biriminde karşılığı
         type: InvestmentType.stock,
         color: const Color(0xFF000000),
         dateAdded: DateTime(2026, 1, 1),
@@ -1186,7 +1190,7 @@ void main() {
 
       await svc.syncInvestment('w');
 
-      // Toplam currency'den bağımsız: 2500 + 5200 = 7700 (TL).
+      // Toplam, fiyat-kaynağı etiketinden bağımsız: 2500 + 5200 = 7700.
       expect(wallets.store['w']!.investment, 7700);
     });
   });

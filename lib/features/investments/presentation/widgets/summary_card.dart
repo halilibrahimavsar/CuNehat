@@ -12,12 +12,17 @@ class SummaryCard extends StatelessWidget {
     required this.totalCurrentValue,
     required this.totalProfit,
     required this.totalProfitPercentage,
+    required this.currency,
   });
 
   final double totalInvestment;
   final double totalCurrentValue;
   final double totalProfit;
   final double totalProfitPercentage;
+
+  /// Cüzdanın para birimi; portföydeki tüm kayıtlar aynı cüzdana ait
+  /// olduğundan toplamlar tek birimdedir.
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +69,7 @@ class SummaryCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              formatMoney(totalCurrentValue),
+              formatMoney(totalCurrentValue, currency: currency),
               style: theme.textTheme.displayMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 fontSize: 48,
@@ -101,7 +106,7 @@ class SummaryCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    formatMoney(totalInvestment),
+                    formatMoney(totalInvestment, currency: currency),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: scheme.onSurface,
@@ -153,7 +158,7 @@ class SummaryCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        formatMoney(totalProfit),
+                        formatMoney(totalProfit, currency: currency),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: profitColor,

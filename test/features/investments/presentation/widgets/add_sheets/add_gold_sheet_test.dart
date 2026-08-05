@@ -100,13 +100,15 @@ void main() {
 
     when(() => mockGetLiveQuoteUseCase(
         symbol: 'gram-altin',
-        type: InvestmentType.gold)).thenAnswer((_) => completer.future);
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
         AddGoldSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (inv) => savedInvestment = inv,
         ),
       ),
@@ -130,7 +132,9 @@ void main() {
 
     // Complete quote call
     completer.complete(const Right(
-      LivePriceQuote(price: 1500.0, currency: 'TRY', priceTl: 1500.0),
+      LivePriceQuote(price: 1500.0, currency: 'TRY',
+ convertedPrice: 1500.0,
+ targetCurrency: 'TRY'),
     ));
     await tester.pumpAndSettle();
 
@@ -181,7 +185,8 @@ void main() {
     });
 
     when(() => mockGetLiveQuoteUseCase(
-        symbol: 'gram-altin', type: InvestmentType.gold)).thenAnswer(
+        symbol: 'gram-altin', type: InvestmentType.gold,
+            targetCurrency: 'TRY')).thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
 
@@ -190,6 +195,7 @@ void main() {
         AddGoldSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (_) {},
         ),
       ),
@@ -241,6 +247,7 @@ void main() {
         AddGoldSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
           onSave: (inv) => updatedInvestment = inv,
         ),

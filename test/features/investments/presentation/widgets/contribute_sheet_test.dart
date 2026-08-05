@@ -90,6 +90,7 @@ void main() {
       buildTestableWidget(
         ContributeSheet(
           investment: cashInvestment,
+          walletCurrency: 'TRY',
           onSave: (inv) => savedInvestment = inv,
         ),
       ),
@@ -133,13 +134,15 @@ void main() {
 
     final completer = Completer<Either<Failure, LivePriceQuote>>();
     when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
+            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold,
+    targetCurrency: 'TRY'))
         .thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
         ContributeSheet(
           investment: assetInvestment,
+          walletCurrency: 'TRY',
           onSave: (inv) => savedInvestment = inv,
         ),
       ),
@@ -172,7 +175,9 @@ void main() {
 
     // Complete the live price fetch
     completer.complete(const Right(
-      LivePriceQuote(price: 1800.0, currency: 'TRY', priceTl: 1800.0),
+      LivePriceQuote(price: 1800.0, currency: 'TRY',
+ convertedPrice: 1800.0,
+ targetCurrency: 'TRY'),
     ));
     await tester.pumpAndSettle(); // Settle live price response
 
@@ -195,7 +200,8 @@ void main() {
   testWidgets('handles live price quote failure gracefully',
       (WidgetTester tester) async {
     when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold))
+            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold,
+    targetCurrency: 'TRY'))
         .thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
@@ -204,6 +210,7 @@ void main() {
       buildTestableWidget(
         ContributeSheet(
           investment: assetInvestment,
+          walletCurrency: 'TRY',
           onSave: (_) {},
         ),
       ),

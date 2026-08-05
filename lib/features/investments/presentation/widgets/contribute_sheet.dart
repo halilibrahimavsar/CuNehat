@@ -15,22 +15,31 @@ import 'package:flutter/material.dart';
 ///   eklenir; maliyet farkı kuplajı tutarı cüzdandan gider olarak düşer.
 /// - Mod B (sembollü, varlık alımı): miktar + ödenen tutar girilir.
 ///   quantity += miktar, amount += ödenen; canlı fiyat biliniyorsa
-///   currentValue = yeniMiktar × fiyatTL, yoksa currentValue += ödenen.
+///   currentValue = yeniMiktar × fiyat, yoksa currentValue += ödenen.
 ///   Defterde yalnız ödenen tutar gider olur (paid=0 → hareket yok).
+///
+/// Tüm tutarlar cüzdanın birimindedir; canlı fiyat başka bir birimden
+/// geliyorsa çapraz kurla çevrilmiş hâli kullanılır.
 class ContributeSheet extends StatefulWidget {
   final InvestmentEntity investment;
   final Function(InvestmentEntity) onSave;
+
+  /// Cüzdanın para birimi; katkı ve değerleme bu birimdedir, canlı fiyat da
+  /// buna çevrilir.
+  final String walletCurrency;
 
   const ContributeSheet({
     super.key,
     required this.investment,
     required this.onSave,
+    required this.walletCurrency,
   });
 
   static Future<void> show(
     BuildContext context, {
     required InvestmentEntity investment,
     required Function(InvestmentEntity) onSave,
+    required String walletCurrency,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -39,6 +48,7 @@ class ContributeSheet extends StatefulWidget {
       builder: (context) => ContributeSheet(
         investment: investment,
         onSave: onSave,
+        walletCurrency: walletCurrency,
       ),
     );
   }
@@ -55,9 +65,11 @@ class _ContributeSheetState extends State<ContributeSheet> {
   String? _priceMessage;
   Color _priceColor = Colors.green;
 
-  /// Son başarılı sorgunun TL birim fiyatı; Mod B'de currentValue'yu
-  /// yeniden hesaplamak için kullanılır.
-  double? _livePriceTl;
+  /// Son başarılı sorgunun CÜZDAN birimindeki birim fiyatı; Mod B'de
+  /// currentValue'yu yeniden hesaplamak için kullanılır.
+  double? _livePrice;
+
+  /// Fiyat kaynağının birimi (kayıtta bilgi olarak saklanır).
   String? _liveCurrency;
 
   bool get _isAssetMode => widget.investment.symbol != null;
@@ -74,6 +86,9 @@ class _ContributeSheetState extends State<ContributeSheet> {
 
   String _fmt(double v) => formatAmountForInput(v);
 
+  /// Sheet'teki her tutar cüzdanın biriminde yazılır.
+  String _money(double v) => formatMoney(v, currency: widget.walletCurrency);
+
   Future<void> _fetchLivePrice() async {
     setState(() {
       _isLoading = true;
@@ -84,6 +99,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
     final result = await getIt<GetLiveQuoteUseCase>()(
       symbol: widget.investment.symbol!,
       type: widget.investment.type,
+      targetCurrency: widget.walletCurrency,
     );
     if (!mounted) return;
 
@@ -94,19 +110,21 @@ class _ContributeSheetState extends State<ContributeSheet> {
         _isLoading = false;
       }),
       (quote) {
-        _livePriceTl = quote.priceTl;
+        _livePrice = quote.convertedPrice;
         _liveCurrency = quote.currency;
         // Ödenen tutarı öner: girilen miktar × güncel fiyat.
         final qty = _parsedQuantity;
         if (qty != null && qty > 0 && _amountController.text.isEmpty) {
-          _amountController.text = _fmt(qty * quote.priceTl);
+          _amountController.text = _fmt(qty * quote.convertedPrice);
         }
         setState(() {
-          _priceMessage = quote.currency == 'TRY'
-              ? context.l10n.guncelFiyatFormatTry(formatMoney(quote.priceTl))
-              : context.l10n.guncelFiyatFormatForeign(
+          _priceMessage = quote.isSameCurrency
+              ? context.l10n.guncelFiyatFormat(
+                  formatMoney(quote.price, currency: quote.currency))
+              : context.l10n.guncelFiyatFormatCevrimli(
                   formatMoney(quote.price, currency: quote.currency),
-                  formatMoney(quote.priceTl),
+                  formatMoney(quote.convertedPrice,
+                      currency: quote.targetCurrency),
                 );
           _priceColor = Colors.green;
           _isLoading = false;
@@ -148,7 +166,7 @@ class _ContributeSheetState extends State<ContributeSheet> {
         inv,
         qtyAdded: _parsedQuantity!,
         paid: _parsedAmount ?? 0.0,
-        livePriceTl: _livePriceTl,
+        livePrice: _livePrice,
         liveCurrency: _liveCurrency,
       );
     } else {
@@ -207,8 +225,12 @@ class _ContributeSheetState extends State<ContributeSheet> {
                   const SizedBox(height: 6),
                   if (inv.isGoal)
                     Text(
-                      '${context.l10n.birikmisFormatmoneyInvCurrentvalue(formatMoney(inv.currentValue))}'
-                      '${context.l10n.hedefCurrencyformatFormatInvestment(formatMoney(inv.targetAmount!))}',
+                      context.l10n.birikmisFormatmoneyInvCurrentvalue(
+                            _money(inv.currentValue),
+                          ) +
+                          context.l10n.hedefCurrencyformatFormatInvestment(
+                            _money(inv.targetAmount!),
+                          ),
                       style: TextStyle(
                         fontSize: 13,
                         color: cs.onSurfaceVariant,

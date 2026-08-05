@@ -1,5 +1,4 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
@@ -15,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/dynamic_slider.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Slider button view with vertical stack navigation
 ///
@@ -173,30 +171,9 @@ class SliderButtonView extends StatelessWidget {
     );
   }
 
-  /// v1 kısıtı: yatırım akışı TL'ye bağlı (değerleme ve canlı fiyat TL'ye
-  /// çıpalı); döviz cüzdanında mesajla engellenir. Gelir/gider ve borç/alacak
-  /// serbesttir — tutar cüzdanın kendi birimindedir.
-  bool _blockIfNonTry(
-      BuildContext context, dynamic activeWallet, String message) {
-    if (activeWallet.currency == kDefaultCurrency) return false;
-    AppMessenger.warning(message);
-    return true;
-  }
-
   void _handleAction(
       String actionType, BuildContext context, dynamic activeWallet) {
     debugPrint("DEBUG: _handleAction called with actionType=$actionType");
-    switch (actionType) {
-      case 'add_gold_investment':
-      case 'add_stock_investment':
-      case 'add_custom_investment':
-        if (_blockIfNonTry(
-            context, activeWallet, context.l10n.sadeceTlCuzdanYatirim)) {
-          return;
-        }
-        break;
-    }
-
     switch (actionType) {
       case 'add_gold_investment':
         _showAddGoldSheet(context, activeWallet);
@@ -229,6 +206,7 @@ class SliderButtonView extends StatelessWidget {
       context,
       userId: activeWallet.userId,
       walletId: activeWallet.id!,
+      walletCurrency: activeWallet.currency,
       onSave: (investment) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
@@ -244,6 +222,7 @@ class SliderButtonView extends StatelessWidget {
       context,
       userId: activeWallet.userId,
       walletId: activeWallet.id!,
+      walletCurrency: activeWallet.currency,
       onSave: (investment) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
@@ -259,6 +238,7 @@ class SliderButtonView extends StatelessWidget {
       context,
       userId: activeWallet.userId,
       walletId: activeWallet.id!,
+      walletCurrency: activeWallet.currency,
       onSave: (investment) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,

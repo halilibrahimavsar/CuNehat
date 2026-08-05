@@ -76,6 +76,7 @@ void main() {
         AddCustomSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (inv) => savedInvestment = inv,
         ),
       ),
@@ -130,6 +131,7 @@ void main() {
         AddCustomSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           onSave: (_) {},
         ),
       ),
@@ -187,6 +189,7 @@ void main() {
         AddCustomSheet(
           walletId: 'wallet_123',
           userId: 'user_123',
+          walletCurrency: 'TRY',
           investmentToEdit: testInvestment,
           onSave: (inv) => updatedInvestment = inv,
         ),

@@ -229,16 +229,20 @@ void main() {
     test('should return LivePriceQuote when symbol is valid', () async {
       // Arrange
       const quote =
-          LivePriceQuote(price: 180.0, currency: 'USD', priceTl: 5400.0);
+          LivePriceQuote(price: 180.0, currency: 'USD',
+ convertedPrice: 5400.0,
+ targetCurrency: 'TRY');
       when(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
+            targetCurrency: 'TRY',
           )).thenAnswer((_) async => const Right(quote));
 
       // Act
       final result = await getLiveQuoteUseCase(
         symbol: 'AAPL',
         type: InvestmentType.stock,
+        targetCurrency: 'TRY',
       );
 
       // Assert
@@ -246,22 +250,27 @@ void main() {
       verify(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
+            targetCurrency: 'TRY',
           )).called(1);
     });
 
     test('should trim symbol and query repository', () async {
       // Arrange
       const quote =
-          LivePriceQuote(price: 180.0, currency: 'USD', priceTl: 5400.0);
+          LivePriceQuote(price: 180.0, currency: 'USD',
+ convertedPrice: 5400.0,
+ targetCurrency: 'TRY');
       when(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
+            targetCurrency: 'TRY',
           )).thenAnswer((_) async => const Right(quote));
 
       // Act
       final result = await getLiveQuoteUseCase(
         symbol: ' AAPL ',
         type: InvestmentType.stock,
+        targetCurrency: 'TRY',
       );
 
       // Assert
@@ -269,6 +278,7 @@ void main() {
       verify(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
+            targetCurrency: 'TRY',
           )).called(1);
     });
 
@@ -278,6 +288,7 @@ void main() {
       final result = await getLiveQuoteUseCase(
         symbol: '   ',
         type: InvestmentType.stock,
+        targetCurrency: 'TRY',
       );
 
       // Assert
@@ -286,6 +297,7 @@ void main() {
       verifyNever(() => mockRepository.getLiveQuote(
             symbol: any(named: 'symbol'),
             type: any(named: 'type'),
+            targetCurrency: any(named: 'targetCurrency'),
           ));
     });
 
@@ -295,12 +307,14 @@ void main() {
       when(() => mockRepository.getLiveQuote(
             symbol: 'AAPL',
             type: InvestmentType.stock,
+            targetCurrency: 'TRY',
           )).thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await getLiveQuoteUseCase(
         symbol: 'AAPL',
         type: InvestmentType.stock,
+        targetCurrency: 'TRY',
       );
 
       // Assert

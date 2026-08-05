@@ -8,9 +8,14 @@ import 'package:flutter/material.dart';
 class InvestmentCard extends StatelessWidget {
   final InvestmentEntity investment;
 
+  /// Kaydın cüzdanının para birimi: maliyet, güncel değer ve kâr/zarar bu
+  /// birimdedir (kayıtta ayrı bir değerleme birimi alanı yok).
+  final String currency;
+
   const InvestmentCard({
     super.key,
     required this.investment,
+    required this.currency,
   });
 
   IconData _getInvestmentIcon(InvestmentType type) {
@@ -159,7 +164,8 @@ class InvestmentCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          formatMoney(investment.currentValue),
+                          formatMoney(investment.currentValue,
+                              currency: currency),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -179,7 +185,7 @@ class InvestmentCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          formatMoney(investment.profit),
+                          formatMoney(investment.profit, currency: currency),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -208,7 +214,8 @@ class InvestmentCard extends StatelessWidget {
                     children: [
                       Text(
                         context.l10n.hedefCurrencyformatFormatInvestment(
-                            formatMoney(investment.targetAmount!)),
+                            formatMoney(investment.targetAmount!,
+                                currency: currency)),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

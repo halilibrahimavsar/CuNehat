@@ -614,17 +614,17 @@
   "ataAltin": "Ata Gold",
   "fiyatAliniyor": "Fetching price...",
   "fiyatAlinamadi": "Failed to fetch price.",
-  "guncelFiyatFormatTry": "Current Price: {price}",
-  "@guncelFiyatFormatTry": {
+  "guncelFiyatFormat": "Current Price: {price}",
+  "@guncelFiyatFormat": {
     "placeholders": {
       "price": {}
     }
   },
-  "guncelFiyatFormatForeign": "Current Price: {price} (≈{priceTl})",
-  "@guncelFiyatFormatForeign": {
+  "guncelFiyatFormatCevrimli": "Current Price: {price} (≈{converted})",
+  "@guncelFiyatFormatCevrimli": {
     "placeholders": {
       "price": {},
-      "priceTl": {}
+      "converted": {}
     }
   },
   "gecerliYatirimMiktariGirin": "Enter a valid investment amount",
@@ -828,7 +828,6 @@
   "toplamMaliyetAciklama": "The total you paid for this investment (your cost). 'Calculate' doesn't change it; profit/loss is computed from it.",
   "paraBirimiLabel": "Currency",
   "paraBirimiKilitliHint": "The currency of a wallet with transaction history can't be changed",
-  "sadeceTlCuzdanYatirim": "Investment tracking is only available in TRY wallets for now",
   "yaklasikKarsilikFormat": "≈ {tutar}",
   "@yaklasikKarsilikFormat": {
     "placeholders": {

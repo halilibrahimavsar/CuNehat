@@ -59,13 +59,19 @@ final class RefreshPricesEvent extends InvestmentEvent {
   final String walletId;
   final String? investmentId;
 
+  /// Değerlemenin yapılacağı birim — cüzdanın kendi birimi. Fiyat kaynağı
+  /// başka bir birimdeyse çapraz kurla buraya çevrilir.
+  final String walletCurrency;
+
   const RefreshPricesEvent({
     required this.userId,
     required this.walletId,
+    required this.walletCurrency,
     this.investmentId,
   });
   @override
-  List<Object> get props => [userId, walletId, investmentId ?? ''];
+  List<Object> get props =>
+      [userId, walletId, walletCurrency, investmentId ?? ''];
 }
 
 final class DeleteInvestmentEvent extends InvestmentEvent {

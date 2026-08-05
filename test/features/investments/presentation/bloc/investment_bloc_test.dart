@@ -392,7 +392,7 @@ void main() {
     const testQuote = LivePriceQuote(
       price: 1500.0,
       currency: 'USD',
-      priceTl: 1600.0,
+      convertedPrice: 1600.0, targetCurrency: 'TRY',
     );
 
     blocTest<InvestmentBloc, InvestmentState>(
@@ -405,6 +405,7 @@ void main() {
         when(() => mockGetLiveQuoteUseCase(
               symbol: 'XAU',
               type: InvestmentType.gold,
+              targetCurrency: 'TRY',
             )).thenAnswer((_) async => const Right(testQuote));
         when(() => mockUpdateUseCase(any()))
             .thenAnswer((_) async => const Right(null));
@@ -415,6 +416,7 @@ void main() {
       act: (bloc) => bloc.add(const RefreshPricesEvent(
         userId: 'user_123',
         walletId: 'wallet_123',
+        walletCurrency: 'TRY',
       )),
       expect: () => [
         InvestmentLoading(),
@@ -426,9 +428,55 @@ void main() {
         final captured = verify(() => mockUpdateUseCase(captureAny()))
             .captured
             .first as InvestmentEntity;
-        // quantity (1.5) * priceTl (1600.0) = 2400.0
+        // quantity (1.5) * convertedPrice (1600.0) = 2400.0
         expect(captured.currentValue, 2400.0);
         expect(captured.currency, 'USD');
+      },
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'cüzdanın birimini değerleme hedefi olarak fiyat servisine iletir',
+      build: () {
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => Right([refreshableInvestment]));
+        // USD cüzdan: fiyat USD'ye çevrilmiş gelir (150 $/birim).
+        when(() => mockGetLiveQuoteUseCase(
+              symbol: 'XAU',
+              type: InvestmentType.gold,
+              targetCurrency: 'USD',
+            )).thenAnswer((_) async => const Right(LivePriceQuote(
+              price: 1500.0,
+              currency: 'TRY',
+              convertedPrice: 150.0,
+              targetCurrency: 'USD',
+            )));
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(const RefreshPricesEvent(
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        walletCurrency: 'USD',
+      )),
+      verify: (_) {
+        // Hedef birim gerçekten geçti (TRY'ye düşülmedi).
+        verify(() => mockGetLiveQuoteUseCase(
+              symbol: 'XAU',
+              type: InvestmentType.gold,
+              targetCurrency: 'USD',
+            )).called(1);
+        final captured = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .first as InvestmentEntity;
+        // Değerleme çevrilmiş fiyattan: 1.5 × 150 $ = 225 $ (ham 1500 ₺ değil).
+        expect(captured.currentValue, 225.0);
+        // Kayıtta saklanan birim fiyat KAYNAĞININ birimi.
+        expect(captured.currency, 'TRY');
       },
     );
 
@@ -457,6 +505,7 @@ void main() {
       act: (bloc) => bloc.add(const RefreshPricesEvent(
         userId: 'user_123',
         walletId: 'wallet_123',
+        walletCurrency: 'TRY',
       )),
       expect: () => [
         InvestmentLoading(),
@@ -475,6 +524,7 @@ void main() {
         when(() => mockGetLiveQuoteUseCase(
                   symbol: 'XAU',
                   type: InvestmentType.gold,
+                  targetCurrency: 'TRY',
                 ))
             .thenAnswer((_) async => const Left(ServerFailure('Quote failed')));
         when(() => mockMetricsService.syncInvestment('wallet_123'))
@@ -484,6 +534,7 @@ void main() {
       act: (bloc) => bloc.add(const RefreshPricesEvent(
         userId: 'user_123',
         walletId: 'wallet_123',
+        walletCurrency: 'TRY',
       )),
       expect: () => [
         InvestmentLoading(),
@@ -503,6 +554,7 @@ void main() {
         when(() => mockGetLiveQuoteUseCase(
               symbol: 'XAU',
               type: InvestmentType.gold,
+              targetCurrency: 'TRY',
             )).thenAnswer((_) async => const Right(testQuote));
         when(() => mockUpdateUseCase(any()))
             .thenAnswer((_) async => const Right(null));
@@ -513,6 +565,7 @@ void main() {
       act: (bloc) => bloc.add(const RefreshPricesEvent(
         userId: 'user_123',
         walletId: 'wallet_123',
+        walletCurrency: 'TRY',
         investmentId: 'inv_refresh',
       )),
       expect: () => [
@@ -523,7 +576,8 @@ void main() {
       ],
       verify: (_) {
         verify(() => mockGetLiveQuoteUseCase(
-            symbol: 'XAU', type: InvestmentType.gold)).called(1);
+            symbol: 'XAU', type: InvestmentType.gold,
+                targetCurrency: 'TRY')).called(1);
       },
     );
 
@@ -540,6 +594,7 @@ void main() {
         when(() => mockGetLiveQuoteUseCase(
               symbol: 'XAU',
               type: InvestmentType.gold,
+              targetCurrency: 'TRY',
             )).thenAnswer((_) async => const Right(testQuote));
         when(() => mockUpdateUseCase(any())).thenAnswer((_) async {
           if (firstUpdate) {
@@ -555,6 +610,7 @@ void main() {
       act: (bloc) => bloc.add(const RefreshPricesEvent(
         userId: 'user_123',
         walletId: 'wallet_123',
+        walletCurrency: 'TRY',
       )),
       expect: () => [
         InvestmentLoading(),

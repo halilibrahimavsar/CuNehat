@@ -2454,17 +2454,17 @@ abstract class AppLocalizations {
   /// **'Fiyat alınamadı.'**
   String get fiyatAlinamadi;
 
-  /// No description provided for @guncelFiyatFormatTry.
+  /// No description provided for @guncelFiyatFormat.
   ///
   /// In tr, this message translates to:
   /// **'Güncel Fiyat: {price}'**
-  String guncelFiyatFormatTry(Object price);
+  String guncelFiyatFormat(Object price);
 
-  /// No description provided for @guncelFiyatFormatForeign.
+  /// No description provided for @guncelFiyatFormatCevrimli.
   ///
   /// In tr, this message translates to:
-  /// **'Güncel Fiyat: {price} (≈{priceTl})'**
-  String guncelFiyatFormatForeign(Object price, Object priceTl);
+  /// **'Güncel Fiyat: {price} (≈{converted})'**
+  String guncelFiyatFormatCevrimli(Object price, Object converted);
 
   /// No description provided for @gecerliYatirimMiktariGirin.
   ///
@@ -3509,12 +3509,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İşlem geçmişi olan cüzdanın para birimi değiştirilemez'**
   String get paraBirimiKilitliHint;
-
-  /// No description provided for @sadeceTlCuzdanYatirim.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yatırım takibi şimdilik yalnız TL cüzdanlarda kullanılabilir'**
-  String get sadeceTlCuzdanYatirim;
 
   /// No description provided for @yaklasikKarsilikFormat.
   ///

@@ -1,7 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/utils/currencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -88,12 +88,18 @@ class InvestmentAmountCard extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onChanged;
 
+  /// Kaydın cüzdanının para birimi. Aktif cüzdandan okumak yerine açıkça
+  /// geçilir: `context.activeWalletCurrency` WalletBloc yoksa sessizce
+  /// TRY'ye düşer ve alan yanlış sembolle etiketlenirdi.
+  final String currency;
+
   const InvestmentAmountCard({
     super.key,
     required this.accent,
     required this.valueColor,
     required this.controller,
     required this.onChanged,
+    required this.currency,
   });
 
   @override
@@ -160,7 +166,7 @@ class InvestmentAmountCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),
                 child: Text(
-                  context.activeWalletCurrencySymbol,
+                  currencySymbol(currency),
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,

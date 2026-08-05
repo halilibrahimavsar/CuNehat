@@ -132,7 +132,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       );
     });
 
-    // Fiyat Yenile: güncel değer = miktar × canlı TL fiyatı. Maliyet
+    // Fiyat Yenile: güncel değer = miktar × canlı fiyat (CÜZDANIN biriminde;
+    // fiyat kaynağı başka birimdeyse çapraz kurla çevrilir). Maliyet
     // değişmediği için (costDiff yok) defterde nakit hareketi oluşmaz;
     // yalnızca portföy/birikim metriği senkronlanır.
     on<RefreshPricesEvent>((event, emit) async {
@@ -165,12 +166,17 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
             final quoteResult = await getLiveQuoteUseCase(
               symbol: inv.symbol!,
               type: inv.type,
+              targetCurrency: event.walletCurrency,
             );
             final ok = await quoteResult.fold(
               (_) async => false,
               (quote) async {
                 final updated = inv.copyWith(
-                  currentValue: inv.quantity! * quote.priceTl,
+                  // convertedPrice cüzdanın biriminde; `amount` (maliyet) de
+                  // öyle olduğundan kâr/zarar aynı birimde hesaplanır.
+                  currentValue: inv.quantity! * quote.convertedPrice,
+                  // Kaydedilen birim fiyat KAYNAĞININ birimi (bilgi amaçlı),
+                  // değerleme birimi değil.
                   currency: quote.currency,
                 );
                 final saveResult = await updateInvestmentUseCase.call(updated);

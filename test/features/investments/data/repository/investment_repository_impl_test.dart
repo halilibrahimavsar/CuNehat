@@ -163,31 +163,38 @@ void main() {
   });
 
   group('getLiveQuote', () {
-    const quote = LivePriceQuote(price: 100.0, currency: 'TRY', priceTl: 100.0);
+    const quote = LivePriceQuote(price: 100.0, currency: 'TRY',
+ convertedPrice: 100.0,
+ targetCurrency: 'TRY');
 
     test('should return Right(LivePriceQuote) when call is successful',
         () async {
       when(() => mockRemoteDataSource.getLiveQuote(
             symbol: any(named: 'symbol'),
             type: any(named: 'type'),
+            targetCurrency: any(named: 'targetCurrency'),
           )).thenAnswer((_) async => quote);
 
       final result = await repository.getLiveQuote(
-          symbol: 'THYAO.IS', type: InvestmentType.stock);
+          symbol: 'THYAO.IS', type: InvestmentType.stock,
+              targetCurrency: 'TRY');
 
       expect(result, const Right<Failure, LivePriceQuote>(quote));
       verify(() => mockRemoteDataSource.getLiveQuote(
-          symbol: 'THYAO.IS', type: InvestmentType.stock)).called(1);
+          symbol: 'THYAO.IS', type: InvestmentType.stock,
+              targetCurrency: 'TRY')).called(1);
     });
 
     test('should return Left(ServerFailure) when call fails', () async {
       when(() => mockRemoteDataSource.getLiveQuote(
             symbol: any(named: 'symbol'),
             type: any(named: 'type'),
+            targetCurrency: any(named: 'targetCurrency'),
           )).thenThrow(Exception('Server Error'));
 
       final result = await repository.getLiveQuote(
-          symbol: 'THYAO.IS', type: InvestmentType.stock);
+          symbol: 'THYAO.IS', type: InvestmentType.stock,
+              targetCurrency: 'TRY');
 
       expect(result.isLeft(), true);
       final failure = (result as Left<Failure, LivePriceQuote>).value;

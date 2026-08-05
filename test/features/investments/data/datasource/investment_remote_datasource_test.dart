@@ -70,18 +70,20 @@ void main() {
       'USD': {'Satış': '32,50'},
     };
 
-    test('getLiveQuote gold returns priceTl correctly', () async {
+    test('getLiveQuote gold TL cüzdanda çevrim yapmadan fiyatı verir',
+        () async {
       when(() => mockClient
               .get(Uri.parse('https://finans.truncgil.com/today.json')))
           .thenAnswer((_) async => http.Response(json.encode(goldResponse), 200,
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'Gram Altın', type: InvestmentType.gold);
+          symbol: 'Gram Altın', type: InvestmentType.gold,
+              targetCurrency: 'TRY');
 
       expect(quote.price, 2550.75);
       expect(quote.currency, 'TRY');
-      expect(quote.priceTl, 2550.75);
+      expect(quote.convertedPrice, 2550.75);
     });
 
     test('getLiveQuote gold throws ServerException when goldType not found',
@@ -93,7 +95,8 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'Çeyrek Altın', type: InvestmentType.gold),
+            symbol: 'Çeyrek Altın', type: InvestmentType.gold,
+                targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -105,11 +108,12 @@ void main() {
               (_) async => http.Response(json.encode(yahooResponseTry), 200));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'THYAO.IS', type: InvestmentType.stock);
+          symbol: 'THYAO.IS', type: InvestmentType.stock,
+              targetCurrency: 'TRY');
 
       expect(quote.price, 100.0);
       expect(quote.currency, 'TRY');
-      expect(quote.priceTl, 100.0);
+      expect(quote.convertedPrice, 100.0);
     });
 
     test(
@@ -126,11 +130,12 @@ void main() {
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'AAPL', type: InvestmentType.stock);
+          symbol: 'AAPL', type: InvestmentType.stock,
+              targetCurrency: 'TRY');
 
       expect(quote.price, 150.0);
       expect(quote.currency, 'USD');
-      expect(quote.priceTl, 150.0 * 32.50); // 4875.0
+      expect(quote.convertedPrice, 150.0 * 32.50); // 4875.0
     });
 
     test('getLiveQuote stock throws ServerException on unsupported currency',
@@ -155,7 +160,8 @@ void main() {
 
       expect(
         () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
+            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
+    targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -178,7 +184,8 @@ void main() {
 
       expect(
         () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
+            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
+    targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -190,7 +197,8 @@ void main() {
 
       expect(
         () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
+            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
+    targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -204,7 +212,8 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'Gram Altın', type: InvestmentType.gold),
+            symbol: 'Gram Altın', type: InvestmentType.gold,
+                targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -223,7 +232,8 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'Gram Altın', type: InvestmentType.gold),
+            symbol: 'Gram Altın', type: InvestmentType.gold,
+                targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -237,7 +247,8 @@ void main() {
 
       expect(
         () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
+            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
+    targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -256,7 +267,8 @@ void main() {
       unawaited(() async {
         try {
           await dataSource.getLiveQuote(
-              symbol: 'AAPL', type: InvestmentType.stock);
+              symbol: 'AAPL', type: InvestmentType.stock,
+                  targetCurrency: 'TRY');
         } catch (e) {
           thrown = e;
         }
@@ -269,6 +281,113 @@ void main() {
       final message = (thrown! as ServerException).message;
       expect(message, contains('zamanında yanıt vermedi'));
       expect(message, isNot(contains('TimeoutException')));
+    });
+
+    // ------------------------------------------------- Çapraz kur değerlemesi
+    // Değerleme cüzdanın biriminde yapılır: fiyat kaynağı hangi birimdeyse
+    // TRY köprüsüyle hedefe çevrilir (eskiden hedef koşulsuz TRY idi).
+
+    test('altın TL fiyatı USD cüzdan için çevrilir', () async {
+      when(() => mockClient
+              .get(Uri.parse('https://finans.truncgil.com/today.json')))
+          .thenAnswer((_) async => http.Response(
+              json.encode({...goldResponse, ...truncgilFxResponse}), 200,
+              headers: {'content-type': 'application/json; charset=utf-8'}));
+
+      final quote = await dataSource.getLiveQuote(
+          symbol: 'Gram Altın',
+          type: InvestmentType.gold,
+          targetCurrency: 'USD');
+
+      // 2.550,75 ₺ / 32,50 = 78,48… $
+      expect(quote.price, 2550.75);
+      expect(quote.currency, 'TRY');
+      expect(quote.targetCurrency, 'USD');
+      expect(quote.convertedPrice, closeTo(2550.75 / 32.5, 1e-9));
+      expect(quote.isSameCurrency, isFalse);
+    });
+
+    test('USD hisse USD cüzdanda hiç çevrilmez (kur servisine gidilmez)',
+        () async {
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+          .thenAnswer(
+              (_) async => http.Response(json.encode(yahooResponseUsd), 200));
+
+      final quote = await dataSource.getLiveQuote(
+          symbol: 'AAPL', type: InvestmentType.stock,
+              targetCurrency: 'USD');
+
+      expect(quote.price, 150.0);
+      expect(quote.convertedPrice, 150.0);
+      expect(quote.isSameCurrency, isTrue);
+      // Kur köprüsüne hiç ihtiyaç yok → çevrimdışı da çalışır.
+      verifyNever(() => mockClient
+          .get(Uri.parse('https://finans.truncgil.com/today.json')));
+    });
+
+    test('USD hisse EUR cüzdanda TRY köprüsüyle çevrilir', () async {
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+          .thenAnswer(
+              (_) async => http.Response(json.encode(yahooResponseUsd), 200));
+      when(() => mockClient
+              .get(Uri.parse('https://finans.truncgil.com/today.json')))
+          .thenAnswer((_) async => http.Response(
+              json.encode({
+                'USD': {'Satış': '40,00'},
+                'EUR': {'Satış': '50,00'},
+              }),
+              200,
+              headers: {'content-type': 'application/json; charset=utf-8'}));
+
+      final quote = await dataSource.getLiveQuote(
+          symbol: 'AAPL', type: InvestmentType.stock,
+              targetCurrency: 'EUR');
+
+      // 150 $ × (40 ₺/$ ÷ 50 ₺/€) = 120 €
+      expect(quote.price, 150.0);
+      expect(quote.currency, 'USD');
+      expect(quote.targetCurrency, 'EUR');
+      expect(quote.convertedPrice, closeTo(120.0, 1e-9));
+    });
+
+    test('çapraz kurun bir bacağı eksikse hata verir (karışık birim yazılmaz)',
+        () async {
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+          .thenAnswer(
+              (_) async => http.Response(json.encode(yahooResponseUsd), 200));
+      // EUR kuru yok → USD→EUR köprüsü kurulamaz.
+      when(() => mockClient
+              .get(Uri.parse('https://finans.truncgil.com/today.json')))
+          .thenAnswer((_) async => http.Response(
+              json.encode({
+                'USD': {'Satış': '40,00'},
+              }),
+              200,
+              headers: {'content-type': 'application/json; charset=utf-8'}));
+
+      expect(
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock,
+                targetCurrency: 'EUR'),
+        throwsA(isA<ServerException>()),
+      );
+    });
+
+    test('desteklenmeyen hedef birim hata verir', () async {
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+          .thenAnswer(
+              (_) async => http.Response(json.encode(yahooResponseUsd), 200));
+
+      expect(
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock,
+                targetCurrency: 'GBP'),
+        throwsA(isA<ServerException>()),
+      );
     });
   });
 }

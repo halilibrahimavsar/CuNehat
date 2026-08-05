@@ -301,8 +301,8 @@ O gün geldi. Yayından sonra:
 | Değişiklik | Geriye uyumluluk etkisi |
 |---|---|
 | Yeni para birimi eklemek (GBP, CHF, JPY…) | **Yok.** `currency` bir `String` (`wallet_model.dart:18`), enum değil. `kSupportedCurrencies`, `kCurrencySymbols`, `kNoiseThresholds` ve `ExchangeRateService._supported` listelerine eklemek yeterli. Şema değişmez. |
-| Borç/alacağa `currency` alanı eklemek | **Var.** `DebtModel` (HiveField 19'a kadar) ve `ReceivableModel` (9'a kadar) bu alana sahip değil. Yeni alan → eski kayıtlarda null → 13.1'deki çökme. `defaultValue: 'TRY'` semantik olarak **doğru**, çünkü v1'de borç sayfası TL dışı cüzdanlarda `TryOnlyFeatureView` ile kapalı — üretilmiş her borç kaydı zaten TL. |
-| Yatırımlara para birimi | Zaten var (`InvestmentModel.currency`, nullable) — sorun yok. |
+| Borç/alacağa `currency` alanı eklemek | **Gerek yok, ekleme.** Birim kaydın cüzdanından türetilir (`DebtModel.walletId` / `ReceivableModel.walletId`, ikisi de HiveField 2) ve v1'de borç/alacak her para biriminde açık. Alan eklemek hem gereksiz hem riskli: eski kayıtlarda null → 13.1'deki çökme. |
+| Yatırımlara para birimi | Zaten var (`InvestmentModel.currency`, nullable) ama anlamı **fiyat kaynağının birimi** (AAPL → USD); değerleme birimi cüzdandan gelir. Bu ikisini karıştırma. |
 | Cüzdanın para birimini sonradan değiştirilebilir yapmak | **Yapma.** `wallet_form_dialog.dart:366` şu an kilitliyor ve doğrusu bu; açarsan tüm geçmiş tutarlar sessizce yeniden yorumlanır. |
 
 ### 13.3 `google_sign_in` 7.x'e geçiş

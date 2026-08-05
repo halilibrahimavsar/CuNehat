@@ -344,12 +344,28 @@ void main() {
     });
 
     test('RefreshPricesEvent props', () {
-      const e1 =
-          RefreshPricesEvent(userId: 'u1', walletId: 'w1', investmentId: 'i1');
-      const e2 =
-          RefreshPricesEvent(userId: 'u1', walletId: 'w1', investmentId: 'i1');
+      const e1 = RefreshPricesEvent(
+          userId: 'u1',
+          walletId: 'w1',
+          walletCurrency: 'TRY',
+          investmentId: 'i1');
+      const e2 = RefreshPricesEvent(
+          userId: 'u1',
+          walletId: 'w1',
+          walletCurrency: 'TRY',
+          investmentId: 'i1');
       expect(e1, e2);
-      expect(e1.props, ['u1', 'w1', 'i1']);
+      expect(e1.props, ['u1', 'w1', 'TRY', 'i1']);
+    });
+
+    test('RefreshPricesEvent farklı cüzdan biriminde eşit DEĞİLDİR', () {
+      // Değerleme birimi olayın kimliğine dahil: aynı cüzdanın fiyatları USD
+      // ve TRY hedefiyle iki ayrı sonuç üretir, bloc bunları ayırt etmeli.
+      const tryEvent = RefreshPricesEvent(
+          userId: 'u1', walletId: 'w1', walletCurrency: 'TRY');
+      const usdEvent = RefreshPricesEvent(
+          userId: 'u1', walletId: 'w1', walletCurrency: 'USD');
+      expect(tryEvent, isNot(usdEvent));
     });
 
     test('DeleteInvestmentEvent props', () {

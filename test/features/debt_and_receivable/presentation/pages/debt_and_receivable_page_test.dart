@@ -3,7 +3,6 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/shared/widgets/try_only_feature_view.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -112,8 +111,8 @@ void main() {
     await tester.pumpWidget(buildTestableWidget(currency: 'USD'));
     await tester.pumpAndSettle();
 
-    // Eski davranışta burada TryOnlyFeatureView vardı ve liste hiç kurulmazdı.
-    expect(find.byType(TryOnlyFeatureView), findsNothing);
+    // Eski davranışta burada bir "yalnız TL" bilgilendirmesi vardı ve liste
+    // hiç kurulmazdı.
     expect(find.text('Araba Kredisi'), findsOneWidget);
     expect(find.text('1.200,00 \$'), findsOneWidget);
     expect(find.textContaining('₺'), findsNothing);

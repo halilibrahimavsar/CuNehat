@@ -18,11 +18,16 @@ class AddCustomSheet extends StatefulWidget {
   final InvestmentEntity? investmentToEdit;
   final Function(InvestmentEntity) onSave;
 
+  /// Cüzdanın para birimi: maliyet ve güncel değer bu birimdedir. Özel
+  /// varlığın canlı fiyat kaynağı yoktur, değerler elle girilir.
+  final String walletCurrency;
+
   const AddCustomSheet({
     super.key,
     required this.walletId,
     required this.userId,
     required this.onSave,
+    required this.walletCurrency,
     this.investmentToEdit,
   });
 
@@ -31,6 +36,7 @@ class AddCustomSheet extends StatefulWidget {
     required String walletId,
     required String userId,
     required Function(InvestmentEntity) onSave,
+    required String walletCurrency,
     InvestmentEntity? investmentToEdit,
   }) {
     return showModalBottomSheet(
@@ -41,6 +47,7 @@ class AddCustomSheet extends StatefulWidget {
         walletId: walletId,
         userId: userId,
         onSave: onSave,
+        walletCurrency: walletCurrency,
         investmentToEdit: investmentToEdit,
       ),
     );
@@ -219,6 +226,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                           valueColor: Colors.deepPurple,
                           controller: _currentValueController,
                           onChanged: _clearError,
+                          currency: widget.walletCurrency,
                         ),
                       ),
                       const SizedBox(height: 20),

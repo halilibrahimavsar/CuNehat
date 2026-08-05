@@ -55,6 +55,39 @@ class ExchangeRateService {
     return _readPrefsRates()?[c];
   }
 
+  /// 1 birim [from] kaç birim [to] eder. Aynı kod → 1.0; kurlardan biri
+  /// alınamazsa null.
+  ///
+  /// Kaynak yalnız X→TRY kuru yayımladığından çapraz kur TRY üzerinden
+  /// köprülenir: `USD→EUR = (USD/TRY) / (EUR/TRY)`. DİKKAT — her iki bacak da
+  /// **satış** kuru olduğundan alış-satış makası iki kez girer; sonuç piyasanın
+  /// gerçek çapraz kurundan sapar. Portföy değerlemesi için kabul edilebilir
+  /// bir yaklaşıklıktır, döviz alım-satım hesabı için değildir.
+  Future<double?> rateBetween(String from, String to) async {
+    final f = from.toUpperCase();
+    final t = to.toUpperCase();
+    if (f == t) return 1.0;
+
+    final fromRate = await rateToTry(f);
+    if (fromRate == null || fromRate <= 0) return null;
+    final toRate = await rateToTry(t);
+    if (toRate == null || toRate <= 0) return null;
+    return fromRate / toRate;
+  }
+
+  /// [rateBetween]'in ağa çıkmayan hâli; bkz. [cachedRateToTry].
+  double? cachedRateBetween(String from, String to) {
+    final f = from.toUpperCase();
+    final t = to.toUpperCase();
+    if (f == t) return 1.0;
+
+    final fromRate = cachedRateToTry(f);
+    if (fromRate == null || fromRate <= 0) return null;
+    final toRate = cachedRateToTry(t);
+    if (toRate == null || toRate <= 0) return null;
+    return fromRate / toRate;
+  }
+
   /// Ağa çıkmadan, yalnız bellek/prefs önbelleğinden (senkron gösterimler
   /// için; ör. cüzdan kartındaki "≈ ₺" satırı). TRY → 1.0.
   double? cachedRateToTry(String code) {
