@@ -3558,6 +3558,12 @@ abstract class AppLocalizations {
   /// **'Hedefe ≈ {tutar} geçecek'**
   String transferOnizlemeFormat(String tutar);
 
+  /// No description provided for @transferKurAliniyor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kur alınıyor…'**
+  String get transferKurAliniyor;
+
   /// No description provided for @transferKurYok.
   ///
   /// In tr, this message translates to:
@@ -5370,6 +5376,54 @@ abstract class AppLocalizations {
   /// **'Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.'**
   String get privacyMarketDataBody;
 
+  /// No description provided for @backupOfferTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Verilerin yalnızca bu cihazda'**
+  String get backupOfferTitle;
+
+  /// No description provided for @backupOfferBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'CuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.'**
+  String get backupOfferBody;
+
+  /// No description provided for @backupOfferSetup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedeklemeyi Kur'**
+  String get backupOfferSetup;
+
+  /// No description provided for @backupOfferLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi Değil'**
+  String get backupOfferLater;
+
+  /// No description provided for @privacyReceiptsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş fotoğrafları ve metin tanıma'**
+  String get privacyReceiptsTitle;
+
+  /// No description provided for @privacyReceiptsBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşleme fiş fotoğrafı eklemek isteğe bağlıdır. Fotoğraf sistem seçicisiyle alınır; uygulama kalıcı kamera veya depolama izni istemez. Görseller yalnızca cihazınızın özel depolama alanında tutulur; hiçbir yere yüklenmez ve Drive yedeğine girmez. Fişten tutar/tarih okuma, uygulamanın içine gömülü çevrimdışı Google ML Kit modeliyle yapılır — görsel hiçbir sunucuya gönderilmez. İşlemi silmek ekli görseli de siler.'**
+  String get privacyReceiptsBody;
+
+  /// No description provided for @privacyStatementTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka ekstresi içe aktarma'**
+  String get privacyStatementTitle;
+
+  /// No description provided for @privacyStatementBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekstreyi (PDF, CSV, Excel) siz seçersiniz ya da paylaş menüsünden gönderirsiniz; uygulamanın bankanıza erişimi ve dosyalarınızı tarama izni yoktur. Dosya tamamen cihazınızda ayrıştırılır ve hiçbir yere yüklenmez. Yalnızca inceleme ekranında onayladığınız hareketler kaydedilir; ekstre dosyasının kendisi saklanmaz.'**
+  String get privacyStatementBody;
+
   /// No description provided for @privacySharingTitle.
   ///
   /// In tr, this message translates to:
@@ -5415,7 +5469,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyLastUpdated.
   ///
   /// In tr, this message translates to:
-  /// **'Son güncelleme: 30 Haziran 2026'**
+  /// **'Son güncelleme: 4 Ağustos 2026'**
   String get privacyLastUpdated;
 
   /// No description provided for @privacyConsentTitle.

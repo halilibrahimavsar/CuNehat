@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -239,6 +240,35 @@ void main() {
             dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock),
         throwsA(isA<ServerException>()),
       );
+    });
+
+    // Zaman aşımı ham TimeoutException olarak sızarsa mesajı
+    // ("TimeoutException after 0:00:15.000000: Future not completed")
+    // doğrudan snackbar'a basılır: InvestmentBloc failure.message'ı olduğu
+    // gibi AppMessenger.error'a veriyor.
+    testWidgets('yanıtsız kalan istek okunabilir mesajla ServerException olur',
+        (tester) async {
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+          .thenAnswer((_) => Completer<http.Response>().future);
+
+      Object? thrown;
+      unawaited(() async {
+        try {
+          await dataSource.getLiveQuote(
+              symbol: 'AAPL', type: InvestmentType.stock);
+        } catch (e) {
+          thrown = e;
+        }
+      }());
+
+      await tester.pump(InvestmentRemoteDataSourceImpl.requestTimeout +
+          const Duration(milliseconds: 100));
+
+      expect(thrown, isA<ServerException>());
+      final message = (thrown! as ServerException).message;
+      expect(message, contains('zamanında yanıt vermedi'));
+      expect(message, isNot(contains('TimeoutException')));
     });
   });
 }

@@ -28,6 +28,12 @@ class ExchangeRateService {
   static const _ttl = Duration(hours: 1);
   static const _supported = ['USD', 'EUR'];
 
+  /// Kur isteğinin üst sınırı. `http` paketinin varsayılan yanıt zaman aşımı
+  /// YOKTUR: captive portal ya da paket düşüren bir şebekede istek TCP'nin
+  /// OS zaman aşımına (dakikalar) kadar asılı kalır. Bu Future'ı bekleyen
+  /// ekranlar (transfer sheet) o süre boyunca kilitlenirdi.
+  static const requestTimeout = Duration(seconds: 15);
+
   Map<String, double>? _memRates;
   DateTime? _memAt;
   Future<Map<String, double>?>? _inflight;
@@ -70,7 +76,8 @@ class ExchangeRateService {
 
   Future<Map<String, double>?> _fetchAndCache() async {
     try {
-      final response = await client.get(Uri.parse(_url));
+      final response =
+          await client.get(Uri.parse(_url)).timeout(requestTimeout);
       if (response.statusCode != 200) return null;
 
       final data = json.decode(response.body) as Map<String, dynamic>;

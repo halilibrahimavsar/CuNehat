@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -128,4 +129,49 @@ void main() {
     stubResponse({}, status: 500);
     expect(await svc.rateToTry('USD'), isNull);
   });
+
+  // `http` paketinin varsayılan yanıt zaman aşımı yoktur: yanıt hiç gelmezse
+  // (captive portal, paket düşüren şebeke) istek TCP'nin OS zaman aşımına
+  // kadar asılı kalır ve bu Future'ı bekleyen ekran — transfer sheet — o süre
+  // boyunca kilitlenir. testWidgets kullanılıyor çünkü sahte saat yalnızca
+  // orada işliyor; gerçek zamanla test 15 sn sürerdi.
+  testWidgets('yanıt hiç gelmezse zaman aşımına düşer (asılı kalmaz)',
+      (tester) async {
+    final svc = await makeService();
+    final never = Completer<http.Response>();
+    when(() => client.get(truncgilUri)).thenAnswer((_) => never.future);
+
+    double? result;
+    var settled = false;
+    unawaited(svc.rateToTry('USD').then((v) {
+      result = v;
+      settled = true;
+    }));
+
+    await tester.pump(ExchangeRateService.requestTimeout - _epsilon);
+    expect(settled, isFalse, reason: 'süre dolmadan vazgeçilmemeli');
+
+    await tester.pump(_epsilon * 2);
+    expect(settled, isTrue, reason: 'zaman aşımı sonrası Future tamamlanmalı');
+    expect(result, isNull, reason: 'önbellek yokken null (sözleşme: fırlatmaz)');
+  });
+
+  testWidgets('zaman aşımında bayat önbellek döner', (tester) async {
+    final svc = await makeService(prefsSeed: {
+      'exchange_rates_cache_v1': json.encode({
+        'rates': {'USD': 41.0},
+        'ts': '2026-01-01T00:00:00.000',
+      }),
+    });
+    when(() => client.get(truncgilUri))
+        .thenAnswer((_) => Completer<http.Response>().future);
+
+    double? result;
+    unawaited(svc.rateToTry('USD').then((v) => result = v));
+    await tester.pump(ExchangeRateService.requestTimeout + _epsilon);
+
+    expect(result, 41.0);
+  });
 }
+
+const _epsilon = Duration(milliseconds: 100);

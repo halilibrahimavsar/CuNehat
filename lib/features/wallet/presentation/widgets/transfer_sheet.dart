@@ -57,6 +57,11 @@ class _TransferSheetState extends State<TransferSheet> {
   double? _dstRate;
   bool _submitting = false;
 
+  /// Kur isteği sürüyor. Bu ayrım olmadan sheet açılır açılmaz "kur alınamadı"
+  /// yazıyordu: `_rateReady` başlangıçta da false olduğu için yükleniyor ile
+  /// başarısız durum aynı görünüyordu.
+  bool _loadingRates = false;
+
   bool get _crossCurrency => _from.currency != _to.currency;
 
   /// Çapraz birimde her iki kur da çözülmüş olmalı.
@@ -82,16 +87,21 @@ class _TransferSheetState extends State<TransferSheet> {
       setState(() {
         _srcRate = 1.0;
         _dstRate = 1.0;
+        _loadingRates = false;
       });
       return;
     }
+    setState(() => _loadingRates = true);
     final fx = getIt<ExchangeRateService>();
+    // Servis sözleşmesi gereği fırlatmaz; zaman aşımında null döner
+    // (bkz. ExchangeRateService.requestTimeout).
     final src = await fx.rateToTry(_from.currency);
     final dst = await fx.rateToTry(_to.currency);
     if (!mounted) return;
     setState(() {
       _srcRate = src;
       _dstRate = dst;
+      _loadingRates = false;
     });
   }
 
@@ -149,6 +159,86 @@ class _TransferSheetState extends State<TransferSheet> {
       case TransferResult.failed:
         AppMessenger.error(context.l10n.transferBasarisiz);
     }
+  }
+
+  /// Çapraz birim transferinde kur durumu: yükleniyor / alınamadı (dokununca
+  /// tekrar dener) / önizleme. Üç durumun ayrı görünmesi şart — kur gelmeden
+  /// "Transfer Et" düğmesi kapalı kalıyor ve kullanıcı sebebini buradan okur.
+  Widget _rateStatusRow(ColorScheme cs, double? converted) {
+    if (_loadingRates) {
+      return Row(
+        children: [
+          SizedBox(
+            width: 13,
+            height: 13,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.l10n.transferKurAliniyor,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (!_rateReady) {
+      final errorColor = cs.error.withValues(alpha: 0.8);
+      return InkWell(
+        onTap: _loadRates,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            children: [
+              Icon(Icons.wifi_off_rounded, size: 15, color: errorColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  context.l10n.transferKurYok,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: errorColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(Icons.refresh_rounded, size: 16, color: errorColor),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Icon(Icons.currency_exchange_rounded, size: 15, color: cs.primary),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            converted != null
+                ? context.l10n.transferOnizlemeFormat(
+                    formatMoney(converted, currency: _to.currency))
+                : '',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -259,39 +349,7 @@ class _TransferSheetState extends State<TransferSheet> {
                   ),
                   const SizedBox(height: 10),
                   // Önizleme / kur durumu (yalnız çapraz birimde anlamlı)
-                  if (_crossCurrency)
-                    Row(
-                      children: [
-                        Icon(
-                          _rateReady
-                              ? Icons.currency_exchange_rounded
-                              : Icons.wifi_off_rounded,
-                          size: 15,
-                          color: _rateReady
-                              ? cs.primary
-                              : cs.error.withValues(alpha: 0.8),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            !_rateReady
-                                ? context.l10n.transferKurYok
-                                : converted != null
-                                    ? context.l10n.transferOnizlemeFormat(
-                                        formatMoney(converted,
-                                            currency: _to.currency))
-                                    : '',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _rateReady
-                                  ? cs.onSurfaceVariant
-                                  : cs.error.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  if (_crossCurrency) _rateStatusRow(cs, converted),
                   const SizedBox(height: 18),
                   SizedBox(
                     width: double.infinity,

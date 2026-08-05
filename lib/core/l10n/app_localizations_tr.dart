@@ -1921,6 +1921,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get transferKurAliniyor => 'Kur alınıyor…';
+
+  @override
   String get transferKurYok =>
       'Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin';
 
@@ -2964,6 +2967,33 @@ class AppLocalizationsTr extends AppLocalizations {
       'Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.';
 
   @override
+  String get backupOfferTitle => 'Verilerin yalnızca bu cihazda';
+
+  @override
+  String get backupOfferBody =>
+      'CuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.';
+
+  @override
+  String get backupOfferSetup => 'Yedeklemeyi Kur';
+
+  @override
+  String get backupOfferLater => 'Şimdi Değil';
+
+  @override
+  String get privacyReceiptsTitle => 'Fiş fotoğrafları ve metin tanıma';
+
+  @override
+  String get privacyReceiptsBody =>
+      'İşleme fiş fotoğrafı eklemek isteğe bağlıdır. Fotoğraf sistem seçicisiyle alınır; uygulama kalıcı kamera veya depolama izni istemez. Görseller yalnızca cihazınızın özel depolama alanında tutulur; hiçbir yere yüklenmez ve Drive yedeğine girmez. Fişten tutar/tarih okuma, uygulamanın içine gömülü çevrimdışı Google ML Kit modeliyle yapılır — görsel hiçbir sunucuya gönderilmez. İşlemi silmek ekli görseli de siler.';
+
+  @override
+  String get privacyStatementTitle => 'Banka ekstresi içe aktarma';
+
+  @override
+  String get privacyStatementBody =>
+      'Ekstreyi (PDF, CSV, Excel) siz seçersiniz ya da paylaş menüsünden gönderirsiniz; uygulamanın bankanıza erişimi ve dosyalarınızı tarama izni yoktur. Dosya tamamen cihazınızda ayrıştırılır ve hiçbir yere yüklenmez. Yalnızca inceleme ekranında onayladığınız hareketler kaydedilir; ekstre dosyasının kendisi saklanmaz.';
+
+  @override
   String get privacySharingTitle => 'Veri paylaşımı';
 
   @override
@@ -2990,7 +3020,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get privacyLastUpdated => 'Son güncelleme: 30 Haziran 2026';
+  String get privacyLastUpdated => 'Son güncelleme: 4 Ağustos 2026';
 
   @override
   String get privacyConsentTitle => 'Gizliliğiniz';

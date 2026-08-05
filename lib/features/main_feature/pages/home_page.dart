@@ -30,7 +30,10 @@ import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/notifications/notification_permission_dialog.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/onboarding/backup_offer_prompt.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/core/services/auto_backup_service.dart';
+import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/main_feature/widgets/onboarding_navigation_hint_card.dart';
@@ -119,6 +122,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await _maybeShowPrivacyConsent();
     if (!mounted) return;
     await _maybeRequestNotificationPermission();
+    if (!mounted) return;
+    await _maybeOfferBackup();
+  }
+
+  /// Yedekleme teklifi. Diğer ikisinden farklı olarak ilk açılışa BAĞLI
+  /// DEĞİL: sıfır veriyle sorulması anlamsız olduğu için eşiğe ulaşana kadar
+  /// her açılışta yeniden değerlendirilir (bkz. [BackupOfferPrompt]).
+  Future<void> _maybeOfferBackup() async {
+    final prefs = getIt<SharedPreferences>();
+    if (prefs.getBool(BackupOfferPrompt.seenKey) ?? false) return;
+
+    final autoBackup = getIt<AutoBackupService>();
+    if (autoBackup.isEnabled) {
+      // Kullanıcı yedeklemeyi kendi bulup açmış: teklif gereksiz. Bayrağı
+      // yazıyoruz ki sonradan kapatırsa diyalog aylar sonra karşısına
+      // çıkmasın.
+      await prefs.setBool(BackupOfferPrompt.seenKey, true);
+      return;
+    }
+
+    final summary = await getIt<DataSerializationService>().currentDataSummary();
+    if (!BackupOfferPrompt.shouldOffer(
+      alreadyOffered: false,
+      autoBackupEnabled: false,
+      transactionCount: summary.transactionCount,
+    )) {
+      return;
+    }
+
+    if (!mounted) return;
+    await showBackupOfferDialog(context);
+    // Bayrak "Kur"a basılıp basılmadığından bağımsız yazılır: kullanıcı
+    // Ayarlar'a gidip vazgeçse bile aynı diyalog tekrar açılmamalı.
+    await prefs.setBool(BackupOfferPrompt.seenKey, true);
   }
 
   Future<void> _maybeShowPrivacyConsent() async {

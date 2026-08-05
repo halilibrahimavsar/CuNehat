@@ -50,6 +50,14 @@ class PrivacyPolicyPage extends StatelessWidget {
             body: l10n.privacyMarketDataBody,
           ),
           _Section(
+            title: l10n.privacyReceiptsTitle,
+            body: l10n.privacyReceiptsBody,
+          ),
+          _Section(
+            title: l10n.privacyStatementTitle,
+            body: l10n.privacyStatementBody,
+          ),
+          _Section(
             title: l10n.privacySharingTitle,
             body: l10n.privacySharingBody,
           ),

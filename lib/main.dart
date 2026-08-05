@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:cunehat/config/initialization/app_initialization.dart';
 import 'package:cunehat/config/app/app_providers.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/pages/init_error_page.dart';
 import 'package:cunehat/core/widgets/cunehat_app.dart';
 import 'package:cunehat/config/app/themed_app.dart';
@@ -12,6 +13,9 @@ import 'package:cunehat/config/app/themed_app.dart';
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
+
+  // Binding'den hemen sonra: init sırasında oluşan hatalar da yakalansın.
+  installGlobalErrorHandlers();
 
   try {
     runApp(await _buildApp());

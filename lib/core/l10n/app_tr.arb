@@ -878,6 +878,7 @@
       }
     }
   },
+  "transferKurAliniyor": "Kur alınıyor…",
   "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin",
   "transferBasarili": "Transfer tamamlandı",
   "transferBasarisiz": "Transfer başarısız oldu",
@@ -1460,6 +1461,14 @@
   "privacyDriveBody": "Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve kısıtlı \"drive.appdata\" kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) kendi Drive'ınızdaki, başka uygulamaların erişemediği özel bir klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.",
   "privacyMarketDataTitle": "Piyasa verisi",
   "privacyMarketDataBody": "Canlı fiyat göstermek için yalnızca varlık sembolü (örn. hisse kodu) herkese açık uç noktalara (Yahoo Finance, Truncgil) gönderilir. Hiçbir kişisel veya finansal kayıt paylaşılmaz.",
+  "backupOfferTitle": "Verilerin yalnızca bu cihazda",
+  "backupOfferBody": "CuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive'ındaki özel bir klasöre alınır.",
+  "backupOfferSetup": "Yedeklemeyi Kur",
+  "backupOfferLater": "Şimdi Değil",
+  "privacyReceiptsTitle": "Fiş fotoğrafları ve metin tanıma",
+  "privacyReceiptsBody": "İşleme fiş fotoğrafı eklemek isteğe bağlıdır. Fotoğraf sistem seçicisiyle alınır; uygulama kalıcı kamera veya depolama izni istemez. Görseller yalnızca cihazınızın özel depolama alanında tutulur; hiçbir yere yüklenmez ve Drive yedeğine girmez. Fişten tutar/tarih okuma, uygulamanın içine gömülü çevrimdışı Google ML Kit modeliyle yapılır — görsel hiçbir sunucuya gönderilmez. İşlemi silmek ekli görseli de siler.",
+  "privacyStatementTitle": "Banka ekstresi içe aktarma",
+  "privacyStatementBody": "Ekstreyi (PDF, CSV, Excel) siz seçersiniz ya da paylaş menüsünden gönderirsiniz; uygulamanın bankanıza erişimi ve dosyalarınızı tarama izni yoktur. Dosya tamamen cihazınızda ayrıştırılır ve hiçbir yere yüklenmez. Yalnızca inceleme ekranında onayladığınız hareketler kaydedilir; ekstre dosyasının kendisi saklanmaz.",
   "privacySharingTitle": "Veri paylaşımı",
   "privacySharingBody": "Verilerinizi satmaz, kiralamaz veya üçüncü taraflarla paylaşmayız. Uygulamada analitik, çökme-raporlama, reklam veya izleme SDK'sı yoktur. Google API'lerinden alınan bilgilerin kullanımı Google API Hizmetleri Kullanıcı Verileri Politikası'na (Sınırlı Kullanım dahil) uyar.",
   "privacySecurityTitle": "Güvenlik",
@@ -1474,7 +1483,7 @@
       }
     }
   },
-  "privacyLastUpdated": "Son güncelleme: 30 Haziran 2026",
+  "privacyLastUpdated": "Son güncelleme: 4 Ağustos 2026",
   "privacyConsentTitle": "Gizliliğiniz",
   "privacyConsentBody": "CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.",
   "privacyConsentAcknowledge": "Anladım",

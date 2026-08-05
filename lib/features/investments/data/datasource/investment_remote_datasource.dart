@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:cunehat/core/error/exceptions.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -28,6 +29,12 @@ class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
 
   static const _truncgilUrl = 'https://finans.truncgil.com/today.json';
 
+  /// Fiyat isteğinin üst sınırı; bkz. [ExchangeRateService.requestTimeout].
+  /// Zaman aşımı ham `TimeoutException` olarak yukarı sızarsa mesajı
+  /// (`TimeoutException after 0:00:15...`) doğrudan kullanıcıya gösterilirdi
+  /// — bloc `failure.message`'ı olduğu gibi snackbar'a basıyor.
+  static const requestTimeout = Duration(seconds: 15);
+
   /// Truncgil today.json'daki kur anahtarları; desteklenmeyen birimler
   /// (örn. GBp) hata verir ki portföye karışık birim değer yazılmasın.
   static const _fxKeys = {'USD': 'USD', 'EUR': 'EUR'};
@@ -50,10 +57,23 @@ class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
     }
   }
 
+  /// Zaman aşımını uygulayan ve onu kullanıcıya gösterilebilir bir
+  /// [ServerException]'a çeviren tek giriş noktası.
+  Future<http.Response> _get(Uri url) async {
+    try {
+      return await client.get(url).timeout(requestTimeout);
+    } on TimeoutException {
+      throw ServerException(
+        'Fiyat servisi zamanında yanıt vermedi. '
+        'Bağlantınızı kontrol edip tekrar deneyin.',
+      );
+    }
+  }
+
   Future<LivePriceQuote> _fetchStockQuote(String symbol) async {
     // Sembol tam haliyle kullanılır (BIST: THYAO.IS, ABD: AAPL);
     // koşulsuz .IS eki yabancı sembolleri bozar.
-    final response = await client.get(
+    final response = await _get(
       Uri.parse('https://query1.finance.yahoo.com/v8/finance/chart/$symbol'),
     );
 
@@ -111,7 +131,7 @@ class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
   }
 
   Future<Map<String, dynamic>> _fetchTruncgil() async {
-    final response = await client.get(Uri.parse(_truncgilUrl));
+    final response = await _get(Uri.parse(_truncgilUrl));
     if (response.statusCode != 200) {
       throw ServerException('Fiyat servisi yanıt vermedi: '
           '${response.statusCode}');

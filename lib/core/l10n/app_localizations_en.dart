@@ -1918,6 +1918,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get transferKurAliniyor => 'Fetching exchange rate…';
+
+  @override
   String get transferKurYok =>
       'Couldn\'t get the exchange rate — try again when online';
 
@@ -2962,6 +2965,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'To show live prices, only the asset symbol (e.g. a stock ticker) is sent to public endpoints (Yahoo Finance, Truncgil). No personal or financial-record data is included.';
 
   @override
+  String get backupOfferTitle => 'Your data lives only on this device';
+
+  @override
+  String get backupOfferBody =>
+      'CuNehat keeps your records on no server. If you lose your phone, reset it, or uninstall the app, this data is gone for good. Turning on automatic backup keeps a regular copy in a private folder inside your own Google Drive.';
+
+  @override
+  String get backupOfferSetup => 'Set Up Backup';
+
+  @override
+  String get backupOfferLater => 'Not Now';
+
+  @override
+  String get privacyReceiptsTitle => 'Receipt photos and text recognition';
+
+  @override
+  String get privacyReceiptsBody =>
+      'Attaching a receipt photo to a transaction is optional. The photo comes from the system picker; the app requests no permanent camera or storage permission. Images are kept only in the app\'s private storage — they are never uploaded and are not included in the Drive backup. Reading the amount and date from a receipt uses Google ML Kit\'s offline model bundled inside the app, so the image is never sent to a server. Deleting the transaction also deletes the attached image.';
+
+  @override
+  String get privacyStatementTitle => 'Bank statement import';
+
+  @override
+  String get privacyStatementBody =>
+      'You pick the statement (PDF, CSV, Excel) yourself or send it from a share menu; the app has no access to your bank and no permission to browse your files. The file is parsed entirely on your device and is never uploaded. Only the transactions you confirm on the review screen are saved; the statement file itself is not retained.';
+
+  @override
   String get privacySharingTitle => 'Data sharing';
 
   @override
@@ -2988,7 +3018,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get privacyLastUpdated => 'Last updated: 30 June 2026';
+  String get privacyLastUpdated => 'Last updated: 4 August 2026';
 
   @override
   String get privacyConsentTitle => 'Your privacy';

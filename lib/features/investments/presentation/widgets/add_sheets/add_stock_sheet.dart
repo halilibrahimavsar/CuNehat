@@ -142,12 +142,19 @@ class _AddStockSheetState extends State<AddStockSheet> {
     if (_error != null) setState(() => _error = null);
   }
 
+  /// Her tuş vuruşunda tetiklendiği için üst sınır kısa: yanıt gecikirse
+  /// öneri listesi boş kalır, kullanıcı sembolü elle yazmaya devam eder.
+  /// Paylaşılan (DI) client kullanılır — üst düzey `http.get` her çağrıda
+  /// yeni bağlantı açıp kapatırdı.
+  static const _searchTimeout = Duration(seconds: 8);
+
   Future<Iterable<String>> _searchStockSymbols(String query) async {
     if (query.length < 2) return [];
     try {
       final url = Uri.parse(
           'https://query2.finance.yahoo.com/v1/finance/search?q=$query');
-      final response = await http.get(url);
+      final response =
+          await getIt<http.Client>().get(url).timeout(_searchTimeout);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final quotes = data['quotes'] as List;

@@ -11,6 +11,7 @@ import 'package:cunehat/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/http.dart' as http;
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -67,6 +68,11 @@ void main() {
     getIt.registerSingleton<OnboardingCoordinator>(onboardingCoordinator);
     mockGetLiveQuoteUseCase = MockGetLiveQuoteUseCase();
     getIt.registerSingleton<GetLiveQuoteUseCase>(mockGetLiveQuoteUseCase);
+    // Sembol araması paylaşılan (DI) istemciyi kullanır. LAZY kayıt şart:
+    // http.Client() kurucuda dart:io HttpClient'ını hemen yaratır ve testler
+    // HttpOverrides.global'ı gövdenin İÇİNDE kuruyor. Erken oluşturulan
+    // istemci gerçek HttpClient'ı yakalar, mock'u değil.
+    getIt.registerLazySingleton<http.Client>(http.Client.new);
   });
 
   tearDown(() {
