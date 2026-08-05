@@ -28,7 +28,7 @@
   <!-- =========================== ENGLISH =========================== -->
   <section id="en">
     <h1>CuNehat — Privacy Policy</h1>
-    <p class="meta">Last updated: 30 June 2026 · App package: <code>dev.halilibrahim.cunehat</code></p>
+    <p class="meta">Last updated: 4 August 2026 · App package: <code>dev.halilibrahim.cunehat</code></p>
 
     <p>
       CuNehat ("the app") is a personal finance application that helps you track
@@ -86,6 +86,41 @@
       No personal or financial-record data is included in these requests.
     </p>
 
+    <h3>1.4 Receipt photos and on-device text recognition</h3>
+    <p>
+      You can optionally attach a receipt photo to a transaction, taken with the
+      camera or picked from your gallery through the system picker. CuNehat does
+      not request permanent camera or storage permission; the system hands over
+      only the single image you choose.
+    </p>
+    <ul>
+      <li><strong>Images stay on your device.</strong> They are copied into the
+        app's private storage and are never uploaded — not to us, and not to your
+        Google Drive backup (the backup file contains records only, no images).</li>
+      <li><strong>Text recognition runs offline.</strong> Reading the amount and
+        date from a receipt uses Google ML Kit's on-device text recognition model,
+        which is bundled inside the app. The image is not sent to any server.</li>
+      <li>Deleting the transaction, or using "Delete all data", also deletes the
+        attached image.</li>
+    </ul>
+
+    <h3>1.5 Bank statement import</h3>
+    <p>
+      You can import a bank statement (PDF, CSV, Excel) that you select yourself,
+      or send to CuNehat from another app's share menu. This is always initiated
+      by you — the app has no access to your bank and no permission to browse
+      your files.
+    </p>
+    <ul>
+      <li><strong>The file is parsed entirely on your device</strong> and is never
+        uploaded. Scanned (image-only) PDFs are read with the same offline text
+        recognition described in 1.4.</li>
+      <li>Only the transactions you confirm on the review screen are saved. The
+        statement file itself is not retained by the app.</li>
+      <li>When a file is shared with CuNehat, Android grants a one-time,
+        read-only permission for that single file.</li>
+    </ul>
+
     <h2>2. How we use data</h2>
     <p>
       Data is used solely to provide the app's features (recording and reporting
@@ -135,12 +170,17 @@
     <h2>7. Permissions</h2>
     <table>
       <tr><th>Permission</th><th>Why</th></tr>
-      <tr><td>Internet</td><td>Drive backup and market-price lookups</td></tr>
+      <tr><td>Internet / Network state</td><td>Drive backup and market-price lookups</td></tr>
       <tr><td>Biometric / Fingerprint</td><td>Optional app lock</td></tr>
       <tr><td>Notifications</td><td>Budget alerts and reminders</td></tr>
-      <tr><td>Exact alarms / Boot completed</td><td>Scheduling recurring-transaction reminders</td></tr>
+      <tr><td>Boot completed</td><td>Re-scheduling reminders after the device restarts</td></tr>
       <tr><td>Vibrate</td><td>Haptic feedback</td></tr>
     </table>
+    <p>
+      The app requests <strong>no</strong> camera, storage, location, contacts or
+      exact-alarm permission. Receipt photos and statement files reach the app
+      only through the system picker or the share menu, one file at a time.
+    </p>
 
     <h2>8. Children</h2>
     <p>
@@ -166,7 +206,7 @@
   <!-- =========================== TÜRKÇE =========================== -->
   <section id="tr" lang="tr">
     <h1>CuNehat — Gizlilik Politikası</h1>
-    <p class="meta">Son güncelleme: 30 Haziran 2026 · Uygulama paketi: <code>dev.halilibrahim.cunehat</code></p>
+    <p class="meta">Son güncelleme: 4 Ağustos 2026 · Uygulama paketi: <code>dev.halilibrahim.cunehat</code></p>
 
     <p>
       CuNehat ("uygulama"); cüzdanları, işlemleri, borçları, alacakları,
@@ -227,6 +267,41 @@
       Bu isteklere hiçbir kişisel veri veya finansal kayıt dahil edilmez.
     </p>
 
+    <h3>1.4 Fiş fotoğrafları ve cihaz-içi metin tanıma</h3>
+    <p>
+      İsterseniz bir işleme fiş fotoğrafı ekleyebilirsiniz; fotoğraf kamerayla
+      çekilir ya da sistem seçicisi üzerinden galeriden seçilir. CuNehat kalıcı
+      kamera veya depolama izni istemez; sistem yalnızca seçtiğiniz tek görseli
+      uygulamaya verir.
+    </p>
+    <ul>
+      <li><strong>Görseller cihazınızda kalır.</strong> Uygulamanın özel
+        depolama alanına kopyalanır ve hiçbir yere yüklenmez — bize de,
+        Google Drive yedeğinize de (yedek dosyası yalnızca kayıtları içerir,
+        görsel içermez).</li>
+      <li><strong>Metin tanıma çevrimdışı çalışır.</strong> Fişten tutar ve
+        tarih okuma, uygulamanın içine gömülü Google ML Kit cihaz-içi metin
+        tanıma modeliyle yapılır. Görsel hiçbir sunucuya gönderilmez.</li>
+      <li>İşlemi silmek ya da "Tüm veriyi sil" demek, ekli görseli de siler.</li>
+    </ul>
+
+    <h3>1.5 Banka ekstresi içe aktarma</h3>
+    <p>
+      Kendi seçtiğiniz bir banka ekstresini (PDF, CSV, Excel) içe aktarabilir ya
+      da başka bir uygulamanın paylaş menüsünden CuNehat'e gönderebilirsiniz. Bu
+      her zaman sizin başlattığınız bir işlemdir — uygulamanın bankanıza erişimi
+      ve dosyalarınızı tarama izni yoktur.
+    </p>
+    <ul>
+      <li><strong>Dosya tamamen cihazınızda ayrıştırılır</strong> ve hiçbir yere
+        yüklenmez. Taranmış (yalnızca görsel içeren) PDF'ler, 1.4'te anlatılan
+        aynı çevrimdışı metin tanımayla okunur.</li>
+      <li>Yalnızca inceleme ekranında onayladığınız hareketler kaydedilir.
+        Ekstre dosyasının kendisi uygulamada saklanmaz.</li>
+      <li>Bir dosya CuNehat ile paylaşıldığında Android o tek dosya için tek
+        seferlik, salt-okunur bir izin verir.</li>
+    </ul>
+
     <h2>2. Verileri nasıl kullanırız</h2>
     <p>
       Veriler yalnızca uygulamanın işlevlerini sağlamak için kullanılır
@@ -277,12 +352,17 @@
     <h2>7. İzinler</h2>
     <table>
       <tr><th>İzin</th><th>Neden</th></tr>
-      <tr><td>İnternet</td><td>Drive yedeği ve piyasa-fiyatı sorguları</td></tr>
+      <tr><td>İnternet / Ağ durumu</td><td>Drive yedeği ve piyasa-fiyatı sorguları</td></tr>
       <tr><td>Biyometrik / Parmak izi</td><td>İsteğe bağlı uygulama kilidi</td></tr>
       <tr><td>Bildirimler</td><td>Bütçe uyarıları ve hatırlatıcılar</td></tr>
-      <tr><td>Tam alarm / Açılışta başlat</td><td>Tekrarlayan işlem hatırlatıcılarını zamanlama</td></tr>
+      <tr><td>Açılışta başlat</td><td>Cihaz yeniden başladıktan sonra hatırlatıcıları yeniden kurma</td></tr>
       <tr><td>Titreşim</td><td>Dokunsal geri bildirim</td></tr>
     </table>
+    <p>
+      Uygulama kamera, depolama, konum, rehber veya tam alarm izni
+      <strong>istemez</strong>. Fiş fotoğrafları ve ekstre dosyaları uygulamaya
+      yalnızca sistem seçicisi ya da paylaş menüsü üzerinden, teker teker ulaşır.
+    </p>
 
     <h2>8. Çocuklar</h2>
     <p>
