@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/installment_progress.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,7 @@ void main() {
         totalDebtAmount: total,
         termMonths: term,
         startDate: start,
-        totalPaidAmount: paid,
+        principalPaidAmount: paid,
         now: now ?? beforeAnyDue,
       );
 
@@ -103,7 +104,7 @@ void main() {
         totalDebtAmount: 1.0,
         termMonths: 36,
         startDate: DateTime(2026, 1, 15),
-        totalPaidAmount: 0,
+        principalPaidAmount: 0,
         now: DateTime(2026, 1, 1),
       );
 
@@ -123,7 +124,7 @@ void main() {
             totalDebtAmount: total,
             termMonths: term,
             startDate: DateTime(2026, 1, 15),
-            totalPaidAmount: 0,
+            principalPaidAmount: 0,
             now: DateTime(2026, 1, 1),
           );
           for (final r in rows) {
@@ -138,6 +139,7 @@ void main() {
   group('buildInstallmentPlanFor', () {
     test('borcun toplam/vade/ödenen değerlerini tek kaynaktan okur', () {
       final debt = DebtEntity(
+        calcMode: DebtCalcMode.none,
         userId: 'u',
         walletId: 'w',
         title: 'Kredi',
@@ -149,8 +151,8 @@ void main() {
         startDate: start,
         expectedTotalAmount: 1200,
         payments: [
-          Payment(date: start, amount: 100),
-          Payment(date: start, amount: 100),
+          Payment(id: 'p1', date: start, amount: 100),
+          Payment(id: 'p2', date: start, amount: 100),
         ],
       );
 
@@ -160,6 +162,83 @@ void main() {
       expect(rows[0].status, InstallmentStatus.paid);
       expect(rows[1].status, InstallmentStatus.paid);
       expect(rows[2].status, InstallmentStatus.unpaid);
+    });
+  });
+
+  // Liste ALLOKE ETMEYEN sorgular: kart listesi ve hatırlatma senkronu her
+  // borç için bunları çağırıyor; 600 satırlık plan kurup atmamalılar.
+  group('plan kurmayan sorgular', () {
+    final start = DateTime(2026, 1, 1);
+
+    DebtEntity debt({
+      double total = 12000,
+      int term = 12,
+      double paid = 0,
+      bool isPaid = false,
+      DateTime? dueDate,
+      bool noDueDate = false,
+    }) =>
+        DebtEntity(
+          id: 'd1',
+          userId: 'u',
+          walletId: 'w',
+          title: 'Kredi',
+          counterparty: 'Banka',
+          type: DebtType.bankLoan,
+          calcMode: DebtCalcMode.fixedInstallment,
+          principalAmount: total,
+          interestRate: 0,
+          termMonths: term,
+          startDate: start,
+          dueDate: noDueDate ? null : (dueDate ?? DateTime(2027, 1, 1)),
+          payments: paid > 0
+              ? [Payment(id: 'p1', date: start, amount: paid)]
+              : const [],
+          isPaid: isPaid,
+          expectedTotalAmount: total,
+        );
+
+    test('paidInstallmentCount tam kapanan taksitleri sayar', () {
+      expect(paidInstallmentCount(debt(paid: 0)), 0);
+      expect(paidInstallmentCount(debt(paid: 999)), 0); // 1 taksiti bile bitmez
+      expect(paidInstallmentCount(debt(paid: 1000)), 1);
+      expect(paidInstallmentCount(debt(paid: 3500)), 3);
+      expect(paidInstallmentCount(debt(paid: 12000)), 12);
+    });
+
+    test('nextUnpaidInstallmentDate sıradaki ödenmemiş taksite işaret eder',
+        () {
+      expect(nextUnpaidInstallmentDate(debt(paid: 0)), DateTime(2026, 2, 1));
+      expect(nextUnpaidInstallmentDate(debt(paid: 2000)), DateTime(2026, 4, 1));
+      // Tüm taksitler kapandıysa sıradaki taksit yok.
+      expect(nextUnpaidInstallmentDate(debt(paid: 12000)), isNull);
+      expect(nextUnpaidInstallmentDate(debt(isPaid: true)), isNull);
+    });
+
+    test('tek taksitli kayıtta kaydın kendi vadesi geçerlidir', () {
+      expect(
+          nextUnpaidInstallmentDate(
+              debt(term: 1, dueDate: DateTime(2026, 5, 5))),
+          DateTime(2026, 5, 5));
+      // Vade opsiyonel (kişisel borç): yoksa hatırlatma da yok.
+      expect(nextUnpaidInstallmentDate(debt(term: 1, noDueDate: true)), isNull);
+    });
+
+    test('hasOverdueInstallment ARA taksit gecikmesini de yakalar', () {
+      // REGRESYON: kart yalnız kaydın SON vadesine bakıyordu; 12 taksitin
+      // 6'sı gecikmiş bir borç son vade gelmediği için tertemiz görünüyordu.
+      final d = debt(paid: 0);
+      expect(hasOverdueInstallment(d, now: DateTime(2026, 1, 15)), isFalse);
+      expect(hasOverdueInstallment(d, now: DateTime(2026, 7, 15)), isTrue);
+      // Son vade (2027-01-01) daha gelmemiş olmasına rağmen gecikme var.
+      expect(d.dueDate!.isAfter(DateTime(2026, 7, 15)), isTrue);
+    });
+
+    test('kapanmış borç gecikmiş sayılmaz', () {
+      expect(
+        hasOverdueInstallment(debt(isPaid: true), now: DateTime(2030, 1, 1)),
+        isFalse,
+      );
     });
   });
 }

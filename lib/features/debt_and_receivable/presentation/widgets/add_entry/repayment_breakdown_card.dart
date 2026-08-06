@@ -1,7 +1,7 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
 import 'package:flutter/material.dart';
 
@@ -13,10 +13,11 @@ class RepaymentBreakdownCard extends StatelessWidget {
   final TextEditingController interestController;
   final TextEditingController termController;
   final TextEditingController installmentController;
-  final DebtType debtType;
-  final bool isInstallmentAmortized;
-  final bool isBankLoanMonthly;
-  final bool includeBankTaxes;
+
+  /// Toplamın hangi yöntemle hesaplandığı. Borç TÜRÜ değil mod taşınır:
+  /// önizleme ile kaydetme yolu birebir aynı girdiyi paylaşsın diye.
+  final DebtCalcMode mode;
+
   final Color accent;
 
   /// Kaydın ait olduğu cüzdanın para birimi; hesaplama birimden bağımsızdır,
@@ -29,10 +30,7 @@ class RepaymentBreakdownCard extends StatelessWidget {
     required this.interestController,
     required this.termController,
     required this.installmentController,
-    required this.debtType,
-    required this.isInstallmentAmortized,
-    required this.isBankLoanMonthly,
-    required this.includeBankTaxes,
+    required this.mode,
     required this.accent,
     required this.currency,
   });
@@ -54,14 +52,11 @@ class RepaymentBreakdownCard extends StatelessWidget {
         final hasData = principal > 0;
 
         final breakdown = _calc.compute(
-          type: debtType,
+          mode: mode,
           principal: principal,
           termMonths: term,
           interestRate: parseAmountInput(interestController.text) ?? 0,
           monthlyInstallment: parseMoneyInput(installmentController.text) ?? 0,
-          isInstallmentAmortized: isInstallmentAmortized,
-          isBankLoanMonthly: isBankLoanMonthly,
-          includeBankTaxes: includeBankTaxes,
         );
         final total = breakdown.expectedTotal;
         final monthly = breakdown.monthlyPayment;
@@ -74,8 +69,7 @@ class RepaymentBreakdownCard extends StatelessWidget {
               child: Divider(height: 1, color: accent.withValues(alpha: 0.20)),
             ),
             _SummaryRow(
-              label: debtType == DebtType.installmentDebt &&
-                      !isInstallmentAmortized
+              label: mode == DebtCalcMode.flatSurcharge
                   ? context.l10n.vadeFarkiLabel
                   : context.l10n.toplamFaizLabel,
               value: hasData

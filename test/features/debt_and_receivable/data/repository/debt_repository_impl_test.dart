@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
@@ -16,6 +17,8 @@ void main() {
   setUpAll(() {
     registerFallbackValue(
       DebtModel(
+        calcMode: DebtCalcMode.none,
+        expectedTotalAmount: 0.0,
         id: 'fallback',
         userId: 'user',
         walletId: 'wallet',
@@ -38,6 +41,8 @@ void main() {
 
   final startDate = DateTime(2026, 1, 1);
   final testEntity = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 10000.0,
     id: 'debt_1',
     userId: 'user_1',
     walletId: 'wallet_1',

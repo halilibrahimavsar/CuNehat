@@ -23,6 +23,7 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       title: fields[3] as String,
       counterparty: fields[17] as String,
       type: fields[4] as DebtType,
+      calcMode: fields[20] as DebtCalcMode,
       principalAmount: fields[5] as double,
       interestRate: fields[6] as double,
       termMonths: fields[7] as int,
@@ -32,7 +33,7 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       payments: (fields[14] as List).cast<Payment>(),
       isPaid: fields[15] as bool,
       notes: fields[16] as String?,
-      expectedTotalAmount: fields[18] as double?,
+      expectedTotalAmount: fields[18] as double,
       principalToWallet: fields[19] as bool,
     );
   }
@@ -40,7 +41,7 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
   @override
   void write(BinaryWriter writer, DebtModel obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -74,7 +75,9 @@ class DebtModelAdapter extends TypeAdapter<DebtModel> {
       ..writeByte(18)
       ..write(obj.expectedTotalAmount)
       ..writeByte(19)
-      ..write(obj.principalToWallet);
+      ..write(obj.principalToWallet)
+      ..writeByte(20)
+      ..write(obj.calcMode);
   }
 
   @override
@@ -99,8 +102,10 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return PaymentModel(
+      id: fields[3] as String,
       date: fields[0] as DateTime,
       amount: fields[1] as double,
+      overdueInterestPart: fields[4] as double,
       notes: fields[2] as String?,
     );
   }
@@ -108,13 +113,17 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
   @override
   void write(BinaryWriter writer, PaymentModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
       ..write(obj.amount)
       ..writeByte(2)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(3)
+      ..write(obj.id)
+      ..writeByte(4)
+      ..write(obj.overdueInterestPart);
   }
 
   @override

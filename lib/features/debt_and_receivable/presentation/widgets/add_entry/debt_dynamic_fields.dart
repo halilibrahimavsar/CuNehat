@@ -95,9 +95,11 @@ class DebtDynamicFields extends StatelessWidget {
               ],
             ],
           ),
-          if (selectedDebtType != DebtType.personalDebt &&
-              !(selectedDebtType == DebtType.bankLoan && isBankLoanMonthly) &&
-              selectedDebtType != DebtType.installmentDebt) ...[
+          // Gecikme faizi kişisel borç dışında HER türde sorulur. Eskiden
+          // banka kredisinin taksit modunda ve taksitli borçta gizliydi;
+          // alan gizliyken kaydetme onu 0 yazdığı için, modu değişen bir
+          // kaydın gecikme faizi düzenlemede sessizce siliniyordu.
+          if (selectedDebtType != DebtType.personalDebt) ...[
             const SizedBox(height: 10),
             FilledEntryField(
               controller: overdueController,

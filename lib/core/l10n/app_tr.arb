@@ -270,13 +270,6 @@
   "finansalTakip": "Finansal Takip",
   "vADESIGecmis": "VADESİ GEÇMİŞ",
   "oDENDI": "ÖDENDİ",
-  "vadeDebtTermmonthsAy": "Vade: {termMonths} Ay | {length} Ödeme",
-  "@vadeDebtTermmonthsAy": {
-    "placeholders": {
-      "termMonths": {},
-      "length": {}
-    }
-  },
   "vadeDateformatDdMmm": "Vade: {dueDate}",
   "@vadeDateformatDdMmm": {
     "placeholders": {
@@ -683,7 +676,6 @@
   "baslikGirin": "Başlık girin",
   "borcluKisiAdiGirin": "Borçlu kişi adını girin",
   "kurumKisiGirin": "Kurum/kişi girin",
-  "vadeEnAz1Olmali": "Vade (ay) en az 1 olmalı",
   "aylikTaksitTutariniGirin": "Aylık taksit tutarını girin",
   "aylikTaksitKrediTutarindanKucuk": "Aylık taksit × vade, kredi tutarından küçük olamaz",
   "krediHesaplamaInfoBaslik": "Banka kredisi hesaplaması",
@@ -938,14 +930,14 @@
     }
   },
   "notifDebtUpcomingTitle": "Borç Hatırlatması",
-  "notifDebtUpcomingBody": "{title} başlıklı borcunuzun son ödeme tarihi yaklaştı.",
+  "notifDebtUpcomingBody": "{title} borcunuzun sıradaki taksit ödeme tarihi yaklaştı.",
   "@notifDebtUpcomingBody": {
     "placeholders": {
       "title": {}
     }
   },
   "notifDebtDueTitle": "Borç Son Ödeme Tarihi!",
-  "notifDebtDueBody": "{title} başlıklı borcunuzun son ödeme tarihi bugün.",
+  "notifDebtDueBody": "{title} borcunuzun sıradaki taksit ödeme tarihi bugün.",
   "@notifDebtDueBody": {
     "placeholders": {
       "title": {}
@@ -1051,7 +1043,7 @@
   "onboardingDebtAddTitle": "Tutar ve Geri Ödeme",
   "onboardingDebtAddDesc": "Tutarı girin. Borç türüne göre taksit, faiz ve vade alanları aşağıda açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.",
   "onboardingDebtAddDueDateTitle": "Vade Tarihi",
-  "onboardingDebtAddDueDateDesc": "Seçtiğiniz tarihte hatırlatma bildirimi alırsınız; taksitli kayıtlarda her taksit için ayrı ayrı.",
+  "onboardingDebtAddDueDateDesc": "Alacağını beklediğin tarih. O gün yaklaştığında hatırlatma bildirimi alırsın.",
   "onboardingInvestmentAddTitle": "Bugünkü Değer",
   "onboardingInvestmentAddDesc": "Yatırımın şu anki piyasa değeri. Kâr/zararınız bu değerle toplam maliyet arasındaki farktır.",
   "onboardingInvestmentAddCostTitle": "Toplam Maliyet",
@@ -1623,5 +1615,47 @@
       }
     }
   },
-  "driveErrApiNotEnabled": "Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez."
+  "driveErrApiNotEnabled": "Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez.",
+  "vadeAraligi": "Vade 1 ile {max} ay arasında olmalı",
+  "@vadeAraligi": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "oranAraligi": "Oran %0 ile %{max} arasında olmalı",
+  "@oranAraligi": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "gecikmeFaiziLabel": "Gecikme faizi:",
+  "odenecekToplamLabel": "Ödenecek toplam:",
+  "odenecekTutardanFazlaOlamaz": "Ödenecek toplamdan fazla olamaz",
+  "gecikmeFaiziChip": "Gecikme faizi",
+  "gecikmeFaiziKisa": "+ {tutar} gecikme faizi",
+  "@gecikmeFaiziKisa": {
+    "placeholders": { "tutar": {} }
+  },
+  "odemeMahsupAciklama": "{faiz} gecikme faizine, {anapara} ana paraya sayılacak.",
+  "@odemeMahsupAciklama": {
+    "placeholders": { "faiz": {}, "anapara": {} }
+  },
+  "taksitGecikmeGun": "≈ {tutar} · {gun} gün gecikti",
+  "@taksitGecikmeGun": {
+    "placeholders": { "tutar": {}, "gun": { "type": "int" } }
+  },
+  "odemeIcindeGecikmeFaizi": "{tarih} · içinde {faiz} gecikme faizi",
+  "@odemeIcindeGecikmeFaizi": {
+    "placeholders": { "tarih": {}, "faiz": {} }
+  },
+  "odemeSilBaslik": "Ödemeyi Sil",
+  "odemeSilOnayMesaji": "{tutar} tutarındaki ödeme kaydı silinecek. Bu ödemenin cüzdan bakiyesine etkisi de geri alınır.",
+  "@odemeSilOnayMesaji": {
+    "placeholders": { "tutar": {} }
+  },
+  "odemeyiDuzenleBaslik": "Ödemeyi Düzenle",
+  "onboardingDebtAddStartDateTitle": "Başlangıç Tarihi",
+  "onboardingDebtAddStartDateDesc": "Borcun başladığı tarih; taksitler buradan itibaren aylık ilerler. Hatırlatma bildirimi, sıradaki ödenmemiş taksitin vadesinde gelir.",
+  "vadeTaksitIlerleme": "Vade: {termMonths} Ay | {paid}/{termMonths} taksit",
+  "@vadeTaksitIlerleme": {
+    "placeholders": { "termMonths": { "type": "int" }, "paid": { "type": "int" } }
+  },
+  "vadeOpsiyonelLabel": "Vade (opsiyonel)",
+  "vadeSecilmedi": "Seçilmedi"
 }

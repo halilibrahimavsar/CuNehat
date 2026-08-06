@@ -704,11 +704,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oDENDI => 'PAID';
 
   @override
-  String vadeDebtTermmonthsAy(Object termMonths, Object length) {
-    return 'Maturity: $termMonths Months | $length Payments';
-  }
-
-  @override
   String vadeDateformatDdMmm(Object dueDate) {
     return 'Maturity: $dueDate';
   }
@@ -1479,9 +1474,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kurumKisiGirin => 'Enter institution/person';
 
   @override
-  String get vadeEnAz1Olmali => 'Maturity must be at least 1 month';
-
-  @override
   String get aylikTaksitTutariniGirin => 'Enter monthly installment amount';
 
   @override
@@ -2078,7 +2070,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notifDebtUpcomingBody(Object title) {
-    return 'The due date for $title is approaching.';
+    return 'The next installment for $title is due soon.';
   }
 
   @override
@@ -2086,7 +2078,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notifDebtDueBody(Object title) {
-    return 'The due date for $title is today.';
+    return 'The next installment for $title is due today.';
   }
 
   @override
@@ -2283,7 +2275,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingDebtAddDueDateDesc =>
-      'You\'ll get a reminder on the date you pick — for installment records, one per installment.';
+      'The date you expect to collect. You get a reminder as it approaches.';
 
   @override
   String get onboardingInvestmentAddTitle => 'Today\'s Value';
@@ -3273,4 +3265,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driveErrApiNotEnabled =>
       'The Google Drive API is not enabled for this app. This is a setup gap; it cannot be fixed by granting permission.';
+
+  @override
+  String vadeAraligi(int max) {
+    return 'Term must be between 1 and $max months';
+  }
+
+  @override
+  String oranAraligi(int max) {
+    return 'Rate must be between 0% and $max%';
+  }
+
+  @override
+  String get gecikmeFaiziLabel => 'Late interest:';
+
+  @override
+  String get odenecekToplamLabel => 'Total payable:';
+
+  @override
+  String get odenecekTutardanFazlaOlamaz => 'Cannot exceed the total payable';
+
+  @override
+  String get gecikmeFaiziChip => 'Late interest';
+
+  @override
+  String gecikmeFaiziKisa(Object tutar) {
+    return '+ $tutar late interest';
+  }
+
+  @override
+  String odemeMahsupAciklama(Object faiz, Object anapara) {
+    return '$faiz goes to late interest, $anapara to principal.';
+  }
+
+  @override
+  String taksitGecikmeGun(Object tutar, int gun) {
+    return '≈ $tutar · $gun days overdue';
+  }
+
+  @override
+  String odemeIcindeGecikmeFaizi(Object tarih, Object faiz) {
+    return '$tarih · includes $faiz late interest';
+  }
+
+  @override
+  String get odemeSilBaslik => 'Delete Payment';
+
+  @override
+  String odemeSilOnayMesaji(Object tutar) {
+    return 'The payment record of $tutar will be deleted. Its effect on the wallet balance is reverted too.';
+  }
+
+  @override
+  String get odemeyiDuzenleBaslik => 'Edit Payment';
+
+  @override
+  String get onboardingDebtAddStartDateTitle => 'Start Date';
+
+  @override
+  String get onboardingDebtAddStartDateDesc =>
+      'The date the debt starts; installments run monthly from here. The reminder arrives on the due date of the next unpaid installment.';
+
+  @override
+  String vadeTaksitIlerleme(int termMonths, int paid) {
+    return 'Term: $termMonths months | $paid/$termMonths installments';
+  }
+
+  @override
+  String get vadeOpsiyonelLabel => 'Due date (optional)';
+
+  @override
+  String get vadeSecilmedi => 'Not set';
 }

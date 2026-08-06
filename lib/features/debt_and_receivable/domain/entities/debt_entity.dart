@@ -1,30 +1,57 @@
-import 'dart:math' as math;
 import 'package:cunehat/core/utils/money_math.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:equatable/equatable.dart';
 
 enum DebtType { bankLoan, installmentDebt, personalDebt, otherDebt }
 
 class Payment extends Equatable {
+  /// Kaydın kalıcı kimliği. Ödeme düzenleme/silme bu kimlikle hedeflenir;
+  /// liste indeksi güvenilir değildir (liste bloc'tan yeniden çekilebilir).
+  final String id;
   final DateTime date;
+
+  /// Cüzdandan gerçekten çıkan tutar. Deftere bu yazılır.
   final double amount;
+
+  /// [amount]'ın gecikme faizine sayılan kısmı.
+  ///
+  /// Ödemeler önce birikmiş gecikme faizini kapatır, kalanı ana paraya sayar.
+  /// Borcun kalanı yalnız faiz-dışı kısımla azalır ([DebtEntity
+  /// .principalPaidAmount]) — böylece `remainingAmount`/`isPaid` zamanla
+  /// büyüyen bir tahakkuktan etkilenmez, donmuş ve kararlı kalır.
+  final double overdueInterestPart;
+
   final String? notes;
 
-  const Payment({required this.date, required this.amount, this.notes});
+  const Payment({
+    required this.id,
+    required this.date,
+    required this.amount,
+    this.overdueInterestPart = 0,
+    this.notes,
+  });
+
+  /// Bu ödemenin ana paraya sayılan kısmı.
+  double get principalPart => roundToCents(amount - overdueInterestPart);
 
   Payment copyWith({
+    String? id,
     DateTime? date,
     double? amount,
+    double? overdueInterestPart,
     String? notes,
   }) {
     return Payment(
+      id: id ?? this.id,
       date: date ?? this.date,
       amount: amount ?? this.amount,
+      overdueInterestPart: overdueInterestPart ?? this.overdueInterestPart,
       notes: notes ?? this.notes,
     );
   }
 
   @override
-  List<Object?> get props => [date, amount, notes];
+  List<Object?> get props => [id, date, amount, overdueInterestPart, notes];
 }
 
 class DebtEntity extends Equatable {
@@ -34,16 +61,30 @@ class DebtEntity extends Equatable {
   final String title;
   final String counterparty; // Banka adı veya Kişi adı (UI'daki Subtitle)
   final DebtType type;
+
+  /// Toplam geri ödemenin hangi yöntemle hesaplandığı. Kayıtla saklanır;
+  /// [interestRate]'in değerinden TÜRETİLMEZ (bkz. [DebtCalcMode]).
+  final DebtCalcMode calcMode;
+
   final double principalAmount;
   final double interestRate;
   final int termMonths;
-  final double overdueInterestRate; // Gecikme Faizi (%)
+
+  /// Gecikme faizi (aylık %). Vadesi geçmiş taksitlerin ödenmemiş kısmına
+  /// günlük oransal işler; bkz. `computeOverdueInterest`.
+  final double overdueInterestRate;
+
   final DateTime startDate;
   final DateTime? dueDate;
   final List<Payment> payments;
   final bool isPaid;
   final String? notes;
-  final double? expectedTotalAmount;
+
+  /// Kayıt anında dondurulan toplam geri ödeme. Her yazım yolu bunu
+  /// `DebtRepaymentCalculator` ile hesaplar; borcun büyüklüğü sonradan
+  /// yeniden türetilmez, bu yüzden zamanla ya da formül değişikliğiyle
+  /// kaymaz.
+  final double expectedTotalAmount;
 
   /// Ana para cüzdana nakit olarak girdi mi?
   /// true  → borç alınırken para ele geçti; anapara bakiyeye gelir yazılır
@@ -59,6 +100,7 @@ class DebtEntity extends Equatable {
     required this.title,
     required this.counterparty,
     required this.type,
+    required this.calcMode,
     required this.principalAmount,
     required this.interestRate,
     required this.termMonths,
@@ -68,7 +110,7 @@ class DebtEntity extends Equatable {
     this.payments = const [],
     this.isPaid = false,
     this.notes,
-    this.expectedTotalAmount,
+    required this.expectedTotalAmount,
     this.principalToWallet = true,
   });
 
@@ -79,6 +121,7 @@ class DebtEntity extends Equatable {
     String? title,
     String? counterparty,
     DebtType? type,
+    DebtCalcMode? calcMode,
     double? principalAmount,
     double? interestRate,
     int? termMonths,
@@ -98,6 +141,7 @@ class DebtEntity extends Equatable {
       title: title ?? this.title,
       counterparty: counterparty ?? this.counterparty,
       type: type ?? this.type,
+      calcMode: calcMode ?? this.calcMode,
       principalAmount: principalAmount ?? this.principalAmount,
       interestRate: interestRate ?? this.interestRate,
       termMonths: termMonths ?? this.termMonths,
@@ -114,59 +158,36 @@ class DebtEntity extends Equatable {
 
   // --- Hesaplama Metodları ---
 
-  /// Toplam Ödenen Tutar (kuruşa yuvarlı; FP birikimi kullanıcıya sızmaz)
+  /// Cüzdandan çıkan toplam nakit (gecikme faizi dahil; kuruşa yuvarlı).
+  /// "Ne kadar ödedim" sorusunun yanıtı — borcun ne kadarının kapandığı
+  /// değil (onun için [principalPaidAmount]).
   double get totalPaidAmount =>
       roundToCents(payments.fold(0, (sum, p) => sum + p.amount));
 
-  /// Basit faiz formülü
-  static double calculateTotalDebt({
-    required double principal,
-    required double interestRate,
-    required int termMonths,
-  }) =>
-      principal + (principal * interestRate * termMonths / 1200);
+  /// Ödemelerin **borcu azaltan** kısmı: toplam nakit eksi gecikme faizi payı.
+  /// Kalan borç, taksit planı ve "ödendi" kararı bunu kullanır.
+  ///
+  /// Yuvarlama TOPLAMDA yapılır, ödeme başına değil: kayıt başına yuvarlayıp
+  /// toplamak, kuruş-temiz olmayan eski ödemelerde ([Payment.principalPart]
+  /// tek kaydı yuvarlar) toplamı [totalPaidAmount]'tan kuruşlarca ayırıp
+  /// kapanmış bir borcu açık gösteriyordu.
+  double get principalPaidAmount => roundToCents(
+      payments.fold(0, (sum, p) => sum + p.amount - p.overdueInterestPart));
 
-  /// Eşit Taksitli Kredi (Amortisman) Formülü - Aylık Faiz üzerinden
-  static double calculateAmortizedTotal({
-    required double principal,
-    required double monthlyInterestRate,
-    required int termMonths,
-    bool includeTaxes = false,
-  }) {
-    if (principal <= 0 || termMonths <= 0) return principal;
-    if (monthlyInterestRate <= 0) return principal;
-
-    // Banka tüketici kredilerinde faiz üzerinden %15 KKDF ve %15 BSMV alınır (Toplam %30).
-    double effectiveRate = monthlyInterestRate;
-    if (includeTaxes) {
-      effectiveRate = monthlyInterestRate * 1.30;
-    }
-
-    final r = effectiveRate / 100;
-    final denominator = math.pow(1 + r, termMonths) - 1;
-    if (denominator == 0) return principal;
-
-    final monthlyPayment =
-        principal * (r * math.pow(1 + r, termMonths)) / denominator;
-    return monthlyPayment * termMonths;
-  }
+  /// Ödemelerin gecikme faizine sayılmış toplam kısmı.
+  double get settledOverdueInterest =>
+      roundToCents(payments.fold(0, (sum, p) => sum + p.overdueInterestPart));
 
   /// Toplam Borç Tutarı (kuruşa yuvarlı; faiz formülü çok basamak üretebilir)
-  double get totalDebtAmount => roundToCents(
-        expectedTotalAmount ??
-            calculateTotalDebt(
-              principal: principalAmount,
-              interestRate: interestRate,
-              termMonths: termMonths,
-            ),
-      );
+  double get totalDebtAmount => roundToCents(expectedTotalAmount);
 
   /// Kalan Borç (kuruşa yuvarlı; "Tümü" prefill'i bu değerle birebir eşleşir)
-  double get remainingAmount => roundToCents(totalDebtAmount - totalPaidAmount);
+  double get remainingAmount =>
+      roundToCents(totalDebtAmount - principalPaidAmount);
 
   /// Ödeme İlerlemesi (0.0 - 1.0 arası)
   double get progress =>
-      totalDebtAmount == 0 ? 0 : totalPaidAmount / totalDebtAmount;
+      totalDebtAmount == 0 ? 0 : principalPaidAmount / totalDebtAmount;
 
   @override
   List<Object?> get props => [
@@ -176,6 +197,7 @@ class DebtEntity extends Equatable {
         title,
         counterparty,
         type,
+        calcMode,
         principalAmount,
         interestRate,
         termMonths,

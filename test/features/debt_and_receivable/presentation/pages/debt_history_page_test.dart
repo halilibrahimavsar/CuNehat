@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -70,6 +71,8 @@ void main() {
   }
 
   final testPaidDebt = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 150000.0,
     id: 'debt_1',
     userId: 'user_123',
     walletId: 'wallet_123',
@@ -83,7 +86,7 @@ void main() {
     dueDate: DateTime(2026, 6, 1),
     isPaid: true,
     payments: [
-      Payment(date: DateTime(2026, 1, 15), amount: 150000.0),
+      Payment(id: 'p1', date: DateTime(2026, 1, 15), amount: 150000.0),
     ],
   );
 

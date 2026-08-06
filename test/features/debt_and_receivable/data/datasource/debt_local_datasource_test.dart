@@ -1,3 +1,5 @@
+import 'package:cunehat/features/debt_and_receivable/data/models/debt_calc_mode_adapter.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'dart:io';
 import 'package:cunehat/features/debt_and_receivable/data/datasource/debt_local_datasource.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
@@ -14,6 +16,7 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('hive_test_debts');
     Hive.init(tempDir.path);
     Hive.registerAdapter(DebtTypeAdapter());
+    Hive.registerAdapter(DebtCalcModeAdapter());
     Hive.registerAdapter(PaymentModelAdapter());
     Hive.registerAdapter(DebtModelAdapter());
   });
@@ -39,6 +42,8 @@ void main() {
   group('DebtLocalDatasource', () {
     final startDate = DateTime(2026, 1, 1);
     final testDebt1 = DebtModel(
+      calcMode: DebtCalcMode.none,
+      expectedTotalAmount: 10000.0,
       id: 'debt_1',
       userId: 'user_1',
       walletId: 'wallet_1',
@@ -52,6 +57,8 @@ void main() {
     );
 
     final testDebt2 = DebtModel(
+      calcMode: DebtCalcMode.none,
+      expectedTotalAmount: 5000.0,
       id: 'debt_2',
       userId: 'user_1',
       walletId: 'wallet_2',

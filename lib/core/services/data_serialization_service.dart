@@ -102,7 +102,14 @@ class DataSerializationService {
   /// tekrar tespitinin KESİN anahtarı; gün+tutar+başlık üçlüsü hem kullanıcı
   /// düzenlemesiyle bozulabildiği hem de gerçek ekstrelerde çakışabildiği için
   /// tek başına yetmiyordu (bkz. `TransactionEntity.reference`).
-  static const int schemaVersion = 5;
+  /// v6 (2026-08-06): borç hesabı ve ödeme kaydı.
+  /// - Borçlara `calcMode`: toplam geri ödemenin hangi yöntemle hesaplandığı.
+  ///   Eskiden `interestRate`'in değerinden tahmin ediliyordu; tahmin yanlış
+  ///   olduğunda düzenleme, kaydın toplamını sessizce değiştiriyordu.
+  /// - Ödemelere `id`: düzenleme/silme kalıcı kimlikle hedeflenir.
+  /// - Ödemelere `overdueInterestPart`: ödemenin gecikme faizine sayılan
+  ///   kısmı. Borcun kalanı yalnız faiz-dışı kısımla azalır.
+  static const int schemaVersion = 6;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;

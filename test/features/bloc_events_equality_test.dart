@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/presentation/bloc/budgets_event.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -84,6 +85,8 @@ void main() {
 
   group('DebtEvent', () {
     final debt = DebtEntity(
+      calcMode: DebtCalcMode.none,
+      expectedTotalAmount: 1000,
       id: 'd1',
       userId: 'u1',
       walletId: 'w1',
@@ -147,7 +150,17 @@ void main() {
         startDate: DateTime(2026, 1, 1),
       );
       expect(e1, e2);
-      expect(e1.props, ['d1', 'w1']);
+      // props tam alan listesini taşır: eksik props, farklı borçların
+      // silme olaylarını eşit gösteriyordu.
+      expect(e1.props, [
+        'd1',
+        'u1',
+        'w1',
+        1000.0,
+        DateTime(2026, 1, 1),
+        const <Payment>[],
+        true,
+      ]);
     });
   });
 

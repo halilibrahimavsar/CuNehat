@@ -1,4 +1,4 @@
-import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -6,103 +6,157 @@ void main() {
   const calc = DebtRepaymentCalculator();
 
   group('DebtRepaymentCalculator.compute', () {
-    test('personalDebt: toplam = ana para, faizsiz', () {
+    test('none: toplam = ana para, faizsiz', () {
       final r = calc.compute(
-        type: DebtType.personalDebt,
-        principal: 1000,
+        mode: DebtCalcMode.none,
+        principal: 5000,
         termMonths: 1,
       );
-      expect(r.expectedTotal, 1000);
+      expect(r.expectedTotal, 5000);
       expect(r.totalInterest, 0);
+      expect(r.monthlyPayment, 5000);
+    });
+
+    test('flatSurcharge: ana para + tek seferlik %vade farkı', () {
+      final r = calc.compute(
+        mode: DebtCalcMode.flatSurcharge,
+        principal: 10000,
+        termMonths: 12,
+        interestRate: 20,
+      );
+      expect(r.expectedTotal, 12000);
+      expect(r.totalInterest, 2000);
       expect(r.monthlyPayment, 1000);
     });
 
-    test('installmentDebt basit vade farkı: ana para + %faiz', () {
+    test('amortized: eşit taksitli kredi formülü, aylık oran', () {
+      // P=10000, r=0.01, n=12 → taksit ≈ 888,49 → toplam ≈ 10.661,85
       final r = calc.compute(
-        type: DebtType.installmentDebt,
-        principal: 1000,
-        termMonths: 10,
-        interestRate: 10,
-        isInstallmentAmortized: false,
-      );
-      expect(r.expectedTotal, 1100); // 1000 + 1000*10/100
-      expect(r.totalInterest, 100);
-      expect(r.monthlyPayment, 110); // 1100 / 10
-    });
-
-    test('installmentDebt amortized, faiz 0 → toplam ana paraya eşit', () {
-      final r = calc.compute(
-        type: DebtType.installmentDebt,
-        principal: 2000,
-        termMonths: 4,
-        interestRate: 0,
-        isInstallmentAmortized: true,
-      );
-      // calculateAmortizedTotal faiz <= 0 için principal döndürür.
-      expect(r.expectedTotal, 2000);
-      expect(r.totalInterest, 0);
-      expect(r.monthlyPayment, 500);
-    });
-
-    test('bankLoan aylık taksit biliniyor: toplam = taksit × vade', () {
-      final r = calc.compute(
-        type: DebtType.bankLoan,
-        principal: 5000,
-        termMonths: 12,
-        monthlyInstallment: 500,
-        isBankLoanMonthly: true,
-      );
-      expect(r.expectedTotal, 6000); // 500 * 12
-      expect(r.totalInterest, 1000); // 6000 - 5000
-      expect(r.monthlyPayment, 500);
-    });
-
-    test('bankLoan aylık modda toplam < ana para ise faiz negatif gösterilmez',
-        () {
-      final r = calc.compute(
-        type: DebtType.bankLoan,
+        mode: DebtCalcMode.amortized,
         principal: 10000,
         termMonths: 12,
-        monthlyInstallment: 500, // 6000 < 10000
-        isBankLoanMonthly: true,
+        interestRate: 1,
       );
-      expect(r.expectedTotal, 6000);
-      expect(r.totalInterest, 0); // negatif değil
+      expect(r.expectedTotal, closeTo(10661.85, 0.1));
     });
 
-    test('bankLoan faiz oranıyla, faiz 0 → amortisman ana parayı döndürür', () {
+    test('amortizedWithTaxes: efektif oran × 1,30 (KKDF + BSMV)', () {
+      // Efektif aylık oran %1,3 → toplam ≈ 10.865
       final r = calc.compute(
-        type: DebtType.bankLoan,
-        principal: 3000,
-        termMonths: 6,
-        interestRate: 0,
-        isBankLoanMonthly: false,
+        mode: DebtCalcMode.amortizedWithTaxes,
+        principal: 10000,
+        termMonths: 12,
+        interestRate: 1,
       );
-      expect(r.expectedTotal, 3000);
+      expect(r.expectedTotal, closeTo(10865.00, 0.1));
+      // Vergiler toplamı gerçekten yükseltmeli.
+      final withoutTaxes = calc.compute(
+        mode: DebtCalcMode.amortized,
+        principal: 10000,
+        termMonths: 12,
+        interestRate: 1,
+      );
+      expect(r.expectedTotal, greaterThan(withoutTaxes.expectedTotal));
+    });
+
+    test('amortized: oran 0 ise toplam ana paraya eşit', () {
+      final r = calc.compute(
+        mode: DebtCalcMode.amortized,
+        principal: 10000,
+        termMonths: 12,
+      );
+      expect(r.expectedTotal, 10000);
       expect(r.totalInterest, 0);
     });
 
-    test('otherDebt: basit faiz formülü (principal*rate*term/1200)', () {
-      final r = calc.compute(
-        type: DebtType.otherDebt,
-        principal: 1200,
-        termMonths: 12,
-        interestRate: 10,
+    test('amortized: vade 0 ya da ana para 0 ise ana parayı döndürür', () {
+      expect(
+        calc
+            .compute(
+                mode: DebtCalcMode.amortized,
+                principal: 1000,
+                termMonths: 0,
+                interestRate: 1)
+            .expectedTotal,
+        1000,
       );
-      // 1200 + 1200*10*12/1200 = 1200 + 120
-      expect(r.expectedTotal, 1320);
-      expect(r.totalInterest, 120);
-      expect(r.monthlyPayment, 110); // 1320 / 12
+      expect(
+        calc
+            .compute(
+                mode: DebtCalcMode.amortized,
+                principal: 0,
+                termMonths: 12,
+                interestRate: 1)
+            .expectedTotal,
+        0,
+      );
+    });
+
+    test('fixedInstallment: toplam = taksit × vade', () {
+      final r = calc.compute(
+        mode: DebtCalcMode.fixedInstallment,
+        principal: 10000,
+        termMonths: 12,
+        monthlyInstallment: 1000,
+      );
+      expect(r.expectedTotal, 12000);
+      expect(r.totalInterest, 2000);
+      expect(r.monthlyPayment, 1000);
+    });
+
+    test('fixedInstallment: toplam ana paranın altındaysa faiz negatif değil',
+        () {
+      final r = calc.compute(
+        mode: DebtCalcMode.fixedInstallment,
+        principal: 10000,
+        termMonths: 12,
+        monthlyInstallment: 500,
+      );
+      expect(r.expectedTotal, 6000);
+      expect(r.totalInterest, 0);
+    });
+
+    test('simpleMonthlyInterest: oran AYLIK uygulanır', () {
+      // Regresyon: aynı girdi eskiden yıllık nominal faiz gibi işleniyordu
+      // (rate × term / 1200) ve toplam 10.500 çıkıyordu — girilen oranın
+      // etkisi 12 kat küçüktü. Etiket "Aylık Faiz %" diyor.
+      final r = calc.compute(
+        mode: DebtCalcMode.simpleMonthlyInterest,
+        principal: 10000,
+        termMonths: 12,
+        interestRate: 5,
+      );
+      expect(r.expectedTotal, 16000);
+      expect(r.totalInterest, 6000);
     });
 
     test('vade 0 ise aylık taksit 0', () {
       final r = calc.compute(
-        type: DebtType.otherDebt,
+        mode: DebtCalcMode.simpleMonthlyInterest,
         principal: 1000,
         termMonths: 0,
-        interestRate: 10,
+        interestRate: 5,
       );
       expect(r.monthlyPayment, 0);
+    });
+
+    test('taşan girdide NaN/Infinity kayda sızmaz, ana paraya düşer', () {
+      // Doğrulama vadeyi kMaxTermMonths ile sınırlıyor; bu ikinci savunma
+      // hattı. Eskiden toplam NaN oluyor, kayıt `moneyIsPositive(NaN)==false`
+      // yüzünden listeden tamamen kayboluyordu.
+      final r = calc.compute(
+        mode: DebtCalcMode.amortized,
+        principal: 100000,
+        termMonths: 36000,
+        interestRate: 2,
+      );
+      expect(r.expectedTotal.isFinite, isTrue);
+      expect(r.expectedTotal, 100000);
+    });
+
+    test('sınır sabitleri makul aralıkta', () {
+      expect(kMaxTermMonths, 600);
+      expect(kMaxInterestRatePercent, 100);
     });
   });
 }

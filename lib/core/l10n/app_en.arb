@@ -270,13 +270,6 @@
   "finansalTakip": "Financial Tracking",
   "vADESIGecmis": "OVERDUE",
   "oDENDI": "PAID",
-  "vadeDebtTermmonthsAy": "Maturity: {termMonths} Months | {length} Payments",
-  "@vadeDebtTermmonthsAy": {
-    "placeholders": {
-      "termMonths": {},
-      "length": {}
-    }
-  },
   "vadeDateformatDdMmm": "Maturity: {dueDate}",
   "@vadeDateformatDdMmm": {
     "placeholders": {
@@ -683,7 +676,6 @@
   "baslikGirin": "Enter title",
   "borcluKisiAdiGirin": "Enter debtor name",
   "kurumKisiGirin": "Enter institution/person",
-  "vadeEnAz1Olmali": "Maturity must be at least 1 month",
   "aylikTaksitTutariniGirin": "Enter monthly installment amount",
   "aylikTaksitKrediTutarindanKucuk": "Monthly installment × term can't be less than the loan amount",
   "krediHesaplamaInfoBaslik": "Bank loan calculation",
@@ -917,14 +909,14 @@
     }
   },
   "notifDebtUpcomingTitle": "Debt Reminder",
-  "notifDebtUpcomingBody": "The due date for {title} is approaching.",
+  "notifDebtUpcomingBody": "The next installment for {title} is due soon.",
   "@notifDebtUpcomingBody": {
     "placeholders": {
       "title": {}
     }
   },
   "notifDebtDueTitle": "Debt Due Today!",
-  "notifDebtDueBody": "The due date for {title} is today.",
+  "notifDebtDueBody": "The next installment for {title} is due today.",
   "@notifDebtDueBody": {
     "placeholders": {
       "title": {}
@@ -1030,7 +1022,7 @@
   "onboardingDebtAddTitle": "Amount and Repayment",
   "onboardingDebtAddDesc": "Enter the amount. Depending on the debt type, installment, interest, and term fields appear below; the summary under the card computes total repayment live.",
   "onboardingDebtAddDueDateTitle": "Due Date",
-  "onboardingDebtAddDueDateDesc": "You'll get a reminder on the date you pick — for installment records, one per installment.",
+  "onboardingDebtAddDueDateDesc": "The date you expect to collect. You get a reminder as it approaches.",
   "onboardingInvestmentAddTitle": "Today's Value",
   "onboardingInvestmentAddDesc": "The investment's current market value. Your profit/loss is the difference between this and total cost.",
   "onboardingInvestmentAddCostTitle": "Total Cost",
@@ -1602,5 +1594,47 @@
       }
     }
   },
-  "driveErrApiNotEnabled": "The Google Drive API is not enabled for this app. This is a setup gap; it cannot be fixed by granting permission."
+  "driveErrApiNotEnabled": "The Google Drive API is not enabled for this app. This is a setup gap; it cannot be fixed by granting permission.",
+  "vadeAraligi": "Term must be between 1 and {max} months",
+  "@vadeAraligi": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "oranAraligi": "Rate must be between 0% and {max}%",
+  "@oranAraligi": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "gecikmeFaiziLabel": "Late interest:",
+  "odenecekToplamLabel": "Total payable:",
+  "odenecekTutardanFazlaOlamaz": "Cannot exceed the total payable",
+  "gecikmeFaiziChip": "Late interest",
+  "gecikmeFaiziKisa": "+ {tutar} late interest",
+  "@gecikmeFaiziKisa": {
+    "placeholders": { "tutar": {} }
+  },
+  "odemeMahsupAciklama": "{faiz} goes to late interest, {anapara} to principal.",
+  "@odemeMahsupAciklama": {
+    "placeholders": { "faiz": {}, "anapara": {} }
+  },
+  "taksitGecikmeGun": "≈ {tutar} · {gun} days overdue",
+  "@taksitGecikmeGun": {
+    "placeholders": { "tutar": {}, "gun": { "type": "int" } }
+  },
+  "odemeIcindeGecikmeFaizi": "{tarih} · includes {faiz} late interest",
+  "@odemeIcindeGecikmeFaizi": {
+    "placeholders": { "tarih": {}, "faiz": {} }
+  },
+  "odemeSilBaslik": "Delete Payment",
+  "odemeSilOnayMesaji": "The payment record of {tutar} will be deleted. Its effect on the wallet balance is reverted too.",
+  "@odemeSilOnayMesaji": {
+    "placeholders": { "tutar": {} }
+  },
+  "odemeyiDuzenleBaslik": "Edit Payment",
+  "onboardingDebtAddStartDateTitle": "Start Date",
+  "onboardingDebtAddStartDateDesc": "The date the debt starts; installments run monthly from here. The reminder arrives on the due date of the next unpaid installment.",
+  "vadeTaksitIlerleme": "Term: {termMonths} months | {paid}/{termMonths} installments",
+  "@vadeTaksitIlerleme": {
+    "placeholders": { "termMonths": { "type": "int" }, "paid": { "type": "int" } }
+  },
+  "vadeOpsiyonelLabel": "Due date (optional)",
+  "vadeSecilmedi": "Not set"
 }

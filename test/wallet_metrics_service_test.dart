@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
@@ -216,10 +217,8 @@ class FakeInvestmentRepository implements InvestmentRepository {
     required InvestmentType type,
     required String targetCurrency,
   }) async =>
-      const Right<Failure, LivePriceQuote>(
-          LivePriceQuote(price: 0, currency: 'TRY',
- convertedPrice: 0,
- targetCurrency: 'TRY'));
+      const Right<Failure, LivePriceQuote>(LivePriceQuote(
+          price: 0, currency: 'TRY', convertedPrice: 0, targetCurrency: 'TRY'));
 }
 
 /// Yazmayı her zaman başarısız kılan varyant (hata yolu testi).
@@ -373,6 +372,9 @@ DebtEntity _debt(
   required bool isPaid,
 }) =>
     DebtEntity(
+      calcMode: DebtCalcMode.none,
+      // Faizsiz kişisel borç: toplam geri ödeme ana paranın kendisi.
+      expectedTotalAmount: principal,
       id: 'd-$principal',
       userId: 'u',
       walletId: walletId,
@@ -384,7 +386,7 @@ DebtEntity _debt(
       termMonths: 12,
       startDate: DateTime(2026, 1, 1),
       payments: paid > 0
-          ? [Payment(date: DateTime(2026, 1, 2), amount: paid)]
+          ? [Payment(id: 'p1', date: DateTime(2026, 1, 2), amount: paid)]
           : const [],
       isPaid: isPaid,
     );
@@ -766,6 +768,8 @@ void main() {
           type: TransactionTypeModel.income));
 
       debts.store.add(DebtEntity(
+          calcMode: DebtCalcMode.none,
+          expectedTotalAmount: 10,
           id: 'd1',
           userId: 'u',
           walletId: 'w',

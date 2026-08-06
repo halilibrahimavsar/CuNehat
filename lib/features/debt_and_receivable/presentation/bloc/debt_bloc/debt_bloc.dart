@@ -7,6 +7,7 @@ import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/overdue_interest.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/debt_usecases.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/services/deletion_undo_service.dart';
@@ -42,6 +43,8 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     on<AddDebtEvent>(_onAddDebt);
     on<UpdateDebtEvent>(_onUpdateDebt);
     on<PayDebtEvent>(_onPayDebt);
+    on<UpdateDebtPaymentEvent>(_onUpdateDebtPayment);
+    on<DeleteDebtPaymentEvent>(_onDeleteDebtPayment);
     on<DeleteDebtEvent>(_onDeleteDebt);
 
     // Borç listesi defterin türevi: silme geri alındığında (bkz.
@@ -104,9 +107,26 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     );
   }
 
+  /// Kaydın türev alanlarını tek noktada tazeler: ödemelerin gecikme faizi
+  /// payları kronolojik olarak yeniden dağıtılır, `isPaid` bunun üzerinden
+  /// yeniden hesaplanır.
+  ///
+  /// Ödeme ekleme/düzenleme/silme ve borcun kendisinin düzenlenmesi — dördü de
+  /// buradan geçmeli. Borcun vadesi, başlangıcı ya da toplamı değişince taksit
+  /// planı kayar ve eski faiz payları geçersizleşir; yalnız `isPaid`'i
+  /// tazelemek yetmez.
+  DebtEntity _normalize(DebtEntity debt) {
+    final withSplits = debt.copyWith(payments: reallocatePayments(debt));
+    return withSplits.copyWith(
+      isPaid: moneyGte(
+              withSplits.principalPaidAmount, withSplits.totalDebtAmount) &&
+          !moneyIsPositive(outstandingOverdueInterest(withSplits)),
+    );
+  }
+
   Future<void> _onPayDebt(PayDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
-    final result = await updateDebtUseCase(event.debt);
+    final result = await updateDebtUseCase(_normalize(event.debt));
 
     await result.fold(
       (failure) async => emit(DebtError(failure.message)),
@@ -132,15 +152,111 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     );
   }
 
+  Future<void> _onUpdateDebtPayment(
+      UpdateDebtPaymentEvent event, Emitter<DebtState> emit) async {
+    emit(DebtLoading());
+    final debt = _normalize(event.debt);
+    final result = await updateDebtUseCase(debt);
+
+    await result.fold(
+      (failure) async => emit(DebtError(failure.message)),
+      (_) async {
+        // Mutabakat, borç güncellemesindeki desenin aynısı — YALNIZ İŞARET
+        // TERS: anapara girişi GELİR, ödeme ise GİDERdir. Tutar arttıysa
+        // deftere ek gider, azaldıysa iade yazılır.
+        final entries = <CashMovement>[];
+        if (_isSameDay(event.prevDate, event.newDate)) {
+          final diff = event.newAmount - event.prevAmount;
+          if (diff != 0) {
+            entries.add(CashMovement(
+              userId: debt.userId,
+              amount: diff.abs(),
+              isIncome: diff < 0,
+              title: 'Ödeme güncellendi: ${debt.title}',
+              tag: CashMovementTags.debtPayment,
+              date: event.newDate,
+            ));
+          }
+        } else {
+          // Tarih taşındı: eskisini KENDİ döneminde iade et, yenisini yeni
+          // döneme yaz. Aksi hâlde iki dönemin gider toplamı birden bozulur.
+          if (event.prevAmount != 0) {
+            entries.add(CashMovement(
+              userId: debt.userId,
+              amount: event.prevAmount,
+              isIncome: true,
+              title: 'Ödeme güncellendi: ${debt.title}',
+              tag: CashMovementTags.debtPayment,
+              date: event.prevDate,
+            ));
+          }
+          if (event.newAmount != 0) {
+            entries.add(CashMovement(
+              userId: debt.userId,
+              amount: event.newAmount,
+              isIncome: false,
+              title: 'Ödeme güncellendi: ${debt.title}',
+              tag: CashMovementTags.debtPayment,
+              date: event.newDate,
+            ));
+          }
+        }
+
+        var cashOk = true;
+        if (entries.isNotEmpty) {
+          cashOk = (await walletMetricsService.recordCashMovements(
+            walletId: debt.walletId,
+            entries: entries,
+          ))
+              .ok;
+        }
+        await _safeSyncDebt(debt.walletId);
+
+        emit(DebtOperationSuccess(
+            'Ödeme güncellendi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+        add(GetDebtsEvent(debt.walletId));
+      },
+    );
+  }
+
+  Future<void> _onDeleteDebtPayment(
+      DeleteDebtPaymentEvent event, Emitter<DebtState> emit) async {
+    emit(DebtLoading());
+    final debt = _normalize(event.debt);
+    final result = await updateDebtUseCase(debt);
+
+    await result.fold(
+      (failure) async => emit(DebtError(failure.message)),
+      (_) async {
+        // İade, silinen ödemenin KENDİ tarihine yazılır: bugüne yazılsaydı
+        // geçmiş ayda iadesiz gider, bu ayda gidersiz iade kalırdı.
+        final cashOk = await walletMetricsService.recordCashMovement(
+          walletId: debt.walletId,
+          userId: debt.userId,
+          amount: event.removedAmount,
+          isIncome: true,
+          title: 'Ödeme silindi: ${debt.title}',
+          tag: CashMovementTags.debtPayment,
+          date: event.removedDate,
+        );
+        await _safeSyncDebt(debt.walletId);
+
+        emit(DebtOperationSuccess(
+            'Ödeme silindi.${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+        add(GetDebtsEvent(debt.walletId));
+      },
+    );
+  }
+
   Future<void> _onUpdateDebt(
       UpdateDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
     // Tutar düzenlemesi isPaid'i geçersiz kılabilir (örn. 600 ödenmişken
     // anapara 500'e indirilirse). isPaid yeniden hesaplanmazsa borç ne aktif
-    // listede (remaining ≤ 0) ne geçmişte (isPaid=false) görünür.
-    final debt = event.debt.copyWith(
-      isPaid: moneyGte(event.debt.totalPaidAmount, event.debt.totalDebtAmount),
-    );
+    // listede (remaining ≤ 0) ne geçmişte (isPaid=false) görünür. Vade/
+    // başlangıç düzenlemesi ayrıca taksit planını kaydırdığından ödemelerin
+    // gecikme faizi payları da yeniden dağıtılmalı.
+    final debt = _normalize(event.debt);
     final result = await updateDebtUseCase(debt);
 
     await result.fold(

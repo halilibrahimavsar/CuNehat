@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -11,11 +12,12 @@ void main() {
     double principal = 300,
     double interest = 0,
     int term = 1,
-    double? expectedTotal,
+    double expectedTotal = 300,
     List<Payment> payments = const [],
     bool isPaid = false,
   }) {
     return DebtEntity(
+      calcMode: DebtCalcMode.none,
       userId: 'u',
       walletId: 'w',
       title: 'Kredi',
@@ -69,9 +71,12 @@ void main() {
       final d = debt(
         expectedTotal: 314.56,
         payments: [
-          Payment(date: DateTime(2026, 2, 1), amount: 104.85333333333334),
-          Payment(date: DateTime(2026, 3, 1), amount: 104.85333333333334),
-          Payment(date: DateTime(2026, 4, 1), amount: 104.85333333333331),
+          Payment(
+              id: 'p1', date: DateTime(2026, 2, 1), amount: 104.85333333333334),
+          Payment(
+              id: 'p2', date: DateTime(2026, 3, 1), amount: 104.85333333333334),
+          Payment(
+              id: 'p3', date: DateTime(2026, 4, 1), amount: 104.85333333333331),
         ],
       );
       // Toplam ~314.55999...99 → getter 314.56'ya oturur, borç kapanmıştır.
@@ -83,7 +88,9 @@ void main() {
     test('kalan tutar negatif artık bırakmaz', () {
       final d = debt(
         expectedTotal: 100,
-        payments: [Payment(date: DateTime(2026, 2, 1), amount: 100.001)],
+        payments: [
+          Payment(id: 'p4', date: DateTime(2026, 2, 1), amount: 100.001)
+        ],
       );
       // Ödeme yazımı artık yuvarlı geliyor ama eski veri böyle olabilir;
       // getter'lar kuruşa oturur ve kalan "para olarak" pozitif değildir.

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -53,6 +54,8 @@ void main() {
   });
 
   final activeDebt = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 1200.0,
     id: 'debt_1',
     userId: 'user_1',
     walletId: 'wallet_1',

@@ -7,6 +7,7 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_math.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
@@ -84,6 +85,11 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   DebtType _selectedDebtType = DebtType.bankLoan;
   DateTime _selectedDate = DateTime.now();
+
+  /// Kişisel borçta kullanıcının seçtiği vade — opsiyoneldir. Taksitli
+  /// türlerde vade planın sonundan türer, burası kullanılmaz.
+  DateTime? _personalDueDate;
+
   double? _originalAmount;
 
   /// Düzenlemede taksit alanına yazılan prefill metni; kaydederken alan hâlâ
@@ -112,20 +118,17 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       _overdueController.text =
           formatAmountForInput(d.overdueInterestRate, decimalDigits: 4);
       _selectedDebtType = d.type;
+      _personalDueDate = d.type == DebtType.personalDebt ? d.dueDate : null;
       _originalAmount = d.principalAmount;
-      if (d.type == DebtType.bankLoan) {
-        // Proxy: interestRate == 0 → "aylık taksiti biliyorum" modu
-        _isBankLoanMonthly = d.interestRate == 0;
-        if (_isBankLoanMonthly &&
-            d.termMonths > 0 &&
-            d.expectedTotalAmount != null) {
-          _installmentController.text =
-              _fmt(d.expectedTotalAmount! / d.termMonths);
-          _prefilledInstallmentText = _installmentController.text;
-        }
-      } else if (d.type == DebtType.installmentDebt) {
-        // Proxy: interestRate == 0 → "basit vade farkı" modu
-        _isInstallmentAmortized = d.interestRate != 0;
+      // Mod kayıttan OKUNUR, faiz oranından tahmin EDİLMEZ. Tahmin üç ayrı
+      // veri kaybına yol açıyordu (bkz. DebtCalcMode).
+      _isBankLoanMonthly = d.calcMode == DebtCalcMode.fixedInstallment;
+      _includeBankTaxes = d.calcMode == DebtCalcMode.amortizedWithTaxes;
+      _isInstallmentAmortized = d.calcMode != DebtCalcMode.flatSurcharge;
+      if (_isBankLoanMonthly && d.termMonths > 0) {
+        _installmentController.text =
+            _fmt(d.expectedTotalAmount / d.termMonths);
+        _prefilledInstallmentText = _installmentController.text;
       }
     } else if (widget.receivableToEdit != null) {
       _isEditing = true;
@@ -158,6 +161,24 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
   String _fmt(double v) => formatAmountForInput(v);
   double? get _parsedAmount => parseMoneyInput(_amountController.text);
+
+  /// Formun o anki durumundan kalıcı hesap moduna TEK YÖNLÜ eşleme.
+  ///
+  /// UI ergonomik bool'ları tutmaya devam eder (kullanıcı sekmeler arasında
+  /// gidip gelirken vergi anahtarı gibi seçimler kaybolmasın); kayda giden
+  /// tek gerçek ise bu enum'dur. Geri yön `initState`'te, yine açıkça yapılır.
+  DebtCalcMode get _calcMode => switch (_selectedDebtType) {
+        DebtType.personalDebt => DebtCalcMode.none,
+        DebtType.installmentDebt => _isInstallmentAmortized
+            ? DebtCalcMode.amortized
+            : DebtCalcMode.flatSurcharge,
+        DebtType.bankLoan => _isBankLoanMonthly
+            ? DebtCalcMode.fixedInstallment
+            : (_includeBankTaxes
+                ? DebtCalcMode.amortizedWithTaxes
+                : DebtCalcMode.amortized),
+        DebtType.otherDebt => DebtCalcMode.simpleMonthlyInterest,
+      };
 
   void _onInstallmentChanged() {
     if (_suppressInstallmentListener) return;
@@ -194,6 +215,16 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
+  Future<void> _pickPersonalDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _personalDueDate ?? _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => _personalDueDate = picked);
+  }
+
   String? _validate() {
     if (_titleController.text.trim().isEmpty) {
       return _isDebt
@@ -208,7 +239,20 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
     if (_isDebt && _selectedDebtType != DebtType.personalDebt) {
       final t = int.tryParse(_termController.text.trim()) ?? 0;
-      if (t <= 0) return context.l10n.vadeEnAz1Olmali;
+      // Üst sınır yalnız ergonomi değil: sınırsız vadede amortisman formülü
+      // `pow(1+r, n)` ile sonsuza taşıyor, toplam NaN olarak kaydediliyor ve
+      // borç `moneyIsPositive(NaN) == false` yüzünden listeden kayboluyordu.
+      if (t <= 0 || t > kMaxTermMonths) {
+        return context.l10n.vadeAraligi(kMaxTermMonths);
+      }
+      final rate = parseAmountInput(_interestController.text) ?? 0;
+      if (rate < 0 || rate > kMaxInterestRatePercent) {
+        return context.l10n.oranAraligi(kMaxInterestRatePercent.toInt());
+      }
+      final overdueRate = parseAmountInput(_overdueController.text) ?? 0;
+      if (overdueRate < 0 || overdueRate > kMaxInterestRatePercent) {
+        return context.l10n.oranAraligi(kMaxInterestRatePercent.toInt());
+      }
       if (_selectedDebtType == DebtType.bankLoan && _isBankLoanMonthly) {
         final installment = parseMoneyInput(_installmentController.text);
         if (installment == null) {
@@ -247,52 +291,34 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
     final amount = _parsedAmount!;
 
     if (_isDebt) {
+      final mode = _calcMode;
+      final isPersonal = _selectedDebtType == DebtType.personalDebt;
+
       // Faiz ORAN'dır, yuvarlanmaz; taksit para tutarıdır.
-      final rawInterest = parseAmountInput(_interestController.text) ?? 0;
+      //
+      // Oran artık HER modda olduğu gibi saklanır — eskiden basit vade farkı
+      // modunda sentinel olarak 0 yazılıyor ve mod bu 0'dan geri okunuyordu.
+      // Sonuç: düzenleyip kaydetmek vade farkını toplamdan siliyordu. Modu
+      // `calcMode` taşıdığı için oran artık saf veridir.
+      final interest = mode.usesInterestRate
+          ? (parseAmountInput(_interestController.text) ?? 0)
+          : 0.0;
+      final overdue =
+          isPersonal ? 0.0 : (parseAmountInput(_overdueController.text) ?? 0);
       final monthlyInstallment =
           parseMoneyInput(_installmentController.text) ?? 0;
-      final parsedTerm = int.tryParse(_termController.text.trim()) ?? 1;
-
-      int term = 1;
-      double interest = 0; // kalıcı değer; bazı modlarda proxy sentinel (0)
-      double overdue = 0;
-
-      switch (_selectedDebtType) {
-        case DebtType.personalDebt:
-          term = 1;
-          break;
-        case DebtType.installmentDebt:
-          term = parsedTerm;
-          // Amortisman: faizi sakla. Basit vade farkı: sentinel 0
-          // (restore'da "basit vade farkı" modu buradan anlaşılır).
-          interest = _isInstallmentAmortized ? rawInterest : 0;
-          break;
-        case DebtType.bankLoan:
-          term = parsedTerm;
-          if (!_isBankLoanMonthly) {
-            interest = rawInterest;
-            overdue = parseAmountInput(_overdueController.text) ?? 0;
-          }
-          break;
-        case DebtType.otherDebt:
-          term = parsedTerm;
-          interest = rawInterest;
-          overdue = parseAmountInput(_overdueController.text) ?? 0;
-          break;
-      }
+      final term =
+          isPersonal ? 1 : (int.tryParse(_termController.text.trim()) ?? 1);
 
       // Önizleme ile aynı hesaplayıcı → kaydedilen tutar önizlenenle birebir.
       // Kaydedilen toplam kuruşa yuvarlanır; "Tümü" ödemesi bu değerle eşleşir.
       var expectedTotal = roundToCents(_calc
           .compute(
-            type: _selectedDebtType,
+            mode: mode,
             principal: amount,
             termMonths: term,
-            interestRate: rawInterest,
+            interestRate: interest,
             monthlyInstallment: monthlyInstallment,
-            isInstallmentAmortized: _isInstallmentAmortized,
-            isBankLoanMonthly: _isBankLoanMonthly,
-            includeBankTaxes: _includeBankTaxes,
           )
           .expectedTotal);
 
@@ -302,22 +328,25 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
       final original = widget.debtToEdit;
       if (_isEditing &&
           original != null &&
-          _selectedDebtType == DebtType.bankLoan &&
-          _isBankLoanMonthly &&
-          original.expectedTotalAmount != null &&
+          mode == DebtCalcMode.fixedInstallment &&
           _installmentController.text == _prefilledInstallmentText &&
           term == original.termMonths &&
           amount == original.principalAmount) {
-        expectedTotal = roundToCents(original.expectedTotalAmount!);
+        expectedTotal = roundToCents(original.expectedTotalAmount);
       }
 
-      final dueDate = addMonthsClamped(_selectedDate, term);
+      // Kişisel borçta vade kullanıcıya ait ve opsiyoneldir; taksitli
+      // türlerde planın son taksitidir. Eskiden kişisel borca da sessizce
+      // "başlangıç + 1 ay" yazılıyor ve istenmeyen bildirim kuruluyordu.
+      final dueDate =
+          isPersonal ? _personalDueDate : addMonthsClamped(_selectedDate, term);
 
       if (_isEditing && widget.debtToEdit != null) {
         final updated = widget.debtToEdit!.copyWith(
           title: _titleController.text.trim(),
           counterparty: _counterpartyController.text.trim(),
           type: _selectedDebtType,
+          calcMode: mode,
           principalAmount: amount,
           interestRate: interest,
           termMonths: term,
@@ -338,6 +367,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           title: _titleController.text.trim(),
           counterparty: _counterpartyController.text.trim(),
           type: _selectedDebtType,
+          calcMode: mode,
           principalAmount: amount,
           interestRate: interest,
           termMonths: term,
@@ -452,9 +482,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           interestController: _interestController,
                           termController: _termController,
                           installmentController: _installmentController,
-                          isInstallmentAmortized: _isInstallmentAmortized,
-                          isBankLoanMonthly: _isBankLoanMonthly,
-                          includeBankTaxes: _includeBankTaxes,
+                          mode: _calcMode,
                           accent: _accent,
                           onChanged: _clearError,
                           currency: widget.currency,
@@ -544,6 +572,16 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                         ),
                         const SizedBox(height: 14),
                         _buildDueDateStep(context),
+                        if (_selectedDebtType == DebtType.personalDebt) ...[
+                          const SizedBox(height: 14),
+                          OptionalDueDatePill(
+                            accent: _accent,
+                            date: _personalDueDate,
+                            onTap: _pickPersonalDueDate,
+                            onClear: () =>
+                                setState(() => _personalDueDate = null),
+                          ),
+                        ],
                       ] else ...[
                         FilledEntryField(
                           controller: _titleController,
@@ -575,10 +613,18 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
   /// Vade adımı. Borç ve alacak dallarının ikisinde de aynı hedefi kurar;
   /// aynı anda yalnız biri build edildiğinden GlobalKey çakışmaz.
   Widget _buildDueDateStep(BuildContext context) {
+    // Metin borç ve alacakta AYRIŞIR: borçta bu hap "Başlangıç" tarihidir
+    // (taksitler buradan ilerler), alacakta gerçekten vadedir. Tek metin
+    // kullanıldığında borç tarafı hem yanlış adı hem de var olmayan bir
+    // "her taksit için ayrı bildirim" vaadini gösteriyordu.
     return Showcase(
       key: OnboardingKeys.debtAddDueDate,
-      title: context.l10n.onboardingDebtAddDueDateTitle,
-      description: context.l10n.onboardingDebtAddDueDateDesc,
+      title: _isDebt
+          ? context.l10n.onboardingDebtAddStartDateTitle
+          : context.l10n.onboardingDebtAddDueDateTitle,
+      description: _isDebt
+          ? context.l10n.onboardingDebtAddStartDateDesc
+          : context.l10n.onboardingDebtAddDueDateDesc,
       child: DueDatePill(
         isDebt: _isDebt,
         accent: _accent,

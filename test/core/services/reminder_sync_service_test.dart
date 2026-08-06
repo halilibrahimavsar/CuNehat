@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/enums/notification_frequency.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -53,6 +54,8 @@ void main() {
   );
 
   final debt = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 1000,
     id: 'debt_1',
     userId: 'u',
     walletId: 'w',
@@ -186,6 +189,10 @@ void main() {
   });
 
   group('syncDebt', () {
+    // Hatırlatma kaydın SON vadesine değil SIRADAKİ ÖDENMEMİŞ TAKSİTE kurulur.
+    // Fixture: başlangıç 2099-06-01, 12 ay, ödeme yok → 1. taksit 2099-07-01.
+    // Eskiden hedef `dueDate` (2099-06-20) idi; 36 aylık bir kredide bu,
+    // kullanıcının ilk bildirimi üç yıl sonra almasına yol açıyordu.
     test('vade öncesi ve vade günü olmak üzere iki hatırlatma kurar', () async {
       await service.syncDebt(debt);
 
@@ -198,14 +205,14 @@ void main() {
             id: ReminderIds.debtUpcoming('debt_1'),
             title: tr.notifDebtUpcomingTitle,
             body: tr.notifDebtUpcomingBody('Kredi'),
-            scheduledDate: DateTime(2099, 6, 19, kReminderHour),
+            scheduledDate: DateTime(2099, 6, 30, kReminderHour),
             payload: NotificationPayloads.debtDue,
           )).called(1);
       verify(() => notifications.scheduleNotification(
             id: ReminderIds.debtDue('debt_1'),
             title: tr.notifDebtDueTitle,
             body: tr.notifDebtDueBody('Kredi'),
-            scheduledDate: DateTime(2099, 6, 20, kReminderHour),
+            scheduledDate: DateTime(2099, 7, 1, kReminderHour),
             payload: NotificationPayloads.debtDue,
           )).called(1);
     });
@@ -245,7 +252,12 @@ void main() {
     // GECİKMİŞ borç — hatırlatılması en kritik kalem — hiç bildirim almıyordu.
     test('vadesi GEÇMİŞ borç için vade günü hatırlatması sessizce atlanmaz',
         () async {
-      final overdue = debt.copyWith(dueDate: DateTime(2020, 1, 15));
+      // Taksitli borçta gecikme PLANDAN gelir: başlangıç geçmişe alınınca
+      // 1. taksit (2020-02-15) gecikmiş olur.
+      final overdue = debt.copyWith(
+        startDate: DateTime(2020, 1, 15),
+        dueDate: DateTime(2021, 1, 15),
+      );
       final before = DateTime.now();
 
       await service.syncDebt(overdue);
@@ -270,7 +282,7 @@ void main() {
             id: ReminderIds.debtUpcoming('debt_1'),
             title: any(named: 'title'),
             body: any(named: 'body'),
-            scheduledDate: DateTime(2020, 1, 14, kReminderHour),
+            scheduledDate: DateTime(2020, 2, 14, kReminderHour),
             payload: any(named: 'payload'),
           )).called(1);
     });

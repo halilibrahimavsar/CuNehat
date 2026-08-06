@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
@@ -31,6 +32,8 @@ void main() {
   setUpAll(() {
     registerFallbackValue(
       DebtEntity(
+        calcMode: DebtCalcMode.none,
+        expectedTotalAmount: 0,
         id: 'fallback_id',
         userId: 'fallback_user',
         walletId: 'fallback_wallet',
@@ -68,6 +71,8 @@ void main() {
   });
 
   final testDebt = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 1000.0,
     id: 'debt_123',
     userId: 'user_123',
     walletId: 'wallet_123',
@@ -513,8 +518,8 @@ void main() {
     // doğru çıksa bile silme ayının raporunu bozuyordu.
     final start = DateTime(2026, 1, 10);
     final payments = [
-      Payment(date: DateTime(2026, 2, 10), amount: 200.0),
-      Payment(date: DateTime(2026, 3, 10), amount: 100.0),
+      Payment(id: 'p1', date: DateTime(2026, 2, 10), amount: 200.0),
+      Payment(id: 'p2', date: DateTime(2026, 3, 10), amount: 100.0),
     ];
 
     List<CashMovement> capturedEntries() =>
@@ -756,7 +761,9 @@ void main() {
         userId: 'user_123',
         principalAmount: 1000.0,
         startDate: DateTime(2026, 1, 1),
-        payments: [Payment(date: DateTime(2026, 2, 5), amount: 300.0)],
+        payments: [
+          Payment(id: 'p3', date: DateTime(2026, 2, 5), amount: 300.0)
+        ],
         principalToWallet: false,
       )),
       expect: () => [
@@ -815,6 +822,239 @@ void main() {
               entries: captureAny(named: 'entries'),
             )).captured.single as List<CashMovement>;
         expect(entries, isEmpty);
+      },
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Ödeme kaydı düzenleme / silme
+  //
+  // Mutabakat deseni borç güncellemesindekiyle AYNI, yalnız işaret TERS:
+  // anapara girişi GELİR, ödeme ise GİDER. Kopyala-yapıştır bu satırda
+  // bakiyeyi çift-hatalı bozar, o yüzden `isIncome` açıkça iddia edilir.
+  // -------------------------------------------------------------------------
+  group('ödeme düzenleme / silme', () {
+    final payDate = DateTime(2026, 7, 1);
+    final paidDebt = testDebt.copyWith(
+      payments: [Payment(id: 'pay_1', date: payDate, amount: 400.0)],
+    );
+
+    List<CashMovement> capturedEntries() =>
+        verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+
+    void stubAll() {
+      when(() => mockUpdateUseCase(any()))
+          .thenAnswer((_) async => const Right(null));
+      when(() => mockMetricsService.recordCashMovements(
+            walletId: any(named: 'walletId'),
+            entries: any(named: 'entries'),
+          )).thenAnswer((_) async => const CashWriteResult(ok: true));
+      when(() => mockMetricsService.recordCashMovement(
+            walletId: any(named: 'walletId'),
+            userId: any(named: 'userId'),
+            amount: any(named: 'amount'),
+            isIncome: any(named: 'isIncome'),
+            title: any(named: 'title'),
+            tag: any(named: 'tag'),
+            date: any(named: 'date'),
+          )).thenAnswer((_) async => true);
+      when(() => mockMetricsService.syncDebt(any())).thenAnswer((_) async {});
+      when(() => mockGetUseCase('wallet_123'))
+          .thenAnswer((_) async => const Right([]));
+    }
+
+    blocTest<DebtBloc, DebtState>(
+      'tarih yerindeyken tutar ARTIŞI ek gider yazar',
+      build: () {
+        stubAll();
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtPaymentEvent(
+        paidDebt.copyWith(payments: [
+          Payment(id: 'pay_1', date: payDate, amount: 600.0),
+        ]),
+        prevAmount: 400.0,
+        prevDate: payDate,
+        newAmount: 600.0,
+        newDate: payDate,
+      )),
+      verify: (_) {
+        final entries = capturedEntries();
+        expect(entries, hasLength(1));
+        expect(entries.single.amount, 200.0);
+        expect(entries.single.isIncome, isFalse, reason: 'ödeme = gider');
+        expect(entries.single.date, payDate);
+        expect(entries.single.tag, CashMovementTags.debtPayment);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'tarih yerindeyken tutar AZALIŞI iade yazar',
+      build: () {
+        stubAll();
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(UpdateDebtPaymentEvent(
+        paidDebt.copyWith(payments: [
+          Payment(id: 'pay_1', date: payDate, amount: 250.0),
+        ]),
+        prevAmount: 400.0,
+        prevDate: payDate,
+        newAmount: 250.0,
+        newDate: payDate,
+      )),
+      verify: (_) {
+        final entries = capturedEntries();
+        expect(entries, hasLength(1));
+        expect(entries.single.amount, 150.0);
+        expect(entries.single.isIncome, isTrue);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'tarih taşındıysa eskisi KENDİ tarihine iade, yenisi yeni tarihe gider',
+      build: () {
+        stubAll();
+        return debtBloc;
+      },
+      act: (bloc) {
+        final newDate = DateTime(2026, 9, 3);
+        bloc.add(UpdateDebtPaymentEvent(
+          paidDebt.copyWith(payments: [
+            Payment(id: 'pay_1', date: newDate, amount: 400.0),
+          ]),
+          prevAmount: 400.0,
+          prevDate: payDate,
+          newAmount: 400.0,
+          newDate: newDate,
+        ));
+      },
+      verify: (_) {
+        final entries = capturedEntries();
+        expect(entries, hasLength(2));
+        // İade eski döneme: aksi hâlde geçmiş ayın gider toplamı bozulurdu.
+        expect(entries[0].isIncome, isTrue);
+        expect(entries[0].amount, 400.0);
+        expect(entries[0].date, payDate);
+        // Gider yeni döneme.
+        expect(entries[1].isIncome, isFalse);
+        expect(entries[1].amount, 400.0);
+        expect(entries[1].date, DateTime(2026, 9, 3));
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'ödeme silmede iade ödemenin KENDİ tarihine yazılır',
+      build: () {
+        stubAll();
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(DeleteDebtPaymentEvent(
+        testDebt,
+        removedAmount: 400.0,
+        removedDate: payDate,
+      )),
+      verify: (_) {
+        verify(() => mockMetricsService.recordCashMovement(
+              walletId: 'wallet_123',
+              userId: 'user_123',
+              amount: 400.0,
+              isIncome: true,
+              title: any(named: 'title'),
+              tag: CashMovementTags.debtPayment,
+              date: payDate,
+            )).called(1);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
+      'kapanmış borçta ödeme silinince isPaid yeniden false olur',
+      build: () {
+        stubAll();
+        return debtBloc;
+      },
+      act: (bloc) => bloc.add(DeleteDebtPaymentEvent(
+        // 1.000'lik borç kapanmıştı; 400'lük ödeme siliniyor.
+        testDebt.copyWith(
+          isPaid: true,
+          payments: [Payment(id: 'pay_2', date: payDate, amount: 600.0)],
+        ),
+        removedAmount: 400.0,
+        removedDate: payDate,
+      )),
+      verify: (_) {
+        final saved = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .single as DebtEntity;
+        expect(saved.isPaid, isFalse);
+        expect(saved.principalPaidAmount, 600.0);
+      },
+    );
+  });
+
+  group('gecikme faizi mahsubu (PayDebtEvent)', () {
+    blocTest<DebtBloc, DebtState>(
+      'deftere TAM tutar yazılır, borcu yalnız faiz-dışı kısım azaltır',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncDebt(any())).thenAnswer((_) async {});
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => const Right([]));
+        return debtBloc;
+      },
+      act: (bloc) {
+        // 12.000 ₺, tek vade 2026-02-01, aylık %7,5 gecikme faizi.
+        // 2026-03-03'te (30 gün gecikme) tahakkuk 900 ₺.
+        final overdue = testDebt.copyWith(
+          principalAmount: 12000,
+          expectedTotalAmount: 12000,
+          termMonths: 1,
+          dueDate: DateTime(2026, 2, 1),
+          overdueInterestRate: 7.5,
+        );
+        final payDate = DateTime(2026, 3, 3);
+        bloc.add(PayDebtEvent(
+          overdue.copyWith(payments: [
+            Payment(id: 'pay_1', date: payDate, amount: 1000),
+          ]),
+          1000,
+          paymentDate: payDate,
+        ));
+      },
+      verify: (_) {
+        // Cüzdandan çıkan para tam tutar.
+        verify(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: 1000,
+              isIncome: false,
+              title: any(named: 'title'),
+              tag: CashMovementTags.debtPayment,
+              date: any(named: 'date'),
+            )).called(1);
+
+        final saved = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .single as DebtEntity;
+        // 900 faize, 100 ana paraya.
+        expect(saved.payments.single.overdueInterestPart, closeTo(900, 0.01));
+        expect(saved.totalPaidAmount, 1000);
+        expect(saved.principalPaidAmount, closeTo(100, 0.01));
+        expect(saved.remainingAmount, closeTo(11900, 0.01));
+        expect(saved.isPaid, isFalse);
       },
     );
   });

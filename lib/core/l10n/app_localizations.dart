@@ -1383,12 +1383,6 @@ abstract class AppLocalizations {
   /// **'ÖDENDİ'**
   String get oDENDI;
 
-  /// No description provided for @vadeDebtTermmonthsAy.
-  ///
-  /// In tr, this message translates to:
-  /// **'Vade: {termMonths} Ay | {length} Ödeme'**
-  String vadeDebtTermmonthsAy(Object termMonths, Object length);
-
   /// No description provided for @vadeDateformatDdMmm.
   ///
   /// In tr, this message translates to:
@@ -2742,12 +2736,6 @@ abstract class AppLocalizations {
   /// **'Kurum/kişi girin'**
   String get kurumKisiGirin;
 
-  /// No description provided for @vadeEnAz1Olmali.
-  ///
-  /// In tr, this message translates to:
-  /// **'Vade (ay) en az 1 olmalı'**
-  String get vadeEnAz1Olmali;
-
   /// No description provided for @aylikTaksitTutariniGirin.
   ///
   /// In tr, this message translates to:
@@ -3849,7 +3837,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifDebtUpcomingBody.
   ///
   /// In tr, this message translates to:
-  /// **'{title} başlıklı borcunuzun son ödeme tarihi yaklaştı.'**
+  /// **'{title} borcunuzun sıradaki taksit ödeme tarihi yaklaştı.'**
   String notifDebtUpcomingBody(Object title);
 
   /// No description provided for @notifDebtDueTitle.
@@ -3861,7 +3849,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifDebtDueBody.
   ///
   /// In tr, this message translates to:
-  /// **'{title} başlıklı borcunuzun son ödeme tarihi bugün.'**
+  /// **'{title} borcunuzun sıradaki taksit ödeme tarihi bugün.'**
   String notifDebtDueBody(Object title);
 
   /// No description provided for @notifBudgetWarningTitle.
@@ -4191,7 +4179,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingDebtAddDueDateDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Seçtiğiniz tarihte hatırlatma bildirimi alırsınız; taksitli kayıtlarda her taksit için ayrı ayrı.'**
+  /// **'Alacağını beklediğin tarih. O gün yaklaştığında hatırlatma bildirimi alırsın.'**
   String get onboardingDebtAddDueDateDesc;
 
   /// No description provided for @onboardingInvestmentAddTitle.
@@ -5909,6 +5897,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez.'**
   String get driveErrApiNotEnabled;
+
+  /// No description provided for @vadeAraligi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade 1 ile {max} ay arasında olmalı'**
+  String vadeAraligi(int max);
+
+  /// No description provided for @oranAraligi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oran %0 ile %{max} arasında olmalı'**
+  String oranAraligi(int max);
+
+  /// No description provided for @gecikmeFaiziLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikme faizi:'**
+  String get gecikmeFaiziLabel;
+
+  /// No description provided for @odenecekToplamLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödenecek toplam:'**
+  String get odenecekToplamLabel;
+
+  /// No description provided for @odenecekTutardanFazlaOlamaz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödenecek toplamdan fazla olamaz'**
+  String get odenecekTutardanFazlaOlamaz;
+
+  /// No description provided for @gecikmeFaiziChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikme faizi'**
+  String get gecikmeFaiziChip;
+
+  /// No description provided for @gecikmeFaiziKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'+ {tutar} gecikme faizi'**
+  String gecikmeFaiziKisa(Object tutar);
+
+  /// No description provided for @odemeMahsupAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'{faiz} gecikme faizine, {anapara} ana paraya sayılacak.'**
+  String odemeMahsupAciklama(Object faiz, Object anapara);
+
+  /// No description provided for @taksitGecikmeGun.
+  ///
+  /// In tr, this message translates to:
+  /// **'≈ {tutar} · {gun} gün gecikti'**
+  String taksitGecikmeGun(Object tutar, int gun);
+
+  /// No description provided for @odemeIcindeGecikmeFaizi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{tarih} · içinde {faiz} gecikme faizi'**
+  String odemeIcindeGecikmeFaizi(Object tarih, Object faiz);
+
+  /// No description provided for @odemeSilBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemeyi Sil'**
+  String get odemeSilBaslik;
+
+  /// No description provided for @odemeSilOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{tutar} tutarındaki ödeme kaydı silinecek. Bu ödemenin cüzdan bakiyesine etkisi de geri alınır.'**
+  String odemeSilOnayMesaji(Object tutar);
+
+  /// No description provided for @odemeyiDuzenleBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemeyi Düzenle'**
+  String get odemeyiDuzenleBaslik;
+
+  /// No description provided for @onboardingDebtAddStartDateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlangıç Tarihi'**
+  String get onboardingDebtAddStartDateTitle;
+
+  /// No description provided for @onboardingDebtAddStartDateDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borcun başladığı tarih; taksitler buradan itibaren aylık ilerler. Hatırlatma bildirimi, sıradaki ödenmemiş taksitin vadesinde gelir.'**
+  String get onboardingDebtAddStartDateDesc;
+
+  /// No description provided for @vadeTaksitIlerleme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade: {termMonths} Ay | {paid}/{termMonths} taksit'**
+  String vadeTaksitIlerleme(int termMonths, int paid);
+
+  /// No description provided for @vadeOpsiyonelLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade (opsiyonel)'**
+  String get vadeOpsiyonelLabel;
+
+  /// No description provided for @vadeSecilmedi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilmedi'**
+  String get vadeSecilmedi;
 }
 
 class _AppLocalizationsDelegate

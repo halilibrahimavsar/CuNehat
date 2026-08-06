@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/deletion_undo_service.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
@@ -56,6 +57,8 @@ void main() {
   );
 
   final debt = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 10000,
     id: 'debt_1',
     userId: 'user_1',
     walletId: 'wallet_1',
@@ -66,7 +69,7 @@ void main() {
     interestRate: 1.5,
     termMonths: 12,
     startDate: DateTime(2026, 1, 10),
-    payments: [Payment(date: DateTime(2026, 2, 10), amount: 900)],
+    payments: [Payment(id: 'p1', date: DateTime(2026, 2, 10), amount: 900)],
   );
 
   final receivable = ReceivableEntity(

@@ -18,6 +18,7 @@ import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_type_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
+import 'package:cunehat/features/debt_and_receivable/data/models/debt_calc_mode_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
@@ -144,6 +145,7 @@ class AppInitialization {
     register(ReceivableModelAdapter());
     register(PaymentModelAdapter());
     register(DebtTypeAdapter());
+    register(DebtCalcModeAdapter());
     register(BudgetModelAdapter());
     register(RecurringTransactionModelAdapter());
     register(RecurringFrequencyAdapter());

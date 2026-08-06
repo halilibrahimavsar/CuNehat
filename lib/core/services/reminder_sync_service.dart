@@ -6,6 +6,7 @@ import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/notification_settings_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/installment_progress.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 
@@ -102,7 +103,12 @@ class ReminderSyncService {
 
     await cancelDebtReminders(debtId);
 
-    final dueDate = debt.dueDate;
+    // Hatırlatma SON vadeye değil SIRADAKİ ödenmemiş taksite kurulur: 36 aylık
+    // bir kredide son vadeye bağlamak, kullanıcının ilk bildirimi üç yıl sonra
+    // almasına yol açıyordu. Her ödemeden sonra syncDebt yeniden çağrıldığı
+    // için hedef kendiliğinden bir sonraki taksite kayar; bildirim SAYISI
+    // artmaz (iOS'un 64 bekleyen bildirim tavanı zorlanmaz).
+    final dueDate = nextUnpaidInstallmentDate(debt);
     if (dueDate == null || debt.isPaid) return;
     if (!_settings.isDebtRemindersEnabled) return;
 

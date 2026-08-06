@@ -1,3 +1,5 @@
+import 'package:cunehat/features/debt_and_receivable/data/models/debt_calc_mode_adapter.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -83,6 +85,7 @@ void main() {
     register(ReceivableModelAdapter());
     register(PaymentModelAdapter());
     register(DebtTypeAdapter());
+    register(DebtCalcModeAdapter());
     register(BudgetModelAdapter());
     register(RecurringTransactionModelAdapter());
     register(RecurringFrequencyAdapter());
@@ -565,6 +568,8 @@ InvestmentModel _investment() {
 
 DebtModel _debt() {
   return DebtModel(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 1000,
     id: 'd1',
     userId: 'u1',
     walletId: 'w1',
@@ -576,7 +581,7 @@ DebtModel _debt() {
     termMonths: 12,
     startDate: DateTime(2024, 1, 4),
     payments: [
-      PaymentModel(date: DateTime(2024, 2, 1), amount: 100),
+      PaymentModel(id: 'p1', date: DateTime(2024, 2, 1), amount: 100),
     ],
   );
 }

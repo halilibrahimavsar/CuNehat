@@ -708,11 +708,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get oDENDI => 'ÖDENDİ';
 
   @override
-  String vadeDebtTermmonthsAy(Object termMonths, Object length) {
-    return 'Vade: $termMonths Ay | $length Ödeme';
-  }
-
-  @override
   String vadeDateformatDdMmm(Object dueDate) {
     return 'Vade: $dueDate';
   }
@@ -1483,9 +1478,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kurumKisiGirin => 'Kurum/kişi girin';
 
   @override
-  String get vadeEnAz1Olmali => 'Vade (ay) en az 1 olmalı';
-
-  @override
   String get aylikTaksitTutariniGirin => 'Aylık taksit tutarını girin';
 
   @override
@@ -2082,7 +2074,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String notifDebtUpcomingBody(Object title) {
-    return '$title başlıklı borcunuzun son ödeme tarihi yaklaştı.';
+    return '$title borcunuzun sıradaki taksit ödeme tarihi yaklaştı.';
   }
 
   @override
@@ -2090,7 +2082,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String notifDebtDueBody(Object title) {
-    return '$title başlıklı borcunuzun son ödeme tarihi bugün.';
+    return '$title borcunuzun sıradaki taksit ödeme tarihi bugün.';
   }
 
   @override
@@ -2287,7 +2279,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingDebtAddDueDateDesc =>
-      'Seçtiğiniz tarihte hatırlatma bildirimi alırsınız; taksitli kayıtlarda her taksit için ayrı ayrı.';
+      'Alacağını beklediğin tarih. O gün yaklaştığında hatırlatma bildirimi alırsın.';
 
   @override
   String get onboardingInvestmentAddTitle => 'Bugünkü Değer';
@@ -3275,4 +3267,75 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get driveErrApiNotEnabled =>
       'Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez.';
+
+  @override
+  String vadeAraligi(int max) {
+    return 'Vade 1 ile $max ay arasında olmalı';
+  }
+
+  @override
+  String oranAraligi(int max) {
+    return 'Oran %0 ile %$max arasında olmalı';
+  }
+
+  @override
+  String get gecikmeFaiziLabel => 'Gecikme faizi:';
+
+  @override
+  String get odenecekToplamLabel => 'Ödenecek toplam:';
+
+  @override
+  String get odenecekTutardanFazlaOlamaz => 'Ödenecek toplamdan fazla olamaz';
+
+  @override
+  String get gecikmeFaiziChip => 'Gecikme faizi';
+
+  @override
+  String gecikmeFaiziKisa(Object tutar) {
+    return '+ $tutar gecikme faizi';
+  }
+
+  @override
+  String odemeMahsupAciklama(Object faiz, Object anapara) {
+    return '$faiz gecikme faizine, $anapara ana paraya sayılacak.';
+  }
+
+  @override
+  String taksitGecikmeGun(Object tutar, int gun) {
+    return '≈ $tutar · $gun gün gecikti';
+  }
+
+  @override
+  String odemeIcindeGecikmeFaizi(Object tarih, Object faiz) {
+    return '$tarih · içinde $faiz gecikme faizi';
+  }
+
+  @override
+  String get odemeSilBaslik => 'Ödemeyi Sil';
+
+  @override
+  String odemeSilOnayMesaji(Object tutar) {
+    return '$tutar tutarındaki ödeme kaydı silinecek. Bu ödemenin cüzdan bakiyesine etkisi de geri alınır.';
+  }
+
+  @override
+  String get odemeyiDuzenleBaslik => 'Ödemeyi Düzenle';
+
+  @override
+  String get onboardingDebtAddStartDateTitle => 'Başlangıç Tarihi';
+
+  @override
+  String get onboardingDebtAddStartDateDesc =>
+      'Borcun başladığı tarih; taksitler buradan itibaren aylık ilerler. Hatırlatma bildirimi, sıradaki ödenmemiş taksitin vadesinde gelir.';
+
+  @override
+  String vadeTaksitIlerleme(int termMonths, int paid) {
+    return 'Vade: $termMonths Ay | $paid/$termMonths taksit';
+  }
+
+  @override
+  String get vadeOpsiyonelLabel => 'Vade (opsiyonel)';
+
+  @override
+  String get vadeSecilmedi => 'Seçilmedi';
 }

@@ -1,6 +1,7 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry/repayment_breakdown_card.dart';
 import 'package:flutter/material.dart';
@@ -13,9 +14,10 @@ class AddEntryAmountCard extends StatelessWidget {
   final TextEditingController interestController;
   final TextEditingController termController;
   final TextEditingController installmentController;
-  final bool isInstallmentAmortized;
-  final bool isBankLoanMonthly;
-  final bool includeBankTaxes;
+
+  /// Geri ödeme özetinin kullanacağı hesap yöntemi.
+  final DebtCalcMode mode;
+
   final Color accent;
   final VoidCallback onChanged;
 
@@ -32,9 +34,7 @@ class AddEntryAmountCard extends StatelessWidget {
     required this.interestController,
     required this.termController,
     required this.installmentController,
-    required this.isInstallmentAmortized,
-    required this.isBankLoanMonthly,
-    required this.includeBankTaxes,
+    required this.mode,
     required this.accent,
     required this.onChanged,
     required this.currency,
@@ -44,10 +44,13 @@ class AddEntryAmountCard extends StatelessWidget {
     if (!isDebt) return context.l10n.alacakTutari;
     return switch (selectedDebtType) {
       DebtType.bankLoan => context.l10n.krediTutariAnaPara,
+      // Yalnız kişisel borçta girilen tutar toplamın KENDİSİ (faiz yok).
+      // Taksitli borçta vade farkı bu tutarın üstüne eklendiğinden alan
+      // "Toplam tutar" diyemez — toplam, kartın altındaki özette yazar.
+      DebtType.personalDebt => context.l10n.toplamTutar,
       DebtType.installmentDebt ||
-      DebtType.personalDebt =>
-        context.l10n.toplamTutar,
-      DebtType.otherDebt => context.l10n.borcTutariAnaPara,
+      DebtType.otherDebt =>
+        context.l10n.borcTutariAnaPara,
     };
   }
 
@@ -132,10 +135,7 @@ class AddEntryAmountCard extends StatelessWidget {
               interestController: interestController,
               termController: termController,
               installmentController: installmentController,
-              debtType: selectedDebtType,
-              isInstallmentAmortized: isInstallmentAmortized,
-              isBankLoanMonthly: isBankLoanMonthly,
-              includeBankTaxes: includeBankTaxes,
+              mode: mode,
               accent: accent,
               currency: currency,
             ),

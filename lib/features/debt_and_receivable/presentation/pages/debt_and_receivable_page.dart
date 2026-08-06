@@ -6,6 +6,9 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/debt_sorting.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/installment_progress.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/overdue_interest.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
@@ -146,10 +149,12 @@ class DebtListSection extends StatelessWidget {
         if (state is DebtLoading || state is DebtOperationSuccess) {
           return const Center(child: CircularProgressIndicator());
         } else if (state is DebtLoaded) {
-          final activeDebts = state.debts
-              .where((debt) =>
-                  !debt.isPaid && moneyIsPositive(debt.remainingAmount))
-              .toList();
+          // Filtre yalnız `isPaid`: bu bayrak her yazma yolunda yeniden
+          // hesaplanıyor (bkz. DebtBloc._normalize). Ek `remainingAmount > 0`
+          // şartı hem gereksizdi hem de ana parası kapanmış ama gecikme faizi
+          // duran borcu ekrandan tamamen gizliyordu.
+          final activeDebts =
+              sortDebtsForDisplay(state.debts.where((d) => !d.isPaid).toList());
 
           if (activeDebts.isEmpty) {
             return _EmptyStateCard(
@@ -191,9 +196,10 @@ class DebtListSection extends StatelessWidget {
   }
 
   Widget _buildDebtCard(BuildContext context, DebtEntity debt) {
-    final isOverdue = debt.dueDate != null &&
-        debt.dueDate!.isBefore(DateTime.now()) &&
-        !debt.isPaid;
+    // Gecikme, kaydın SON vadesine değil taksit planına bakar: 12 taksitin
+    // 6'sı gecikmiş bir borç, son vade gelmediği için tertemiz görünüyordu.
+    final isOverdue = hasOverdueInstallment(debt);
+    final overdueInterest = outstandingOverdueInterest(debt);
 
     return InfoActionMenu<String>(
       items: [
@@ -350,25 +356,17 @@ class DebtListSection extends StatelessWidget {
                             fontSize: 20,
                           ),
                     ),
-                    if (debt.isPaid) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: Colors.green.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          context.l10n.oDENDI,
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
+                    // Gecikme faizi borcun kendisine eklenmez; ayrı satırda
+                    // durur ve ödeme diyaloğunda "ödenecek toplam"a girer.
+                    if (moneyIsPositive(overdueInterest)) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.gecikmeFaiziKisa(
+                            formatMoney(overdueInterest, currency: currency)),
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -394,8 +392,11 @@ class DebtListSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  context.l10n.vadeDebtTermmonthsAy(
-                      debt.termMonths, debt.payments.length),
+                  // Ödeme KAYDI sayısı değil taksit ilerlemesi: 12×1.000'lik
+                  // borca üç kez 100 ₺ ödeyen kullanıcı "3 Ödeme" görüp üç
+                  // taksitin kapandığını sanıyordu.
+                  context.l10n.vadeTaksitIlerleme(
+                      debt.termMonths, paidInstallmentCount(debt)),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -404,22 +405,21 @@ class DebtListSection extends StatelessWidget {
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                if (!debt.isPaid)
-                  FilledButton.icon(
-                    onPressed: () => DebtPaymentDialog.show(context, debt,
-                        currency: currency),
-                    icon: const Icon(Icons.payment, size: 16),
-                    label: Text(context.l10n.ode),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.green.withValues(alpha: 0.15),
-                      foregroundColor: Colors.green,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                FilledButton.icon(
+                  onPressed: () =>
+                      DebtPaymentDialog.show(context, debt, currency: currency),
+                  icon: const Icon(Icons.payment, size: 16),
+                  label: Text(context.l10n.ode),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green.withValues(alpha: 0.15),
+                    foregroundColor: Colors.green,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
               ],
             ),
           ],

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -26,6 +27,8 @@ void main() {
   setUpAll(() {
     registerFallbackValue(
       DebtEntity(
+        calcMode: DebtCalcMode.none,
+        expectedTotalAmount: 0,
         id: 'fallback_id',
         userId: 'fallback_user',
         walletId: 'fallback_wallet',
@@ -56,6 +59,8 @@ void main() {
 
   final testDueDate = DateTime(2026, 6, 20);
   final testDebt = DebtEntity(
+    calcMode: DebtCalcMode.none,
+    expectedTotalAmount: 5000.0,
     id: 'debt_123',
     userId: 'user_123',
     walletId: 'wallet_123',
@@ -86,6 +91,8 @@ void main() {
   group('AddDebtUseCase', () {
     test('should assign v7 ID, save debt, and sync its reminders', () async {
       final debtWithoutId = DebtEntity(
+        calcMode: DebtCalcMode.none,
+        expectedTotalAmount: 1000.0,
         id: null,
         userId: 'user_123',
         walletId: 'wallet_123',
@@ -136,6 +143,8 @@ void main() {
   group('UpdateDebtUseCase', () {
     test('should return Left(ValidationFailure) when ID is null', () async {
       final debtWithNullId = DebtEntity(
+        calcMode: DebtCalcMode.none,
+        expectedTotalAmount: 100,
         id: null,
         userId: 'user_123',
         walletId: 'wallet_123',

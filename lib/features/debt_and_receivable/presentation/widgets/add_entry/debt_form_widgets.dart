@@ -257,6 +257,78 @@ class BankTaxSwitch extends StatelessWidget {
   }
 }
 
+/// Kişisel borçta OPSİYONEL vade hapı.
+///
+/// Kişisel borcun taksit planı yoktur; eskiden vade sorulmadan "başlangıç + 1
+/// ay" atanıyor ve kullanıcı hiç istemediği bir hatırlatma alıyordu. Boş
+/// bırakılırsa vade yazılmaz, bildirim de kurulmaz.
+class OptionalDueDatePill extends StatelessWidget {
+  final Color accent;
+  final DateTime? date;
+  final VoidCallback onTap;
+  final VoidCallback onClear;
+
+  const OptionalDueDatePill({
+    super.key,
+    required this.accent,
+    required this.date,
+    required this.onTap,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      color: cs.onSurface.withValues(alpha: 0.04),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+          child: Row(
+            children: [
+              Icon(Icons.event_available_rounded, size: 18, color: accent),
+              const SizedBox(width: 12),
+              Text(
+                context.l10n.vadeOpsiyonelLabel,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                date == null
+                    ? context.l10n.vadeSecilmedi
+                    : AppFormatters.dateLong.format(date!),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: date == null
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.7)
+                      : cs.onSurface,
+                ),
+              ),
+              if (date != null)
+                IconButton(
+                  onPressed: onClear,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(Icons.close_rounded,
+                      size: 18, color: cs.onSurfaceVariant),
+                )
+              else
+                const SizedBox(width: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Tarih seçim hapı (borç: başlangıç tarihi / alacak: vade tarihi).
 class DueDatePill extends StatelessWidget {
   final bool isDebt;

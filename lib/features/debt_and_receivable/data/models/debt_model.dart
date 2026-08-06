@@ -1,3 +1,4 @@
+import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:hive/hive.dart';
 
@@ -67,11 +68,15 @@ class DebtModel extends DebtEntity {
 
   @override
   @HiveField(18) // Yeni alan
-  double? get expectedTotalAmount;
+  double get expectedTotalAmount;
 
   @override
   @HiveField(19)
   bool get principalToWallet;
+
+  @override
+  @HiveField(20)
+  DebtCalcMode get calcMode;
 
   const DebtModel({
     required super.id,
@@ -80,6 +85,7 @@ class DebtModel extends DebtEntity {
     required super.title,
     required super.counterparty,
     required super.type,
+    required super.calcMode,
     required super.principalAmount,
     required super.interestRate,
     required super.termMonths,
@@ -89,7 +95,7 @@ class DebtModel extends DebtEntity {
     super.payments = const [],
     super.isPaid = false,
     super.notes,
-    super.expectedTotalAmount,
+    required super.expectedTotalAmount,
     super.principalToWallet = true,
   });
 
@@ -101,6 +107,7 @@ class DebtModel extends DebtEntity {
       title: entity.title,
       counterparty: entity.counterparty,
       type: entity.type,
+      calcMode: entity.calcMode,
       principalAmount: entity.principalAmount,
       interestRate: entity.interestRate,
       termMonths: entity.termMonths,
@@ -123,6 +130,7 @@ class DebtModel extends DebtEntity {
       title: title,
       counterparty: counterparty,
       type: type,
+      calcMode: calcMode,
       principalAmount: principalAmount,
       interestRate: interestRate,
       termMonths: termMonths,
@@ -132,7 +140,13 @@ class DebtModel extends DebtEntity {
       payments: payments
           .map((e) => e is PaymentModel
               ? e.toEntity()
-              : Payment(date: e.date, amount: e.amount, notes: e.notes))
+              : Payment(
+                  id: e.id,
+                  date: e.date,
+                  amount: e.amount,
+                  overdueInterestPart: e.overdueInterestPart,
+                  notes: e.notes,
+                ))
           .toList(),
       isPaid: isPaid,
       notes: notes,
@@ -149,6 +163,7 @@ class DebtModel extends DebtEntity {
     String? title,
     String? counterparty,
     DebtType? type,
+    DebtCalcMode? calcMode,
     double? principalAmount,
     double? interestRate,
     int? termMonths,
@@ -168,6 +183,7 @@ class DebtModel extends DebtEntity {
       title: title ?? this.title,
       counterparty: counterparty ?? this.counterparty,
       type: type ?? this.type,
+      calcMode: calcMode ?? this.calcMode,
       principalAmount: principalAmount ?? this.principalAmount,
       interestRate: interestRate ?? this.interestRate,
       termMonths: termMonths ?? this.termMonths,
@@ -190,6 +206,7 @@ class DebtModel extends DebtEntity {
       'title': title,
       'counterparty': counterparty,
       'type': type.name,
+      'calcMode': calcMode.name,
       'principalAmount': principalAmount,
       'interestRate': interestRate,
       'termMonths': termMonths,
@@ -213,6 +230,7 @@ class DebtModel extends DebtEntity {
       title: json['title'] as String,
       counterparty: json['counterparty'] as String,
       type: DebtType.values.byName(json['type'] as String),
+      calcMode: DebtCalcMode.values.byName(json['calcMode'] as String),
       principalAmount: (json['principalAmount'] as num).toDouble(),
       interestRate: (json['interestRate'] as num).toDouble(),
       termMonths: json['termMonths'] as int,
@@ -226,20 +244,15 @@ class DebtModel extends DebtEntity {
           .toList(),
       isPaid: json['isPaid'] as bool,
       notes: json['notes'] as String?,
-      expectedTotalAmount: (json['expectedTotalAmount'] as num?)?.toDouble(),
+      expectedTotalAmount: (json['expectedTotalAmount'] as num).toDouble(),
       principalToWallet: json['principalToWallet'] as bool,
     );
   }
 }
 
-// Payment sınıfı artık Entity dosyasında tanımlı ama Hive için burada Adapter'a ihtiyacı var.
-// Hive Type Adapter'ı generated dosyada (g.dart) oluşturulurken bu sınıfı kullanacak.
-// Eğer Payment sınıfını Entity'de tanımladığımız için burada tekrar tanımlamıyoruz,
-// ancak Hive anotasyonlarını eklemek için bir "Mixin" veya "Extension" kullanamayız.
-// Bu yüzden en temiz yöntem: PaymentModel oluşturup Entity'deki Payment'tan türetmek veya
-// Payment sınıfını direkt Entity'de tutup HiveType anotasyonunu orada kullanmaktır.
-// Ancak Clean Architecture gereği Entity'de Hive olmamalı.
-// Çözüm: PaymentModel oluşturuyoruz.
+// Payment sınıfı Entity dosyasında tanımlı (Clean Architecture gereği orada
+// Hive anotasyonu olamaz); Hive'ın ihtiyaç duyduğu alan haritası burada,
+// PaymentModel üzerinden verilir.
 
 @HiveType(typeId: 9)
 class PaymentModel extends Payment {
@@ -255,50 +268,76 @@ class PaymentModel extends Payment {
   @HiveField(2)
   String? get notes => super.notes;
 
-  const PaymentModel({required super.date, required super.amount, super.notes});
+  @override
+  @HiveField(3)
+  String get id => super.id;
+
+  @override
+  @HiveField(4)
+  double get overdueInterestPart => super.overdueInterestPart;
+
+  const PaymentModel({
+    required super.id,
+    required super.date,
+    required super.amount,
+    super.overdueInterestPart,
+    super.notes,
+  });
 
   // Entity'den Model'e çevirici
   factory PaymentModel.fromEntity(Payment payment) {
     return PaymentModel(
+      id: payment.id,
       date: payment.date,
       amount: payment.amount,
+      overdueInterestPart: payment.overdueInterestPart,
       notes: payment.notes,
     );
   }
 
   Payment toEntity() {
     return Payment(
+      id: id,
       date: date,
       amount: amount,
+      overdueInterestPart: overdueInterestPart,
       notes: notes,
     );
   }
 
   @override
   PaymentModel copyWith({
+    String? id,
     DateTime? date,
     double? amount,
+    double? overdueInterestPart,
     String? notes,
   }) {
     return PaymentModel(
+      id: id ?? this.id,
       date: date ?? this.date,
       amount: amount ?? this.amount,
+      overdueInterestPart: overdueInterestPart ?? this.overdueInterestPart,
       notes: notes ?? this.notes,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'date': date.toIso8601String(),
       'amount': amount,
+      'overdueInterestPart': overdueInterestPart,
       'notes': notes,
     };
   }
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
     return PaymentModel(
+      id: json['id'] as String,
       date: DateTime.parse(json['date'] as String),
       amount: (json['amount'] as num).toDouble(),
+      overdueInterestPart: (json['overdueInterestPart'] as num).toDouble(),
       notes: json['notes'] as String?,
     );
   }

@@ -8,10 +8,14 @@ import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/installment_progress.dart';
+import 'package:cunehat/features/debt_and_receivable/domain/services/overdue_interest.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
+import 'package:cunehat/features/debt_and_receivable/presentation/widgets/payment_edit_dialog.dart';
 import 'package:cunehat/core/shared/widgets/app_dialog_surface.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -55,10 +59,43 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
-  DateTime _paymentDate = DateTime.now();
+  late DateTime _paymentDate;
   double? _activeQuickPay;
   bool _showInstallmentPlan = false;
   bool _showPaymentHistory = false;
+
+  /// Ekranda gösterilen borç. `widget.debt` diyalog AÇILDIĞI andaki donmuş
+  /// kopyadır; ödeme silme/düzenleme listeyi tazelediği için her build'de
+  /// bloc'tan yeniden çözülür (aynı desen: single_transaction_detail_page).
+  /// Kayıt bulunamazsa (yükleme/hata durumları) donmuş kopya korunur —
+  /// ekran boşaltılmaz.
+  late DebtEntity _debt;
+
+  @override
+  void initState() {
+    super.initState();
+    _debt = widget.debt;
+    // Alan başlatıcısı widget'a erişemediği için varsayılan "bugün"dü; borcun
+    // başlangıcı gelecekteyse bu, seçicinin `firstDate`inin ALTINDA kalıyor ve
+    // showDatePicker assertion ile düşüyordu.
+    _paymentDate = _clampToPickerRange(DateTime.now());
+  }
+
+  /// Ödeme, borcun başlangıcından önce yapılmış olamaz.
+  DateTime get _pickerFirst => _debt.startDate;
+
+  /// Bir yıl ileriye kadar; ama başlangıç daha da ileride ise ona kenetlenir
+  /// (aksi halde `lastDate < firstDate` olur ve seçici yine düşer).
+  DateTime get _pickerLast {
+    final byNow = DateTime.now().add(const Duration(days: 365));
+    return byNow.isBefore(_pickerFirst) ? _pickerFirst : byNow;
+  }
+
+  DateTime _clampToPickerRange(DateTime d) {
+    if (d.isBefore(_pickerFirst)) return _pickerFirst;
+    if (d.isAfter(_pickerLast)) return _pickerLast;
+    return d;
+  }
 
   /// Diyalogdaki her tutar borcun cüzdan biriminde yazılır.
   String _money(double amount) =>
@@ -81,18 +118,36 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     super.dispose();
   }
 
+  /// Ödeme tarihi itibarıyla kapanmamış gecikme faizi.
+  ///
+  /// `DateTime.now()` DEĞİL, [_paymentDate] üzerinden hesaplanır: geçmişe
+  /// tarihli bir ödemede bugünkü (daha yüksek) tahakkuk üst sınır olarak
+  /// kullanılsaydı, mahsup o tarihteki daha küçük faizi düşer ve fazlası ana
+  /// paraya giderek kalanı eksiye çekerdi.
+  double get _outstandingInterest =>
+      outstandingOverdueInterest(_debt, now: _paymentDate);
+
+  /// Borcu bu tarihte tamamen kapatmak için gereken tutar.
+  double get _payoff =>
+      roundToCents(_debt.remainingAmount + _outstandingInterest);
+
   void _handlePayment() {
     if (!_formKey.currentState!.validate()) return;
 
     var amount = parseMoneyInput(_amountController.text)!;
-    // Yarım kuruş içindeki fazlalığı kalana kıskaçla: kayıtlı ödemeler
-    // toplamı borcu asla aşmasın (negatif kalan oluşmasın).
-    final remaining = widget.debt.remainingAmount;
-    if (amount > remaining && !moneyGreaterThan(amount, remaining)) {
-      amount = remaining;
+    // Yarım kuruş içindeki fazlalığı kapanış tutarına kıskaçla: kayıtlı
+    // ödemeler toplamı borcu asla aşmasın (negatif kalan oluşmasın).
+    final payoff = _payoff;
+    if (amount > payoff && !moneyGreaterThan(amount, payoff)) {
+      amount = payoff;
     }
 
+    // Faiz/ana para ayrımı ve `isPaid` burada HESAPLANMAZ: ikisi de
+    // DebtBloc'taki tek normalizasyon noktasından geçer (bkz. `_normalize`).
+    // Ödeme düzenleme/silme de aynı yoldan geçtiği için paylar her zaman
+    // kronolojik olarak yeniden dağıtılır.
     final newPayment = Payment(
+      id: UidGenerator.generateV7(),
       date: _paymentDate,
       amount: amount,
       notes: _notesController.text.trim().isEmpty
@@ -100,18 +155,8 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
           : _notesController.text.trim(),
     );
 
-    final updatedPayments = List<Payment>.from(widget.debt.payments)
-      ..add(newPayment);
-
-    final totalPaid = updatedPayments.fold<double>(
-      0.0,
-      (sum, payment) => sum + payment.amount,
-    );
-    final isPaid = moneyGte(totalPaid, widget.debt.totalDebtAmount);
-
-    final updatedDebt = widget.debt.copyWith(
-      payments: updatedPayments,
-      isPaid: isPaid,
+    final updatedDebt = _debt.copyWith(
+      payments: [..._debt.payments, newPayment],
     );
 
     context
@@ -123,24 +168,46 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _paymentDate,
-      firstDate: widget.debt.startDate,
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: _clampToPickerRange(_paymentDate),
+      firstDate: _pickerFirst,
+      lastDate: _pickerLast,
     );
-    if (picked != null) setState(() => _paymentDate = picked);
+    if (picked != null) {
+      setState(() {
+        _paymentDate = picked;
+        // Tahakkuk tarihe bağlı → seçili hızlı-ödeme tutarı bayatlar.
+        _activeQuickPay = null;
+      });
+    }
+  }
+
+  /// Bloc'taki güncel kaydı bulur; yoksa elindeki kopyayı korur.
+  DebtEntity _resolveDebt(BuildContext context) {
+    final state = context.watch<DebtBloc>().state;
+    if (state is DebtLoaded) {
+      for (final d in state.debts) {
+        if (d.id == _debt.id) return d;
+      }
+    }
+    return _debt;
   }
 
   @override
   Widget build(BuildContext context) {
+    _debt = _resolveDebt(context);
     final mq = MediaQuery.of(context);
     // Diyalog kabuğu içeriğe sonsuz yükseklik veriyor; ConstrainedBox bunu
     // filtreler ve SingleChildScrollView sınırlı alanda scroll eder → taşma yok.
     final maxH =
         (mq.size.height - mq.viewInsets.bottom - 250).clamp(380.0, 700.0);
 
-    final remaining = widget.debt.remainingAmount;
-    final totalDebt = widget.debt.totalDebtAmount;
-    final totalPaid = widget.debt.totalPaidAmount;
+    final remaining = _debt.remainingAmount;
+    final totalDebt = _debt.totalDebtAmount;
+    final totalPaid = _debt.totalPaidAmount;
+    // Tahakkuk hesabı liste/plan üzerinden döndüğü için build başına BİR kez
+    // ölçülür; getter'lar her çağrıda yeniden hesaplardı.
+    final outstandingInterest = _outstandingInterest;
+    final payoff = roundToCents(remaining + outstandingInterest);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
 
@@ -178,20 +245,33 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.debt.title,
+                            _debt.title,
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           const SizedBox(height: 8),
-                          _buildInfoRow(context.l10n.toplamBorcLabel,
-                              _money(totalDebt)),
+                          _buildInfoRow(
+                              context.l10n.toplamBorcLabel, _money(totalDebt)),
                           _buildInfoRow(
                               context.l10n.odenenLabel, _money(totalPaid),
                               color: Colors.green),
                           const Divider(height: 16),
+                          // Gecikme faizi borcun KENDİSİ değil; kalan ana para
+                          // ile ayrı satırlarda durur, ikisinin toplamı
+                          // "ödenecek toplam"dır.
                           _buildInfoRow(
                               context.l10n.kalanLabel, _money(remaining),
-                              color: Colors.red, isBold: true),
+                              color: Colors.red,
+                              isBold: !moneyIsPositive(outstandingInterest)),
+                          if (moneyIsPositive(outstandingInterest)) ...[
+                            _buildInfoRow(context.l10n.gecikmeFaiziLabel,
+                                _money(outstandingInterest),
+                                color: Colors.red),
+                            const Divider(height: 16),
+                            _buildInfoRow(context.l10n.odenecekToplamLabel,
+                                _money(payoff),
+                                color: Colors.red, isBold: true),
+                          ],
                         ],
                       ),
                     ),
@@ -199,7 +279,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                     const SizedBox(height: 16),
 
                     // Hızlı seçim chip'leri
-                    _buildQuickPayOptions(remaining),
+                    _buildQuickPayOptions(payoff, outstandingInterest),
 
                     const SizedBox(height: 12),
 
@@ -210,9 +290,9 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                           const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [AmountInputFormatter()],
                       onChanged: (_) {
-                        if (_activeQuickPay != null) {
-                          setState(() => _activeQuickPay = null);
-                        }
+                        // Faiz payı önizlemesi tutara bağlı → her değişimde
+                        // yeniden çiz.
+                        setState(() => _activeQuickPay = null);
                       },
                       decoration: InputDecoration(
                         labelText: context.l10n.labelOdemeTutari,
@@ -222,15 +302,21 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
                         helperText: context.l10n
-                            .maksimumFormatmoneyRemaining(_money(remaining)),
+                            .maksimumFormatmoneyRemaining(_money(payoff)),
                       ),
                       validator: (value) => validateAmountInput(
                         value ?? '',
-                        max: remaining,
-                        maxExceededMessage:
-                            context.l10n.kalanTutardanFazlaOlamaz,
+                        max: payoff,
+                        maxExceededMessage: moneyIsPositive(outstandingInterest)
+                            ? context.l10n.odenecekTutardanFazlaOlamaz
+                            : context.l10n.kalanTutardanFazlaOlamaz,
                       ),
                     ),
+
+                    // Mahsup sırası kullanıcıya görünür olmalı: girilen tutarın
+                    // bir kısmı borcu değil faizi kapatıyor.
+                    if (moneyIsPositive(outstandingInterest))
+                      _buildAllocationHint(outstandingInterest),
 
                     const SizedBox(height: 16),
 
@@ -268,12 +354,12 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                     ),
 
                     // Taksit Planı (foldable)
-                    if (widget.debt.termMonths > 1) ...[
+                    if (_debt.termMonths > 1) ...[
                       const SizedBox(height: 8),
                       _buildCollapsibleSection(
                         cs: cs,
-                        title: context.l10n.taksitPlaniFormat(
-                            widget.debt.termMonths.toString()),
+                        title: context.l10n
+                            .taksitPlaniFormat(_debt.termMonths.toString()),
                         icon: Icons.calendar_month_rounded,
                         isExpanded: _showInstallmentPlan,
                         onToggle: () => setState(
@@ -283,12 +369,12 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                     ],
 
                     // Ödeme Geçmişi (foldable)
-                    if (widget.debt.payments.isNotEmpty) ...[
+                    if (_debt.payments.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       _buildCollapsibleSection(
                         cs: cs,
                         title: context.l10n.odemeGecmisiFormat(
-                            widget.debt.payments.length.toString()),
+                            _debt.payments.length.toString()),
                         icon: Icons.history_rounded,
                         isExpanded: _showPaymentHistory,
                         onToggle: () => setState(
@@ -422,7 +508,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   Widget _buildInstallmentPlanList(bool isDark) {
     // Durum ödenen TUTARdan gelir, ödeme SAYISINDAN değil: aradan geçen
     // kısmi/fazla ödemeler planı kaydırmaz (bkz. buildInstallmentPlan).
-    final plan = buildInstallmentPlanFor(widget.debt);
+    final plan = buildInstallmentPlanFor(_debt);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -444,9 +530,15 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                     row.number, AppFormatters.dateShort.format(row.dueDate)),
                 style: const TextStyle(fontSize: 13),
               ),
+              // Gecikme faizi satır başına DAĞITILMAZ (mahsup havuzludur:
+              // ödeme tek bir taksitin faizine değil toplam faize gider), bu
+              // yüzden burada tutar değil yalnız gecikme SÜRESİ yazar.
               subtitle: Text(
-                context.l10n
-                    .formatMoneyMonthlyamount(_money(row.scheduledAmount)),
+                row.isOverdue
+                    ? context.l10n.taksitGecikmeGun(_money(row.scheduledAmount),
+                        DateTime.now().difference(row.dueDate).inDays)
+                    : context.l10n
+                        .formatMoneyMonthlyamount(_money(row.scheduledAmount)),
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -490,10 +582,62 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
           row.isOverdue ? context.l10n.gecikmis : context.l10n.bekleniyor,
       };
 
+  Future<void> _deletePayment(Payment payment) async {
+    final bloc = context.read<DebtBloc>();
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.odemeSilBaslik,
+      message: context.l10n.odemeSilOnayMesaji(_money(payment.amount)),
+      confirmText: context.l10n.sil,
+      danger: true,
+    );
+    if (!confirmed) return;
+
+    bloc.add(DeleteDebtPaymentEvent(
+      _debt.copyWith(
+        payments: [
+          for (final p in _debt.payments)
+            if (p.id != payment.id) p
+        ],
+      ),
+      removedAmount: payment.amount,
+      removedDate: payment.date,
+    ));
+  }
+
+  Future<void> _editPayment(Payment payment) async {
+    final bloc = context.read<DebtBloc>();
+    // Kendi katkısı geri sayılmalı: aksi hâlde tutarı değiştirmeyen bir
+    // düzenleme bile "kalandan fazla" diye reddedilirdi.
+    final maxAmount = roundToCents(_payoff + payment.amount);
+    final result = await PaymentEditDialog.show(
+      context,
+      payment: payment,
+      currency: widget.currency,
+      maxAmount: maxAmount,
+      firstDate: _pickerFirst,
+      lastDate: _pickerLast,
+    );
+    if (result == null) return;
+
+    bloc.add(UpdateDebtPaymentEvent(
+      _debt.copyWith(
+        payments: [
+          for (final p in _debt.payments)
+            if (p.id == payment.id) result else p
+        ],
+      ),
+      prevAmount: payment.amount,
+      prevDate: payment.date,
+      newAmount: result.amount,
+      newDate: result.date,
+    ));
+  }
+
   Widget _buildPaymentHistoryList() {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: widget.debt.payments.asMap().entries.map((entry) {
+      children: _debt.payments.asMap().entries.map((entry) {
         final index = entry.key;
         final payment = entry.value;
         return Card(
@@ -516,16 +660,61 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
               _money(payment.amount),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            // Başlıktaki tutar cüzdandan ÇIKAN tam tutar; bunun ne kadarının
+            // borcu değil gecikme faizini kapattığı burada yazar.
             subtitle: Text(
-              AppFormatters.dateShort.format(payment.date),
+              moneyIsPositive(payment.overdueInterestPart)
+                  ? context.l10n.odemeIcindeGecikmeFaizi(
+                      AppFormatters.dateShort.format(payment.date),
+                      _money(payment.overdueInterestPart),
+                    )
+                  : AppFormatters.dateShort.format(payment.date),
               style: const TextStyle(fontSize: 12),
             ),
-            trailing: payment.notes != null
-                ? Tooltip(
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (payment.notes != null)
+                  Tooltip(
                     message: payment.notes!,
                     child: const Icon(Icons.info_outline, size: 16),
-                  )
-                : null,
+                  ),
+                // Yanlış girilen bir ödemenin tek çıkış yolu, borcun tamamını
+                // silmekti: deftere yazılan karşılığı sistem işlemi olduğu
+                // için işlemler sayfasından da silinemiyordu.
+                PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.more_vert_rounded, size: 18),
+                  onSelected: (v) => v == 'edit'
+                      ? _editPayment(payment)
+                      : _deletePayment(payment),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit,
+                              size: 18, color: Colors.blueGrey),
+                          const SizedBox(width: 8),
+                          Text(context.l10n.duzenle),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete, size: 18, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Text(context.l10n.sil,
+                              style: const TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),
@@ -534,42 +723,75 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
 
   // ---------------------------------------------------------------- Quick pay
 
-  Widget _buildQuickPayOptions(double remaining) {
+  /// Girilen tutarın ne kadarının faize, ne kadarının ana paraya sayılacağı.
+  Widget _buildAllocationHint(double outstandingInterest) {
+    final entered = parseMoneyInput(_amountController.text) ?? 0;
+    if (!moneyIsPositive(entered)) return const SizedBox.shrink();
+    final interestPart = roundToCents(math.min(entered, outstandingInterest));
+    final principalPart = roundToCents(entered - interestPart);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded,
+              size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              context.l10n.odemeMahsupAciklama(
+                  _money(interestPart), _money(principalPart)),
+              style: TextStyle(
+                fontSize: 11.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickPayOptions(double payoff, double outstandingInterest) {
     // Tutarlar plandan okunur, yeniden hesaplanmaz. Elle `toplam / vade`
     // bölmek aynı diyalogda İKİ ayrı "bir taksit" tanımı yaratıyordu: plan
     // satırları kuruşa yuvarlanıp artığı son taksite yüklerken (1.000/3 →
     // 333,33 / 333,33 / 333,34) chip 333,33333… öneriyordu. Chip'lerle ödeyen
     // kullanıcı son taksiti hiçbir zaman "ödendi"ye çeviremiyor, borç kuruşu
     // kapanmadan açık kalıyordu.
-    final plan = buildInstallmentPlanFor(widget.debt);
+    final plan = buildInstallmentPlanFor(_debt);
     final unpaid = plan
         .where((r) => r.status != InstallmentStatus.paid)
         .toList(growable: false);
 
-    /// Sıradaki [count] ödenmemiş taksitin KALAN tutarı (kısmen ödenmiş bir
-    /// taksitte yalnız eksik kısım istenir).
+    /// Sıradaki [count] ödenmemiş taksiti GERÇEKTEN kapatan tutar.
+    ///
+    /// Kapanmamış gecikme faizi eklenir: mahsup önce faizi kapattığı için,
+    /// yalnız taksit tutarı kadar ödeme yapıldığında taksit kapanmaz — chip
+    /// vaat ettiğini yerine getirmemiş olurdu.
     double? nextInstallments(int count) {
       if (unpaid.length < count) return null;
       final sum = unpaid
           .take(count)
           .fold<double>(0, (acc, r) => acc + r.remainingAmount);
-      final capped = roundToCents(math.min(sum, remaining));
+      final capped = roundToCents(math.min(sum + outstandingInterest, payoff));
       return capped > 0 ? capped : null;
     }
 
-    final oneInstallment =
-        widget.debt.termMonths > 1 ? nextInstallments(1) : null;
-    final twoInstallments =
-        widget.debt.termMonths > 1 ? nextInstallments(2) : null;
+    final oneInstallment = _debt.termMonths > 1 ? nextInstallments(1) : null;
+    final twoInstallments = _debt.termMonths > 1 ? nextInstallments(2) : null;
 
     final options = <({String label, double amount})>[
+      // Yalnız birikmiş gecikme faizini kapat.
+      if (moneyIsPositive(outstandingInterest))
+        (label: context.l10n.gecikmeFaiziChip, amount: outstandingInterest),
       if (oneInstallment != null)
         (label: context.l10n.taksit1, amount: oneInstallment),
       // Tamamıyla aynı tutara düşen ikinci chip kullanıcıya bir şey sunmaz.
-      if (twoInstallments != null && twoInstallments < remaining)
+      if (twoInstallments != null && twoInstallments < payoff)
         (label: context.l10n.taksit2, amount: twoInstallments),
-      // remaining getter'ı zaten kuruşa yuvarlı
-      (label: context.l10n.tamaminiOde, amount: remaining),
+      // payoff zaten kuruşa yuvarlı
+      (label: context.l10n.tamaminiOde, amount: payoff),
     ];
 
     return SingleChildScrollView(

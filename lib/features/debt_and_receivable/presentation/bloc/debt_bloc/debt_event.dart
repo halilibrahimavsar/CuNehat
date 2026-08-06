@@ -61,6 +61,48 @@ class PayDebtEvent extends DebtEvent {
   List<Object?> get props => [debt, paymentAmount, paymentDate];
 }
 
+/// Var olan bir ödeme kaydını günceller (tutar / tarih / not).
+///
+/// [debt] ödeme listesi GÜNCELLENMİŞ hâlidir; faiz payları ve `isPaid`
+/// handler'daki tek normalizasyon noktasından geçer. Önceki tutar ve tarih
+/// defter mutabakatı için ayrıca taşınır — kaydın kendisi zaten yeni hâlinde.
+class UpdateDebtPaymentEvent extends DebtEvent {
+  final DebtEntity debt;
+  final double prevAmount;
+  final DateTime prevDate;
+  final double newAmount;
+  final DateTime newDate;
+
+  const UpdateDebtPaymentEvent(
+    this.debt, {
+    required this.prevAmount,
+    required this.prevDate,
+    required this.newAmount,
+    required this.newDate,
+  });
+
+  @override
+  List<Object?> get props => [debt, prevAmount, prevDate, newAmount, newDate];
+}
+
+/// Bir ödeme kaydını siler; deftere iade kendi tarihine yazılır.
+///
+/// [debt] ödeme ÇIKARILMIŞ hâlidir.
+class DeleteDebtPaymentEvent extends DebtEvent {
+  final DebtEntity debt;
+  final double removedAmount;
+  final DateTime removedDate;
+
+  const DeleteDebtPaymentEvent(
+    this.debt, {
+    required this.removedAmount,
+    required this.removedDate,
+  });
+
+  @override
+  List<Object?> get props => [debt, removedAmount, removedDate];
+}
+
 class DeleteDebtEvent extends DebtEvent {
   final String id;
   final String userId;
@@ -92,5 +134,13 @@ class DeleteDebtEvent extends DebtEvent {
   });
 
   @override
-  List<Object?> get props => [id, walletId];
+  List<Object?> get props => [
+        id,
+        userId,
+        walletId,
+        principalAmount,
+        startDate,
+        payments,
+        principalToWallet,
+      ];
 }
