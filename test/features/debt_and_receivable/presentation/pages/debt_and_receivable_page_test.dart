@@ -34,7 +34,7 @@ void main() {
     getIt.allowReassignment = true;
     registerFallbackValue(GetDebtsEvent('wallet_1'));
     registerFallbackValue(GetReceivablesEvent('wallet_1'));
-    registerFallbackValue(OnboardingFlow.debt);
+    registerFallbackValue(OnboardingFlow.shell);
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });
 
@@ -105,8 +105,7 @@ void main() {
   testWidgets('döviz cüzdanda liste açılır, TL kısıtı görünmez',
       (tester) async {
     when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
-    when(() => mockReceivableBloc.state)
-        .thenReturn(const ReceivableLoaded([]));
+    when(() => mockReceivableBloc.state).thenReturn(const ReceivableLoaded([]));
 
     await tester.pumpWidget(buildTestableWidget(currency: 'USD'));
     await tester.pumpAndSettle();
@@ -136,8 +135,7 @@ void main() {
 
   testWidgets('ödeme diyaloğu cüzdanın birimiyle açılır', (tester) async {
     when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
-    when(() => mockReceivableBloc.state)
-        .thenReturn(const ReceivableLoaded([]));
+    when(() => mockReceivableBloc.state).thenReturn(const ReceivableLoaded([]));
 
     await tester.pumpWidget(buildTestableWidget(currency: 'USD'));
     await tester.pumpAndSettle();
@@ -153,8 +151,7 @@ void main() {
 
   testWidgets('TL cüzdanda gösterim değişmez', (tester) async {
     when(() => mockDebtBloc.state).thenReturn(DebtLoaded([activeDebt]));
-    when(() => mockReceivableBloc.state)
-        .thenReturn(const ReceivableLoaded([]));
+    when(() => mockReceivableBloc.state).thenReturn(const ReceivableLoaded([]));
 
     await tester.pumpWidget(buildTestableWidget(currency: 'TRY'));
     await tester.pumpAndSettle();

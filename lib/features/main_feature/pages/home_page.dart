@@ -34,7 +34,6 @@ import 'package:cunehat/core/onboarding/backup_offer_prompt.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/services/auto_backup_service.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/main_feature/widgets/onboarding_navigation_hint_card.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
@@ -87,18 +86,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         .read<PendingRecurringBloc>()
         .add(const LoadPendingTransactionsEvent());
 
-    final coordinator = getIt<OnboardingCoordinator>();
-    coordinator.addListener(_onOnboardingCoordinatorChanged);
-    // İnteraktif turların "yüzeyim şu an gerçekten ekranda mı" sorusunun
-    // kabuk tarafındaki yanıtı: kaydırıcı konumu, alt yığın indeksi, süren
-    // geçiş ve drawer/cüzdan dönüşümü. Turlar yalnız kabuk hedef konumunda
-    // DURURKEN oynar.
-    coordinator.shellStatusProvider = () => OnboardingShellStatus(
-          sliderValue: _navController.horizontalController.value,
-          stackIndex: _navController.viewStack.currentIndex,
-          isAnimating: _navController.isAnimating,
-          isTransformed: _scaffoldKey.currentState?.isTransforming ?? false,
-        );
+    // Kabuk turunun "yüzeyim şu an gerçekten ekranda mı" sorusunun kabuk
+    // tarafındaki yanıtı: alt yığın indeksi, süren geçiş ve drawer/cüzdan
+    // dönüşümü. Tur yalnız kabuk KÖKTE ve DURURKEN oynar.
+    getIt<OnboardingCoordinator>().shellStatusProvider =
+        () => OnboardingShellStatus(
+              stackIndex: _navController.viewStack.currentIndex,
+              isAnimating: _navController.isAnimating,
+              isTransformed: _scaffoldKey.currentState?.isTransforming ?? false,
+            );
     _navController.viewStack.addListener(_pumpOnboarding);
 
     // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
@@ -142,7 +138,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       return;
     }
 
-    final summary = await getIt<DataSerializationService>().currentDataSummary();
+    final summary =
+        await getIt<DataSerializationService>().currentDataSummary();
     if (!BackupOfferPrompt.shouldOffer(
       alreadyOffered: false,
       autoBackupEnabled: false,
@@ -184,31 +181,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  /// Ayarlar'dan tetiklenen "turu tekrar göster" isteğini karşılar: yalnızca
-  /// kaydırıcıyı ilgili ekrana taşır. Turu BAŞLATMAZ — sayfanın kendi
-  /// [OnboardingTour] kapısı, ekran görünür ve durur hale gelince turu
-  /// kendiliğinden açar. Settings `context.push` ile açıldığından HomePage
-  /// state'i canlı kalır; bu yüzden initState'e değil bu listener'a ihtiyaç
-  /// var.
-  void _onOnboardingCoordinatorChanged() {
-    final coordinator = getIt<OnboardingCoordinator>();
-    final flow = coordinator.pendingFlow;
-    if (flow == null) return;
-    coordinator.consumePendingFlow();
-    // Alt sayfa/sheet akışları buraya hiç gelmez; onlar o yüzeye gidildiğinde
-    // kendiliğinden tetiklenir.
-    if (!flow.isReplayableMainScreen) return;
-    final targetValue = switch (flow) {
-      OnboardingFlow.investment => 0.0,
-      OnboardingFlow.transactions => 0.5,
-      _ => 1.0,
-    };
-    if ((_navController.horizontalController.value - targetValue).abs() >
-        0.01) {
-      _navController.horizontalController.animateTo(targetValue);
-    }
-  }
-
   void _pumpOnboarding() => getIt<OnboardingCoordinator>().notifyMaybeReady();
 
   /// Slider 0.25/0.75 sınırını geçip durum değiştirdiğinde view stack'in
@@ -240,9 +212,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _navController.horizontalController
         .removeListener(_onSliderStateMaybeChanged);
     _navController.viewStack.removeListener(_pumpOnboarding);
-    final coordinator = getIt<OnboardingCoordinator>();
-    coordinator.removeListener(_onOnboardingCoordinatorChanged);
-    coordinator.shellStatusProvider = null;
+    getIt<OnboardingCoordinator>().shellStatusProvider = null;
     _navController.dispose();
     super.dispose();
   }

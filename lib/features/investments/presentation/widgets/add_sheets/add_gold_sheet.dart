@@ -260,11 +260,18 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
 
     return OnboardingTour(
       flow: OnboardingFlow.investmentAdd,
-      keys: [OnboardingKeys.investmentAddForm],
+      keys: _tourKeys,
       enabled: !_isEditing,
       child: _buildContent(context, surface, cs),
     );
   }
+
+  /// Mevcut değer → toplam maliyet → miktar/otomatik fiyat.
+  static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.investmentAddForm,
+    OnboardingKeys.investmentAddCost,
+    OnboardingKeys.investmentAddQuantity,
+  ];
 
   Widget _buildContent(
       BuildContext context, AppSurface surface, ColorScheme cs) {
@@ -315,15 +322,21 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       InvestmentHintCaption(context.l10n.mevcutDegerAciklama),
                       const SizedBox(height: 14),
                       // Toplam Maliyet: Mevcut Değer'in hemen altında durur.
-                      InvestmentFilledField(
-                        controller: _amountController,
-                        hint: context.l10n.maliyetYatirilanAnaPara,
-                        icon: Icons.payments_rounded,
-                        accent: _accent,
-                        onChanged: _clearError,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [AmountInputFormatter()],
+                      Showcase(
+                        key: OnboardingKeys.investmentAddCost,
+                        title: context.l10n.onboardingInvestmentAddCostTitle,
+                        description:
+                            context.l10n.onboardingInvestmentAddCostDesc,
+                        child: InvestmentFilledField(
+                          controller: _amountController,
+                          hint: context.l10n.maliyetYatirilanAnaPara,
+                          icon: Icons.payments_rounded,
+                          accent: _accent,
+                          onChanged: _clearError,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [AmountInputFormatter()],
+                        ),
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       const SizedBox(height: 20),
@@ -332,14 +345,21 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       const SizedBox(height: 10),
                       _buildGoldTypeSelector(cs),
                       const SizedBox(height: 14),
-                      InvestmentQuantityAndFetch(
-                        accent: _accent,
-                        quantityController: _quantityController,
-                        onQuantityChanged: _clearError,
-                        isLoading: _isLoading,
-                        fetchedMessage: _fetchedPriceMessage,
-                        fetchedColor: _fetchedPriceColor,
-                        onFetch: _fetchLivePrice,
+                      Showcase(
+                        key: OnboardingKeys.investmentAddQuantity,
+                        title:
+                            context.l10n.onboardingInvestmentAddQuantityTitle,
+                        description:
+                            context.l10n.onboardingInvestmentAddQuantityDesc,
+                        child: InvestmentQuantityAndFetch(
+                          accent: _accent,
+                          quantityController: _quantityController,
+                          onQuantityChanged: _clearError,
+                          isLoading: _isLoading,
+                          fetchedMessage: _fetchedPriceMessage,
+                          fetchedColor: _fetchedPriceColor,
+                          onFetch: _fetchLivePrice,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.yatirimDetaylari),

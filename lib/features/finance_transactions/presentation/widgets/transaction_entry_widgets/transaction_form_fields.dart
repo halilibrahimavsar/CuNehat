@@ -4,6 +4,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
@@ -82,8 +83,23 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
     _routeAnimation = null;
     if (!mounted) return;
     _c.loadCategories();
-    if (!_isEdit) _amountFocus.requestFocus();
+    // Klavye, tur oynayacaksa açılmaz: açık klavye sheet'i kısaltır ve
+    // Showcase'in hedefe kaydırmasıyla (enableAutoScroll) çakışır. Tur bir
+    // kez gösterildikten sonra her açılışta olduğu gibi odak tutara gider.
+    if (!_isEdit && _tourAlreadySeen) _amountFocus.requestFocus();
   }
+
+  bool get _tourAlreadySeen =>
+      !getIt.isRegistered<OnboardingCoordinator>() ||
+      getIt<OnboardingCoordinator>().isSeen(OnboardingFlow.transactionsAdd);
+
+  /// Tutar → kategori → tekrar sıklığı. Üçü de aynı Column'da, yani turun
+  /// tüm hedefleri her zaman birlikte ağaçtadır.
+  static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.transactionAddForm,
+    OnboardingKeys.transactionAddCategory,
+    OnboardingKeys.transactionAddRecurring,
+  ];
 
   @override
   void dispose() {
@@ -146,7 +162,7 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
 
     return OnboardingTour(
       flow: OnboardingFlow.transactionsAdd,
-      keys: [OnboardingKeys.transactionAddForm],
+      keys: _tourKeys,
       // Düzenleme modunda tanıtım gösterilmez.
       enabled: !_isEdit,
       child: _buildContent(context, surface),
@@ -190,10 +206,17 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                     children: [
                       _TitleField(controller: _c, accent: _accent),
                       const SizedBox(height: 22),
-                      CategoryPicker(
-                        controller: _c,
-                        accent: _accent,
-                        isExpense: widget.isExpense,
+                      Showcase(
+                        key: OnboardingKeys.transactionAddCategory,
+                        title:
+                            context.l10n.onboardingTransactionsAddCategoryTitle,
+                        description:
+                            context.l10n.onboardingTransactionsAddCategoryDesc,
+                        child: CategoryPicker(
+                          controller: _c,
+                          accent: _accent,
+                          isExpense: widget.isExpense,
+                        ),
                       ),
                       const SizedBox(height: 22),
                       WhenRow(controller: _c, accent: _accent),
@@ -201,8 +224,15 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
                       const SizedBox(height: 22),
                       ReceiptRow(controller: _c, accent: _accent),
                       const SizedBox(height: 22),
-                      _RecurringRow(
-                          controller: _c, accent: _accent, isEdit: _isEdit),
+                      Showcase(
+                        key: OnboardingKeys.transactionAddRecurring,
+                        title: context
+                            .l10n.onboardingTransactionsAddRecurringTitle,
+                        description:
+                            context.l10n.onboardingTransactionsAddRecurringDesc,
+                        child: _RecurringRow(
+                            controller: _c, accent: _accent, isEdit: _isEdit),
+                      ),
                       const SizedBox(height: 20),
                       _ErrorBanner(controller: _c),
                       _SaveButton(

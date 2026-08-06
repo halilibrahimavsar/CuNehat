@@ -8,12 +8,8 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class InvestmentDetailPage extends StatelessWidget {
   final String userId;
@@ -44,71 +40,62 @@ class _InvestmentDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingTour(
-      flow: OnboardingFlow.investmentDetail,
-      keys: [OnboardingKeys.investmentDetailBody],
-      child: Scaffold(
-        appBar: showAppBar
-            ? AppBar(
-                title: Text(context.l10n.birikimDetayi),
-                centerTitle: true,
-              )
-            : null,
-        body: Showcase(
-          key: OnboardingKeys.investmentDetailBody,
-          title: context.l10n.onboardingInvestmentDetailTitle,
-          description: context.l10n.onboardingInvestmentDetailDesc,
-          child: BlocBuilder<TransactionBloc, TransactionState>(
-            builder: (context, state) {
-              final allTransactions = state.currentTransactions;
+    return Scaffold(
+      appBar: showAppBar
+          ? AppBar(
+              title: Text(context.l10n.birikimDetayi),
+              centerTitle: true,
+            )
+          : null,
+      body: BlocBuilder<TransactionBloc, TransactionState>(
+        builder: (context, state) {
+          final allTransactions = state.currentTransactions;
 
-              if (state is TransactionLoading && allTransactions.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          if (state is TransactionLoading && allTransactions.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              // Sadece otomatik oluşturulan yatırım hareketlerini filtrele
-              final investmentTransactions = allTransactions.where((t) {
-                return t.isSystem &&
-                    (t.tag == CashMovementTags.investmentBuy ||
-                        t.tag == CashMovementTags.investmentSell ||
-                        t.tag == CashMovementTags.investmentCorrection);
-              }).toList();
+          // Sadece otomatik oluşturulan yatırım hareketlerini filtrele
+          final investmentTransactions = allTransactions.where((t) {
+            return t.isSystem &&
+                (t.tag == CashMovementTags.investmentBuy ||
+                    t.tag == CashMovementTags.investmentSell ||
+                    t.tag == CashMovementTags.investmentCorrection);
+          }).toList();
 
-              if (investmentTransactions.isEmpty) {
-                return _buildEmptyState(context);
-              }
+          if (investmentTransactions.isEmpty) {
+            return _buildEmptyState(context);
+          }
 
-              // TransactionCard beklentisi olan TransactionWithBalance sınıfına çevir
-              // Bakiye takibi bu sayfada görünür olmadığından currentBalance: 0
-              final withBalanceList = buildLedgerView(
-                allTransactions: investmentTransactions,
-                currentBalance: 0,
-              );
+          // TransactionCard beklentisi olan TransactionWithBalance sınıfına çevir
+          // Bakiye takibi bu sayfada görünür olmadığından currentBalance: 0
+          final withBalanceList = buildLedgerView(
+            allTransactions: investmentTransactions,
+            currentBalance: 0,
+          );
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.gecmis,
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    ...withBalanceList.map(
-                      (item) => TransactionCard(
-                        context: context,
-                        item: item,
-                        isListView: true,
-                      ),
-                    ),
-                  ],
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.gecmis,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-              );
-            },
-          ),
-        ),
+                const SizedBox(height: 16),
+                ...withBalanceList.map(
+                  (item) => TransactionCard(
+                    context: context,
+                    item: item,
+                    isListView: true,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -23,14 +23,15 @@ class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 void main() {
   late MockTransactionBloc mockTransactionBloc;
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;

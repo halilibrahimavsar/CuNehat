@@ -6,18 +6,20 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 void main() {
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });
@@ -249,5 +251,26 @@ void main() {
     expect(updatedInvestment!.targetAmount, 15000.0);
     expect(updatedInvestment!.goalCategory, 'acil_fon');
     expect(updatedInvestment!.color, Colors.teal);
+  });
+
+  // Tur adımları kapanı: OnboardingTour TÜM hedefleri render edilmiş
+  // bulamazsa tur sessizce hiç oynamaz. Özel yatırımda miktar alanı yok, bu
+  // yüzden adım listesi iki adımdır.
+  testWidgets('turun iki adımı ağaçta, miktar adımı yok', (tester) async {
+    await tester.pumpWidget(buildTestableWidget(
+      AddCustomSheet(
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        walletCurrency: 'TRY',
+        onSave: (_) {},
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final showcase = ShowcaseView.get();
+    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddForm), isTrue);
+    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddCost), isTrue);
+    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddQuantity),
+        isFalse);
   });
 }

@@ -86,7 +86,7 @@ void main() {
     registerFallbackValue(FakeTransactionEvent());
     registerFallbackValue(FakeTransactionEntity());
     registerFallbackValue(FakeRecurringTransactionEntity());
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Sayfa Showcase kullanır; kayıtlı bir scope yoksa initState fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });

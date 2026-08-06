@@ -22,18 +22,17 @@ class OnboardingHelpCard extends StatelessWidget {
     await showNotificationPermissionRationale(context);
   }
 
-  /// Ekran turunu sıfırlayıp HomePage'in (Settings altında canlı kalan)
-  /// dinleyicisini tetikler; sonra Settings'ten geri dönülür ki tur o
-  /// ekranda görünür olsun.
-  Future<void> _replayScreenTour(
-      BuildContext context, OnboardingFlow flow) async {
-    await getIt<OnboardingCoordinator>().resetAndReplay(flow);
+  /// Kabuk turunu sıfırlayıp HomePage'in (Settings altında canlı kalan)
+  /// [OnboardingTour] dinleyicisini tetikler; sonra Settings'ten geri dönülür
+  /// ki tur ana ekranda görünür olsun.
+  Future<void> _replayShellTour(BuildContext context) async {
+    await getIt<OnboardingCoordinator>().resetAndReplay(OnboardingFlow.shell);
     if (context.mounted) context.pop();
   }
 
-  /// Ana ekranlar dışında alt sayfaların (Detay/İçgörü/Rapor/Geçmiş) da
-  /// bir replay tile'ı yok — o sayfaya gidildiğinde zaten otomatik
-  /// tetikleniyor. Bu, hepsinin bayrağını tek seferde sıfırlar.
+  /// Ekleme formlarının (işlem/borç/yatırım) ve cüzdan yönetiminin ayrı bir
+  /// replay satırı yok — o yüzey açıldığında zaten kendiliğinden tetiklenir.
+  /// Bu, beş turun bayrağını birden sıfırlar.
   Future<void> _resetAll(BuildContext context) async {
     final confirmed = await ConfirmDialog.show(
       context,
@@ -69,32 +68,12 @@ class OnboardingHelpCard extends StatelessWidget {
           ),
           divider(),
           ListTile(
-            leading: Icon(Icons.savings_outlined, color: scheme.primary),
+            leading: Icon(Icons.explore_outlined, color: scheme.primary),
             title: Text(
-              context.l10n.yatirimBirikimTuru,
+              context.l10n.uygulamaTuruTekrarGoster,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            onTap: () => _replayScreenTour(context, OnboardingFlow.investment),
-          ),
-          divider(),
-          ListTile(
-            leading: Icon(Icons.receipt_long_outlined, color: scheme.primary),
-            title: Text(
-              context.l10n.islemlerTuru,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            onTap: () =>
-                _replayScreenTour(context, OnboardingFlow.transactions),
-          ),
-          divider(),
-          ListTile(
-            leading: Icon(Icons.account_balance_wallet_outlined,
-                color: scheme.primary),
-            title: Text(
-              context.l10n.borcAlacakTuru,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            onTap: () => _replayScreenTour(context, OnboardingFlow.debt),
+            onTap: () => _replayShellTour(context),
           ),
           divider(),
           ListTile(

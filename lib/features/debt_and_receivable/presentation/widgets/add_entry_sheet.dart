@@ -400,11 +400,19 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
 
     return OnboardingTour(
       flow: OnboardingFlow.debtAdd,
-      keys: [OnboardingKeys.debtAddForm],
+      keys: _tourKeys,
       enabled: !_isEditing,
       child: _buildContent(context, surface, cs),
     );
   }
+
+  /// Tutar kartı → vade tarihi. İkisi de HEM borç HEM alacak modunda ağaçta;
+  /// yalnız borçta görünen alanlara (tür çipleri, taksit/faiz) adım konursa
+  /// kapı tüm hedefleri arayacağından tur alacak modunda hiç oynamaz.
+  static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.debtAddForm,
+    OnboardingKeys.debtAddDueDate,
+  ];
 
   Widget _buildContent(
     BuildContext context,
@@ -535,12 +543,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           onChanged: _clearError,
                         ),
                         const SizedBox(height: 14),
-                        DueDatePill(
-                          isDebt: _isDebt,
-                          accent: _accent,
-                          date: _selectedDate,
-                          onTap: _pickDate,
-                        ),
+                        _buildDueDateStep(context),
                       ] else ...[
                         FilledEntryField(
                           controller: _titleController,
@@ -550,12 +553,7 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
                           onChanged: _clearError,
                         ),
                         const SizedBox(height: 14),
-                        DueDatePill(
-                          isDebt: _isDebt,
-                          accent: _accent,
-                          date: _selectedDate,
-                          onTap: _pickDate,
-                        ),
+                        _buildDueDateStep(context),
                       ],
                       if (_error != null) ...[
                         const SizedBox(height: 16),
@@ -570,6 +568,22 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Vade adımı. Borç ve alacak dallarının ikisinde de aynı hedefi kurar;
+  /// aynı anda yalnız biri build edildiğinden GlobalKey çakışmaz.
+  Widget _buildDueDateStep(BuildContext context) {
+    return Showcase(
+      key: OnboardingKeys.debtAddDueDate,
+      title: context.l10n.onboardingDebtAddDueDateTitle,
+      description: context.l10n.onboardingDebtAddDueDateDesc,
+      child: DueDatePill(
+        isDebt: _isDebt,
+        accent: _accent,
+        date: _selectedDate,
+        onTap: _pickDate,
       ),
     );
   }

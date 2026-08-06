@@ -35,7 +35,7 @@ void main() {
 
   Widget tourPage({String label = 'ana sayfa', bool enabled = true}) {
     return OnboardingTour(
-      flow: OnboardingFlow.budgets,
+      flow: OnboardingFlow.walletManagement,
       keys: [targetKey],
       enabled: enabled,
       child: Showcase(
@@ -74,9 +74,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('banka ekstresi'), findsOneWidget);
-    expect(started, isEmpty,
-        reason: 'tur başka sayfanın üstünde açılmamalı');
-    expect(coordinator.isSeen(OnboardingFlow.budgets), isFalse,
+    expect(started, isEmpty, reason: 'tur başka sayfanın üstünde açılmamalı');
+    expect(coordinator.isSeen(OnboardingFlow.walletManagement), isFalse,
         reason: 'oynatılamayan tur harcanmamalı');
 
     navigator.currentState!.pop();
@@ -112,14 +111,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(started, isEmpty);
-    expect(coordinator.isPending(OnboardingFlow.budgets), isFalse);
+    expect(coordinator.isPending(OnboardingFlow.walletManagement), isFalse);
   });
 
   testWidgets('hedef ağaçta değilken beklenir', (tester) async {
     // Showcase hedefi olmayan bir ağaç: tur isteği açılır ama oynamaz.
     await tester.pumpWidget(MaterialApp(
       home: OnboardingTour(
-        flow: OnboardingFlow.budgets,
+        flow: OnboardingFlow.walletManagement,
         keys: [targetKey],
         child: const Scaffold(body: Text('hedefsiz')),
       ),
@@ -127,7 +126,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(started, isEmpty);
-    expect(coordinator.isPending(OnboardingFlow.budgets), isTrue);
+    expect(coordinator.isPending(OnboardingFlow.walletManagement), isTrue);
   });
 
   testWidgets('sayfa yeniden mount olsa da tur bir kez oynar', (tester) async {
@@ -143,11 +142,9 @@ void main() {
     expect(started.length, 1);
   });
 
-  testWidgets('kabuğa bağlı tur, kabuk doğru konumda değilken oynamaz',
-      (tester) async {
+  testWidgets('kabuk turu, alt sayfa açıkken oynamaz', (tester) async {
     var stackIndex = 1; // alt sayfa açık
     coordinator.shellStatusProvider = () => OnboardingShellStatus(
-          sliderValue: 0.5,
           stackIndex: stackIndex,
           isAnimating: false,
           isTransformed: false,
@@ -155,13 +152,13 @@ void main() {
 
     await tester.pumpWidget(MaterialApp(
       home: OnboardingTour(
-        flow: OnboardingFlow.transactions,
+        flow: OnboardingFlow.shell,
         keys: [targetKey],
         child: Showcase(
           key: targetKey,
           title: 'başlık',
           description: 'açıklama',
-          child: const Scaffold(body: Text('işlemler')),
+          child: const Scaffold(body: Text('kabuk')),
         ),
       ),
     ));
@@ -171,6 +168,23 @@ void main() {
     stackIndex = 0; // alt sayfa kapandı
     coordinator.notifyMaybeReady();
     await tester.pumpAndSettle();
+    expect(started, [
+      [targetKey]
+    ]);
+  });
+
+  testWidgets('enabled false→true olunca tur kendini yeniden silahlandırır',
+      (tester) async {
+    // Kabuk turunun cüzdan koşulu tam olarak bu yoldan işler: ilk cüzdan
+    // oluşana kadar `enabled` false'tur, sonra true'ya döner ve tur oynar.
+    await tester.pumpWidget(MaterialApp(home: tourPage(enabled: false)));
+    await tester.pumpAndSettle();
+    expect(started, isEmpty);
+    expect(coordinator.isPending(OnboardingFlow.walletManagement), isFalse);
+
+    await tester.pumpWidget(MaterialApp(home: tourPage()));
+    await tester.pumpAndSettle();
+
     expect(started, [
       [targetKey]
     ]);

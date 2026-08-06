@@ -1,59 +1,75 @@
 import 'package:flutter/widgets.dart';
 
-/// HomePage seviyesinde tanımlı, üç ana ekran turunun da ortak son adımı
-/// olarak kullandığı hedef anahtarlar (ör. ekle eylemleri kaydırıcısı).
+/// Turların Showcase hedefleri.
+///
+/// Anahtarlar modül seviyesinde sabit tutulur: hedefi taşıyan widget'ların bir
+/// kısmı StatelessWidget olduğundan (kendi initState'leri yok) her rebuild'de
+/// yeni bir GlobalKey yaratılsa Showcase'in kayıt sistemi her seferinde farklı
+/// bir key görüp hedefi bulamazdı. Turun kapısı ([OnboardingTour]) hedefin
+/// gerçekten render edildiğini `isTargetRendered` ile bu anahtarlar üzerinden
+/// doğrular — bu yüzden bir turun TÜM adımları aynı anda ağaçta olmak
+/// zorundadır.
 class OnboardingKeys {
   OnboardingKeys._();
 
-  /// SliderButtonView'ı (gelir/gider/yatırım/borç ekle eylemleri) saran
-  /// Showcase hedefi. lib/features/main_feature/pages/home_page.dart'ta
-  /// tanımlanır; üç sayfa da kendi tur listesinin sonuna bunu ekler.
-  static final GlobalKey addActionSlider =
-      GlobalKey(debugLabel: 'onboarding_add_action_slider');
+  // ==================== Kabuk (OnboardingFlow.shell) ====================
 
-  /// Alt sayfaların (Detay/İçgörü/Rapor/Geçmiş) tur hedefleri. Bu sayfalar
-  /// StatelessWidget olduğundan (kendi initState'leri yok), her rebuild'de
-  /// yeniden yaratılmaması için burada modül-seviyesinde sabit tutulur —
-  /// aksi halde Showcase'in kayıt sistemi her seferinde farklı bir key
-  /// görüp hedefi bulamaz. Turun kapısı (`OnboardingTour`) hedefin gerçekten
-  /// render edildiğini `isTargetRendered` ile bu anahtarlar üzerinden
-  /// doğrular.
-  static final GlobalKey investmentDetailBody =
-      GlobalKey(debugLabel: 'onboarding_investment_detail_body');
-  static final GlobalKey transactionsInsightsBody =
-      GlobalKey(debugLabel: 'onboarding_tx_insights_body');
-  static final GlobalKey transactionsReportBody =
-      GlobalKey(debugLabel: 'onboarding_tx_report_body');
-  static final GlobalKey debtHistoryBody =
-      GlobalKey(debugLabel: 'onboarding_debt_history_body');
-
-  /// Ekleme sheet'leri (gelir/gider, borç/alacak, yatırım) — üçü de aynı
-  /// desende: sheet açılınca bir kez, düzenleme değil yeni-kayıt modundayken.
-  /// Yatırım tarafında altın/hisse/özel sheet'lerinin üçü de aynı key+flow'u
-  /// kullanır; hangisi önce açılırsa tur onda gösterilir.
-  static final GlobalKey transactionAddForm =
-      GlobalKey(debugLabel: 'onboarding_tx_add_form');
-  static final GlobalKey debtAddForm =
-      GlobalKey(debugLabel: 'onboarding_debt_add_form');
-  static final GlobalKey investmentAddForm =
-      GlobalKey(debugLabel: 'onboarding_investment_add_form');
-
-  /// AppBar: menü (drawer) butonu ve dokunulunca cüzdan sheet'ini açan
-  /// cüzdan adı/bakiye alanı.
-  static final GlobalKey appBarMenuButton =
-      GlobalKey(debugLabel: 'onboarding_appbar_menu');
+  /// AppBar'da dokunulunca cüzdan sheet'ini açan cüzdan adı/bakiye alanı.
   static final GlobalKey appBarWalletArea =
       GlobalKey(debugLabel: 'onboarding_appbar_wallet_area');
 
-  /// Cüzdan yönetimi sheet'i: "Yeni Cüzdan Oluştur" butonu.
+  /// AppBar'daki menü (drawer) butonu.
+  static final GlobalKey appBarMenuButton =
+      GlobalKey(debugLabel: 'onboarding_appbar_menu');
+
+  /// SliderButtonView'ı (gelir/gider/yatırım/borç ekle eylemleri) saran
+  /// Showcase hedefi; kabuk turunun son adımı olarak navigasyon kartını
+  /// gösterir. lib/features/main_feature/pages/home_page.dart'ta tanımlanır.
+  static final GlobalKey addActionSlider =
+      GlobalKey(debugLabel: 'onboarding_add_action_slider');
+
+  // ============== Cüzdan yönetimi (OnboardingFlow.walletManagement) ======
+
+  /// Cüzdan sheet'inin başlığı: cüzdan listesi ve toplam karşılık. Adım
+  /// listedeki bir karta değil başlığa konur — liste `ListView.builder`,
+  /// yani elemanları tembel kurulur ve üstündeki bir hedef `isTargetRendered`
+  /// kapısında kararsız davranır.
+  static final GlobalKey walletManagementHeader =
+      GlobalKey(debugLabel: 'onboarding_wallet_header');
+
+  /// "Yeni Cüzdan Oluştur" butonu.
   static final GlobalKey walletManagementAddButton =
       GlobalKey(debugLabel: 'onboarding_wallet_add_button');
 
-  /// Bütçe sayfası: "yeni bütçe ekle" FAB.
-  static final GlobalKey budgetsAddButton =
-      GlobalKey(debugLabel: 'onboarding_budgets_add_button');
+  // ============== Gelir/gider formu (OnboardingFlow.transactionsAdd) =====
 
-  /// Düzenli işlemler sayfası: tüm gövde (liste/boş durum).
-  static final GlobalKey recurringTemplatesBody =
-      GlobalKey(debugLabel: 'onboarding_recurring_templates_body');
+  static final GlobalKey transactionAddForm =
+      GlobalKey(debugLabel: 'onboarding_tx_add_form');
+  static final GlobalKey transactionAddCategory =
+      GlobalKey(debugLabel: 'onboarding_tx_add_category');
+  static final GlobalKey transactionAddRecurring =
+      GlobalKey(debugLabel: 'onboarding_tx_add_recurring');
+
+  // ============== Borç/alacak formu (OnboardingFlow.debtAdd) =============
+
+  /// Tutar kartı ve vade hapı: ikisi de HEM borç HEM alacak modunda ağaçta.
+  /// Yalnız borç modunda görünen alanlara (tür çipleri, taksit/faiz) adım
+  /// konulamaz — kapı tüm hedefleri aradığından tur alacak modunda hiç
+  /// oynamazdı.
+  static final GlobalKey debtAddForm =
+      GlobalKey(debugLabel: 'onboarding_debt_add_form');
+  static final GlobalKey debtAddDueDate =
+      GlobalKey(debugLabel: 'onboarding_debt_add_due_date');
+
+  // ============== Yatırım formu (OnboardingFlow.investmentAdd) ===========
+
+  /// Altın/hisse/özel sheet'lerinin üçü de aynı flow'u kullanır; hangisi önce
+  /// açılırsa tur onda gösterilir. İlk iki adım üçünde de vardır, miktar adımı
+  /// yalnız altın ve hissede (aynı anda yalnız biri mount olur).
+  static final GlobalKey investmentAddForm =
+      GlobalKey(debugLabel: 'onboarding_investment_add_form');
+  static final GlobalKey investmentAddCost =
+      GlobalKey(debugLabel: 'onboarding_investment_add_cost');
+  static final GlobalKey investmentAddQuantity =
+      GlobalKey(debugLabel: 'onboarding_investment_add_quantity');
 }

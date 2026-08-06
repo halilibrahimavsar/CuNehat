@@ -102,6 +102,7 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   }
 
   static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.walletManagementHeader,
     OnboardingKeys.walletManagementAddButton,
   ];
 
@@ -192,132 +193,138 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
   /// Header with title and actions
   Widget _buildHeader(BuildContext context, WalletState state) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Simge + başlık
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+    return Showcase(
+      key: OnboardingKeys.walletManagementHeader,
+      title: context.l10n.onboardingWalletListTitle,
+      description: context.l10n.onboardingWalletListDesc,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // Simge + başlık
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet,
+                    color: Theme.of(context).primaryColor,
+                    size: 24,
+                  ),
                 ),
-                child: Icon(
-                  Icons.account_balance_wallet,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.cuzdanlarim,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      // Döviz cüzdanı varsa ve tüm kurlar biliniyorsa TL toplamı;
+                      // aksi halde standart alt başlık.
+                      if (state is WalletLoadedSt &&
+                          state.wallets
+                              .any((w) => w.currency != kDefaultCurrency) &&
+                          _tlTotal(state.wallets) != null)
+                        Text(
+                          context.l10n.toplamTlKarsilikFormat(
+                              formatMoney(_tlTotal(state.wallets)!)),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        )
+                      else
+                        Text(
+                          context.l10n.cuzdanlariniziYonetin,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.cuzdanlarim,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                // Kapatma eylemi
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.shade50,
+                    foregroundColor: Colors.red.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Eylem satırı
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openTransferSheet(context, state),
+                    icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                    label: Text(
+                      context.l10n.cuzdanlarArasiTransfer,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade100,
+                      foregroundColor: Colors.grey.shade800,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    // Döviz cüzdanı varsa ve tüm kurlar biliniyorsa TL toplamı;
-                    // aksi halde standart alt başlık.
-                    if (state is WalletLoadedSt &&
-                        state.wallets
-                            .any((w) => w.currency != kDefaultCurrency) &&
-                        _tlTotal(state.wallets) != null)
-                      Text(
-                        context.l10n.toplamTlKarsilikFormat(
-                            formatMoney(_tlTotal(state.wallets)!)),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
-                        ),
-                      )
-                    else
-                      Text(
-                        context.l10n.cuzdanlariniziYonetin,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              // Kapatma eylemi
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.red.shade50,
-                  foregroundColor: Colors.red.shade700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Eylem satırı
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _openTransferSheet(context, state),
-                  icon: const Icon(Icons.swap_horiz_rounded, size: 20),
-                  label: Text(
-                    context.l10n.cuzdanlarArasiTransfer,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey.shade100,
-                    foregroundColor: Colors.grey.shade800,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.account_balance, size: 22),
+                  tooltip: context.l10n.bankImportSettingsEntry,
+                  onPressed: () => _openBankImport(context),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 4,
+                    shadowColor:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.account_balance, size: 22),
-                tooltip: context.l10n.bankImportSettingsEntry,
-                onPressed: () => _openBankImport(context),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  shadowColor:
-                      Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () => WalletInfoDialog.show(context),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.grey.shade100,
+                    foregroundColor: Colors.grey.shade700,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.info_outline),
-                onPressed: () => WalletInfoDialog.show(context),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.grey.shade100,
-                  foregroundColor: Colors.grey.shade700,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

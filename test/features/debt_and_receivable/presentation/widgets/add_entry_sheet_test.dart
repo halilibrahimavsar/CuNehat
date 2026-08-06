@@ -2,6 +2,7 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
@@ -14,7 +15,9 @@ import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockDebtBloc extends Mock implements DebtBloc {}
+
 class MockReceivableBloc extends Mock implements ReceivableBloc {}
+
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
 
 void main() {
@@ -54,7 +57,6 @@ void main() {
     }
   });
 
-
   Widget buildTestableWidget(Widget child) {
     return MultiBlocProvider(
       providers: [
@@ -76,7 +78,8 @@ void main() {
     );
   }
 
-  testWidgets('renders AddEntrySheet for debt addition successfully', (tester) async {
+  testWidgets('renders AddEntrySheet for debt addition successfully',
+      (tester) async {
     await tester.pumpWidget(buildTestableWidget(
       const AddEntrySheet(
         walletId: 'w1',
@@ -91,7 +94,8 @@ void main() {
     expect(find.byType(TextField), findsWidgets);
   });
 
-  testWidgets('renders AddEntrySheet for receivable addition successfully', (tester) async {
+  testWidgets('renders AddEntrySheet for receivable addition successfully',
+      (tester) async {
     await tester.pumpWidget(buildTestableWidget(
       const AddEntrySheet(
         walletId: 'w1',
@@ -105,6 +109,30 @@ void main() {
     expect(find.byType(AddEntrySheet), findsOneWidget);
     expect(find.byType(TextField), findsWidgets);
   });
+
+  // --------------------------------------------------- Tur adımları kapanı
+  // OnboardingTour kapısı turun TÜM hedeflerinin aynı anda render edilmiş
+  // olmasını arar (`isTargetRendered`); biri eksikse tur sessizce hiç
+  // oynamaz. Vade hapı borç ve alacak dallarında ayrı ayrı kurulduğundan iki
+  // mod da doğrulanır.
+  for (final isDebt in [true, false]) {
+    final mod = isDebt ? 'borç' : 'alacak';
+    testWidgets('$mod modunda turun tüm adımları ağaçta', (tester) async {
+      await tester.pumpWidget(buildTestableWidget(
+        AddEntrySheet(
+          walletId: 'w1',
+          userId: 'u1',
+          currency: 'TRY',
+          initialIsDebt: isDebt,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final showcase = ShowcaseView.get();
+      expect(showcase.isTargetRendered(OnboardingKeys.debtAddForm), isTrue);
+      expect(showcase.isTargetRendered(OnboardingKeys.debtAddDueDate), isTrue);
+    });
+  }
 
   // ------------------------------------------------- Refactor koruma testleri
   // Aşağıdakiler add_entry/* widget'larına bölünen davranışı sabitler: tutar

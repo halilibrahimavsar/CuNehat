@@ -23,11 +23,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 
@@ -78,14 +74,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// Varsayılan Takvim: uygulama açılışta İşlemler (orta) görünümüne geldiğinden
   /// kullanıcı doğrudan takvimi görür.
   _ViewMode _viewMode = _ViewMode.calendar;
-
-  final GlobalKey _filterBarKey =
-      GlobalKey(debugLabel: 'onboarding_tx_filter_bar');
-  final GlobalKey _viewToggleKey =
-      GlobalKey(debugLabel: 'onboarding_tx_view_toggle');
-
-  List<GlobalKey> get _tourKeys =>
-      [_filterBarKey, _viewToggleKey, OnboardingKeys.addActionSlider];
 
   StreamSubscription<void>? _categoriesSub;
 
@@ -247,14 +235,6 @@ class _TransactionsViewState extends State<_TransactionsView> {
   Widget build(BuildContext context) {
     // Tarih aralığı bellekte filtrelendiği için tarih değişiminde yeniden
     // veri çekmeye gerek yok; rebuild yeterli.
-    return OnboardingTour(
-      flow: OnboardingFlow.transactions,
-      keys: _tourKeys,
-      child: _buildContent(context),
-    );
-  }
-
-  Widget _buildContent(BuildContext context) {
     return BlocBuilder<TransactionFilterCubit, CombinedFilter>(
       builder: (context, filterState) {
         return BlocConsumer<TransactionBloc, TransactionState>(
@@ -292,47 +272,31 @@ class _TransactionsViewState extends State<_TransactionsView> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: Showcase(
-                                key: _filterBarKey,
-                                title: context
-                                    .l10n.onboardingTransactionsFilterTitle,
-                                description: context
-                                    .l10n.onboardingTransactionsFilterDesc,
-                                child: TransactionFilterBar(
-                                  currentMode:
-                                      filterState.viewFilter.financeMode,
-                                  dataFilter: filterState.dataFilter,
-                                  onModeChanged: (mode) {
-                                    context
-                                        .read<TransactionFilterCubit>()
-                                        .updateFilter(
-                                          filterState.copyWith(
-                                            viewFilter: filterState.viewFilter
-                                                .copyWith(financeMode: mode),
-                                            dataFilter: filterState.dataFilter
-                                                .copyWith(
-                                                    clearCategories: true),
-                                          ),
-                                        );
-                                  },
-                                  onFilterTap: () => _showFilterSheet(
-                                    context,
-                                    context.read<TransactionFilterCubit>(),
-                                  ),
+                              child: TransactionFilterBar(
+                                currentMode: filterState.viewFilter.financeMode,
+                                dataFilter: filterState.dataFilter,
+                                onModeChanged: (mode) {
+                                  context
+                                      .read<TransactionFilterCubit>()
+                                      .updateFilter(
+                                        filterState.copyWith(
+                                          viewFilter: filterState.viewFilter
+                                              .copyWith(financeMode: mode),
+                                          dataFilter: filterState.dataFilter
+                                              .copyWith(clearCategories: true),
+                                        ),
+                                      );
+                                },
+                                onFilterTap: () => _showFilterSheet(
+                                  context,
+                                  context.read<TransactionFilterCubit>(),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Showcase(
-                              key: _viewToggleKey,
-                              title: context
-                                  .l10n.onboardingTransactionsViewToggleTitle,
-                              description: context
-                                  .l10n.onboardingTransactionsViewToggleDesc,
-                              child: _ViewModeToggle(
-                                mode: _viewMode,
-                                onChanged: (m) => setState(() => _viewMode = m),
-                              ),
+                            _ViewModeToggle(
+                              mode: _viewMode,
+                              onChanged: (m) => setState(() => _viewMode = m),
                             ),
                           ],
                         ),

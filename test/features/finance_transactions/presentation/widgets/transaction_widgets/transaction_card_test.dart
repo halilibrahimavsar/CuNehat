@@ -58,7 +58,7 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;

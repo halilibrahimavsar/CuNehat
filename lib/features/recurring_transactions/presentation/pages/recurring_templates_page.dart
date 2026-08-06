@@ -4,12 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -150,14 +146,6 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return OnboardingTour(
-      flow: OnboardingFlow.recurringTemplates,
-      keys: [OnboardingKeys.recurringTemplatesBody],
-      child: _buildContent(context, scheme),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, ColorScheme scheme) {
     return BlocListener<PendingRecurringBloc, PendingRecurringState>(
       // Onay/atlama/silme şablonun vadesini değiştirir; sayfanın kendi
       // listesi bloc'un yüklemesinden bağımsız olduğu için tazelenmeli.
@@ -189,12 +177,7 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
             ),
           ),
         ),
-        body: Showcase(
-          key: OnboardingKeys.recurringTemplatesBody,
-          title: context.l10n.onboardingRecurringTemplatesTitle,
-          description: context.l10n.onboardingRecurringTemplatesDesc,
-          child: _buildBody(),
-        ),
+        body: _buildBody(),
       ),
     );
   }

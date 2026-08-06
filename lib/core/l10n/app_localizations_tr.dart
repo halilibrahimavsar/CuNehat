@@ -1942,48 +1942,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Gizlilik ve Bildirim Tanıtımını Tekrar Göster';
 
   @override
-  String get yatirimBirikimTuru => 'Yatırım/Birikim Turu';
-
-  @override
-  String get islemlerTuru => 'İşlemler Turu';
-
-  @override
-  String get borcAlacakTuru => 'Borç & Alacak Turu';
-
-  @override
-  String get onboardingInvestmentSummaryTitle => 'Toplam Birikiminiz';
-
-  @override
-  String get onboardingInvestmentSummaryDesc =>
-      'Toplam yatırım, güncel değer ve kâr/zararınızı burada tek bakışta görürsünüz.';
-
-  @override
-  String get onboardingInvestmentPortfolioTitle => 'Portföyünüz';
-
-  @override
-  String get onboardingInvestmentPortfolioDesc =>
-      'Altın, hisse ve özel yatırımlarınızın listesi burada. Bir karta dokunarak katkı, satış, düzenleme ve silme işlemlerine ulaşabilirsiniz.';
-
-  @override
-  String get onboardingTransactionsFilterTitle => 'Mod ve Filtreler';
-
-  @override
-  String get onboardingTransactionsFilterDesc =>
-      'Gelir/Gider modunu değiştirin ve kategoriye, tarihe veya tutara göre filtreleyin.';
-
-  @override
-  String get onboardingTransactionsViewToggleTitle => 'Liste / Takvim';
-
-  @override
-  String get onboardingTransactionsViewToggleDesc =>
-      'İşlemlerinizi liste veya takvim görünümünde inceleyebilirsiniz.';
-
-  @override
-  String get onboardingDebtTabsTitle => 'Borçlarım / Alacaklarım';
-
-  @override
-  String get onboardingDebtTabsDesc =>
-      'Verdiğiniz ve aldığınız borçları buradan sekmeler halinde takip edersiniz.';
+  String get uygulamaTuruTekrarGoster => 'Uygulama Turunu Tekrar Göster';
 
   @override
   String get onboardingNavHintHeader => 'Nasıl Gezinilir?';
@@ -2008,34 +1967,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingNavHintAddDesc =>
       'Yeni gelir, gider, yatırım, borç veya alacak ekleyin.';
-
-  @override
-  String get onboardingInvestmentDetailTitle => 'Birikim Detayı';
-
-  @override
-  String get onboardingInvestmentDetailDesc =>
-      'Yatırımlarınızla ilgili tüm alım/satım hareketlerini burada kronolojik olarak görürsünüz.';
-
-  @override
-  String get onboardingTransactionsInsightsTitle => 'Akıllı İçgörüler';
-
-  @override
-  String get onboardingTransactionsInsightsDesc =>
-      'Harcama alışkanlıklarınızla ilgili otomatik tespitler ve olası tekrarlayan ödemeler burada gösterilir.';
-
-  @override
-  String get onboardingTransactionsReportTitle => 'İşlem Raporu';
-
-  @override
-  String get onboardingTransactionsReportDesc =>
-      'Seçtiğiniz tarih aralığı için gelir/gider dağılımını grafiklerle inceleyin, dışa aktarın.';
-
-  @override
-  String get onboardingDebtHistoryTitle => 'Geçmiş';
-
-  @override
-  String get onboardingDebtHistoryDesc =>
-      'Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.';
 
   @override
   String get notificationSettings => 'Bildirim Ayarları';
@@ -2300,56 +2231,84 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get onboardingAppBarMenuDesc =>
-      'Buradan bütçe, düzenli işlemler, profil ve ayarlara ulaşabilirsiniz.';
+      'Bütçeler, düzenli işlemler, banka ekstresi içe aktarma ve ayarlar bu menüde.';
 
   @override
-  String get onboardingAppBarWalletTitle => 'Cüzdanınız';
+  String get onboardingAppBarWalletTitle => 'Aktif Cüzdanınız';
 
   @override
   String get onboardingAppBarWalletDesc =>
-      'Aktif cüzdanın adı ve bakiyesi burada görünür. Dokunarak cüzdanlar arasında geçiş yapabilir veya yeni cüzdan ekleyebilirsiniz.';
+      'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Buraya dokunarak cüzdan değiştirebilir veya yeni cüzdan ekleyebilirsiniz.';
+
+  @override
+  String get onboardingWalletListTitle => 'Cüzdanlarınız';
+
+  @override
+  String get onboardingWalletListDesc =>
+      'Her cüzdanın kendi para birimi ve bakiyesi vardır. Bir karta dokunarak aktif cüzdanı değiştirir, karttaki simgelerle düzenler veya silersiniz.';
 
   @override
   String get onboardingWalletManagementTitle => 'Yeni Cüzdan Ekle';
 
   @override
   String get onboardingWalletManagementDesc =>
-      'Farklı hesaplarınız veya döviz cüzdanlarınız için buradan yeni bir cüzdan oluşturabilirsiniz.';
+      'Nakit, banka hesabı ya da döviz için ayrı cüzdan açın — raporlar, bütçeler ve borçlar cüzdan bazlı çalışır.';
 
   @override
   String get onboardingTransactionsAddTitle => 'Tutarı Girin';
 
   @override
   String get onboardingTransactionsAddDesc =>
-      'Tutarı yazın, ardından kategori ve tarih seçip kaydedin. İsterseniz tekrar sıklığı da ayarlayabilirsiniz.';
+      'Tutarı yazın. Üstteki gelir/gider seçimi işlemin cüzdan bakiyesini artıracağını mı azaltacağını mı belirler.';
 
   @override
-  String get onboardingDebtAddTitle => 'Tutarı Girin';
+  String get onboardingTransactionsAddCategoryTitle => 'Kategori Seçin';
+
+  @override
+  String get onboardingTransactionsAddCategoryDesc =>
+      'Kategori zorunludur: raporlar ve bütçe uyarıları bu kategoriye göre hesaplanır.';
+
+  @override
+  String get onboardingTransactionsAddRecurringTitle => 'Tekrar Sıklığı';
+
+  @override
+  String get onboardingTransactionsAddRecurringDesc =>
+      'Kira, maaş, abonelik gibi düzenli işlemleri bir kez tanımlayın; uygulama zamanı gelince hatırlatır.';
+
+  @override
+  String get onboardingDebtAddTitle => 'Tutar ve Geri Ödeme';
 
   @override
   String get onboardingDebtAddDesc =>
-      'Borç/alacak tutarını ve türünü seçin; vade tarihi ve taksit gibi detayları aşağıda tamamlayın.';
+      'Tutarı girin. Borç türüne göre taksit, faiz ve vade alanları aşağıda açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.';
 
   @override
-  String get onboardingInvestmentAddTitle => 'Mevcut Değer';
+  String get onboardingDebtAddDueDateTitle => 'Vade Tarihi';
+
+  @override
+  String get onboardingDebtAddDueDateDesc =>
+      'Seçtiğiniz tarihte hatırlatma bildirimi alırsınız; taksitli kayıtlarda her taksit için ayrı ayrı.';
+
+  @override
+  String get onboardingInvestmentAddTitle => 'Bugünkü Değer';
 
   @override
   String get onboardingInvestmentAddDesc =>
-      'Yatırımın güncel değerini girin. Aşağıda miktar, tür ve isteğe bağlı hedef tutar gibi detayları tamamlayabilirsiniz.';
+      'Yatırımın şu anki piyasa değeri. Kâr/zararınız bu değerle toplam maliyet arasındaki farktır.';
 
   @override
-  String get onboardingBudgetsTitle => 'Yeni Bütçe Ekle';
+  String get onboardingInvestmentAddCostTitle => 'Toplam Maliyet';
 
   @override
-  String get onboardingBudgetsDesc =>
-      'Bir kategori seçip aylık harcama limiti belirleyin; limit aşıldığında bilgilendirilirsiniz.';
+  String get onboardingInvestmentAddCostDesc =>
+      'Bu yatırıma bugüne kadar ödediğiniz ana para. Boş bırakırsanız kâr/zarar hesaplanamaz.';
 
   @override
-  String get onboardingRecurringTemplatesTitle => 'Düzenli İşlemler';
+  String get onboardingInvestmentAddQuantityTitle => 'Miktar ve Güncel Fiyat';
 
   @override
-  String get onboardingRecurringTemplatesDesc =>
-      'Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.';
+  String get onboardingInvestmentAddQuantityDesc =>
+      'Gram/adet girip güncel fiyatı çekin; bugünkü değer sizin yerinize hesaplanır.';
 
   @override
   String get fisEkle => 'Fiş/fotoğraf ekle';

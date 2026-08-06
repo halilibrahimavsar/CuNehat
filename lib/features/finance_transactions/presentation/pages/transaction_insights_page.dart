@@ -4,9 +4,6 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/core/utils/currencies.dart';
@@ -33,7 +30,6 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/catego
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// "Akıllı İçgörüler" — transactions sekmesinin ilk swipe sayfası.
@@ -187,123 +183,112 @@ class _InsightsViewState extends State<_InsightsView> {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingTour(
-      flow: OnboardingFlow.transactionsInsights,
-      keys: [OnboardingKeys.transactionsInsightsBody],
-      child: Scaffold(
-        appBar: widget.showAppBar
-            ? AppBar(
-                title: Text(context.l10n.akilliIcgoruler),
-                centerTitle: true,
-              )
-            : null,
-        body: Showcase(
-          key: OnboardingKeys.transactionsInsightsBody,
-          title: context.l10n.onboardingTransactionsInsightsTitle,
-          description: context.l10n.onboardingTransactionsInsightsDesc,
-          child: BlocBuilder<TransactionBloc, TransactionState>(
-            builder: (context, state) {
-              final all = state.currentTransactions;
+    return Scaffold(
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Text(context.l10n.akilliIcgoruler),
+              centerTitle: true,
+            )
+          : null,
+      body: BlocBuilder<TransactionBloc, TransactionState>(
+        builder: (context, state) {
+          final all = state.currentTransactions;
 
-              if (state is TransactionLoading && all.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (all.isEmpty) {
-                return _buildEmptyState(context);
-              }
+          if (state is TransactionLoading && all.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (all.isEmpty) {
+            return _buildEmptyState(context);
+          }
 
-              final insights = _analytics.analyze(
-                all,
-                rangeStart: _range.start,
-                rangeEnd: _range.end,
-                // Sıçrama alt eşiği tutar bazlıdır; işlemler aktif cüzdanın
-                // biriminde tutulduğundan eşik de o birimden seçilir
-                // (50 ₺ ile 50 $ aynı büyüklük değil).
-                spikeMinimumAmount:
-                    noiseThresholdFor(context.activeWalletCurrency),
-                // Günlük harcama hedefi yalnız bütçe döneminde ("Bu Ay",
-                // "Bu Yıl") dönemin son gününde de anlamlı.
-                rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range),
-              );
+          final insights = _analytics.analyze(
+            all,
+            rangeStart: _range.start,
+            rangeEnd: _range.end,
+            // Sıçrama alt eşiği tutar bazlıdır; işlemler aktif cüzdanın
+            // biriminde tutulduğundan eşik de o birimden seçilir
+            // (50 ₺ ile 50 $ aynı büyüklük değil).
+            spikeMinimumAmount: noiseThresholdFor(context.activeWalletCurrency),
+            // Günlük harcama hedefi yalnız bütçe döneminde ("Bu Ay",
+            // "Bu Yıl") dönemin son gününde de anlamlı.
+            rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range),
+          );
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.akilliIcgoruler,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    InsightRangeChips(
-                      quickOptions: _quickOptions,
-                      selectedRange: _range,
-                      onSelected: (newRange) =>
-                          setState(() => _range = newRange),
-                    ),
-                    const SizedBox(height: 16),
-                    if (insights.isEmpty)
-                      _buildPeriodEmptyNote(context)
-                    else ...[
-                      InsightSummaryRow(
-                        insights: insights,
-                        formatMoney: _money,
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.akilliIcgoruler,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
-                      const SizedBox(height: 12),
-                      if (insights.dailySafeToSpend != null &&
-                          insights.dailySafeToSpend! > 0)
-                        DailySafeToSpendCard(
-                          dailySafeAmount: insights.dailySafeToSpend!,
-                          remainingDays: insights.remainingDays,
-                          formatMoney: _money,
-                        ),
-                      if (insights.categorySpike != null)
-                        CategorySpikeCard(
-                          spike: insights.categorySpike!,
-                          formatMoney: _money,
-                          categoryLabels: _categoryLabels,
-                        ),
-                      InsightStatCard(
-                        icon: Icons.calendar_today_rounded,
-                        label: context.l10n.gunlukOrtalamaHarcama,
-                        value: _money(insights.dailyAverageExpense),
-                      ),
-                      if (insights.topExpenseWeekday != null)
-                        InsightStatCard(
-                          icon: Icons.event_rounded,
-                          label: context.l10n.enCokHarcananGun,
-                          value:
-                              '${_weekdayName(context, insights.topExpenseWeekday!)} '
-                              '(${_money(insights.topExpenseWeekdayAmount)})',
-                        ),
-                      if (insights.topExpenseCategory != null)
-                        InsightStatCard(
-                          icon: Icons.category_rounded,
-                          label: context.l10n.enCokHarcananKategori,
-                          value:
-                              '${insights.topExpenseCategory!.trim().isEmpty ? context.l10n.kategorisiz : context.categoryLabelForTag(insights.topExpenseCategory!, labels: _categoryLabels)} '
-                              '(${_money(insights.topExpenseCategoryAmount)})',
-                        ),
-                      if (insights.largestExpense != null)
-                        InsightStatCard(
-                          icon: Icons.north_east_rounded,
-                          label: context.l10n.enBuyukHarcama,
-                          value:
-                              '${insights.largestExpense!.title} (${_money(insights.largestExpense!.amount)})',
-                          accent: AppGradients.debt,
-                        ),
-                    ],
-                    _buildRecurringSection(context, all),
-                  ],
                 ),
-              );
-            },
-          ),
-        ),
+                const SizedBox(height: 12),
+                InsightRangeChips(
+                  quickOptions: _quickOptions,
+                  selectedRange: _range,
+                  onSelected: (newRange) => setState(() => _range = newRange),
+                ),
+                const SizedBox(height: 16),
+                if (insights.isEmpty)
+                  _buildPeriodEmptyNote(context)
+                else ...[
+                  InsightSummaryRow(
+                    insights: insights,
+                    formatMoney: _money,
+                  ),
+                  const SizedBox(height: 12),
+                  if (insights.dailySafeToSpend != null &&
+                      insights.dailySafeToSpend! > 0)
+                    DailySafeToSpendCard(
+                      dailySafeAmount: insights.dailySafeToSpend!,
+                      remainingDays: insights.remainingDays,
+                      formatMoney: _money,
+                    ),
+                  if (insights.categorySpike != null)
+                    CategorySpikeCard(
+                      spike: insights.categorySpike!,
+                      formatMoney: _money,
+                      categoryLabels: _categoryLabels,
+                    ),
+                  InsightStatCard(
+                    icon: Icons.calendar_today_rounded,
+                    label: context.l10n.gunlukOrtalamaHarcama,
+                    value: _money(insights.dailyAverageExpense),
+                  ),
+                  if (insights.topExpenseWeekday != null)
+                    InsightStatCard(
+                      icon: Icons.event_rounded,
+                      label: context.l10n.enCokHarcananGun,
+                      value:
+                          '${_weekdayName(context, insights.topExpenseWeekday!)} '
+                          '(${_money(insights.topExpenseWeekdayAmount)})',
+                    ),
+                  if (insights.topExpenseCategory != null)
+                    InsightStatCard(
+                      icon: Icons.category_rounded,
+                      label: context.l10n.enCokHarcananKategori,
+                      value:
+                          '${insights.topExpenseCategory!.trim().isEmpty ? context.l10n.kategorisiz : context.categoryLabelForTag(insights.topExpenseCategory!, labels: _categoryLabels)} '
+                          '(${_money(insights.topExpenseCategoryAmount)})',
+                    ),
+                  if (insights.largestExpense != null)
+                    InsightStatCard(
+                      icon: Icons.north_east_rounded,
+                      label: context.l10n.enBuyukHarcama,
+                      value:
+                          '${insights.largestExpense!.title} (${_money(insights.largestExpense!.amount)})',
+                      accent: AppGradients.debt,
+                    ),
+                ],
+                _buildRecurringSection(context, all),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

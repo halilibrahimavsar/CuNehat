@@ -1,86 +1,43 @@
-/// Ana ekranlara, alt sayfalara ve kendi route'una sahip yüzeylere (sheet /
-/// tam sayfa) bağlı interaktif turlar.
+/// Kullanıcıya **keşfedilemeyeni** gösteren interaktif turlar.
+///
+/// Küratörlük kuralı: bir adım ancak ekranda yazmayan bir davranışı
+/// anlatıyorsa vardır. Sayfa başlığını tekrar eden ("Geçmiş → geçmişiniz
+/// burada") ya da boş bir listenin üstünde oynayan tur yoktur; o işi
+/// sayfaların kendi boş durum ekranları yapar. Bu yüzden turlar kullanıcının
+/// iş yaptığı yüzeylerde toplanmıştır: kabuk, cüzdan yönetimi ve üç ekleme
+/// formu.
 ///
 /// **Bildirim sırası = öncelik.** Aynı anda birden çok tur oynatılabilir
-/// duruma gelirse [OnboardingCoordinator] bu sırayı izler; önce kabuk
-/// (appBar), sonra ana ekranlar, sonra alt sayfalar, en sonda kendi
-/// route'una sahip yüzeyler gelir. Kalıcı bayrak `flow.name` üzerinden
-/// yazıldığından sıra değiştirmek kayıtlı "görüldü" bilgisini bozmaz.
+/// duruma gelirse [OnboardingCoordinator] bu sırayı izler. Kalıcı bayrak
+/// `flow.name` üzerinden yazıldığından sıra değiştirmek kayıtlı "görüldü"
+/// bilgisini bozmaz.
 enum OnboardingFlow {
-  appBar,
-  investment,
-  transactions,
-  debt,
-  investmentDetail,
-  transactionsInsights,
-  transactionsReport,
-  debtHistory,
-  investmentAdd,
-  transactionsAdd,
-  debtAdd,
+  /// Kabuk: aktif cüzdan alanı → menü → ekle/navigasyon kartı. İlk cüzdan
+  /// oluştuktan SONRA oynar (bkz. AppBarContent'teki `enabled` koşulu);
+  /// cüzdanı olmayan kullanıcıya "işte aktif cüzdanın" demenin anlamı yok.
+  shell,
+
+  /// Cüzdan sheet'i: cüzdan listesi → yeni cüzdan.
   walletManagement,
-  budgets,
-  recurringTemplates,
-}
 
-/// Bir turun ana kabuktaki (HomePage) konumu.
-///
-/// HomePage üç ana ekranı yatay küpte, alt sayfaları dikey yığında tutar;
-/// ikisi de geçiş sırasında hedef widget'ları ekranda kaydırır. Tur yalnızca
-/// kabuk TAM OLARAK bu konumda durduğunda oynatılır — "sıra gelince nerede
-/// olursak olalım başlat" davranışının panzehiri budur.
-class OnboardingHomeSlot {
-  /// Yatay küpteki demirleme değeri (0.0 yatırım, 0.5 işlemler, 1.0 borç).
-  /// null ise yatay konum önemsizdir (kabuk kromu: appBar).
-  final double? sliderValue;
+  /// Gelir/gider formu: tutar → kategori → tekrar sıklığı.
+  transactionsAdd,
 
-  /// Dikey yığındaki indeks (0 ana görünüm, 1+ alt sayfalar).
-  /// null ise dikey konum önemsizdir.
-  final int? stackIndex;
+  /// Borç/alacak formu: tutar kartı → vade tarihi.
+  debtAdd,
 
-  const OnboardingHomeSlot({this.sliderValue, this.stackIndex});
-
-  /// Kabuğun her yerinde görünen kromu (appBar): yalnızca "kabuk duruyor mu"
-  /// koşulunu arar.
-  static const OnboardingHomeSlot chrome = OnboardingHomeSlot();
+  /// Yatırım formu: mevcut değer → toplam maliyet → (altın/hisse) miktar.
+  investmentAdd,
 }
 
 extension OnboardingFlowSurface on OnboardingFlow {
-  /// Turun HomePage kabuğundaki konumu; `null` ise yüzeyin kendi route'u
-  /// vardır (sheet / itilmiş sayfa) ve görünürlük yalnızca route durumundan
-  /// belirlenir.
+  /// Turun yüzeyi HomePage kabuğunun kendisi mi?
   ///
-  /// Alt sayfa indeksleri `SubViewFactory.createSubViewsForState` ile
-  /// birebir eşleşmek zorundadır.
-  OnboardingHomeSlot? get homeSlot => switch (this) {
-        OnboardingFlow.appBar => OnboardingHomeSlot.chrome,
-        OnboardingFlow.investment =>
-          const OnboardingHomeSlot(sliderValue: 0.0, stackIndex: 0),
-        OnboardingFlow.investmentDetail =>
-          const OnboardingHomeSlot(sliderValue: 0.0, stackIndex: 1),
-        OnboardingFlow.transactions =>
-          const OnboardingHomeSlot(sliderValue: 0.5, stackIndex: 0),
-        OnboardingFlow.transactionsInsights =>
-          const OnboardingHomeSlot(sliderValue: 0.5, stackIndex: 1),
-        OnboardingFlow.transactionsReport =>
-          const OnboardingHomeSlot(sliderValue: 0.5, stackIndex: 2),
-        OnboardingFlow.debt =>
-          const OnboardingHomeSlot(sliderValue: 1.0, stackIndex: 0),
-        OnboardingFlow.debtHistory =>
-          const OnboardingHomeSlot(sliderValue: 1.0, stackIndex: 1),
-        OnboardingFlow.investmentAdd ||
-        OnboardingFlow.transactionsAdd ||
-        OnboardingFlow.debtAdd ||
-        OnboardingFlow.walletManagement ||
-        OnboardingFlow.budgets ||
-        OnboardingFlow.recurringTemplates =>
-          null,
-      };
-
-  /// Ayarlar'dan tek tek tekrar oynatılabilen üç ana ekran turu; HomePage
-  /// bunlarda kaydırıcıyı ilgili ekrana taşır.
-  bool get isReplayableMainScreen =>
-      this == OnboardingFlow.investment ||
-      this == OnboardingFlow.transactions ||
-      this == OnboardingFlow.debt;
+  /// Yalnız [OnboardingFlow.shell] için true: hedefleri (appBar, ekle
+  /// kaydırıcısı) kabuğa aittir ve kabuk, alt sayfa açıkken veya geçiş
+  /// animasyonu sürerken bu hedefleri ekranda kaydırır — tur ancak kabuk
+  /// kökte ve durur haldeyken oynayabilir. Diğer turların kendi route'u
+  /// vardır (sheet / itilmiş sayfa); görünürlükleri yalnızca route
+  /// durumundan belirlenir.
+  bool get requiresHomeShellAtRoot => this == OnboardingFlow.shell;
 }

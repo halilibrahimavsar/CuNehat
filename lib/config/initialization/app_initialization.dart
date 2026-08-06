@@ -58,6 +58,13 @@ class AppInitialization {
       ShowcaseView.register(
         onFinish: () => getIt<OnboardingCoordinator>().handleShowcaseIdle(),
         onDismiss: (_) => getIt<OnboardingCoordinator>().handleShowcaseIdle(),
+        // Ekleme sheet'lerinin turları kaydırılabilir formda ilerliyor
+        // (tutar → kategori → tekrar). SingleChildScrollView tembel
+        // olmadığından hedefler "render edilmiş" sayılır ama ekranın altında
+        // kalabilir; bu bayrak olmadan overlay görünmeyen bir yeri
+        // işaretlerdi. Kaydırılabilir atası olmayan hedeflerde (appBar)
+        // sessizce etkisizdir.
+        enableAutoScroll: true,
       );
 
       // Bildirim servisi: soğuk açılışta dokunulan bildirimin yükünü de

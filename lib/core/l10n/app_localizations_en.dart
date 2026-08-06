@@ -1938,48 +1938,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genelTanitimiTekrarGoster => 'Replay Privacy & Notification Intro';
 
   @override
-  String get yatirimBirikimTuru => 'Investments/Savings Tour';
-
-  @override
-  String get islemlerTuru => 'Transactions Tour';
-
-  @override
-  String get borcAlacakTuru => 'Debts & Receivables Tour';
-
-  @override
-  String get onboardingInvestmentSummaryTitle => 'Your Total Savings';
-
-  @override
-  String get onboardingInvestmentSummaryDesc =>
-      'See your total investment, current value, and profit/loss at a glance here.';
-
-  @override
-  String get onboardingInvestmentPortfolioTitle => 'Your Portfolio';
-
-  @override
-  String get onboardingInvestmentPortfolioDesc =>
-      'Your gold, stock, and custom investments are listed here. Tap a card to contribute, sell, edit, or delete.';
-
-  @override
-  String get onboardingTransactionsFilterTitle => 'Mode & Filters';
-
-  @override
-  String get onboardingTransactionsFilterDesc =>
-      'Switch between Income/Expense mode and filter by category, date, or amount.';
-
-  @override
-  String get onboardingTransactionsViewToggleTitle => 'List / Calendar';
-
-  @override
-  String get onboardingTransactionsViewToggleDesc =>
-      'Browse your transactions in a list or calendar view.';
-
-  @override
-  String get onboardingDebtTabsTitle => 'My Debts / My Receivables';
-
-  @override
-  String get onboardingDebtTabsDesc =>
-      'Track what you owe and what\'s owed to you in separate tabs here.';
+  String get uygulamaTuruTekrarGoster => 'Replay the App Tour';
 
   @override
   String get onboardingNavHintHeader => 'How to Navigate';
@@ -2004,34 +1963,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingNavHintAddDesc =>
       'Add a new income, expense, investment, debt, or receivable.';
-
-  @override
-  String get onboardingInvestmentDetailTitle => 'Savings Detail';
-
-  @override
-  String get onboardingInvestmentDetailDesc =>
-      'See all buy/sell activity for your investments here, in chronological order.';
-
-  @override
-  String get onboardingTransactionsInsightsTitle => 'Smart Insights';
-
-  @override
-  String get onboardingTransactionsInsightsDesc =>
-      'Automatic observations about your spending habits and possible recurring payments appear here.';
-
-  @override
-  String get onboardingTransactionsReportTitle => 'Transaction Report';
-
-  @override
-  String get onboardingTransactionsReportDesc =>
-      'Explore income/expense breakdowns with charts for your selected date range, and export them.';
-
-  @override
-  String get onboardingDebtHistoryTitle => 'History';
-
-  @override
-  String get onboardingDebtHistoryDesc =>
-      'The full history of paid-off debts and collected receivables is kept here.';
 
   @override
   String get notificationSettings => 'Notification Settings';
@@ -2296,56 +2227,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingAppBarMenuDesc =>
-      'Access budgets, recurring transactions, profile, and settings from here.';
+      'Budgets, recurring transactions, bank statement import, and settings live in this menu.';
 
   @override
-  String get onboardingAppBarWalletTitle => 'Your Wallet';
+  String get onboardingAppBarWalletTitle => 'Your Active Wallet';
 
   @override
   String get onboardingAppBarWalletDesc =>
-      'The active wallet\'s name and balance show here. Tap to switch between wallets or add a new one.';
+      'Every income, expense, debt, and investment record goes into the SELECTED wallet. Tap here to switch wallets or add a new one.';
+
+  @override
+  String get onboardingWalletListTitle => 'Your Wallets';
+
+  @override
+  String get onboardingWalletListDesc =>
+      'Each wallet has its own currency and balance. Tap a card to make it active, or use the icons on it to edit or delete.';
 
   @override
   String get onboardingWalletManagementTitle => 'Add a New Wallet';
 
   @override
   String get onboardingWalletManagementDesc =>
-      'Create a new wallet here for a different account or currency.';
+      'Create separate wallets for cash, a bank account, or a foreign currency — reports, budgets, and debts are all wallet-scoped.';
 
   @override
   String get onboardingTransactionsAddTitle => 'Enter the Amount';
 
   @override
   String get onboardingTransactionsAddDesc =>
-      'Type the amount, then pick a category and date, and save. You can also set a repeat frequency.';
+      'Type the amount. The income/expense choice above decides whether this raises or lowers your wallet balance.';
 
   @override
-  String get onboardingDebtAddTitle => 'Enter the Amount';
+  String get onboardingTransactionsAddCategoryTitle => 'Pick a Category';
+
+  @override
+  String get onboardingTransactionsAddCategoryDesc =>
+      'A category is required: reports and budget alerts are calculated from it.';
+
+  @override
+  String get onboardingTransactionsAddRecurringTitle => 'Repeat Frequency';
+
+  @override
+  String get onboardingTransactionsAddRecurringDesc =>
+      'Define rent, salary, or subscriptions once; the app reminds you when they\'re due.';
+
+  @override
+  String get onboardingDebtAddTitle => 'Amount and Repayment';
 
   @override
   String get onboardingDebtAddDesc =>
-      'Choose the debt/receivable amount and type; fill in details like due date and installments below.';
+      'Enter the amount. Depending on the debt type, installment, interest, and term fields appear below; the summary under the card computes total repayment live.';
 
   @override
-  String get onboardingInvestmentAddTitle => 'Current Value';
+  String get onboardingDebtAddDueDateTitle => 'Due Date';
+
+  @override
+  String get onboardingDebtAddDueDateDesc =>
+      'You\'ll get a reminder on the date you pick — for installment records, one per installment.';
+
+  @override
+  String get onboardingInvestmentAddTitle => 'Today\'s Value';
 
   @override
   String get onboardingInvestmentAddDesc =>
-      'Enter the investment\'s current value. Fill in details like quantity, type, and an optional target below.';
+      'The investment\'s current market value. Your profit/loss is the difference between this and total cost.';
 
   @override
-  String get onboardingBudgetsTitle => 'Add a New Budget';
+  String get onboardingInvestmentAddCostTitle => 'Total Cost';
 
   @override
-  String get onboardingBudgetsDesc =>
-      'Pick a category and set a monthly spending limit; you\'ll be notified if you exceed it.';
+  String get onboardingInvestmentAddCostDesc =>
+      'The principal you\'ve paid into this investment so far. Leave it empty and profit/loss can\'t be computed.';
 
   @override
-  String get onboardingRecurringTemplatesTitle => 'Recurring Transactions';
+  String get onboardingInvestmentAddQuantityTitle => 'Quantity and Live Price';
 
   @override
-  String get onboardingRecurringTemplatesDesc =>
-      'Templates created from the repeat option when adding income/expense are listed here; pause or delete them.';
+  String get onboardingInvestmentAddQuantityDesc =>
+      'Enter grams/shares and fetch the live price; today\'s value is calculated for you.';
 
   @override
   String get fisEkle => 'Add receipt/photo';

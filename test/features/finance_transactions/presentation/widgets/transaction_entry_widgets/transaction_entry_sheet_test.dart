@@ -18,6 +18,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_event.dart';
@@ -61,7 +62,7 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;
@@ -371,5 +372,37 @@ void main() {
     // Verify SaveRecurringTransactionUsecase is called
     verify(() => mockSaveRecurringTransactionUsecase.call(any())).called(1);
     expect(find.text('Kaydet'), findsNothing); // Sheet is closed
+  });
+
+  // Tur adımları kapanı: OnboardingTour TÜM hedefleri render edilmiş
+  // bulamazsa tur sessizce hiç oynamaz.
+  testWidgets('turun üç adımı da ağaçta', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        Builder(
+          builder: (context) {
+            return ElevatedButton(
+              onPressed: () => TransactionSheetHandler.showSheet(
+                context: context,
+                userId: 'user_123',
+                walletId: 'wallet_123',
+                type: TransactionTypeModel.expense,
+              ),
+              child: const Text('Open Form'),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open Form'));
+    await tester.pumpAndSettle();
+
+    final showcase = ShowcaseView.get();
+    expect(
+        showcase.isTargetRendered(OnboardingKeys.transactionAddForm), isTrue);
+    expect(showcase.isTargetRendered(OnboardingKeys.transactionAddCategory),
+        isTrue);
+    expect(showcase.isTargetRendered(OnboardingKeys.transactionAddRecurring),
+        isTrue);
   });
 }

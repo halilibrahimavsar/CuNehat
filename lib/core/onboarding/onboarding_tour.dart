@@ -13,8 +13,8 @@ import 'onboarding_flow.dart';
 /// 1. Sahip widget hâlâ ağaçta (`mounted`),
 /// 2. sahibinin route'u güncel — üstünde başka sayfa, sheet ya da diyalog yok,
 /// 3. route'un giriş animasyonu bitti,
-/// 4. tur kabuğa bağlıysa (bkz. [OnboardingFlowSurface.homeSlot]) kabuk tam o
-///    konumda ve duruyor (küp geçişi yok, drawer/cüzdan dönüşümü yok),
+/// 4. tur kabuğa bağlıysa (bkz. [OnboardingFlowSurface.requiresHomeShellAtRoot])
+///    kabuk kökte ve duruyor (küp geçişi yok, drawer/cüzdan dönüşümü yok),
 /// 5. turun tüm Showcase hedefleri gerçekten render edilmiş.
 ///
 /// Koşullardan biri sağlanmıyorsa istek düşürülmez, **beklemede kalır**:
@@ -91,8 +91,7 @@ class _OnboardingTourState extends State<OnboardingTour> {
     _coverAnimation = null;
   }
 
-  void _onRouteAnimation(AnimationStatus _) =>
-      _coordinator?.notifyMaybeReady();
+  void _onRouteAnimation(AnimationStatus _) => _coordinator?.notifyMaybeReady();
 
   void _onCoordinatorChanged() {
     final coordinator = _coordinator;
@@ -127,9 +126,8 @@ class _OnboardingTourState extends State<OnboardingTour> {
     final coverAnimation = route.secondaryAnimation;
     if (coverAnimation != null && coverAnimation.value > 0.0) return false;
 
-    final slot = widget.flow.homeSlot;
-    if (slot != null &&
-        !(_coordinator?.isHomeSlotSettled(slot) ?? false)) {
+    if (widget.flow.requiresHomeShellAtRoot &&
+        !(_coordinator?.isHomeShellAtRoot() ?? false)) {
       return false;
     }
 

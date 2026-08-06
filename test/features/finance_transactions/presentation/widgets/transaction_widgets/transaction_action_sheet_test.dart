@@ -13,12 +13,13 @@ import 'package:mocktail/mocktail.dart';
 
 /// Showcase turları getIt üzerinden koordinatörü çeker; widget testlerinde
 /// gerçek koordinatör kayıtlı olmadığından mock'lanır.
-class _MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+class _MockOnboardingCoordinator extends Mock
+    implements OnboardingCoordinator {}
 
 void main() {
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
   });

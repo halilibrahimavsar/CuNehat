@@ -4,9 +4,6 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/app_date_range_picker.dart';
@@ -33,7 +30,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class TransactionReportPage extends StatelessWidget {
   final String userId;
@@ -260,192 +256,178 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return OnboardingTour(
-      flow: OnboardingFlow.transactionsReport,
-      keys: [OnboardingKeys.transactionsReportBody],
-      child: Scaffold(
-        appBar: widget.showAppBar
-            ? AppBar(
-                title: Text(context.l10n.islemRaporu),
-                centerTitle: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.ios_share_rounded),
-                    onPressed: _shareReport,
-                    tooltip: context.l10n.raporuPaylas,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.date_range),
-                    onPressed: _pickDateRange,
-                    tooltip: context.l10n.tooltipTarihAraligi,
-                  ),
-                ],
-              )
-            : null,
-        body: Showcase(
-          key: OnboardingKeys.transactionsReportBody,
-          title: context.l10n.onboardingTransactionsReportTitle,
-          description: context.l10n.onboardingTransactionsReportDesc,
-          child: BlocConsumer<TransactionBloc, TransactionState>(
-            listenWhen: (prev, curr) =>
-                prev.currentTransactions != curr.currentTransactions,
-            listener: (context, state) =>
-                _maybeAdjustInitialRange(state.currentTransactions),
-            builder: (context, state) {
-              final transactions = state.currentTransactions;
-              if (state is TransactionLoading && transactions.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (transactions.isEmpty) {
-                return _buildEmptyState(context);
-              }
-
-              final dataBuilder = _dataBuilder(context);
-              final filteredTransactions =
-                  _filterTransactionsByRange(transactions);
-
-              final totals =
-                  _reportService.calculateTotals(filteredTransactions);
-              final previousTotals = _previousPeriodTotals(transactions);
-              final expenseFull =
-                  dataBuilder.buildFull(filteredTransactions, isExpense: true);
-              final incomeFull =
-                  dataBuilder.buildFull(filteredTransactions, isExpense: false);
-              final expensePie = dataBuilder.buildPie(expenseFull);
-              final incomePie = dataBuilder.buildPie(incomeFull);
-
-              // Karşılaştırma modu tek bir kart çizer (bkz.
-              // [ReportCompareChartCard]); tek taraflı modlar eskisi gibi
-              // pasta/çubuk kartını gösterir.
-              final isCompare = _categoryMode == FinanceMode.compare;
-              final brightness =
-                  (theme.extension<AppSurface>() ?? AppSurface.light)
-                      .brightness;
-
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.islemRaporu,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Tarih başlığı aralık boş olsa da görünür kalır; aksi
-                    // halde kullanıcı aralığı değiştirecek kontrolü bulamıyordu.
-                    ReportRangeHeader(
-                      range: _range,
-                      onPickDateRange: _pickDateRange,
-                    ),
-                    const SizedBox(height: 16),
-
-                    if (filteredTransactions.isEmpty) ...[
-                      _buildEmptyState(
-                        context,
-                        message: context.l10n.msgSecilenTarihAraligindaIslem,
-                      ),
-                    ] else ...[
-                      ReportSummaryCards(
-                        totals: totals,
-                        previousTotals: previousTotals,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.l10n.haftalikNetAkis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ReportWeeklyNetFlowChart(
-                        transactions: filteredTransactions,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        context.l10n.reportBalanceTrend,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ReportCumulativeBalanceChart(
-                        transactions: filteredTransactions,
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            context.l10n.kategoriDagilimi,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          FinanceModeSegment(
-                            currentMode: _categoryMode,
-                            onModeChanged: (m) =>
-                                setState(() => _categoryMode = m),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (isCompare)
-                        ReportCompareChartCard(
-                          incomeSlices: dataBuilder.buildRanked(
-                            incomeFull,
-                            isExpense: false,
-                            brightness: brightness,
-                          ),
-                          expenseSlices: dataBuilder.buildRanked(
-                            expenseFull,
-                            isExpense: true,
-                            brightness: brightness,
-                          ),
-                          categoryLabels: _categoryLabels,
-                          onSliceTap: (slice, isExpense) =>
-                              _openCategoryDetails(
-                                  slice, isExpense, ReportSliceMode.ranked),
-                        )
-                      else if (_categoryMode == FinanceMode.expense)
-                        ReportCategoryChartCard(
-                          title: context.l10n.reportExpensesTitle,
-                          fullData: expenseFull,
-                          pieData: expensePie,
-                          isExpense: true,
-                          showBarChart: _showExpenseBarChart,
-                          onToggleBarChart: (v) =>
-                              setState(() => _showExpenseBarChart = v),
-                          onCategoryTap: (cat, mode) =>
-                              _openCategoryDetails(cat, true, mode),
-                          budgetProgressFor: dataBuilder.budgetProgressFor,
-                          categoryLabels: _categoryLabels,
-                        )
-                      else
-                        ReportCategoryChartCard(
-                          title: context.l10n.reportIncomesTitle,
-                          fullData: incomeFull,
-                          pieData: incomePie,
-                          isExpense: false,
-                          showBarChart: _showIncomeBarChart,
-                          onToggleBarChart: (v) =>
-                              setState(() => _showIncomeBarChart = v),
-                          onCategoryTap: (cat, mode) =>
-                              _openCategoryDetails(cat, false, mode),
-                          budgetProgressFor: dataBuilder.budgetProgressFor,
-                          categoryLabels: _categoryLabels,
-                        ),
-                    ],
-                  ],
+    return Scaffold(
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Text(context.l10n.islemRaporu),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.ios_share_rounded),
+                  onPressed: _shareReport,
+                  tooltip: context.l10n.raporuPaylas,
                 ),
-              );
-            },
-          ),
-        ),
+                IconButton(
+                  icon: const Icon(Icons.date_range),
+                  onPressed: _pickDateRange,
+                  tooltip: context.l10n.tooltipTarihAraligi,
+                ),
+              ],
+            )
+          : null,
+      body: BlocConsumer<TransactionBloc, TransactionState>(
+        listenWhen: (prev, curr) =>
+            prev.currentTransactions != curr.currentTransactions,
+        listener: (context, state) =>
+            _maybeAdjustInitialRange(state.currentTransactions),
+        builder: (context, state) {
+          final transactions = state.currentTransactions;
+          if (state is TransactionLoading && transactions.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (transactions.isEmpty) {
+            return _buildEmptyState(context);
+          }
+
+          final dataBuilder = _dataBuilder(context);
+          final filteredTransactions = _filterTransactionsByRange(transactions);
+
+          final totals = _reportService.calculateTotals(filteredTransactions);
+          final previousTotals = _previousPeriodTotals(transactions);
+          final expenseFull =
+              dataBuilder.buildFull(filteredTransactions, isExpense: true);
+          final incomeFull =
+              dataBuilder.buildFull(filteredTransactions, isExpense: false);
+          final expensePie = dataBuilder.buildPie(expenseFull);
+          final incomePie = dataBuilder.buildPie(incomeFull);
+
+          // Karşılaştırma modu tek bir kart çizer (bkz.
+          // [ReportCompareChartCard]); tek taraflı modlar eskisi gibi
+          // pasta/çubuk kartını gösterir.
+          final isCompare = _categoryMode == FinanceMode.compare;
+          final brightness =
+              (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.islemRaporu,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Tarih başlığı aralık boş olsa da görünür kalır; aksi
+                // halde kullanıcı aralığı değiştirecek kontrolü bulamıyordu.
+                ReportRangeHeader(
+                  range: _range,
+                  onPickDateRange: _pickDateRange,
+                ),
+                const SizedBox(height: 16),
+
+                if (filteredTransactions.isEmpty) ...[
+                  _buildEmptyState(
+                    context,
+                    message: context.l10n.msgSecilenTarihAraligindaIslem,
+                  ),
+                ] else ...[
+                  ReportSummaryCards(
+                    totals: totals,
+                    previousTotals: previousTotals,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    context.l10n.haftalikNetAkis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ReportWeeklyNetFlowChart(
+                    transactions: filteredTransactions,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    context.l10n.reportBalanceTrend,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ReportCumulativeBalanceChart(
+                    transactions: filteredTransactions,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.l10n.kategoriDagilimi,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      FinanceModeSegment(
+                        currentMode: _categoryMode,
+                        onModeChanged: (m) => setState(() => _categoryMode = m),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (isCompare)
+                    ReportCompareChartCard(
+                      incomeSlices: dataBuilder.buildRanked(
+                        incomeFull,
+                        isExpense: false,
+                        brightness: brightness,
+                      ),
+                      expenseSlices: dataBuilder.buildRanked(
+                        expenseFull,
+                        isExpense: true,
+                        brightness: brightness,
+                      ),
+                      categoryLabels: _categoryLabels,
+                      onSliceTap: (slice, isExpense) => _openCategoryDetails(
+                          slice, isExpense, ReportSliceMode.ranked),
+                    )
+                  else if (_categoryMode == FinanceMode.expense)
+                    ReportCategoryChartCard(
+                      title: context.l10n.reportExpensesTitle,
+                      fullData: expenseFull,
+                      pieData: expensePie,
+                      isExpense: true,
+                      showBarChart: _showExpenseBarChart,
+                      onToggleBarChart: (v) =>
+                          setState(() => _showExpenseBarChart = v),
+                      onCategoryTap: (cat, mode) =>
+                          _openCategoryDetails(cat, true, mode),
+                      budgetProgressFor: dataBuilder.budgetProgressFor,
+                      categoryLabels: _categoryLabels,
+                    )
+                  else
+                    ReportCategoryChartCard(
+                      title: context.l10n.reportIncomesTitle,
+                      fullData: incomeFull,
+                      pieData: incomePie,
+                      isExpense: false,
+                      showBarChart: _showIncomeBarChart,
+                      onToggleBarChart: (v) =>
+                          setState(() => _showIncomeBarChart = v),
+                      onCategoryTap: (cat, mode) =>
+                          _openCategoryDetails(cat, false, mode),
+                      budgetProgressFor: dataBuilder.budgetProgressFor,
+                      categoryLabels: _categoryLabels,
+                    ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }

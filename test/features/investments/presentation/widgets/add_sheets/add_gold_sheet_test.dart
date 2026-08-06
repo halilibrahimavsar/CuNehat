@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
+import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -33,7 +34,7 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;
@@ -132,9 +133,11 @@ void main() {
 
     // Complete quote call
     completer.complete(const Right(
-      LivePriceQuote(price: 1500.0, currency: 'TRY',
- convertedPrice: 1500.0,
- targetCurrency: 'TRY'),
+      LivePriceQuote(
+          price: 1500.0,
+          currency: 'TRY',
+          convertedPrice: 1500.0,
+          targetCurrency: 'TRY'),
     ));
     await tester.pumpAndSettle();
 
@@ -185,8 +188,9 @@ void main() {
     });
 
     when(() => mockGetLiveQuoteUseCase(
-        symbol: 'gram-altin', type: InvestmentType.gold,
-            targetCurrency: 'TRY')).thenAnswer(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
 
@@ -307,5 +311,24 @@ void main() {
     expect(updatedInvestment!.targetAmount, 10000.0);
     expect(updatedInvestment!.goalCategory, 'araba');
     expect(updatedInvestment!.color, Colors.blue);
+  });
+
+  // Tur adımları kapanı: altın/hisse sheet'lerinde üç adım da ağaçta olmalı.
+  testWidgets('turun üç adımı da ağaçta', (tester) async {
+    await tester.pumpWidget(buildTestableWidget(
+      AddGoldSheet(
+        walletId: 'wallet_123',
+        userId: 'user_123',
+        walletCurrency: 'TRY',
+        onSave: (_) {},
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final showcase = ShowcaseView.get();
+    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddForm), isTrue);
+    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddCost), isTrue);
+    expect(showcase.isTargetRendered(OnboardingKeys.investmentAddQuantity),
+        isTrue);
   });
 }

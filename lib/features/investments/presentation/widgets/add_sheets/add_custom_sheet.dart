@@ -99,7 +99,6 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
     }
     // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
     _targetAmountController.addListener(() => setState(() {}));
-
   }
 
   @override
@@ -178,13 +177,21 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
 
     return OnboardingTour(
       flow: OnboardingFlow.investmentAdd,
-      keys: [OnboardingKeys.investmentAddForm],
+      keys: _tourKeys,
       enabled: !_isEditing,
       child: _buildContent(context, surface, cs),
     );
   }
 
-  Widget _buildContent(BuildContext context, AppSurface surface, ColorScheme cs) {
+  /// Mevcut değer → toplam maliyet. Özel yatırımda miktar alanı olmadığı için
+  /// üçüncü adım yok; akış bayrağı üç sheet'te ortaktır, adım listesi değil.
+  static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.investmentAddForm,
+    OnboardingKeys.investmentAddCost,
+  ];
+
+  Widget _buildContent(
+      BuildContext context, AppSurface surface, ColorScheme cs) {
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -240,15 +247,21 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                         onChanged: _clearError,
                       ),
                       const SizedBox(height: 14),
-                      InvestmentFilledField(
-                        controller: _amountController,
-                        hint: context.l10n.maliyetYatirilanAnaPara,
-                        icon: Icons.payments_rounded,
-                        accent: _accent,
-                        onChanged: _clearError,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [AmountInputFormatter()],
+                      Showcase(
+                        key: OnboardingKeys.investmentAddCost,
+                        title: context.l10n.onboardingInvestmentAddCostTitle,
+                        description:
+                            context.l10n.onboardingInvestmentAddCostDesc,
+                        child: InvestmentFilledField(
+                          controller: _amountController,
+                          hint: context.l10n.maliyetYatirilanAnaPara,
+                          icon: Icons.payments_rounded,
+                          accent: _accent,
+                          onChanged: _clearError,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [AmountInputFormatter()],
+                        ),
                       ),
                       const SizedBox(height: 14),
                       InvestmentFilledField(

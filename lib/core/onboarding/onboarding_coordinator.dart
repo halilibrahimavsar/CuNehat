@@ -12,9 +12,6 @@ import 'onboarding_flow.dart';
 /// için okur.
 @immutable
 class OnboardingShellStatus {
-  /// Yatay küpün konumu (0.0 yatırım, 0.5 işlemler, 1.0 borç).
-  final double sliderValue;
-
   /// Dikey yığının indeksi (0 ana görünüm, 1+ alt sayfalar).
   final int stackIndex;
 
@@ -27,7 +24,6 @@ class OnboardingShellStatus {
   final bool isTransformed;
 
   const OnboardingShellStatus({
-    required this.sliderValue,
     required this.stackIndex,
     required this.isAnimating,
     required this.isTransformed,
@@ -79,8 +75,8 @@ class OnboardingCoordinator extends ChangeNotifier {
   static String _seenKey(OnboardingFlow flow) => 'onboarding_${flow.name}_seen';
 
   /// HomePage tarafından set edilir. null ise kabuk henüz kurulmamıştır ve
-  /// kabuğa bağlı turlar (bkz. [OnboardingFlowSurface.homeSlot]) beklemede
-  /// kalır.
+  /// kabuğa bağlı tur (bkz. [OnboardingFlowSurface.requiresHomeShellAtRoot])
+  /// beklemede kalır.
   OnboardingShellStatus Function()? shellStatusProvider;
 
   /// Testlerde gerçek overlay'i kurmadan turun başladığını gözlemleyebilmek
@@ -104,7 +100,8 @@ class OnboardingCoordinator extends ChangeNotifier {
   bool isPending(OnboardingFlow flow) => _pending.containsKey(flow);
 
   bool isSeen(OnboardingFlow flow) =>
-      _seenInSession.contains(flow) || (_prefs.getBool(_seenKey(flow)) ?? false);
+      _seenInSession.contains(flow) ||
+      (_prefs.getBool(_seenKey(flow)) ?? false);
 
   Future<void> markSeen(OnboardingFlow flow) {
     _seenInSession.add(flow);
@@ -200,39 +197,23 @@ class OnboardingCoordinator extends ChangeNotifier {
 
   // ==================== KABUK DURUMU ====================
 
-  /// Kabuğa bağlı bir turun oynatılabilmesi için kabuğun tam olarak o
-  /// konumda ve durur halde olması gerekir.
-  bool isHomeSlotSettled(OnboardingHomeSlot slot) {
+  /// Kabuğa bağlı tek tur ([OnboardingFlow.shell]) ancak kabuk kökte —
+  /// alt sayfa açık değil — ve durur haldeyken oynayabilir.
+  bool isHomeShellAtRoot() {
     final status = shellStatusProvider?.call();
     if (status == null) return false;
     if (status.isAnimating || status.isTransformed) return false;
-    final stackIndex = slot.stackIndex;
-    if (stackIndex != null && status.stackIndex != stackIndex) return false;
-    final sliderValue = slot.sliderValue;
-    if (sliderValue != null &&
-        (status.sliderValue - sliderValue).abs() > 0.01) {
-      return false;
-    }
-    return true;
+    return status.stackIndex == 0;
   }
 
   // ==================== AYARLAR'DAN TEKRAR OYNATMA ====================
 
-  /// Ayarlar'dan tekrar oynatma isteğini HomePage'e taşır: ana ekran
-  /// turlarında kaydırıcı ilgili ekrana getirilmelidir. Turun kendisi
-  /// başlatılmaz — sayfa görünür olduğunda kapı kendiliğinden açılır.
-  OnboardingFlow? _pendingFlow;
-  OnboardingFlow? get pendingFlow => _pendingFlow;
-
-  void consumePendingFlow() => _pendingFlow = null;
-
   /// Bayrağı sıfırlar; [notifyListeners] canlı [OnboardingTour]'ların
-  /// isteklerini yeniden açmasını sağlar (sayfa zaten ekrandaysa tur oracıkta
-  /// yeniden oynar).
+  /// isteklerini yeniden açmasını sağlar. Turun kendisi başlatılmaz —
+  /// kullanıcı o yüzeye döndüğünde kapı kendiliğinden açılır.
   Future<void> resetAndReplay(OnboardingFlow flow) async {
     _seenInSession.remove(flow);
     await _prefs.remove(_seenKey(flow));
-    _pendingFlow = flow;
     notifyListeners();
   }
 

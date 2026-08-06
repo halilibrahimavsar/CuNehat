@@ -40,10 +40,18 @@ class AppBarContent extends StatefulWidget {
 class _AppBarContentState extends State<AppBarContent> {
   WalletLoadedSt? _cachedLoadedState;
 
+  /// Kabuk turunun adımları, sırasıyla: aktif cüzdan (uygulamanın en önemli
+  /// kavramı) → menü → ekle/navigasyon kartı. Sonuncusu HomePage'te tanımlıdır
+  /// ve turu bir eyleme çağırarak kapatır.
   static final List<GlobalKey> _tourKeys = [
-    OnboardingKeys.appBarMenuButton,
     OnboardingKeys.appBarWalletArea,
+    OnboardingKeys.appBarMenuButton,
+    OnboardingKeys.addActionSlider,
   ];
+
+  /// Tur ancak en az bir cüzdan varken istenir.
+  static bool _hasWallet(WalletState state) =>
+      state is WalletLoadedSt && state.wallets.isNotEmpty;
 
   /// Cüzdan alt-sayfasına verilen kaydırma denetleyicisi. State'e ait: her
   /// dokunuşta `ScrollController()` üretmek dispose edilmeyen denetleyici
@@ -58,19 +66,25 @@ class _AppBarContentState extends State<AppBarContent> {
 
   @override
   Widget build(BuildContext context) {
-    // Kabuk kromu turu: hedefler (menü butonu + cüzdan alanı) render edilip
-    // kabuk durunca oynar; cüzdan alanı yoksa (cüzdan yüklenmemiş) bekler.
-    return OnboardingTour(
-      flow: OnboardingFlow.appBar,
-      keys: _tourKeys,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Row(
-          children: [
-            _buildMenuButton(context),
-            Expanded(child: _buildCenterContent(context)),
-            _buildVisibilityButton(),
-          ],
+    // Kabuk turu ilk cüzdan oluştuktan SONRA oynar: ekranda "İlk Cüzdanı
+    // Oluştur"dan başka bir şey yokken "işte aktif cüzdanın" demenin anlamı
+    // yok. `enabled` false→true olunca OnboardingTour kendini yeniden
+    // silahlandırır; ek bir tetikleyiciye gerek yok.
+    return BlocBuilder<WalletBloc, WalletState>(
+      buildWhen: (prev, curr) => _hasWallet(prev) != _hasWallet(curr),
+      builder: (context, walletState) => OnboardingTour(
+        flow: OnboardingFlow.shell,
+        keys: _tourKeys,
+        enabled: _hasWallet(walletState),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            children: [
+              _buildMenuButton(context),
+              Expanded(child: _buildCenterContent(context)),
+              _buildVisibilityButton(),
+            ],
+          ),
         ),
       ),
     );

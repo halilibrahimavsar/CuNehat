@@ -54,7 +54,7 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactions);
+    registerFallbackValue(OnboardingFlow.shell);
     // Showcase widget'ı kayıtlı bir scope yoksa initState'te fırlatır.
     ShowcaseView.register(onFinish: () {}, onDismiss: (_) {});
     getIt.allowReassignment = true;
@@ -166,9 +166,11 @@ void main() {
 
     // Complete quote call
     completer.complete(const Right(
-      LivePriceQuote(price: 300.0, currency: 'TRY',
- convertedPrice: 300.0,
- targetCurrency: 'TRY'),
+      LivePriceQuote(
+          price: 300.0,
+          currency: 'TRY',
+          convertedPrice: 300.0,
+          targetCurrency: 'TRY'),
     ));
     await tester.pumpAndSettle();
 
@@ -218,10 +220,10 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock,
-    targetCurrency: 'TRY'))
-        .thenAnswer(
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'AAPL',
+        type: InvestmentType.stock,
+        targetCurrency: 'TRY')).thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
 
@@ -361,13 +363,14 @@ void main() {
 
     InvestmentEntity? savedInvestment;
 
-    when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'AAPL', type: InvestmentType.stock,
-    targetCurrency: 'TRY'))
+    when(() => mockGetLiveQuoteUseCase(
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY'))
         .thenAnswer((_) async => const Right(
-              LivePriceQuote(price: 150.0, currency: 'USD',
- convertedPrice: 4875.0,
- targetCurrency: 'TRY'),
+              LivePriceQuote(
+                  price: 150.0,
+                  currency: 'USD',
+                  convertedPrice: 4875.0,
+                  targetCurrency: 'TRY'),
             ));
 
     await tester.pumpWidget(

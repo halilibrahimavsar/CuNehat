@@ -14,10 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
 
@@ -44,10 +40,6 @@ class DebtAndReceivablePage extends StatefulWidget {
 class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-
-  final GlobalKey _tabBarKey = GlobalKey(debugLabel: 'onboarding_debt_tabbar');
-
-  List<GlobalKey> get _tourKeys => [_tabBarKey, OnboardingKeys.addActionSlider];
 
   @override
   void initState() {
@@ -77,14 +69,6 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingTour(
-      flow: OnboardingFlow.debt,
-      keys: _tourKeys,
-      child: _buildContent(context),
-    );
-  }
-
-  Widget _buildContent(BuildContext context) {
     final tabBar = TabBar(
       controller: _tabController,
       indicatorWeight: 4,
@@ -110,12 +94,7 @@ class _DebtAndReceivablePageState extends State<DebtAndReceivablePage>
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: tabBar.preferredSize,
-          child: Showcase(
-            key: _tabBarKey,
-            title: context.l10n.onboardingDebtTabsTitle,
-            description: context.l10n.onboardingDebtTabsDesc,
-            child: tabBar,
-          ),
+          child: tabBar,
         ),
       ),
       body: TabBarView(

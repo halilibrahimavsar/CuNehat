@@ -9,13 +9,9 @@ import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/receivable_bloc/receivable_bloc.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
-import 'package:cunehat/core/onboarding/onboarding_tour.dart';
-import 'package:cunehat/core/onboarding/onboarding_flow.dart';
-import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
@@ -71,54 +67,41 @@ class _DebtHistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingTour(
-      flow: OnboardingFlow.debtHistory,
-      keys: [OnboardingKeys.debtHistoryBody],
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: showAppBar
-              ? AppBar(
-                  title: Text(context.l10n.gecmis),
-                  centerTitle: true,
-                )
-              : null,
-          body: Showcase(
-            key: OnboardingKeys.debtHistoryBody,
-            title: context.l10n.onboardingDebtHistoryTitle,
-            description: context.l10n.onboardingDebtHistoryDesc,
-            child: Column(
-              children: [
-                TabBar(
-                  indicatorWeight: 4,
-                  labelStyle: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 14),
-                  tabs: [
-                    Tab(
-                        icon: const Icon(Icons.outbound),
-                        text: context.l10n.borcGecmisi),
-                    Tab(
-                        icon: const Icon(Icons.call_received),
-                        text: context.l10n.alacakGecmisi),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _DebtHistoryTab(
-                          userId: userId,
-                          walletId: walletId,
-                          currency: currency),
-                      _ReceivableHistoryTab(
-                          userId: userId,
-                          walletId: walletId,
-                          currency: currency),
-                    ],
-                  ),
-                ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: showAppBar
+            ? AppBar(
+                title: Text(context.l10n.gecmis),
+                centerTitle: true,
+              )
+            : null,
+        body: Column(
+          children: [
+            TabBar(
+              indicatorWeight: 4,
+              labelStyle:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              tabs: [
+                Tab(
+                    icon: const Icon(Icons.outbound),
+                    text: context.l10n.borcGecmisi),
+                Tab(
+                    icon: const Icon(Icons.call_received),
+                    text: context.l10n.alacakGecmisi),
               ],
             ),
-          ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _DebtHistoryTab(
+                      userId: userId, walletId: walletId, currency: currency),
+                  _ReceivableHistoryTab(
+                      userId: userId, walletId: walletId, currency: currency),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

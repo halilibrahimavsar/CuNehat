@@ -3594,83 +3594,11 @@ abstract class AppLocalizations {
   /// **'Gizlilik ve Bildirim Tanıtımını Tekrar Göster'**
   String get genelTanitimiTekrarGoster;
 
-  /// No description provided for @yatirimBirikimTuru.
+  /// No description provided for @uygulamaTuruTekrarGoster.
   ///
   /// In tr, this message translates to:
-  /// **'Yatırım/Birikim Turu'**
-  String get yatirimBirikimTuru;
-
-  /// No description provided for @islemlerTuru.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşlemler Turu'**
-  String get islemlerTuru;
-
-  /// No description provided for @borcAlacakTuru.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borç & Alacak Turu'**
-  String get borcAlacakTuru;
-
-  /// No description provided for @onboardingInvestmentSummaryTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Toplam Birikiminiz'**
-  String get onboardingInvestmentSummaryTitle;
-
-  /// No description provided for @onboardingInvestmentSummaryDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Toplam yatırım, güncel değer ve kâr/zararınızı burada tek bakışta görürsünüz.'**
-  String get onboardingInvestmentSummaryDesc;
-
-  /// No description provided for @onboardingInvestmentPortfolioTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Portföyünüz'**
-  String get onboardingInvestmentPortfolioTitle;
-
-  /// No description provided for @onboardingInvestmentPortfolioDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Altın, hisse ve özel yatırımlarınızın listesi burada. Bir karta dokunarak katkı, satış, düzenleme ve silme işlemlerine ulaşabilirsiniz.'**
-  String get onboardingInvestmentPortfolioDesc;
-
-  /// No description provided for @onboardingTransactionsFilterTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Mod ve Filtreler'**
-  String get onboardingTransactionsFilterTitle;
-
-  /// No description provided for @onboardingTransactionsFilterDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelir/Gider modunu değiştirin ve kategoriye, tarihe veya tutara göre filtreleyin.'**
-  String get onboardingTransactionsFilterDesc;
-
-  /// No description provided for @onboardingTransactionsViewToggleTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Liste / Takvim'**
-  String get onboardingTransactionsViewToggleTitle;
-
-  /// No description provided for @onboardingTransactionsViewToggleDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşlemlerinizi liste veya takvim görünümünde inceleyebilirsiniz.'**
-  String get onboardingTransactionsViewToggleDesc;
-
-  /// No description provided for @onboardingDebtTabsTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borçlarım / Alacaklarım'**
-  String get onboardingDebtTabsTitle;
-
-  /// No description provided for @onboardingDebtTabsDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Verdiğiniz ve aldığınız borçları buradan sekmeler halinde takip edersiniz.'**
-  String get onboardingDebtTabsDesc;
+  /// **'Uygulama Turunu Tekrar Göster'**
+  String get uygulamaTuruTekrarGoster;
 
   /// No description provided for @onboardingNavHintHeader.
   ///
@@ -3713,54 +3641,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yeni gelir, gider, yatırım, borç veya alacak ekleyin.'**
   String get onboardingNavHintAddDesc;
-
-  /// No description provided for @onboardingInvestmentDetailTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Birikim Detayı'**
-  String get onboardingInvestmentDetailTitle;
-
-  /// No description provided for @onboardingInvestmentDetailDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yatırımlarınızla ilgili tüm alım/satım hareketlerini burada kronolojik olarak görürsünüz.'**
-  String get onboardingInvestmentDetailDesc;
-
-  /// No description provided for @onboardingTransactionsInsightsTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Akıllı İçgörüler'**
-  String get onboardingTransactionsInsightsTitle;
-
-  /// No description provided for @onboardingTransactionsInsightsDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Harcama alışkanlıklarınızla ilgili otomatik tespitler ve olası tekrarlayan ödemeler burada gösterilir.'**
-  String get onboardingTransactionsInsightsDesc;
-
-  /// No description provided for @onboardingTransactionsReportTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşlem Raporu'**
-  String get onboardingTransactionsReportTitle;
-
-  /// No description provided for @onboardingTransactionsReportDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seçtiğiniz tarih aralığı için gelir/gider dağılımını grafiklerle inceleyin, dışa aktarın.'**
-  String get onboardingTransactionsReportDesc;
-
-  /// No description provided for @onboardingDebtHistoryTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Geçmiş'**
-  String get onboardingDebtHistoryTitle;
-
-  /// No description provided for @onboardingDebtHistoryDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ödenmiş borç ve tahsil edilmiş alacaklarınızın tam geçmişi burada saklanır.'**
-  String get onboardingDebtHistoryDesc;
 
   /// No description provided for @notificationSettings.
   ///
@@ -4215,20 +4095,32 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingAppBarMenuDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Buradan bütçe, düzenli işlemler, profil ve ayarlara ulaşabilirsiniz.'**
+  /// **'Bütçeler, düzenli işlemler, banka ekstresi içe aktarma ve ayarlar bu menüde.'**
   String get onboardingAppBarMenuDesc;
 
   /// No description provided for @onboardingAppBarWalletTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Cüzdanınız'**
+  /// **'Aktif Cüzdanınız'**
   String get onboardingAppBarWalletTitle;
 
   /// No description provided for @onboardingAppBarWalletDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Aktif cüzdanın adı ve bakiyesi burada görünür. Dokunarak cüzdanlar arasında geçiş yapabilir veya yeni cüzdan ekleyebilirsiniz.'**
+  /// **'Her gelir, gider, borç ve yatırım kaydı SEÇİLİ cüzdana işlenir. Buraya dokunarak cüzdan değiştirebilir veya yeni cüzdan ekleyebilirsiniz.'**
   String get onboardingAppBarWalletDesc;
+
+  /// No description provided for @onboardingWalletListTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlarınız'**
+  String get onboardingWalletListTitle;
+
+  /// No description provided for @onboardingWalletListDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her cüzdanın kendi para birimi ve bakiyesi vardır. Bir karta dokunarak aktif cüzdanı değiştirir, karttaki simgelerle düzenler veya silersiniz.'**
+  String get onboardingWalletListDesc;
 
   /// No description provided for @onboardingWalletManagementTitle.
   ///
@@ -4239,7 +4131,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWalletManagementDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Farklı hesaplarınız veya döviz cüzdanlarınız için buradan yeni bir cüzdan oluşturabilirsiniz.'**
+  /// **'Nakit, banka hesabı ya da döviz için ayrı cüzdan açın — raporlar, bütçeler ve borçlar cüzdan bazlı çalışır.'**
   String get onboardingWalletManagementDesc;
 
   /// No description provided for @onboardingTransactionsAddTitle.
@@ -4251,56 +4143,92 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingTransactionsAddDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Tutarı yazın, ardından kategori ve tarih seçip kaydedin. İsterseniz tekrar sıklığı da ayarlayabilirsiniz.'**
+  /// **'Tutarı yazın. Üstteki gelir/gider seçimi işlemin cüzdan bakiyesini artıracağını mı azaltacağını mı belirler.'**
   String get onboardingTransactionsAddDesc;
+
+  /// No description provided for @onboardingTransactionsAddCategoryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori Seçin'**
+  String get onboardingTransactionsAddCategoryTitle;
+
+  /// No description provided for @onboardingTransactionsAddCategoryDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori zorunludur: raporlar ve bütçe uyarıları bu kategoriye göre hesaplanır.'**
+  String get onboardingTransactionsAddCategoryDesc;
+
+  /// No description provided for @onboardingTransactionsAddRecurringTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar Sıklığı'**
+  String get onboardingTransactionsAddRecurringTitle;
+
+  /// No description provided for @onboardingTransactionsAddRecurringDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kira, maaş, abonelik gibi düzenli işlemleri bir kez tanımlayın; uygulama zamanı gelince hatırlatır.'**
+  String get onboardingTransactionsAddRecurringDesc;
 
   /// No description provided for @onboardingDebtAddTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Tutarı Girin'**
+  /// **'Tutar ve Geri Ödeme'**
   String get onboardingDebtAddTitle;
 
   /// No description provided for @onboardingDebtAddDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Borç/alacak tutarını ve türünü seçin; vade tarihi ve taksit gibi detayları aşağıda tamamlayın.'**
+  /// **'Tutarı girin. Borç türüne göre taksit, faiz ve vade alanları aşağıda açılır; kartın altındaki özet toplam geri ödemeyi anında hesaplar.'**
   String get onboardingDebtAddDesc;
+
+  /// No description provided for @onboardingDebtAddDueDateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vade Tarihi'**
+  String get onboardingDebtAddDueDateTitle;
+
+  /// No description provided for @onboardingDebtAddDueDateDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçtiğiniz tarihte hatırlatma bildirimi alırsınız; taksitli kayıtlarda her taksit için ayrı ayrı.'**
+  String get onboardingDebtAddDueDateDesc;
 
   /// No description provided for @onboardingInvestmentAddTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Mevcut Değer'**
+  /// **'Bugünkü Değer'**
   String get onboardingInvestmentAddTitle;
 
   /// No description provided for @onboardingInvestmentAddDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Yatırımın güncel değerini girin. Aşağıda miktar, tür ve isteğe bağlı hedef tutar gibi detayları tamamlayabilirsiniz.'**
+  /// **'Yatırımın şu anki piyasa değeri. Kâr/zararınız bu değerle toplam maliyet arasındaki farktır.'**
   String get onboardingInvestmentAddDesc;
 
-  /// No description provided for @onboardingBudgetsTitle.
+  /// No description provided for @onboardingInvestmentAddCostTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Yeni Bütçe Ekle'**
-  String get onboardingBudgetsTitle;
+  /// **'Toplam Maliyet'**
+  String get onboardingInvestmentAddCostTitle;
 
-  /// No description provided for @onboardingBudgetsDesc.
+  /// No description provided for @onboardingInvestmentAddCostDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Bir kategori seçip aylık harcama limiti belirleyin; limit aşıldığında bilgilendirilirsiniz.'**
-  String get onboardingBudgetsDesc;
+  /// **'Bu yatırıma bugüne kadar ödediğiniz ana para. Boş bırakırsanız kâr/zarar hesaplanamaz.'**
+  String get onboardingInvestmentAddCostDesc;
 
-  /// No description provided for @onboardingRecurringTemplatesTitle.
+  /// No description provided for @onboardingInvestmentAddQuantityTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Düzenli İşlemler'**
-  String get onboardingRecurringTemplatesTitle;
+  /// **'Miktar ve Güncel Fiyat'**
+  String get onboardingInvestmentAddQuantityTitle;
 
-  /// No description provided for @onboardingRecurringTemplatesDesc.
+  /// No description provided for @onboardingInvestmentAddQuantityDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Gelir/gider eklerken seçtiğiniz tekrar sıklığından oluşan şablonlar burada listelenir; duraklatabilir veya silebilirsiniz.'**
-  String get onboardingRecurringTemplatesDesc;
+  /// **'Gram/adet girip güncel fiyatı çekin; bugünkü değer sizin yerinize hesaplanır.'**
+  String get onboardingInvestmentAddQuantityDesc;
 
   /// No description provided for @fisEkle.
   ///

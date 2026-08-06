@@ -51,7 +51,7 @@ void main() {
 
   setUpAll(() {
     getIt.allowReassignment = true;
-    registerFallbackValue(OnboardingFlow.transactionsReport);
+    registerFallbackValue(OnboardingFlow.shell);
     ShowcaseView.register(
       onFinish: () {},
       onDismiss: (_) {},
