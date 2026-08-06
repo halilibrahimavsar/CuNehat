@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -270,6 +271,14 @@ class NotificationServiceImpl implements NotificationService {
             ? Priority.defaultPriority
             : Priority.high,
         icon: '@drawable/ic_notification',
+        // Sistem küçük ikonu bu renge boyar. İkonun halkasından alındı;
+        // hem açık hem koyu bildirim zemininde 3:1 üstünde.
+        color: const Color(0xFF0A6CF7),
+        // largeIcon BitmapFactory.decodeResource ile açılıyor; adaptive
+        // ikon (@mipmap/launcher_icon) XML olduğu için sessizce null döner,
+        // o yüzden ayrı bir PNG kaynağı.
+        largeIcon:
+            const DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
       ),
       iOS: const DarwinNotificationDetails(),
     );

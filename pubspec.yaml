@@ -143,7 +143,7 @@ flutter_native_splash:
   # Zemin ikonun mavisi, görsel de şeffaf foreground katmanı.
   # Gradyanın görsel ortasından örneklenen düz renk. Gradyan bitmap'i zemin
   # olarak verilirse uzun ekranlarda gerilip ikondan farklı görünüyor.
-  color: "#3054BB"
+  color: "#061B49"
   image: "assets/images/app_icon_foreground.png"
   fullscreen: true
 
@@ -170,7 +170,9 @@ flutter_launcher_icons:
   image_path: "assets/images/app_icon.png"
   # Adaptive ikon (Android 8+): launcher kendi maskesini uygular ve
   # foreground'un kenarlarından ~%17 kırpar. app_icon_foreground.png bu
-  # yüzden şeffaf zeminli ve içerik tuvalin ortadaki %56'sında.
+  # yüzden şeffaf zeminli; içerik tuvalin ortadaki ~%72'sinde (C'nin dış
+  # çapı tam %72). Paket ayrıca XML'de %16 inset uyguluyor, yani işaret
+  # 108dp'lik tuvalde 72dp'lik görünür alanın ~%73'ünü kaplıyor.
   # Bu katmanlar olmadan launcher legacy bitmap'i beyaz bir rozetin içine
   # küçültüyor ve ikon diğer uygulamaların yanında bariz bozuk duruyor.
   # Arka plan düz renk değil görsel: işaretin altındaki gradyan kimliğin
