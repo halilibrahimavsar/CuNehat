@@ -36,6 +36,12 @@ coverage/
 **/android/key.properties
 **/android/**/GeneratedPluginRegistrant.java
 
+# İmzalama anahtarları — repoya ASLA girmemeli. Keystore sızarsa upload
+# anahtarı yeniden üretilemez hale gelir (Play'de sıfırlama süreci günler sürer).
+*.jks
+*.keystore
+*.p12
+
 # iOS
 **/ios/Pods/
 **/ios/Flutter/.last_build_id
