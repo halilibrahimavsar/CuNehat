@@ -1,0 +1,16 @@
+# GitHub Pages yapılandırması — kaynak: main dalı, /docs klasörü.
+#
+# NEDEN VAR: Pages, /docs kaynak seçildiğinde bu klasördeki HER dosyayı
+# yayınlar. Buradaki tek amaç Play'in istediği herkese açık gizlilik
+# politikası URL'idir; iç dokümanların web sayfasına dönüşmesi istenmiyor.
+#
+# ⚠️ Bu klasöre `.nojekyll` EKLEME: o dosya Jekyll'i tamamen devre dışı
+# bırakır ve aşağıdaki `exclude` listesi işlemez — her şey yayınlanır.
+
+title: CuNehat
+description: CuNehat kişisel finans uygulaması — gizlilik politikası
+
+exclude:
+  - RELEASE_GUIDE.md            # iç yayın rehberi
+  - cunehat-mantiksal-analiz.md # eski iç teknik analiz
+  - store/                      # mağaza varlıkları ve listing metinleri
