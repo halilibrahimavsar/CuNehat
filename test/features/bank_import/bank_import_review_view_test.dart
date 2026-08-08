@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
@@ -7,6 +8,7 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_review_view.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -16,6 +18,10 @@ import 'package:intl/intl.dart';
 
 class MockBankImportCubit extends MockCubit<BankImportState>
     implements BankImportCubit {}
+
+class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class FakeCategoryEntity extends Fake implements CategoryEntity {}
 
 CategoryEntity _cat(String id, {bool expense = true}) => CategoryEntity(
       id: id,
@@ -45,15 +51,36 @@ void main() {
   // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
   // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
   // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
-  setUpAll(() => Intl.defaultLocale = 'tr');
+  setUpAll(() {
+    Intl.defaultLocale = 'tr';
+    getIt.allowReassignment = true;
+    registerFallbackValue(FakeCategoryEntity());
+  });
 
   late MockBankImportCubit cubit;
+  late MockCategoryRepository categoryRepo;
+  late int fullscreenToggles;
 
   setUp(() {
     cubit = MockBankImportCubit();
+    fullscreenToggles = 0;
     when(() => cubit.setAllSelected(any())).thenReturn(null);
     when(() => cubit.toggleDraft(any())).thenReturn(null);
+    when(() => cubit.setDraftCategory(any(), any())).thenReturn(null);
+    when(() => cubit.applyCategoryToIndexes(any(), any())).thenReturn(null);
+    when(() => cubit.registerCreatedCategory(any())).thenReturn(null);
+
+    // Kategori sayfasından "Yeni kategori" akışı `showCategoryForm` üzerinden
+    // gerçek depoyu (getIt) kullanır.
+    categoryRepo = MockCategoryRepository();
+    getIt.registerSingleton<CategoryRepository>(categoryRepo);
+    when(() => categoryRepo.getCategoriesWithDefaults(any()))
+        .thenAnswer((_) async => <CategoryEntity>[]);
+    when(() => categoryRepo.addCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
   });
+
+  tearDown(() => getIt.reset());
 
   BankImportReview review({
     required List<ImportDraft> drafts,
@@ -78,7 +105,11 @@ void main() {
         verification: verification,
       );
 
-  Future<void> pump(WidgetTester tester, BankImportReview state) async {
+  Future<void> pump(
+    WidgetTester tester,
+    BankImportReview state, {
+    bool fullscreen = false,
+  }) async {
     when(() => cubit.state).thenReturn(state);
     await tester.pumpWidget(
       MaterialApp(
@@ -93,7 +124,11 @@ void main() {
         home: Scaffold(
           body: BlocProvider<BankImportCubit>.value(
             value: cubit,
-            child: BankImportReviewView(state: state),
+            child: BankImportReviewView(
+              state: state,
+              fullscreen: fullscreen,
+              onToggleFullscreen: () => fullscreenToggles++,
+            ),
           ),
         ),
       ),
@@ -157,7 +192,7 @@ void main() {
       ]),
     );
 
-    await tester.tap(find.textContaining('Kategorisiz'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Kategorisiz (1)'));
     await tester.pumpAndSettle();
 
     expect(find.text('BILINMEYEN ISLEM'), findsOneWidget);
@@ -176,7 +211,7 @@ void main() {
       ]),
     );
 
-    await tester.tap(find.textContaining('Kategorisiz'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Kategorisiz (1)'));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(Checkbox));
     await tester.pumpAndSettle();
@@ -290,5 +325,160 @@ void main() {
     await pump(tester, review(drafts: const []));
     expect(tester.takeException(), isNull);
     expect(find.textContaining('bulunamadı'), findsOneWidget);
+  });
+
+  // ------------------------------------------------------------- Tam ekran
+
+  testWidgets('tam ekranda özet/uyarı kartı listeden çıkar ama kaybolmaz',
+      (tester) async {
+    final state =
+        review(drafts: [_draft(description: 'X', categoryId: 'Market')]);
+
+    await pump(tester, state);
+    expect(find.textContaining('otomatik algılandı'), findsOneWidget);
+
+    await pump(tester, state, fullscreen: true);
+    expect(find.textContaining('otomatik algılandı'), findsNothing);
+
+    // Kart gizlendi, bilgi değil: taşma menüsünden sayfa olarak açılır.
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Özet ve uyarılar'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('otomatik algılandı'), findsOneWidget);
+  });
+
+  testWidgets('tam ekran düğmesi sayfaya haber verir (AppBar orada gizlenir)',
+      (tester) async {
+    await pump(tester,
+        review(drafts: [_draft(description: 'X', categoryId: 'Market')]));
+
+    await tester.tap(find.byIcon(Icons.fullscreen_rounded));
+    await tester.pumpAndSettle();
+
+    expect(fullscreenToggles, 1);
+  });
+
+  // -------------------------------------------------- Kategorisiz satır kapısı
+
+  testWidgets('seçili kategorisiz satır varken ekleme kapalı', (tester) async {
+    await pump(tester, review(drafts: [_draft(description: 'X')]));
+
+    final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Seçilenleri ekle (1)'));
+    expect(button.onPressed, isNull);
+    expect(find.textContaining('kategorisi yok'), findsOneWidget);
+  });
+
+  testWidgets('hepsi kategoriliyse ekleme açık', (tester) async {
+    await pump(tester,
+        review(drafts: [_draft(description: 'X', categoryId: 'Market')]));
+
+    final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Seçilenleri ekle (1)'));
+    expect(button.onPressed, isNotNull);
+    expect(find.textContaining('kategorisi yok'), findsNothing);
+  });
+
+  // --------------------------------------------------------- Kategori seçimi
+
+  testWidgets('satırdan kategori seçimi doğru (filtrelenmemiş) indekse gider',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+        _draft(description: 'BILINMEYEN ISLEM', day: 6),
+      ]),
+    );
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Kategorisiz (1)'));
+    await tester.pumpAndSettle();
+
+    // Kategorisiz satırın kırmızı "Kategori seç" çağrısı.
+    await tester.tap(find.text('Kategori seç'));
+    await tester.pumpAndSettle();
+
+    // Seçim sayfası: yeni kategori kurma girişi + mevcut kategoriler.
+    expect(find.text('Yeni Kategori'), findsOneWidget);
+    await tester.tap(find.text('Fatura'));
+    await tester.pumpAndSettle();
+
+    verify(() => cubit.setDraftCategory(1, 'Fatura')).called(1);
+  });
+
+  testWidgets('seçim sayfasından yeni kategori kurulup satıra atanır',
+      (tester) async {
+    await pump(tester, review(drafts: [_draft(description: 'KAHVECI')]));
+
+    await tester.tap(find.text('Kategori seç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yeni Kategori'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField), 'Kahve');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    // Kategori gerçekten yazıldı, akışa tanıtıldı ve satıra atandı: kullanıcı
+    // kurduğu kategoriyi bir de listeden aramak zorunda kalmamalı.
+    verify(() => categoryRepo.addCategory(any(),
+        displayLabels: any(named: 'displayLabels'))).called(1);
+    verify(() => cubit.registerCreatedCategory(any())).called(1);
+    verify(() => cubit.setDraftCategory(0, 'Kahve')).called(1);
+  });
+
+  testWidgets('dar ekranda tekrar rozeti + uzun kategori satırı taşırmaz',
+      (tester) async {
+    // Satırın alt şeridi en yoğun hâli: tarih + "olası tekrar" rozeti +
+    // kategori düğmesi + tür simgesi. Telefon genişliğinde ölçülür.
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(
+          description: 'ODEME ISLEMI ACIKLAMASI COK UZUN OLAN BIR SATIR',
+          categoryId: 'Fatura',
+          duplicate: true,
+        ),
+        // Kategorisiz satır: alt şeritteki engel uyarısı da bu genişlikte
+        // çizilsin.
+        _draft(description: 'BILINMEYEN ISLEM', day: 6),
+      ]),
+    );
+
+    expect(find.textContaining('kategorisi yok'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('toplu kategori yalnız GÖRÜNEN satırlara uygulanır',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+        _draft(description: 'BILINMEYEN ISLEM', day: 6),
+      ]),
+    );
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Kategorisiz (1)'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Görünen 1 satıra'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fatura'));
+    await tester.pumpAndSettle();
+
+    // Doğru tahmin edilmiş 0. satıra DOKUNULMAZ: kapsamı süzgeç belirler.
+    final captured = verify(
+      () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
+    ).captured;
+    expect(captured.single, [1]);
   });
 }

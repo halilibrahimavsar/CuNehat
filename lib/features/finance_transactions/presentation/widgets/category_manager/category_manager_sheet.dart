@@ -343,7 +343,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
       isExpense: widget.isExpense,
     );
 
-    if (result == true) {
+    if (result != null) {
       _loadCategories();
     }
   }
@@ -355,7 +355,7 @@ class _CategoryManagerSheetState extends State<CategoryManagerSheet>
       category: category,
     );
 
-    if (result == true) {
+    if (result != null) {
       _loadCategories();
     }
   }

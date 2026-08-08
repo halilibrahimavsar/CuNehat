@@ -4581,7 +4581,7 @@ abstract class AppLocalizations {
   /// No description provided for @bankImportStepperMode.
   ///
   /// In tr, this message translates to:
-  /// **'Tek tek'**
+  /// **'Tek tek incele'**
   String get bankImportStepperMode;
 
   /// No description provided for @bankImportDuplicate.
@@ -4613,18 +4613,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümünü iptal'**
   String get bankImportStepCancelAll;
-
-  /// No description provided for @bankImportDefaultExpenseCat.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gider:'**
-  String get bankImportDefaultExpenseCat;
-
-  /// No description provided for @bankImportDefaultIncomeCat.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelir:'**
-  String get bankImportDefaultIncomeCat;
 
   /// No description provided for @bankImportShowRaw.
   ///
@@ -4931,6 +4919,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kategori seç'**
   String get bankImportPickCategoryHint;
+
+  /// No description provided for @bankImportFullscreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran'**
+  String get bankImportFullscreen;
+
+  /// No description provided for @bankImportExitFullscreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekrandan çık'**
+  String get bankImportExitFullscreen;
+
+  /// No description provided for @bankImportSummarySheet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet ve uyarılar'**
+  String get bankImportSummarySheet;
+
+  /// No description provided for @bankImportMoreActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer işlemler'**
+  String get bankImportMoreActions;
+
+  /// No description provided for @bankImportAssignVisible.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünen {count} satıra kategori ata'**
+  String bankImportAssignVisible(int count);
+
+  /// No description provided for @bankImportAssignVisibleDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır “{category}” kategorisine alındı.'**
+  String bankImportAssignVisibleDone(int count, String category);
+
+  /// No description provided for @bankImportUncategorizedBlocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili {count} satırın kategorisi yok. Kategori seçilmeden eklenemez: bütçe ve raporlarda hiçbir kategoriye sayılmazlar.'**
+  String bankImportUncategorizedBlocked(int count);
+
+  /// No description provided for @bankImportShowUncategorized.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get bankImportShowUncategorized;
+
+  /// No description provided for @bankImportStepNeedsCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce kategorisiz satırlara kategori seç.'**
+  String get bankImportStepNeedsCategory;
 
   /// No description provided for @bankStatementSectionHeader.
   ///

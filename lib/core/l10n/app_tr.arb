@@ -1144,14 +1144,12 @@
   "bankImportNoRows": "İçe aktarılacak hareket bulunamadı.",
   "bankImportSelectAll": "Tümü",
   "bankImportDeselectAll": "Hiçbiri",
-  "bankImportStepperMode": "Tek tek",
+  "bankImportStepperMode": "Tek tek incele",
   "bankImportDuplicate": "Olası tekrar",
   "bankImportStepSkip": "Atla",
   "bankImportStepAdd": "Ekle",
   "bankImportStepAddRest": "Kalanları ekle",
   "bankImportStepCancelAll": "Tümünü iptal",
-  "bankImportDefaultExpenseCat": "Gider:",
-  "bankImportDefaultIncomeCat": "Gelir:",
   "bankImportShowRaw": "Ham metni göster",
   "bankImportPdfRawTitle": "PDF metni tanınamadı",
   "bankImportPdfRawHint": "Metni çıkardık ama hareket satırlarını tanıyamadık. Aşağıdaki metni kopyalayıp paylaş; ayrıştırıcı bankanın düzenine göre ayarlanacak.",
@@ -1274,6 +1272,39 @@
   "bankImportCategorySuggestionHint": "Bazı hareketler mevcut kategorilerinden hiçbirine uymuyor. İşaretlediklerin oluşturulup otomatik atanır; işaretini kaldırdıkların oluşturulmaz ve o hareketler varsayılan kategoride kalır.",
   "bankImportCategorySuggestionContinue": "Devam et",
   "bankImportPickCategoryHint": "Kategori seç",
+  "bankImportFullscreen": "Tam ekran",
+  "bankImportExitFullscreen": "Tam ekrandan çık",
+  "bankImportSummarySheet": "Özet ve uyarılar",
+  "bankImportMoreActions": "Diğer işlemler",
+  "bankImportAssignVisible": "Görünen {count} satıra kategori ata",
+  "@bankImportAssignVisible": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignVisibleDone": "{count} satır “{category}” kategorisine alındı.",
+  "@bankImportAssignVisibleDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportUncategorizedBlocked": "Seçili {count} satırın kategorisi yok. Kategori seçilmeden eklenemez: bütçe ve raporlarda hiçbir kategoriye sayılmazlar.",
+  "@bankImportUncategorizedBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportShowUncategorized": "Göster",
+  "bankImportStepNeedsCategory": "Önce kategorisiz satırlara kategori seç.",
   "bankStatementSectionHeader": "BANKA EKSTRESİ",
   "sifirla": "Sıfırla",
   "tumTurlariSifirlaOnayMesaji": "Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?",

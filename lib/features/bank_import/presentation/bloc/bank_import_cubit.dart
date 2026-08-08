@@ -69,6 +69,12 @@ class BankImportCubit extends Cubit<BankImportState> {
   List<CategoryEntity> _expenseCats = const [];
   List<CategoryEntity> _incomeCats = const [];
 
+  /// Kullanıcının geçmişinden kurulan token→kategori indeksi. İnceleme
+  /// başlarken bir kez kurulur ve SAKLANIR: satırın türü sonradan çevrilince
+  /// (gider↔gelir) kategori yeniden tahmin edilirken de aynı öğrenilmiş bilgi
+  /// kullanılır (bkz. [_guessCategory]).
+  HistoryCategoryIndex? _historyIndex;
+
   /// Son PDF içe aktarımının çıkarılan ham metni (tanılama/paylaşım için).
   String? _lastPdfRawText;
   String? get lastPdfRawText => _lastPdfRawText;
@@ -474,36 +480,10 @@ class BankImportCubit extends Cubit<BankImportState> {
       );
       res.fold((_) {}, (list) => history = list);
     }
-    final historyIndex = _guesser.buildHistoryIndex(history);
+    _historyIndex = _guesser.buildHistoryIndex(history);
 
-    // Kategori tahmini, güvenilirlik sırasıyla: (1) kullanıcının KENDİ geçmişi
-    // ("bu markayı geçen sefer X yapmıştım"), (2) bankanın ekstrede verdiği
-    // kendi etiketi, (3) sabit anahtar-kelime sözlüğü. Üçü de tutmazsa BİLEREK
-    // `null` kalır (türün ilk kategorisine düşülmez — eskiden işlemlerin ~%80'i
-    // tesadüfen "Yemek" görünüp yanlış güven veriyordu). Eşleşmeyenler inceleme
-    // ekranında elle seçilir (bkz. `BankImportReview.uncategorizedCount`).
     var drafts = [
-      for (final d in raw)
-        () {
-          final candidates = d.isIncome ? _incomeCats : _expenseCats;
-          return d.copyWith(
-            categoryId: _guesser.guessFromHistory(
-                  description: d.description,
-                  isIncome: d.isIncome,
-                  index: historyIndex,
-                  candidates: candidates,
-                ) ??
-                _guesser.guessFromSourceTag(
-                  sourceTag: d.sourceTag,
-                  candidates: candidates,
-                ) ??
-                _guesser.guess(
-                  description: d.description,
-                  isIncome: d.isIncome,
-                  candidates: candidates,
-                ),
-          );
-        }(),
+      for (final d in raw) d.copyWith(categoryId: _guessCategory(d, d.type)),
     ];
 
     if (drafts.isNotEmpty) {
@@ -539,6 +519,54 @@ class BankImportCubit extends Cubit<BankImportState> {
     ));
   }
 
+  // --- kategori tahmini ---
+
+  /// [d]'nin [type] türü için kategori tahmini; güvenilirlik sırasıyla:
+  /// (1) kullanıcının KENDİ geçmişi ("bu markayı geçen sefer X yapmıştım"),
+  /// (2) bankanın ekstrede verdiği kendi etiketi, (3) sabit anahtar-kelime
+  /// sözlüğü. Üçü de tutmazsa BİLEREK `null` döner (türün ilk kategorisine
+  /// düşülmez — eskiden işlemlerin ~%80'i tesadüfen "Yemek" görünüp yanlış
+  /// güven veriyordu). Eşleşmeyenler inceleme ekranında elle seçilir
+  /// (bkz. `BankImportReview.uncategorizedCount`).
+  String? _guessCategory(ImportDraft d, TransactionTypeModel type) {
+    final isIncome = type == TransactionTypeModel.income;
+    final candidates = isIncome ? _incomeCats : _expenseCats;
+    final index = _historyIndex;
+    return (index == null
+            ? null
+            : _guesser.guessFromHistory(
+                description: d.description,
+                isIncome: isIncome,
+                index: index,
+                candidates: candidates,
+              )) ??
+        _guesser.guessFromSourceTag(
+          sourceTag: d.sourceTag,
+          candidates: candidates,
+        ) ??
+        _guesser.guess(
+          description: d.description,
+          isIncome: isIncome,
+          candidates: candidates,
+        );
+  }
+
+  /// Türü değişen taslağı yeniden kurar. `copyWith` DEĞİL: yeni tür için
+  /// tahmin tutmuyorsa kategori `null`'a dönmeli, `copyWith` ise
+  /// `categoryId ?? this.categoryId` ile eski (artık yanlış türe ait)
+  /// kategoriyi korurdu.
+  ImportDraft _retyped(ImportDraft d, TransactionTypeModel type) => ImportDraft(
+        date: d.date,
+        description: d.description,
+        amount: d.amount,
+        type: type,
+        categoryId: _guessCategory(d, type),
+        sourceTag: d.sourceTag,
+        reference: d.reference,
+        isDuplicate: d.isDuplicate,
+        selected: d.selected,
+      );
+
   // --- inceleme mutasyonları ---
 
   void toggleDraft(int i) => _mutate(
@@ -569,21 +597,9 @@ class BankImportCubit extends Cubit<BankImportState> {
         ],
       );
 
-  void setDraftType(int i, TransactionTypeModel type) => _mutate((d) {
-        final defExp = _expenseCats.isNotEmpty ? _expenseCats.first.id : null;
-        final defInc = _incomeCats.isNotEmpty ? _incomeCats.first.id : null;
-        return [
-          for (var k = 0; k < d.length; k++)
-            if (k == i)
-              d[k].copyWith(
-                type: type,
-                categoryId:
-                    type == TransactionTypeModel.income ? defInc : defExp,
-              )
-            else
-              d[k],
-        ];
-      });
+  void setDraftType(int i, TransactionTypeModel type) => _mutate((d) => [
+        for (var k = 0; k < d.length; k++) k == i ? _retyped(d[k], type) : d[k],
+      ]);
 
   void setAllSelected(bool value) =>
       _mutate((d) => [for (final x in d) x.copyWith(selected: value)]);
@@ -591,18 +607,10 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// Tüm taslakları tek türe (gider/gelir) çevirir. Tek pozitif "Tutar"
   /// sütunlu (işaretsiz) ekstrelerde tüm satırlar yanlışlıkla aynı yöne
   /// (ör. hep gelir) düşerse kullanıcı tek dokunuşla düzeltebilsin diye.
-  /// Kategori, `setDraftType` ile aynı biçimde yeni türün varsayılanına çekilir.
-  void setAllType(TransactionTypeModel type) => _mutate((d) {
-        final defExp = _expenseCats.isNotEmpty ? _expenseCats.first.id : null;
-        final defInc = _incomeCats.isNotEmpty ? _incomeCats.first.id : null;
-        return [
-          for (final x in d)
-            x.copyWith(
-              type: type,
-              categoryId: type == TransactionTypeModel.income ? defInc : defExp,
-            ),
-        ];
-      });
+  /// Kategori, `setDraftType` ile aynı biçimde yeni tür için yeniden tahmin
+  /// edilir.
+  void setAllType(TransactionTypeModel type) =>
+      _mutate((d) => [for (final x in d) _retyped(x, type)]);
 
   void setDraftSelected(int i, bool value) => _mutate(
         (d) => [
@@ -611,16 +619,41 @@ class BankImportCubit extends Cubit<BankImportState> {
         ],
       );
 
-  /// Bir türdeki (gider/gelir) tüm taslaklara toplu kategori uygular.
-  void applyBatchCategory(
-          {required bool forExpense, required String categoryId}) =>
-      _mutate((d) => [
-            for (final x in d)
-              if (x.isIncome != forExpense)
-                x.copyWith(categoryId: categoryId)
-              else
-                x,
-          ]);
+  /// Verilen indekslerdeki taslaklara aynı kategoriyi uygular.
+  ///
+  /// Toplu atamanın kapsamını inceleme ekranındaki arama+filtre belirler
+  /// ("kategorisiz" + "MIGROS" → görünen satırlara Market): türün TAMAMINI
+  /// tek kategoriye çeken eski toplu işlem, doğru tahmin edilmiş satırların
+  /// üstüne de yazıyordu.
+  void applyCategoryToIndexes(Iterable<int> indexes, String categoryId) {
+    final target = indexes.toSet();
+    if (target.isEmpty) return;
+    _mutate((d) => [
+          for (var k = 0; k < d.length; k++)
+            target.contains(k) ? d[k].copyWith(categoryId: categoryId) : d[k],
+        ]);
+  }
+
+  /// İnceleme sırasında oluşturulan kategoriyi akışa tanıtır: aday listesine
+  /// eklenir (satır seçicileri onu hemen görür) ve sonraki tür çevirmelerinde
+  /// tahmine girer. Kategori deftere zaten `showCategoryForm` tarafından
+  /// yazılmıştır; burada yalnız bu akışın kopyası tazelenir.
+  void registerCreatedCategory(CategoryEntity category) {
+    if (category.isExpense) {
+      if (_expenseCats.any((c) => c.id == category.id)) return;
+      _expenseCats = [..._expenseCats, category];
+    } else {
+      if (_incomeCats.any((c) => c.id == category.id)) return;
+      _incomeCats = [..._incomeCats, category];
+    }
+    final s = state;
+    if (s is BankImportReview) {
+      emit(s.copyWith(
+        expenseCategories: _expenseCats,
+        incomeCategories: _incomeCats,
+      ));
+    }
+  }
 
   void _mutate(List<ImportDraft> Function(List<ImportDraft>) f) {
     final s = state;

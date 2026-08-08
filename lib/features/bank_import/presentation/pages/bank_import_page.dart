@@ -21,7 +21,7 @@ import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Banka ekstresi içe aktarma akışı (Ayarlar → Banka ekstresi içe aktar).
-class BankImportPage extends StatelessWidget {
+class BankImportPage extends StatefulWidget {
   /// Paylaş menüsünden gelen ekstrenin önbellekteki kopyası (bkz.
   /// `SharedStatementListener`). `null` ise akış dosya seçiciyle başlar —
   /// dosya seçici yolu kaldırılmadı, paylaşım ona ek bir giriş kapısı.
@@ -30,52 +30,75 @@ class BankImportPage extends StatelessWidget {
   const BankImportPage({super.key, this.sharedFilePath});
 
   @override
+  State<BankImportPage> createState() => _BankImportPageState();
+}
+
+class _BankImportPageState extends State<BankImportPage> {
+  /// İnceleme listesinin tam ekran kipi. Sayfada tutulur çünkü kipin asıl
+  /// kazancı AppBar'ın da gizlenmesi: 80+ satırlık bir ekstrede ekrana sığan
+  /// satır sayısı asıl darboğaz (bkz. `BankImportReviewView`).
+  bool _fullscreen = false;
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) {
         final cubit = getIt<BankImportCubit>();
-        final shared = sharedFilePath;
+        final shared = widget.sharedFilePath;
         if (shared != null) cubit.attachSharedFile(shared);
         return cubit;
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(context.l10n.bankImportTitle),
-          actions: const [_RawTextAction()],
-        ),
-        body: BlocBuilder<BankImportCubit, BankImportState>(
-          builder: (context, state) => switch (state) {
-            BankImportInitial() => const _SetupStep(),
-            BankImportParsing() => _Busy(label: context.l10n.bankImportParsing),
-            BankImportCategorySuggestion() =>
-              _CategorySuggestionStep(state: state),
-            BankImportMapping() => BankImportMappingView(state: state),
-            BankImportReview() => BankImportReviewView(state: state),
-            BankImportCommitting() => _Committing(state: state),
-            BankImportDone() => _Done(state: state),
-            BankImportRawText() => _RawTextView(text: state.rawText),
-            BankImportScannedPdf() => _BlockedView(
-                icon: Icons.image_not_supported_outlined,
-                title: context.l10n.bankImportScannedPdfTitle,
-                message: context.l10n.bankImportScannedPdfHint,
-              ),
-            BankImportLegacyExcel() => _BlockedView(
-                icon: Icons.table_chart_outlined,
-                title: context.l10n.bankImportLegacyExcelTitle,
-                message: context.l10n.bankImportLegacyExcelHint(state.reason),
-              ),
-            BankImportUnsupportedFile() => _BlockedView(
-                icon: Icons.help_outline_rounded,
-                title: context.l10n.bankImportUnsupportedTitle,
-                message: context.l10n.bankImportUnsupportedHint(
-                  StatementFormat.supportedExtensions
-                      .map((e) => '.$e')
-                      .join(', '),
+      child: BlocBuilder<BankImportCubit, BankImportState>(
+        builder: (context, state) {
+          // Tam ekran YALNIZ inceleme adımında geçerli: diğer adımlarda AppBar
+          // tek çıkış yolu, gizlenirse kullanıcı akışta kilitlenir.
+          final hideChrome = _fullscreen && state is BankImportReview;
+          return Scaffold(
+            appBar: hideChrome
+                ? null
+                : AppBar(
+                    title: Text(context.l10n.bankImportTitle),
+                    actions: const [_RawTextAction()],
+                  ),
+            body: switch (state) {
+              BankImportInitial() => const _SetupStep(),
+              BankImportParsing() =>
+                _Busy(label: context.l10n.bankImportParsing),
+              BankImportCategorySuggestion() =>
+                _CategorySuggestionStep(state: state),
+              BankImportMapping() => BankImportMappingView(state: state),
+              BankImportReview() => BankImportReviewView(
+                  state: state,
+                  fullscreen: _fullscreen,
+                  onToggleFullscreen: () =>
+                      setState(() => _fullscreen = !_fullscreen),
                 ),
-              ),
-            BankImportError() => _ErrorView(message: state.message),
-          },
-        ),
+              BankImportCommitting() => _Committing(state: state),
+              BankImportDone() => _Done(state: state),
+              BankImportRawText() => _RawTextView(text: state.rawText),
+              BankImportScannedPdf() => _BlockedView(
+                  icon: Icons.image_not_supported_outlined,
+                  title: context.l10n.bankImportScannedPdfTitle,
+                  message: context.l10n.bankImportScannedPdfHint,
+                ),
+              BankImportLegacyExcel() => _BlockedView(
+                  icon: Icons.table_chart_outlined,
+                  title: context.l10n.bankImportLegacyExcelTitle,
+                  message: context.l10n.bankImportLegacyExcelHint(state.reason),
+                ),
+              BankImportUnsupportedFile() => _BlockedView(
+                  icon: Icons.help_outline_rounded,
+                  title: context.l10n.bankImportUnsupportedTitle,
+                  message: context.l10n.bankImportUnsupportedHint(
+                    StatementFormat.supportedExtensions
+                        .map((e) => '.$e')
+                        .join(', '),
+                  ),
+                ),
+              BankImportError() => _ErrorView(message: state.message),
+            },
+          );
+        },
       ),
     );
   }

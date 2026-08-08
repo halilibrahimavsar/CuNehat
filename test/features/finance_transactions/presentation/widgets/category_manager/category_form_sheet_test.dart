@@ -95,9 +95,9 @@ void main() {
     expect(find.text('En az 2 karakter olmalı'), findsOneWidget);
   });
 
-  testWidgets('adds custom category successfully and pops true',
+  testWidgets('adds custom category successfully and returns it',
       (WidgetTester tester) async {
-    bool? result;
+    CategoryEntity? result;
 
     when(() => mockCategoryRepository.addCategory(any(),
         displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
@@ -133,9 +133,9 @@ void main() {
     await tester.tap(find.text('Ekle'));
     await tester.pumpAndSettle();
 
-    // Verify dialog pops and result is true
+    // Verify dialog pops and the saved category is returned
     expect(find.byType(CategoryFormSheet), findsNothing);
-    expect(result, isTrue);
+    expect(result, isNotNull);
     verify(() => mockCategoryRepository.addCategory(any(),
         displayLabels: any(named: 'displayLabels'))).called(1);
   });
@@ -168,7 +168,7 @@ void main() {
   testWidgets(
       'renders CategoryFormSheet in edit mode and updates category successfully',
       (WidgetTester tester) async {
-    bool? result;
+    CategoryEntity? result;
     const category = CategoryEntity(
       id: 'Kira',
       iconName: 'home',
@@ -214,9 +214,9 @@ void main() {
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
 
-    // Verify dialog pops and result is true
+    // Verify dialog pops and the saved category is returned
     expect(find.byType(CategoryFormSheet), findsNothing);
-    expect(result, isTrue);
+    expect(result, isNotNull);
     verify(() => mockCategoryRepository.updateCategory(any(),
         displayLabels: any(named: 'displayLabels'))).called(1);
   });
@@ -358,7 +358,7 @@ void main() {
 
   testWidgets('cancels form and pops without saving',
       (WidgetTester tester) async {
-    bool? result;
+    CategoryEntity? result;
 
     await tester.pumpWidget(
       buildTestableWidget(

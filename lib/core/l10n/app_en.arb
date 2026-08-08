@@ -1123,14 +1123,12 @@
   "bankImportNoRows": "No transactions to import.",
   "bankImportSelectAll": "All",
   "bankImportDeselectAll": "None",
-  "bankImportStepperMode": "One by one",
+  "bankImportStepperMode": "Review one by one",
   "bankImportDuplicate": "Possible duplicate",
   "bankImportStepSkip": "Skip",
   "bankImportStepAdd": "Add",
   "bankImportStepAddRest": "Add the rest",
   "bankImportStepCancelAll": "Cancel all",
-  "bankImportDefaultExpenseCat": "Expense:",
-  "bankImportDefaultIncomeCat": "Income:",
   "bankImportShowRaw": "Show raw text",
   "bankImportPdfRawTitle": "Couldn't recognize the PDF text",
   "bankImportPdfRawHint": "We extracted the text but couldn't recognize the transaction rows. Copy the text below and share it; the parser will be tuned to your bank's layout.",
@@ -1253,6 +1251,39 @@
   "bankImportCategorySuggestionHint": "Some transactions don't match any of your existing categories. Checked ones will be created and assigned automatically; unchecked ones won't be created and those transactions stay in the default category.",
   "bankImportCategorySuggestionContinue": "Continue",
   "bankImportPickCategoryHint": "Pick category",
+  "bankImportFullscreen": "Full screen",
+  "bankImportExitFullscreen": "Exit full screen",
+  "bankImportSummarySheet": "Summary and warnings",
+  "bankImportMoreActions": "More actions",
+  "bankImportAssignVisible": "Assign a category to the {count} shown rows",
+  "@bankImportAssignVisible": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignVisibleDone": "{count} rows moved to “{category}”.",
+  "@bankImportAssignVisibleDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportUncategorizedBlocked": "{count} selected rows have no category. They can't be added without one: they would count towards no category in budgets and reports.",
+  "@bankImportUncategorizedBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportShowUncategorized": "Show",
+  "bankImportStepNeedsCategory": "Pick a category for the uncategorized rows first.",
   "bankStatementSectionHeader": "BANK STATEMENT",
   "sifirla": "Reset",
   "tumTurlariSifirlaOnayMesaji": "All intro tours will be reset and shown again. Do you want to continue?",

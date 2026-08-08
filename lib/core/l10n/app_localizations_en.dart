@@ -2490,7 +2490,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportDeselectAll => 'None';
 
   @override
-  String get bankImportStepperMode => 'One by one';
+  String get bankImportStepperMode => 'Review one by one';
 
   @override
   String get bankImportDuplicate => 'Possible duplicate';
@@ -2506,12 +2506,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportStepCancelAll => 'Cancel all';
-
-  @override
-  String get bankImportDefaultExpenseCat => 'Expense:';
-
-  @override
-  String get bankImportDefaultIncomeCat => 'Income:';
 
   @override
   String get bankImportShowRaw => 'Show raw text';
@@ -2694,6 +2688,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportPickCategoryHint => 'Pick category';
+
+  @override
+  String get bankImportFullscreen => 'Full screen';
+
+  @override
+  String get bankImportExitFullscreen => 'Exit full screen';
+
+  @override
+  String get bankImportSummarySheet => 'Summary and warnings';
+
+  @override
+  String get bankImportMoreActions => 'More actions';
+
+  @override
+  String bankImportAssignVisible(int count) {
+    return 'Assign a category to the $count shown rows';
+  }
+
+  @override
+  String bankImportAssignVisibleDone(int count, String category) {
+    return '$count rows moved to “$category”.';
+  }
+
+  @override
+  String bankImportUncategorizedBlocked(int count) {
+    return '$count selected rows have no category. They can\'t be added without one: they would count towards no category in budgets and reports.';
+  }
+
+  @override
+  String get bankImportShowUncategorized => 'Show';
+
+  @override
+  String get bankImportStepNeedsCategory =>
+      'Pick a category for the uncategorized rows first.';
 
   @override
   String get bankStatementSectionHeader => 'BANK STATEMENT';

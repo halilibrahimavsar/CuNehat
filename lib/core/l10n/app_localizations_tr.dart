@@ -2494,7 +2494,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportDeselectAll => 'Hiçbiri';
 
   @override
-  String get bankImportStepperMode => 'Tek tek';
+  String get bankImportStepperMode => 'Tek tek incele';
 
   @override
   String get bankImportDuplicate => 'Olası tekrar';
@@ -2510,12 +2510,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportStepCancelAll => 'Tümünü iptal';
-
-  @override
-  String get bankImportDefaultExpenseCat => 'Gider:';
-
-  @override
-  String get bankImportDefaultIncomeCat => 'Gelir:';
 
   @override
   String get bankImportShowRaw => 'Ham metni göster';
@@ -2698,6 +2692,40 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportPickCategoryHint => 'Kategori seç';
+
+  @override
+  String get bankImportFullscreen => 'Tam ekran';
+
+  @override
+  String get bankImportExitFullscreen => 'Tam ekrandan çık';
+
+  @override
+  String get bankImportSummarySheet => 'Özet ve uyarılar';
+
+  @override
+  String get bankImportMoreActions => 'Diğer işlemler';
+
+  @override
+  String bankImportAssignVisible(int count) {
+    return 'Görünen $count satıra kategori ata';
+  }
+
+  @override
+  String bankImportAssignVisibleDone(int count, String category) {
+    return '$count satır “$category” kategorisine alındı.';
+  }
+
+  @override
+  String bankImportUncategorizedBlocked(int count) {
+    return 'Seçili $count satırın kategorisi yok. Kategori seçilmeden eklenemez: bütçe ve raporlarda hiçbir kategoriye sayılmazlar.';
+  }
+
+  @override
+  String get bankImportShowUncategorized => 'Göster';
+
+  @override
+  String get bankImportStepNeedsCategory =>
+      'Önce kategorisiz satırlara kategori seç.';
 
   @override
   String get bankStatementSectionHeader => 'BANKA EKSTRESİ';

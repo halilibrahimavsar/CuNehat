@@ -9,12 +9,16 @@ import 'package:cunehat/features/finance_transactions/presentation/category_labe
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 
-Future<bool?> showCategoryForm({
+/// Kategori ekleme/düzenleme sayfasını açar. Kaydedildiyse KAYDEDİLEN kategori
+/// döner (iptal/hata → `null`): çağıran yalnız "değişti mi" bilgisiyle
+/// yetinmek zorunda kalmasın — banka ekstresi incelemesi yeni kategoriyi
+/// oluşturur oluşturmaz o satıra atamak zorunda.
+Future<CategoryEntity?> showCategoryForm({
   required BuildContext context,
   required bool isExpense,
   CategoryEntity? category,
 }) async {
-  return await showModalBottomSheet<bool>(
+  return await showModalBottomSheet<CategoryEntity>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -319,6 +323,9 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
       final name = _nameController.text.trim();
       final sortOrder = DateTime.now().millisecondsSinceEpoch;
 
+      /// Sayfayı kapatırken geri verilecek kayıt (bkz. [showCategoryForm]).
+      final CategoryEntity saved;
+
       if (_isEditMode) {
         // Yalnız GÖRÜNEN ad değişir; `id` sabit kalır. id'yi yeni ada
         // çevirmek hem kaydı bulunamaz yapıyordu (updateCategory kaydı id ile
@@ -347,6 +354,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
           // henüz kaydedilmemiş olsa da çakışma ona göre aranır.
           displayLabels: {..._displayLabels(), widget.category!.id: name},
         );
+        saved = updatedCategory;
       } else {
         // Yeni kategoride kimlik bu an donar: id = ilk verilen ad.
         final newCategory = CategoryEntity(
@@ -361,13 +369,14 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
           newCategory,
           displayLabels: _displayLabels(),
         );
+        saved = newCategory;
       }
 
       if (mounted) {
         final message = _isEditMode
             ? '✅ ${context.l10n.kategoriGuncellendi}'
             : '✅ ${context.l10n.kategoriOlusturuldu}';
-        Navigator.pop(context, true);
+        Navigator.pop(context, saved);
         // Bir sonraki frame'de göstermek için Future.microtask kullan
         Future.microtask(() {
           if (mounted) {

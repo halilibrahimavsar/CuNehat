@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
@@ -15,18 +17,36 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
 
 /// İnceleme listesinde hangi taslakların gösterileceği.
 enum _ReviewFilter { all, uncategorized, duplicates }
+
+/// Kategori seçiminin sonucu: seçilen kategori + hangi türe ait olduğu. Toplu
+/// atamada tür de gerekir; kategori yalnız KENDİ türündeki satırlara uygulanır
+/// (gider kategorisi gelir satırına yazılamaz).
+typedef _PickedCategory = ({String id, bool isExpense});
 
 /// Taslakları inceleme: liste (varsayılan) + tek-tek stepper. Toplu ekleme.
 ///
 /// Liste 80+ satıra kadar çıkabildiği için (gerçek bir Garanti ekstresinde 85)
 /// arama + filtre şart: "kategorisiz" olanlara doğrudan gitmek, tekrarları
-/// gözden geçirmek elle kaydırmadan mümkün olmalı.
+/// gözden geçirmek elle kaydırmadan mümkün olmalı. Aynı nedenle tam ekran
+/// kipi var: özet/uyarı kartı ve AppBar gizlenince ekrana ~4 satır daha sığar.
 class BankImportReviewView extends StatefulWidget {
   final BankImportReview state;
-  const BankImportReviewView({super.key, required this.state});
+
+  /// Tam ekran (yalnız liste) kipi. Durum sayfada tutulur, çünkü AppBar'ı
+  /// gizleyen `Scaffold` orada.
+  final bool fullscreen;
+  final VoidCallback onToggleFullscreen;
+
+  const BankImportReviewView({
+    super.key,
+    required this.state,
+    required this.onToggleFullscreen,
+    this.fullscreen = false,
+  });
 
   @override
   State<BankImportReviewView> createState() => _BankImportReviewViewState();
@@ -88,11 +108,29 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     if (_s.drafts.isEmpty) {
       return Center(child: Text(context.l10n.bankImportNoRows));
     }
-    return _stepper ? _buildStepper(context) : _buildList(context);
+    final body = _stepper ? _buildStepper(context) : _buildList(context);
+    return PopScope(
+      // Tam ekranda geri hareketi önce KİPTEN çıkar: AppBar gizli olduğu için
+      // ekranda başka çıkış yolu yok ve kullanıcı istemeden akıştan düşerdi.
+      canPop: !widget.fullscreen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) widget.onToggleFullscreen();
+      },
+      // AppBar gizliyken üst çentik/durum çubuğu alanını Scaffold tüketmez.
+      child: widget.fullscreen ? SafeArea(bottom: false, child: body) : body,
+    );
   }
 
   List<CategoryEntity> _catsFor(bool income) =>
       income ? _s.incomeCategories : _s.expenseCategories;
+
+  CategoryEntity? _categoryById(List<CategoryEntity> cats, String? id) {
+    if (id == null) return null;
+    for (final c in cats) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
 
   // ---------------------------------------------------------------- List mode
 
@@ -100,7 +138,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final visible = _visible;
     return Column(
       children: [
-        _statusCard(context),
+        if (!widget.fullscreen) _statusCard(context),
         _toolbar(context),
         Expanded(
           child: visible.isEmpty
@@ -126,6 +164,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// Özet + uyarılar TEK kartta. Eskiden üst üste üç tam genişlik şerit
   /// (genel uyarı, mutabakat, para birimi) vardı ve listeye yer kalmıyordu;
   /// olumlu bilgi (bakiye doğrulandı) artık çip olarak, uyarılar tek blokta.
+  ///
+  /// Tam ekran kipinde listeden çıkar ama KAYBOLMAZ: taşma menüsünden aynı
+  /// kart bir sayfa olarak açılır (bkz. [_showSummarySheet]).
   Widget _statusCard(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final warnings = _warnings(context);
@@ -196,6 +237,22 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// Tam ekran kipinde gizlenen özet/uyarı kartını sayfa olarak gösterir.
+  void _showSummarySheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.8,
+          ),
+          child: SingleChildScrollView(child: _statusCard(context)),
+        ),
       ),
     );
   }
@@ -358,7 +415,16 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: color)),
+          // Satır içinde (tekrar rozeti) yer daralabiliyor: etiket taşmak
+          // yerine kısalsın.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: color),
+            ),
+          ),
         ],
       ),
     );
@@ -417,15 +483,17 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
           const SizedBox(height: 4),
           Row(
             children: [
-              Text(
-                filtered
-                    ? context.l10n
-                        .bankImportShownOf(visibleCount, _s.drafts.length)
-                    : context.l10n.bankImportSelectedOf(
-                        _s.selectedCount, _s.drafts.length),
-                style: Theme.of(context).textTheme.bodySmall,
+              Expanded(
+                child: Text(
+                  filtered
+                      ? context.l10n
+                          .bankImportShownOf(visibleCount, _s.drafts.length)
+                      : context.l10n.bankImportSelectedOf(
+                          _s.selectedCount, _s.drafts.length),
+                  style: Theme.of(context).textTheme.bodySmall,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
               IconButton(
                 tooltip: context.l10n.bankImportSelectAll,
                 icon: const Icon(Icons.done_all_rounded, size: 20),
@@ -437,14 +505,17 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                 onPressed: () => _cubit.setAllSelected(false),
               ),
               IconButton(
-                tooltip: context.l10n.bankImportStepperMode,
-                icon: const Icon(Icons.view_agenda_outlined, size: 20),
-                onPressed: () => setState(() {
-                  _stepper = true;
-                  _step = 0;
-                }),
+                tooltip: widget.fullscreen
+                    ? context.l10n.bankImportExitFullscreen
+                    : context.l10n.bankImportFullscreen,
+                icon: Icon(
+                    widget.fullscreen
+                        ? Icons.fullscreen_exit_rounded
+                        : Icons.fullscreen_rounded,
+                    size: 20),
+                onPressed: widget.onToggleFullscreen,
               ),
-              _batchMenu(context),
+              _overflowMenu(context),
             ],
           ),
         ],
@@ -461,69 +532,139 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
   }
 
-  /// Toplu işlemler (tür çevirme + varsayılan kategori) artık ekranın üstünde
-  /// iki ayrı çubuk yerine tek bir menüde: gerçek ekstrede nadiren gerekiyor
-  /// ama gerektiğinde her satırı tek tek düzeltmekten kurtarıyor.
-  Widget _batchMenu(BuildContext context) {
-    final hasExpense = _s.drafts.any((d) => !d.isIncome);
-    final hasIncome = _s.drafts.any((d) => d.isIncome);
+  /// Seyrek kullanılan işlemler tek taşma menüsünde: eylem satırına dördüncü
+  /// bir simge daha sığmıyor (dar telefonda taşıyordu).
+  Widget _overflowMenu(BuildContext context) {
+    final visibleCount = _visible.length;
     return PopupMenuButton<void>(
-      tooltip: context.l10n.bankImportBatchTypeLabel,
-      icon: const Icon(Icons.playlist_add_rounded, size: 20),
+      tooltip: context.l10n.bankImportMoreActions,
+      icon: const Icon(Icons.more_vert_rounded, size: 20),
       itemBuilder: (ctx) => [
-        PopupMenuItem(
+        if (visibleCount > 0)
+          _menuItem(
+            icon: Icons.label_outline_rounded,
+            label: context.l10n.bankImportAssignVisible(visibleCount),
+            onTap: _assignCategoryToVisible,
+          ),
+        _menuItem(
+          icon: Icons.view_agenda_outlined,
+          label: context.l10n.bankImportStepperMode,
+          onTap: () => setState(() {
+            _stepper = true;
+            _step = 0;
+          }),
+        ),
+        if (widget.fullscreen)
+          _menuItem(
+            icon: Icons.info_outline_rounded,
+            label: context.l10n.bankImportSummarySheet,
+            onTap: () => _showSummarySheet(context),
+          ),
+        _menuItem(
+          icon: Icons.trending_down_rounded,
+          label:
+              '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllExpense}',
           onTap: () => _cubit.setAllType(TransactionTypeModel.expense),
-          child: Row(children: [
-            const Icon(Icons.trending_down_rounded, size: 18),
-            const SizedBox(width: 8),
-            Text(
-                '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllExpense}'),
-          ]),
         ),
-        PopupMenuItem(
+        _menuItem(
+          icon: Icons.trending_up_rounded,
+          label:
+              '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllIncome}',
           onTap: () => _cubit.setAllType(TransactionTypeModel.income),
-          child: Row(children: [
-            const Icon(Icons.trending_up_rounded, size: 18),
-            const SizedBox(width: 8),
-            Text(
-                '${context.l10n.bankImportBatchTypeLabel} ${context.l10n.bankImportSetAllIncome}'),
-          ]),
         ),
-        if (hasExpense && _s.expenseCategories.isNotEmpty)
-          PopupMenuItem(
-            onTap: () => _pickBatchCategory(context, forExpense: true),
-            child: Text(context.l10n.bankImportDefaultExpenseCat),
-          ),
-        if (hasIncome && _s.incomeCategories.isNotEmpty)
-          PopupMenuItem(
-            onTap: () => _pickBatchCategory(context, forExpense: false),
-            child: Text(context.l10n.bankImportDefaultIncomeCat),
-          ),
       ],
     );
   }
 
-  Future<void> _pickBatchCategory(BuildContext context,
-      {required bool forExpense}) async {
-    final cats = _catsFor(!forExpense);
-    final picked = await showModalBottomSheet<String>(
+  /// Menü satırı. Etiket `Flexible`: çeviriler ve "{n} satır" gibi değişken
+  /// parçalar menü genişliğini taşırabiliyor (ölçüldü), taşma yerine sarsın.
+  PopupMenuItem<void> _menuItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return PopupMenuItem<void>(
+      onTap: onTap,
+      child: Row(children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 8),
+        Flexible(child: Text(label)),
+      ]),
+    );
+  }
+
+  // -------------------------------------------------------- Category picking
+
+  /// Kategori seçim sayfasını açar; iptalde `null`.
+  ///
+  /// Sayfanın içinden YENİ kategori de kurulabilir: ekstredeki bir harcama
+  /// mevcut kategorilerin hiçbirine uymadığında akıştan çıkıp ayarlara gitmek
+  /// gerekmemeli (öneri adımı yalnız BİLİNEN grupları önerir, kullanıcının
+  /// kendi kategorisini değil).
+  Future<_PickedCategory?> _pickCategory(
+    BuildContext context, {
+    required bool allowTypeSwitch,
+    required bool initialIsExpense,
+    String? currentId,
+  }) {
+    return showModalBottomSheet<_PickedCategory>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            for (final c in cats)
-              ListTile(
-                title: Text(context.categoryLabel(c)),
-                onTap: () => Navigator.pop(ctx, c.id),
-              ),
-          ],
-        ),
+      isScrollControlled: true,
+      builder: (ctx) => _CategoryPickerSheet(
+        expenseCategories: _s.expenseCategories,
+        incomeCategories: _s.incomeCategories,
+        allowTypeSwitch: allowTypeSwitch,
+        initialIsExpense: initialIsExpense,
+        currentId: currentId,
+        onCreated: _cubit.registerCreatedCategory,
       ),
     );
-    if (picked != null) {
-      _cubit.applyBatchCategory(forExpense: forExpense, categoryId: picked);
-    }
+  }
+
+  Future<void> _pickCategoryForRow(
+      BuildContext context, int i, ImportDraft d) async {
+    final picked = await _pickCategory(
+      context,
+      allowTypeSwitch: false,
+      initialIsExpense: !d.isIncome,
+      currentId: d.categoryId,
+    );
+    if (picked != null) _cubit.setDraftCategory(i, picked.id);
+  }
+
+  /// Görünen (arama + filtre sonucu) satırlara toplu kategori uygular.
+  ///
+  /// Kapsamı kullanıcının kurduğu süzgeç belirler: "kategorisiz" + "MIGROS"
+  /// → yalnız o satırlar. Kategori kendi türündeki satırlara uygulanır; karışık
+  /// listede seçilmeyen tür olduğu gibi kalır.
+  ///
+  /// `context` bilerek parametre DEĞİL: seçim sayfası beklenirken sayfa
+  /// kapanmış olabilir, `mounted` ancak State'in kendi context'ini korur.
+  Future<void> _assignCategoryToVisible() async {
+    final rows = _visible;
+    if (rows.isEmpty) return;
+    final hasExpense = rows.any((r) => !r.$2.isIncome);
+    final hasIncome = rows.any((r) => r.$2.isIncome);
+
+    final picked = await _pickCategory(
+      context,
+      allowTypeSwitch: hasExpense && hasIncome,
+      initialIsExpense: hasExpense,
+    );
+    if (picked == null || !mounted) return;
+
+    final targets = [
+      for (final (index, draft) in rows)
+        if (draft.isIncome != picked.isExpense) index,
+    ];
+    if (targets.isEmpty) return;
+    _cubit.applyCategoryToIndexes(targets, picked.id);
+
+    final label = _categoryById(_catsFor(!picked.isExpense), picked.id);
+    AppMessenger.success(context.l10n.bankImportAssignVisibleDone(
+      targets.length,
+      label == null ? picked.id : context.categoryLabel(label),
+    ));
   }
 
   // --------------------------------------------------------------------- Row
@@ -586,14 +727,22 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                               fontSize: 12, color: cs.onSurfaceVariant)),
                       if (d.isDuplicate) ...[
                         const SizedBox(width: 8),
-                        _chip(
-                            context,
-                            Icons.copy_all_rounded,
-                            context.l10n.bankImportDuplicate,
-                            AppGradients.debt),
+                        // Rozet de esner: tarih + rozet + kategori + tür
+                        // simgesi dar telefonda satırı taşırıyordu (ölçüldü).
+                        Flexible(
+                          child: _chip(
+                              context,
+                              Icons.copy_all_rounded,
+                              context.l10n.bankImportDuplicate,
+                              AppGradients.debt),
+                        ),
                       ],
-                      const Spacer(),
-                      _categoryDropdown(context, i, d),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: _categoryControl(context, i, d),
+                        ),
+                      ),
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
@@ -624,43 +773,117 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
   }
 
-  Widget _categoryDropdown(BuildContext context, int i, ImportDraft d) {
-    final cats = _catsFor(d.isIncome);
-    if (cats.isEmpty) return const SizedBox.shrink();
-    final value = cats.any((c) => c.id == d.categoryId) ? d.categoryId : null;
+  /// Satırın kategori düğmesi. Açılır liste (Dropdown) yerine sayfa açar:
+  /// listeye "yeni kategori" girişi eklenebilsin ve 20+ kategori dar satırda
+  /// okunabilsin diye.
+  ///
+  /// Tahmin edilemeyen taslaklar `categoryId: null` gelir (bkz. cubit); boş
+  /// görünmek yerine kırmızı bir "Kategori seç" çağrısı basılır — kategorisiz
+  /// satır zaten eklenemez.
+  Widget _categoryControl(BuildContext context, int i, ImportDraft d) {
     final cs = Theme.of(context).colorScheme;
-    return DropdownButton<String>(
-      value: value,
-      isDense: true,
-      underline: const SizedBox.shrink(),
-      borderRadius: BorderRadius.circular(12),
-      style: Theme.of(context).textTheme.bodySmall,
-      // Tahmin edilemeyen taslaklar `categoryId: null` gelir (bkz. cubit);
-      // boş dropdown yerine açık bir "seç" ipucu göster, aksi halde satır
-      // kategorisi varmış gibi yanlışlıkla boş görünür.
-      hint: Text(
-        context.l10n.bankImportPickCategoryHint,
-        style: TextStyle(color: cs.error, fontSize: 12),
+    final cat = _categoryById(_catsFor(d.isIncome), d.categoryId);
+    final missing = cat == null;
+    return InkWell(
+      onTap: () => _pickCategoryForRow(context, i, d),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              missing
+                  ? Icons.error_outline_rounded
+                  : AppIcons.getIconData(cat.iconName),
+              size: 14,
+              color: missing ? cs.error : cs.onSurfaceVariant,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                missing
+                    ? context.l10n.bankImportPickCategoryHint
+                    : context.categoryLabel(cat),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: missing ? cs.error : cs.onSurface,
+                  fontWeight: missing ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_drop_down_rounded,
+                size: 16, color: cs.onSurfaceVariant),
+          ],
+        ),
       ),
-      items: [
-        for (final c in cats)
-          DropdownMenuItem(value: c.id, child: Text(context.categoryLabel(c))),
-      ],
-      onChanged: (v) => v == null ? null : _cubit.setDraftCategory(i, v),
     );
   }
 
   Widget _bottomBar(BuildContext context) {
+    final blocked = _s.selectedUncategorizedCount;
     return SafeArea(
-      minimum: const EdgeInsets.all(12),
-      child: SizedBox(
-        width: double.infinity,
-        child: FilledButton.icon(
-          onPressed: _s.selectedCount == 0 ? null : () => _cubit.commit(),
-          icon: const Icon(Icons.playlist_add_check_rounded),
-          label: Text(context.l10n.bankImportAdd(_s.selectedCount)),
-          style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16)),
+      minimum: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (blocked > 0) _uncategorizedBanner(context, blocked),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _s.canCommit ? () => _cubit.commit() : null,
+              icon: const Icon(Icons.playlist_add_check_rounded),
+              label: Text(context.l10n.bankImportAdd(_s.selectedCount)),
+              style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Seçili ama kategorisiz satır varsa ekleme kapalıdır: kategorisiz hareket
+  /// deftere boş etiketle yazılır ve bütçe/raporda hiçbir kategoriye sayılmaz
+  /// (elle girişte de kategori zorunlu). Şerit doğrudan o satırlara götürür.
+  Widget _uncategorizedBanner(BuildContext context, int count) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => setState(() {
+          _stepper = false;
+          _filter = _ReviewFilter.uncategorized;
+        }),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: cs.error.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 16, color: cs.error),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.bankImportUncategorizedBlocked(count),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.bankImportShowUncategorized,
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w800, color: cs.error),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -683,6 +906,15 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             children: [
               Text('${_step + 1} / $total'),
               const Spacer(),
+              // Tam ekranda AppBar yok: kipten çıkış burada da bulunmalı,
+              // yoksa stepper'a geçen kullanıcı için tek yol geri hareketi
+              // kalıyor.
+              if (widget.fullscreen)
+                IconButton(
+                  tooltip: context.l10n.bankImportExitFullscreen,
+                  icon: const Icon(Icons.fullscreen_exit_rounded, size: 20),
+                  onPressed: widget.onToggleFullscreen,
+                ),
               TextButton.icon(
                 onPressed: () => setState(() => _stepper = false),
                 icon: const Icon(Icons.list_rounded, size: 18),
@@ -750,7 +982,21 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _categoryDropdown(context, _step, d),
+                  // Dokunma kolu [_categoryControl]'ün kendisinde; burada
+                  // yalnız daha görünür bir çerçeveye alınıyor (iç içe iki
+                  // tıklama alanı kurulmaz).
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      child: _categoryControl(context, _step, d),
+                    ),
+                  ),
                   if (d.isDuplicate) ...[
                     const SizedBox(height: 8),
                     Text(context.l10n.bankImportDuplicate,
@@ -776,7 +1022,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      onPressed: () => _stepDecide(true),
+                      // Kategorisiz satır eklenemez (bkz. [_uncategorizedBanner]).
+                      onPressed:
+                          d.categoryId == null ? null : () => _stepDecide(true),
                       child: Text(context.l10n.bankImportStepAdd),
                     ),
                   ),
@@ -787,7 +1035,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: () => _cubit.commit(),
+                      onPressed: _finish,
                       child: Text(context.l10n.bankImportStepAddRest),
                     ),
                   ),
@@ -809,10 +1057,29 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   void _stepDecide(bool add) {
     _cubit.setDraftSelected(_step, add);
     if (_step >= _s.drafts.length - 1) {
-      _cubit.commit();
+      _finish();
     } else {
       setState(() => _step++);
     }
+  }
+
+  /// Toplu yazımı başlatır. Seçililer arasında kategorisiz satır kalmışsa
+  /// (stepper yalnız gezilen satırları etkiler) yazmaz; listeye dönüp o
+  /// satırları gösterir.
+  ///
+  /// Durum cubit'ten TAZE okunur: `widget.state` bu karede hâlâ mutasyon
+  /// öncesini taşıyor olabilir.
+  void _finish() {
+    final s = _cubit.state;
+    if (s is BankImportReview && !s.canCommit && s.selectedCount > 0) {
+      setState(() {
+        _stepper = false;
+        _filter = _ReviewFilter.uncategorized;
+      });
+      AppMessenger.warning(context.l10n.bankImportStepNeedsCategory);
+      return;
+    }
+    _cubit.commit();
   }
 
   Future<void> _editDescriptionDialog(
@@ -887,4 +1154,153 @@ class _Warning {
   final String message;
   final Color color;
   const _Warning(this.icon, this.message, this.color);
+}
+
+/// Kategori seçim sayfası: satır bazında ve toplu atamada ortak yol.
+///
+/// Yeni kategori buradan kurulabilir; oluşturulan kategori hem deftere yazılır
+/// (`showCategoryForm`) hem de [onCreated] ile akışa tanıtılır, ardından sayfa
+/// doğrudan o kategoriyle kapanır — kullanıcı yarattığı kategoriyi bir de
+/// listeden aramak zorunda kalmasın.
+class _CategoryPickerSheet extends StatefulWidget {
+  final List<CategoryEntity> expenseCategories;
+  final List<CategoryEntity> incomeCategories;
+
+  /// Toplu atamada görünen satırlar karışık türdeyse tür seçimi gösterilir.
+  final bool allowTypeSwitch;
+  final bool initialIsExpense;
+  final String? currentId;
+  final ValueChanged<CategoryEntity> onCreated;
+
+  const _CategoryPickerSheet({
+    required this.expenseCategories,
+    required this.incomeCategories,
+    required this.allowTypeSwitch,
+    required this.initialIsExpense,
+    required this.onCreated,
+    this.currentId,
+  });
+
+  @override
+  State<_CategoryPickerSheet> createState() => _CategoryPickerSheetState();
+}
+
+class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
+  late bool _isExpense = widget.initialIsExpense;
+
+  List<CategoryEntity> get _cats =>
+      _isExpense ? widget.expenseCategories : widget.incomeCategories;
+
+  Future<void> _create() async {
+    final created = await showCategoryForm(
+      context: context,
+      isExpense: _isExpense,
+    );
+    if (created == null) return;
+    widget.onCreated(created);
+    if (mounted) {
+      Navigator.pop(
+        context,
+        (id: created.id, isExpense: created.isExpense),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final accent = _isExpense ? AppGradients.debt : AppGradients.savings;
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.bankImportPickCategoryHint,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            if (widget.allowTypeSwitch)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      label: Text(context.l10n.detailLabelGider),
+                      selected: _isExpense,
+                      onSelected: (_) => setState(() => _isExpense = true),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Text(context.l10n.detailLabelGelir),
+                      selected: !_isExpense,
+                      onSelected: (_) => setState(() => _isExpense = false),
+                    ),
+                  ],
+                ),
+              ),
+            ListTile(
+              leading: CircleAvatar(
+                radius: 16,
+                backgroundColor: accent.withValues(alpha: 0.14),
+                child: Icon(Icons.add_rounded, size: 18, color: accent),
+              ),
+              title: Text(
+                context.l10n.yeniKategori,
+                style: TextStyle(fontWeight: FontWeight.w700, color: accent),
+              ),
+              onTap: _create,
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 8),
+                itemCount: _cats.length,
+                itemBuilder: (context, i) {
+                  final c = _cats[i];
+                  final selected = c.id == widget.currentId;
+                  return ListTile(
+                    leading: Icon(AppIcons.getIconData(c.iconName),
+                        color: selected ? accent : cs.onSurfaceVariant),
+                    title: Text(
+                      context.categoryLabel(c),
+                      style: TextStyle(
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w400,
+                        color: selected ? accent : null,
+                      ),
+                    ),
+                    trailing: selected
+                        ? Icon(Icons.check_rounded, size: 18, color: accent)
+                        : null,
+                    onTap: () => Navigator.pop(
+                      context,
+                      (id: c.id, isExpense: c.isExpense),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

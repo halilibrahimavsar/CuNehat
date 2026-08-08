@@ -108,10 +108,30 @@ class BankImportReview extends BankImportState {
   int get uncategorizedCount =>
       drafts.where((d) => d.categoryId == null).length;
 
-  BankImportReview copyWith({List<ImportDraft>? drafts}) => BankImportReview(
+  /// İÇE AKTARILACAK (seçili) ama kategorisi olmayan taslak sayısı.
+  ///
+  /// Kategori elle girişte zorunludur; kategorisiz bir hareket deftere boş
+  /// `tag` ile yazılır ve bütçe/rapor hiçbir kategoriye saymaz — yani sessizce
+  /// kaybolur. Bu yüzden [canCommit] bunu bir kapı olarak kullanır: sayı sıfır
+  /// olmadan ekleme yapılmaz.
+  int get selectedUncategorizedCount =>
+      drafts.where((d) => d.selected && d.categoryId == null).length;
+
+  /// Toplu ekleme yapılabilir mi: en az bir seçim var ve seçililerin hepsi
+  /// kategorili.
+  bool get canCommit => selectedCount > 0 && selectedUncategorizedCount == 0;
+
+  /// [expenseCategories]/[incomeCategories] yalnız inceleme sırasında yeni bir
+  /// kategori oluşturulduğunda değişir (bkz. `BankImportCubit`).
+  BankImportReview copyWith({
+    List<ImportDraft>? drafts,
+    List<CategoryEntity>? expenseCategories,
+    List<CategoryEntity>? incomeCategories,
+  }) =>
+      BankImportReview(
         drafts: drafts ?? this.drafts,
-        expenseCategories: expenseCategories,
-        incomeCategories: incomeCategories,
+        expenseCategories: expenseCategories ?? this.expenseCategories,
+        incomeCategories: incomeCategories ?? this.incomeCategories,
         skippedRows: skippedRows,
         reconciliation: reconciliation,
         verification: verification,
