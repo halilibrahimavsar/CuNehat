@@ -118,8 +118,17 @@ a Community License or a commercial license."*
 Tek geliştirici + yıllık 1M USD altı ciro ile hak kazanıyorsun, ama **almalısın**:
 <https://www.syncfusion.com/products/communitylicense>
 
-Kayıt sonrası kodda anahtar tanımlaman **gerekmiyor** (v18.3+ için geçerli değil).
-Yapılacak tek şey lisansı hesabına tanımlatmak.
+**Kodda anahtar tanımlaman gerekmiyor — doğrulandı (2026-08-10).**
+`syncfusion_flutter_pdf` 29.2.11 ve `syncfusion_flutter_core` 31.1.19
+paketlerinin `lib/` ağacında `registerLicense`, `SyncfusionLicense` veya
+`licenseKey` diye bir sembol **yok** (grep sıfır sonuç). pub.dev paketinde
+lisans doğrulama mekanizması bulunmuyor; şart tamamen hukuki.
+
+> **Başvuru sonrası gelen e-postadaki 7 günlük anahtar seni ilgilendirmiyor.**
+> O anahtar **Essential Studio installer**'ı (Windows/Mac/Linux masaüstü
+> kurulumu) içindir. Sen paketi pub.dev'den alıyorsun, o kurulumu hiç
+> indirmeyeceksin. Yapılacak tek şey topluluk lisansı onayının gelmesi.
+> Anahtarı **repoya koyma** — hem gereksiz hem repo public.
 
 ---
 
@@ -174,9 +183,34 @@ Drive yedeği `drive.appdata` kapsamını kullanıyor (hassas kapsam).
    `https://www.googleapis.com/auth/drive.appdata` ekle. Başka kapsam ekleme.
 5. **Test users** → kendi Google hesabını ekle (yayın öncesi test için şart)
 
-> `drive.appdata` "restricted" değil "sensitive" kapsamdır; ağır güvenlik
-> denetimi gerekmez. "Unverified app" uyarısını kaldırmak istersen doğrulama
-> gönderebilirsin, ama test aşaması için gerekmiyor.
+> **DÜZELTME (2026-08-10):** Bu rehber önce `drive.appdata`'yı "sensitive"
+> diye yazıyordu — **yanlış.** Google'ın Drive API kapsam tablosunda
+> `drive.appdata` **non-sensitive** ve "recommended" listesinde. Ne sensitive
+> ne restricted doğrulaması gerekiyor; CASA güvenlik denetimi hiç gündeme
+> gelmiyor. Uygulama başka kapsam istemiyor (`google_drive_backup_service.dart:38`,
+> tek kapsam), `google_sign_in`'in eklediği `email`/`profile` de non-sensitive.
+
+### "OAuth user cap — N users / 100 user cap" ne demek?
+
+Consent screen sayfasında bu sayaç **her projede** görünür, korkutucu ama
+seni bağlamıyor. Console'un kendi tanımı: cap, *"unapproved **sensitive or
+restricted** scopes"* isteyen uygulamalardaki izin veren kullanıcı sayısını
+sınırlar. CuNehat hiç sensitive/restricted kapsam istemiyor → sınırlayacak
+bir şey yok. Sayaç yine artar, sadece bir sayaçtır.
+
+> **Yine de gözünle doğrula:** Consent screen → **Scopes** sayfasında
+> kapsamlar üç tabloya ayrılır (Non-sensitive / Sensitive / Restricted).
+> `drive.appdata`'nın hangi tabloda durduğuna bak. Console'un seçicisi
+> zaman zaman dokümantasyondan farklı grupluyor; **Sensitive** tablosundaysa
+> 100 sınırı gerçekten işler ve doğrulama başvurusu gerekir.
+
+### "Publish" durumu — Testing'de bırakma
+
+Consent screen'i **Published** (In production) yap. `Testing` durumunda
+kalırsan iki şey olur: yalnız listelediğin test kullanıcıları giriş yapabilir,
+**ve refresh token'lar 7 günde bir geçersizleşir** — yani kullanıcının Drive
+yedeği her hafta kopar. Bu sessiz bir arıza; ancak kullanıcı şikâyet edince
+fark edilir.
 
 ---
 
