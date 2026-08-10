@@ -342,8 +342,27 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 3. Play App Signing'i **etkin bırak** (varsayılan)
 4. Yükleme bittikten sonra: **Test ve yayınlama → Kurulum → Uygulama imzalama**
    sayfasını aç. Burada **App signing key certificate** altında bir SHA-1 var.
-5. Bu SHA-1'i **Adım 5'teki Android OAuth istemcisine ikinci parmak izi olarak
-   ekle** (Cloud Console → Credentials → istemciyi düzenle → SHA-1 ekle).
+5. Bu SHA-1'i Cloud Console'a **aynı paket adıyla** kaydet:
+   `dev.halilibrahim.cunehat`.
+
+   > Cloud Console'da bir Android OAuth istemcisinin **tek bir SHA-1 alanı**
+   > vardır. İstemciyi düzenleyip ikinci parmak izi ekleyemiyorsan bu normal —
+   > o zaman **yeni bir Android OAuth istemcisi** oluştur, paket adı aynı,
+   > SHA-1 farklı. Google'ın kuralı: *paket adı + SHA-1 çifti* tüm Google
+   > Cloud ve Firebase projelerinde benzersiz olmalı; aynı paketin birden çok
+   > sertifikası için birden çok istemci normaldir.
+
+**Bu uygulamanın üç sertifikası olacak:**
+
+| Ne için | SHA-1 | Durum |
+|---|---|---|
+| Debug — kendi cihazında `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | Geliştirme sırasında gerekir |
+| Upload — yerel release derlemesi | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | Kayıtlı olmalı |
+| **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra Console'dan alınır* | **Bu adımda eklenir** |
+
+Üçü de kayıtlı değilse Drive girişi o imzayla çalışan senaryoda sessizce
+başarısız olur. En sık kaçırılan üçüncüsüdür, çünkü ancak gerçek kullanıcıda
+görünür.
 
 > **Bu adım atlanırsa ne olur:** Kendi cihazında `flutter run --release` ile
 > Drive girişi çalışır (upload anahtarıyla imzalı), ama **Play'den indiren
