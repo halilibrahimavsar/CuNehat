@@ -179,8 +179,15 @@ Drive yedeği `drive.appdata` kapsamını kullanıyor (hassas kapsam).
    - App name: `CuNehat`
    - User support email + Developer contact: kendi e-postan
    - App domain → **Privacy policy link**: Adım 3'teki URL
-4. **Scopes** → Add or remove scopes → yalnız
+4. **Scopes** (yeni arayüzde **Data Access**) → Add or remove scopes → yalnız
    `https://www.googleapis.com/auth/drive.appdata` ekle. Başka kapsam ekleme.
+   **Save'e basmayı unutma** — basılmazsa üç tablo da "No rows to display"
+   kalır ve kapsam beyan edilmemiş olur. (2026-08-10'da tam olarak bu oldu.)
+   - Kapsam **seçicide görünmüyorsa Drive API enable edilmemiştir** (2. adım);
+     seçici yalnız açık API'lerin kapsamlarını listeler.
+   - Ekledikten sonra **hangi tabloya düştüğüne bak.** Beklenen:
+     *Your non-sensitive scopes*. Sensitive'e düşerse Console dokümantasyondan
+     farklı sınıflandırıyor demektir → user cap ve doğrulama konusu açılır.
 5. **Test users** → kendi Google hesabını ekle (yayın öncesi test için şart)
 
 > **DÜZELTME (2026-08-10):** Bu rehber önce `drive.appdata`'yı "sensitive"
