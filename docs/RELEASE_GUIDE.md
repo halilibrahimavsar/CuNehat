@@ -358,11 +358,11 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 
 **Bu uygulamanın üç sertifikası var — her biri ayrı istemci:**
 
-| Ne için | SHA-1 | Durum (2026-08-10) |
+| Ne için | SHA-1 | İstemci / durum (2026-08-10) |
 |---|---|---|
-| Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ Kayıtlı ("Android client 1", 30 Tem 2026) |
-| Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ❌ Kayıtlı değil |
-| **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra alınır* | ❌ Henüz alınamaz |
+| Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ "Android client 1" (30 Tem 2026) |
+| Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ✅ "CuNehat upload key" (10 Ağu 2026) |
+| **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra alınır* | ⬜ Adım 9'da eklenecek |
 
 **Hangisi ne zaman ısırır:**
 
