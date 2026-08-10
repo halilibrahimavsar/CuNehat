@@ -345,24 +345,36 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 5. Bu SHA-1'i Cloud Console'a **aynı paket adıyla** kaydet:
    `dev.halilibrahim.cunehat`.
 
-   > Cloud Console'da bir Android OAuth istemcisinin **tek bir SHA-1 alanı**
-   > vardır. İstemciyi düzenleyip ikinci parmak izi ekleyemiyorsan bu normal —
-   > o zaman **yeni bir Android OAuth istemcisi** oluştur, paket adı aynı,
-   > SHA-1 farklı. Google'ın kuralı: *paket adı + SHA-1 çifti* tüm Google
-   > Cloud ve Firebase projelerinde benzersiz olmalı; aynı paketin birden çok
-   > sertifikası için birden çok istemci normaldir.
+   > **Ölçüldü (2026-08-10):** Cloud Console'da Android istemcisinin
+   > **tek bir SHA-1 alanı** var — `SHA-1 certificate fingerprint *`, tek
+   > metin kutusu. İkinci parmak izi eklenemiyor. Her sertifika için **ayrı
+   > Android OAuth istemcisi** açacaksın: paket adı aynı, SHA-1 farklı.
+   > Google'ın kuralı *paket adı + SHA-1 çiftinin* tüm Cloud/Firebase
+   > projelerinde benzersiz olması; aynı paketin birden çok istemcisi normal.
 
-**Bu uygulamanın üç sertifikası olacak:**
+   Parmak izini Play Console'da bulacağın yer (Cloud Console'un kendi ipucu):
+   **Protected with Play → Play Store protection → Manage Play app signing**.
+   Eski arayüzdeki karşılığı: Test ve yayınlama → Kurulum → Uygulama imzalama.
 
-| Ne için | SHA-1 | Durum |
+**Bu uygulamanın üç sertifikası var — her biri ayrı istemci:**
+
+| Ne için | SHA-1 | Durum (2026-08-10) |
 |---|---|---|
-| Debug — kendi cihazında `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | Geliştirme sırasında gerekir |
-| Upload — yerel release derlemesi | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | Kayıtlı olmalı |
-| **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra Console'dan alınır* | **Bu adımda eklenir** |
+| Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ Kayıtlı ("Android client 1", 30 Tem 2026) |
+| Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ❌ Kayıtlı değil |
+| **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra alınır* | ❌ Henüz alınamaz |
 
-Üçü de kayıtlı değilse Drive girişi o imzayla çalışan senaryoda sessizce
-başarısız olur. En sık kaçırılan üçüncüsüdür, çünkü ancak gerçek kullanıcıda
-görünür.
+**Hangisi ne zaman ısırır:**
+
+- **Debug yoksa:** geliştirirken Drive girişi çalışmaz. (Kayıtlı, sorun yok.)
+- **Upload yoksa:** yerel `--release` APK'sını cihaza yandan yüklediğinde
+  Drive çalışmaz. R8 altında Drive'ı Play'i beklemeden denemek istiyorsan
+  bunu ekle.
+- **Play yoksa:** *mağazadan indiren herkeste* Drive çalışmaz — sende
+  çalıştığı için fark edilmez. **En kritik ve en sık kaçırılan bu.**
+
+> Yan not: Console uyarıyor — 6 ay kullanılmayan OAuth istemcileri silinmeye
+> aday. Üç istemci de aktif kalacağı için pratikte konu değil.
 
 > **Bu adım atlanırsa ne olur:** Kendi cihazında `flutter run --release` ile
 > Drive girişi çalışır (upload anahtarıyla imzalı), ama **Play'den indiren
