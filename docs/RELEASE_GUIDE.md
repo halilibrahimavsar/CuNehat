@@ -100,6 +100,32 @@ keytool -printcert -file "$T"/META-INF/*.RSA | grep -E "Owner|Sahibi"; rm -rf "$
 
 `CN=Android Debug` görüyorsan **yüklenemez** — `key.properties` eksik demektir.
 
+> **APK'da bu komut çalışmaz.** minSdk 24+ olduğu için v1 (JAR) imzalama
+> kapalı; APK'da `META-INF/*.RSA` yok, yalnız v2/v3 imza blokları var.
+> APK için `apksigner` kullan:
+>
+> ```bash
+> ~/Android/Sdk/build-tools/36.0.0/apksigner verify --print-certs \
+>   build/app/outputs/flutter-apk/app-release.apk
+> ```
+>
+> Beklenen: `Signer #1 certificate SHA-1 digest: c6756e5547e50abf672cbd8ef014c5d722b058eb`
+
+### Yandan yüklenebilir APK (Drive'ı R8 altında erken denemek için)
+
+AAB Play'e gider; cihaza elle kurmak için APK gerekir. Upload anahtarının
+SHA-1'i Cloud Console'a kayıtlı olduğu için bu APK'da **Drive girişi de
+çalışır** — yani obfuscation'ın Google Sign-In/Drive'ı bozup bozmadığını
+Play turunu beklemeden görürsün.
+
+```bash
+flutter build apk --release --split-per-abi
+# build/app/outputs/flutter-apk/app-arm64-v8a-release.apk  (~42 MB)
+```
+
+`--split-per-abi` olmadan tek "fat" APK üretilir (~108 MB, tüm ABI'ler).
+Telefona atmak için arm64 sürümü yeter.
+
 > **AAB boyutu 87 MB görünecek, panik yok.** Bunun ~37 MB'ı
 > `BUNDLE-METADATA` (proguard.map + native debug sembolleri): Play bunları
 > çökme çözümlemesi için saklar, **cihaza göndermez.** Kalanı ABI'ye bölünür.
