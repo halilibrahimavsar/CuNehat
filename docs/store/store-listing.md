@@ -10,21 +10,89 @@ sınırlardır; aşarsan form kaydetmez.
 
 ---
 
+## ASO stratejisi — neden metinler böyle yazıldı
+
+Play üç alanı da anahtar kelime için indeksler ama **ağırlıkları eşit değil:**
+başlık > kısa açıklama > uzun açıklama. 2024–2026 arasında algoritma ayrıca
+kurulum *öncesi* sinyallerden (anahtar kelime, ham indirme) kurulum *sonrası*
+sinyallere (tutunma, listeden kuruluma dönüşüm) kaydı — yani metin seni arama
+sonucuna sokar, **elde tutan şey ürün.**
+
+**Bu listelemedeki en büyük tek kayıp başlıktı.** Play Console'un uygulama adı
+alanı 30 karakter ve "CuNehat" bunun 7'sini kullanıp **sıfır arama hacmi**
+getiriyor: kimse "CuNehat" aramıyor, çünkü kimse bilmiyor. Türkiye pazarındaki
+rakiplerin tamamı ana terimi başlığa koyuyor — *Gelir Gider Takibi*,
+*GiderimVar - Gelir Gider Bütçe*, *Bütçe Yönetimi Gelir & Gider*,
+*Hızlı Bütçe – Gider Yöneticisi*. Marka adı tek başına başlıkta durduğu sürece
+organik aramadan pay alınamaz.
+
+> **Play Console'daki "Uygulama adı" ≠ telefondaki simge adı.** Mağaza adı
+> indekslenen alandır; ana ekranda görünen isim `AndroidManifest.xml`'deki
+> `android:label` (= `CuNehat`) ve **öyle kalmalı.** İkisinin farklı olması
+> normaldir, kod değişikliği gerektirmez.
+
+**Alan başına anahtar kelime paylaşımı** (aynı kelimeyi iki alanda tekrarlamak
+israf; her alan yeni terim taşımalı):
+
+| Alan | Taşıdığı terimler |
+|---|---|
+| Başlık | gelir, gider, takip |
+| Kısa açıklama | bütçe, harcama, borç, banka ekstresi |
+| Uzun açıklama | cüzdan, kredi kartı, fiş, OCR, yatırım, döviz, altın, taksit, rapor, yedek |
+
+**Ana terimi kazan, farkı ekran görüntüsünde göster.** Bu kategoride onlarca
+klon var; CuNehat'i ayıran şey **banka ekstresi okuma** (PDF/CSV/Excel + taranmış
+PDF için cihaz içi OCR) — Türkiye pazarında neredeyse hiçbir rakipte yok. Ama
+"ekstre" arama hacmi "gelir gider"in yanında küçük. Doğru kurgu: **aramaya ana
+terimle gir, dönüşümü farkla al.**
+
+---
+
 ## Türkçe (tr-TR — varsayılan dil)
+
+### Uygulama adı (sınır 30) — **en ağır alan**
+
+```
+CuNehat: Gelir Gider Takibi
+```
+
+*27 karakter.* Marka + ana terim. "Gelir gider" bu kategorinin baş terimi;
+"takibi" ifadeyi doğal bitiriyor.
+
+> **Değerlendirilip elenen alternatif:** `CuNehat: Gelir Gider Bütçe` (26) bir
+> baş terim daha taşıyor ama arama sonucunda anahtar kelime yığını gibi okunuyor.
+> Dönüşüm artık sıralamada anahtar kelimeden ağır bastığı için okunabilirlik
+> seçildi. İlk kurulumlar geldikten sonra Play Console'un **listeleme deneyleri**
+> (ücretsiz A/B) ile ikisini karşılaştır — o zaman tahmin değil ölçüm olur.
 
 ### Kısa açıklama (sınır 80)
 
 ```
-Reklamsız kişisel finans: cüzdan, bütçe, borç takibi. Verin cihazında kalır.
+Bütçe, harcama, borç takibi; banka ekstresi okur. Verileriniz cihazınızda.
 ```
 
-*76 karakter.*
+*74 karakter.* Başlıkta olmayan dört terimi taşıyor: bütçe, harcama, borç,
+banka ekstresi. Sonundaki gizlilik ifadesi dönüşüm için duruyor.
+
+> **Önceki metin:** `Reklamsız kişisel finans: cüzdan, bütçe, borç takibi. Verin
+> cihazında kalır.` (76) — mağazanın **ikinci en ağır** alanının ilk kelimesini
+> "Reklamsız"a veriyordu. "Reklamsız" bir satış argümanı ama arama terimi değil;
+> baş terimler ("harcama", "gelir gider") hiç geçmiyordu. Reklamsızlık artık
+> uzun açıklamanın 3. satırında, yeri orası.
 
 ### Uzun açıklama (sınır 4000)
 
+> **Açılıştaki ilk ~170 karakter kritik:** Play listelemede metni orada kesip
+> "Devamını oku" koyuyor. Kesilmeden önce görünen kısım hem baş terimleri hem
+> kancayı taşımalı. Önceki açılış — *"CuNehat, paranın nereye gittiğini gerçekten
+> görmek isteyenler için yapılmış bir kişisel finans defteridir."* — güzel bir
+> cümleydi ama içinde tek bir aranan terim yoktu. Aşağıdaki açılış 168 karakter,
+> kesmeden önce bitiyor.
+
 ```
-CuNehat, paranın nereye gittiğini gerçekten görmek isteyenler için yapılmış bir
-kişisel finans defteridir.
+CuNehat; gelir gider takibi, bütçe yönetimi ve borç takibi için yapılmış
+reklamsız bir kişisel finans uygulamasıdır. Banka ekstrenizi okur, veriler
+telefonunuzda kalır.
 
 Reklam yok. Abonelik yok. Hesap açma zorunluluğu yok. Verilerin telefonunda
 kalır ve hiçbir sunucuya gönderilmez.
@@ -100,20 +168,36 @@ hizmeti sunmaz. Yalnızca kendi kayıtlarını tutmana yarayan bir defterdir.
 
 ## English (en-US — ikincil dil, isteğe bağlı)
 
+### App name (limit 30)
+
+```
+CuNehat: Budget & Expenses
+```
+
+*26 karakter.* Aynı mantık: marka + baş terim.
+
+> `CuNehat: Expense & Budget Tracker` doğal olurdu ama **33 karakter** — sınırı
+> aşıyor, Console kaydetmez. "Tracker" kelimesini kısa açıklamaya bırak.
+
 ### Short description (limit 80)
 
 ```
-Ad-free personal finance: wallets, budgets, debt tracking. Data stays private.
+Expense tracker, budgets, debts and bank statement import. Ad-free, private.
 ```
 
-*77 karakter. (İlk taslak "…stays on device." tam 80'di — sınıra yapışık metin,
-Console'da tek bir görünmez boşlukta kaydı reddettirir.)*
+*76 karakter.* Başlıkta olmayan terimleri taşıyor: tracker, debts, bank
+statement import.
+
+> **Önceki metin:** `Ad-free personal finance: wallets, budgets, debt tracking.
+> Data stays private.` (78) — Türkçedeki hatanın aynısı, en ağır ikinci alanı
+> "Ad-free" ile açıyordu. (Not: ilk taslak "…stays on device." tam 80'di —
+> sınıra yapışık metin, Console'da tek bir görünmez boşlukta kaydı reddettirir.)
 
 ### Long description (limit 4000)
 
 ```
-CuNehat is a personal finance ledger for people who actually want to see where
-their money goes.
+CuNehat is an ad-free personal finance app for expense tracking, budgeting and
+debt tracking. It reads your bank statements, and your data stays on your phone.
 
 No ads. No subscriptions. No account required. Your data stays on your phone and
 is never sent to any server.
@@ -218,16 +302,61 @@ No ads, no subscriptions. Your data stays on your device.
 ## Ekran görüntüleri — hâlâ senin üretmen gerekiyor
 
 Play en az 2, en çok 8 telefon ekran görüntüsü istiyor. Cihazda release
-derlemesini açıp çek. Önerilen sıra (ilk 3'ü listeleme kartında görünüyor,
-en güçlüleri başa koy):
+derlemesini açıp çek.
 
-1. **Ana ekran** — dolu cüzdan kartları, bakiyeler görünür
-2. **Rapor grafiği** — kategori dağılımı, renkli ve okunur
-3. **Banka ekstresi içe aktarma** — inceleme ekranı, ayrıştırılmış satırlar
-4. **Bütçe ekranı** — ilerleme çubukları
-5. **Borç/alacak listesi** — taksit planı görünür bir kayıt
-6. **İşlem ekleme** — fiş fotoğrafı eklenmiş hali
+**Metin şeridi olmadan yükleme.** Bağımsız geliştiricilerin en sık yaptığı hata
+ham ekran görüntüsü yüklemek. Arama sonucunda görsel küçücük görünür; içindeki
+arayüz metni okunmaz, kullanıcı ne gördüğünü anlamaz. Her görselin üstüne
+**3–5 kelimelik bir başlık şeridi** koy (uygulamanın kendi renkleriyle, tek
+tip). Okunan şey o şerit; ekran görüntüsü onun kanıtı.
+
+**İlk 3 görsel arama sonucunda görünüyor** — kaydırmadan görülen tek şey onlar.
+Bu yüzden sıralama, "en güzel ekran" değil **"en ikna edici üç iddia"** mantığıyla
+kurulmalı. Farkı en başa koy: ekstre okuma rakiplerde yok, ana ekran ise herkeste
+var.
+
+| # | Ekran | Şerit metni (öneri) |
+|---|---|---|
+| 1 | **Banka ekstresi inceleme** — ayrıştırılmış satırlar | *Ekstreni oku, tek tek girme* |
+| 2 | **Rapor grafiği** — kategori dağılımı | *Paran nereye gidiyor, gör* |
+| 3 | **Ana ekran** — dolu cüzdan kartları | *Tüm hesapların tek ekranda* |
+| 4 | **Bütçe ekranı** — ilerleme çubukları | *Bütçeni aşmadan önce uyarır* |
+| 5 | **Borç/alacak** — taksit planı görünür kayıt | *Kime ne borçlusun, unutma* |
+| 6 | **Fiş fotoğrafı + OCR** | *Fişi çek, tutar kendi dolsun* |
+| 7 | **Yatırım listesi** — döviz/altın | *Döviz ve altın, güncel kurla* |
+| 8 | **Gizlilik/yedek ayarları** | *Reklam yok. Veri telefonunda.* |
 
 > Ekran görüntülerinde **gerçek kişisel verini gösterme.** Temiz bir kurulumda
 > makul görünen örnek veri oluştur; hem mahremiyet hem de daha derli toplu
-> görünüm için.
+> görünüm için. Rakamlar da inandırıcı olsun — 3 işlemlik boş bir liste
+> "kimse kullanmıyor" izlenimi verir.
+
+**Tanıtım videosu (isteğe bağlı, güçlü):** Feature graphic yalnızca YouTube
+tanıtım videosu eklediğinde listelemenin tepesinde görünür — video yoksa çoğu
+yerleşimde hiç gösterilmez. 30 saniyelik bir ekran kaydı bile
+`play-feature-graphic-1024x500.png` varlığını çalışır hale getirir.
+
+---
+
+## Yayın sonrası ASO kaldıraçları (v1'i bloke etmez)
+
+- **Listeleme deneyleri (Store listing experiments).** Play Console'da ücretsiz
+  yerleşik A/B testi: simge, kısa açıklama ve ilk ekran görüntüsü için ayrı ayrı
+  varyant koşturulur. **Trafik gerektirir** — sıfır kurulumla anlamlı sonuç
+  vermez, o yüzden lansmanda değil ilk birkaç yüz kurulumdan sonra aç. İlk
+  denenecek: başlıktaki `Takibi` ↔ `Bütçe` varyantı.
+- **Yorumlar indeksleniyor.** Kullanıcı yorumlarının metni de arama eşleşmesine
+  giriyor. Kapalı testteki 12 kişi production çıkışında yorum bırakabilir;
+  onlardan yorum *istemek* meşru, **ne yazacaklarını söylemek değil** — yönlendirilmiş
+  yorum Play politikasını ihlal eder ve listelemeyi riske atar.
+- **Tutunma = sıralama.** 2024 sonrası algoritma kurulum sonrası sinyallere
+  kaydı; 1./7./30. gün tutunma ham indirme sayısından daha belirleyici. Bu,
+  monetizasyon kararındaki "ölçüt para değil 30 günlük tutunma" ilkesiyle
+  aynı yöne bakıyor — ayrı bir iş değil.
+- **Güncelleme sıklığı bir sinyal.** Terk edilmiş görünen uygulamalar geriliyor.
+  Kapalı test boyunca sürüm atmak sayacı bozmuyor (bkz. RELEASE_GUIDE Adım 11),
+  üstelik bu sinyali besliyor.
+- **Site zaten var, tam kullanılmıyor.** `docs/index.html` şu an yalnız gizlilik
+  politikasına link veriyor. Play bağlantısı + ekran görüntüleri eklenirse
+  markalı arama ("CuNehat") için indekslenen bir dış sinyal olur. Play URL'i
+  ancak yayından sonra oluşacağı için bu iş production çıkışına ertelenmeli.

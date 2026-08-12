@@ -418,6 +418,8 @@ Dahili test bağlantısından **kendi telefonuna Play üzerinden kur** (yandan
 yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 
 - [ ] Açılış, splash, ikon ana ekranda doğru görünüyor
+- [ ] **Edge-to-edge:** hiçbir ekranda içerik durum çubuğunun / gezinme
+      çubuğunun altına girmiyor, hiçbir düğme çubuğun arkasında kalmıyor ⚠️
 - [ ] İlk açılışta gizlilik onam diyaloğu bir kez çıkıyor
 - [ ] Bildirim izni istemi çıkıyor, izin verince test bildirimi geliyor
 - [ ] Biyometrik / PIN kilidi çalışıyor
@@ -433,9 +435,20 @@ yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 - [ ] R8/obfuscation altında çökme yok (özellikle Hive ve bildirimler)
 - [ ] Cihazı yeniden başlat → planlı hatırlatmalar hâlâ geliyor
 
-> ⚠️ işaretli madde başarısızsa: `google_sign_in` 6.x, Google'ın deprecate
+> ⚠️ **Google ile giriş** başarısızsa: `google_sign_in` 6.x, Google'ın deprecate
 > ettiği legacy SDK'yı kullanıyor. Çözüm `google_sign_in` 7.x'e (Credential
 > Manager) geçiş — Production'a çıkmadan çöz.
+
+> ⚠️ **Edge-to-edge neden ayrı bir madde:** `targetSdk = 36` (Android 16) ile
+> edge-to-edge **zorunlu ve devre dışı bırakılamıyor** — uygulama artık durum ve
+> gezinme çubuklarının altına da çiziyor. Kaynak koddan doğrulanamaz, yalnız
+> cihazda görülür. Ölçülen durum (2026-08-10): kodda açık bir
+> `setEnabledSystemUIMode` / `SystemUiOverlayStyle` yapılandırması **yok**;
+> 23 dosyada `SafeArea` var, yani Flutter'ın kendi varsayılanına ve tek tek
+> `SafeArea`'lara güveniliyor. Muhtemelen sorunsuz, ama **kanıtlanmadı.**
+> Kırık çıkarsa çare tek tek `SafeArea` eklemek değil, `MediaQuery.viewPadding`
+> ile alt/üst dolgu vermek; özellikle alt sabit düğme çubukları ve
+> `bottomNavigationBar` risk altında.
 
 R8 kaynaklı bir çökme çıkarsa `android/app/proguard-rules.pro`'ya ilgili
 `-keep` kuralını ekleyip yeniden derle.
