@@ -31,6 +31,16 @@ abstract class TransactionsRepository {
   Future<Either<Failure, void>> updateTransaction(
       TransactionEntity transaction);
 
+  /// [tags]'ten birini taşıyan işlem sayısı — TÜM cüzdanlarda.
+  ///
+  /// Kategori silme akışı "bu kategoride kaç işlem var?" sorusunu buradan
+  /// sorar; kategoriler cüzdana bağlı olmadığı için sayım da öyle.
+  Future<Either<Failure, int>> countByTags(Set<String> tags);
+
+  /// [from] etiketlerini [to]'ya çevirir, değişen kayıt sayısını döner.
+  /// Bkz. `DeleteCategoryUseCase` — silinen kategorinin işlemleri yetim kalmaz.
+  Future<Either<Failure, int>> retagTransactions(Set<String> from, String to);
+
   /// [keepReceiptFile] true ise iliştirilmiş fiş görseli diskte BIRAKILIR.
   /// "Geri al" akışı bunu kullanır: unlink tek yönlüdür, geri alınan işlem
   /// eki kopmuş halde geri dönerdi. Dosyayı silme sorumluluğu o durumda

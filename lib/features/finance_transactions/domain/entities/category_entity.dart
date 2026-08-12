@@ -1,63 +1,75 @@
 import 'package:equatable/equatable.dart';
 
-/// İşlem kategorisi.
+/// İşlem kategorisi — en fazla İKİ seviye: ana kategori → alt kategori.
 ///
-/// [id] SABİT, opak bir anahtardır — kullanıcıya asla gösterilmez ve yeniden
-/// adlandırmada DEĞİŞMEZ. `TransactionEntity.tag` ve bütçe anahtarı
-/// (`walletId::categoryId`) doğrudan bu değere bağlıdır; id değişseydi her
-/// yeniden adlandırma tüm işlemleri ve bütçeleri yetim bırakırdı.
+/// [id] UUID'dir; kullanıcıya asla gösterilmez ve yeniden adlandırmada DEĞİŞMEZ.
+/// `TransactionEntity.tag` ve bütçe anahtarı (`walletId::categoryId`) doğrudan
+/// bu değere bağlıdır.
 ///
-/// Görünen ad [displayName]'dir. `null` ise ad id'den çözülür:
-/// varsayılan kategorilerde l10n'a çevrilir (bkz. `context.categoryLabel`),
-/// özel kategorilerde id zaten oluşturulurken verilen addır.
+/// Kimliğin addan ayrı olması hiyerarşinin ön koşuludur: ad kimlik olsaydı
+/// `Fatura > Su` ile `Konut > Su` aynı anda var olamazdı. Ad tekilliği artık
+/// yalnız KARDEŞLER arasında aranır (bkz. `category_tree.dart`).
 class CategoryEntity extends Equatable {
   final String id;
 
-  /// Kullanıcının verdiği görünen ad. `null` → ad id'den çözülür.
-  final String? displayName;
+  /// Kullanıcıya gösterilen ad. Kategorilerin tamamı kullanıcı tarafından
+  /// oluşturulduğu için her zaman doludur — l10n'a çevrilecek "varsayılan
+  /// kategori" kavramı yoktur.
+  final String name;
 
   final String iconName;
   final bool isExpense;
 
-  /// Sistem kategorisi (silinemez).
-  final bool isDefault;
+  /// Bağlı olduğu ana kategori. `null` → bu kaydın kendisi ana kategoridir.
+  ///
+  /// Alt kategorinin alt kategorisi olamaz; kural `validateCategory` ile
+  /// zorlanır.
+  final String? parentId;
+
+  /// Kardeşler arası sıra.
   final int sortOrder;
 
   const CategoryEntity({
     required this.id,
-    this.displayName,
+    required this.name,
     required this.iconName,
     required this.isExpense,
-    this.isDefault = false,
+    this.parentId,
     this.sortOrder = 0,
   });
+
+  bool get isRoot => parentId == null;
 
   /// [id] BİLEREK yoktur: kimlik değişmez.
   ///
   /// Düzeltilen hata tam olarak `copyWith(id: yeniAd)` idi — form yeniden
   /// adlandırmayı id'ye yazıyordu; updateCategory kaydı YENİ id ile aradığı
   /// için hiçbir zaman bulamıyor, her yeniden adlandırma "kategori bulunamadı"
-  /// ile düşüyordu (yalnız ikon değişikliği çalışıyordu). Parametre burada
-  /// durursa aynı veri bozulması her an geri gelebilir; olmayınca derleme
-  /// hatasına dönüşür. Yeniden adlandırma [displayName] üzerinden yapılır.
+  /// ile düşüyordu. Parametre burada durursa aynı veri bozulması her an geri
+  /// gelebilir; olmayınca derleme hatasına dönüşür.
+  ///
+  /// [clearParent] alt kategoriyi ana kategoriye YÜKSELTİR: `parentId: null`
+  /// geçmek `?? this.parentId` yüzünden işe yaramaz (bkz. aynı desen
+  /// `FilterEntity.copyWith(clearCategories:)`).
   CategoryEntity copyWith({
-    String? displayName,
+    String? name,
     String? iconName,
     bool? isExpense,
-    bool? isDefault,
+    String? parentId,
+    bool clearParent = false,
     int? sortOrder,
   }) {
     return CategoryEntity(
       id: id,
-      displayName: displayName ?? this.displayName,
+      name: name ?? this.name,
       iconName: iconName ?? this.iconName,
       isExpense: isExpense ?? this.isExpense,
-      isDefault: isDefault ?? this.isDefault,
+      parentId: clearParent ? null : (parentId ?? this.parentId),
       sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
   @override
   List<Object?> get props =>
-      [id, displayName, iconName, isExpense, isDefault, sortOrder];
+      [id, name, iconName, isExpense, parentId, sortOrder];
 }

@@ -121,7 +121,7 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
     // Bütçeler yalnız gider kategorilerine kurulur.
     final cats = await getIt<CategoryRepository>().getCategories(true);
     if (!mounted) return;
-    setState(() => _labels = buildCategoryLabelMap(context, cats));
+    setState(() => _labels = buildCategoryLabelMap(cats));
   }
 
   @override
@@ -519,6 +519,72 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   bool get _isUpdate =>
       widget.existingBudgets.any((b) => b.categoryId == _selectedCategory);
 
+  /// TEK SEVİYE KİLİDİ: bir kategoriye bütçe konduysa atasına ya da
+  /// çocuklarına konamaz.
+  ///
+  /// Ana kategori bütçesi çocuklarının harcamasını zaten sayıyor; ikisine
+  /// birden limit koymak "hangi seviye aşıldı?" sorusunu belirsizleştirir ve
+  /// bütçe uyarı monitörünün tek-kategori mantığını bozardı. Kilit sebebini
+  /// döner, engel yoksa `null`.
+  String? _lockReasonFor(CategoryEntity category) {
+    // Kategorinin KENDİ bütçesi engel değil — o güncellemedir.
+    if (widget.existingBudgets.any((b) => b.categoryId == category.id)) {
+      return null;
+    }
+
+    final parentId = category.parentId;
+    if (parentId != null &&
+        widget.existingBudgets.any((b) => b.categoryId == parentId)) {
+      final parent = _categories.where((c) => c.id == parentId).firstOrNull;
+      return context.l10n.butceUstKategorideVar(parent?.name ?? '');
+    }
+
+    final hasBudgetedChild = _categories.any((c) =>
+        c.parentId == category.id &&
+        widget.existingBudgets.any((b) => b.categoryId == c.id));
+    if (hasBudgetedChild) return context.l10n.butceAltKategorideVar;
+
+    return null;
+  }
+
+  Widget _categoryItem(CategoryEntity category) {
+    final lockReason = _lockReasonFor(category);
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.only(left: category.isRoot ? 0 : 16),
+      child: Row(
+        children: [
+          if (!category.isRoot)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.subdirectory_arrow_right,
+                  size: 14, color: cs.onSurfaceVariant),
+            ),
+          Flexible(
+            child: Text(
+              category.name,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: lockReason != null ? cs.onSurfaceVariant : null,
+              ),
+            ),
+          ),
+          if (lockReason != null) ...[
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '· $lockReason',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   void _onCategorySelected(String? value) {
     setState(() => _selectedCategory = value);
     // Mevcut bütçesi olan kategori seçilirse limiti öne doldur (güncelleme).
@@ -558,10 +624,15 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                 labelText: context.l10n.labelKategori,
                 border: const OutlineInputBorder(),
               ),
-              items: _categories
-                  .map((c) => DropdownMenuItem(
-                      value: c.id, child: Text(context.categoryLabel(c))))
-                  .toList(),
+              isExpanded: true,
+              items: [
+                for (final c in _categories)
+                  DropdownMenuItem(
+                    value: c.id,
+                    enabled: _lockReasonFor(c) == null,
+                    child: _categoryItem(c),
+                  ),
+              ],
               onChanged: _onCategorySelected,
               validator: (value) => value == null ? 'Bir kategori seçin' : null,
             ),

@@ -7,7 +7,8 @@ import 'package:cunehat/features/budgets/data/models/budget_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
+import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -16,7 +17,6 @@ import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum DataRestoreStatus {
   success,
@@ -58,7 +58,7 @@ class _ParsedBackup {
   final List<BudgetModel> budgets;
   final List<RecurringTransactionModel> recurringTransactions;
   final Map<String, Map> users;
-  final Map<String, String> categories;
+  final List<CategoryModel> categories;
 
   /// Yedeğin alındığı an (`timestamp`). Önizleme bunu gösterir; bozuksa null.
   final DateTime? timestamp;
@@ -109,7 +109,14 @@ class DataSerializationService {
   /// - Ödemelere `id`: düzenleme/silme kalıcı kimlikle hedeflenir.
   /// - Ödemelere `overdueInterestPart`: ödemenin gecikme faizine sayılan
   ///   kısmı. Borcun kalanı yalnız faiz-dışı kısımla azalır.
-  static const int schemaVersion = 6;
+  ///
+  /// v7 (2026-08-12): kategori sistemi yeniden kuruldu.
+  /// - Kategoriler artık SharedPreferences'ta değil kendi Hive kutusunda;
+  ///   yedekte de ham prefs string'i değil GERÇEK BİR LİSTE olarak taşınırlar.
+  /// - `id` kullanıcının verdiği ad değil UUID; ad ayrı `name` alanında.
+  /// - `parentId` (nullable): iki seviyeli hiyerarşi.
+  /// - `isDefault` kaldırıldı — varsayılan kategori kavramı yok.
+  static const int schemaVersion = 7;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;
@@ -154,10 +161,8 @@ class DataSerializationService {
         .clear();
     await (await _hive.openBox<Map>('users')).clear();
 
-    final prefs = await SharedPreferences.getInstance();
-    for (final key in CategoryService.backupKeys) {
-      await prefs.remove(key);
-    }
+    await (await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName))
+        .clear();
 
     // İşlemlere iliştirilmiş fiş görselleri de cihaz-yerel; onları da temizle.
     await _receiptStorage.clearAll();
@@ -189,11 +194,8 @@ class DataSerializationService {
       }
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final categories = <String, String>{
-      for (final key in CategoryService.backupKeys)
-        if (prefs.getString(key) != null) key: prefs.getString(key)!,
-    };
+    final categoryBox =
+        await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
 
     return jsonEncode({
       'version': schemaVersion,
@@ -207,7 +209,7 @@ class DataSerializationService {
       'recurringTransactions':
           recurringBox.values.map((r) => r.toJson()).toList(),
       'users': users,
-      'categories': categories,
+      'categories': categoryBox.values.map((c) => c.toJson()).toList(),
     });
   }
 
@@ -235,10 +237,9 @@ class DataSerializationService {
         .openBox<RecurringTransactionModel>('recurring_transactions_box');
     final userBox = await _hive.openBox<Map>('users');
 
-    final prefs = await SharedPreferences.getInstance();
-    final categorySnapshot = <String, String?>{
-      for (final key in CategoryService.backupKeys) key: prefs.getString(key),
-    };
+    final categoryBox =
+        await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
+    final categorySnapshot = Map.of(categoryBox.toMap());
 
     final walletSnapshot = Map.of(walletBox.toMap());
     final transactionSnapshot = Map.of(transactionBox.toMap());
@@ -294,13 +295,12 @@ class DataSerializationService {
         await userBox.put(entry.key, entry.value);
       }
 
-      for (final key in CategoryService.backupKeys) {
-        final value = parsedBackup.categories[key];
-        if (value != null) {
-          await prefs.setString(key, value);
-        } else {
-          await prefs.remove(key);
-        }
+      // Kategoriler tam değişim: yedekte olmayan bir kategori geri yükleme
+      // sonrası kalırsa, ona bağlı olmayan işlemlerle birlikte hayalet kayıt
+      // olur.
+      await categoryBox.clear();
+      for (final model in parsedBackup.categories) {
+        await categoryBox.put(model.id, model);
       }
 
       // Yalnız başarıda yörünge temizliği: geri yüklenen veri fiş binary'si
@@ -333,13 +333,7 @@ class DataSerializationService {
         await _rollback(budgetBox, budgetSnapshot);
         await _rollback(recurringBox, recurringSnapshot);
         await _rollback(userBox, userSnapshot);
-        for (final entry in categorySnapshot.entries) {
-          if (entry.value != null) {
-            await prefs.setString(entry.key, entry.value!);
-          } else {
-            await prefs.remove(entry.key);
-          }
-        }
+        await _rollback(categoryBox, categorySnapshot);
       } catch (rollbackError, rollbackSt) {
         debugPrint(
           'DataSerializationService rollback FAILED: '
@@ -368,7 +362,7 @@ class DataSerializationService {
           receivableCount: parsed.receivables.length,
           budgetCount: parsed.budgets.length,
           recurringCount: parsed.recurringTransactions.length,
-          categoryKeyCount: parsed.categories.length,
+          categoryCount: parsed.categories.length,
           createdAt: parsed.timestamp,
         ),
         schemaVersion,
@@ -396,10 +390,8 @@ class DataSerializationService {
     final recurringBox = await _hive
         .openBox<RecurringTransactionModel>('recurring_transactions_box');
 
-    final prefs = await SharedPreferences.getInstance();
-    final categoryKeyCount = CategoryService.backupKeys
-        .where((key) => prefs.getString(key) != null)
-        .length;
+    final categoryBox =
+        await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
 
     return _summarize(
       wallets: walletBox.values.toList(),
@@ -409,7 +401,7 @@ class DataSerializationService {
       receivableCount: receivableBox.length,
       budgetCount: budgetBox.length,
       recurringCount: recurringBox.length,
-      categoryKeyCount: categoryKeyCount,
+      categoryCount: categoryBox.length,
       createdAt: null,
     );
   }
@@ -422,7 +414,7 @@ class DataSerializationService {
     required int receivableCount,
     required int budgetCount,
     required int recurringCount,
-    required int categoryKeyCount,
+    required int categoryCount,
     required DateTime? createdAt,
   }) {
     DateTime? first;
@@ -452,7 +444,7 @@ class DataSerializationService {
       receivableCount: receivableCount,
       budgetCount: budgetCount,
       recurringCount: recurringCount,
-      categoryKeyCount: categoryKeyCount,
+      categoryCount: categoryCount,
       wallets: [
         for (final w in wallets)
           BackupWalletSummary(
@@ -489,13 +481,12 @@ class DataSerializationService {
       users[entry.key] = Map<dynamic, dynamic>.from(entry.value as Map);
     }
 
-    final categories = <String, String>{};
-    final categoriesMap = decoded['categories'] as Map<String, dynamic>? ?? {};
-    for (final entry in categoriesMap.entries) {
-      if (entry.value is String) {
-        categories[entry.key] = entry.value as String;
-      }
-    }
+    // v7'den itibaren kategoriler gerçek bir liste; öncesinde ham prefs
+    // string'lerinin haritasıydı. Sürüm kapısı eski yedeği zaten reddettiği
+    // için burada tek biçim tanınır.
+    final categories = _list(decoded, 'categories')
+        .map((c) => CategoryModel.fromJson(Map<String, dynamic>.from(c as Map)))
+        .toList();
 
     return _ParsedBackup(
       wallets: _list(decoded, 'wallets').map((w) {

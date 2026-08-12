@@ -17,12 +17,17 @@ class CategoryData {
   /// isimle değil bu bayrakla yapılır.
   final bool isOther;
 
+  /// Alt kategori kırılımı — dilime dokunulduğunda gösterilir. Toplam zaten
+  /// [totalAmount] içinde; bu liste yalnız kırılımı taşır, yeni tutar eklemez.
+  final List<CategoryBreakdown> children;
+
   const CategoryData(
     this.name,
     this.totalAmount,
     this.transactions,
     this.color, {
     this.isOther = false,
+    this.children = const [],
   });
 }
 
@@ -159,10 +164,15 @@ class ReportCategoryDataBuilder {
   /// sınıf BuildContext'e bağımlı olmasın.
   final String otherCategoryLabel;
 
+  /// `id → kök id` (bkz. `buildRootIndex`). Dilimler KÖK seviyede toplanır;
+  /// boş verilirse her tag kendi dilimidir.
+  final Map<String, String> rootIndex;
+
   const ReportCategoryDataBuilder({
     required this.range,
     required this.budgets,
     required this.otherCategoryLabel,
+    this.rootIndex = const {},
   });
 
   List<TransactionEntity> filterByRange(List<TransactionEntity> transactions) =>
@@ -175,6 +185,7 @@ class ReportCategoryDataBuilder {
     final breakdowns = _service.buildCategoryBreakdown(
       transactions,
       isExpense: isExpense,
+      rootIndex: rootIndex,
     );
 
     return [
@@ -184,6 +195,7 @@ class ReportCategoryDataBuilder {
           breakdowns[i].totalAmount,
           breakdowns[i].transactions,
           _colorForIndex(i, isExpense),
+          children: breakdowns[i].children,
         ),
     ];
   }
@@ -280,6 +292,7 @@ class ReportCategoryDataBuilder {
           slices[i].transactions,
           ramp[i],
           isOther: slices[i].isOther,
+          children: slices[i].children,
         ),
     ];
   }

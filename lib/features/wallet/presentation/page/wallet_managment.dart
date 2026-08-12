@@ -6,6 +6,8 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_starter_pack_sheet.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -483,6 +485,16 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
 
   /// Cüzdan oluşturulduktan sonraki atlanabilir yönlendirme.
   Future<void> _offerQuickStart(BuildContext context, String walletName) async {
+    // Kategori kurulumu hızlı başlangıçtan ÖNCE gelir: hızlı başlangıcın iki
+    // aksiyonu da (ekstre içe aktar / işlem ekle) kategori olmadan yürümez,
+    // kategori zorunlu bir alandır. Yalnız hiç kategori yoksa gösterilir.
+    final categories = await getIt<CategoryRepository>().getAllCategories();
+    if (!context.mounted) return;
+    if (categories.isEmpty) {
+      await showCategoryStarterPack(context);
+      if (!context.mounted) return;
+    }
+
     final action =
         await WalletQuickStartSheet.show(context, walletName: walletName);
     if (action == null || !context.mounted) return;

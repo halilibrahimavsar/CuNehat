@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
@@ -186,6 +188,124 @@ void main() {
       );
       expect(result.single.totalAmount, closeTo(0.3, 1e-9));
       expect(result.single.totalAmount.toStringAsFixed(2), '0.30');
+    });
+  });
+
+  group('kök toplaması (hiyerarşi)', () {
+    // Fatura(Elektrik, Doğalgaz) · Market
+    final categories = [
+      const CategoryEntity(
+          id: 'f', name: 'Fatura', iconName: 'x', isExpense: true),
+      const CategoryEntity(
+          id: 'f-e',
+          name: 'Elektrik',
+          iconName: 'x',
+          isExpense: true,
+          parentId: 'f'),
+      const CategoryEntity(
+          id: 'f-d',
+          name: 'Doğalgaz',
+          iconName: 'x',
+          isExpense: true,
+          parentId: 'f'),
+      const CategoryEntity(
+          id: 'm', name: 'Market', iconName: 'x', isExpense: true),
+    ];
+    final rootIndex = buildRootIndex(categories);
+
+    test('alt kategoriler ana kategoride TOPLANIR', () {
+      final result = service.buildCategoryBreakdown(
+        [
+          tx(DateTime(2026, 6, 1), 100, TransactionTypeModel.expense, tag: 'f'),
+          tx(DateTime(2026, 6, 2), 200, TransactionTypeModel.expense,
+              tag: 'f-e'),
+          tx(DateTime(2026, 6, 3), 300, TransactionTypeModel.expense,
+              tag: 'f-d'),
+        ],
+        isExpense: true,
+        rootIndex: rootIndex,
+      );
+
+      expect(result, hasLength(1));
+      expect(result.single.name, 'f');
+      expect(result.single.totalAmount, 600);
+      expect(result.single.transactions, hasLength(3));
+    });
+
+    test('REGRESYON: alt kategoriye geçmek raporu BOŞALTMAZ', () {
+      // Yaprak seviyede gruplansaydı 12 dilim oluşur, her biri toplamın
+      // %3'ünden küçük kalır ve pasta eşiği hepsini "Diğer"e süpürürdü.
+      // Kök toplaması dilim sayısını düz kurulumdakiyle aynı tutar.
+      final txns = [
+        for (var i = 0; i < 6; i++)
+          tx(DateTime(2026, 6, i + 1), 50, TransactionTypeModel.expense,
+              tag: i.isEven ? 'f-e' : 'f-d'),
+        tx(DateTime(2026, 6, 20), 400, TransactionTypeModel.expense, tag: 'm'),
+      ];
+
+      final rolled = service.buildCategoryBreakdown(txns,
+          isExpense: true, rootIndex: rootIndex);
+      final flat = service.buildCategoryBreakdown(txns, isExpense: true);
+
+      expect(rolled, hasLength(2), reason: 'Fatura + Market');
+      expect(flat, hasLength(3),
+          reason: 'hiyerarşisiz: Elektrik+Doğalgaz+Market');
+
+      final total = rolled.fold<double>(0, (s, c) => s + c.totalAmount);
+      for (final slice in rolled) {
+        expect((slice.totalAmount / total) * 100, greaterThan(3.0),
+            reason: '${slice.name} pasta eşiğinin altına düşüyor');
+      }
+    });
+
+    test('çocuk kırılımı ayrı taşınır; kökün DOĞRUDAN tutarı fark olarak kalır',
+        () {
+      final result = service.buildCategoryBreakdown(
+        [
+          tx(DateTime(2026, 6, 1), 100, TransactionTypeModel.expense, tag: 'f'),
+          tx(DateTime(2026, 6, 2), 250, TransactionTypeModel.expense,
+              tag: 'f-e'),
+          tx(DateTime(2026, 6, 3), 50, TransactionTypeModel.expense,
+              tag: 'f-d'),
+        ],
+        isExpense: true,
+        rootIndex: rootIndex,
+      );
+
+      final fatura = result.single;
+      // Çocuklar tutara göre azalan; kökün kendi işlemi çocuk DEĞİLDİR.
+      expect(fatura.children.map((c) => c.name), ['f-e', 'f-d']);
+      final childrenTotal =
+          fatura.children.fold<double>(0, (s, c) => s + c.totalAmount);
+      expect(fatura.totalAmount - childrenTotal, 100);
+    });
+
+    test('kategoriye çözülmeyen tag (sistem etiketi) kendi kalemi olur', () {
+      final result = service.buildCategoryBreakdown(
+        [
+          tx(DateTime(2026, 6, 1), 100, TransactionTypeModel.expense,
+              tag: 'f-e'),
+          tx(DateTime(2026, 6, 2), 80, TransactionTypeModel.expense,
+              tag: 'Borç Ödemesi'),
+        ],
+        isExpense: true,
+        rootIndex: rootIndex,
+      );
+
+      expect(result.map((c) => c.name).toSet(), {'f', 'Borç Ödemesi'});
+    });
+
+    test('rootIndex verilmezse davranış hiyerarşi öncesiyle aynı', () {
+      final result = service.buildCategoryBreakdown(
+        [
+          tx(DateTime(2026, 6, 1), 100, TransactionTypeModel.expense, tag: 'f'),
+          tx(DateTime(2026, 6, 2), 200, TransactionTypeModel.expense,
+              tag: 'f-e'),
+        ],
+        isExpense: true,
+      );
+      expect(result, hasLength(2));
+      expect(result.every((c) => c.children.isEmpty), isTrue);
     });
   });
 }

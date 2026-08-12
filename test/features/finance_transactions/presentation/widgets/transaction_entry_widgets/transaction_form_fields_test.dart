@@ -50,13 +50,18 @@ void main() {
 
   testWidgets('renders TransactionFormSheet with initial fields',
       (WidgetTester tester) async {
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => [
+              ...await mockCategoryRepository.getCategories(true),
+              ...await mockCategoryRepository.getCategories(false),
+            ]);
     when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
@@ -85,9 +90,9 @@ void main() {
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
@@ -122,15 +127,15 @@ void main() {
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
         const CategoryEntity(
           id: 'Market',
+          name: 'Market',
           iconName: 'shopping_cart',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
@@ -184,9 +189,9 @@ void main() {
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
@@ -253,9 +258,9 @@ void main() {
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );

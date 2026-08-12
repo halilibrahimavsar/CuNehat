@@ -1,6 +1,7 @@
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
@@ -127,10 +128,19 @@ class _FilterViewState extends State<FilterView> {
   void _onCategoryToggle(String categoryId) {
     final categories =
         Set<String>.from(widget.filter.dataFilter.selectedCategories);
+
+    // Ana kategoriye dokunmak alt ağacın TAMAMINI seçer/kaldırır. Küme
+    // genişletilmiş hâliyle saklandığından süzgeç tarafı (`selectedCategories
+    // .contains(t.tag)`) değişmeden çalışır — hiyerarşiyi bilmesi gerekmez.
+    final subtree = subtreeIds(
+      categoryId,
+      [..._expenseCategories, ..._incomeCategories],
+    );
+
     if (categories.contains(categoryId)) {
-      categories.remove(categoryId);
+      categories.removeAll(subtree);
     } else {
-      categories.add(categoryId);
+      categories.addAll(subtree);
     }
     widget.onFilterChanged(
       widget.filter.copyWith(

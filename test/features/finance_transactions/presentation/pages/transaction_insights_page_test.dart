@@ -58,9 +58,14 @@ void main() {
 
     // Sayfa kategori etiketlerini yükler (tag → görünen ad); kırılım anahtarı
     // hep tag kalır, harita yalnız gösterim içindir.
-    when(() => mockCategoryRepository.getExpenseCategories())
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => [
+              ...await mockCategoryRepository.getCategories(true),
+              ...await mockCategoryRepository.getCategories(false),
+            ]);
+    when(() => mockCategoryRepository.getCategories(true))
         .thenAnswer((_) async => const <CategoryEntity>[]);
-    when(() => mockCategoryRepository.getIncomeCategories())
+    when(() => mockCategoryRepository.getCategories(false))
         .thenAnswer((_) async => const <CategoryEntity>[]);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
     // Sayfa, kategoriler değiştiğinde ikon/ad indeksini tazelemek için bu

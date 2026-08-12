@@ -28,6 +28,8 @@ import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -169,8 +171,8 @@ class BankImportCubit extends Cubit<BankImportState> {
 
     emit(const BankImportParsing());
     try {
-      _expenseCats = await _categoryRepo.getExpenseCategories();
-      _incomeCats = await _categoryRepo.getIncomeCategories();
+      _expenseCats = await _categoryRepo.getCategories(true);
+      _incomeCats = await _categoryRepo.getCategories(false);
 
       // PDF'te kolon yapısı güvenilir değil → satır-sezgisel doğrudan taslak,
       // eşleme adımı atlanır, direkt incelemeye gider.
@@ -447,27 +449,73 @@ class BankImportCubit extends Cubit<BankImportState> {
 
     for (final suggestion in s.suggestions) {
       if (!approvedNames.contains(suggestion.name)) continue;
+      final isExpense = !suggestion.isIncome;
       try {
-        final category = CategoryEntity(
-          id: suggestion.name,
+        // Öneri pakette bir alt kategoriyse ("Konut › Kira") önce üst
+        // kategorinin var olması gerekir; yoksa o da kurulur.
+        final parentId = await _ensureParent(suggestion, isExpense: isExpense);
+
+        final category = await _categoryRepo.addCategory(
+          name: suggestion.name,
           iconName: suggestion.iconName,
-          isExpense: !suggestion.isIncome,
-          sortOrder: DateTime.now().millisecondsSinceEpoch,
+          isExpense: isExpense,
+          parentId: parentId,
         );
-        await _categoryRepo.addCategory(category);
-        if (suggestion.isIncome) {
-          _incomeCats = [..._incomeCats, category];
-        } else {
-          _expenseCats = [..._expenseCats, category];
-        }
+        _remember(category);
       } catch (_) {
         // Oluşturulamadıysa (ör. adı bu arada başka yerden eklendi) sessizce
-        // atla; ilgili taslaklar yine varsayılana düşer, akış durmaz.
+        // atla; ilgili taslaklar kategorisiz kalır, akış durmaz.
       }
     }
 
     await _toReview(s.rawDrafts, s.skippedRows);
   }
+
+  /// Taslağın kategorisinin adı; bulunamazsa `null`.
+  String? _categoryNameOf(String? categoryId, bool isIncome) {
+    if (categoryId == null) return null;
+    final pool = isIncome ? _incomeCats : _expenseCats;
+    return pool.where((c) => c.id == categoryId).firstOrNull?.name;
+  }
+
+  /// Önerinin üst kategorisini bulur; kullanıcıda yoksa oluşturur.
+  /// Öneri kök seviyedeyse `null` döner.
+  Future<String?> _ensureParent(
+    CategorySuggestion suggestion, {
+    required bool isExpense,
+  }) async {
+    final parentName = suggestion.parentName;
+    if (parentName == null) return null;
+
+    final pool = isExpense ? _expenseCats : _incomeCats;
+    final existing = pool
+        .where((c) => c.isRoot && _sameName(c.name, parentName))
+        .firstOrNull;
+    if (existing != null) return existing.id;
+
+    final created = await _categoryRepo.addCategory(
+      name: parentName,
+      iconName:
+          CategoryStarterPack.iconNameOf(parentName, isExpense: isExpense) ??
+              'category',
+      isExpense: isExpense,
+    );
+    _remember(created);
+    return created.id;
+  }
+
+  /// Yeni kategoriyi yerel havuza ekler ki aynı içe aktarım turunda yapılan
+  /// sonraki tahminler onu görebilsin.
+  void _remember(CategoryEntity category) {
+    if (category.isExpense) {
+      _expenseCats = [..._expenseCats, category];
+    } else {
+      _incomeCats = [..._incomeCats, category];
+    }
+  }
+
+  static bool _sameName(String a, String b) =>
+      normalizeCategoryName(a) == normalizeCategoryName(b);
 
   Future<void> _toReview(List<ImportDraft> raw, int skipped) async {
     // Kullanıcının TÜM geçmişi tek sorguda çekilir: hem geçmişe dayalı kategori
@@ -677,10 +725,12 @@ class BankImportCubit extends Cubit<BankImportState> {
     final importedIds = <String>[];
     for (var i = 0; i < selected.length; i++) {
       final id = UidGenerator.generateV7();
-      final entity = selected[i].toEntity(
+      final draft = selected[i];
+      final entity = draft.toEntity(
         id: id,
         userId: _userId,
         walletId: _walletId,
+        categoryName: _categoryNameOf(draft.categoryId, draft.isIncome),
       );
       final res = await _txRepo.addTransaction(entity);
       res.fold((_) {}, (_) {

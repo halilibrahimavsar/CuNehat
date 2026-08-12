@@ -11,4 +11,7 @@ abstract class RecurringTransactionRepository {
   Future<Either<Failure, List<RecurringTransactionEntity>>>
       getPendingTransactions();
   Future<Either<Failure, List<RecurringTransactionEntity>>> getAllTemplates();
+
+  /// [from] etiketlerini [to]'ya çevirir. Bkz. `DeleteCategoryUseCase`.
+  Future<Either<Failure, int>> retagTemplates(Set<String> from, String to);
 }

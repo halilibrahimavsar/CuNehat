@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart'
+    show CashMovementTags;
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 /// Extension to provide easy access to localized strings via context.l10n.
@@ -131,46 +133,37 @@ extension LocalizationX on BuildContext {
     }
   }
 
-  /// Varsayılan kategori id'sini görünen ada çevirir.
+  /// Otomatik hareket etiketini görünen ada çevirir.
   ///
-  /// Kategori id'leri opak anahtardır (deftere `TransactionEntity.tag` olarak
-  /// bu hâliyle yazılır); kullanıcıya gösterilmeden önce buradan geçmeleri
-  /// gerekir. Bilinmeyen bir id — özel kategori, sistem etiketi ("Borç",
-  /// "Transfer") ya da silinmiş kategoriden kalan tag — olduğu gibi döner.
+  /// `TransactionEntity.tag` iki şeyden biridir: `isSystem` satırlarda bir
+  /// [CashMovementTags] sabiti, aksi hâlde bir kategori kimliği (UUID). Bu
+  /// fonksiyon yalnız birincisini bilir; kalan her değeri olduğu gibi döner.
   ///
-  /// Kullanıcının yeniden adlandırdığı kategorilerde bu değil,
-  /// `CategoryEntity.displayName` geçerlidir; ikisini birlikte çözen sarmalayıcı
-  /// için bkz. `context.categoryLabel`.
-  String translateCategory(String categoryName) {
-    switch (categoryName) {
-      case 'Market':
-        return l10n.defaultCategoryGroceries;
-      case 'Yemek':
-        return l10n.defaultCategoryFood;
-      case 'Ulaşım':
-        return l10n.defaultCategoryTransport;
-      case 'Fatura':
-        return l10n.defaultCategoryBills;
-      case 'Kira':
-        return l10n.defaultCategoryRent;
-      case 'Alışveriş':
-        return l10n.defaultCategoryShopping;
-      case 'Sağlık':
-        return l10n.defaultCategoryHealth;
-      case 'Eğitim':
-        return l10n.defaultCategoryEducation;
-      case 'Eğlence':
-        return l10n.defaultCategoryEntertainment;
-      case 'Maaş':
-        return l10n.defaultCategorySalary;
-      case 'Ek Gelir':
-        return l10n.defaultCategorySideIncome;
-      case 'Serbest':
-        return l10n.defaultCategoryFreelance;
-      case 'Yatırım':
-        return l10n.defaultCategoryInvestment;
+  /// (Eskiden burada 13 varsayılan kategori adı çevriliyordu. Varsayılan
+  /// kategori kavramı kalktı — artık tüm kategoriler kullanıcının koyduğu adı
+  /// taşır ve çeviriye girmez. Sistem etiketleri ise kodda sabit Türkçe
+  /// olduğundan İngilizce arayüzde çevrilmeden görünüyordu; asıl çevrilmesi
+  /// gerekenler bunlardı.)
+  String translateSystemTag(String tag) {
+    switch (tag) {
+      case CashMovementTags.debt:
+        return l10n.systemTagDebt;
+      case CashMovementTags.debtPayment:
+        return l10n.systemTagDebtPayment;
+      case CashMovementTags.receivable:
+        return l10n.systemTagReceivable;
+      case CashMovementTags.receivableCollection:
+        return l10n.systemTagReceivableCollection;
+      case CashMovementTags.investmentBuy:
+        return l10n.systemTagInvestmentBuy;
+      case CashMovementTags.investmentSell:
+        return l10n.systemTagInvestmentSell;
+      case CashMovementTags.investmentCorrection:
+        return l10n.systemTagInvestmentCorrection;
+      case CashMovementTags.transfer:
+        return l10n.systemTagTransfer;
       default:
-        return categoryName;
+        return tag;
     }
   }
 }

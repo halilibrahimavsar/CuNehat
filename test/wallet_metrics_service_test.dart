@@ -67,6 +67,22 @@ class FakeTransactionsRepository implements TransactionsRepository {
   final List<TransactionEntity> store = [];
 
   @override
+  Future<Either<Failure, int>> countByTags(Set<String> tags) async =>
+      Right(store.where((t) => tags.contains(t.tag)).length);
+
+  @override
+  Future<Either<Failure, int>> retagTransactions(
+      Set<String> from, String to) async {
+    var changed = 0;
+    for (var i = 0; i < store.length; i++) {
+      if (!from.contains(store[i].tag)) continue;
+      store[i] = store[i].copyWith(tag: to);
+      changed++;
+    }
+    return Right(changed);
+  }
+
+  @override
   Future<Either<Failure, String>> addTransaction(TransactionEntity t) async {
     store.add(t);
     return Right(t.id!);

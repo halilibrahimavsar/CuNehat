@@ -1,158 +1,282 @@
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/data/repositories/category_repository_impl.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCategoryService extends Mock implements CategoryService {}
+class MockCategoryLocalDataSource extends Mock
+    implements CategoryLocalDataSource {}
 
 void main() {
-  late CategoryRepositoryImpl repository;
-  late MockCategoryService mockService;
+  late MockCategoryLocalDataSource dataSource;
   late CategoriesChangedNotifier changedNotifier;
+  late CategoryRepositoryImpl repository;
+
+  CategoryModel model(
+    String id,
+    String name, {
+    String? parentId,
+    bool isExpense = true,
+    int sortOrder = 0,
+  }) =>
+      CategoryModel(
+        id: id,
+        name: name,
+        iconName: 'category',
+        isExpense: isExpense,
+        parentId: parentId,
+        sortOrder: sortOrder,
+      );
+
+  void seed(List<CategoryModel> models) {
+    when(() => dataSource.getAll()).thenAnswer((_) async => models);
+  }
 
   setUpAll(() {
-    registerFallbackValue(
-      const CategoryModel(
-        id: 'fallback',
-        iconName: 'fallback',
-        isExpense: true,
-      ),
-    );
+    registerFallbackValue(model('fallback', 'fallback'));
   });
 
   setUp(() {
-    mockService = MockCategoryService();
+    dataSource = MockCategoryLocalDataSource();
+    // Gerçek notifier: yayın davranışı da sözleşmenin parçası.
     changedNotifier = CategoriesChangedNotifier();
-    repository = CategoryRepositoryImpl(mockService, changedNotifier);
+    repository = CategoryRepositoryImpl(dataSource, changedNotifier);
+
+    seed([]);
+    when(() => dataSource.put(any())).thenAnswer((_) async {});
+    when(() => dataSource.putAll(any())).thenAnswer((_) async {});
+    when(() => dataSource.deleteAll(any())).thenAnswer((_) async {});
   });
 
   tearDown(() => changedNotifier.dispose());
 
-  const testModel = CategoryModel(
-    id: 'Food',
-    iconName: 'restaurant',
-    isExpense: true,
-    isDefault: true,
-    sortOrder: 1,
-  );
-
-  const testEntity = CategoryEntity(
-    id: 'Food',
-    iconName: 'restaurant',
-    isExpense: true,
-    isDefault: true,
-    sortOrder: 1,
-  );
-
-  group('CategoryRepositoryImpl', () {
-    test('getExpenseCategories should return categories from service',
-        () async {
-      when(() => mockService.getExpenseCategories())
-          .thenAnswer((_) async => [testModel]);
-
-      final result = await repository.getExpenseCategories();
-
-      expect(result, [testEntity]);
-      verify(() => mockService.getExpenseCategories()).called(1);
-    });
-
-    test('getIncomeCategories should return categories from service', () async {
-      when(() => mockService.getIncomeCategories())
-          .thenAnswer((_) async => [testModel]);
-
-      final result = await repository.getIncomeCategories();
-
-      expect(result, [testEntity]);
-      verify(() => mockService.getIncomeCategories()).called(1);
-    });
-
-    test('getCategories should return categories from service', () async {
-      when(() => mockService.getCategories(any()))
-          .thenAnswer((_) async => [testModel]);
+  group('okuma', () {
+    test('getCategories türü süzer ve AĞAÇ sırasında döner', () async {
+      seed([
+        model('f-d', 'Doğalgaz', parentId: 'f', sortOrder: 2),
+        model('m', 'Market', sortOrder: 2),
+        model('f', 'Fatura', sortOrder: 1),
+        model('f-e', 'Elektrik', parentId: 'f', sortOrder: 1),
+        model('g', 'Maaş', isExpense: false),
+      ]);
 
       final result = await repository.getCategories(true);
 
-      expect(result, [testEntity]);
-      verify(() => mockService.getCategories(true)).called(1);
+      expect(
+        result.map((c) => c.name),
+        ['Fatura', 'Elektrik', 'Doğalgaz', 'Market'],
+      );
     });
 
-    test('getCategoriesWithDefaults should return categories from service',
-        () async {
-      when(() => mockService.getCategoriesWithDefaults(any()))
-          .thenAnswer((_) async => [testModel]);
+    test('getAllCategories iki türü birden verir', () async {
+      seed([model('m', 'Market'), model('g', 'Maaş', isExpense: false)]);
+      expect((await repository.getAllCategories()).length, 2);
+    });
+  });
 
-      final result = await repository.getCategoriesWithDefaults(true);
+  group('addCategory', () {
+    test('kimliği KENDİ üretir; çağıranın verdiği ad kimlik olmaz', () async {
+      final created = await repository.addCategory(
+        name: 'Fatura',
+        iconName: 'receipt_long',
+        isExpense: true,
+      );
 
-      expect(result, [testEntity]);
-      verify(() => mockService.getCategoriesWithDefaults(true)).called(1);
+      expect(created.id, isNot('Fatura'));
+      expect(created.id, isNotEmpty);
+      expect(created.name, 'Fatura');
+
+      final saved = verify(() => dataSource.put(captureAny())).captured.single
+          as CategoryModel;
+      expect(saved.id, created.id);
     });
 
-    test('addCategory delegates to service', () async {
-      when(() => mockService.addCategory(any())).thenAnswer((_) async => {});
-
-      await repository.addCategory(testEntity);
-
-      verify(() => mockService.addCategory(any())).called(1);
+    test('adı kırpar', () async {
+      final created = await repository.addCategory(
+        name: '  Fatura  ',
+        iconName: 'receipt_long',
+        isExpense: true,
+      );
+      expect(created.name, 'Fatura');
     });
 
-    test('updateCategory delegates to service', () async {
-      when(() => mockService.updateCategory(any())).thenAnswer((_) async => {});
+    test('yeni kayıt KARDEŞLERİN sonuna eklenir', () async {
+      seed([
+        model('f', 'Fatura', sortOrder: 1),
+        model('m', 'Market', sortOrder: 7),
+        model('f-e', 'Elektrik', parentId: 'f', sortOrder: 4),
+      ]);
 
-      await repository.updateCategory(testEntity);
+      final root = await repository.addCategory(
+        name: 'Ulaşım',
+        iconName: 'category',
+        isExpense: true,
+      );
+      expect(root.sortOrder, 8);
 
-      verify(() => mockService.updateCategory(any())).called(1);
+      final child = await repository.addCategory(
+        name: 'Doğalgaz',
+        iconName: 'category',
+        isExpense: true,
+        parentId: 'f',
+      );
+      expect(child.sortOrder, 5,
+          reason: 'sortOrder kardeş kapsamlı; kökün 7si etkilememeli');
     });
 
-    test('deleteCategory delegates to service', () async {
-      when(() => mockService.deleteCategory(any(), any()))
-          .thenAnswer((_) async => {});
+    test('kural ihlalinde tipli hata fırlatır ve YAZMAZ', () async {
+      seed([model('f', 'Fatura')]);
 
-      await repository.deleteCategory('Food', true);
+      expect(
+        () => repository.addCategory(
+          name: 'Fatura',
+          iconName: 'category',
+          isExpense: true,
+        ),
+        throwsA(
+          isA<CategoryException>().having(
+            (e) => e.error,
+            'error',
+            CategoryValidationError.duplicateSiblingName,
+          ),
+        ),
+      );
 
-      verify(() => mockService.deleteCategory('Food', true)).called(1);
+      verifyNever(() => dataSource.put(any()));
     });
 
-    // ----------------------------------------------- değişim bildirimi
-    //
-    // Etiket/ikon haritaları sayfa seviyesinde initState'te kuruluyordu:
-    // Rapor/Analiz/Bütçeler route yığınında dururken yapılan bir yeniden
-    // adlandırma ancak sayfa yeniden kurulduğunda görünüyordu. Kategoriyi
-    // DEĞİŞTİREN her yol bu kanaldan haber vermeli.
+    test('sistem etiketiyle aynı adlı kategori artık SERBEST', () async {
+      // Kimlik UUID olduğundan `tag == 'Transfer'` eşleşmesine giremez;
+      // eski rezerve-ad kapısı gereksizleşti.
+      final created = await repository.addCategory(
+        name: 'Transfer',
+        iconName: 'category',
+        isExpense: true,
+      );
+      expect(created.name, 'Transfer');
+      expect(created.id, isNot('Transfer'));
+    });
+  });
 
-    test('add / update / delete kategori değişimini yayınlar', () async {
-      when(() => mockService.addCategory(any(),
-          displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
-      when(() => mockService.updateCategory(any(),
-          displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
-      when(() => mockService.deleteCategory(any(), any()))
-          .thenAnswer((_) async {});
+  group('updateCategory', () {
+    test('kaydeder', () async {
+      final existing = model('f', 'Fatura').toEntity();
+      seed([model('f', 'Fatura')]);
 
-      final seen = <void>[];
-      final sub = changedNotifier.stream.listen(seen.add);
+      await repository.updateCategory(existing.copyWith(name: 'Faturalar'));
 
-      await repository.addCategory(testEntity);
-      await repository.updateCategory(testEntity);
-      await repository.deleteCategory('Food', true);
+      final saved = verify(() => dataSource.put(captureAny())).captured.single
+          as CategoryModel;
+      expect(saved.id, 'f');
+      expect(saved.name, 'Faturalar');
+    });
+
+    test('kural ihlalinde tipli hata fırlatır', () async {
+      seed([model('f', 'Fatura'), model('m', 'Market')]);
+
+      expect(
+        () => repository.updateCategory(
+            model('m', 'Market').toEntity().copyWith(name: 'Fatura')),
+        throwsA(isA<CategoryException>()),
+      );
+    });
+  });
+
+  group('addAll', () {
+    test('tek yazımda ekler', () async {
+      final list = [
+        const CategoryEntity(
+            id: 'a', name: 'Fatura', iconName: 'category', isExpense: true),
+        const CategoryEntity(
+            id: 'b',
+            name: 'Elektrik',
+            iconName: 'category',
+            isExpense: true,
+            parentId: 'a'),
+      ];
+
+      await repository.addAll(list);
+
+      final saved = verify(() => dataSource.putAll(captureAny()))
+          .captured
+          .single as Iterable<CategoryModel>;
+      expect(saved.map((c) => c.id), ['a', 'b']);
+    });
+
+    test('parti KENDİ İÇİNDE de doğrulanır', () async {
+      // İki özdeş çocuk aynı ana kategori altına yazılamaz; doğrulama yalnız
+      // kayıtlı listeye bakarsa parti içi çakışma kaçar.
+      final list = [
+        const CategoryEntity(
+            id: 'a', name: 'Fatura', iconName: 'category', isExpense: true),
+        const CategoryEntity(
+            id: 'b',
+            name: 'Su',
+            iconName: 'category',
+            isExpense: true,
+            parentId: 'a'),
+        const CategoryEntity(
+            id: 'c',
+            name: 'Su',
+            iconName: 'category',
+            isExpense: true,
+            parentId: 'a'),
+      ];
+
+      expect(() => repository.addAll(list), throwsA(isA<CategoryException>()));
+      verifyNever(() => dataSource.putAll(any()));
+    });
+
+    test('boş liste hiçbir şey yazmaz', () async {
+      expect(await repository.addAll(const []), isEmpty);
+      verifyNever(() => dataSource.putAll(any()));
+    });
+  });
+
+  group('değişiklik bildirimi', () {
+    test('YAZAN yollar bildirir', () async {
+      final events = <void>[];
+      final sub = changedNotifier.stream.listen(events.add);
+
+      await repository.addCategory(
+          name: 'Fatura', iconName: 'category', isExpense: true);
+      seed([model('f', 'Fatura')]);
+      await repository.updateCategory(model('f', 'Faturalar').toEntity());
+      await repository.deleteCategories({'f'});
+      await repository.addAll([
+        const CategoryEntity(
+            id: 'z', name: 'Yeni', iconName: 'category', isExpense: true)
+      ]);
+
       await Future<void>.delayed(Duration.zero);
-
-      expect(seen, hasLength(3));
+      expect(events.length, 4);
       await sub.cancel();
     });
 
-    test('okuma yolları bildirim YAYMAZ', () async {
-      when(() => mockService.getExpenseCategories())
-          .thenAnswer((_) async => [testModel]);
+    test('OKUYAN yollar bildirmez', () async {
+      final events = <void>[];
+      final sub = changedNotifier.stream.listen(events.add);
 
-      final seen = <void>[];
-      final sub = changedNotifier.stream.listen(seen.add);
+      await repository.getCategories(true);
+      await repository.getAllCategories();
 
-      await repository.getExpenseCategories();
       await Future<void>.delayed(Duration.zero);
+      expect(events, isEmpty);
+      await sub.cancel();
+    });
 
-      expect(seen, isEmpty);
+    test('boş silme bildirmez', () async {
+      final events = <void>[];
+      final sub = changedNotifier.stream.listen(events.add);
+
+      await repository.deleteCategories({});
+
+      await Future<void>.delayed(Duration.zero);
+      expect(events, isEmpty);
       await sub.cancel();
     });
   });

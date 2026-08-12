@@ -79,6 +79,25 @@ class TransactionRepositoryImpl implements TransactionsRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, int>> countByTags(Set<String> tags) async {
+    try {
+      return Right(await localDatasource.countByTags(tags));
+    } catch (e) {
+      return Left(CacheFailure('İşlemler sayılamadı: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> retagTransactions(
+      Set<String> from, String to) async {
+    try {
+      return Right(await localDatasource.retagTransactions(from, to));
+    } catch (e) {
+      return Left(CacheFailure('İşlemler taşınamadı: ${e.toString()}'));
+    }
+  }
+
   /// Kayıtlı işlemin fiş dosya adını döndürür; işlem yoksa/hata olursa null
   /// (dosya temizliği asıl işlemi bloklamamalı).
   Future<String?> _existingReceiptFileName(String? id) async {

@@ -7,6 +7,8 @@ import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/services/budget_alert_monitor.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +16,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockGetBudgetsUsecase extends Mock implements GetBudgetsUsecase {}
+
+class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class MockNotificationService extends Mock implements NotificationService {}
 
@@ -29,6 +33,7 @@ void main() {
   late MockNotificationService mockNotifications;
   late MockNotificationSettingsService mockNotificationSettings;
   late MockNotificationLocalizer mockLocalizer;
+  late MockCategoryRepository mockCategories;
   late TransactionsChangedNotifier notifier;
   late SharedPreferences prefs;
   late BudgetAlertMonitor monitor;
@@ -56,6 +61,7 @@ void main() {
         mockNotificationSettings,
         mockLocalizer,
         prefs,
+        mockCategories,
         notifier,
       );
 
@@ -68,6 +74,9 @@ void main() {
     mockNotifications = MockNotificationService();
     mockNotificationSettings = MockNotificationSettingsService();
     mockLocalizer = MockNotificationLocalizer();
+    mockCategories = MockCategoryRepository();
+    when(() => mockCategories.getAllCategories())
+        .thenAnswer((_) async => <CategoryEntity>[]);
     when(() => mockLocalizer.l10n).thenReturn(tr);
     when(() => mockNotificationSettings.isBudgetAlertsEnabled).thenReturn(true);
     notifier = TransactionsChangedNotifier();

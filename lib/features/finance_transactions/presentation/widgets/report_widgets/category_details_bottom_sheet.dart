@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
@@ -187,6 +188,10 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                       const SizedBox(height: 12),
                       _buildBudgetIndicator(context, theme, budgetInfo),
                     ],
+                    if (updatedCategory.children.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      _buildChildBreakdown(context, theme, updatedCategory),
+                    ],
                   ],
                 ),
               ),
@@ -216,6 +221,102 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  /// Ana kategori diliminin alt kategori kırılımı.
+  ///
+  /// Toplama kök seviyede yapıldığı için pasta "Fatura"yı tek dilim gösterir;
+  /// kullanıcı içeriye ancak buradan bakabilir. Çocukların toplamı ile
+  /// [CategoryData.totalAmount] arasındaki fark kökün DOĞRUDAN harcamasıdır ve
+  /// ayrı bir satır olarak yazılır.
+  Widget _buildChildBreakdown(
+    BuildContext context,
+    ThemeData theme,
+    CategoryData category,
+  ) {
+    final scheme = theme.colorScheme;
+    final childrenTotal =
+        category.children.fold<double>(0.0, (sum, c) => sum + c.totalAmount);
+    final directAmount = category.totalAmount - childrenTotal;
+
+    Widget row(
+      String label,
+      double amount, {
+      bool muted = false,
+      String? budgetNote,
+      bool budgetExceeded = false,
+    }) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              Icon(Icons.subdirectory_arrow_right,
+                  size: 14, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontStyle: muted ? FontStyle.italic : null,
+                    color: muted ? scheme.onSurfaceVariant : null,
+                  ),
+                ),
+              ),
+              if (budgetNote != null) ...[
+                Text(
+                  budgetNote,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: budgetExceeded ? Colors.redAccent : Colors.green,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                _formatCurrency(context, amount),
+                style: const TextStyle(
+                    fontSize: 12.5, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final child in category.children)
+          () {
+            // Bütçe ALT kategoriye de konabiliyor (tek seviye kilidi yalnız
+            // ata+torun ikilisini engeller). Dilimler kök seviyede toplandığı
+            // için böyle bir bütçe kök satırında görünmez; tek görünür yeri
+            // burasıdır.
+            final budget = isExpense
+                ? dataBuilder.budgetProgressFor(child.name, child.totalAmount)
+                : null;
+            return row(
+              context.categoryLabelForTag(child.name, labels: categoryLabels),
+              child.totalAmount,
+              budgetNote: budget == null
+                  ? null
+                  : '%${(budget.progress * 100).toStringAsFixed(0)} / '
+                      '${_formatCurrency(context, budget.limit)}',
+              budgetExceeded: budget?.isExceeded ?? false,
+            );
+          }(),
+        // Kuruş artıkları bir satır üretmesin.
+        if (directAmount > 0.005)
+          row(
+            context.l10n.dogrudanKategoriSec(
+              category.labelIn(context, categoryLabels),
+            ),
+            directAmount,
+            muted: true,
+          ),
+      ],
     );
   }
 

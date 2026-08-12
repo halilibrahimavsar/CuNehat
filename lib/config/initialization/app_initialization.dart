@@ -12,6 +12,8 @@ import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/wallet/data/models/wallet_model.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
+import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -120,6 +122,7 @@ class AppInitialization {
       Hive.openBox<ReceivableModel>('receivables'),
       Hive.openBox<BudgetModel>('budgets_box'),
       Hive.openBox<RecurringTransactionModel>('recurring_transactions_box'),
+      Hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName),
     ]);
   }
 
@@ -149,6 +152,7 @@ class AppInitialization {
     register(BudgetModelAdapter());
     register(RecurringTransactionModelAdapter());
     register(RecurringFrequencyAdapter());
+    register(CategoryModelAdapter());
     register(ColorAdapter());
   }
 }

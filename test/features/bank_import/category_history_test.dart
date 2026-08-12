@@ -16,8 +16,13 @@ TransactionEntity _tx(String title, String tag, {bool income = false}) =>
       type: income ? TransactionTypeModel.income : TransactionTypeModel.expense,
     );
 
-CategoryEntity _cat(String id, {bool expense = true}) =>
-    CategoryEntity(id: id, iconName: 'x', isExpense: expense, sortOrder: 1);
+CategoryEntity _cat(String id, {bool expense = true}) => CategoryEntity(
+      id: id,
+      name: id,
+      iconName: 'x',
+      isExpense: expense,
+      sortOrder: 1,
+    );
 
 void main() {
   final guesser = CategoryGuesser();

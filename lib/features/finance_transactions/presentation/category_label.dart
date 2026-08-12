@@ -1,75 +1,62 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart' show AppIcons;
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:flutter/widgets.dart';
 
 /// Kategori adlarının TEK gösterim yolu.
 ///
-/// `CategoryEntity.id` opak bir anahtardır ve deftere `TransactionEntity.tag`
-/// olarak bu hâliyle yazılır — ekrana asla doğrudan basılmamalıdır. Görünen ad
-/// iki kaynaktan gelir:
-///   1. Kullanıcı kategoriyi yeniden adlandırdıysa `displayName`,
-///   2. aksi hâlde id'nin l10n karşılığı (`translateCategory`).
+/// `CategoryEntity.id` opak bir UUID'dir ve deftere `TransactionEntity.tag`
+/// olarak bu hâliyle yazılır — ekrana asla doğrudan basılmamalıdır.
 extension CategoryLabelX on BuildContext {
-  /// [category] için kullanıcıya gösterilecek ad.
-  String categoryLabel(CategoryEntity category) =>
-      category.displayName ?? translateCategory(category.id);
-
-  /// Elde yalnız ham `tag` / `categoryId` varken görünen ad.
+  /// Elde yalnız ham `tag` varken görünen ad.
   ///
-  /// [labels] (bkz. [buildCategoryLabelMap]) kullanıcının yeniden
-  /// adlandırmalarını taşır. Haritada olmayan tag'ler — sistem etiketleri
-  /// ("Borç", "Transfer") ve silinmiş kategorilerden kalan tag'ler — l10n'a
-  /// düşer, o da bilmiyorsa tag olduğu gibi gösterilir.
+  /// [labels] (bkz. [buildCategoryLabelMap]) kullanıcının kategori adlarını
+  /// taşır. Haritada olmayan tag'ler — otomatik hareketlerin sistem etiketleri
+  /// ("Borç", "Transfer") — çevrilir, o da bilmiyorsa tag olduğu gibi gösterilir.
   String categoryLabelForTag(String tag, {Map<String, String>? labels}) =>
-      labels?[tag] ?? translateCategory(tag);
+      labels?[tag] ?? translateSystemTag(tag);
 }
 
-/// `tag` → görünen ad haritası. Bir listenin her satırında kategori araması
-/// yapmamak için sayfa seviyesinde bir kez kurulur ve aşağı geçirilir
-/// (`categoryIcons` ile aynı kanal).
+/// `id → ad` haritası. Bir listenin her satırında kategori araması yapmamak
+/// için sayfa seviyesinde bir kez kurulur ve aşağı geçirilir.
 Map<String, String> buildCategoryLabelMap(
-  BuildContext context,
-  Iterable<CategoryEntity> categories,
-) =>
-    {for (final c in categories) c.id: context.categoryLabel(c)};
+        Iterable<CategoryEntity> categories) =>
+    {for (final c in categories) c.id: c.name};
 
-/// Kategori kimliğinden GÖRÜNÜME giden indeks: ikon ve ad tek bir şeyin iki
-/// yarısıdır — aynı anahtarla (`c.id`) kurulur, birlikte yüklenir, birlikte
-/// geçirilir.
+/// Kategori kimliğinden GÖRÜNÜME giden indeks: ikon, ad ve hiyerarşi tek bir
+/// şeyin parçalarıdır — aynı anahtarla (`c.id`) kurulur, birlikte yüklenir,
+/// birlikte geçirilir.
 typedef CategoryDisplayIndex = ({
   Map<String, IconData> icons,
   Map<String, String> labels,
+
+  /// `id → kök id`. Toplama yapan her yüzey ("ana kategori çocuklarını kapsar")
+  /// bunu kullanır; bkz. [rootIdOf].
+  Map<String, String> roots,
+
+  /// `id → "Fatura › Elektrik"`. Bağlamın ada eklenmesi gereken yerler
+  /// (bildirim, CSV, seçici alt yazısı) için.
+  Map<String, String> breadcrumbs,
 });
 
 /// Gider + gelir kategorilerini tek turda çeker.
 ///
 /// Dört sayfa (işlemler, rapor, analiz, bütçeler) bu turu ayrı ayrı elle
-/// yazıyordu; ikisi karakter karakter aynıydı, biri ikon yarısını atlıyordu,
-/// biri de zaten yükleyen bir dosyada ikinci kez yüklüyordu. Kopyalar
-/// sapmıştı: analiz sayfası indeksin yalnız yarısını kullanıyordu.
-Future<List<CategoryEntity>> fetchAllCategories(CategoryRepository repo) async {
-  final lists = await Future.wait([
-    repo.getExpenseCategories(),
-    repo.getIncomeCategories(),
-  ]);
-  return [for (final list in lists) ...list];
-}
+/// yazıyordu; ikisi karakter karakter aynıydı, biri ikon yarısını atlıyordu.
+Future<List<CategoryEntity>> fetchAllCategories(CategoryRepository repo) =>
+    repo.getAllCategories();
 
 /// [categories]'ten görüntüleme indeksini kurar.
-///
-/// Ayrı adım olmasının nedeni [BuildContext]: l10n çözümü senkron yapılmalı,
-/// `await`ten sonra context kullanmak zorunda kalınmamalı. Çağıran önce
-/// [fetchAllCategories]'i bekler, `mounted` kontrolünü yapar, sonra bunu
-/// çağırır.
 CategoryDisplayIndex buildCategoryDisplayIndex(
-  BuildContext context,
   Iterable<CategoryEntity> categories,
 ) =>
     (
       icons: {
         for (final c in categories) c.id: AppIcons.getIconData(c.iconName),
       },
-      labels: buildCategoryLabelMap(context, categories),
+      labels: buildCategoryLabelMap(categories),
+      roots: buildRootIndex(categories),
+      breadcrumbs: buildBreadcrumbs(categories),
     );

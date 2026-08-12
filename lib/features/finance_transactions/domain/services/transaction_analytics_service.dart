@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
 /// Tek bir kategorinin dönemsel harcama sıçraması uyarısı.
@@ -47,6 +48,7 @@ class TransactionAnalyticsService {
     DateTime? currentDateOverride,
     double spikeMinimumAmount = defaultSpikeMinimumAmount,
     bool rangeIsBudgetPeriod = false,
+    Map<String, String> rootIndex = const {},
   }) {
     final startDay = _dayOnly(rangeStart);
     final endDay = _dayOnly(rangeEnd);
@@ -70,7 +72,11 @@ class TransactionAnalyticsService {
         totalExpense += t.amount;
         expenseByWeekday[t.date.weekday] =
             (expenseByWeekday[t.date.weekday] ?? 0) + t.amount;
-        expenseByCategory[t.tag] = (expenseByCategory[t.tag] ?? 0) + t.amount;
+        // Kök seviyede toplanır: "en çok harcanan kategori" alt kalemlere
+        // bölünseydi ("Elektrik", "Doğalgaz") hem anlamı zayıflar hem de
+        // sıçrama tespiti bölünmüş tutarlarla %25 eşiğini geçemezdi.
+        final root = rootIdOf(t.tag, rootIndex);
+        expenseByCategory[root] = (expenseByCategory[root] ?? 0) + t.amount;
         if (largestExpense == null || t.amount > largestExpense.amount) {
           largestExpense = t;
         }
@@ -121,6 +127,7 @@ class TransactionAnalyticsService {
       endDay: endDay,
       spanDays: days,
       minimumAmount: spikeMinimumAmount,
+      rootIndex: rootIndex,
     );
 
     return TransactionInsights(
@@ -148,6 +155,7 @@ class TransactionAnalyticsService {
     required DateTime endDay,
     required int spanDays,
     required double minimumAmount,
+    required Map<String, String> rootIndex,
   }) {
     if (currentExpenseByCategory.isEmpty) return null;
 
@@ -162,8 +170,10 @@ class TransactionAnalyticsService {
 
     final Map<String, double> prevExpenseByCategory = {};
     for (final t in prevRange) {
-      prevExpenseByCategory[t.tag] =
-          (prevExpenseByCategory[t.tag] ?? 0) + t.amount;
+      // Karşılaştırılan iki dönem AYNI seviyede toplanmalı.
+      final root = rootIdOf(t.tag, rootIndex);
+      prevExpenseByCategory[root] =
+          (prevExpenseByCategory[root] ?? 0) + t.amount;
     }
 
     CategorySpike? maxSpike;

@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
 /// Bir dönemin gelir/gider/net özeti. Saf veri; biçimlendirme UI'da yapılır.
@@ -16,14 +17,27 @@ class ReportTotals {
 /// Tek bir kategorinin (tag) dönem içindeki toplamı ve ona ait işlemler.
 /// Renk taşımaz — renk ataması bir sunum kararıdır, UI katmanında yapılır.
 class CategoryBreakdown {
+  /// Kalemin kimliği: kök kategori id'si ya da (kategoriye çözülmeyen
+  /// satırlarda) ham `tag`.
   final String name;
+
+  /// Kökün KENDİ işlemleri + tüm alt kategorilerinin toplamı.
   final double totalAmount;
+
+  /// Alt ağacın tamamı — kırılımı çıkarmak için değil, dilime dokunulduğunda
+  /// listelemek için.
   final List<TransactionEntity> transactions;
+
+  /// Alt kategori kırılımı (drill-down). Kökün DOĞRUDAN işlemleri burada
+  /// görünmez; onlar [totalAmount] ile çocukların toplamı arasındaki farktır.
+  /// Çocuğu olmayan kalemlerde boştur.
+  final List<CategoryBreakdown> children;
 
   const CategoryBreakdown({
     required this.name,
     required this.totalAmount,
     required this.transactions,
+    this.children = const [],
   });
 }
 
@@ -76,27 +90,58 @@ class TransactionReportService {
     );
   }
 
-  /// İşlemleri kategoriye (tag) göre gruplayıp her grubun toplamını çıkarır.
+  /// İşlemleri KÖK kategoriye göre gruplayıp her grubun toplamını çıkarır.
   /// [isExpense] true ise yalnızca giderler, false ise yalnızca gider-olmayan
   /// (gelir) işlemler dikkate alınır. Sonuç toplam tutara göre azalan sıralıdır.
+  ///
+  /// [rootIndex] (`id → kök id`, bkz. `buildRootIndex`) verilmezse her tag
+  /// kendi başına bir kalem olur — hiyerarşi öncesi davranış.
+  ///
+  /// Toplamanın kök seviyede olması zorunludur: yaprak seviyede gruplansaydı
+  /// on kategorilik bir kurulum otuz dilime çıkar, pasta grafiğin %3 eşiği
+  /// hepsini "Diğer" kovasına süpürür ve alt kategoriye geçmek raporu
+  /// boşaltırdı.
   List<CategoryBreakdown> buildCategoryBreakdown(
     List<TransactionEntity> transactions, {
     required bool isExpense,
+    Map<String, String> rootIndex = const {},
   }) {
-    final grouped = <String, List<TransactionEntity>>{};
+    // Kök → (alt kalem kimliği → işlemler). Kökün doğrudan işlemleri kendi
+    // kimliği altında toplanır.
+    final grouped = <String, Map<String, List<TransactionEntity>>>{};
+
     for (final t in transactions) {
       if (t.isExpense != isExpense) continue;
-      grouped.putIfAbsent(t.tag, () => []).add(t);
+      final root = rootIdOf(t.tag, rootIndex);
+      grouped.putIfAbsent(root, () => {}).putIfAbsent(t.tag, () => []).add(t);
     }
 
     if (grouped.isEmpty) return const [];
 
-    final result = grouped.entries.map((e) {
-      final sum = e.value.fold<double>(0.0, (prev, t) => prev + t.amount);
+    double sumOf(Iterable<TransactionEntity> list) =>
+        list.fold<double>(0.0, (prev, t) => prev + t.amount);
+
+    final result = grouped.entries.map((entry) {
+      final root = entry.key;
+      final byLeaf = entry.value;
+      final all = [for (final list in byLeaf.values) ...list];
+
+      final children = [
+        for (final leaf in byLeaf.entries)
+          // Kökün DOĞRUDAN işlemleri çocuk kırılımında ayrı kalem değildir.
+          if (leaf.key != root)
+            CategoryBreakdown(
+              name: leaf.key,
+              totalAmount: sumOf(leaf.value),
+              transactions: leaf.value,
+            ),
+      ]..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+
       return CategoryBreakdown(
-        name: e.key,
-        totalAmount: sum,
-        transactions: e.value,
+        name: root,
+        totalAmount: sumOf(all),
+        transactions: all,
+        children: children,
       );
     }).toList()
       ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));

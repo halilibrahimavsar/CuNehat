@@ -5,10 +5,16 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+
+class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late CsvService csvService;
+  late MockCategoryRepository categoryRepo;
 
   const MethodChannel pathChannel =
       MethodChannel('plugins.flutter.io/path_provider');
@@ -22,7 +28,28 @@ void main() {
   dynamic filePickerResponse;
 
   setUp(() {
-    csvService = CsvService();
+    categoryRepo = MockCategoryRepository();
+    // Dosya artık kategori ADINI taşır (kimlik UUID, insan okuyamaz); içe
+    // aktarım adı kimliğe çözer. Çözülemeyen satır kategorisiz işlem üretmek
+    // yerine atlanır.
+    when(() => categoryRepo.getAllCategories()).thenAnswer((_) async => const [
+          CategoryEntity(
+              id: 'id-market',
+              name: 'Market',
+              iconName: 'category',
+              isExpense: true),
+          CategoryEntity(
+              id: 'id-work',
+              name: 'Work',
+              iconName: 'category',
+              isExpense: false),
+          CategoryEntity(
+              id: 'id-home',
+              name: 'Home',
+              iconName: 'category',
+              isExpense: true),
+        ]);
+    csvService = CsvService(categoryRepo);
     shareLog.clear();
     filePickerLog.clear();
     filePickerResponse = null;
@@ -75,8 +102,7 @@ void main() {
     test('UTF-8 BOM ile yazılır ve Türkçe karakterler korunur', () async {
       await csvService.exportTransactionsToCSV([tx]);
 
-      final file =
-          File('${Directory.systemTemp.path}/transactions_export.csv');
+      final file = File('${Directory.systemTemp.path}/transactions_export.csv');
       final bytes = await file.readAsBytes();
 
       expect(bytes.take(3).toList(), utf8Bom, reason: 'BOM eksik');
@@ -103,6 +129,96 @@ void main() {
       expect(result!.skippedRows, 0);
       expect(result.transactions.single.title, 'Şişli Bakkal — ÇĞİÖÜ');
       expect(result.transactions.single.amount, 123.45);
+      // Dışa aktarımda ad yazıldı, içe aktarımda kimliğe geri çözüldü.
+      expect(result.transactions.single.tag, 'id-market');
+    });
+
+    test('otomatik hareket satırı dışa aktarılır ama içe aktarımda ATLANIR',
+        () async {
+      // Bilinçli: içe aktarım yeni bir cüzdana yazar, orada bu satırın
+      // arkasındaki borç/yatırım kaydı yoktur. Kullanıcı atlanan satır
+      // sayısından haberdar edilir.
+      await csvService.exportTransactionsToCSV([
+        tx,
+        TransactionEntity(
+          id: 't2',
+          userId: 'u1',
+          walletId: 'w1',
+          title: 'Kredi taksiti',
+          tag: 'Borç Ödemesi',
+          amount: 750,
+          date: DateTime(2026, 7, 29),
+          type: TransactionTypeModel.expense,
+          isSystem: true,
+        ),
+      ]);
+
+      final path = '${Directory.systemTemp.path}/transactions_export.csv';
+      final content = await File(path).readAsString();
+      expect(content, contains('Borç Ödemesi'), reason: 'rapor değeri korunur');
+
+      filePickerResponse = [
+        {
+          'path': path,
+          'name': 'transactions_export.csv',
+          'size': await File(path).length(),
+          'bytes': null,
+        }
+      ];
+      final result = await csvService.importTransactionsFromCSV('u1');
+
+      expect(result!.transactions, hasLength(1));
+      expect(result.transactions.single.tag, 'id-market');
+      expect(result.skippedRows, 1);
+    });
+
+    test('gelirde ve giderde AYNI adlı kök round-trip\'i bozmaz', () async {
+      // Başlangıç paketi her iki tarafta da "Yatırım" kurar. Ad indeksi türü
+      // içermezse bu ad "belirsiz" sayılıp düşer ve satır atlanırdı.
+      when(() => categoryRepo.getAllCategories())
+          .thenAnswer((_) async => const [
+                CategoryEntity(
+                    id: 'gider-yatirim',
+                    name: 'Yatırım',
+                    iconName: 'category',
+                    isExpense: true),
+                CategoryEntity(
+                    id: 'gelir-yatirim',
+                    name: 'Yatırım',
+                    iconName: 'category',
+                    isExpense: false),
+              ]);
+
+      await csvService.exportTransactionsToCSV([
+        tx.copyWith(tag: 'gider-yatirim'),
+        TransactionEntity(
+          id: 't2',
+          userId: 'u1',
+          walletId: 'w1',
+          title: 'Temettü',
+          tag: 'gelir-yatirim',
+          amount: 500,
+          date: DateTime(2026, 7, 29),
+          type: TransactionTypeModel.income,
+        ),
+      ]);
+
+      final path = '${Directory.systemTemp.path}/transactions_export.csv';
+      filePickerResponse = [
+        {
+          'path': path,
+          'name': 'transactions_export.csv',
+          'size': await File(path).length(),
+          'bytes': null,
+        }
+      ];
+      final result = await csvService.importTransactionsFromCSV('u1');
+
+      expect(result!.skippedRows, 0);
+      expect(
+        result.transactions.map((t) => t.tag),
+        ['gider-yatirim', 'gelir-yatirim'],
+      );
     });
   });
 

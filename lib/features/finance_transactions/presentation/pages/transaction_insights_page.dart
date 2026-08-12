@@ -105,6 +105,9 @@ class _InsightsViewState extends State<_InsightsView> {
   /// yalnız gösterim içindir.
   Map<String, String> _categoryLabels = {};
 
+  /// `id → kök id`; analiz KÖK seviyede toplar (bkz. buildRootIndex).
+  Map<String, String> _categoryRoots = {};
+
   StreamSubscription<void>? _categoriesSub;
 
   @override
@@ -125,8 +128,11 @@ class _InsightsViewState extends State<_InsightsView> {
   Future<void> _loadCategoryLabels() async {
     final categories = await fetchAllCategories(getIt<CategoryRepository>());
     if (!mounted) return;
-    final index = buildCategoryDisplayIndex(context, categories);
-    setState(() => _categoryLabels = index.labels);
+    final index = buildCategoryDisplayIndex(categories);
+    setState(() {
+      _categoryLabels = index.labels;
+      _categoryRoots = index.roots;
+    });
   }
 
   @override
@@ -212,6 +218,7 @@ class _InsightsViewState extends State<_InsightsView> {
             // Günlük harcama hedefi yalnız bütçe döneminde ("Bu Ay",
             // "Bu Yıl") dönemin son gününde de anlamlı.
             rangeIsBudgetPeriod: DateRangeHelper.isBudgetPeriod(_range),
+            rootIndex: _categoryRoots,
           );
 
           return SingleChildScrollView(

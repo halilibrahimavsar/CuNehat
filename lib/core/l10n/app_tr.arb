@@ -63,8 +63,6 @@
   "degistir": "Değiştir",
   "labelKategoriAdi": "Kategori Adı",
   "hintOrnMarketKiraMaas": "Örn: Market, Kira, Maaş",
-  "ozelKategoriler": "Özel Kategoriler",
-  "varsayilanKategoriler": "Varsayılan Kategoriler",
   "yeniKategoriEkle": "Yeni Kategori Ekle",
   "temizle": "Temizle",
   "labelMin": "Min",
@@ -347,15 +345,7 @@
   "buDonemIcinHenuz": "Bu dönem için henüz işlem verisi bulunamadı. Raporlar veri girildikten sonra derlenecektir.",
   "ikonSecin": "İkon Seçin",
   "ikonDegistirmekIcinDokun": "İkon değiştirmek için dokun",
-  "categoriesWhereCC": "{customLength} özel, {defaultLength} varsayılan",
-  "@categoriesWhereCC": {
-    "placeholders": {
-      "customLength": {},
-      "defaultLength": {}
-    }
-  },
   "asagidakiButondanEkleyebilirsiniz": "Aşağıdaki butondan ekleyebilirsiniz",
-  "varsayilan": "Varsayılan",
   "filtreler": "Filtreler",
   "uygula": "Uygula",
   "tARIHAraligi": "TARİH ARALIĞI",
@@ -575,7 +565,6 @@
   "yeniKategori": "Yeni Kategori",
   "kategoriAdiBosOlamaz": "Kategori adı boş olamaz",
   "enAz2KarakterOlmali": "En az 2 karakter olmalı",
-  "kategoriAdiRezerve": "Bu ad otomatik sistem işlemleri için ayrılmış",
   "kategoriOlusturuldu": "Kategori oluşturuldu!",
   "kategoriGuncellendi": "Kategori güncellendi!",
   "kategoriSilindi": "Kategori silindi!",
@@ -594,8 +583,77 @@
   },
   "giderKategorileri": "Gider Kategorileri",
   "gelirKategorileri": "Gelir Kategorileri",
-  "varsayilanKategoriYok": "Varsayılan kategori yok",
-  "henuzOzelKategoriYok": "Henüz özel kategori yok",
+  "categoryErrorDuplicateName": "Bu isimde bir kategori zaten var",
+  "categoryErrorParentNotFound": "Üst kategori bulunamadı",
+  "categoryErrorParentIsNotRoot": "Alt kategorinin altına kategori eklenemez",
+  "categoryErrorTypeMismatch": "Alt kategori, üst kategoriyle aynı türde olmalı",
+  "categoryErrorSelfParent": "Kategori kendi üst kategorisi olamaz",
+  "categoryErrorParentHasChildren": "Alt kategorisi olan bir kategori taşınamaz",
+  "kategorilerBaslik": "Kategoriler",
+  "kategoriSayisiOzeti": "{rootCount} ana, {childCount} alt kategori",
+  "@kategoriSayisiOzeti": {
+    "placeholders": {
+      "rootCount": {},
+      "childCount": {}
+    }
+  },
+  "altKategoriEkle": "Alt kategori ekle",
+  "ustKategori": "Üst kategori",
+  "ustKategoriYok": "Ana kategori (üst yok)",
+  "henuzKategoriYok": "Henüz kategori yok",
+  "oneriSetindenBasla": "Öneri setinden başla",
+  "kategoriSilTasiTitle": "İşlemleri taşı",
+  "kategoriSilTasiMessage": "\"{name}\" kategorisinde {count} işlem var. Silmeden önce bu işlemler hangi kategoriye taşınsın?",
+  "@kategoriSilTasiMessage": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
+  "kategoriSilAltKategorilerDe": "{count} alt kategorisi de silinecek; onların işlemleri de aynı kategoriye taşınır.",
+  "@kategoriSilAltKategorilerDe": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kategoriSilHedefYok": "Taşınacak başka kategori yok. Önce yeni bir kategori oluşturun.",
+  "dogrudanKategoriSec": "Doğrudan \"{name}\"",
+  "@dogrudanKategoriSec": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "altKategoriSec": "Alt kategori seç",
+  "starterPackTitle": "Kategorilerini kur",
+  "starterPackSubtitle": "Hazır setten seç; sonra dilediğin gibi düzenle, sil, yenisini ekle. İşlem girebilmek için en az bir kategori gerekir.",
+  "starterPackSelectAll": "Tümünü seç",
+  "starterPackClearAll": "Seçimi temizle",
+  "starterPackSkip": "Şimdilik atla",
+  "starterPackCreate": "{count} kategori oluştur",
+  "@starterPackCreate": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "starterPackCreated": "{count} kategori oluşturuldu",
+  "@starterPackCreated": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "starterPackChildCount": "{count} alt kategori",
+  "@starterPackChildCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "butceUstKategorideVar": "\"{name}\" üst kategorisinde bütçe var",
+  "@butceUstKategorideVar": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "butceAltKategorideVar": "Alt kategorilerinde bütçe var",
   "duzenleSubtitle": "Tutar, tarih, kategori ve diğer detaylar",
   "islemiSil": "İşlemi Sil",
   "silSubtitle": "Bakiye eski haline döner",
@@ -767,19 +825,14 @@
   "categoryHediyeVeBagis": "Hediye & Bağış",
   "categoryHizmetler": "Hizmetler",
   "categoryDiger": "Diğer",
-  "defaultCategoryGroceries": "Market",
-  "defaultCategoryFood": "Yemek",
-  "defaultCategoryTransport": "Ulaşım",
-  "defaultCategoryBills": "Fatura",
-  "defaultCategoryRent": "Kira",
-  "defaultCategoryShopping": "Alışveriş",
-  "defaultCategoryHealth": "Sağlık",
-  "defaultCategoryEducation": "Eğitim",
-  "defaultCategoryEntertainment": "Eğlence",
-  "defaultCategorySalary": "Maaş",
-  "defaultCategorySideIncome": "Ek Gelir",
-  "defaultCategoryFreelance": "Serbest",
-  "defaultCategoryInvestment": "Yatırım",
+  "systemTagDebt": "Borç",
+  "systemTagDebtPayment": "Borç Ödemesi",
+  "systemTagReceivable": "Alacak",
+  "systemTagReceivableCollection": "Alacak Tahsilatı",
+  "systemTagInvestmentBuy": "Yatırım Alımı",
+  "systemTagInvestmentSell": "Yatırım Satışı",
+  "systemTagInvestmentCorrection": "Yatırım Düzeltmesi",
+  "systemTagTransfer": "Transfer",
   "kategorisiz": "Kategorisiz",
   "detailLabelTarih": "Tarih",
   "detailLabelSaat": "Saat",

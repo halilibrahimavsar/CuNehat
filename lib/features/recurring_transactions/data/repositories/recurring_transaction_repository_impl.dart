@@ -54,6 +54,17 @@ class RecurringTransactionRepositoryImpl
   }
 
   @override
+  Future<Either<Failure, int>> retagTemplates(
+      Set<String> from, String to) async {
+    try {
+      return Right(await localDataSource.retagTemplates(from, to));
+    } catch (e, st) {
+      debugPrint('Retag recurring templates error: $e\n$st');
+      return const Left(CacheFailure('Düzenli işlem şablonları taşınamadı.'));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<RecurringTransactionEntity>>>
       getPendingTransactions() async {
     try {

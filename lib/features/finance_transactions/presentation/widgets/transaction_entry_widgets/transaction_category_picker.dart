@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
-import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_manager_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
 
 // ============================================================ Category picker
@@ -23,6 +24,31 @@ class CategoryPicker extends StatelessWidget {
 
   Future<void> _openManager(BuildContext context) async {
     await showCategoryManager(context: context, isExpense: isExpense);
+    await controller.loadCategories();
+  }
+
+  void _apply(String categoryId) {
+    controller.categoryId.value = categoryId;
+    // "Bir kategori seçin" uyarısı ekranda kalmasın.
+    if (controller.error.value != null) {
+      controller.error.value = null;
+    }
+  }
+
+  /// Çocuksuz kök doğrudan seçilir; çocuklu kök ağaç seçicisini açar.
+  Future<void> _select(BuildContext context, CategoryNode node) async {
+    if (node.children.isEmpty) {
+      _apply(node.category.id);
+      return;
+    }
+
+    final picked = await showCategoryPickerSheet(
+      context: context,
+      isExpense: isExpense,
+      currentId: controller.categoryId.value,
+    );
+    if (picked == null) return;
+    _apply(picked.id);
     await controller.loadCategories();
   }
 
@@ -83,36 +109,45 @@ class CategoryPicker extends StatelessWidget {
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
+                // Şerit yalnız ANA kategorileri gösterir: 40+ yaprağı tek
+                // satırda yan yana dizmek seçimi imkânsızlaştırırdı. Çocuklu
+                // bir köke dokunmak ağaç seçicisini açar.
+                final tree = buildCategoryTree(categories);
                 return SizedBox(
                   height: 96,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(vertical: 2),
-                    itemCount: categories.length + 1,
+                    itemCount: tree.length + 1,
                     separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (context, index) {
-                      if (index == categories.length) {
+                      if (index == tree.length) {
                         return _AddCategoryTile(
                           accent: accent,
                           onTap: () => _openManager(context),
                         );
                       }
-                      final cat = categories[index];
+                      final node = tree[index];
                       return ValueListenableBuilder<String?>(
                         valueListenable: controller.categoryId,
                         builder: (context, selectedId, ___) {
+                          // Alt kategori seçiliyken kökün kendisi seçili
+                          // görünür; etiket ise seçili yaprağın adını taşır ki
+                          // kullanıcı hangi alt kalemi seçtiğini şeritte görsün.
+                          final selectedChild = node.children
+                              .where((c) => c.id == selectedId)
+                              .firstOrNull;
+                          final selected = selectedId == node.category.id ||
+                              selectedChild != null;
+
                           return _CategoryTile(
-                            category: cat,
-                            selected: selectedId == cat.id,
+                            category: node.category,
+                            label: selectedChild?.name ?? node.category.name,
+                            selected: selected,
+                            hasChildren: node.children.isNotEmpty,
                             accent: accent,
-                            onTap: () {
-                              controller.categoryId.value = cat.id;
-                              // "Bir kategori seçin" uyarısı ekranda kalmasın.
-                              if (controller.error.value != null) {
-                                controller.error.value = null;
-                              }
-                            },
+                            onTap: () => _select(context, node),
                           );
                         },
                       );
@@ -130,13 +165,19 @@ class CategoryPicker extends StatelessWidget {
 
 class _CategoryTile extends StatelessWidget {
   final CategoryEntity category;
+
+  /// Şeritte yazan ad — alt kategori seçiliyse onun adı (bkz. CategoryPicker).
+  final String label;
   final bool selected;
+  final bool hasChildren;
   final Color accent;
   final VoidCallback onTap;
 
   const _CategoryTile({
     required this.category,
+    required this.label,
     required this.selected,
+    required this.hasChildren,
     required this.accent,
     required this.onTap,
   });
@@ -163,24 +204,48 @@ class _CategoryTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: selected
-                    ? accent.withValues(alpha: 0.18)
-                    : cs.onSurface.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                AppIcons.getIconData(category.iconName),
-                size: 20,
-                color: selected ? accent : cs.onSurfaceVariant,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? accent.withValues(alpha: 0.18)
+                        : cs.onSurface.withValues(alpha: 0.06),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    AppIcons.getIconData(category.iconName),
+                    size: 20,
+                    color: selected ? accent : cs.onSurfaceVariant,
+                  ),
+                ),
+                // Alt kategorisi olan kök, dokunulduğunda seçim yapmak yerine
+                // listeyi açar; işaret bunu önceden söyler.
+                if (hasChildren)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.expand_more_rounded,
+                        size: 13,
+                        color: selected ? accent : cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 6),
             Text(
-              context.categoryLabel(category),
+              label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

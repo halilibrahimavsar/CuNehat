@@ -87,6 +87,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// `tag` → görünen ad. Kırılım anahtarı hep `tag` (kategori id'si) kalır;
   /// bu harita yalnız gösterim içindir (bkz. [buildCategoryLabelMap]).
   Map<String, String> _categoryLabels = {};
+
+  /// `id → kök id`. Kırılım KÖK seviyede toplanır: alt kategoriler kendi
+  /// dilimlerine bölünseydi %3 eşiği hepsini "Diğer"e süpürürdü.
+  Map<String, String> _categoryRoots = {};
   List<BudgetEntity> _budgets = [];
 
   StreamSubscription<void>? _categoriesSub;
@@ -100,6 +104,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         range: _range,
         budgets: _budgets,
         otherCategoryLabel: context.l10n.categoryDiger,
+        rootIndex: _categoryRoots,
       );
 
   @override
@@ -141,10 +146,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   Future<void> _loadCategoryIcons() async {
     final categories = await fetchAllCategories(widget.categoryRepository);
     if (!mounted) return;
-    final index = buildCategoryDisplayIndex(context, categories);
+    final index = buildCategoryDisplayIndex(categories);
     setState(() {
       _categoryIcons = index.icons;
       _categoryLabels = index.labels;
+      _categoryRoots = index.roots;
     });
   }
 

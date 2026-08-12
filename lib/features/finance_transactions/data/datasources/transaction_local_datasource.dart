@@ -152,6 +152,44 @@ class TransactionHiveDataSource {
     }
   }
 
+  /// [tags]'ten birini taşıyan işlem sayısı — TÜM cüzdanlarda.
+  ///
+  /// Kategori silme akışı "bu kategoride kaç işlem var?" sorusunu buradan
+  /// sorar; kategori cüzdana bağlı olmadığı için sayım da cüzdandan bağımsız.
+  Future<int> countByTags(Set<String> tags) async {
+    if (tags.isEmpty) return 0;
+    try {
+      final box = await _getBox();
+      return box.values.where((t) => tags.contains(t.tag)).length;
+    } catch (e) {
+      throw CacheException('İşlemler sayılırken hata oluştu', e);
+    }
+  }
+
+  /// [from]'daki etiketleri taşıyan işlemleri [to] etiketine çevirir; kaç
+  /// kayıt değiştiğini döner.
+  ///
+  /// Kategori silinirken çağrılır: işlemin etiketi silinen kategoride kalırsa
+  /// hiçbir kategoriye çözülmez ve raporda ham kimlik olarak görünür.
+  Future<int> retagTransactions(Set<String> from, String to) async {
+    if (from.isEmpty) return 0;
+    try {
+      final box = await _getBox();
+
+      final updated = <String, TransactionModel>{};
+      for (final t in box.values) {
+        if (!from.contains(t.tag) || t.id == null) continue;
+        updated[t.id!] = t.copyWith(tag: to);
+      }
+
+      if (updated.isEmpty) return 0;
+      await box.putAll(updated);
+      return updated.length;
+    } catch (e) {
+      throw CacheException('İşlemler yeniden etiketlenirken hata oluştu', e);
+    }
+  }
+
   Future<void> deleteTransaction(String id) async {
     try {
       final box = await _getBox();

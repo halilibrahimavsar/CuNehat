@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_math.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -27,6 +30,10 @@ class CsvImportResult {
 
 @lazySingleton
 class CsvService {
+  final CategoryRepository _categories;
+
+  CsvService(this._categories);
+
   final _uuid = const Uuid();
 
   Future<void> exportTransactionsToCSV(List<TransactionEntity> transactions,
@@ -36,10 +43,20 @@ class CsvService {
     // Header
     rows.add(["Title", "Tag", "Amount", "Date", "Type", "IsSystem"]);
 
+    // Kategori kimliği UUID: ham basılırsa dosya insan için okunamaz ve başka
+    // bir kurulumda hiçbir şeye çözülmez. Kategori sütunu OKUNAKLI ADI taşır
+    // ("Fatura › Elektrik"); içe aktarım onu tekrar kimliğe çevirir.
+    //
+    // Otomatik hareketler (borç/transfer/yatırım) haritada olmadığından kendi
+    // sistem etiketleriyle ("Borç Ödemesi") yazılır — dosya bir RAPOR olarak da
+    // paylaşıldığı için bu satırlar dışarıda bırakılmaz. İçe aktarımda
+    // atlanırlar; bkz. importTransactionsFromCSV.
+    final breadcrumbs = buildBreadcrumbs(await _categories.getAllCategories());
+
     for (var t in transactions) {
       rows.add([
         t.title,
-        t.tag,
+        breadcrumbs[t.tag] ?? t.tag,
         t.amount.toString(),
         t.date.toIso8601String(),
         t.type.name,
@@ -64,6 +81,45 @@ class CsvService {
     ));
   }
 
+  /// `(tür, normalize ad)` ve `(tür, normalize tam yol)` → kategori.
+  ///
+  /// Anahtar TÜRÜ de içerir: gelir ve gider ayrı ad uzaylarıdır ve başlangıç
+  /// paketi her iki tarafta da "Yatırım" kurar. Tür anahtara girmezse o ad
+  /// "belirsiz" sayılıp indeksten tamamen düşer ve dokunulmamış bir kurulumun
+  /// kendi dışa aktarımı geri alınamaz hâle gelir.
+  ///
+  /// Tam yol ayrıca tutulur: iki farklı ana kategori altında aynı adlı alt
+  /// kategori olabilir ("Fatura › Su" ve "Konut › Su"); tür içinde hâlâ
+  /// belirsiz kalan yalın adlar indekse girmez, o satırlar atlanır.
+  Map<(bool, String), CategoryEntity> _categoryIndexByName(
+      List<CategoryEntity> categories) {
+    final breadcrumbs = buildBreadcrumbs(categories);
+    final index = <(bool, String), CategoryEntity>{};
+    final ambiguous = <(bool, String)>{};
+
+    for (final c in categories) {
+      final key = (c.isExpense, normalizeCategoryName(c.name));
+      if (index.containsKey(key)) {
+        ambiguous.add(key);
+      } else {
+        index[key] = c;
+      }
+    }
+    for (final key in ambiguous) {
+      index.remove(key);
+    }
+
+    // YALNIZ alt kategoriler tam yolla eklenir. Ana kategorinin tam yolu zaten
+    // kendi adıdır; kök de yazılsaydı, belirsiz diye AZ ÖNCE silinmiş bir ad
+    // sessizce geri gelir ve rastgele biri kazanırdı.
+    for (final c in categories) {
+      if (c.isRoot) continue;
+      index[(c.isExpense, normalizeCategoryName(breadcrumbs[c.id] ?? c.name))] =
+          c;
+    }
+    return index;
+  }
+
   Future<CsvImportResult?> importTransactionsFromCSV(String userId) async {
     FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
@@ -80,6 +136,12 @@ class CsvService {
 
         if (fields.isEmpty) return null;
 
+        // Ad → kimlik: dosya okunaklı adı taşır (bkz. exportTransactionsToCSV).
+        // Hem tam yol ("Fatura › Elektrik") hem yalın ad ("Elektrik") kabul
+        // edilir; ikincisi kullanıcının elle yazdığı dosyalar için.
+        final categories = await _categories.getAllCategories();
+        final byName = _categoryIndexByName(categories);
+
         // Skip header
         List<TransactionEntity> importedTransactions = [];
         int skippedRows = 0;
@@ -92,23 +154,43 @@ class CsvService {
 
           try {
             final title = row[0].toString();
-            final tag = row[1].toString();
             final amount = row[2] is num
                 ? roundToCents((row[2] as num).toDouble())
                 : parseMoney(row[2].toString());
             final date = parseDate(row[3].toString());
             final typeStr = row[4].toString();
 
-            // Tutar/tarih çözülemiyorsa satırı sessizce bugünün tarihiyle
-            // veya 0 tutarla eklemek veri bozar; atla ve say.
-            if (amount == null || amount <= 0 || date == null) {
-              skippedRows++;
-              continue;
-            }
-
             final type = typeStr == 'income'
                 ? TransactionTypeModel.income
                 : TransactionTypeModel.expense;
+
+            // Kategori KENDİ TÜRÜ içinde aranır: gelir satırı bir gider
+            // kategorisine bağlanamaz.
+            final category = byName[(
+              type == TransactionTypeModel.expense,
+              normalizeCategoryName(row[1].toString()),
+            )];
+
+            // Tutar/tarih çözülemiyorsa satırı sessizce bugünün tarihiyle
+            // veya 0 tutarla eklemek veri bozar; atla ve say.
+            // Kategori ZORUNLU bir alan: çözülemeyen satır kategorisiz
+            // işlem üretmek yerine atlanır ve kullanıcıya raporlanır.
+            //
+            // Otomatik hareket satırları (borç/transfer/yatırım — `tag` bir
+            // `CashMovementTags` sabiti) hiçbir kategoriye çözülmez ve burada
+            // ATLANIR. Bu bilinçli: içe aktarım her zaman YENİ bir cüzdana
+            // yazar ve o cüzdanda karşılık gelen borç/yatırım kaydı yoktur.
+            // Eskiden bunlar `isSystem: false` ile sıradan işleme
+            // dönüştürülüyordu — arkasında kaydı olmayan sahte bir "Borç
+            // Ödemesi" üretiyordu; kategori zorunlu olunca o yol da kapandı.
+            // Atlanan satır sayısı kullanıcıya raporlanır (`skippedRows`).
+            if (amount == null ||
+                amount <= 0 ||
+                date == null ||
+                category == null) {
+              skippedRows++;
+              continue;
+            }
 
             // CSV'deki IsSystem sütununa GÜVENME: içe aktarım her zaman yeni
             // bir cüzdana yazar ve o cüzdanda karşılık gelen borç/yatırım/
@@ -121,7 +203,7 @@ class CsvService {
                 userId: userId,
                 walletId: '', // Bu daha sonra Cüzdan ID ile güncellenecek
                 title: title,
-                tag: tag,
+                tag: category.id,
                 amount: amount,
                 date: date,
                 type: type,

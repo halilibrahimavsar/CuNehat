@@ -191,7 +191,7 @@ class TransactionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          categoryLabel ?? context.translateCategory(tag),
+          categoryLabel ?? context.translateSystemTag(tag),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

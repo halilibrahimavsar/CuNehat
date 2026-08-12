@@ -1,3 +1,4 @@
+import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
@@ -10,16 +11,22 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 /// [CategoryEntity]'ye dönüşür (bkz. `BankImportCubit.resolveCategorySuggestions`).
 class CategorySuggestion extends Equatable {
   final String name;
+
+  /// Kurulacaksa altına gireceği ana kategorinin ADI; kök olarak kurulacaksa
+  /// `null`. Ana kategori kullanıcıda yoksa o da birlikte kurulur.
+  final String? parentName;
+
   final bool isIncome;
   final String iconName;
   const CategorySuggestion({
     required this.name,
     required this.isIncome,
     required this.iconName,
+    this.parentName,
   });
 
   @override
-  List<Object?> get props => [name, isIncome, iconName];
+  List<Object?> get props => [name, parentName, isIncome, iconName];
 }
 
 /// Banka ekstresi açıklamasından kategori tahmini (best-effort/tahminî).
@@ -176,6 +183,16 @@ class CategoryGuesser {
 
   /// Yeni kategori oluşturulması gerektiğinde kullanılacak ikon (bkz.
   /// `AppIcons` — burada yalnız isim tutulur, widget bağımlılığı yok).
+  /// Sözlüğün hedeflediği kategori adları.
+  ///
+  /// Dışa açıktır çünkü bunlar başlangıç paketiyle ARASINDAKİ SÖZLEŞMEDİR:
+  /// buradaki bir ad pakette karşılık bulmazsa, dokunulmamış bir kurulumda o
+  /// grubun tahmini hiçbir zaman tutmaz. Bağ test edilir
+  /// (`category_starter_pack_test.dart`).
+  static Iterable<String> get expenseGroupNames => _expenseGroups.keys;
+  static Iterable<String> get incomeGroupNames => _incomeGroups.keys;
+  static Iterable<String> get tagGroupTargets => _tagGroups.values;
+
   static const Map<String, String> _groupIcons = {
     'Market': 'shopping_cart',
     'Yemek': 'restaurant',
@@ -203,7 +220,7 @@ class CategoryGuesser {
     if (matched == null) return null;
     final normGroup = _normalizeTr(matched);
     for (final c in candidates) {
-      if (_normalizeTr(c.id) == normGroup) return c.id;
+      if (_normalizeTr(c.name) == normGroup) return c.id;
     }
     return null;
   }
@@ -235,7 +252,7 @@ class CategoryGuesser {
     if (group == null) return null;
     final normGroup = _normalizeTr(group);
     for (final c in candidates) {
-      if (_normalizeTr(c.id) == normGroup) return c.id;
+      if (_normalizeTr(c.name) == normGroup) return c.id;
     }
     return null;
   }
@@ -317,12 +334,23 @@ class CategoryGuesser {
     foundIsIncome.forEach((name, isIncome) {
       final existing = isIncome ? incomeCategories : expenseCategories;
       final normName = _normalizeTr(name);
-      final alreadyExists = existing.any((c) => _normalizeTr(c.id) == normName);
+      final alreadyExists =
+          existing.any((c) => _normalizeTr(c.name) == normName);
       if (!alreadyExists) {
+        // Başlangıç paketinde alt kategori olarak geçen bir ad ("Kira")
+        // kökte ikinci kez kurulmamalı; üst kategorisiyle birlikte önerilir.
+        final parentName = CategoryStarterPack.parentNameOf(
+          name,
+          isExpense: !isIncome,
+        );
         result.add(CategorySuggestion(
           name: name,
+          parentName: parentName,
           isIncome: isIncome,
-          iconName: _groupIcons[name] ?? 'category',
+          iconName:
+              CategoryStarterPack.iconNameOf(name, isExpense: !isIncome) ??
+                  _groupIcons[name] ??
+                  'category',
         ));
       }
     });

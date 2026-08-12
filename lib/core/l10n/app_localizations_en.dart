@@ -163,12 +163,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintOrnMarketKiraMaas => 'e.g. Market, Rent, Salary';
 
   @override
-  String get ozelKategoriler => 'Custom Categories';
-
-  @override
-  String get varsayilanKategoriler => 'Default Categories';
-
-  @override
   String get yeniKategoriEkle => 'Add New Category';
 
   @override
@@ -819,16 +813,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ikonDegistirmekIcinDokun => 'Tap to change icon';
 
   @override
-  String categoriesWhereCC(Object customLength, Object defaultLength) {
-    return '$customLength custom, $defaultLength default';
-  }
-
-  @override
   String get asagidakiButondanEkleyebilirsiniz =>
       'You can add from the button below';
-
-  @override
-  String get varsayilan => 'Default';
 
   @override
   String get filtreler => 'Filters';
@@ -1247,10 +1233,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enAz2KarakterOlmali => 'Must be at least 2 characters';
 
   @override
-  String get kategoriAdiRezerve =>
-      'This name is reserved for automatic system transactions';
-
-  @override
   String get kategoriOlusturuldu => 'Category created!';
 
   @override
@@ -1279,10 +1261,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gelirKategorileri => 'Income Categories';
 
   @override
-  String get varsayilanKategoriYok => 'No default categories';
+  String get categoryErrorDuplicateName =>
+      'A category with this name already exists';
 
   @override
-  String get henuzOzelKategoriYok => 'No custom categories yet';
+  String get categoryErrorParentNotFound => 'Parent category not found';
+
+  @override
+  String get categoryErrorParentIsNotRoot =>
+      'A subcategory cannot have subcategories';
+
+  @override
+  String get categoryErrorTypeMismatch =>
+      'A subcategory must match its parent\'s type';
+
+  @override
+  String get categoryErrorSelfParent => 'A category cannot be its own parent';
+
+  @override
+  String get categoryErrorParentHasChildren =>
+      'A category that has subcategories cannot be moved';
+
+  @override
+  String get kategorilerBaslik => 'Categories';
+
+  @override
+  String kategoriSayisiOzeti(Object rootCount, Object childCount) {
+    return '$rootCount main, $childCount sub';
+  }
+
+  @override
+  String get altKategoriEkle => 'Add subcategory';
+
+  @override
+  String get ustKategori => 'Parent category';
+
+  @override
+  String get ustKategoriYok => 'Main category (no parent)';
+
+  @override
+  String get henuzKategoriYok => 'No categories yet';
+
+  @override
+  String get oneriSetindenBasla => 'Start from suggestions';
+
+  @override
+  String get kategoriSilTasiTitle => 'Move transactions';
+
+  @override
+  String kategoriSilTasiMessage(Object name, Object count) {
+    return '\"$name\" has $count transactions. Which category should they move to before deleting?';
+  }
+
+  @override
+  String kategoriSilAltKategorilerDe(Object count) {
+    return 'Its $count subcategories will be deleted too; their transactions move to the same category.';
+  }
+
+  @override
+  String get kategoriSilHedefYok =>
+      'There is no other category to move to. Create one first.';
+
+  @override
+  String dogrudanKategoriSec(Object name) {
+    return '\"$name\" itself';
+  }
+
+  @override
+  String get altKategoriSec => 'Pick a subcategory';
+
+  @override
+  String get starterPackTitle => 'Set up your categories';
+
+  @override
+  String get starterPackSubtitle =>
+      'Pick from a ready-made set, then edit, delete or add your own freely. You need at least one category to record a transaction.';
+
+  @override
+  String get starterPackSelectAll => 'Select all';
+
+  @override
+  String get starterPackClearAll => 'Clear selection';
+
+  @override
+  String get starterPackSkip => 'Skip for now';
+
+  @override
+  String starterPackCreate(Object count) {
+    return 'Create $count categories';
+  }
+
+  @override
+  String starterPackCreated(Object count) {
+    return '$count categories created';
+  }
+
+  @override
+  String starterPackChildCount(Object count) {
+    return '$count subcategories';
+  }
+
+  @override
+  String butceUstKategorideVar(Object name) {
+    return 'Parent category \"$name\" already has a budget';
+  }
+
+  @override
+  String get butceAltKategorideVar => 'A subcategory already has a budget';
 
   @override
   String get duzenleSubtitle => 'Amount, date, category and other details';
@@ -1726,43 +1811,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryDiger => 'Other';
 
   @override
-  String get defaultCategoryGroceries => 'Groceries';
+  String get systemTagDebt => 'Debt';
 
   @override
-  String get defaultCategoryFood => 'Food';
+  String get systemTagDebtPayment => 'Debt Payment';
 
   @override
-  String get defaultCategoryTransport => 'Transport';
+  String get systemTagReceivable => 'Receivable';
 
   @override
-  String get defaultCategoryBills => 'Bills';
+  String get systemTagReceivableCollection => 'Receivable Collection';
 
   @override
-  String get defaultCategoryRent => 'Rent';
+  String get systemTagInvestmentBuy => 'Investment Purchase';
 
   @override
-  String get defaultCategoryShopping => 'Shopping';
+  String get systemTagInvestmentSell => 'Investment Sale';
 
   @override
-  String get defaultCategoryHealth => 'Health';
+  String get systemTagInvestmentCorrection => 'Investment Adjustment';
 
   @override
-  String get defaultCategoryEducation => 'Education';
-
-  @override
-  String get defaultCategoryEntertainment => 'Entertainment';
-
-  @override
-  String get defaultCategorySalary => 'Salary';
-
-  @override
-  String get defaultCategorySideIncome => 'Side Income';
-
-  @override
-  String get defaultCategoryFreelance => 'Freelance';
-
-  @override
-  String get defaultCategoryInvestment => 'Investment';
+  String get systemTagTransfer => 'Transfer';
 
   @override
   String get kategorisiz => 'Uncategorized';

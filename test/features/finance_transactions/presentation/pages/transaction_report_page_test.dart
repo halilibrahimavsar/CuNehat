@@ -73,23 +73,28 @@ void main() {
     getIt.registerSingleton<BudgetRepository>(mockBudgetRepository);
     getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
 
-    when(() => mockCategoryRepository.getExpenseCategories())
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => [
+              ...await mockCategoryRepository.getCategories(true),
+              ...await mockCategoryRepository.getCategories(false),
+            ]);
+    when(() => mockCategoryRepository.getCategories(true))
         .thenAnswer((_) async => [
               const CategoryEntity(
                 id: 'Food',
+                name: 'Food',
                 iconName: 'fastfood',
                 isExpense: true,
-                isDefault: true,
               ),
             ]);
 
-    when(() => mockCategoryRepository.getIncomeCategories())
+    when(() => mockCategoryRepository.getCategories(false))
         .thenAnswer((_) async => [
               const CategoryEntity(
                 id: 'Salary',
+                name: 'Salary',
                 iconName: 'attach_money',
                 isExpense: false,
-                isDefault: true,
               ),
             ]);
 

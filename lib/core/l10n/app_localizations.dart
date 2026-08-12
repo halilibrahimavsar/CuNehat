@@ -386,18 +386,6 @@ abstract class AppLocalizations {
   /// **'Örn: Market, Kira, Maaş'**
   String get hintOrnMarketKiraMaas;
 
-  /// No description provided for @ozelKategoriler.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özel Kategoriler'**
-  String get ozelKategoriler;
-
-  /// No description provided for @varsayilanKategoriler.
-  ///
-  /// In tr, this message translates to:
-  /// **'Varsayılan Kategoriler'**
-  String get varsayilanKategoriler;
-
   /// No description provided for @yeniKategoriEkle.
   ///
   /// In tr, this message translates to:
@@ -1558,23 +1546,11 @@ abstract class AppLocalizations {
   /// **'İkon değiştirmek için dokun'**
   String get ikonDegistirmekIcinDokun;
 
-  /// No description provided for @categoriesWhereCC.
-  ///
-  /// In tr, this message translates to:
-  /// **'{customLength} özel, {defaultLength} varsayılan'**
-  String categoriesWhereCC(Object customLength, Object defaultLength);
-
   /// No description provided for @asagidakiButondanEkleyebilirsiniz.
   ///
   /// In tr, this message translates to:
   /// **'Aşağıdaki butondan ekleyebilirsiniz'**
   String get asagidakiButondanEkleyebilirsiniz;
-
-  /// No description provided for @varsayilan.
-  ///
-  /// In tr, this message translates to:
-  /// **'Varsayılan'**
-  String get varsayilan;
 
   /// No description provided for @filtreler.
   ///
@@ -2316,12 +2292,6 @@ abstract class AppLocalizations {
   /// **'En az 2 karakter olmalı'**
   String get enAz2KarakterOlmali;
 
-  /// No description provided for @kategoriAdiRezerve.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu ad otomatik sistem işlemleri için ayrılmış'**
-  String get kategoriAdiRezerve;
-
   /// No description provided for @kategoriOlusturuldu.
   ///
   /// In tr, this message translates to:
@@ -2370,17 +2340,179 @@ abstract class AppLocalizations {
   /// **'Gelir Kategorileri'**
   String get gelirKategorileri;
 
-  /// No description provided for @varsayilanKategoriYok.
+  /// No description provided for @categoryErrorDuplicateName.
   ///
   /// In tr, this message translates to:
-  /// **'Varsayılan kategori yok'**
-  String get varsayilanKategoriYok;
+  /// **'Bu isimde bir kategori zaten var'**
+  String get categoryErrorDuplicateName;
 
-  /// No description provided for @henuzOzelKategoriYok.
+  /// No description provided for @categoryErrorParentNotFound.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz özel kategori yok'**
-  String get henuzOzelKategoriYok;
+  /// **'Üst kategori bulunamadı'**
+  String get categoryErrorParentNotFound;
+
+  /// No description provided for @categoryErrorParentIsNotRoot.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategorinin altına kategori eklenemez'**
+  String get categoryErrorParentIsNotRoot;
+
+  /// No description provided for @categoryErrorTypeMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategori, üst kategoriyle aynı türde olmalı'**
+  String get categoryErrorTypeMismatch;
+
+  /// No description provided for @categoryErrorSelfParent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori kendi üst kategorisi olamaz'**
+  String get categoryErrorSelfParent;
+
+  /// No description provided for @categoryErrorParentHasChildren.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategorisi olan bir kategori taşınamaz'**
+  String get categoryErrorParentHasChildren;
+
+  /// No description provided for @kategorilerBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler'**
+  String get kategorilerBaslik;
+
+  /// No description provided for @kategoriSayisiOzeti.
+  ///
+  /// In tr, this message translates to:
+  /// **'{rootCount} ana, {childCount} alt kategori'**
+  String kategoriSayisiOzeti(Object rootCount, Object childCount);
+
+  /// No description provided for @altKategoriEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategori ekle'**
+  String get altKategoriEkle;
+
+  /// No description provided for @ustKategori.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üst kategori'**
+  String get ustKategori;
+
+  /// No description provided for @ustKategoriYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana kategori (üst yok)'**
+  String get ustKategoriYok;
+
+  /// No description provided for @henuzKategoriYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kategori yok'**
+  String get henuzKategoriYok;
+
+  /// No description provided for @oneriSetindenBasla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneri setinden başla'**
+  String get oneriSetindenBasla;
+
+  /// No description provided for @kategoriSilTasiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemleri taşı'**
+  String get kategoriSilTasiTitle;
+
+  /// No description provided for @kategoriSilTasiMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" kategorisinde {count} işlem var. Silmeden önce bu işlemler hangi kategoriye taşınsın?'**
+  String kategoriSilTasiMessage(Object name, Object count);
+
+  /// No description provided for @kategoriSilAltKategorilerDe.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} alt kategorisi de silinecek; onların işlemleri de aynı kategoriye taşınır.'**
+  String kategoriSilAltKategorilerDe(Object count);
+
+  /// No description provided for @kategoriSilHedefYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınacak başka kategori yok. Önce yeni bir kategori oluşturun.'**
+  String get kategoriSilHedefYok;
+
+  /// No description provided for @dogrudanKategoriSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrudan \"{name}\"'**
+  String dogrudanKategoriSec(Object name);
+
+  /// No description provided for @altKategoriSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategori seç'**
+  String get altKategoriSec;
+
+  /// No description provided for @starterPackTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorilerini kur'**
+  String get starterPackTitle;
+
+  /// No description provided for @starterPackSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazır setten seç; sonra dilediğin gibi düzenle, sil, yenisini ekle. İşlem girebilmek için en az bir kategori gerekir.'**
+  String get starterPackSubtitle;
+
+  /// No description provided for @starterPackSelectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü seç'**
+  String get starterPackSelectAll;
+
+  /// No description provided for @starterPackClearAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi temizle'**
+  String get starterPackClearAll;
+
+  /// No description provided for @starterPackSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdilik atla'**
+  String get starterPackSkip;
+
+  /// No description provided for @starterPackCreate.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kategori oluştur'**
+  String starterPackCreate(Object count);
+
+  /// No description provided for @starterPackCreated.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kategori oluşturuldu'**
+  String starterPackCreated(Object count);
+
+  /// No description provided for @starterPackChildCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} alt kategori'**
+  String starterPackChildCount(Object count);
+
+  /// No description provided for @butceUstKategorideVar.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" üst kategorisinde bütçe var'**
+  String butceUstKategorideVar(Object name);
+
+  /// No description provided for @butceAltKategorideVar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategorilerinde bütçe var'**
+  String get butceAltKategorideVar;
 
   /// No description provided for @duzenleSubtitle.
   ///
@@ -3222,83 +3354,53 @@ abstract class AppLocalizations {
   /// **'Diğer'**
   String get categoryDiger;
 
-  /// No description provided for @defaultCategoryGroceries.
+  /// No description provided for @systemTagDebt.
   ///
   /// In tr, this message translates to:
-  /// **'Market'**
-  String get defaultCategoryGroceries;
+  /// **'Borç'**
+  String get systemTagDebt;
 
-  /// No description provided for @defaultCategoryFood.
+  /// No description provided for @systemTagDebtPayment.
   ///
   /// In tr, this message translates to:
-  /// **'Yemek'**
-  String get defaultCategoryFood;
+  /// **'Borç Ödemesi'**
+  String get systemTagDebtPayment;
 
-  /// No description provided for @defaultCategoryTransport.
+  /// No description provided for @systemTagReceivable.
   ///
   /// In tr, this message translates to:
-  /// **'Ulaşım'**
-  String get defaultCategoryTransport;
+  /// **'Alacak'**
+  String get systemTagReceivable;
 
-  /// No description provided for @defaultCategoryBills.
+  /// No description provided for @systemTagReceivableCollection.
   ///
   /// In tr, this message translates to:
-  /// **'Fatura'**
-  String get defaultCategoryBills;
+  /// **'Alacak Tahsilatı'**
+  String get systemTagReceivableCollection;
 
-  /// No description provided for @defaultCategoryRent.
+  /// No description provided for @systemTagInvestmentBuy.
   ///
   /// In tr, this message translates to:
-  /// **'Kira'**
-  String get defaultCategoryRent;
+  /// **'Yatırım Alımı'**
+  String get systemTagInvestmentBuy;
 
-  /// No description provided for @defaultCategoryShopping.
+  /// No description provided for @systemTagInvestmentSell.
   ///
   /// In tr, this message translates to:
-  /// **'Alışveriş'**
-  String get defaultCategoryShopping;
+  /// **'Yatırım Satışı'**
+  String get systemTagInvestmentSell;
 
-  /// No description provided for @defaultCategoryHealth.
+  /// No description provided for @systemTagInvestmentCorrection.
   ///
   /// In tr, this message translates to:
-  /// **'Sağlık'**
-  String get defaultCategoryHealth;
+  /// **'Yatırım Düzeltmesi'**
+  String get systemTagInvestmentCorrection;
 
-  /// No description provided for @defaultCategoryEducation.
+  /// No description provided for @systemTagTransfer.
   ///
   /// In tr, this message translates to:
-  /// **'Eğitim'**
-  String get defaultCategoryEducation;
-
-  /// No description provided for @defaultCategoryEntertainment.
-  ///
-  /// In tr, this message translates to:
-  /// **'Eğlence'**
-  String get defaultCategoryEntertainment;
-
-  /// No description provided for @defaultCategorySalary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Maaş'**
-  String get defaultCategorySalary;
-
-  /// No description provided for @defaultCategorySideIncome.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ek Gelir'**
-  String get defaultCategorySideIncome;
-
-  /// No description provided for @defaultCategoryFreelance.
-  ///
-  /// In tr, this message translates to:
-  /// **'Serbest'**
-  String get defaultCategoryFreelance;
-
-  /// No description provided for @defaultCategoryInvestment.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yatırım'**
-  String get defaultCategoryInvestment;
+  /// **'Transfer'**
+  String get systemTagTransfer;
 
   /// No description provided for @kategorisiz.
   ///

@@ -89,7 +89,7 @@ class _SingleTransactionDetailPageState
   Future<void> _loadCategoryIndex() async {
     final categories = await fetchAllCategories(getIt<CategoryRepository>());
     if (!mounted) return;
-    final index = buildCategoryDisplayIndex(context, categories);
+    final index = buildCategoryDisplayIndex(categories);
     setState(() {
       _icons = index.icons;
       _labels = index.labels;
@@ -104,7 +104,7 @@ class _SingleTransactionDetailPageState
   String _categoryLabelOf(BuildContext context, TransactionEntity t) =>
       _labels[t.tag] ??
       (_tagUnchanged(t) ? widget.categoryLabel : null) ??
-      context.translateCategory(t.tag);
+      context.translateSystemTag(t.tag);
 
   IconData? _categoryIconOf(TransactionEntity t) =>
       _icons[t.tag] ?? (_tagUnchanged(t) ? widget.categoryIcon : null);

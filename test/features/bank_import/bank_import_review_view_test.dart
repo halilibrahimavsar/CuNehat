@@ -25,6 +25,7 @@ class FakeCategoryEntity extends Fake implements CategoryEntity {}
 
 CategoryEntity _cat(String id, {bool expense = true}) => CategoryEntity(
       id: id,
+      name: id,
       iconName: 'category',
       isExpense: expense,
       sortOrder: 1,
@@ -74,10 +75,24 @@ void main() {
     // gerçek depoyu (getIt) kullanır.
     categoryRepo = MockCategoryRepository();
     getIt.registerSingleton<CategoryRepository>(categoryRepo);
-    when(() => categoryRepo.getCategoriesWithDefaults(any()))
+    when(() => categoryRepo.getAllCategories()).thenAnswer((_) async => [
+          ...await categoryRepo.getCategories(true),
+          ...await categoryRepo.getCategories(false),
+        ]);
+    // Seçici paylaşılan yüzeydir ve listeyi DEPODAN okur (eskiden state'ten
+    // parametreyle alıyordu).
+    when(() => categoryRepo.getCategories(true))
+        .thenAnswer((_) async => [_cat('Market'), _cat('Fatura')]);
+    when(() => categoryRepo.getCategories(false))
         .thenAnswer((_) async => <CategoryEntity>[]);
-    when(() => categoryRepo.addCategory(any(),
-        displayLabels: any(named: 'displayLabels'))).thenAnswer((_) async {});
+    when(() => categoryRepo.addCategory(
+              name: any(named: 'name'),
+              iconName: any(named: 'iconName'),
+              isExpense: any(named: 'isExpense'),
+              parentId: any(named: 'parentId'),
+            ))
+        .thenAnswer((invocation) async =>
+            _cat(invocation.namedArguments[#name] as String));
   });
 
   tearDown(() => getIt.reset());
@@ -400,7 +415,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Seçim sayfası: yeni kategori kurma girişi + mevcut kategoriler.
-    expect(find.text('Yeni Kategori'), findsOneWidget);
+    expect(find.byTooltip('Yeni Kategori Ekle'), findsOneWidget);
     await tester.tap(find.text('Fatura'));
     await tester.pumpAndSettle();
 
@@ -413,18 +428,23 @@ void main() {
 
     await tester.tap(find.text('Kategori seç'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Yeni Kategori'));
+    await tester.tap(find.byTooltip('Yeni Kategori Ekle'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField), 'Kahve');
+    // Form: ad alanı (üst kategori seçicisi dropdown'dır, TextFormField değil).
+    await tester.enterText(find.byType(TextFormField).first, 'Kahve');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ekle'));
     await tester.pumpAndSettle();
 
     // Kategori gerçekten yazıldı, akışa tanıtıldı ve satıra atandı: kullanıcı
     // kurduğu kategoriyi bir de listeden aramak zorunda kalmamalı.
-    verify(() => categoryRepo.addCategory(any(),
-        displayLabels: any(named: 'displayLabels'))).called(1);
+    verify(() => categoryRepo.addCategory(
+          name: any(named: 'name'),
+          iconName: any(named: 'iconName'),
+          isExpense: any(named: 'isExpense'),
+          parentId: any(named: 'parentId'),
+        )).called(1);
     verify(() => cubit.registerCreatedCategory(any())).called(1);
     verify(() => cubit.setDraftCategory(0, 'Kahve')).called(1);
   });

@@ -95,7 +95,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   Future<void> _loadCategoryIcons() async {
     final categories = await fetchAllCategories(getIt<CategoryRepository>());
     if (!mounted) return;
-    final index = buildCategoryDisplayIndex(context, categories);
+    final index = buildCategoryDisplayIndex(categories);
     setState(() {
       _categoryIcons = index.icons;
       _categoryLabels = index.labels;

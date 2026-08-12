@@ -603,8 +603,7 @@ class _TotalsCard extends StatelessWidget {
           const SizedBox(height: 6),
           _line(context, l.backupPreviewExpense, money(summary.totalExpense)),
           const SizedBox(height: 6),
-          _line(context, l.backupPreviewCategories,
-              '${summary.categoryKeyCount}'),
+          _line(context, l.backupPreviewCategories, '${summary.categoryCount}'),
         ],
       ),
     );

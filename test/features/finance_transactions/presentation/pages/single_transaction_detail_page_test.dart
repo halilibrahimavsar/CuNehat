@@ -110,33 +110,38 @@ void main() {
     getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
     when(() => mockOnboardingCoordinator.isSeen(any())).thenReturn(true);
 
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => [
+              ...await mockCategoryRepository.getCategories(true),
+              ...await mockCategoryRepository.getCategories(false),
+            ]);
     when(() => mockCategoryRepository.getCategories(any())).thenAnswer(
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
-    when(() => mockCategoryRepository.getExpenseCategories()).thenAnswer(
+    when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
       (_) async => const [
         CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
         CategoryEntity(
           id: 'Ulaşım',
+          name: 'Ulaşım',
           iconName: 'directions_bus',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
-    when(() => mockCategoryRepository.getIncomeCategories())
+    when(() => mockCategoryRepository.getCategories(false))
         .thenAnswer((_) async => const []);
   });
 

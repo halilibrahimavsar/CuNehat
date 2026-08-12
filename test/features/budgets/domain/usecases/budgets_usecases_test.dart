@@ -4,8 +4,10 @@ import 'package:cunehat/features/budgets/domain/repositories/budget_repository.d
 import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/get_budgets_usecase.dart';
 import 'package:cunehat/features/budgets/domain/usecases/save_budget_usecase.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,12 +15,15 @@ import 'package:mocktail/mocktail.dart';
 
 class MockBudgetRepository extends Mock implements BudgetRepository {}
 
+class MockCategoryRepository extends Mock implements CategoryRepository {}
+
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
 
 void main() {
   late MockBudgetRepository mockBudgetRepo;
   late MockTransactionsRepository mockTransactionsRepo;
+  late MockCategoryRepository mockCategoryRepo;
 
   late GetBudgetsUsecase getUseCase;
   late SaveBudgetUsecase saveUseCase;
@@ -37,7 +42,11 @@ void main() {
     mockBudgetRepo = MockBudgetRepository();
     mockTransactionsRepo = MockTransactionsRepository();
 
-    getUseCase = GetBudgetsUsecase(mockBudgetRepo, mockTransactionsRepo);
+    mockCategoryRepo = MockCategoryRepository();
+    when(() => mockCategoryRepo.getAllCategories()).thenAnswer((_) async => []);
+
+    getUseCase = GetBudgetsUsecase(
+        mockBudgetRepo, mockTransactionsRepo, mockCategoryRepo);
     saveUseCase = SaveBudgetUsecase(mockBudgetRepo);
     deleteUseCase = DeleteBudgetUsecase(mockBudgetRepo);
   });
@@ -49,6 +58,124 @@ void main() {
   );
 
   group('GetBudgetsUsecase', () {
+    test('ANA kategori bütçesi alt kategori harcamalarını da sayar', () async {
+      // "Fatura"ya konan limit Elektrik + Doğalgaz + doğrudan Fatura
+      // harcamasını birlikte kapsar; aksi halde ana kategoriye bütçe koymanın
+      // hiçbir anlamı kalmazdı.
+      final now = DateTime.now();
+
+      TransactionEntity expense(String id, String tag, double amount) =>
+          TransactionEntity(
+            id: id,
+            userId: 'user_123',
+            walletId: 'wallet_123',
+            title: id,
+            tag: tag,
+            amount: amount,
+            date: now,
+            type: TransactionTypeModel.expense,
+          );
+
+      when(() => mockCategoryRepo.getAllCategories()).thenAnswer((_) async => [
+            const CategoryEntity(
+                id: 'f', name: 'Fatura', iconName: 'x', isExpense: true),
+            const CategoryEntity(
+                id: 'f-e',
+                name: 'Elektrik',
+                iconName: 'x',
+                isExpense: true,
+                parentId: 'f'),
+            const CategoryEntity(
+                id: 'f-d',
+                name: 'Doğalgaz',
+                iconName: 'x',
+                isExpense: true,
+                parentId: 'f'),
+            const CategoryEntity(
+                id: 'm', name: 'Market', iconName: 'x', isExpense: true),
+          ]);
+
+      when(() => mockBudgetRepo.getBudgets('wallet_123')).thenAnswer(
+        (_) async => const Right([
+          BudgetEntity(
+              walletId: 'wallet_123', categoryId: 'f', limitAmount: 2000),
+          BudgetEntity(
+              walletId: 'wallet_123', categoryId: 'm', limitAmount: 500),
+        ]),
+      );
+      when(() => mockTransactionsRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => Right([
+            expense('t1', 'f', 100),
+            expense('t2', 'f-e', 250),
+            expense('t3', 'f-d', 150),
+            expense('t4', 'm', 400),
+          ]));
+
+      final result = await getUseCase('user_123', 'wallet_123');
+      final budgets = result.getOrElse(() => []);
+
+      expect(budgets.firstWhere((b) => b.categoryId == 'f').spentAmount, 500);
+      // Çocuksuz kategori etkilenmez.
+      expect(budgets.firstWhere((b) => b.categoryId == 'm').spentAmount, 400);
+    });
+
+    test('ALT kategori bütçesi yalnız kendi harcamasını sayar', () async {
+      final now = DateTime.now();
+
+      when(() => mockCategoryRepo.getAllCategories()).thenAnswer((_) async => [
+            const CategoryEntity(
+                id: 'f', name: 'Fatura', iconName: 'x', isExpense: true),
+            const CategoryEntity(
+                id: 'f-e',
+                name: 'Elektrik',
+                iconName: 'x',
+                isExpense: true,
+                parentId: 'f'),
+          ]);
+      when(() => mockBudgetRepo.getBudgets('wallet_123')).thenAnswer(
+        (_) async => const Right([
+          BudgetEntity(
+              walletId: 'wallet_123', categoryId: 'f-e', limitAmount: 600),
+        ]),
+      );
+      when(() => mockTransactionsRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => Right([
+            TransactionEntity(
+              id: 't1',
+              userId: 'user_123',
+              walletId: 'wallet_123',
+              title: 'Fatura',
+              tag: 'f',
+              amount: 999,
+              date: now,
+              type: TransactionTypeModel.expense,
+            ),
+            TransactionEntity(
+              id: 't2',
+              userId: 'user_123',
+              walletId: 'wallet_123',
+              title: 'Elektrik',
+              tag: 'f-e',
+              amount: 250,
+              date: now,
+              type: TransactionTypeModel.expense,
+            ),
+          ]));
+
+      final result = await getUseCase('user_123', 'wallet_123');
+      expect(result.getOrElse(() => []).single.spentAmount, 250);
+    });
+
     test(
         'should map spent amounts from current month expenses and return Right(updatedBudgets)',
         () async {

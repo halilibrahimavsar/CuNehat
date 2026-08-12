@@ -163,12 +163,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hintOrnMarketKiraMaas => 'Örn: Market, Kira, Maaş';
 
   @override
-  String get ozelKategoriler => 'Özel Kategoriler';
-
-  @override
-  String get varsayilanKategoriler => 'Varsayılan Kategoriler';
-
-  @override
   String get yeniKategoriEkle => 'Yeni Kategori Ekle';
 
   @override
@@ -822,16 +816,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get ikonDegistirmekIcinDokun => 'İkon değiştirmek için dokun';
 
   @override
-  String categoriesWhereCC(Object customLength, Object defaultLength) {
-    return '$customLength özel, $defaultLength varsayılan';
-  }
-
-  @override
   String get asagidakiButondanEkleyebilirsiniz =>
       'Aşağıdaki butondan ekleyebilirsiniz';
-
-  @override
-  String get varsayilan => 'Varsayılan';
 
   @override
   String get filtreler => 'Filtreler';
@@ -1252,10 +1238,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get enAz2KarakterOlmali => 'En az 2 karakter olmalı';
 
   @override
-  String get kategoriAdiRezerve =>
-      'Bu ad otomatik sistem işlemleri için ayrılmış';
-
-  @override
   String get kategoriOlusturuldu => 'Kategori oluşturuldu!';
 
   @override
@@ -1284,10 +1266,112 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gelirKategorileri => 'Gelir Kategorileri';
 
   @override
-  String get varsayilanKategoriYok => 'Varsayılan kategori yok';
+  String get categoryErrorDuplicateName => 'Bu isimde bir kategori zaten var';
 
   @override
-  String get henuzOzelKategoriYok => 'Henüz özel kategori yok';
+  String get categoryErrorParentNotFound => 'Üst kategori bulunamadı';
+
+  @override
+  String get categoryErrorParentIsNotRoot =>
+      'Alt kategorinin altına kategori eklenemez';
+
+  @override
+  String get categoryErrorTypeMismatch =>
+      'Alt kategori, üst kategoriyle aynı türde olmalı';
+
+  @override
+  String get categoryErrorSelfParent => 'Kategori kendi üst kategorisi olamaz';
+
+  @override
+  String get categoryErrorParentHasChildren =>
+      'Alt kategorisi olan bir kategori taşınamaz';
+
+  @override
+  String get kategorilerBaslik => 'Kategoriler';
+
+  @override
+  String kategoriSayisiOzeti(Object rootCount, Object childCount) {
+    return '$rootCount ana, $childCount alt kategori';
+  }
+
+  @override
+  String get altKategoriEkle => 'Alt kategori ekle';
+
+  @override
+  String get ustKategori => 'Üst kategori';
+
+  @override
+  String get ustKategoriYok => 'Ana kategori (üst yok)';
+
+  @override
+  String get henuzKategoriYok => 'Henüz kategori yok';
+
+  @override
+  String get oneriSetindenBasla => 'Öneri setinden başla';
+
+  @override
+  String get kategoriSilTasiTitle => 'İşlemleri taşı';
+
+  @override
+  String kategoriSilTasiMessage(Object name, Object count) {
+    return '\"$name\" kategorisinde $count işlem var. Silmeden önce bu işlemler hangi kategoriye taşınsın?';
+  }
+
+  @override
+  String kategoriSilAltKategorilerDe(Object count) {
+    return '$count alt kategorisi de silinecek; onların işlemleri de aynı kategoriye taşınır.';
+  }
+
+  @override
+  String get kategoriSilHedefYok =>
+      'Taşınacak başka kategori yok. Önce yeni bir kategori oluşturun.';
+
+  @override
+  String dogrudanKategoriSec(Object name) {
+    return 'Doğrudan \"$name\"';
+  }
+
+  @override
+  String get altKategoriSec => 'Alt kategori seç';
+
+  @override
+  String get starterPackTitle => 'Kategorilerini kur';
+
+  @override
+  String get starterPackSubtitle =>
+      'Hazır setten seç; sonra dilediğin gibi düzenle, sil, yenisini ekle. İşlem girebilmek için en az bir kategori gerekir.';
+
+  @override
+  String get starterPackSelectAll => 'Tümünü seç';
+
+  @override
+  String get starterPackClearAll => 'Seçimi temizle';
+
+  @override
+  String get starterPackSkip => 'Şimdilik atla';
+
+  @override
+  String starterPackCreate(Object count) {
+    return '$count kategori oluştur';
+  }
+
+  @override
+  String starterPackCreated(Object count) {
+    return '$count kategori oluşturuldu';
+  }
+
+  @override
+  String starterPackChildCount(Object count) {
+    return '$count alt kategori';
+  }
+
+  @override
+  String butceUstKategorideVar(Object name) {
+    return '\"$name\" üst kategorisinde bütçe var';
+  }
+
+  @override
+  String get butceAltKategorideVar => 'Alt kategorilerinde bütçe var';
 
   @override
   String get duzenleSubtitle => 'Tutar, tarih, kategori ve diğer detaylar';
@@ -1729,43 +1813,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get categoryDiger => 'Diğer';
 
   @override
-  String get defaultCategoryGroceries => 'Market';
+  String get systemTagDebt => 'Borç';
 
   @override
-  String get defaultCategoryFood => 'Yemek';
+  String get systemTagDebtPayment => 'Borç Ödemesi';
 
   @override
-  String get defaultCategoryTransport => 'Ulaşım';
+  String get systemTagReceivable => 'Alacak';
 
   @override
-  String get defaultCategoryBills => 'Fatura';
+  String get systemTagReceivableCollection => 'Alacak Tahsilatı';
 
   @override
-  String get defaultCategoryRent => 'Kira';
+  String get systemTagInvestmentBuy => 'Yatırım Alımı';
 
   @override
-  String get defaultCategoryShopping => 'Alışveriş';
+  String get systemTagInvestmentSell => 'Yatırım Satışı';
 
   @override
-  String get defaultCategoryHealth => 'Sağlık';
+  String get systemTagInvestmentCorrection => 'Yatırım Düzeltmesi';
 
   @override
-  String get defaultCategoryEducation => 'Eğitim';
-
-  @override
-  String get defaultCategoryEntertainment => 'Eğlence';
-
-  @override
-  String get defaultCategorySalary => 'Maaş';
-
-  @override
-  String get defaultCategorySideIncome => 'Ek Gelir';
-
-  @override
-  String get defaultCategoryFreelance => 'Serbest';
-
-  @override
-  String get defaultCategoryInvestment => 'Yatırım';
+  String get systemTagTransfer => 'Transfer';
 
   @override
   String get kategorisiz => 'Kategorisiz';

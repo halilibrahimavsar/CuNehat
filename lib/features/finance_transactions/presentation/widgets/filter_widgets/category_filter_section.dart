@@ -1,7 +1,6 @@
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
-import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -158,14 +157,20 @@ class CategoryFilterSection extends StatelessWidget {
             final activeColor = isCompareMode
                 ? groupColor
                 : filter.viewFilter.financeMode.primaryColor;
+            // Liste ağaç sırasında gelir (ana kategori, hemen ardından
+            // çocukları); alt kategoriler daha küçük ve ok işaretli çiple
+            // ayrışır — Wrap içinde girinti kullanılamıyor.
+            final isChild = !category.isRoot;
 
             return FilterChip(
-              label: Text(context.categoryLabel(category)),
+              label: Text(category.name),
               selected: isSelected,
               onSelected: (_) => onCategoryToggle(category.id),
               avatar: Icon(
-                AppIcons.getIconData(category.iconName),
-                size: 18,
+                isChild
+                    ? Icons.subdirectory_arrow_right
+                    : AppIcons.getIconData(category.iconName),
+                size: isChild ? 15 : 18,
                 color: isSelected ? Colors.white : activeColor,
               ),
               selectedColor: activeColor,

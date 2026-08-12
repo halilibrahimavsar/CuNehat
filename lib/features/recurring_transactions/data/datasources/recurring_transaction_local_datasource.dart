@@ -10,6 +10,13 @@ abstract class RecurringTransactionLocalDataSource {
   Future<void> deleteTemplate(String id);
   Future<List<RecurringTransactionModel>> getAllTemplates();
   Future<List<RecurringTransactionModel>> getPendingTransactions();
+
+  /// [from]'daki etiketleri taşıyan şablonları [to] etiketine çevirir.
+  ///
+  /// Kategori silinirken çağrılır: şablon onaylandığında etiketi olduğu gibi
+  /// deftere yazılır (`ApproveRecurringTransactionUsecase`), yani düzeltilmemiş
+  /// bir şablon silinen kategoriyi her ay yeniden diriltirdi.
+  Future<int> retagTemplates(Set<String> from, String to);
 }
 
 @LazySingleton(as: RecurringTransactionLocalDataSource)
@@ -33,6 +40,24 @@ class RecurringTransactionLocalDataSourceImpl
   @override
   Future<List<RecurringTransactionModel>> getAllTemplates() async {
     return _box.values.toList();
+  }
+
+  @override
+  Future<int> retagTemplates(Set<String> from, String to) async {
+    if (from.isEmpty) return 0;
+
+    final updated = <String, RecurringTransactionModel>{};
+    for (final t in _box.values) {
+      if (!from.contains(t.tag)) continue;
+      updated[t.id] =
+          RecurringTransactionModel.fromEntity(t.toEntity().copyWith(tag: to));
+    }
+
+    if (updated.isEmpty) return 0;
+    // nextExecutionDate'e dokunulmadığı için SaveRecurringTransactionUsecase
+    // üzerinden geçmeye gerek yok — hatırlatıcı zamanlaması değişmiyor.
+    await _box.putAll(updated);
+    return updated.length;
   }
 
   @override

@@ -13,7 +13,8 @@ import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_type_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/receivable_model.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
-import 'package:cunehat/features/finance_transactions/data/datasources/category_service.dart';
+import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
+import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -49,6 +50,8 @@ class FakeReceivableModel extends Fake implements ReceivableModel {}
 
 class FakeBudgetModel extends Fake implements BudgetModel {}
 
+class FakeCategoryModel extends Fake implements CategoryModel {}
+
 class FakeRecurringTransactionModel extends Fake
     implements RecurringTransactionModel {}
 
@@ -66,6 +69,7 @@ void main() {
     registerFallbackValue(FakeReceivableModel());
     registerFallbackValue(FakeBudgetModel());
     registerFallbackValue(FakeRecurringTransactionModel());
+    registerFallbackValue(FakeCategoryModel());
 
     tempDir = await Directory.systemTemp.createTemp('cunehat_backup_test_');
     Hive.init(tempDir.path);
@@ -89,6 +93,7 @@ void main() {
     register(BudgetModelAdapter());
     register(RecurringTransactionModelAdapter());
     register(RecurringFrequencyAdapter());
+    register(CategoryModelAdapter());
     register(ColorAdapter());
   });
 
@@ -120,8 +125,10 @@ void main() {
 
   test('exports all v3 sections including budgets and recurring templates',
       () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(CategoryService.backupKeys.first, 'custom-cats');
+    await Hive.box<CategoryModel>(CategoryLocalDataSource.boxName)
+        .put('c1', _category());
+    await Hive.box<CategoryModel>(CategoryLocalDataSource.boxName)
+        .put('c2', _category(id: 'c2', parentId: 'c1'));
 
     await Hive.box<WalletModel>('wallets').put('w1', _wallet());
     await Hive.box<TransactionModel>('transactions').put('t1', _transaction());
@@ -150,14 +157,15 @@ void main() {
     expect(data['budgets'], hasLength(1));
     expect(data['recurringTransactions'], hasLength(1));
     expect((data['users'] as Map)['u1']['activeWalletId'], 'w1');
-    expect((data['categories'] as Map)[CategoryService.backupKeys.first],
-        'custom-cats');
+    // Kategoriler artık ham prefs string'i değil, gerçek bir liste.
+    final categories = data['categories'] as List;
+    expect(categories, hasLength(2));
+    expect((categories[1] as Map)['parentId'], 'c1');
   });
 
-  test('clearAllLocalData tüm kutuları ve kategori tercihlerini temizler',
-      () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(CategoryService.backupKeys.first, 'custom-cats');
+  test('clearAllLocalData tüm kutuları (kategoriler dahil) temizler', () async {
+    await Hive.box<CategoryModel>(CategoryLocalDataSource.boxName)
+        .put('c1', _category());
 
     await Hive.box<WalletModel>('wallets').put('w1', _wallet());
     await Hive.box<TransactionModel>('transactions').put('t1', _transaction());
@@ -187,7 +195,10 @@ void main() {
       isEmpty,
     );
     expect(Hive.box<Map>('users').values, isEmpty);
-    expect(prefs.getString(CategoryService.backupKeys.first), isNull);
+    expect(
+      Hive.box<CategoryModel>(CategoryLocalDataSource.boxName).values,
+      isEmpty,
+    );
   });
 
   test('sürümü eşleşmeyen yedek reddedilir ve mevcut veri korunur', () async {
@@ -279,11 +290,7 @@ void main() {
     });
   });
 
-  test('rolls back boxes and category prefs when a write fails', () async {
-    SharedPreferences.setMockInitialValues({
-      CategoryService.backupKeys.first: 'old-cats',
-    });
-
+  test('yazım başarısızsa kutular (kategoriler dahil) geri sarılır', () async {
     final mockHive = MockHiveInterface();
     final walletBox = MockBox<WalletModel>();
     final transactionBox = MockBox<TransactionModel>();
@@ -293,6 +300,7 @@ void main() {
     final budgetBox = MockBox<BudgetModel>();
     final recurringBox = MockBox<RecurringTransactionModel>();
     final userBox = MockBox<Map>();
+    final categoryBox = MockBox<CategoryModel>();
 
     _stubBox(walletBox, {'old-wallet': _wallet(id: 'old-wallet')});
     _stubBox<TransactionModel>(transactionBox, {});
@@ -302,6 +310,7 @@ void main() {
     _stubBox<BudgetModel>(budgetBox, {});
     _stubBox<RecurringTransactionModel>(recurringBox, {});
     _stubBox<Map>(userBox, {});
+    _stubBox<CategoryModel>(categoryBox, {'old-cat': _category(id: 'old-cat')});
 
     when(() => walletBox.put(any(), any()))
         .thenThrow(Exception('write failed'));
@@ -321,6 +330,8 @@ void main() {
     when(() => mockHive.openBox<RecurringTransactionModel>(
         'recurring_transactions_box')).thenAnswer((_) async => recurringBox);
     when(() => mockHive.openBox<Map>('users')).thenAnswer((_) async => userBox);
+    when(() => mockHive.openBox<CategoryModel>(CategoryLocalDataSource.boxName))
+        .thenAnswer((_) async => categoryBox);
 
     final failingService = DataSerializationService.withHive(
       mockHive,
@@ -338,18 +349,19 @@ void main() {
       'budgets': [],
       'recurringTransactions': [],
       'users': {},
-      'categories': {CategoryService.backupKeys.first: 'new-cats'},
+      'categories': [_category(id: 'new-cat').toJson()],
     });
 
     final result = await failingService.importDataFromJson(backup);
-    final prefs = await SharedPreferences.getInstance();
 
     expect(result.status, DataRestoreStatus.writeFailure);
     verify(() => walletBox.putAll(any())).called(1);
     verify(() => transactionBox.putAll(any())).called(1);
     verify(() => budgetBox.putAll(any())).called(1);
     verify(() => recurringBox.putAll(any())).called(1);
-    expect(prefs.getString(CategoryService.backupKeys.first), 'old-cats');
+    // Kategori kutusu da geri sarılır: yazım yarıda kalırsa kullanıcı hem
+    // eski hem yeni kategorilerden yoksun kalırdı.
+    verify(() => categoryBox.putAll(any())).called(greaterThanOrEqualTo(1));
   });
 
   // ===================================================== önizleme (inspect)
@@ -475,6 +487,15 @@ void main() {
   });
 }
 
+CategoryModel _category({String id = 'c1', String? parentId}) => CategoryModel(
+      id: id,
+      name: 'Fatura',
+      iconName: 'receipt_long',
+      isExpense: true,
+      parentId: parentId,
+      sortOrder: 1,
+    );
+
 Future<void> _openAllBoxes() async {
   await Hive.openBox<WalletModel>('wallets');
   await Hive.openBox<TransactionModel>('transactions');
@@ -484,6 +505,7 @@ Future<void> _openAllBoxes() async {
   await Hive.openBox<BudgetModel>('budgets_box');
   await Hive.openBox<RecurringTransactionModel>('recurring_transactions_box');
   await Hive.openBox<Map>('users');
+  await Hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
 }
 
 Future<void> _clearAllBoxes() async {
@@ -501,6 +523,9 @@ Future<void> _clearAllBoxes() async {
   }
   if (Hive.isBoxOpen('receivables')) {
     await Hive.box<ReceivableModel>('receivables').clear();
+  }
+  if (Hive.isBoxOpen(CategoryLocalDataSource.boxName)) {
+    await Hive.box<CategoryModel>(CategoryLocalDataSource.boxName).clear();
   }
   if (Hive.isBoxOpen('budgets_box')) {
     await Hive.box<BudgetModel>('budgets_box').clear();

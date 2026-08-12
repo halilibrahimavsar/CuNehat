@@ -63,8 +63,6 @@
   "degistir": "Change",
   "labelKategoriAdi": "Category Name",
   "hintOrnMarketKiraMaas": "e.g. Market, Rent, Salary",
-  "ozelKategoriler": "Custom Categories",
-  "varsayilanKategoriler": "Default Categories",
   "yeniKategoriEkle": "Add New Category",
   "temizle": "Clear",
   "labelMin": "Min",
@@ -347,15 +345,7 @@
   "buDonemIcinHenuz": "No transaction data found for this period yet. Reports will be compiled after data is entered.",
   "ikonSecin": "Select Icon",
   "ikonDegistirmekIcinDokun": "Tap to change icon",
-  "categoriesWhereCC": "{customLength} custom, {defaultLength} default",
-  "@categoriesWhereCC": {
-    "placeholders": {
-      "customLength": {},
-      "defaultLength": {}
-    }
-  },
   "asagidakiButondanEkleyebilirsiniz": "You can add from the button below",
-  "varsayilan": "Default",
   "filtreler": "Filters",
   "uygula": "Apply",
   "tARIHAraligi": "DATE RANGE",
@@ -575,7 +565,6 @@
   "yeniKategori": "New Category",
   "kategoriAdiBosOlamaz": "Category name cannot be empty",
   "enAz2KarakterOlmali": "Must be at least 2 characters",
-  "kategoriAdiRezerve": "This name is reserved for automatic system transactions",
   "kategoriOlusturuldu": "Category created!",
   "kategoriGuncellendi": "Category updated!",
   "kategoriSilindi": "Category deleted!",
@@ -594,8 +583,77 @@
   },
   "giderKategorileri": "Expense Categories",
   "gelirKategorileri": "Income Categories",
-  "varsayilanKategoriYok": "No default categories",
-  "henuzOzelKategoriYok": "No custom categories yet",
+  "categoryErrorDuplicateName": "A category with this name already exists",
+  "categoryErrorParentNotFound": "Parent category not found",
+  "categoryErrorParentIsNotRoot": "A subcategory cannot have subcategories",
+  "categoryErrorTypeMismatch": "A subcategory must match its parent's type",
+  "categoryErrorSelfParent": "A category cannot be its own parent",
+  "categoryErrorParentHasChildren": "A category that has subcategories cannot be moved",
+  "kategorilerBaslik": "Categories",
+  "kategoriSayisiOzeti": "{rootCount} main, {childCount} sub",
+  "@kategoriSayisiOzeti": {
+    "placeholders": {
+      "rootCount": {},
+      "childCount": {}
+    }
+  },
+  "altKategoriEkle": "Add subcategory",
+  "ustKategori": "Parent category",
+  "ustKategoriYok": "Main category (no parent)",
+  "henuzKategoriYok": "No categories yet",
+  "oneriSetindenBasla": "Start from suggestions",
+  "kategoriSilTasiTitle": "Move transactions",
+  "kategoriSilTasiMessage": "\"{name}\" has {count} transactions. Which category should they move to before deleting?",
+  "@kategoriSilTasiMessage": {
+    "placeholders": {
+      "name": {},
+      "count": {}
+    }
+  },
+  "kategoriSilAltKategorilerDe": "Its {count} subcategories will be deleted too; their transactions move to the same category.",
+  "@kategoriSilAltKategorilerDe": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kategoriSilHedefYok": "There is no other category to move to. Create one first.",
+  "dogrudanKategoriSec": "\"{name}\" itself",
+  "@dogrudanKategoriSec": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "altKategoriSec": "Pick a subcategory",
+  "starterPackTitle": "Set up your categories",
+  "starterPackSubtitle": "Pick from a ready-made set, then edit, delete or add your own freely. You need at least one category to record a transaction.",
+  "starterPackSelectAll": "Select all",
+  "starterPackClearAll": "Clear selection",
+  "starterPackSkip": "Skip for now",
+  "starterPackCreate": "Create {count} categories",
+  "@starterPackCreate": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "starterPackCreated": "{count} categories created",
+  "@starterPackCreated": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "starterPackChildCount": "{count} subcategories",
+  "@starterPackChildCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "butceUstKategorideVar": "Parent category \"{name}\" already has a budget",
+  "@butceUstKategorideVar": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "butceAltKategorideVar": "A subcategory already has a budget",
   "duzenleSubtitle": "Amount, date, category and other details",
   "islemiSil": "Delete Transaction",
   "silSubtitle": "Balance reverts to previous state",
@@ -767,19 +825,14 @@
   "categoryHediyeVeBagis": "Gifts & Donation",
   "categoryHizmetler": "Services",
   "categoryDiger": "Other",
-  "defaultCategoryGroceries": "Groceries",
-  "defaultCategoryFood": "Food",
-  "defaultCategoryTransport": "Transport",
-  "defaultCategoryBills": "Bills",
-  "defaultCategoryRent": "Rent",
-  "defaultCategoryShopping": "Shopping",
-  "defaultCategoryHealth": "Health",
-  "defaultCategoryEducation": "Education",
-  "defaultCategoryEntertainment": "Entertainment",
-  "defaultCategorySalary": "Salary",
-  "defaultCategorySideIncome": "Side Income",
-  "defaultCategoryFreelance": "Freelance",
-  "defaultCategoryInvestment": "Investment",
+  "systemTagDebt": "Debt",
+  "systemTagDebtPayment": "Debt Payment",
+  "systemTagReceivable": "Receivable",
+  "systemTagReceivableCollection": "Receivable Collection",
+  "systemTagInvestmentBuy": "Investment Purchase",
+  "systemTagInvestmentSell": "Investment Sale",
+  "systemTagInvestmentCorrection": "Investment Adjustment",
+  "systemTagTransfer": "Transfer",
   "kategorisiz": "Uncategorized",
   "detailLabelTarih": "Date",
   "detailLabelSaat": "Time",

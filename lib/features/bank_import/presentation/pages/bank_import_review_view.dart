@@ -1,5 +1,4 @@
 import 'package:cunehat/core/utils/money_format.dart';
-import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -17,7 +16,7 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 
 /// İnceleme listesinde hangi taslakların gösterileceği.
 enum _ReviewFilter { all, uncategorized, duplicates }
@@ -601,24 +600,23 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// mevcut kategorilerin hiçbirine uymadığında akıştan çıkıp ayarlara gitmek
   /// gerekmemeli (öneri adımı yalnız BİLİNEN grupları önerir, kullanıcının
   /// kendi kategorisini değil).
+  /// Seçici PAYLAŞILAN yüzeydir (`CategoryPickerSheet`): ağaç mantığı burada
+  /// ikinci kez yazılsaydı işlem formuyla ekstre incelemesi zamanla ayrışırdı.
   Future<_PickedCategory?> _pickCategory(
     BuildContext context, {
     required bool allowTypeSwitch,
     required bool initialIsExpense,
     String? currentId,
-  }) {
-    return showModalBottomSheet<_PickedCategory>(
+  }) async {
+    final picked = await showCategoryPickerSheet(
       context: context,
-      isScrollControlled: true,
-      builder: (ctx) => _CategoryPickerSheet(
-        expenseCategories: _s.expenseCategories,
-        incomeCategories: _s.incomeCategories,
-        allowTypeSwitch: allowTypeSwitch,
-        initialIsExpense: initialIsExpense,
-        currentId: currentId,
-        onCreated: _cubit.registerCreatedCategory,
-      ),
+      isExpense: initialIsExpense,
+      currentId: currentId,
+      allowTypeSwitch: allowTypeSwitch,
+      onCreated: _cubit.registerCreatedCategory,
     );
+    if (picked == null) return null;
+    return (id: picked.id, isExpense: picked.isExpense);
   }
 
   Future<void> _pickCategoryForRow(
@@ -663,7 +661,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final label = _categoryById(_catsFor(!picked.isExpense), picked.id);
     AppMessenger.success(context.l10n.bankImportAssignVisibleDone(
       targets.length,
-      label == null ? picked.id : context.categoryLabel(label),
+      label == null ? picked.id : label.name,
     ));
   }
 
@@ -802,9 +800,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-                missing
-                    ? context.l10n.bankImportPickCategoryHint
-                    : context.categoryLabel(cat),
+                missing ? context.l10n.bankImportPickCategoryHint : cat.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -1154,153 +1150,4 @@ class _Warning {
   final String message;
   final Color color;
   const _Warning(this.icon, this.message, this.color);
-}
-
-/// Kategori seçim sayfası: satır bazında ve toplu atamada ortak yol.
-///
-/// Yeni kategori buradan kurulabilir; oluşturulan kategori hem deftere yazılır
-/// (`showCategoryForm`) hem de [onCreated] ile akışa tanıtılır, ardından sayfa
-/// doğrudan o kategoriyle kapanır — kullanıcı yarattığı kategoriyi bir de
-/// listeden aramak zorunda kalmasın.
-class _CategoryPickerSheet extends StatefulWidget {
-  final List<CategoryEntity> expenseCategories;
-  final List<CategoryEntity> incomeCategories;
-
-  /// Toplu atamada görünen satırlar karışık türdeyse tür seçimi gösterilir.
-  final bool allowTypeSwitch;
-  final bool initialIsExpense;
-  final String? currentId;
-  final ValueChanged<CategoryEntity> onCreated;
-
-  const _CategoryPickerSheet({
-    required this.expenseCategories,
-    required this.incomeCategories,
-    required this.allowTypeSwitch,
-    required this.initialIsExpense,
-    required this.onCreated,
-    this.currentId,
-  });
-
-  @override
-  State<_CategoryPickerSheet> createState() => _CategoryPickerSheetState();
-}
-
-class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
-  late bool _isExpense = widget.initialIsExpense;
-
-  List<CategoryEntity> get _cats =>
-      _isExpense ? widget.expenseCategories : widget.incomeCategories;
-
-  Future<void> _create() async {
-    final created = await showCategoryForm(
-      context: context,
-      isExpense: _isExpense,
-    );
-    if (created == null) return;
-    widget.onCreated(created);
-    if (mounted) {
-      Navigator.pop(
-        context,
-        (id: created.id, isExpense: created.isExpense),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final accent = _isExpense ? AppGradients.debt : AppGradients.savings;
-
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.l10n.bankImportPickCategoryHint,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            if (widget.allowTypeSwitch)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Row(
-                  children: [
-                    ChoiceChip(
-                      label: Text(context.l10n.detailLabelGider),
-                      selected: _isExpense,
-                      onSelected: (_) => setState(() => _isExpense = true),
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: Text(context.l10n.detailLabelGelir),
-                      selected: !_isExpense,
-                      onSelected: (_) => setState(() => _isExpense = false),
-                    ),
-                  ],
-                ),
-              ),
-            ListTile(
-              leading: CircleAvatar(
-                radius: 16,
-                backgroundColor: accent.withValues(alpha: 0.14),
-                child: Icon(Icons.add_rounded, size: 18, color: accent),
-              ),
-              title: Text(
-                context.l10n.yeniKategori,
-                style: TextStyle(fontWeight: FontWeight.w700, color: accent),
-              ),
-              onTap: _create,
-            ),
-            const Divider(height: 1),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 8),
-                itemCount: _cats.length,
-                itemBuilder: (context, i) {
-                  final c = _cats[i];
-                  final selected = c.id == widget.currentId;
-                  return ListTile(
-                    leading: Icon(AppIcons.getIconData(c.iconName),
-                        color: selected ? accent : cs.onSurfaceVariant),
-                    title: Text(
-                      context.categoryLabel(c),
-                      style: TextStyle(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w400,
-                        color: selected ? accent : null,
-                      ),
-                    ),
-                    trailing: selected
-                        ? Icon(Icons.check_rounded, size: 18, color: accent)
-                        : null,
-                    onTap: () => Navigator.pop(
-                      context,
-                      (id: c.id, isExpense: c.isExpense),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

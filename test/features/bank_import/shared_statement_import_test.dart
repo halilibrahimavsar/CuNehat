@@ -63,8 +63,12 @@ void main() {
     reader = _MockReader();
     mapper = _MockMapper();
     categoryRepo = _MockCategoryRepo();
-    when(() => categoryRepo.getExpenseCategories()).thenAnswer((_) async => []);
-    when(() => categoryRepo.getIncomeCategories()).thenAnswer((_) async => []);
+    when(() => categoryRepo.getAllCategories()).thenAnswer((_) async => [
+          ...await categoryRepo.getCategories(true),
+          ...await categoryRepo.getCategories(false),
+        ]);
+    when(() => categoryRepo.getCategories(true)).thenAnswer((_) async => []);
+    when(() => categoryRepo.getCategories(false)).thenAnswer((_) async => []);
   });
 
   tearDown(() {

@@ -35,7 +35,11 @@ class BackupSummary {
   final int receivableCount;
   final int budgetCount;
   final int recurringCount;
-  final int categoryKeyCount;
+
+  /// Yedekteki kategori SAYISI. (v7 öncesi burada dolu SharedPreferences
+  /// anahtarlarının sayısı — en fazla 4 — duruyordu; kullanıcıya hiçbir
+  /// şey söylemeyen bir sayıydı.)
+  final int categoryCount;
 
   final List<BackupWalletSummary> wallets;
 
@@ -60,7 +64,7 @@ class BackupSummary {
     required this.receivableCount,
     required this.budgetCount,
     required this.recurringCount,
-    required this.categoryKeyCount,
+    required this.categoryCount,
     required this.wallets,
     required this.firstTransactionDate,
     required this.lastTransactionDate,

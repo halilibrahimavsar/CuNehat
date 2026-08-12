@@ -141,8 +141,14 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
       id: _isEdit ? widget.initialTransaction!.id : null,
       userId: widget.userId,
       walletId: widget.walletId,
+      // Başlık boşsa kategori ADINA düşer — kimlik UUID olduğundan
+      // `categoryId`'yi basmak ekrana anlamsız bir dizgi yazardı.
       title: _c.titleController.text.trim().isEmpty
-          ? _c.categoryId.value ?? context.l10n.islem
+          ? (_c.categories.value
+                  .where((c) => c.id == _c.categoryId.value)
+                  .firstOrNull
+                  ?.name ??
+              context.l10n.islem)
           : _c.titleController.text.trim(),
       tag: _c.categoryId.value!,
       amount: _c.parsedAmount!,

@@ -3,118 +3,75 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  CategoryModel build({String? parentId}) => CategoryModel(
+        id: '018c-uuid',
+        name: 'Elektrik',
+        iconName: 'lightbulb',
+        isExpense: true,
+        parentId: parentId,
+        sortOrder: 3,
+      );
+
   group('CategoryModel', () {
-    const testEntity = CategoryEntity(
-      id: 'Food',
-      iconName: 'restaurant',
-      isExpense: true,
-      isDefault: true,
-      sortOrder: 1,
-    );
-
-    test('toEntity should return a valid CategoryEntity', () {
-      const model = CategoryModel(
-        id: 'Food',
-        iconName: 'restaurant',
-        isExpense: true,
-        isDefault: true,
-        sortOrder: 1,
-      );
+    test('entity dönüşümü tüm alanları taşır', () {
+      final model = build(parentId: 'ana');
       final entity = model.toEntity();
-      expect(entity, testEntity);
+
+      expect(entity.id, '018c-uuid');
+      expect(entity.name, 'Elektrik');
+      expect(entity.iconName, 'lightbulb');
+      expect(entity.isExpense, isTrue);
+      expect(entity.parentId, 'ana');
+      expect(entity.sortOrder, 3);
+
+      expect(CategoryModel.fromEntity(entity).toEntity(), entity);
     });
 
-    test('fromEntity should return a valid CategoryModel', () {
-      final model = CategoryModel.fromEntity(testEntity);
-      expect(model.id, testEntity.id);
-      expect(model.iconName, testEntity.iconName);
-      expect(model.isExpense, testEntity.isExpense);
-      expect(model.isDefault, testEntity.isDefault);
-      expect(model.sortOrder, testEntity.sortOrder);
+    test('JSON gidiş-dönüşü ana kategoriyi korur', () {
+      final model = build();
+      final restored = CategoryModel.fromJson(model.toJson());
+
+      expect(restored.toEntity(), model.toEntity());
+      expect(restored.parentId, isNull);
     });
 
-    test('toJson returns correct map', () {
-      const model = CategoryModel(
-        id: 'Food',
-        iconName: 'restaurant',
-        isExpense: true,
-        isDefault: true,
-        sortOrder: 1,
+    test('JSON gidiş-dönüşü hiyerarşiyi korur', () {
+      final model = build(parentId: 'ana');
+      expect(CategoryModel.fromJson(model.toJson()).parentId, 'ana');
+    });
+
+    test('parentId yedekte açıkça null yazılır', () {
+      expect(build().toJson()['parentId'], isNull);
+      expect(build().toJson().containsKey('parentId'), isTrue);
+    });
+
+    test('fromJson zorunlu alanlarda SIKI davranır', () {
+      // Yayın öncesi politika: sürüm-kaynaklı `?? varsayılan` fallback'i yok.
+      final json = build().toJson()..remove('name');
+      expect(() => CategoryModel.fromJson(json), throwsA(isA<TypeError>()));
+    });
+
+    test('eşitlik yalnız kimliğe bakar', () {
+      final a = build();
+      final b = CategoryModel(
+        id: '018c-uuid',
+        name: 'Bambaşka',
+        iconName: 'category',
+        isExpense: false,
       );
-      final json = model.toJson();
-      expect(json, {
-        'id': 'Food',
-        // Ad verilmediyse null: görünen ad id'den çözülür (varsayılanlarda
-        // l10n'a çevrilir). Bkz. CategoryEntity.displayName.
-        'displayName': null,
-        'iconName': 'restaurant',
-        'isExpense': true,
-        'isDefault': true,
-        'sortOrder': 1,
-      });
+
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
     });
 
-    test('fromJson returns correct object', () {
-      final json = {
-        'id': 'Food',
-        'iconName': 'restaurant',
-        'isExpense': true,
-        'isDefault': true,
-        'sortOrder': 1,
-      };
-      final model = CategoryModel.fromJson(json);
-      expect(model.id, 'Food');
-      expect(model.iconName, 'restaurant');
-      expect(model.isExpense, true);
-      expect(model.isDefault, true);
-      expect(model.sortOrder, 1);
-    });
-
-    test('copyWith returns updated object', () {
-      const model = CategoryModel(
-        id: 'Food',
-        iconName: 'restaurant',
+    test('fromEntity const entity ile çalışır', () {
+      const entity = CategoryEntity(
+        id: 'x',
+        name: 'Market',
+        iconName: 'shopping_cart',
         isExpense: true,
       );
-      final updated =
-          model.copyWith(displayName: 'Drinks', iconName: 'local_drink');
-      // Kimlik DEĞİŞMEZ: copyWith artık `id` almıyor (bkz. CategoryEntity).
-      expect(updated.id, 'Food');
-      expect(updated.displayName, 'Drinks');
-      expect(updated.iconName, 'local_drink');
-    });
-
-    test(
-        'getDefaultExpenseCategories and getDefaultIncomeCategories return valid defaults',
-        () {
-      final expenses = CategoryModel.getDefaultExpenseCategories();
-      final incomes = CategoryModel.getDefaultIncomeCategories();
-
-      expect(expenses.isNotEmpty, true);
-      expect(expenses.every((c) => c.isExpense), true);
-
-      expect(incomes.isNotEmpty, true);
-      expect(incomes.every((c) => !c.isExpense), true);
-    });
-
-    test('equality checks by id', () {
-      const model1 =
-          CategoryModel(id: 'Food', iconName: 'restaurant', isExpense: true);
-      const model2 =
-          CategoryModel(id: 'Food', iconName: 'other', isExpense: false);
-      const model3 =
-          CategoryModel(id: 'Drinks', iconName: 'restaurant', isExpense: true);
-
-      expect(model1 == model2, true);
-      expect(model1 == model3, false);
-      expect(model1.hashCode == model2.hashCode, true);
-    });
-
-    test('toString formats correctly', () {
-      const model =
-          CategoryModel(id: 'Food', iconName: 'restaurant', isExpense: true);
-      expect(
-          model.toString(), 'CategoryModel(id(name): Food, isExpense: true)');
+      expect(CategoryModel.fromEntity(entity).name, 'Market');
     });
   });
 }

@@ -75,14 +75,18 @@ class ImportDraft extends Equatable {
   }
 
   /// Toplu yazımda kalıcı işleme dönüştürür. [id] çağıran tarafından üretilir
-  /// (UUIDv7); ham repo [id] null kabul etmez. Başlık boşsa kategori adına düşer.
+  /// (UUIDv7); ham repo [id] null kabul etmez.
+  ///
+  /// Başlık boşsa [categoryName]'e düşer — kategori kimliği UUID olduğundan
+  /// onu basmak başlığa anlamsız bir dizgi yazardı.
   TransactionEntity toEntity({
     required String id,
     required String userId,
     required String walletId,
+    String? categoryName,
   }) {
     final title = description.trim().isEmpty
-        ? (categoryId ?? 'İşlem')
+        ? (categoryName ?? 'İşlem')
         : description.trim();
     return TransactionEntity(
       id: id,

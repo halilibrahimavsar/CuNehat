@@ -86,13 +86,18 @@ void main() {
     getIt.registerSingleton<SaveRecurringTransactionUsecase>(
         mockSaveRecurringTransactionUsecase);
 
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => [
+              ...await mockCategoryRepository.getCategories(true),
+              ...await mockCategoryRepository.getCategories(false),
+            ]);
     when(() => mockCategoryRepository.getCategories(true)).thenAnswer(
       (_) async => [
         const CategoryEntity(
           id: 'Food',
+          name: 'Food',
           iconName: 'fastfood',
           isExpense: true,
-          isDefault: true,
         ),
       ],
     );
@@ -101,9 +106,9 @@ void main() {
       (_) async => [
         const CategoryEntity(
           id: 'Salary',
+          name: 'Salary',
           iconName: 'work',
           isExpense: false,
-          isDefault: true,
         ),
       ],
     );
