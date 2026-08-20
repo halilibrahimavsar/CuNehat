@@ -39,6 +39,12 @@ sonra. 14 gün test + ≤7 gün inceleme. 12 testerı toplamak bu sürenin dış
 Bu yüzden aşağıdaki **Adım 9 kapalı testtir, dahili test değildir.** Muafsan
 Adım 9'daki dahili test kısayolunu kullanabilirsin.
 
+> **⛔ En pahalı yanılgı: "önce her şeyi bitirip AAB'yi en son yüklerim."**
+> AAB yüklemek son adım değil, **sayacı başlatan** adım. Yükleme geciktiği her
+> gün yayına doğrudan ekleniyor. Kapalı test yayındayken yeni sürüm atmak
+> sayacı **bozmaz** — düzeltmeleri test süresi içinde yapmak beklenen davranış,
+> mükemmel sürümü beklemek değil.
+
 ---
 
 ## Adım 1 — Upload keystore üret (KRİTİK, bir kez)
@@ -284,11 +290,45 @@ ilk yüklemeden sonra alınabiliyor — **Adım 9**.
 
 | Alan | Değer |
 |---|---|
-| Uygulama adı | CuNehat |
+| Uygulama adı | **`CuNehat: Gelir Gider Takibi`** *(27 kr — gerekçesi `store-listing.md`)* |
 | Varsayılan dil | Türkçe (tr-TR) |
 | Uygulama mı oyun mu | Uygulama |
 | Ücretsiz mi ücretli mi | Ücretsiz *(ücretliye sonradan geçilemez)* |
 | Kategori | Finans |
+
+> **Uygulama adı ≠ `android:label`.** Manifest'teki `CuNehat` telefondaki
+> simgenin altında yazan ad; buradaki alan **mağazada aranan ve indekslenen**
+> ad. Play'in en ağır ASO alanı bu, 30 karakterin 23'ünü sıfır arama hacimli
+> markaya harcamak en pahalı hata olurdu. Uygulama oluştururken sade "CuNehat"
+> girdiysen sorun değil — **Mağaza girişi** ekranından değiştirilebiliyor.
+
+### Etiketler (en fazla 5)
+
+Uygulama oluşturma ekranında değil, sonradan:
+**Mağaza varlığı → Mağaza ayarları → Etiketleri yönet**
+
+| Seç | Sırayla |
+|---|---|
+| 1 | Bütçeleme / Budgeting |
+| 2 | Kişisel finans / Personal finance |
+| 3 | Harcama takibi / Expense tracking *(ayrı seçenek olarak varsa)* |
+
+Etiket listesi sabit bir seçicidir; birebir aynı etiketi bulamazsan **en yakınını**
+seç, uydurma.
+
+**Beşi doldurmak zorunlu değil ve doldurmaya çalışma.** Etiketler arama
+sıralamasına girmiyor — aramayı başlık ve açıklamalar belirliyor. Etiketlerin
+tek işi seni *gözat/keşfet kümelerine* ("Harcamalarını takip et") sokmak. Alakasız
+etiket seni yanlış kümeye sokar, gelen kullanıcı bakıp çıkar ve 2026 algoritmasının
+en ağır sinyali olan **kurulum sonrası davranış** bozulur. Az ve doğru > çok ve gevşek.
+
+**⚠️ Mantıklı görünen ama seçilmemesi gerekenler:**
+
+| Etiket | Neden hayır |
+|---|---|
+| Ödemeler, Bankacılık, Para transferi, Kripto | **Adım 8'deki "finans özelliği yok" beyanıyla çelişir.** Play beyanla mağaza metadata'sını karşılaştırıyor; çelişki inceleme takılması demek. |
+| Yatırım / Alım satım | Aynı çelişki + seni borsa/kripto uygulamalarının kümesine sokar, orada dönüşüm sıfıra yakın olur |
+| Kredi, Faturalar | Uygulama kredi vermiyor, fatura ödettirmiyor |
 
 ---
 
@@ -349,9 +389,26 @@ Bu tablo uygulamanın gerçek davranışından çıkarıldı; olduğu gibi gir.
 | İçerik derecelendirmesi | Anket; kategori Finans, şiddet/cinsellik/kumar/IAP yok → düşük derece |
 | Hedef kitle ve içerik | 13+ *(çocuklara yönelik değil)* |
 | Reklamlar | **Uygulamada reklam yok** |
-| App access (uygulama erişimi) | Tüm işlevler girişsiz kullanılabilir. Drive yedeği isteğe bağlı; inceleyiciye not: *"Google ile giriş yalnız isteğe bağlı Drive yedeği içindir, diğer tüm özellikler girişsiz çalışır."* |
+| App access (uygulama erişimi) | **"Evet"** seç, kullanıcı adı/parola alanlarını **boş bırak**, talimat gir: *"Uygulamanın tüm işlevleri girişsiz kullanılabilir; hesap gerekmez. Google ile giriş yalnız isteğe bağlı Drive yedeği içindir. Uygulama kilidi (PIN/biyometrik) varsayılan olarak kapalıdır."* |
 | Devlet uygulaması mı | Hayır |
-| Finansal özellikler | "Bunların hiçbiri" — uygulama finansal ürün sunmuyor, yalnız kişisel kayıt tutuyor |
+| Finansal özellikler | Yalnız en alttaki **"Uygulamamda finans ile ilgili özellik sağlanmıyor"** kutusunu işaretle; diğer ~20 kutunun hepsi boş kalsın |
+
+> **App access'te neden "Hayır" değil "Evet"?** Sezgi "giriş gerekmiyor → Hayır"
+> diyor, ama **"Hayır" seçilince not alanı hiç açılmıyor.** İnceleyici o zaman
+> Drive giriş ekranını ve PIN/biyometrik kilidi kendi başına yorumlamak zorunda
+> kalıyor. "Evet" + boş kimlik bilgisi + talimat, notu iletmenin tek yolu.
+> Kilidin varsayılan kapalı olduğu koddan doğrulandı
+> (`app_auth_bloc.dart`: kilit yalnız `isBioEnabled || isPinSet` ise basılıyor).
+
+> **Finansal özellikler formu boş bırakılamaz.** Finans özelliği *olmayan*
+> uygulamalar dahil herkesin doldurması zorunlu; doldurulmadan güncelleme
+> yayınlanamıyor. Sıfır kutu işaretli hâli "cevap yok" demek, "hayır" demek değil.
+> Yakın-kaçırma tuzakları: **"Mobil ödemeler ve dijital cüzdanlar"** (bizim cüzdan
+> bir defter kalemi, ödeme aracı değil), **"Borsada alım satım ve portföy
+> yönetimi"** (yatırım *takibi*; emir iletmiyor, varlık saklamıyor),
+> **"Kredi izleme ve raporlama"** (kredi *notu* izleme demek, borç takibi değil),
+> **"Finansal danışmanlık"** (bütçe aşım uyarısı eşik alarmı, kişiselleştirilmiş
+> tavsiye değil).
 
 ---
 
