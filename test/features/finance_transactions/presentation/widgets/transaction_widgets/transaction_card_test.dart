@@ -168,13 +168,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
+        TransactionCard(item: item),
       ),
     );
 
@@ -200,13 +194,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
+        TransactionCard(item: item),
       ),
     );
 
@@ -233,13 +221,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
+        TransactionCard(item: item),
       ),
     );
 
@@ -278,13 +260,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
+        TransactionCard(item: item),
       ),
     );
 
@@ -316,13 +292,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
+        TransactionCard(item: item),
       ),
     );
 
@@ -358,13 +328,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        Builder(
-          builder: (context) => TransactionCard(
-            context: context,
-            item: item,
-            isListView: true,
-          ),
-        ),
+        TransactionCard(item: item),
       ),
     );
 
@@ -379,5 +343,104 @@ void main() {
     verify(() =>
             mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
         .called(1);
+  });
+
+  group('kaydırma eylemleri', () {
+    void seedLoaded(TransactionEntity tx) {
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(
+          groupedTransactions: {
+            testDate: [tx]
+          },
+          allTransactions: [tx],
+        ),
+      );
+    }
+
+    testWidgets('varsayılan olarak KAPALI (salt-okunur dökümler için)',
+        (tester) async {
+      final tx = createTx(isSystem: false, id: 'tx_123');
+      seedLoaded(tx);
+
+      await tester.pumpWidget(buildTestableWidget(
+        TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+        ),
+      ));
+
+      expect(find.byType(Dismissible), findsNothing);
+    });
+
+    testWidgets('kilitli (isSystem) işlemde kaydırma açılmaz', (tester) async {
+      final tx = createTx(isSystem: true, id: 'tx_sys');
+      seedLoaded(tx);
+
+      await tester.pumpWidget(buildTestableWidget(
+        TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+          enableSwipeActions: true,
+        ),
+      ));
+
+      expect(find.byType(Dismissible), findsNothing);
+    });
+
+    testWidgets('sola kaydırma silme event\'i yollar', (tester) async {
+      final tx = createTx(isSystem: false, id: 'tx_123');
+      seedLoaded(tx);
+
+      await tester.pumpWidget(buildTestableWidget(
+        TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+          enableSwipeActions: true,
+        ),
+      ));
+
+      await tester.drag(find.byType(Dismissible), const Offset(-400, 0));
+      await tester.pumpAndSettle();
+
+      verify(() =>
+              mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
+          .called(1);
+    });
+
+    testWidgets('sağa kaydırma düzenleme sayfasını açar', (tester) async {
+      final tx = createTx(isSystem: false, id: 'tx_123');
+      seedLoaded(tx);
+
+      await tester.pumpWidget(buildTestableWidget(
+        TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+          enableSwipeActions: true,
+        ),
+      ));
+
+      await tester.drag(find.byType(Dismissible), const Offset(400, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Güncelle'), findsOneWidget);
+      verifyNever(() => mockTransactionBloc.add(any()));
+    });
+
+    testWidgets('kart kaydırma sonrası ağaçta KALIR (silme asenkron)',
+        (tester) async {
+      // confirmDismiss false döndüğü için Dismissible kartı ağaçtan atmaz;
+      // true dönseydi silme başarısız olduğunda framework assertion atardı.
+      final tx = createTx(isSystem: false, id: 'tx_123');
+      seedLoaded(tx);
+
+      await tester.pumpWidget(buildTestableWidget(
+        TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+          enableSwipeActions: true,
+        ),
+      ));
+
+      await tester.drag(find.byType(Dismissible), const Offset(-400, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Normal İşlem'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

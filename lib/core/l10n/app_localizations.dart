@@ -3210,42 +3210,6 @@ abstract class AppLocalizations {
   /// **'Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.'**
   String get infoBankImportDesc;
 
-  /// No description provided for @dateBadgeToday.
-  ///
-  /// In tr, this message translates to:
-  /// **'BUGÜN'**
-  String get dateBadgeToday;
-
-  /// No description provided for @dateBadgeYesterday.
-  ///
-  /// In tr, this message translates to:
-  /// **'DÜN'**
-  String get dateBadgeYesterday;
-
-  /// No description provided for @dateBadgeThisWeek.
-  ///
-  /// In tr, this message translates to:
-  /// **'BU HAFTA'**
-  String get dateBadgeThisWeek;
-
-  /// No description provided for @dateBadgeLastWeek.
-  ///
-  /// In tr, this message translates to:
-  /// **'GEÇEN HAFTA'**
-  String get dateBadgeLastWeek;
-
-  /// No description provided for @dateBadgeThisMonth.
-  ///
-  /// In tr, this message translates to:
-  /// **'BU AY'**
-  String get dateBadgeThisMonth;
-
-  /// No description provided for @dateBadgeLastMonth.
-  ///
-  /// In tr, this message translates to:
-  /// **'GEÇEN AY'**
-  String get dateBadgeLastMonth;
-
   /// No description provided for @categoryFinans.
   ///
   /// In tr, this message translates to:
@@ -6149,6 +6113,276 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Seçilmedi'**
   String get vadeSecilmedi;
+
+  /// No description provided for @txSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem ara…'**
+  String get txSearchHint;
+
+  /// No description provided for @txSearchClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramayı temizle'**
+  String get txSearchClear;
+
+  /// No description provided for @txSearchNoResultTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{query}” için sonuç yok'**
+  String txSearchNoResultTitle(Object query);
+
+  /// No description provided for @txPeriodPrev.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki dönem'**
+  String get txPeriodPrev;
+
+  /// No description provided for @txPeriodNext.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki dönem'**
+  String get txPeriodNext;
+
+  /// No description provided for @txPeriodPick.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem seç'**
+  String get txPeriodPick;
+
+  /// No description provided for @txViewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste görünümü'**
+  String get txViewList;
+
+  /// No description provided for @txViewCalendar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim görünümü'**
+  String get txViewCalendar;
+
+  /// No description provided for @txOpenFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri aç'**
+  String get txOpenFilters;
+
+  /// No description provided for @txChipRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreyi kaldır'**
+  String get txChipRemove;
+
+  /// No description provided for @txChipSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{query}”'**
+  String txChipSearch(Object query);
+
+  /// No description provided for @txEmptyFilteredTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen işlem yok'**
+  String get txEmptyFilteredTitle;
+
+  /// No description provided for @txEmptyFilteredBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçtiğin dönem ve filtrelerle kayıt bulunamadı.'**
+  String get txEmptyFilteredBody;
+
+  /// No description provided for @txEmptyClearFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri temizle'**
+  String get txEmptyClearFilters;
+
+  /// No description provided for @txFilterShowCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlemi göster'**
+  String txFilterShowCount(int count);
+
+  /// No description provided for @txFilterNoResult.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen işlem yok'**
+  String get txFilterNoResult;
+
+  /// No description provided for @txFilterAmountRange.
+  ///
+  /// In tr, this message translates to:
+  /// **'TUTAR ARALIĞI'**
+  String get txFilterAmountRange;
+
+  /// No description provided for @txFilterMinMaxError.
+  ///
+  /// In tr, this message translates to:
+  /// **'En düşük tutar, en yüksek tutardan büyük olamaz'**
+  String get txFilterMinMaxError;
+
+  /// No description provided for @txFilterCategorySearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori ara…'**
+  String get txFilterCategorySearchHint;
+
+  /// No description provided for @txFilterCategoryNoMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen kategori yok'**
+  String get txFilterCategoryNoMatch;
+
+  /// No description provided for @txFilterSelectedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} seçili'**
+  String txFilterSelectedCount(int count);
+
+  /// No description provided for @txFilterSubcategoryCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{selected}/{total}'**
+  String txFilterSubcategoryCount(int selected, int total);
+
+  /// No description provided for @txFilterExpandGroup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategorileri göster'**
+  String get txFilterExpandGroup;
+
+  /// No description provided for @txFilterCollapseGroup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt kategorileri gizle'**
+  String get txFilterCollapseGroup;
+
+  /// No description provided for @txSummaryNet.
+  ///
+  /// In tr, this message translates to:
+  /// **'NET DURUM'**
+  String get txSummaryNet;
+
+  /// No description provided for @txSummaryNetFiltered.
+  ///
+  /// In tr, this message translates to:
+  /// **'FİLTRELENEN NET DURUM'**
+  String get txSummaryNetFiltered;
+
+  /// No description provided for @txSummaryIncomeTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'TOPLAM GELİR'**
+  String get txSummaryIncomeTotal;
+
+  /// No description provided for @txSummaryIncomeFiltered.
+  ///
+  /// In tr, this message translates to:
+  /// **'FİLTRELENEN GELİR'**
+  String get txSummaryIncomeFiltered;
+
+  /// No description provided for @txSummaryExpenseTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'TOPLAM GİDER'**
+  String get txSummaryExpenseTotal;
+
+  /// No description provided for @txSummaryExpenseFiltered.
+  ///
+  /// In tr, this message translates to:
+  /// **'FİLTRELENEN GİDER'**
+  String get txSummaryExpenseFiltered;
+
+  /// No description provided for @txSummaryIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'GELİR'**
+  String get txSummaryIncome;
+
+  /// No description provided for @txSummaryExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'GİDER'**
+  String get txSummaryExpense;
+
+  /// No description provided for @txSummaryCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem'**
+  String get txSummaryCount;
+
+  /// No description provided for @txSummaryCountFiltered.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtrelenen İşlem'**
+  String get txSummaryCountFiltered;
+
+  /// No description provided for @txModeIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelirler'**
+  String get txModeIncome;
+
+  /// No description provided for @txModeExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giderler'**
+  String get txModeExpense;
+
+  /// No description provided for @txModeCompare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karşılaştırma'**
+  String get txModeCompare;
+
+  /// No description provided for @txSwipeHintLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik oluşturulan işlem düzenlenemez'**
+  String get txSwipeHintLocked;
+
+  /// No description provided for @dateRangeLast7Days.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 7 Gün'**
+  String get dateRangeLast7Days;
+
+  /// No description provided for @dateRangeThisMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu Ay'**
+  String get dateRangeThisMonth;
+
+  /// No description provided for @dateRangeLastMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçen Ay'**
+  String get dateRangeLastMonth;
+
+  /// No description provided for @dateRangeLast3Months.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 3 Ay'**
+  String get dateRangeLast3Months;
+
+  /// No description provided for @dateRangeThisYear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu Yıl'**
+  String get dateRangeThisYear;
+
+  /// No description provided for @txPeriodToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get txPeriodToday;
+
+  /// No description provided for @txPeriodYesterday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dün'**
+  String get txPeriodYesterday;
 }
 
 class _AppLocalizationsDelegate

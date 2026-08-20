@@ -90,10 +90,7 @@ class _InsightsViewState extends State<_InsightsView> {
   String _money(double v) =>
       formatMoney(v, currency: context.activeWalletCurrency);
 
-  final _quickOptions = DateRangeHelper.buildDateRangeQuickOptions();
-
-  // "Bu Ay" — buildDateRangeQuickOptions sırasında index 1.
-  late DateTimeRange _range = _quickOptions[1].range;
+  late DateTimeRange _range = DateRangeHelper.thisMonth();
 
   /// Mevcut şablonlar; null = henüz yükleniyor.
   List<RecurringTransactionEntity>? _templates;
@@ -235,7 +232,8 @@ class _InsightsViewState extends State<_InsightsView> {
                 ),
                 const SizedBox(height: 12),
                 InsightRangeChips(
-                  quickOptions: _quickOptions,
+                  quickOptions:
+                      DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
                   selectedRange: _range,
                   onSelected: (newRange) => setState(() => _range = newRange),
                 ),

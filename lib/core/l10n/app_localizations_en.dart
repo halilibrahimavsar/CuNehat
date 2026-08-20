@@ -1739,24 +1739,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can quickly import transactions by pasting account movements copied from your bank\'s mobile app.';
 
   @override
-  String get dateBadgeToday => 'TODAY';
-
-  @override
-  String get dateBadgeYesterday => 'YESTERDAY';
-
-  @override
-  String get dateBadgeThisWeek => 'THIS WEEK';
-
-  @override
-  String get dateBadgeLastWeek => 'LAST WEEK';
-
-  @override
-  String get dateBadgeThisMonth => 'THIS MONTH';
-
-  @override
-  String get dateBadgeLastMonth => 'LAST MONTH';
-
-  @override
   String get categoryFinans => 'Finance';
 
   @override
@@ -3434,4 +3416,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vadeSecilmedi => 'Not set';
+
+  @override
+  String get txSearchHint => 'Search transactions…';
+
+  @override
+  String get txSearchClear => 'Clear search';
+
+  @override
+  String txSearchNoResultTitle(Object query) {
+    return 'No results for “$query”';
+  }
+
+  @override
+  String get txPeriodPrev => 'Previous period';
+
+  @override
+  String get txPeriodNext => 'Next period';
+
+  @override
+  String get txPeriodPick => 'Choose period';
+
+  @override
+  String get txViewList => 'List view';
+
+  @override
+  String get txViewCalendar => 'Calendar view';
+
+  @override
+  String get txOpenFilters => 'Open filters';
+
+  @override
+  String get txChipRemove => 'Remove filter';
+
+  @override
+  String txChipSearch(Object query) {
+    return '“$query”';
+  }
+
+  @override
+  String get txEmptyFilteredTitle => 'No matching transactions';
+
+  @override
+  String get txEmptyFilteredBody =>
+      'Nothing found for the selected period and filters.';
+
+  @override
+  String get txEmptyClearFilters => 'Clear filters';
+
+  @override
+  String txFilterShowCount(int count) {
+    return 'Show $count transactions';
+  }
+
+  @override
+  String get txFilterNoResult => 'No matching transactions';
+
+  @override
+  String get txFilterAmountRange => 'AMOUNT RANGE';
+
+  @override
+  String get txFilterMinMaxError => 'Minimum amount cannot exceed the maximum';
+
+  @override
+  String get txFilterCategorySearchHint => 'Search categories…';
+
+  @override
+  String get txFilterCategoryNoMatch => 'No matching categories';
+
+  @override
+  String txFilterSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String txFilterSubcategoryCount(int selected, int total) {
+    return '$selected/$total';
+  }
+
+  @override
+  String get txFilterExpandGroup => 'Show subcategories';
+
+  @override
+  String get txFilterCollapseGroup => 'Hide subcategories';
+
+  @override
+  String get txSummaryNet => 'NET';
+
+  @override
+  String get txSummaryNetFiltered => 'FILTERED NET';
+
+  @override
+  String get txSummaryIncomeTotal => 'TOTAL INCOME';
+
+  @override
+  String get txSummaryIncomeFiltered => 'FILTERED INCOME';
+
+  @override
+  String get txSummaryExpenseTotal => 'TOTAL EXPENSES';
+
+  @override
+  String get txSummaryExpenseFiltered => 'FILTERED EXPENSES';
+
+  @override
+  String get txSummaryIncome => 'INCOME';
+
+  @override
+  String get txSummaryExpense => 'EXPENSES';
+
+  @override
+  String get txSummaryCount => 'transactions';
+
+  @override
+  String get txSummaryCountFiltered => 'filtered';
+
+  @override
+  String get txModeIncome => 'Income';
+
+  @override
+  String get txModeExpense => 'Expenses';
+
+  @override
+  String get txModeCompare => 'Compare';
+
+  @override
+  String get txSwipeHintLocked =>
+      'Auto-generated transactions cannot be edited';
+
+  @override
+  String get dateRangeLast7Days => 'Last 7 Days';
+
+  @override
+  String get dateRangeThisMonth => 'This Month';
+
+  @override
+  String get dateRangeLastMonth => 'Last Month';
+
+  @override
+  String get dateRangeLast3Months => 'Last 3 Months';
+
+  @override
+  String get dateRangeThisYear => 'This Year';
+
+  @override
+  String get txPeriodToday => 'Today';
+
+  @override
+  String get txPeriodYesterday => 'Yesterday';
 }

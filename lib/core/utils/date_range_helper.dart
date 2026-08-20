@@ -1,10 +1,24 @@
+import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 class DateRangeHelper {
   DateRangeHelper._();
 
-  static List<IboDateRangeQuickOption> buildDateRangeQuickOptions() {
+  /// İçinde bulunulan ay. Başlangıç aralığı olarak kullanan sayfalar için;
+  /// eskiden `buildDateRangeQuickOptions()[1].range` diye indeksle
+  /// alınıyordu ve seçenek sırası değişince sessizce kayardı.
+  static DateTimeRange thisMonth({DateTime? now}) {
+    final today = now ?? DateTime.now();
+    final start = DateTime(today.year, today.month, 1);
+    final end = DateTime(today.year, today.month + 1, 0);
+    return DateTimeRange(start: start, end: end);
+  }
+
+  /// Hızlı aralık seçenekleri. Etiketler l10n'den gelir; sabit Türkçe
+  /// metinlerdi ve İngilizce arayüzde de "Son 7 Gün" görünüyordu.
+  static List<IboDateRangeQuickOption> buildDateRangeQuickOptions(
+      AppLocalizations l10n) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final startOfMonth = DateTime(now.year, now.month, 1);
@@ -24,26 +38,26 @@ class DateRangeHelper {
 
     return [
       IboDateRangeQuickOption(
-        label: 'Son 7 Gün',
+        label: l10n.dateRangeLast7Days,
         range: DateTimeRange(
           start: today.subtract(const Duration(days: 6)),
           end: today,
         ),
       ),
       IboDateRangeQuickOption(
-        label: 'Bu Ay',
+        label: l10n.dateRangeThisMonth,
         range: DateTimeRange(start: startOfMonth, end: endOfMonth),
       ),
       IboDateRangeQuickOption(
-        label: 'Geçen Ay',
+        label: l10n.dateRangeLastMonth,
         range: DateTimeRange(start: startOfLastMonth, end: endOfLastMonth),
       ),
       IboDateRangeQuickOption(
-        label: 'Son 3 Ay',
+        label: l10n.dateRangeLast3Months,
         range: DateTimeRange(start: startOfLast3Months, end: endOfMonth),
       ),
       IboDateRangeQuickOption(
-        label: 'Bu Yıl',
+        label: l10n.dateRangeThisYear,
         range: DateTimeRange(start: startOfYear, end: endOfYear),
       ),
     ];

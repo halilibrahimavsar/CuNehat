@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 
 /// Kategori hiyerarşisinin TEK kaynağı — saf fonksiyonlar, I/O yok.
@@ -41,24 +42,12 @@ enum CategoryValidationError {
   parentHasChildren,
 }
 
-/// Ad karşılaştırma anahtarı: kırp, iç boşlukları tekle, Türkçe harfleri katla.
+/// Ad karşılaştırma anahtarı: Türkçe-duyarlı katlama ([foldTr]).
 ///
-/// `toLowerCase()` tek başına yetmez — 'İ' Dart'ta 'i̇' (i + birleşen nokta)
-/// oluyor ve 'i' ile eşleşmiyor. (`CategoryGuesser._normalizeTr` ile bilerek
-/// ayrı: orada amaç işlem AÇIKLAMASINDA anahtar kelime aramak, ayraçlar da
-/// sadeleşiyor; burada amaç kullanıcının yazdığı iki adı karşılaştırmak.)
-String normalizeCategoryName(String name) {
-  final folded = name
-      .replaceAll('İ', 'i')
-      .replaceAll('I', 'ı')
-      .replaceAll('Ş', 'ş')
-      .replaceAll('Ğ', 'ğ')
-      .replaceAll('Ü', 'ü')
-      .replaceAll('Ö', 'ö')
-      .replaceAll('Ç', 'ç')
-      .toLowerCase();
-  return folded.trim().replaceAll(RegExp(r'\s+'), ' ');
-}
+/// (`CategoryGuesser._normalizeTr` ile bilerek ayrı: orada amaç işlem
+/// AÇIKLAMASINDA anahtar kelime aramak, ayraçlar da sadeleşiyor; burada amaç
+/// kullanıcının yazdığı iki adı karşılaştırmak.)
+String normalizeCategoryName(String name) => foldTr(name);
 
 /// [all] içindeki kökleri, altlarında çocuklarıyla döner.
 ///

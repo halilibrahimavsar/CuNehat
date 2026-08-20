@@ -1741,24 +1741,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.';
 
   @override
-  String get dateBadgeToday => 'BUGÜN';
-
-  @override
-  String get dateBadgeYesterday => 'DÜN';
-
-  @override
-  String get dateBadgeThisWeek => 'BU HAFTA';
-
-  @override
-  String get dateBadgeLastWeek => 'GEÇEN HAFTA';
-
-  @override
-  String get dateBadgeThisMonth => 'BU AY';
-
-  @override
-  String get dateBadgeLastMonth => 'GEÇEN AY';
-
-  @override
   String get categoryFinans => 'Finans';
 
   @override
@@ -3435,4 +3417,151 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get vadeSecilmedi => 'Seçilmedi';
+
+  @override
+  String get txSearchHint => 'İşlem ara…';
+
+  @override
+  String get txSearchClear => 'Aramayı temizle';
+
+  @override
+  String txSearchNoResultTitle(Object query) {
+    return '“$query” için sonuç yok';
+  }
+
+  @override
+  String get txPeriodPrev => 'Önceki dönem';
+
+  @override
+  String get txPeriodNext => 'Sonraki dönem';
+
+  @override
+  String get txPeriodPick => 'Dönem seç';
+
+  @override
+  String get txViewList => 'Liste görünümü';
+
+  @override
+  String get txViewCalendar => 'Takvim görünümü';
+
+  @override
+  String get txOpenFilters => 'Filtreleri aç';
+
+  @override
+  String get txChipRemove => 'Filtreyi kaldır';
+
+  @override
+  String txChipSearch(Object query) {
+    return '“$query”';
+  }
+
+  @override
+  String get txEmptyFilteredTitle => 'Eşleşen işlem yok';
+
+  @override
+  String get txEmptyFilteredBody =>
+      'Seçtiğin dönem ve filtrelerle kayıt bulunamadı.';
+
+  @override
+  String get txEmptyClearFilters => 'Filtreleri temizle';
+
+  @override
+  String txFilterShowCount(int count) {
+    return '$count işlemi göster';
+  }
+
+  @override
+  String get txFilterNoResult => 'Eşleşen işlem yok';
+
+  @override
+  String get txFilterAmountRange => 'TUTAR ARALIĞI';
+
+  @override
+  String get txFilterMinMaxError =>
+      'En düşük tutar, en yüksek tutardan büyük olamaz';
+
+  @override
+  String get txFilterCategorySearchHint => 'Kategori ara…';
+
+  @override
+  String get txFilterCategoryNoMatch => 'Eşleşen kategori yok';
+
+  @override
+  String txFilterSelectedCount(int count) {
+    return '$count seçili';
+  }
+
+  @override
+  String txFilterSubcategoryCount(int selected, int total) {
+    return '$selected/$total';
+  }
+
+  @override
+  String get txFilterExpandGroup => 'Alt kategorileri göster';
+
+  @override
+  String get txFilterCollapseGroup => 'Alt kategorileri gizle';
+
+  @override
+  String get txSummaryNet => 'NET DURUM';
+
+  @override
+  String get txSummaryNetFiltered => 'FİLTRELENEN NET DURUM';
+
+  @override
+  String get txSummaryIncomeTotal => 'TOPLAM GELİR';
+
+  @override
+  String get txSummaryIncomeFiltered => 'FİLTRELENEN GELİR';
+
+  @override
+  String get txSummaryExpenseTotal => 'TOPLAM GİDER';
+
+  @override
+  String get txSummaryExpenseFiltered => 'FİLTRELENEN GİDER';
+
+  @override
+  String get txSummaryIncome => 'GELİR';
+
+  @override
+  String get txSummaryExpense => 'GİDER';
+
+  @override
+  String get txSummaryCount => 'İşlem';
+
+  @override
+  String get txSummaryCountFiltered => 'Filtrelenen İşlem';
+
+  @override
+  String get txModeIncome => 'Gelirler';
+
+  @override
+  String get txModeExpense => 'Giderler';
+
+  @override
+  String get txModeCompare => 'Karşılaştırma';
+
+  @override
+  String get txSwipeHintLocked => 'Otomatik oluşturulan işlem düzenlenemez';
+
+  @override
+  String get dateRangeLast7Days => 'Son 7 Gün';
+
+  @override
+  String get dateRangeThisMonth => 'Bu Ay';
+
+  @override
+  String get dateRangeLastMonth => 'Geçen Ay';
+
+  @override
+  String get dateRangeLast3Months => 'Son 3 Ay';
+
+  @override
+  String get dateRangeThisYear => 'Bu Yıl';
+
+  @override
+  String get txPeriodToday => 'Bugün';
+
+  @override
+  String get txPeriodYesterday => 'Dün';
 }

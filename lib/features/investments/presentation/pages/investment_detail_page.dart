@@ -86,11 +86,7 @@ class _InvestmentDetailView extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ...withBalanceList.map(
-                  (item) => TransactionCard(
-                    context: context,
-                    item: item,
-                    isListView: true,
-                  ),
+                  (item) => TransactionCard(item: item),
                 ),
               ],
             ),

@@ -2,9 +2,9 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/date_math.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/daily_spending_summary_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/calculate_running_balance_helper.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
@@ -17,9 +17,20 @@ import 'package:table_calendar/table_calendar.dart';
 /// noktası taşır. Bir güne dokununca o günün işlemleri takvimin altında
 /// listelenir (mevcut [TransactionCard] yeniden kullanılır).
 ///
-/// [transactions]: cüzdanın TAM geçmişi, mod/kategori/fiyat filtreleri
-/// uygulanmış — tarih penceresi UYGULANMAMIŞ. Takvim tarih eksenini kendi
-/// navigasyonuyla yönetir.
+/// **Zaman ekseni paylaşılır.** Takvim eskiden kendi ay/hafta gezinmesini
+/// tutuyordu ve filtrenin tarih aralığı bu görünümde hiçbir şey yapmıyordu —
+/// kullanıcı "Bu Hafta" seçip Uygula'ya bastığında ekran değişmiyordu. Artık:
+/// - ay/hafta değiştirmek (ok yerine SAYFA kaydırma) dönemi [onRangeChanged]
+///   ile YAZAR, böylece listeye geçince aynı dönem görünür;
+/// - dışarıdan gelen dönem takvimi oraya ODAKLAR ve dönem dışındaki günler
+///   soluklaşır.
+///
+/// Dönemin ileri/geri okları ve etiketi üst çubuktadır ([TransactionTopBar]);
+/// burada tekrarlanmaz.
+///
+/// [transactions]: cüzdanın TAM geçmişi, mod/kategori/tutar/arama filtreleri
+/// uygulanmış — dönem penceresi UYGULANMAMIŞ. Kullanıcı dönem dışına da
+/// gezinebilmeli.
 class TransactionCalendarView extends StatefulWidget {
   final List<TransactionWithBalance> transactions;
   final Map<String, IconData> categoryIcons;
@@ -27,9 +38,17 @@ class TransactionCalendarView extends StatefulWidget {
   /// `tag` → görünen ad (bkz. `buildCategoryLabelMap`).
   final Map<String, String> categoryLabels;
 
+  /// Etkin dönem — üst çubuk ve liste görünümüyle ortak.
+  final DateTimeRange range;
+
+  /// Takvimde gezinildiğinde yeni dönem.
+  final ValueChanged<DateTimeRange> onRangeChanged;
+
   const TransactionCalendarView({
     super.key,
     required this.transactions,
+    required this.range,
+    required this.onRangeChanged,
     this.categoryIcons = const {},
     this.categoryLabels = const {},
   });
@@ -57,8 +76,10 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _focusedDay = DateTime(now.year, now.month, now.day);
+    _format = periodKindOf(widget.range) == PeriodKind.week
+        ? CalendarFormat.week
+        : CalendarFormat.month;
+    _focusedDay = focusDayFor(widget.range);
     _selectedDay = _focusedDay;
     _rebuildIndexes();
   }
@@ -66,38 +87,84 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
   @override
   void didUpdateWidget(covariant TransactionCalendarView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.transactions != widget.transactions) {
+
+    // İşlem listesi her build'de YENİ bir List örneği olarak geliyor; kimlik
+    // karşılaştırması her seferinde indeksleri baştan kurardı. İçeriğe bak.
+    if (!_sameLedger(oldWidget.transactions, widget.transactions)) {
       _rebuildIndexes();
+    }
+
+    if (widget.range != oldWidget.range) {
+      // Sınırlar dönemi de kapsar (bkz. _recomputeBounds); yeniden
+      // hesaplanmazsa veri aralığının dışına atlayan bir dönem
+      // ("geçen yıl") _clamp tarafından geri çekilir ve takvim yanlış aya
+      // odaklanır.
+      setState(_recomputeBounds);
+      _syncToRange();
     }
   }
 
-  /// İşlem listesi değiştiğinde özet + gün indekslerini ve takvim sınırlarını
-  /// yeniden kur.
+  /// Dönem dışarıdan değişti: odağı oraya taşı. Aynı dönem içinde kalan bir
+  /// değişimde (takvimin kendi yazdığı aralık geri döndüğünde) odağa DOKUNMA,
+  /// yoksa sayfa animasyonu ortasında geri zıplar.
+  void _syncToRange() {
+    final target = focusDayFor(widget.range);
+    if (_inFocusedPeriod(target)) return;
+    setState(() {
+      _focusedDay = _clamp(target);
+      if (!_inFocusedPeriod(_selectedDay)) _selectedDay = _focusedDay;
+    });
+  }
+
+  static bool _sameLedger(
+    List<TransactionWithBalance> a,
+    List<TransactionWithBalance> b,
+  ) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].transaction != b[i].transaction) return false;
+    }
+    return true;
+  }
+
+  /// İşlem listesi değiştiğinde özet + gün indekslerini yeniden kur.
   void _rebuildIndexes() {
     _summaries = _service.buildDailySummaries(
         widget.transactions.map((e) => e.transaction).toList());
 
     final byDay = <DateTime, List<TransactionWithBalance>>{};
     for (final item in widget.transactions) {
-      final d = item.transaction.date;
-      final key = DateTime(d.year, d.month, d.day);
+      final key = dayOf(item.transaction.date);
       byDay.putIfAbsent(key, () => []).add(item);
     }
     _byDay = byDay;
 
-    final today = DateTime.now();
-    final todayDay = DateTime(today.year, today.month, today.day);
+    _recomputeBounds();
+  }
+
+  /// Takvimin gezinebileceği en erken/en geç ay.
+  void _recomputeBounds() {
+    final todayDay = dayOf(DateTime.now());
     DateTime earliest = todayDay;
     for (final item in widget.transactions) {
-      final d = item.transaction.date;
-      final day = DateTime(d.year, d.month, d.day);
+      final day = dayOf(item.transaction.date);
       if (day.isBefore(earliest)) earliest = day;
     }
+    // Dönem geçmişe kaydırıldıysa takvim oraya gidebilmeli; sınır yalnız
+    // veriye bakarsa "Geçen yıl" seçen kullanıcı o aya ulaşamıyordu.
+    final rangeStart = dayOf(widget.range.start);
+    if (rangeStart.isBefore(earliest)) earliest = rangeStart;
+
     _firstDay = DateTime(earliest.year, earliest.month, 1);
     if (_firstDay.isAfter(todayDay)) {
       _firstDay = DateTime(todayDay.year - 1, todayDay.month, 1);
     }
-    _lastDay = DateTime(todayDay.year + 1, todayDay.month + 1, 0);
+    final rangeEnd = dayOf(widget.range.end);
+    final horizon = DateTime(todayDay.year + 1, todayDay.month + 1, 0);
+    _lastDay = rangeEnd.isAfter(horizon)
+        ? DateTime(rangeEnd.year, rangeEnd.month + 1, 0)
+        : horizon;
 
     _focusedDay = _clamp(_focusedDay);
     _selectedDay = _clamp(_selectedDay);
@@ -109,22 +176,14 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
     return d;
   }
 
-  DateTime _weekStart(DateTime d) {
-    final date = DateTime(d.year, d.month, d.day);
-    return date.subtract(Duration(days: (date.weekday - DateTime.monday) % 7));
-  }
-
   bool _inFocusedPeriod(DateTime day) {
     if (_format == CalendarFormat.month) {
       return day.year == _focusedDay.year && day.month == _focusedDay.month;
     }
-    final start = _weekStart(_focusedDay);
-    final end = start.add(const Duration(days: 6));
-    final d = DateTime(day.year, day.month, day.day);
-    return !d.isBefore(start) && !d.isAfter(end);
+    return isDayInRange(day, weekRangeOf(_focusedDay));
   }
 
-  /// Görünen dönemdeki (ay/hafta) en yüksek günlük gider — ısı-haritası
+  /// Görünen ızgaradaki (ay/hafta) en yüksek günlük gider — ısı-haritası
   /// normalizasyonu için. Böyle olunca her dönemin kendi içi okunur kalır.
   double _visibleMaxExpense() {
     double maxE = 0;
@@ -136,11 +195,14 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
     return maxE;
   }
 
+  /// Özet satırı ETKİN DÖNEMİN toplamıdır (görünen ızgaranın değil): üst
+  /// çubuktaki dönem etiketiyle ve liste görünümünün özet kartıyla aynı
+  /// rakamı söylemeli.
   DaySummary _periodTotals() {
     double inc = 0, exp = 0;
     int cnt = 0;
     for (final e in _summaries.entries) {
-      if (_inFocusedPeriod(e.key)) {
+      if (isDayInRange(e.key, widget.range)) {
         inc += e.value.income;
         exp += e.value.expense;
         cnt += e.value.count;
@@ -149,28 +211,18 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
     return DaySummary(income: inc, expense: exp, count: cnt);
   }
 
-  void _goPrev() {
-    setState(() {
-      final next = _format == CalendarFormat.month
-          ? addMonthsClamped(_focusedDay, -1)
-          : _focusedDay.subtract(const Duration(days: 7));
-      _focusedDay = _clamp(next);
-    });
-  }
-
-  void _goNext() {
-    setState(() {
-      final next = _format == CalendarFormat.month
-          ? addMonthsClamped(_focusedDay, 1)
-          : _focusedDay.add(const Duration(days: 7));
-      _focusedDay = _clamp(next);
-    });
+  /// Takvimde gezinme dönemi YAZAR.
+  void _emitPeriodFor(DateTime focused) {
+    widget.onRangeChanged(
+      _format == CalendarFormat.month
+          ? monthRangeOf(focused)
+          : weekRangeOf(focused),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final selKey =
-        DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+    final selKey = dayOf(_selectedDay);
     final dayItems = _byDay[selKey] ?? const <TransactionWithBalance>[];
 
     return CustomScrollView(
@@ -196,13 +248,12 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
                     (context, index) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: TransactionCard(
-                        context: context,
                         item: dayItems[index],
-                        isListView: true,
                         categoryIcon: widget
                             .categoryIcons[dayItems[index].transaction.tag],
                         categoryLabel: widget
                             .categoryLabels[dayItems[index].transaction.tag],
+                        enableSwipeActions: true,
                       ),
                     ),
                     childCount: dayItems.length,
@@ -222,33 +273,14 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       child: Column(
         children: [
-          // Başlık: ‹  Ay Yıl  ›  +  Ay/Hafta toggle
           Row(
             children: [
-              _navButton(Icons.chevron_left_rounded, _goPrev),
-              Expanded(
-                child: Text(
-                  _periodTitle(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-              _navButton(Icons.chevron_right_rounded, _goNext),
-              const SizedBox(width: 4),
+              Expanded(child: _buildSummaryRow(period)),
+              const SizedBox(width: 8),
               _buildFormatToggle(),
             ],
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: _buildSummaryRow(period),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           TableCalendar<TransactionWithBalance>(
             firstDay: _firstDay,
             lastDay: _lastDay,
@@ -271,7 +303,18 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
                 _focusedDay = focused;
               });
             },
-            onPageChanged: (focused) => setState(() => _focusedDay = focused),
+            onPageChanged: (focused) {
+              setState(() {
+                _focusedDay = focused;
+                // Alt panel eski ayda kalmasın: seçili gün artık görünmeyen
+                // bir aya aitse dönemin doğal başlangıcına kayar.
+                if (!_inFocusedPeriod(_selectedDay)) {
+                  final today = dayOf(DateTime.now());
+                  _selectedDay = _inFocusedPeriod(today) ? today : focused;
+                }
+              });
+              _emitPeriodFor(focused);
+            },
             calendarStyle: const CalendarStyle(outsideDaysVisible: true),
             daysOfWeekStyle: DaysOfWeekStyle(
               weekdayStyle: TextStyle(
@@ -303,16 +346,20 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
 
   Widget _buildCell(DateTime day, _CellKind kind, double maxExpense) {
     final scheme = Theme.of(context).colorScheme;
-    final key = DateTime(day.year, day.month, day.day);
+    final key = dayOf(day);
     final summary = _summaries[key];
 
     final isOutside = kind == _CellKind.outside;
     final isToday = kind == _CellKind.today;
     final isSelected = kind == _CellKind.selected;
+    // Dönem dışındaki günler görünür ama SOLUK: hangi günlerin özet
+    // rakamlarına girdiği hücreye bakınca anlaşılmalı.
+    final isOutOfPeriod = !isDayInRange(day, widget.range);
+    final dimmed = isOutside || isOutOfPeriod;
 
     final expense = summary?.expense ?? 0;
     double tintAlpha = 0;
-    if (!isOutside && expense > 0) {
+    if (!dimmed && expense > 0) {
       final intensity =
           maxExpense <= 0 ? 0.0 : (expense / maxExpense).clamp(0.0, 1.0);
       tintAlpha = 0.10 + 0.32 * intensity;
@@ -332,53 +379,56 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
                 width: 1.2)
             : null;
 
-    final Color dayColor = isOutside
+    final Color dayColor = dimmed
         ? scheme.onSurfaceVariant.withValues(alpha: 0.35)
         : (isSelected || isToday)
             ? AppGradients.transactions
             : scheme.onSurface;
 
-    final hasData = !isOutside && summary != null && !summary.isEmpty;
+    final hasData = summary != null && !summary.isEmpty;
 
-    return Container(
-      margin: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        border: border,
-      ),
-      child: Center(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${day.day}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: (isToday || isSelected)
-                      ? FontWeight.w800
-                      : FontWeight.w600,
-                  color: dayColor,
-                ),
-              ),
-              if (hasData) ...[
-                const SizedBox(height: 1),
+    return Opacity(
+      opacity: isOutOfPeriod && !isOutside ? 0.45 : 1,
+      child: Container(
+        margin: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(10),
+          border: border,
+        ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  formatMoneyCompact(summary.net, symbol: false),
+                  '${day.day}',
                   style: TextStyle(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w700,
-                    color: summary.net >= 0
-                        ? AppGradients.savings
-                        : AppGradients.debt,
+                    fontSize: 13,
+                    fontWeight: (isToday || isSelected)
+                        ? FontWeight.w800
+                        : FontWeight.w600,
+                    color: dayColor,
                   ),
                 ),
-                const SizedBox(height: 2),
-                _countDots(summary.count),
+                if (hasData && !isOutside) ...[
+                  const SizedBox(height: 1),
+                  Text(
+                    formatMoneyCompact(summary.net, symbol: false),
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w700,
+                      color: summary.net >= 0
+                          ? AppGradients.savings
+                          : AppGradients.debt,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  _countDots(summary.count),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -441,12 +491,16 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
           Icon(Icons.arrow_upward_rounded,
               size: 11, color: AppGradients.savings.withValues(alpha: 0.85)),
           const SizedBox(width: 2),
-          Text(
-            money(s.income),
-            style: TextStyle(
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              money(s.income),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -455,12 +509,16 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
           Icon(Icons.arrow_downward_rounded,
               size: 11, color: AppGradients.debt.withValues(alpha: 0.85)),
           const SizedBox(width: 2),
-          Text(
-            money(s.expense),
-            style: TextStyle(
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              money(s.expense),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -531,53 +589,39 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
   Widget _formatChip(String label, CalendarFormat format) {
     final scheme = Theme.of(context).colorScheme;
     final selected = _format == format;
-    return GestureDetector(
-      onTap: () => setState(() => _format = format),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: selected ? AppGradients.transactions : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w700,
-            color: selected
-                ? Colors.white
-                : scheme.onSurfaceVariant.withValues(alpha: 0.8),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: GestureDetector(
+        onTap: () {
+          if (selected) return;
+          setState(() => _format = format);
+          // Biçim değişimi dönemi de değiştirir: haftaya geçince "bu hafta",
+          // aya geçince "bu ay" filtreye yazılır.
+          _emitPeriodFor(_focusedDay);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? AppGradients.transactions : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: selected
+                  ? Colors.white
+                  : scheme.onSurfaceVariant.withValues(alpha: 0.8),
+            ),
           ),
         ),
       ),
     );
-  }
-
-  Widget _navButton(IconData icon, VoidCallback onTap) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkResponse(
-      onTap: onTap,
-      radius: 20,
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(icon, size: 24, color: scheme.onSurfaceVariant),
-      ),
-    );
-  }
-
-  String _periodTitle() {
-    final locale = Intl.defaultLocale;
-    if (_format == CalendarFormat.month) {
-      return DateFormat.yMMMM(locale).format(_focusedDay);
-    }
-    final start = _weekStart(_focusedDay);
-    final end = start.add(const Duration(days: 6));
-    if (start.month == end.month) {
-      return '${start.day} – ${end.day} ${DateFormat.MMMM(locale).format(start)}';
-    }
-    return '${start.day} ${DateFormat.MMM(locale).format(start)} – '
-        '${end.day} ${DateFormat.MMM(locale).format(end)}';
   }
 }
 

@@ -801,12 +801,6 @@
   "cuzdanYonetimiTitle": "Wallet Management",
   "infoTransferDesc": "You can transfer money between your wallets. The transferred amount is deducted from the source wallet and added to the destination, considering exchange rates.",
   "infoBankImportDesc": "You can quickly import transactions by pasting account movements copied from your bank's mobile app.",
-  "dateBadgeToday": "TODAY",
-  "dateBadgeYesterday": "YESTERDAY",
-  "dateBadgeThisWeek": "THIS WEEK",
-  "dateBadgeLastWeek": "LAST WEEK",
-  "dateBadgeThisMonth": "THIS MONTH",
-  "dateBadgeLastMonth": "LAST MONTH",
   "categoryFinans": "Finance",
   "categoryGrafikler": "Charts",
   "categoryIsVeOfis": "Work & Office",
@@ -1562,7 +1556,6 @@
       }
     }
   },
-
   "driveErrNotSignedIn": "You are not connected to Google Drive.",
   "driveErrCancelled": "Operation cancelled.",
   "driveErrNoNetwork": "No internet connection. Reconnect and try again.",
@@ -1681,11 +1674,19 @@
   "driveErrApiNotEnabled": "The Google Drive API is not enabled for this app. This is a setup gap; it cannot be fixed by granting permission.",
   "vadeAraligi": "Term must be between 1 and {max} months",
   "@vadeAraligi": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "oranAraligi": "Rate must be between 0% and {max}%",
   "@oranAraligi": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "gecikmeFaiziLabel": "Late interest:",
   "odenecekToplamLabel": "Total payable:",
@@ -1693,32 +1694,133 @@
   "gecikmeFaiziChip": "Late interest",
   "gecikmeFaiziKisa": "+ {tutar} late interest",
   "@gecikmeFaiziKisa": {
-    "placeholders": { "tutar": {} }
+    "placeholders": {
+      "tutar": {}
+    }
   },
   "odemeMahsupAciklama": "{faiz} goes to late interest, {anapara} to principal.",
   "@odemeMahsupAciklama": {
-    "placeholders": { "faiz": {}, "anapara": {} }
+    "placeholders": {
+      "faiz": {},
+      "anapara": {}
+    }
   },
   "taksitGecikmeGun": "≈ {tutar} · {gun} days overdue",
   "@taksitGecikmeGun": {
-    "placeholders": { "tutar": {}, "gun": { "type": "int" } }
+    "placeholders": {
+      "tutar": {},
+      "gun": {
+        "type": "int"
+      }
+    }
   },
   "odemeIcindeGecikmeFaizi": "{tarih} · includes {faiz} late interest",
   "@odemeIcindeGecikmeFaizi": {
-    "placeholders": { "tarih": {}, "faiz": {} }
+    "placeholders": {
+      "tarih": {},
+      "faiz": {}
+    }
   },
   "odemeSilBaslik": "Delete Payment",
   "odemeSilOnayMesaji": "The payment record of {tutar} will be deleted. Its effect on the wallet balance is reverted too.",
   "@odemeSilOnayMesaji": {
-    "placeholders": { "tutar": {} }
+    "placeholders": {
+      "tutar": {}
+    }
   },
   "odemeyiDuzenleBaslik": "Edit Payment",
   "onboardingDebtAddStartDateTitle": "Start Date",
   "onboardingDebtAddStartDateDesc": "The date the debt starts; installments run monthly from here. The reminder arrives on the due date of the next unpaid installment.",
   "vadeTaksitIlerleme": "Term: {termMonths} months | {paid}/{termMonths} installments",
   "@vadeTaksitIlerleme": {
-    "placeholders": { "termMonths": { "type": "int" }, "paid": { "type": "int" } }
+    "placeholders": {
+      "termMonths": {
+        "type": "int"
+      },
+      "paid": {
+        "type": "int"
+      }
+    }
   },
   "vadeOpsiyonelLabel": "Due date (optional)",
-  "vadeSecilmedi": "Not set"
+  "vadeSecilmedi": "Not set",
+  "txSearchHint": "Search transactions…",
+  "txSearchClear": "Clear search",
+  "txSearchNoResultTitle": "No results for “{query}”",
+  "@txSearchNoResultTitle": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "txPeriodPrev": "Previous period",
+  "txPeriodNext": "Next period",
+  "txPeriodPick": "Choose period",
+  "txViewList": "List view",
+  "txViewCalendar": "Calendar view",
+  "txOpenFilters": "Open filters",
+  "txChipRemove": "Remove filter",
+  "txChipSearch": "“{query}”",
+  "@txChipSearch": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "txEmptyFilteredTitle": "No matching transactions",
+  "txEmptyFilteredBody": "Nothing found for the selected period and filters.",
+  "txEmptyClearFilters": "Clear filters",
+  "txFilterShowCount": "Show {count} transactions",
+  "@txFilterShowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "txFilterNoResult": "No matching transactions",
+  "txFilterAmountRange": "AMOUNT RANGE",
+  "txFilterMinMaxError": "Minimum amount cannot exceed the maximum",
+  "txFilterCategorySearchHint": "Search categories…",
+  "txFilterCategoryNoMatch": "No matching categories",
+  "txFilterSelectedCount": "{count} selected",
+  "@txFilterSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "txFilterSubcategoryCount": "{selected}/{total}",
+  "@txFilterSubcategoryCount": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "txFilterExpandGroup": "Show subcategories",
+  "txFilterCollapseGroup": "Hide subcategories",
+  "txSummaryNet": "NET",
+  "txSummaryNetFiltered": "FILTERED NET",
+  "txSummaryIncomeTotal": "TOTAL INCOME",
+  "txSummaryIncomeFiltered": "FILTERED INCOME",
+  "txSummaryExpenseTotal": "TOTAL EXPENSES",
+  "txSummaryExpenseFiltered": "FILTERED EXPENSES",
+  "txSummaryIncome": "INCOME",
+  "txSummaryExpense": "EXPENSES",
+  "txSummaryCount": "transactions",
+  "txSummaryCountFiltered": "filtered",
+  "txModeIncome": "Income",
+  "txModeExpense": "Expenses",
+  "txModeCompare": "Compare",
+  "txSwipeHintLocked": "Auto-generated transactions cannot be edited",
+  "dateRangeLast7Days": "Last 7 Days",
+  "dateRangeThisMonth": "This Month",
+  "dateRangeLastMonth": "Last Month",
+  "dateRangeLast3Months": "Last 3 Months",
+  "dateRangeThisYear": "This Year",
+  "txPeriodToday": "Today",
+  "txPeriodYesterday": "Yesterday"
 }

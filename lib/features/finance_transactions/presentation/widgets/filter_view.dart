@@ -1,33 +1,53 @@
-import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/compact_filter_info.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/category_filter_section.dart';
+import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/category_filter_tree.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/price_range_filter_section.dart';
-import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:cunehat/core/messaging/app_messenger.dart';
 
+/// Gelişmiş filtre sayfası (alt sayfa olarak açılır).
+///
+/// Eski hâlinde iki ayrı "uygula" yolu vardı — kategoriler anında
+/// uygulanıyor, tutar ayrı bir ✓ düğmesi bekliyordu — ve alttaki "Uygula"
+/// düğmesi aynı doğrulamayı bir kez daha yapıyordu. Panel artık TAMAMEN
+/// canlıdır: her değişiklik anında filtreye yazılır, alttaki düğme yalnız
+/// sonucu ("24 işlemi göster") söyleyip sayfayı kapatır.
+///
+/// Widget'ın kendisi de sadeleşti: eskiden gövdenin yarısı hiç kurulmayan
+/// gömülü kip (`useFixedMenuHeight`, `isMenuOpen == false`) içindi.
 class FilterView extends StatefulWidget {
   final CombinedFilter filter;
-  final VoidCallback onDateTap;
+
+  /// Bu filtreyle kaç işlem görüneceği; alttaki düğmenin önizlemesi.
+  final int resultCount;
+
   final ValueChanged<CombinedFilter> onFilterChanged;
-  final bool isMenuOpen;
-  final VoidCallback onMenuToggle;
-  final bool useFixedMenuHeight;
+
+  /// Dönem seçiciyi açar (hızlı aralık menüsü + takvim).
+  final VoidCallback onDateTap;
+
+  /// Dönemi bir adım ileri/geri kaydırır.
+  final ValueChanged<int> onPeriodStep;
+
+  /// Filtreleri VE dönemi varsayılana döndürür.
+  final VoidCallback onClearAll;
+
+  final VoidCallback onClose;
 
   const FilterView({
     super.key,
     required this.filter,
-    required this.onDateTap,
+    required this.resultCount,
     required this.onFilterChanged,
-    required this.isMenuOpen,
-    required this.onMenuToggle,
-    this.useFixedMenuHeight = true,
+    required this.onDateTap,
+    required this.onPeriodStep,
+    required this.onClearAll,
+    required this.onClose,
   });
 
   @override
@@ -36,37 +56,15 @@ class FilterView extends StatefulWidget {
 
 class _FilterViewState extends State<FilterView> {
   final CategoryRepository _categoryService = getIt<CategoryRepository>();
+
   List<CategoryEntity> _incomeCategories = [];
   List<CategoryEntity> _expenseCategories = [];
   bool _isLoadingCategories = true;
-  final ScrollController _scrollController = ScrollController();
-  late TextEditingController _minPriceController;
-  late TextEditingController _maxPriceController;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
-    final minPrice = widget.filter.dataFilter.priceRange?.minPrice;
-    _minPriceController = TextEditingController(
-      text: minPrice == null
-          ? ''
-          : formatAmountForInput(minPrice, decimalDigits: 0),
-    );
-    final maxPrice = widget.filter.dataFilter.priceRange?.maxPrice;
-    _maxPriceController = TextEditingController(
-      text: maxPrice == null
-          ? ''
-          : formatAmountForInput(maxPrice, decimalDigits: 0),
-    );
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _minPriceController.dispose();
-    _maxPriceController.dispose();
-    super.dispose();
   }
 
   @override
@@ -76,507 +74,204 @@ class _FilterViewState extends State<FilterView> {
         oldWidget.filter.viewFilter.financeMode) {
       _loadCategories();
     }
-
-    // Fiyat filtrelerini senkronize et (Dışarıdan değişim veya temizleme durumları için)
-    // Sadece filtre nesnesi değiştiyse güncelle (kullanıcı yazarken ezmemek için)
-    if (widget.filter.dataFilter.priceRange !=
-        oldWidget.filter.dataFilter.priceRange) {
-      final minPrice = widget.filter.dataFilter.priceRange?.minPrice;
-      final newMin = minPrice == null
-          ? ''
-          : formatAmountForInput(minPrice, decimalDigits: 0);
-      if (_minPriceController.text != newMin) {
-        _minPriceController.text = newMin;
-      }
-      final maxPrice = widget.filter.dataFilter.priceRange?.maxPrice;
-      final newMax = maxPrice == null
-          ? ''
-          : formatAmountForInput(maxPrice, decimalDigits: 0);
-      if (_maxPriceController.text != newMax) {
-        _maxPriceController.text = newMax;
-      }
-    }
   }
 
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
     try {
-      if (widget.filter.viewFilter.financeMode == FinanceMode.compare) {
+      final mode = widget.filter.viewFilter.financeMode;
+      if (mode == FinanceMode.compare) {
         _incomeCategories = await _categoryService.getCategories(false);
         _expenseCategories = await _categoryService.getCategories(true);
+      } else if (mode == FinanceMode.expense) {
+        _expenseCategories = await _categoryService.getCategories(true);
+        _incomeCategories = [];
       } else {
-        final isExpense =
-            widget.filter.viewFilter.financeMode == FinanceMode.expense;
-        if (isExpense) {
-          _expenseCategories = await _categoryService.getCategories(true);
-          _incomeCategories = [];
-        } else {
-          _incomeCategories = await _categoryService.getCategories(false);
-          _expenseCategories = [];
-        }
+        _incomeCategories = await _categoryService.getCategories(false);
+        _expenseCategories = [];
       }
-      if (!mounted) return;
-      setState(() {
-        _isLoadingCategories = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoadingCategories = false);
+    } finally {
+      if (mounted) setState(() => _isLoadingCategories = false);
     }
   }
 
-  void _onCategoryToggle(String categoryId) {
-    final categories =
-        Set<String>.from(widget.filter.dataFilter.selectedCategories);
-
-    // Ana kategoriye dokunmak alt ağacın TAMAMINI seçer/kaldırır. Küme
-    // genişletilmiş hâliyle saklandığından süzgeç tarafı (`selectedCategories
-    // .contains(t.tag)`) değişmeden çalışır — hiyerarşiyi bilmesi gerekmez.
-    final subtree = subtreeIds(
-      categoryId,
-      [..._expenseCategories, ..._incomeCategories],
-    );
-
-    if (categories.contains(categoryId)) {
-      categories.removeAll(subtree);
-    } else {
-      categories.addAll(subtree);
-    }
+  void _setCategories(Set<String> categories) {
     widget.onFilterChanged(
       widget.filter.copyWith(
-        dataFilter:
-            widget.filter.dataFilter.copyWith(selectedCategories: categories),
+        dataFilter: categories.isEmpty
+            ? widget.filter.dataFilter.copyWith(clearCategories: true)
+            : widget.filter.dataFilter.copyWith(selectedCategories: categories),
       ),
     );
   }
 
-  void _onPriceRangeChanged(PriceRangeFilter? priceRange) {
+  void _setPriceRange(PriceRangeFilter? range) {
     widget.onFilterChanged(
       widget.filter.copyWith(
-        dataFilter: widget.filter.dataFilter.copyWith(
-          priceRange: priceRange,
-          clearPriceRange: priceRange == null,
-        ),
-      ),
-    );
-  }
-
-  void _applyAndClose() {
-    final min = parseAmountInput(_minPriceController.text);
-    final max = parseAmountInput(_maxPriceController.text);
-
-    if (min != null && max != null && min > max) {
-      AppMessenger.error(
-        'Minimum tutar, maksimum tutardan büyük olamaz',
-      );
-      return;
-    }
-
-    final priceRange = (min == null && max == null)
-        ? null
-        : PriceRangeFilter(minPrice: min, maxPrice: max);
-
-    widget.onFilterChanged(
-      widget.filter.copyWith(
-        dataFilter: widget.filter.dataFilter.copyWith(
-          priceRange: priceRange,
-          clearPriceRange: priceRange == null,
-        ),
-      ),
-    );
-    widget.onMenuToggle();
-  }
-
-  void _clearAllFilters() {
-    _minPriceController.clear();
-    _maxPriceController.clear();
-    widget.onFilterChanged(
-      widget.filter.copyWith(
-        dataFilter: widget.filter.dataFilter.copyWith(
-          clearCategories: true,
-          clearPriceRange: true,
-        ),
+        dataFilter: range == null
+            ? widget.filter.dataFilter.copyWith(clearPriceRange: true)
+            : widget.filter.dataFilter.copyWith(priceRange: range),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = widget.filter.viewFilter.financeMode.primaryColor;
+
     return SafeArea(
+      top: false,
       child: Column(
         children: [
-          // Drag Handle (Sürükleme İpucu)
-          if (widget.isMenuOpen) _buildDragHandle(),
-
-          // Kompakt Filtre Çubuğu
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.05),
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: CompactFilterInfo(
-                    startDate: widget.filter.viewFilter.startDate,
-                    endDate: widget.filter.viewFilter.endDate,
-                    dataFilter: widget.filter.dataFilter,
-                    onDateTap: widget.onDateTap,
-                    isLightMode: false, // BottomSheet için koyu tema
-                  ),
-                ),
-                Row(
-                  children: [
-                    if (!widget.isMenuOpen) _buildFilterToggleButton(),
-                    if (widget.isMenuOpen) _buildCloseButton(),
-                  ],
-                ),
-              ],
-            ),
+          _dragHandle(scheme),
+          _header(context, scheme),
+          Divider(
+            height: 1,
+            color: scheme.onSurface.withValues(alpha: 0.08),
           ),
-
-          // Açılır Filtre Menüsü
-          if (widget.useFixedMenuHeight)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              height: widget.isMenuOpen ? 300 : 0,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-                border: Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.05),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: widget.isMenuOpen ? _buildFilterMenu() : null,
-            )
-          else if (widget.isMenuOpen)
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.05),
-                      blurRadius: 12,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                  // Tam ekran sheet görünümü için kenarlık kaldırıldı
-                ),
-                child: _buildFilterMenu(),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterToggleButton() {
-    return GestureDetector(
-      onTap: widget.onMenuToggle,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(11),
-        decoration: BoxDecoration(
-          color: widget.isMenuOpen
-              ? widget.filter.viewFilter.financeMode.primaryColor
-                  .withValues(alpha: 0.12)
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: widget.isMenuOpen
-                ? widget.filter.viewFilter.financeMode.primaryColor
-                : Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.15),
-            width: 2,
-          ),
-          boxShadow: widget.isMenuOpen
-              ? [
-                  BoxShadow(
-                    color: widget.filter.viewFilter.financeMode.primaryColor
-                        .withValues(alpha: 0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: AnimatedRotation(
-          duration: const Duration(milliseconds: 300),
-          turns: widget.isMenuOpen ? 0.5 : 0,
-          child: Icon(
-            Icons.filter_list_rounded,
-            size: 22,
-            color:
-                widget.isMenuOpen ? Colors.blue.shade800 : Colors.grey.shade800,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDragHandle() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCloseButton() {
-    return GestureDetector(
-      onTap: widget.onMenuToggle,
-      child: Container(
-        padding: const EdgeInsets.all(11),
-        decoration: BoxDecoration(
-          color:
-              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
-            width: 2,
-          ),
-        ),
-        child: Icon(
-          Icons.close_rounded,
-          size: 22,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterMenu() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          // Menü Başlığı (Sabit)
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.filter_alt_rounded,
-                  size: 20,
-                  color: Colors.blue.shade800,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                context.l10n.filtreler,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const Spacer(),
-              if (widget.filter.dataFilter.hasActiveFilters)
-                TextButton.icon(
-                  onPressed: _clearAllFilters,
-                  icon: const Icon(Icons.clear_all, size: 16),
-                  label: Text(context.l10n.temizle),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Kaydırılabilir İçerik (Expanded ile kalan alanı kaplar)
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Fiyat Aralığı Filtresi
-                  PriceRangeFilterSection(
-                    filter: widget.filter,
-                    minController: _minPriceController,
-                    maxController: _maxPriceController,
-                    onPriceRangeChanged: _onPriceRangeChanged,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              children: [
+                _sectionLabel(context, context.l10n.tARIHAraligi, scheme),
+                const SizedBox(height: 10),
+                TransactionPeriodBar(
+                  range: DateTimeRange(
+                    start: widget.filter.viewFilter.startDate,
+                    end: widget.filter.viewFilter.endDate,
                   ),
-                  const SizedBox(height: 24),
-
-                  // Tarih Aralığı
-                  _buildDateRangeSection(),
-                  const SizedBox(height: 24),
-
-                  // Kategori Filtresi
-                  CategoryFilterSection(
-                    filter: widget.filter,
-                    incomeCategories: _incomeCategories,
-                    expenseCategories: _expenseCategories,
-                    isLoading: _isLoadingCategories,
-                    onCategoryToggle: _onCategoryToggle,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
-
-          // Uygula Butonu (Sabit Alt)
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _applyAndClose,
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    widget.filter.viewFilter.financeMode.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  onStep: widget.onPeriodStep,
+                  onPick: widget.onDateTap,
                 ),
-                elevation: 2,
-                shadowColor: widget.filter.viewFilter.financeMode.primaryColor
-                    .withValues(alpha: 0.35),
-              ),
-              child: Text(
-                context.l10n.uygula,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+                const SizedBox(height: 24),
+                PriceRangeFilterSection(
+                  range: widget.filter.dataFilter.priceRange,
+                  accent: accent,
+                  onChanged: _setPriceRange,
+                ),
+                const SizedBox(height: 24),
+                CategoryFilterTree(
+                  incomeCategories: _incomeCategories,
+                  expenseCategories: _expenseCategories,
+                  selected: widget.filter.dataFilter.selectedCategories,
+                  isLoading: _isLoadingCategories,
+                  onChanged: _setCategories,
+                  showTypeHeaders: widget.filter.viewFilter.financeMode ==
+                      FinanceMode.compare,
+                  accent: accent,
+                ),
+              ],
             ),
           ),
-          // Alt boşluk
-          const SizedBox(height: 8),
+          _applyBar(context, scheme, accent),
         ],
       ),
     );
   }
 
-  Widget _buildDateRangeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.tARIHAraligi,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant
-                .withValues(alpha: 0.8),
-            letterSpacing: 0.5,
+  Widget _dragHandle(ColorScheme scheme) => Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: scheme.onSurface.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(height: 10),
-        GestureDetector(
-          onTap: widget.onDateTap,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: widget.filter.viewFilter.financeMode.primaryColor
-                  .withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: widget.filter.viewFilter.financeMode.primaryColor
-                      .withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today,
-                    color: widget.filter.viewFilter.financeMode.primaryColor),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.seciliAralik,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color:
-                              widget.filter.viewFilter.financeMode.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getDateRangeText(),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.arrow_forward_ios,
-                    size: 16,
-                    color: widget.filter.viewFilter.financeMode.primaryColor
-                        .withValues(alpha: 0.6)),
-              ],
+      );
+
+  Widget _header(BuildContext context, ColorScheme scheme) {
+    final l10n = context.l10n;
+    // "Temizle" artık DÖNEMİ de sıfırlıyor ve yalnız veri filtresi varken
+    // değil, dönem varsayılandan saptığında da görünüyor: eskiden sadece
+    // tarihi değiştiren kullanıcının geri dönüş yolu yoktu.
+    final canClear = widget.filter.dataFilter.hasActiveFilters ||
+        !_isDefaultPeriod(widget.filter);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 8, 12),
+      child: Row(
+        children: [
+          Icon(Icons.filter_alt_rounded, size: 20, color: scheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.filtreler,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
             ),
           ),
-        ),
-      ],
+          if (canClear)
+            TextButton.icon(
+              onPressed: widget.onClearAll,
+              icon: const Icon(Icons.clear_all_rounded, size: 16),
+              label: Text(l10n.temizle),
+              style: TextButton.styleFrom(foregroundColor: scheme.error),
+            ),
+          IconButton(
+            tooltip: l10n.kapat,
+            onPressed: widget.onClose,
+            icon: const Icon(Icons.close_rounded),
+          ),
+        ],
+      ),
     );
   }
 
-  String _getDateRangeText() {
-    final start = widget.filter.viewFilter.startDate;
-    final end = widget.filter.viewFilter.endDate;
-    return '${start.day}.${start.month}.${start.year} - ${end.day}.${end.month}.${end.year}';
+  Widget _sectionLabel(BuildContext context, String text, ColorScheme scheme) =>
+      Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+        ),
+      );
+
+  Widget _applyBar(BuildContext context, ColorScheme scheme, Color accent) {
+    final l10n = context.l10n;
+    final hasResults = widget.resultCount > 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: widget.onClose,
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                hasResults ? accent : scheme.onSurface.withValues(alpha: 0.12),
+            foregroundColor: hasResults ? Colors.white : scheme.onSurface,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: hasResults ? 2 : 0,
+            shadowColor: accent.withValues(alpha: 0.35),
+          ),
+          child: Text(
+            // Sayı ÖNİZLEME: kullanıcı paneli kapatmadan seçiminin sonucunu
+            // görsün. Eskiden "Uygula"ya basıp boş listeyle karşılaşmak
+            // mümkündü.
+            hasResults
+                ? l10n.txFilterShowCount(widget.resultCount)
+                : l10n.txFilterNoResult,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
   }
+}
+
+bool _isDefaultPeriod(CombinedFilter filter) {
+  final month = monthRangeOf(DateTime.now());
+  return isSameDayValue(filter.viewFilter.startDate, month.start) &&
+      isSameDayValue(filter.viewFilter.endDate, month.end);
 }

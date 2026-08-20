@@ -139,12 +139,11 @@ class _DetailedListViewState extends State<DetailedListView> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 TransactionCard(
-                  context: context,
                   item: row.item,
-                  isListView: true,
                   categoryIcon: widget.categoryIcons[row.item.transaction.tag],
                   categoryLabel:
                       widget.categoryLabels[row.item.transaction.tag],
+                  enableSwipeActions: true,
                 ),
                 if (row.dayEndBalance != null)
                   _buildDayEndBalance(context, row.dayEndBalance!),

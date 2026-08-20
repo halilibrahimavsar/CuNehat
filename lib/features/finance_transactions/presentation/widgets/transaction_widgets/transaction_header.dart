@@ -54,17 +54,20 @@ class TransactionHeader extends StatelessWidget {
 
     final netBalance = totalIncome - totalExpense;
 
+    final l10n = context.l10n;
     final hasActiveFilters =
         currentFilter?.dataFilter.hasActiveFilters ?? false;
     final String netStatusLabel =
-        hasActiveFilters ? 'FİLTRELENEN NET DURUM' : 'NET DURUM';
+        hasActiveFilters ? l10n.txSummaryNetFiltered : l10n.txSummaryNet;
     final String singleModeLabel = hasActiveFilters
         ? (mode == FinanceMode.income
-            ? 'FİLTRELENEN GELİR'
-            : 'FİLTRELENEN GİDER')
-        : (mode == FinanceMode.income ? 'TOPLAM GELİR' : 'TOPLAM GİDER');
+            ? l10n.txSummaryIncomeFiltered
+            : l10n.txSummaryExpenseFiltered)
+        : (mode == FinanceMode.income
+            ? l10n.txSummaryIncomeTotal
+            : l10n.txSummaryExpenseTotal);
     final String transactionCountLabel =
-        hasActiveFilters ? 'Filtrelenen İşlem' : 'İşlem';
+        hasActiveFilters ? l10n.txSummaryCountFiltered : l10n.txSummaryCount;
     final Color labelColor =
         hasActiveFilters ? Colors.orangeAccent.shade200 : mutedColor;
 
@@ -94,7 +97,7 @@ class TransactionHeader extends StatelessWidget {
               children: [
                 Expanded(
                   child: _buildStatCard(
-                    title: 'GELİR',
+                    title: l10n.txSummaryIncome,
                     amount: totalIncome,
                     color: incomeColor,
                     icon: Icons.arrow_upward_rounded,
@@ -104,7 +107,7 @@ class TransactionHeader extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
-                    title: 'GİDER',
+                    title: l10n.txSummaryExpense,
                     amount: totalExpense,
                     color: expenseColor,
                     icon: Icons.arrow_downward_rounded,

@@ -41,6 +41,10 @@ class PriceRangeFilter extends Equatable {
   /// Çip dar olduğu için kuruş YAZILMAZ (`decimals: 0`) — burası tam tutar
   /// değil aralık göstergesi. Biçim yine de [formatMoney]'den gelir, yani
   /// binlik ayracı ve sembol yerleşimi uygulamanın geri kalanıyla aynıdır.
+  ///
+  /// Tek yönlü sınırlar `≥`/`≤` ile yazılır: eskiden "500 ₺'ye kadar" diye
+  /// sabit bir Türkçe ek vardı ve İngilizce arayüzde de öyle görünüyordu.
+  /// Simge hem dilden bağımsız hem de dar çipte kısa.
   String label({String currency = kDefaultCurrency}) {
     String money(double v) => formatMoney(v, decimals: 0, currency: currency);
 
@@ -50,9 +54,9 @@ class PriceRangeFilter extends Equatable {
       }
       return '${money(minPrice!)} - ${money(maxPrice!)}';
     } else if (minPrice != null) {
-      return '${money(minPrice!)}+';
+      return '≥ ${money(minPrice!)}';
     } else if (maxPrice != null) {
-      return '${money(maxPrice!)}\'ye kadar';
+      return '≤ ${money(maxPrice!)}';
     }
     return '';
   }

@@ -61,9 +61,9 @@ void main() {
       expect(
           const PriceRangeFilter(minPrice: 100.0, maxPrice: 500.0).toString(),
           '100 ₺ - 500 ₺');
-      expect(const PriceRangeFilter(minPrice: 100.0).toString(), '100 ₺+');
-      expect(const PriceRangeFilter(maxPrice: 500.0).toString(),
-          '500 ₺\'ye kadar');
+      // Tek yönlü sınır dilden bağımsız simgeyle yazılır (bkz. label).
+      expect(const PriceRangeFilter(minPrice: 100.0).toString(), '≥ 100 ₺');
+      expect(const PriceRangeFilter(maxPrice: 500.0).toString(), '≤ 500 ₺');
       expect(const PriceRangeFilter().toString(), '');
     });
 

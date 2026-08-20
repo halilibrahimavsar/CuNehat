@@ -172,7 +172,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final picked = await AppDateRangePicker.pick(
       context,
       initialDateRange: _range,
-      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(),
+      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
     );
     if (picked != null) {
       setState(() {

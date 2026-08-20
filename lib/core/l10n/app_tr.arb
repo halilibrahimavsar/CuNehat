@@ -801,12 +801,6 @@
   "cuzdanYonetimiTitle": "Cüzdan Yönetimi",
   "infoTransferDesc": "Cüzdanlarınız arasında para transferi yapabilirsiniz. Transfer edilen tutar kur farklılıkları gözetilerek kaynak cüzdandan düşülür ve hedefe eklenir.",
   "infoBankImportDesc": "Bankanızın mobil uygulamasından kopyaladığınız hesap hareketlerini hızlıca içe aktararak işlemlerinizi kolaylaştırabilirsiniz.",
-  "dateBadgeToday": "BUGÜN",
-  "dateBadgeYesterday": "DÜN",
-  "dateBadgeThisWeek": "BU HAFTA",
-  "dateBadgeLastWeek": "GEÇEN HAFTA",
-  "dateBadgeThisMonth": "BU AY",
-  "dateBadgeLastMonth": "GEÇEN AY",
   "categoryFinans": "Finans",
   "categoryGrafikler": "Grafikler",
   "categoryIsVeOfis": "İş & Ofis",
@@ -1583,7 +1577,6 @@
       }
     }
   },
-
   "driveErrNotSignedIn": "Google Drive'a bağlı değilsiniz.",
   "driveErrCancelled": "İşlem iptal edildi.",
   "driveErrNoNetwork": "İnternet bağlantısı yok. Bağlanıp tekrar deneyin.",
@@ -1702,11 +1695,19 @@
   "driveErrApiNotEnabled": "Google Drive API bu uygulama için etkinleştirilmemiş. Bu bir kurulum eksiği; kullanıcı izniyle çözülemez.",
   "vadeAraligi": "Vade 1 ile {max} ay arasında olmalı",
   "@vadeAraligi": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "oranAraligi": "Oran %0 ile %{max} arasında olmalı",
   "@oranAraligi": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "gecikmeFaiziLabel": "Gecikme faizi:",
   "odenecekToplamLabel": "Ödenecek toplam:",
@@ -1714,32 +1715,133 @@
   "gecikmeFaiziChip": "Gecikme faizi",
   "gecikmeFaiziKisa": "+ {tutar} gecikme faizi",
   "@gecikmeFaiziKisa": {
-    "placeholders": { "tutar": {} }
+    "placeholders": {
+      "tutar": {}
+    }
   },
   "odemeMahsupAciklama": "{faiz} gecikme faizine, {anapara} ana paraya sayılacak.",
   "@odemeMahsupAciklama": {
-    "placeholders": { "faiz": {}, "anapara": {} }
+    "placeholders": {
+      "faiz": {},
+      "anapara": {}
+    }
   },
   "taksitGecikmeGun": "≈ {tutar} · {gun} gün gecikti",
   "@taksitGecikmeGun": {
-    "placeholders": { "tutar": {}, "gun": { "type": "int" } }
+    "placeholders": {
+      "tutar": {},
+      "gun": {
+        "type": "int"
+      }
+    }
   },
   "odemeIcindeGecikmeFaizi": "{tarih} · içinde {faiz} gecikme faizi",
   "@odemeIcindeGecikmeFaizi": {
-    "placeholders": { "tarih": {}, "faiz": {} }
+    "placeholders": {
+      "tarih": {},
+      "faiz": {}
+    }
   },
   "odemeSilBaslik": "Ödemeyi Sil",
   "odemeSilOnayMesaji": "{tutar} tutarındaki ödeme kaydı silinecek. Bu ödemenin cüzdan bakiyesine etkisi de geri alınır.",
   "@odemeSilOnayMesaji": {
-    "placeholders": { "tutar": {} }
+    "placeholders": {
+      "tutar": {}
+    }
   },
   "odemeyiDuzenleBaslik": "Ödemeyi Düzenle",
   "onboardingDebtAddStartDateTitle": "Başlangıç Tarihi",
   "onboardingDebtAddStartDateDesc": "Borcun başladığı tarih; taksitler buradan itibaren aylık ilerler. Hatırlatma bildirimi, sıradaki ödenmemiş taksitin vadesinde gelir.",
   "vadeTaksitIlerleme": "Vade: {termMonths} Ay | {paid}/{termMonths} taksit",
   "@vadeTaksitIlerleme": {
-    "placeholders": { "termMonths": { "type": "int" }, "paid": { "type": "int" } }
+    "placeholders": {
+      "termMonths": {
+        "type": "int"
+      },
+      "paid": {
+        "type": "int"
+      }
+    }
   },
   "vadeOpsiyonelLabel": "Vade (opsiyonel)",
-  "vadeSecilmedi": "Seçilmedi"
+  "vadeSecilmedi": "Seçilmedi",
+  "txSearchHint": "İşlem ara…",
+  "txSearchClear": "Aramayı temizle",
+  "txSearchNoResultTitle": "“{query}” için sonuç yok",
+  "@txSearchNoResultTitle": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "txPeriodPrev": "Önceki dönem",
+  "txPeriodNext": "Sonraki dönem",
+  "txPeriodPick": "Dönem seç",
+  "txViewList": "Liste görünümü",
+  "txViewCalendar": "Takvim görünümü",
+  "txOpenFilters": "Filtreleri aç",
+  "txChipRemove": "Filtreyi kaldır",
+  "txChipSearch": "“{query}”",
+  "@txChipSearch": {
+    "placeholders": {
+      "query": {}
+    }
+  },
+  "txEmptyFilteredTitle": "Eşleşen işlem yok",
+  "txEmptyFilteredBody": "Seçtiğin dönem ve filtrelerle kayıt bulunamadı.",
+  "txEmptyClearFilters": "Filtreleri temizle",
+  "txFilterShowCount": "{count} işlemi göster",
+  "@txFilterShowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "txFilterNoResult": "Eşleşen işlem yok",
+  "txFilterAmountRange": "TUTAR ARALIĞI",
+  "txFilterMinMaxError": "En düşük tutar, en yüksek tutardan büyük olamaz",
+  "txFilterCategorySearchHint": "Kategori ara…",
+  "txFilterCategoryNoMatch": "Eşleşen kategori yok",
+  "txFilterSelectedCount": "{count} seçili",
+  "@txFilterSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "txFilterSubcategoryCount": "{selected}/{total}",
+  "@txFilterSubcategoryCount": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "txFilterExpandGroup": "Alt kategorileri göster",
+  "txFilterCollapseGroup": "Alt kategorileri gizle",
+  "txSummaryNet": "NET DURUM",
+  "txSummaryNetFiltered": "FİLTRELENEN NET DURUM",
+  "txSummaryIncomeTotal": "TOPLAM GELİR",
+  "txSummaryIncomeFiltered": "FİLTRELENEN GELİR",
+  "txSummaryExpenseTotal": "TOPLAM GİDER",
+  "txSummaryExpenseFiltered": "FİLTRELENEN GİDER",
+  "txSummaryIncome": "GELİR",
+  "txSummaryExpense": "GİDER",
+  "txSummaryCount": "İşlem",
+  "txSummaryCountFiltered": "Filtrelenen İşlem",
+  "txModeIncome": "Gelirler",
+  "txModeExpense": "Giderler",
+  "txModeCompare": "Karşılaştırma",
+  "txSwipeHintLocked": "Otomatik oluşturulan işlem düzenlenemez",
+  "dateRangeLast7Days": "Son 7 Gün",
+  "dateRangeThisMonth": "Bu Ay",
+  "dateRangeLastMonth": "Geçen Ay",
+  "dateRangeLast3Months": "Son 3 Ay",
+  "dateRangeThisYear": "Bu Yıl",
+  "txPeriodToday": "Bugün",
+  "txPeriodYesterday": "Dün"
 }
