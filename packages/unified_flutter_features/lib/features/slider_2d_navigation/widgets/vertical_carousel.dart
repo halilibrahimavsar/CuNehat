@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/slider_config.dart';
 
 class VerticalCarousel extends StatelessWidget {
   final FixedExtentScrollController controller;
@@ -7,10 +6,27 @@ class VerticalCarousel extends StatelessWidget {
   final ValueChanged<int>? onItemTapped;
   final ScrollPhysics? physics;
 
+  /// Öğe adımı. `SliderMetrics.itemExtent`'ten gelir; sabit değildir çünkü
+  /// yazı ölçeğine göre komşu etiketin hapla çakışmaması ve viewport'tan
+  /// taşmaması gerekir.
+  final double itemExtent;
+
+  /// Çarkın görünür yüksekliği. Eskiden burada `itemExtent * 4` yazıyordu ama
+  /// widget `Positioned.fill` ile sıkı kısıt aldığı için o değer hiç
+  /// uygulanmıyordu; artık gerçek yükseklik açıkça geçiliyor.
+  final double height;
+
+  /// Silindirin bükülmesi. Küçük değer komşu öğeyi neredeyse dik çevirip
+  /// okunmaz hale getiriyordu.
+  final double diameterRatio;
+
   const VerticalCarousel({
     super.key,
     required this.controller,
     required this.children,
+    required this.itemExtent,
+    required this.height,
+    this.diameterRatio = 2.6,
     this.onItemTapped,
     this.physics,
   });
@@ -18,12 +34,12 @@ class VerticalCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: SliderConfig.carouselTotalHeight,
+      height: height,
       child: ListWheelScrollView.useDelegate(
         controller: controller,
-        itemExtent: SliderConfig.carouselItemHeight,
-        perspective: 0.009,
-        diameterRatio: 1.5,
+        itemExtent: itemExtent,
+        perspective: 0.004,
+        diameterRatio: diameterRatio,
         physics: physics ?? const FixedExtentScrollPhysics(),
         childDelegate: ListWheelChildBuilderDelegate(
           childCount: children.length,
@@ -40,7 +56,7 @@ class VerticalCarousel extends StatelessWidget {
               },
               child: Center(
                 child: SizedBox(
-                  height: SliderConfig.carouselItemHeight,
+                  height: itemExtent,
                   width: double.infinity,
                   child: children[index],
                 ),

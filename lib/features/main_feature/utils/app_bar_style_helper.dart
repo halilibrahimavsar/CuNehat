@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/slider_state_helper.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 class AppBarStyleHelper {
+  /// Bir durumun (ayrık) üst çubuk rengi — [getAppBarColor]'ın uç değeri.
+  ///
+  /// Gölge rengi sürekli değerden türetilirse `AppBar`'ın KENDİSİ kare başına
+  /// yeniden kurulur; oysa %30 opaklıktaki bir gölgenin lerp'lenmesiyle
+  /// durumdan duruma atlaması ayırt edilemiyor.
+  static Color getAppBarColorForState(SliderState state) => getAppBarColor(
+        SliderStateHelper.getTargetValue(state, SliderState.values.length),
+      );
+
   static Color getAppBarColor(double value) {
     if (value < 0.5) {
       return Color.lerp(
@@ -51,7 +62,9 @@ class AppBarStyleHelper {
     );
   }
 
-  static ShapeBorder getAppbarShape(double currentValue) {
+  /// Şekil kaydırıcı değerinden BAĞIMSIZ (eskiden gereksiz bir parametre
+  /// alıyor ve hiç kullanmıyordu).
+  static ShapeBorder getAppbarShape() {
     return const RoundedRectangleBorder(
       borderRadius: BorderRadius.only(
         bottomLeft: Radius.circular(AppBorderRadius.appBarBottom),

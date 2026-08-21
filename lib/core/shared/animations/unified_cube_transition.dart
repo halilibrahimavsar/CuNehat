@@ -138,6 +138,14 @@ class UnifiedCubeTransition extends StatelessWidget {
 class VerticalListTransitionManager extends ChangeNotifier {
   late final AnimationController _controller;
 
+  /// Geçişi süren eğrili animasyon.
+  ///
+  /// Eskiden yüzler doğrudan `_controller.value`'yu okuyordu ve `navigateTo`
+  /// `forward(from: 0)` çağırıyordu: hareket baştan sona **doğrusaldı**.
+  /// Doğrusal hareket mekanik/ucuz okunur; yatay eksen zaten `animateTo`
+  /// üzerinden eğriliydi, dikey eksen değildi.
+  late final CurvedAnimation _curved;
+
   final List<Widget> _views = [];
   List<Widget>? _pendingViews;
   int? _pendingTarget;
@@ -150,10 +158,18 @@ class VerticalListTransitionManager extends ChangeNotifier {
       vsync: vsync,
       duration: duration ?? const Duration(milliseconds: 500),
     );
+    // `easeInOutCubic`, `easeOutCubic` DEĞİL: ikincisi t=0'da doğrusalın üç
+    // katı hızla açılıyor ve geçiş "fırlamış" gibi hissettiriyordu. Yavaş
+    // başlayıp yavaş biten eğri, doğrusalın mekanikliğini de almadan yumuşak.
+    _curved =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
     _controller.addStatusListener(_onStatusChanged);
   }
 
   AnimationController get controller => _controller;
+
+  /// Yüzlerin okuduğu eğrili animasyon.
+  Animation<double> get animation => _curved;
   bool get isTransitioning => _isTransitioning;
   bool get isAtMainView => _currentIndex == 0;
   int get currentIndex => _currentIndex;
@@ -229,10 +245,13 @@ class VerticalListTransitionManager extends ChangeNotifier {
   /// biterken widget zinciri değişmediğinden görünümler yeniden mount olmaz.
   /// (Eski sürüm duruyorken görünümü çıplak, geçerken sarmalanmış döndürüyor;
   /// bu da her alt sayfa açılışında sayfayı iki kez mount ediyordu.)
+  /// [useFade] AÇIK olmalı: kapatıldığında dönen yüzün dikdörtgen kenarı
+  /// ekranı süpürerek geçiyor (cihazda görüldü). `Opacity`nin geçiş boyunca
+  /// açtığı iki tam ekran `saveLayer` bilinçli olarak kabul ediliyor.
   Widget buildTransition({bool useFade = true}) {
     if (_views.isEmpty) return const SizedBox.shrink();
     return _VerticalCubeStack(
-      controller: _controller,
+      animation: _curved,
       views: List.of(_views),
       currentIndex: _currentIndex.clamp(0, _views.length - 1),
       previousIndex: _isTransitioning ? _previousIndex : null,
@@ -242,20 +261,21 @@ class VerticalListTransitionManager extends ChangeNotifier {
 
   @override
   void dispose() {
+    _curved.dispose();
     _controller.dispose();
     super.dispose();
   }
 }
 
 class _VerticalCubeStack extends StatelessWidget {
-  final AnimationController controller;
+  final Animation<double> animation;
   final List<Widget> views;
   final int currentIndex;
   final int? previousIndex;
   final bool useFade;
 
   const _VerticalCubeStack({
-    required this.controller,
+    required this.animation,
     required this.views,
     required this.currentIndex,
     required this.previousIndex,
@@ -274,11 +294,11 @@ class _VerticalCubeStack extends StatelessWidget {
         : CubeDirection.up;
 
     return AnimatedBuilder(
-      animation: controller,
+      animation: animation,
       builder: (context, _) {
         // Durur haldeyken geçerli yüz "gelen" tarafın bitiş konumundadır:
         // dönüşümler birim, opaklık 1.
-        final value = isTransitioning ? controller.value : 1.0;
+        final value = isTransitioning ? animation.value : 1.0;
         return Stack(
           alignment: Alignment.center,
           // Yığın artık duruyorken de araya girdiğinden, görünümler eskiden

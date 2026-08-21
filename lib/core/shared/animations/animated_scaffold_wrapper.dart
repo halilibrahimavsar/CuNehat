@@ -46,7 +46,6 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
   late Animation<double> _walletRotationAnimation;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final bool _isWalletOpen = false;
 
   /// Drawer veya cüzdan diyaloğu açılış/kapanış dönüşümü (translate/scale/
   /// rotate) sürüyor mu. İçerik bu sırada ekranda kaymış görünür; bu yüzden
@@ -147,7 +146,6 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
 
   /// Wallet dialog'unu aç (animasyonlu)
   void openWalletDialog(Widget walletContent) {
-    // setState(() => _isWalletOpen = true);
     _walletController.forward();
 
     showModalBottomSheet(
@@ -164,7 +162,6 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
       },
     ).whenComplete(() {
       _walletController.reverse();
-      // setState(() => _isWalletOpen = false);
     });
   }
 
@@ -258,21 +255,6 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
               floatingActionButton: widget.floatingActionButton,
             ),
           ),
-
-          // ========== GESTURE DETECTOR (Drawer açıkken tıklanabilir overlay) ==========
-          if (_drawerController.value > 0.1 || _isWalletOpen)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () {
-                  if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
-                    Navigator.of(context).pop(); // Drawer'ı kapat
-                  }
-                },
-                child: Container(
-                  color: Colors.transparent,
-                ),
-              ),
-            ),
         ],
       ),
     );

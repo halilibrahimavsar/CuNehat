@@ -1,5 +1,52 @@
 # Changelog
 
+## 3.0.0 - 2026-08-21
+
+### Changed (BREAKING)
+
+- `SliderKnob`: `showUpArrow` / `showDownArrow` kaldırıldı, yerine
+  `selectedIndex` geldi. Dikey chevron'lar komşu etiketle çakışıyordu
+  (ok y 65–93, etiket ~85–92) ve kaç alt sayfa olduğunu söylemiyordu;
+  yerlerini hapın sağ iç kenarındaki nokta rayı aldı.
+- `SliderKnob`: `metrics` (`SliderMetrics`) artık zorunlu; sabit
+  100/50/130/42 ölçüleri kaldırıldı.
+- `SliderKnob.onHorizontalDragEnd` artık `GestureDragEndCallback` (hız
+  okunabilsin diye).
+- `VerticalCarousel`: `itemExtent` ve `height` zorunlu parametre oldu.
+- `SliderConfig.carouselTotalHeight` / `carouselItemHeight` kaldırıldı.
+  `carouselTotalHeight` ölü koddu: çark `Positioned.fill` ile sıkı 100 px
+  alıyordu, 168'lik değer hiç uygulanmıyordu.
+- `SliderConfig.knobLabelStyle` artık açık `height` taşıyor; taşımadığında
+  Material 3'ün `bodyMedium`'undan `height: 1.43` miras alıp 16 px'lik
+  puntoyu 23 px'lik satır kutusuna çeviriyordu.
+
+### Added
+
+- Çark oturma eğrisi: `Curves.linear` → `Curves.easeOutCubic` (260 ms).
+  (`SliderConfig.animationDuration` 380 ms'e çekilmişti; cihazda fazla hızlı
+  bulunup 600 ms'de bırakıldı.)
+- `SliderMetrics`: kaydırıcı ölçülerini sistem yazı ölçeğinden türetir.
+  Değişmezler: komşu etiket ne hapla çakışır ne viewport'tan taşar; punto
+  tabana inmeden hiçbir etiket kesilmez.
+- `DynamicSlider.peekStates` / `onPeekPlayed`: dikey navigasyonu bir kez
+  tanıtan "göz kırpma" animasyonu.
+- `resolveDragTarget` / `flingDirection` (`helpers/drag_settle.dart`):
+  sürükleme bitişinde konum + HIZ. Eskiden yalnız konuma bakılıyor ve kısa
+  yol almış hızlı fiske yutuluyordu.
+
+### Fixed
+
+- Ölçülen üç kesilme: komşu etiketin altı viewport kenarında kesiliyordu
+  (x1.0'da 4,7 px, x2.0'da 17,6 px), ana etiket ellipsis'e düşüyordu
+  (TR x1.8'den, EN "TRANSACTIONS" x1.15'ten), ShaderMask'in beyaz odak bandı
+  satır kutusundan dardı (16 px'e karşı 23 px) ve `İ`nin noktası griye
+  düşüyordu.
+- Etiket ölçümü artık ortamdaki `DefaultTextStyle`'ın font ailesini kullanıyor;
+  çıplak `TextPainter` ölçümüyle boyama sessizce ayrışabiliyordu.
+- Jest başına tek dokunsal geri bildirim (eskiden üç ayrı titreşim).
+- Komşu etiketin opaklığı 0.6 → 0.85: dekoratif altyazı gibi değil,
+  dokunulabilir bir öğe gibi okunuyor.
+
 ## 2.0.0 - 2026-02-17
 
 ### Added

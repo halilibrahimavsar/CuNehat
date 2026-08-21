@@ -12,7 +12,9 @@ import 'package:cunehat/features/investments/presentation/pages/investment_money
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:cunehat/features/main_feature/pages/modern_appbar.dart';
-import 'package:cunehat/features/main_feature/utils/app_constants.dart';
+import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
+import 'package:cunehat/features/main_feature/widgets/cube_back_handler.dart';
+import 'package:cunehat/features/main_feature/widgets/main_content_swipe.dart';
 import 'package:cunehat/features/main_feature/widgets/modern_drawer.dart';
 import 'package:cunehat/features/main_feature/widgets/slider_button_view.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -219,37 +221,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: AnimatedScaffoldWrapper(
-        key: _scaffoldKey,
-        drawer: const ModernDrawer(),
-        // Drawer/cüzdan sheet'i açıkken kabuk içeriği ölçeklenip kaydığından
-        // hedeflerin ekran konumu geçersizdir; dönüşüm bitince bekleyen
-        // turlar yeniden değerlendirilir.
-        onTransformChanged: _pumpOnboarding,
-        appBar: PreferredSize(
-          preferredSize: const Size(double.maxFinite, AppSizes.appBarHeight),
-          child: AnimatedBuilder(
-            animation: _navController.horizontalController,
-            builder: (context, child) {
-              return ModernAppbar(
-                currentSliderValue: _navController.horizontalController.value,
-              );
-            },
+    return CubeBackHandler(
+      controller: _navController,
+      child: SafeArea(
+        top: false,
+        child: AnimatedScaffoldWrapper(
+          key: _scaffoldKey,
+          drawer: const ModernDrawer(),
+          // Drawer/cüzdan sheet'i açıkken kabuk içeriği ölçeklenip
+          // kaydığından hedeflerin ekran konumu geçersizdir; dönüşüm bitince
+          // bekleyen turlar yeniden değerlendirilir.
+          onTransformChanged: _pumpOnboarding,
+          // AppBar'a denetleyici DOĞRUDAN veriliyor: kare başına yalnız zemin
+          // gradyanı yeniden kurulur, başlık ağacı durum değişince.
+          appBar: ModernAppbar(
+            sliderAnimation: _navController.horizontalController,
           ),
-        ),
-        child: MultiBlocListener(
-          listeners: [
-            BlocListener<WalletBloc, WalletState>(
-              listener: _handleWalletStateChanges,
+          child: MultiBlocListener(
+            listeners: [
+              BlocListener<WalletBloc, WalletState>(
+                listener: _handleWalletStateChanges,
+              ),
+              BlocListener<PendingRecurringBloc, PendingRecurringState>(
+                listener: _handlePendingRecurringState,
+              ),
+            ],
+            child: BlocBuilder<WalletBloc, WalletState>(
+              builder: (context, walletState) => _buildContent(walletState),
             ),
-            BlocListener<PendingRecurringBloc, PendingRecurringState>(
-              listener: _handlePendingRecurringState,
-            ),
-          ],
-          child: BlocBuilder<WalletBloc, WalletState>(
-            builder: (context, walletState) => _buildContent(walletState),
           ),
         ),
       ),
@@ -416,6 +415,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(24),
               ),
               child: SliderButtonView(
+                peekStore: SliderPeekStore(getIt<SharedPreferences>()),
                 controller: _navController.horizontalController,
                 navigationController: _navController,
                 userId: userId,
@@ -433,15 +433,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // to avoid calling notifyListeners() during the build phase.
     _setupViewStack(userId, activeWallet);
 
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        _navController,
-        _navController.viewStack,
-      ]),
-      builder: (context, child) {
-        // Build transition
-        return _navController.viewStack.buildTransition();
-      },
+    return MainContentSwipe(
+      controller: _navController,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([
+          _navController,
+          _navController.viewStack,
+        ]),
+        builder: (context, child) {
+          // Build transition
+          return _navController.viewStack.buildTransition();
+        },
+      ),
     );
   }
 

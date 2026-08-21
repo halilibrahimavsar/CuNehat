@@ -9,6 +9,9 @@ import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add
 import 'package:cunehat/features/main_feature/config/menu_configuration.dart';
 import 'package:cunehat/features/main_feature/controllers/home_navigation_controller.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
+import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
+import 'package:cunehat/features/main_feature/utils/slider_peek_store.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +25,7 @@ import 'package:unified_flutter_features/features/slider_2d_navigation/models/sl
 /// Index 1+: SubViews
 ///
 /// Tapping a submenu item navigates to that view with vertical animation
-class SliderButtonView extends StatelessWidget {
+class SliderButtonView extends StatefulWidget {
   const SliderButtonView({
     super.key,
     required this.controller,
@@ -30,6 +33,7 @@ class SliderButtonView extends StatelessWidget {
     required this.userId,
     required this.walletState,
     required this.subViewFactory,
+    required this.peekStore,
   });
 
   final AnimationController controller;
@@ -38,18 +42,54 @@ class SliderButtonView extends StatelessWidget {
   final WalletLoadedSt walletState;
   final SubViewFactory subViewFactory;
 
+  /// Dikey navigasyon tanıtımının hangi durumlarda oynayacağını bilen depo.
+  final SliderPeekStore peekStore;
+
+  @override
+  State<SliderButtonView> createState() => _SliderButtonViewState();
+}
+
+class _SliderButtonViewState extends State<SliderButtonView> {
+  late Set<SliderState> _pendingPeeks;
+
+  String get userId => widget.userId;
+  WalletLoadedSt get walletState => widget.walletState;
+  HomeNavigationController get navigationController =>
+      widget.navigationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pendingPeeks = widget.peekStore.pending();
+  }
+
+  /// Tanıtım, interaktif tur oynarken/beklerken ertelenir (bkz.
+  /// [isSliderPeekAllowed]).
+  bool _canPeek() =>
+      !getIt.isRegistered<OnboardingCoordinator>() ||
+      isSliderPeekAllowed(getIt<OnboardingCoordinator>());
+
+  void _onPeekPlayed(SliderState state) {
+    widget.peekStore.markSeen(state);
+    if (!mounted) return;
+    setState(() => _pendingPeeks = {..._pendingPeeks}..remove(state));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
       child: DynamicSlider(
-        controller: controller,
+        controller: widget.controller,
         onValueChanged: (_) => _onSliderInteraction(),
         onStateTap: (_) => _onSliderInteraction(),
         miniButtons: _buildMiniButtons(context),
         subMenuItems: _buildSubMenuItems(context),
         selectedSubIndex: navigationController.selectedSubIndices,
         texts: context.sliderTexts,
+        peekStates: _pendingPeeks,
+        onPeekPlayed: _onPeekPlayed,
+        canPeek: _canPeek,
       ),
     );
   }

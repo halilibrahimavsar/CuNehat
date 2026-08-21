@@ -5,6 +5,7 @@ import 'package:unified_flutter_features/core/texts/slider_texts.dart';
 import '../models/slider_models.dart';
 import '../constants/slider_config.dart';
 import '../helpers/slider_state_helper.dart';
+import '../models/slider_metrics.dart';
 import 'vertical_carousel.dart';
 
 class SliderKnob extends StatelessWidget {
@@ -15,9 +16,15 @@ class SliderKnob extends StatelessWidget {
   final FixedExtentScrollController carouselController;
   final bool isDragging;
   final double transitionProgress;
-  final bool showUpArrow;
-  final bool showDownArrow;
+
+  /// Çarkta ortalanmış öğenin indeksi (0 = ana başlık). Yığın göstergesini ve
+  /// '+' rozetinin görünürlüğünü sürer.
+  final int selectedIndex;
   final SliderTexts texts;
+
+  /// Yazı ölçeğinden türetilmiş ölçüler; sabit 100/50/130/42 dörtlüsünün yerini
+  /// aldı (bkz. [SliderMetrics]).
+  final SliderMetrics metrics;
 
   /// Whether the add ('+') affordance should be shown. Only true when the main
   /// title is centered in the carousel (i.e. tapping opens the mini buttons).
@@ -26,7 +33,7 @@ class SliderKnob extends StatelessWidget {
   final VoidCallback? onMainTitleTap;
   final VoidCallback onHorizontalDragStart;
   final GestureDragUpdateCallback onHorizontalDrag;
-  final VoidCallback onHorizontalDragEnd;
+  final GestureDragEndCallback onHorizontalDragEnd;
   final GestureDragUpdateCallback? onVerticalDrag;
   final GestureDragEndCallback? onVerticalDragEnd;
 
@@ -39,8 +46,8 @@ class SliderKnob extends StatelessWidget {
     required this.carouselController,
     required this.isDragging,
     required this.transitionProgress,
-    required this.showUpArrow,
-    required this.showDownArrow,
+    required this.selectedIndex,
+    required this.metrics,
     this.showAddButton = true,
     this.texts = const SliderTexts(),
     required this.onTap,
@@ -74,25 +81,24 @@ class SliderKnob extends StatelessWidget {
       key: knobKey,
       onHorizontalDragStart: (_) => onHorizontalDragStart(),
       onHorizontalDragUpdate: onHorizontalDrag,
-      onHorizontalDragEnd: (_) => onHorizontalDragEnd(),
+      onHorizontalDragEnd: onHorizontalDragEnd,
       onVerticalDragUpdate: onVerticalDrag,
       onVerticalDragEnd: onVerticalDragEnd,
       onTap: onTap,
       behavior: HitTestBehavior.translucent,
       child: SizedBox(
-        height: SliderConfig.sliderHeight,
-        width: SliderConfig.knobWidth,
+        height: metrics.sliderHeight,
+        width: metrics.knobWidth,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              height: SliderConfig.knobHeight,
-              width: SliderConfig.knobWidth,
+              height: metrics.knobHeight,
+              width: metrics.knobWidth,
               decoration: BoxDecoration(
-                borderRadius:
-                    BorderRadius.circular(SliderConfig.knobHeight / 2),
+                borderRadius: BorderRadius.circular(metrics.knobHeight / 2),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -118,8 +124,12 @@ class SliderKnob extends StatelessWidget {
                   // Plus icon (only when adding is available, i.e. main title)
                   if (showAddButton) _buildPlusIcon(),
 
-                  // Direction arrows
+                  // Yatay yön okları (durumlar arası geçiş)
                   _buildArrows(),
+
+                  // Dikey yığın göstergesi (alt sayfa sayısı + konum)
+                  if (carouselItems.length > 1)
+                    _buildStackIndicator(carouselItems.length),
                 ],
               ),
             ),
@@ -136,12 +146,12 @@ class SliderKnob extends StatelessWidget {
 
   Widget _buildGlassBackground() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(SliderConfig.knobHeight / 2),
+      borderRadius: BorderRadius.circular(metrics.knobHeight / 2),
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(SliderConfig.knobHeight / 2),
+            borderRadius: BorderRadius.circular(metrics.knobHeight / 2),
             color: Colors.white.withValues(alpha: 0.2),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.3),
@@ -161,23 +171,26 @@ class SliderKnob extends StatelessWidget {
         child: ShaderMask(
           shaderCallback: (rect) {
             final onSurface = Theme.of(context).colorScheme.onSurface;
+            // Komşu etiket sayfa zemininin üstünde duruyor; 0.6 onu
+            // "dekoratif altyazı" gibi gösteriyordu. 0.85 ile dokunulabilir
+            // bir öğe gibi okunuyor.
+            final dim = onSurface.withValues(alpha: 0.85);
             return LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                onSurface.withValues(alpha: 0.6),
-                onSurface.withValues(alpha: 0.6),
-                Colors.white,
-                Colors.white,
-                onSurface.withValues(alpha: 0.6),
-                onSurface.withValues(alpha: 0.6),
-              ],
-              stops: const [0.0, 0.30, 0.42, 0.58, 0.70, 1.0],
+              colors: [dim, dim, Colors.white, Colors.white, dim, dim],
+              // Beyaz bant, merkezdeki satır kutusunu TAM kapsar. Sabit
+              // [0.42, 0.58] bandı 16 px'ti; satır kutusu 23 px olduğu için
+              // `İ`nin noktası ve `Ş`nin çengeli banttan taşıp griye
+              // düşüyordu (ölçüldü).
+              stops: metrics.focusStops,
             ).createShader(rect);
           },
           blendMode: BlendMode.srcIn,
           child: VerticalCarousel(
             controller: carouselController,
+            itemExtent: metrics.itemExtent,
+            height: metrics.sliderHeight,
             physics: const NeverScrollableScrollPhysics(),
             onItemTapped: (index) {
               if (index == 0) {
@@ -194,13 +207,17 @@ class SliderKnob extends StatelessWidget {
             children: items.map((item) {
               return Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SliderConfig.knobLabelPaddingH,
+                  ),
                   child: Text(
                     item.label,
                     textAlign: TextAlign.center,
                     maxLines: 1,
+                    // Punto zaten sığacak şekilde çözülüyor; bu yalnız son
+                    // çare (bkz. SliderMetrics.resolve).
                     overflow: TextOverflow.ellipsis,
-                    style: SliderConfig.knobLabelStyle,
+                    style: metrics.labelStyle,
                   ),
                 ),
               );
@@ -215,8 +232,9 @@ class SliderKnob extends StatelessWidget {
     return Center(
       child: Text(
         label,
-        style: SliderConfig.knobLabelStyle.copyWith(
-          fontSize: isDragging ? 12 : 10,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: metrics.labelStyle.copyWith(
           shadows: [const Shadow(color: Colors.black26, blurRadius: 2)],
         ),
       ),
@@ -284,33 +302,49 @@ class SliderKnob extends StatelessWidget {
             ),
           ),
         ),
-        // Up arrow
-        Align(
-          alignment: Alignment.topCenter,
-          child: Transform.translate(
-            offset: const Offset(0, -SliderConfig.arrowOffsetUp),
-            child: _Arrow(
-              icon: Icons.keyboard_arrow_up,
-              color: activeColor,
-              size: SliderConfig.arrowSizeVertical,
-              isVisible: showUpArrow,
-            ),
-          ),
-        ),
-        // Down arrow
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Transform.translate(
-            offset: const Offset(0, SliderConfig.arrowOffsetDown),
-            child: _Arrow(
-              icon: Icons.keyboard_arrow_down,
-              color: activeColor,
-              size: SliderConfig.arrowSizeVertical,
-              isVisible: showDownArrow,
-            ),
-          ),
-        ),
       ],
+    );
+  }
+
+  /// Alt sayfa yığınının konum göstergesi.
+  ///
+  /// Eskiden burada hapın altına/üstüne taşan bir chevron vardı; komşu
+  /// etiketle ÇAKIŞIYORDU (ok y 65–93, etiket ~85–92 — ölçüldü) ve kaç alt
+  /// sayfa olduğunu hiç söylemiyordu: üç öğeli "İşlemler"de kullanıcı
+  /// "Rapor"un varlığını göremiyordu. Nokta rayı ikisini birden çözer ve
+  /// hapın İÇİNDE durduğu için hiçbir şeyle çakışmaz.
+  Widget _buildStackIndicator(int count) {
+    return Positioned(
+      right: SliderConfig.stackIndicatorInset,
+      top: 0,
+      bottom: 0,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < count; i++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                margin: const EdgeInsets.symmetric(
+                  vertical: SliderConfig.stackIndicatorGap / 2,
+                ),
+                width: SliderConfig.stackIndicatorDotSize,
+                height: i == selectedIndex
+                    ? SliderConfig.stackIndicatorActiveLength
+                    : SliderConfig.stackIndicatorDotSize,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(
+                    alpha: i == selectedIndex ? 0.95 : 0.45,
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    SliderConfig.stackIndicatorDotSize / 2,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -318,13 +352,11 @@ class SliderKnob extends StatelessWidget {
 class _Arrow extends StatelessWidget {
   final IconData icon;
   final Color color;
-  final double size;
   final bool isVisible;
 
   const _Arrow({
     required this.icon,
     required this.color,
-    this.size = SliderConfig.arrowSize,
     required this.isVisible,
   });
 
@@ -336,7 +368,7 @@ class _Arrow extends StatelessWidget {
       child: Icon(
         icon,
         color: color.withValues(alpha: SliderConfig.arrowAlpha),
-        size: size,
+        size: SliderConfig.arrowSize,
       ),
     );
   }

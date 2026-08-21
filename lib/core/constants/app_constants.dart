@@ -1,4 +1,5 @@
 import 'package:cunehat/config/theme/app_surface_theme.dart';
+import 'package:cunehat/core/navigation/predictive_slide_page_transitions_builder.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -10,12 +11,30 @@ class ThemeNames {
   // Tek sefer kurulur (cached). Dropdown value/item eşleşmesi örnek kimliğine
   // dayandığı için her erişimde yeni ThemeData üretilmemeli.
   //
-  // Sayfa geçişleri: Android'de native predictive-back (parmak takipli canlı
-  // önizleme + yaylanma), iOS/masaüstünde Cupertino kenar-swipe. Route'lar
-  // MaterialPage olduğu için bu tema builder'ları gerçekten devreye girer.
+  // ============ SAYFA GEÇİŞLERİ ============
+  //
+  // Android'de native predictive-back (parmak takipli canlı önizleme +
+  // yaylanma), iOS/masaüstünde Cupertino kenar-swipe. Route'lar `MaterialPage`
+  // olduğu için bu builder'lar GERÇEKTEN devreye girer — `CustomTransitionPage`
+  // kullanıldığı dönemde ölü koddu, bu yüzden `theme_page_transitions_test`
+  // seçimi kilitliyor.
+  //
+  // Android'de artık `PredictiveSlidePageTransitionsBuilder` var: sistem
+  // jestini alıp Cupertino kayma/paralaks görseliyle çiziyor. Gerekçesi ve
+  // ödünleşimi o dosyanın başında.
+  //
+  // Elenen seçenekler:
+  //   * `PredictiveBackPageTransitionsBuilder` — canlı ama hareketi 360 dp'de
+  //     10 px + %10 küçülme; alttaki sayfa hiç kıpırdamıyor. Cihazda "sönük"
+  //     bulundu.
+  //   * `PredictiveBackFullscreenPageTransitionsBuilder` — jest dışı yolu
+  //     `Zoom`'a çevirir, jest görselini değiştirmez.
+  //   * Android'i düz `CupertinoPageTransitionsBuilder`'a çevirmek — güzel
+  //     kayma gelir ama Cupertino'nun KENDİ kenar dedektörü Android'de olay
+  //     alamıyor (sistem kenarı yutuyor, ölçüldü) → etkileşim kaybolur.
   static const PageTransitionsTheme _pageTransitions = PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+      TargetPlatform.android: PredictiveSlidePageTransitionsBuilder(),
       TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
       TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
       TargetPlatform.linux: CupertinoPageTransitionsBuilder(),

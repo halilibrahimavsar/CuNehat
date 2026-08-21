@@ -18,17 +18,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
-import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/slider_state_helper.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
 class AppBarContent extends StatefulWidget {
-  final double currentSliderValue;
+  /// Aktif ana durum. Eskiden buraya ham kaydırıcı DEĞERİ geçiliyordu ve
+  /// AppBar kaydırma boyunca saniyede 60 kez yeniden kuruluyordu — oysa bu
+  /// ağaç değerden değil yalnız DURUMDAN etkileniyor (tam sürüşte 2 kez).
+  final SliderState currentState;
   final Animation<double> scaleAnimation;
   final Animation<double> fadeAnimation;
 
   const AppBarContent({
     super.key,
-    required this.currentSliderValue,
+    required this.currentState,
     required this.scaleAnimation,
     required this.fadeAnimation,
   });
@@ -156,10 +158,7 @@ class _AppBarContentState extends State<AppBarContent> {
           opacity: widget.fadeAnimation,
           child: effectiveState != null
               ? _buildWalletContent(
-                  context,
-                  effectiveState,
-                  widget.currentSliderValue,
-                )
+                  context, effectiveState, widget.currentState)
               : _buildContentByState(context, state),
         );
       },
@@ -168,7 +167,7 @@ class _AppBarContentState extends State<AppBarContent> {
 
   Widget _buildContentByState(BuildContext context, WalletState state) {
     if (state is WalletLoadedSt) {
-      return _buildWalletContent(context, state, widget.currentSliderValue);
+      return _buildWalletContent(context, state, widget.currentState);
     } else if (state is WalletLoadingSt) {
       return const Center(
         child: SizedBox(
@@ -197,17 +196,11 @@ class _AppBarContentState extends State<AppBarContent> {
   }
 
   Widget _buildWalletContent(
-      BuildContext context, WalletLoadedSt state, double sliderValue) {
+      BuildContext context, WalletLoadedSt state, SliderState st) {
     double value = 0.0;
     String valueName = "";
-    SliderState st = SliderState.transactions;
 
     if (state.activeWallet != null) {
-      // Same source of truth as the navbar/controller (0.25/0.75 boundaries).
-      st = SliderStateHelper.getStateFromValue(
-        sliderValue,
-        SliderState.values.length,
-      );
       switch (st) {
         case SliderState.savedMoney:
           value = state.activeWallet?.investment ?? 0.0;

@@ -1,6 +1,6 @@
 name: unified_flutter_features
 description: A comprehensive collection of reusable Flutter components and features following Clean Architecture principles.
-version: 2.0.0
+version: 3.0.0
 homepage: https://github.com/unified-flutter-features/unified_flutter_features
 
 environment:

@@ -59,7 +59,7 @@ void main() {
     test(
         'getAppbarShape returns RoundedRectangleBorder with correct border radius',
         () {
-      final shape = AppBarStyleHelper.getAppbarShape(0.5);
+      final shape = AppBarStyleHelper.getAppbarShape();
       expect(shape, isA<RoundedRectangleBorder>());
 
       final border = shape as RoundedRectangleBorder;

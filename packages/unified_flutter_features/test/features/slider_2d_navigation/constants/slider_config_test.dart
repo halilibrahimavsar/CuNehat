@@ -7,9 +7,11 @@ void main() {
       expect(SliderConfig.knobHeight, lessThan(SliderConfig.sliderHeight));
     });
 
-    test('carousel total height is computed correctly', () {
-      expect(SliderConfig.carouselTotalHeight,
-          SliderConfig.carouselItemHeight * 4);
+    test('etiket stili açık satır yüksekliği taşır', () {
+      // Taşımadığında Material 3'ün bodyMedium'undan height: 1.43 miras
+      // alınıyor ve 16 px'lik punto 23 px'lik satır kutusu üretiyordu.
+      expect(
+          SliderConfig.knobLabelStyle.height, SliderConfig.knobLabelLineHeight);
     });
 
     test('mini button size is positive', () {

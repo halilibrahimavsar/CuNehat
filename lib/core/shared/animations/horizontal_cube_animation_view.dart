@@ -80,7 +80,9 @@ class HorizontalCubeAnimationView extends StatelessWidget {
           begin: Offset.zero,
           end: const Offset(-1.0, 0.0),
         ).transform(phaseValue),
-        // Add subtle scale and opacity for depth
+        // Derinlik için hafif ölçek + solma. Solma GEREKLİ: onsuz dönen
+        // yüzün dikdörtgen KENARI ekranı süpürerek geçiyor. Bedeli geçiş
+        // boyunca tam ekran bir `saveLayer`; görünüm buna değer.
         scale: Tween(begin: 1.0, end: 0.85).transform(phaseValue),
         opacity: Tween(begin: 1.0, end: 0.0).transform(phaseValue),
         child: view,

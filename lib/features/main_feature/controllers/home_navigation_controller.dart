@@ -1,7 +1,21 @@
 import 'package:cunehat/core/shared/animations/unified_cube_transition.dart';
 import 'package:flutter/material.dart';
+import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/drag_settle.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/helpers/slider_state_helper.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
+
+/// Ana kaydırıcının oturma süresi/eğrisi.
+///
+/// 380 ms denendi (Material'ın 300–500 ms aralığı gerekçesiyle) ve cihazda
+/// **fazla hızlı** bulundu; küp geçişi kısa sürede okunmuyor. Paketin
+/// `SliderConfig.animationDuration` değeriyle aynı tutulmalı: ikisi de aynı
+/// ekseni sürüyor.
+const Duration kMainSettleDuration = Duration(milliseconds: 600);
+const Curve kMainSettleCurve = Curves.easeOutCubic;
+
+/// Alt sayfa (dikey küp) geçişi. Süre eski değerinde; kazanılan tek şey
+/// eğri — yığın eskiden `forward()` ile DOĞRUSAL ilerliyordu.
+const Duration kSubViewTransitionDuration = Duration(milliseconds: 500);
 
 /// Simplified navigation controller using vertical list paradigm
 ///
@@ -26,13 +40,13 @@ class HomeNavigationController extends ChangeNotifier {
   HomeNavigationController(TickerProvider vsync) {
     _horizontalController = AnimationController(
       vsync: vsync,
-      duration: const Duration(milliseconds: 750),
+      duration: kMainSettleDuration,
       value: 0.5, // Start at transactions
     );
 
     _viewStack = VerticalListTransitionManager(
       vsync,
-      duration: const Duration(milliseconds: 500),
+      duration: kSubViewTransitionDuration,
     );
 
     _horizontalController.addListener(_onHorizontalChanged);
@@ -48,8 +62,26 @@ class HomeNavigationController extends ChangeNotifier {
   Map<SliderState, int> get selectedSubIndices =>
       Map.unmodifiable(_selectedSubIndices);
 
+  /// Kabuk "duruyor" mu? İnteraktif tur (bkz. `OnboardingShellStatus`) bunun
+  /// false olmasını bekler; hedeflerin ekran konumu ancak o zaman geçerli.
+  ///
+  /// `AnimationController.isAnimating` YETMEZ: hem knob hem içerik jesti
+  /// değeri `animateTo` ile değil **doğrudan** yazıyor (`value = ...`), o da
+  /// `isAnimating`i false bırakıyor. Yani parmak ekrandayken tur açılabilirdi.
+  /// Ölçüt bu yüzden "eksen park edilmiş mi": her sürükleme `settleMain` /
+  /// `_navigateToState` ile tam bir durum değerine oturuyor.
   bool get isAnimating =>
-      _horizontalController.isAnimating || _viewStack.isTransitioning;
+      _horizontalController.isAnimating ||
+      _viewStack.isTransitioning ||
+      !_isHorizontalParked;
+
+  bool get _isHorizontalParked {
+    final target = SliderStateHelper.getTargetValue(
+      currentSliderState,
+      SliderState.values.length,
+    );
+    return (_horizontalController.value - target).abs() < 0.001;
+  }
 
   /// Single source of truth for the current state: delegates to the package
   /// helper so the controller, the navbar and the appbar all use the same
@@ -86,6 +118,46 @@ class HomeNavigationController extends ChangeNotifier {
       notifyListeners();
     }
     await _viewStack.navigateTo(0);
+  }
+
+  /// Bir sayfanın denetleyici ekseninde kapladığı aralık. Üç durum iki geçiş
+  /// demek: 0.0 → 0.5 → 1.0.
+  static double get pageSpan => 1.0 / (SliderState.values.length - 1);
+
+  /// İçerik alanından gelen yatay sürükleme.
+  ///
+  /// Parmakla **1:1**: bir tam ekran genişliği tam bir sayfa eder. Knob'un
+  /// kendi sürüklemesi parkur genişliğine bölündüğü için ~3,4× kazançla
+  /// çalışıyor ve parmaktan kopuyor; içerik jesti doğrudan hissedilir.
+  void dragMainBy({required double deltaX, required double width}) {
+    if (_isDisposed || width <= 0) return;
+    _horizontalController.value =
+        (_horizontalController.value - (deltaX / width) * pageSpan)
+            .clamp(0.0, 1.0);
+  }
+
+  /// Sürükleme bitince oturt.
+  ///
+  /// [velocityX] ekrandaki yatay hız (px/s). İçeriği SOLA hızla itmek bir
+  /// sonraki sayfaya geçirir; konum eşiğini geçmemiş olsa bile. Hız
+  /// okunmadığında %20 yol almış hızlı fiske hiçbir şey yapmıyordu.
+  void settleMain({double velocityX = 0}) {
+    if (_isDisposed) return;
+    final maxIndex = SliderState.values.length - 1;
+    final target = resolveDragTarget(
+      position: _horizontalController.value * maxIndex,
+      // İçerik sola giderken (negatif dx) indeks artar: işaret ters.
+      direction: flingDirection(-velocityX),
+      maxIndex: maxIndex,
+    );
+    _horizontalController.animateTo(
+      SliderStateHelper.getTargetValue(
+        SliderState.values[target],
+        SliderState.values.length,
+      ),
+      duration: kMainSettleDuration,
+      curve: kMainSettleCurve,
+    );
   }
 
   /// Set up the view stack for current slider state
