@@ -12,6 +12,36 @@ Cloud projesi, Flutter SDK kurulu.
 
 ---
 
+## 📍 Durum panosu — son ölçüm 21 Ağustos 2026
+
+| Adım | Ne | Durum |
+|---|---|---|
+| 1 | Upload keystore + imzalı AAB | ✅ `android/key.properties` var; AAB `CN=Halil Ibrahim Avsar` / SHA-1 `C6:75:6E:…:58:EB` ile imzalı (debug değil) |
+| 2 | Syncfusion Community License | ✅ Onaylandı (#863579, 18 Ağu 2026). **Kodda yapılacak iş yok** — aşağıdaki nota bak |
+| 3 | Gizlilik politikası yayında | ✅ `privacy-policy.html` → 200; `RELEASE_GUIDE.html` ve analiz dokümanı → 404 (sızıntı yok) |
+| 4 | OAuth consent ekranı | ✅ Published; `drive.appdata` **non-sensitive** tabloda doğrulandı |
+| 5 | Android OAuth istemcisi (upload anahtarı) | ✅ "CuNehat upload key" (10 Ağu 2026) |
+| 6 | Play Console'da uygulama | ✅ Oluşturuldu |
+| 7 | Data Safety formu | ✅ Dolduruldu |
+| 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
+| 8b | App access + finansal özellikler | ✅ Dolduruldu |
+| 8c | **Mağaza girişi (metin + ikon + görseller)** | ⬜ **KALAN** — varlıkların hepsi hazır, Console'a girilmedi |
+| 8d | **Etiketler (3 tane)** | ⬜ **KALAN** |
+| — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 14 maddenin hiçbiri işaretli değil |
+| 9 | **AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi** | ⬜ **KALAN — takvimi başlatan adım** |
+| 11 | Kapalı test 12 tester × 14 gün | ⬜ Testerlar toplandı, sayaç başlamadı |
+| 12 | Production | ⬜ |
+
+**Kod tarafı sağlık (21 Ağu 2026 ölçümü):** `flutter test` **1804/1804**,
+`dart analyze` **0 sorun**, `flutter build appbundle --release` **başarılı**
+(88,1 MB). Yayını bloke eden teknik hata yok.
+
+**Kritik yol:** cihaz duman testi → AAB yükle (Adım 9) → Play SHA-1'ini
+Cloud Console'a ekle → kapalı test 14 gün → production ≤7 gün.
+**En erken yayın ~3 hafta.** Adım 9 geciken her gün doğrudan yayına ekleniyor.
+
+---
+
 ## ⏱️ ÖNCE OKU — takvimi belirleyen kural: 12 tester / 14 gün
 
 **13 Kasım 2023'ten sonra açılmış *kişisel* geliştirici hesapları**, production'a
@@ -52,10 +82,13 @@ Adım 9'daki dahili test kısayolunu kullanabilirsin.
 Şu an release derlemesi **debug anahtarıyla** imzalanıyor (`build.gradle.kts`
 `key.properties` yoksa debug'a düşüyor). Play bunu reddeder.
 
-> **Not:** Bu makinede `~/keystores/cunehat-upload.jks` zaten var (PKCS12,
-> 10 Haziran 2026, root sahipli, mod 644 → derleme okuyabilir). Parolasını ve
-> alias'ını biliyorsan yeniden üretme; bilmiyorsan aşağıdaki komutla yenisini
-> üret. **Play'e henüz hiçbir şey yüklenmediği sürece yeni anahtar üretmek
+> **✅ ÇÖZÜLDÜ (21 Ağu 2026 doğrulaması).** `~/keystores/cunehat-upload.jks`
+> kullanılıyor ve `android/key.properties` yerinde; `flutter build appbundle
+> --release` bugün başarıyla derledi ve çıkan AAB **upload anahtarıyla**
+> imzalı (`CN=Halil Ibrahim Avsar`, SHA-1 `C6:75:6E:…:58:EB`) — debug
+> anahtarına düşmüyor. Aşağıdaki üretme komutuna **ihtiyacın yok**; yalnız
+> keystore'u kaybedersen ya da Play'e ilk yüklemeden önce değiştirmek
+> istersen gerekir. **Play'e henüz hiçbir şey yüklenmediği sürece yeni anahtar üretmek
 > bedava** — upload anahtarı ancak ilk yüklemede sabitlenir.
 >
 > Mevcut keystore'un parolasını sınamak (alias'ı da gösterir):
@@ -150,17 +183,50 @@ a Community License or a commercial license."*
 Tek geliştirici + yıllık 1M USD altı ciro ile hak kazanıyorsun, ama **almalısın**:
 <https://www.syncfusion.com/products/communitylicense>
 
-**Kodda anahtar tanımlaman gerekmiyor — doğrulandı (2026-08-10).**
-`syncfusion_flutter_pdf` 29.2.11 ve `syncfusion_flutter_core` 31.1.19
-paketlerinin `lib/` ağacında `registerLicense`, `SyncfusionLicense` veya
-`licenseKey` diye bir sembol **yok** (grep sıfır sonuç). pub.dev paketinde
-lisans doğrulama mekanizması bulunmuyor; şart tamamen hukuki.
+**✅ ALINDI — 18 Ağustos 2026, onay #863579.** Bu adım kapandı.
+
+### "Lisansı aldık ama kodda hiçbir şey yapmıyoruz, boşa mı gitti?" — hayır
+
+İki ayrı şey karıştırılıyor:
+
+| | Ne demek | Bizde durum |
+|---|---|---|
+| **Lisans (hak)** | Paketi kullanma iznin var mı | **Şart. Alındı.** Olmadan `syncfusion_flutter_pdf`'i uygulamada kullanmak lisans ihlali — kod çalışsa bile. |
+| **Anahtar kaydı (kod)** | Paketin hakkı *doğrulaması* | **Gerekmiyor.** Syncfusion bu doğrulamayı kaldırdı. |
+
+Yani lisans, kodun değil **senin** yükümlülüğün. Play'e yüklerken kimse
+sormuyor ama Syncfusion denetlerse dayanağın bu onay.
+
+**Ölçülen kanıt (2026-08-21).** Projenin gerçekten çözdüğü sürüm
+`syncfusion_flutter_pdf` **29.2.11** + `syncfusion_flutter_core` **29.2.11**
+(`pubspec.lock`). Core'un içinde `registerLicense` *var* ama gövdesi boş:
+
+```dart
+// ~/.pub-cache/hosted/pub.dev/syncfusion_flutter_core-29.2.11/lib/src/license.dart
+@Deprecated('License registration is not required now')
+class SyncfusionLicense {
+  static void validateLicense(BuildContext context) {}
+  static void registerLicense(String licenseKey) {}   // ← hiçbir şey yapmıyor
+}
+```
+
+Yani `registerLicense(...)` çağırsan da **hiçbir etkisi olmaz**. Bu yüzden:
+
+- `syncfusion_flutter_core`'u doğrudan bağımlılık **yapma** (gereksiz),
+- `main()`'de `registerLicense` **çağırma** (no-op),
+- anahtarı **repoya koyma** (repo public, üstelik işe yaramıyor).
+
+> Bu bölüm daha önce sürümü yanlış yazıyordu (core 31.1.19 denmişti; proje
+> 29.2.11 çözüyor). Sonuç değişmedi — 29.2.11'de de kayıt gerekmiyor — ama
+> ileride sürüm yükseltilirse **o sürümün `license.dart`'ına yeniden bak.**
 
 > **Başvuru sonrası gelen e-postadaki 7 günlük anahtar seni ilgilendirmiyor.**
 > O anahtar **Essential Studio installer**'ı (Windows/Mac/Linux masaüstü
 > kurulumu) içindir. Sen paketi pub.dev'den alıyorsun, o kurulumu hiç
-> indirmeyeceksin. Yapılacak tek şey topluluk lisansı onayının gelmesi.
-> Anahtarı **repoya koyma** — hem gereksiz hem repo public.
+> indirmeyeceksin.
+
+> **Devredilemez:** kodu satarsan alıcı kendi lisansını alır; projeyi açık
+> kaynağa çevirmeden önce Syncfusion'dan ayrıca onay gerekir.
 
 ---
 
@@ -168,6 +234,14 @@ lisans doğrulama mekanizması bulunmuyor; şart tamamen hukuki.
 
 `docs/privacy-policy.html` hazır (TR + EN, 4 Ağustos 2026 güncel). Play herkese
 açık bir URL istiyor.
+
+> **✅ YAYINDA ve doğrulandı (21 Ağu 2026).** Üç adres ölçüldü:
+> `.../CuNehat/privacy-policy.html` → **200** (TR+EN içerik yerinde),
+> `.../CuNehat/RELEASE_GUIDE.html` → **404**,
+> `.../CuNehat/cunehat-mantiksal-analiz.html` → **404**.
+> Yani `_config.yml`'deki `exclude` listesi çalışıyor, sızıntı yok.
+> Aşağıdaki 1–6 adımları yeniden yapmana gerek yok; **ancak `_config.yml`'i
+> değiştirirsen 6. maddedeki 404 kontrolünü tekrarla.**
 
 > ⚠️ **Pages `/docs` içindeki HER dosyayı yayınlar.** Repo zaten public, ama
 > Pages bu dosyaları tarayıcıda okunur ve indekslenebilir sayfalara çevirir.
@@ -370,11 +444,15 @@ Bu tablo uygulamanın gerçek davranışından çıkarıldı; olduğu gibi gir.
 - Kısa/uzun açıklama + sürüm notları (TR + EN) → **`docs/store/store-listing.md`**
   (yazıldı, karakter sayıları ölçüldü, kopyala-yapıştır hazır)
 
-**Senin üretmen gereken tek şey:**
+- **Telefon ekran görüntüleri** → ✅ `docs/store/screenshots/` altında **8 adet**
+  hazır (18 Ağu 2026). Ham çekimler `tools/store_screenshots.py` ile 1080×1920
+  tuvale, marka zemini ve başlık şeridiyle yerleştirildi. Şerit metni ya da
+  renk değişirse betiği tekrar çalıştır, elle düzenleme.
 
-- **Telefon ekran görüntüleri**: en az 2, en fazla 8. Cihazda release build'i
-  açıp çek; önerilen kadraj listesi `store-listing.md`'nin sonunda. Gerçek
-  kişisel verini gösterme, örnek veriyle çek.
+> **Kalan iş bu adımda yalnız Console'a girmek:** metinleri `store-listing.md`'den
+> kopyala, üç görsel setini yükle. Uygulama adının **`CuNehat: Gelir Gider Takibi`**
+> olduğundan emin ol — sadece "CuNehat" bırakılırsa 30 karakterlik en ağır ASO
+> alanının 23'ü boşa gider.
 
 > **Metin yazarken dikkat:** "kredi verme", "borç para verme", "faizsiz kredi"
 > gibi ifadeler Play'in Finansal Hizmetler politikasını tetikler ve ek beyan
@@ -498,14 +576,41 @@ yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 
 > ⚠️ **Edge-to-edge neden ayrı bir madde:** `targetSdk = 36` (Android 16) ile
 > edge-to-edge **zorunlu ve devre dışı bırakılamıyor** — uygulama artık durum ve
-> gezinme çubuklarının altına da çiziyor. Kaynak koddan doğrulanamaz, yalnız
-> cihazda görülür. Ölçülen durum (2026-08-10): kodda açık bir
-> `setEnabledSystemUIMode` / `SystemUiOverlayStyle` yapılandırması **yok**;
-> 23 dosyada `SafeArea` var, yani Flutter'ın kendi varsayılanına ve tek tek
-> `SafeArea`'lara güveniliyor. Muhtemelen sorunsuz, ama **kanıtlanmadı.**
-> Kırık çıkarsa çare tek tek `SafeArea` eklemek değil, `MediaQuery.viewPadding`
-> ile alt/üst dolgu vermek; özellikle alt sabit düğme çubukları ve
-> `bottomNavigationBar` risk altında.
+> gezinme çubuklarının altına da çiziyor. Kaynak koddan *kanıtlanamaz*, yalnız
+> cihazda görülür — ama **nereye bakacağın** koddan çıkarılabilir.
+
+### Edge-to-edge — ölçülmüş risk haritası (21 Ağu 2026)
+
+| Ölçüm | Sonuç |
+|---|---|
+| `SystemChrome` / `SystemUiOverlayStyle` / `setEnabledSystemUIMode` | lib'de **0 sonuç** — hiç yapılandırılmamış, Flutter varsayılanına güveniliyor |
+| `bottomNavigationBar` / `persistentFooterButtons` | **Yok** — bu klasik risk sınıfı bizde hiç yok ✅ |
+| `showModalBottomSheet` çağrısı | **28 adet** |
+| Bunlardan `useSafeArea: true` kullanan | **0 adet** ⚠️ |
+| Alt dolgu için kullanılan desen | `viewInsets.bottom` (**klavye**) — `viewPadding.bottom` (**gezinme çubuğu**) hiç kullanılmıyor |
+
+**Bu ayrım kritik:** `viewInsets.bottom` klavye kapalıyken **0**'dır. Yani
+klavyeli formlar doğru davranırken, klavyesiz sheet'lerin en alt satırı
+gezinme çubuğunun altına girebilir.
+
+**Önce şu üçüne bak — sırayla:**
+
+1. **Rapor → pasta grafikte bir kategoriye dokun** → açılan detay sheet'i
+   (`category_details_bottom_sheet.dart`). Ekran yüksekliğinin %75'i sabit
+   yükseklikte, `SafeArea` **yok**, alt dolgu **yok**. Listenin son satırı
+   çubuğun altında kalıyor mu?
+2. **Borç/alacak → kayıt düzenle** → `AddEntrySheet`. `SafeArea` var ama
+   yalnız `viewInsets` ile besleniyor; **klavye kapalıyken** kaydet düğmesinin
+   konumuna bak.
+3. **İşlem ekleme sheet'i** (`transaction_form_fields.dart:188`) — burada
+   `SafeArea` **var** ✅. Doğru davranışın referansı olarak kullan: diğer
+   ikisi buna benzemiyorsa fark oradadır.
+
+**Kırık çıkarsa çözüm sırası:** (a) `showModalBottomSheet`'e
+`useSafeArea: true` eklemek en ucuz düzeltme; (b) yetmezse sheet gövdesine
+`EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom)`.
+Tek tek `SafeArea` sarmalamak **son çare** — sheet'in kendi köşe yuvarlaklığını
+ve zeminini bozabiliyor.
 
 R8 kaynaklı bir çökme çıkarsa `android/app/proguard-rules.pro`'ya ilgili
 `-keep` kuralını ekleyip yeniden derle.
@@ -576,7 +681,7 @@ O gün geldi. Yayından sonra:
   eklersen Hive eski kayıtlarda o alanı `null` döner; alan non-nullable ise
   üretilen adapter `fields[N] as String` yapıp **okuma anında çöker**.
   Çözüm: `@HiveField(20, defaultValue: 'TRY')` ya da alanı nullable yap.
-- **Yedek şeması artık silinemez.** `data_serialization_service.dart:482`:
+- **Yedek şeması artık silinemez.** `data_serialization_service.dart:474`:
 
   ```dart
   if (version != schemaVersion) {
@@ -584,15 +689,22 @@ O gün geldi. Yayından sonra:
   }
   ```
 
-  v1.0.0 **`schemaVersion = 6`** ile çıkıyor (`:112`; borç hesaplama modları
-  turunda 5'ten 6'ya çıkarıldı). Bu sıkı eşitlik, sürüm **6→7** olduğu anda
+  v1.0.0 **`schemaVersion = 7`** ile çıkıyor (`:119`; 6'dan 7'ye kategori
+  hiyerarşisi turunda çıkarıldı — kategoriler prefs'ten Hive kutusuna taşındı
+  ve kimlik ad yerine UUID oldu). Bu sıkı eşitlik, sürüm **7→8** olduğu anda
   v1.0.0 kullanıcısının Drive yedeğini geri yüklenemez yapar. Telefon
   değiştiren ilk kullanıcı verisini kaybeder. Şemayı yayından sonra ilk kez
   değiştirmeden ÖNCE bunu "eski sürümü oku ve yükselt" akışına çevir.
 
-  > Yayın anında dondurulan sayı **6**'dır. Kapalı test sürecinde şema
+  > Yayın anında dondurulan sayı **7**'dir. Kapalı test sürecinde şema
   > değişirse bu sayıyı burada güncelle — yanlış sayı, migrasyonu yanlış
   > sürümden başlatır.
+  >
+  > Migrasyonun neye benzediğinin çalışan bir örneği elde var:
+  > `tools/migrate_backup_v6_to_v7.py` (6→7 geçişinde geliştiricinin kendi
+  > yedeği için yazıldı). Uygulama içi migrasyon yazılırken referans alınabilir
+  > — özellikle kategori kimliği ad→UUID dönüşümünde defterdeki `tag` ve
+  > bütçedeki `categoryId` atıflarının da çevrilmesi gerektiği kısmı.
 
 ### 14.2 Çoklu para birimi genişlemesi — ne güvenli, ne değil
 
@@ -601,7 +713,7 @@ O gün geldi. Yayından sonra:
 | Yeni para birimi eklemek (GBP, CHF, JPY…) | **Yok.** `currency` bir `String` (`wallet_model.dart:18`), enum değil. `kSupportedCurrencies`, `kCurrencySymbols`, `kNoiseThresholds` ve `ExchangeRateService._supported` listelerine eklemek yeterli. Şema değişmez. |
 | Borç/alacağa `currency` alanı eklemek | **Gerek yok, ekleme.** Birim kaydın cüzdanından türetilir (`DebtModel.walletId` / `ReceivableModel.walletId`, ikisi de HiveField 2) ve v1'de borç/alacak her para biriminde açık. Alan eklemek hem gereksiz hem riskli: eski kayıtlarda null → 14.1'deki çökme. |
 | Yatırımlara para birimi | Zaten var (`InvestmentModel.currency`, nullable) ama anlamı **fiyat kaynağının birimi** (AAPL → USD); değerleme birimi cüzdandan gelir. Bu ikisini karıştırma. |
-| Cüzdanın para birimini sonradan değiştirilebilir yapmak | **Yapma.** `wallet_form_dialog.dart:366` şu an kilitliyor ve doğrusu bu; açarsan tüm geçmiş tutarlar sessizce yeniden yorumlanır. |
+| Cüzdanın para birimini sonradan değiştirilebilir yapmak | **Yapma — ve zaten gerekmiyor.** Kilit körü körüne değil koşullu: `wallet_form_dialog.dart:_resolveCurrencyLock` (:129) cüzdanda işlem *ve* sıfırdan farklı borç/alacak/yatırım yoksa kilidi kendiliğinden açıyor. Yani boş cüzdanda birim zaten serbest; dolu cüzdanda açmak tüm geçmiş tutarları sessizce yeniden yorumlar. |
 
 ### 14.3 `google_sign_in` 7.x'e geçiş
 

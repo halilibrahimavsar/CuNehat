@@ -299,10 +299,23 @@ No ads, no subscriptions. Your data stays on your device.
 
 ---
 
-## Ekran görüntüleri — hâlâ senin üretmen gerekiyor
+## Ekran görüntüleri — ✅ ÜRETİLDİ (18 Ağu 2026)
 
-Play en az 2, en çok 8 telefon ekran görüntüsü istiyor. Cihazda release
-derlemesini açıp çek.
+**8 görsel hazır:** `docs/store/screenshots/` (`01_…` – `08_…`). Ham cihaz
+çekimleri `tools/store_screenshots.py` ile 1080×1920 (tam 9:16) tuvale, marka
+zemini ve başlık şeridiyle yerleştirildi.
+
+> **Değişiklik gerekirse betikten geç, elle düzenleme:**
+> `python3 tools/store_screenshots.py` (tamamı) veya
+> `python3 tools/store_screenshots.py 3 5` (yalnız 3 ve 5). Şerit metni ya da
+> renk değişince 8 görselin hepsi tek komutla yeniden üretilir.
+
+**Kalan iş:** görselleri Play Console → Mağaza girişi'ne yüklemek.
+
+Aşağıdaki bölüm görsellerin **neden bu sırada ve bu şeritlerle** üretildiğini
+anlatıyor — yeniden çekmen gerekirse kadraj referansı olarak duruyor.
+
+Play en az 2, en çok 8 telefon ekran görüntüsü istiyor.
 
 **Metin şeridi olmadan yükleme.** Bağımsız geliştiricilerin en sık yaptığı hata
 ham ekran görüntüsü yüklemek. Arama sonucunda görsel küçücük görünür; içindeki
