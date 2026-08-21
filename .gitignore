@@ -42,6 +42,10 @@ coverage/
 # (137 işlem) yanlışlıkla commit'lendi, push edilmeden fark edildi.
 cunehat_backup_*.json
 *_backup_*.json
+# Mağaza ekran görüntüsü için üretilen SAHTE defter (tools/make_demo_backup.py
+# ile her an yeniden üretilir; tarihe göreli olduğu için taze olanı üretmek
+# eskisini saklamaktan iyi).
+cunehat_demo.json
 
 # İmzalama anahtarları — repoya ASLA girmemeli. Keystore sızarsa upload
 # anahtarı yeniden üretilemez hale gelir (Play'de sıfırlama süreci günler sürer).
