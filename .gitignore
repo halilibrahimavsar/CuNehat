@@ -36,6 +36,13 @@ coverage/
 **/android/key.properties
 **/android/**/GeneratedPluginRegistrant.java
 
+# Uygulama yedekleri — GERÇEK FİNANSAL VERİ içerir (cüzdan bakiyeleri, işlem
+# geçmişi). Repo public; bir kez commit'lenirse geçmişten silmek force push
+# ister. 2026-08-21'de tam olarak bu oldu: cunehat_backup_20260810_0253.json
+# (137 işlem) yanlışlıkla commit'lendi, push edilmeden fark edildi.
+cunehat_backup_*.json
+*_backup_*.json
+
 # İmzalama anahtarları — repoya ASLA girmemeli. Keystore sızarsa upload
 # anahtarı yeniden üretilemez hale gelir (Play'de sıfırlama süreci günler sürer).
 *.jks
