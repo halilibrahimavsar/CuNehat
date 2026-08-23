@@ -5,10 +5,10 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
-import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
+import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
@@ -16,7 +16,6 @@ import 'package:cunehat/features/wallet/presentation/page/wallet_managment.dart'
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
 import 'package:unified_flutter_features/features/amount_visibility/ibo_amount_display.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
@@ -214,6 +213,9 @@ class _AppBarContentState extends State<AppBarContent> {
       }
     }
 
+    final walletName = state.activeWallet?.name.toUpperCase() ??
+        context.l10n.wallet.toUpperCase();
+
     return Showcase(
       key: OnboardingKeys.appBarWalletArea,
       title: context.l10n.onboardingAppBarWalletTitle,
@@ -238,100 +240,30 @@ class _AppBarContentState extends State<AppBarContent> {
         },
         child: Container(
           color: AppColors.transparent,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildWalletNameBadge(context, state.activeWallet, valueName, st),
-              const SizedBox(height: 2),
-              _buildMoneyText(value),
-              // Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı;
-              // kur yoksa satır gizlenir.
-              if (st == SliderState.transactions &&
-                  state.activeWallet != null &&
-                  state.activeWallet!.currency != kDefaultCurrency)
-                if (getIt<ExchangeRateService>()
-                        .cachedRateToTry(state.activeWallet!.currency)
-                    case final double rate)
-                  Text(
-                    context.l10n
-                        .yaklasikKarsilikFormat(formatMoney(value * rate)),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.white.withValues(alpha: 0.75),
-                    ),
-                  ),
-            ],
+          child: WalletHeadline(
+            badgeLabel: st == SliderState.transactions
+                ? walletName
+                : "$walletName • $valueName",
+            amount: value,
+            currency: context.activeWalletCurrency,
+            secondaryLine: _tryEquivalentLine(context, state, st, value),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildWalletNameBadge(
-      BuildContext context, activeWallet, String valueName, SliderState st) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.white.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.wallet,
-              size: 14, color: AppColors.white.withValues(alpha: 0.9)),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              st == SliderState.transactions
-                  ? (activeWallet?.name.toUpperCase() ??
-                      context.l10n.wallet.toUpperCase())
-                  : "${activeWallet?.name.toUpperCase() ?? context.l10n.wallet.toUpperCase()} • $valueName",
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.white,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.0,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMoneyText(double value) {
-    return BlocBuilder<AmountVisibilityCubit, bool>(
-      builder: (context, isVisible) {
-        return MoneyText(
-          amount: value,
-          currency: context.activeWalletCurrency,
-          animationCurve: Curves.decelerate,
-          obscureMode: AmountObscureMode.blur,
-          alignment: Alignment.center,
-          style: const TextStyle(
-            fontSize: 34,
-            color: AppColors.white,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.0,
-            shadows: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  /// Döviz cüzdanında bakiyenin son bilinen kurla TL karşılığı; kur yoksa
+  /// satır gizlenir.
+  String? _tryEquivalentLine(BuildContext context, WalletLoadedSt state,
+      SliderState st, double value) {
+    if (st != SliderState.transactions) return null;
+    final wallet = state.activeWallet;
+    if (wallet == null || wallet.currency == kDefaultCurrency) return null;
+    if (getIt<ExchangeRateService>().cachedRateToTry(wallet.currency)
+        case final double rate) {
+      return context.l10n.yaklasikKarsilikFormat(formatMoney(value * rate));
+    }
+    return null;
   }
 }
