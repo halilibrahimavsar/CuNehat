@@ -41,6 +41,10 @@ class BackupSummary {
   /// şey söylemeyen bir sayıydı.)
   final int categoryCount;
 
+  /// Yedekteki birikim hedefi sayısı. Hedefler v9'da kendi kaydı oldu;
+  /// yatırım sayısına dahil DEĞİLDİR (hedef bir kap, varlık değil).
+  final int goalCount;
+
   final List<BackupWalletSummary> wallets;
 
   final DateTime? firstTransactionDate;
@@ -65,6 +69,7 @@ class BackupSummary {
     required this.budgetCount,
     required this.recurringCount,
     required this.categoryCount,
+    required this.goalCount,
     required this.wallets,
     required this.firstTransactionDate,
     required this.lastTransactionDate,
@@ -82,7 +87,8 @@ class BackupSummary {
       debtCount +
       receivableCount +
       budgetCount +
-      recurringCount;
+      recurringCount +
+      goalCount;
 
   bool get isEmpty => recordCount == 0;
 }

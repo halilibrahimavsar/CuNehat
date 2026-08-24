@@ -1,8 +1,9 @@
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
-import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
+import 'package:cunehat/features/investments/presentation/widgets/gold_types.dart';
 import 'package:flutter/material.dart';
 
 class InvestmentCard extends StatelessWidget {
@@ -29,15 +30,31 @@ class InvestmentCard extends StatelessWidget {
     }
   }
 
-  String _getInvestmentTypeText(InvestmentType type) {
+  String _getInvestmentTypeText(BuildContext context, InvestmentType type) {
     switch (type) {
       case InvestmentType.stock:
-        return 'Hisse Senedi';
+        return context.l10n.yatirimTuruHisse;
       case InvestmentType.gold:
-        return 'Altın';
+        return context.l10n.yatirimTuruAltin;
       case InvestmentType.custom:
-        return 'Özel';
+        return context.l10n.yatirimTuruOzel;
     }
+  }
+
+  /// Kartın "kaç gramım var" satırı: miktar + birim, yanında birim fiyat.
+  /// Miktar takibi olmayan kayıtta (özel varlık) satır hiç çizilmez.
+  String? _quantityLine(BuildContext context) {
+    final quantity = investment.quantity;
+    if (quantity == null || quantity <= 0) return null;
+    final unit = investmentUnitLabel(context, investment);
+    if (unit == null) return null;
+    // Adet hassas kalır (0,125 gr); paradan farklı olarak 4 hane.
+    final qtyText = formatAmountForInput(quantity, decimalDigits: 4);
+    final line = context.l10n.kartMiktarBirim(qtyText, unit);
+    final unitValue = investment.unitValue;
+    if (unitValue == null) return line;
+    return '$line · '
+        '${context.l10n.kartBirimFiyat(formatMoney(unitValue, currency: currency))}';
   }
 
   @override
@@ -45,6 +62,7 @@ class InvestmentCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final accent = investment.color;
     final profitColor = investment.isProfitable ? Colors.green : Colors.red;
+    final quantityLine = _quantityLine(context);
 
     return AppCard(
       accent: accent,
@@ -85,9 +103,11 @@ class InvestmentCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (GoalCategory.byKey(investment.goalCategory) != null)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                    if (investment.symbol != null)
+                      // Rozet ESNEK: "Gram Altın" gibi uzun etiketler dar
+                      // kartta (hedef grubunun içinde 104px) taşırıyordu.
+                      // Ad değil rozet kısalır — ad kaydın kimliği.
+                      Flexible(
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -97,45 +117,19 @@ class InvestmentCard extends StatelessWidget {
                             color: accent.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                GoalCategory.byKey(investment.goalCategory)!
-                                    .icon,
-                                size: 12,
-                                color: accent,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                GoalCategory.byKey(investment.goalCategory)!
-                                    .label,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: accent,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    if (investment.symbol != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          investment.symbol!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: accent,
+                          child: Text(
+                            // Altında ham anahtar ("gram-altin") değil adı;
+                            // hissede sembolün kendisi zaten okunur (AAPL).
+                            investment.type == InvestmentType.gold
+                                ? goldTypeLabel(context, investment.symbol!)
+                                : investment.symbol!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: accent,
+                            ),
                           ),
                         ),
                       ),
@@ -143,137 +137,108 @@ class InvestmentCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _getInvestmentTypeText(investment.type),
+                  _getInvestmentTypeText(context, investment.type),
                   style: TextStyle(
                     fontSize: 12,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.mevcutDeger,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                        Text(
-                          formatMoney(investment.currentValue,
-                              currency: currency),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                      ],
+                if (quantityLine != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    quantityLine,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: accent,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          context.l10n.karZarar,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
+                  ),
+                ],
+                const SizedBox(height: 10),
+                // İki sütun da ESNEK: serbest bıraktığında büyük tutarlar
+                // (ölçüldü: hedef grubunun içinde 204px alanda 124px taşma)
+                // kartı taşırıyordu. Tutarlar kırpılmaz, sığmazsa küçülür —
+                // parada üç nokta rakam kaybıdır.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.mevcutDeger,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        Text(
-                          formatMoney(investment.profit, currency: currency),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: profitColor,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              formatMoney(investment.currentValue,
+                                  currency: currency),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: scheme.onSurface,
+                              ),
+                            ),
                           ),
-                        ),
-                        Text(
-                          context.l10n
-                              .investmentProfitpercentageTostringasfixed(
-                                  investment.profitPercentage
-                                      .toStringAsFixed(2)),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: profitColor,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            context.l10n.karZarar,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: Text(
+                              formatMoney(investment.profit,
+                                  currency: currency),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: profitColor,
+                              ),
+                            ),
+                          ),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: Text(
+                              context.l10n
+                                  .investmentProfitpercentageTostringasfixed(
+                                      investment.profitPercentage
+                                          .toStringAsFixed(2)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: profitColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                if (investment.targetAmount != null &&
-                    investment.targetAmount! > 0) ...[
-                  const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        context.l10n.hedefCurrencyformatFormatInvestment(
-                            formatMoney(investment.targetAmount!,
-                                currency: currency)),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        context.l10n.investmentTargetprogressTostringasfixed(
-                            (investment.targetProgress * 100)
-                                .toStringAsFixed(1)),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: investment.isTargetReached
-                              ? Colors.green
-                              : accent,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Stack(
-                    children: [
-                      Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: scheme.onSurface.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                      FractionallySizedBox(
-                        widthFactor: investment.targetProgress.clamp(0.0, 1.0),
-                        child: Container(
-                          height: 6,
-                          decoration: BoxDecoration(
-                            gradient: investment.isTargetReached
-                                ? const LinearGradient(
-                                    colors: [Colors.green, Colors.lightGreen])
-                                : LinearGradient(colors: [
-                                    accent.withValues(alpha: 0.6),
-                                    accent
-                                  ]),
-                            borderRadius: BorderRadius.circular(3),
-                            boxShadow: investment.isTargetReached
-                                ? [
-                                    BoxShadow(
-                                        color:
-                                            Colors.green.withValues(alpha: 0.4),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2))
-                                  ]
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ],
             ),
           ),

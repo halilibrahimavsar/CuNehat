@@ -10,7 +10,6 @@ InvestmentEntity _inv({
   double? quantity = 10,
   String? symbol = 'gram-altin',
   String? currency,
-  double? targetAmount,
 }) {
   return InvestmentEntity(
     id: 'inv-1',
@@ -25,7 +24,6 @@ InvestmentEntity _inv({
     symbol: symbol,
     quantity: quantity,
     currency: currency,
-    targetAmount: targetAmount,
   );
 }
 
@@ -100,14 +98,76 @@ void main() {
     test('yeni alanlar korunur', () {
       final model = InvestmentModel.fromEntity(_inv(
         currency: 'USD',
-        targetAmount: 100000,
-      ).copyWith(goalCategory: 'dugun'));
+      ).copyWith(goalId: 'goal-1'));
       final json = model.toJson();
       final back = InvestmentModel.fromJson('inv-1', json);
       expect(back.quantity, 10);
-      expect(back.goalCategory, 'dugun');
+      expect(back.goalId, 'goal-1');
       expect(back.currency, 'USD');
-      expect(back.targetAmount, 100000);
+    });
+  });
+
+  group('applyPartialSale', () {
+    final gold = InvestmentEntity(
+      id: 'inv',
+      userId: 'u',
+      walletId: 'w',
+      name: 'Altın Birikimi',
+      amount: 4000.0,
+      currentValue: 5000.0,
+      type: InvestmentType.gold,
+      color: const Color(0xFFFFC107),
+      dateAdded: DateTime(2026, 1, 1),
+      symbol: 'gram-altin',
+      quantity: 4.0,
+    );
+
+    test('miktar, maliyet ve değer aynı oranda düşer', () {
+      final result = applyPartialSale(gold, ratio: 0.25);
+
+      expect(result.quantity, 3.0);
+      expect(result.amount, 3000.0);
+      expect(result.currentValue, 3750.0);
+      // Ortalama maliyet korunur: kalanın birim maliyeti değişmemeli.
+      expect(result.amount / result.quantity!, gold.amount / gold.quantity!);
+    });
+
+    test('canlı fiyat verilirse kalan piyasaya oturur', () {
+      final result = applyPartialSale(gold, ratio: 0.5, livePrice: 2000.0);
+
+      expect(result.quantity, 2.0);
+      expect(result.amount, 2000.0);
+      expect(result.currentValue, 4000.0); // 2 × 2.000
+    });
+
+    test('miktar takibi olmayan kayıtta yalnız tutarlar düşer', () {
+      final custom = gold.copyWith(quantity: null, symbol: null);
+      // copyWith null'ı "değiştirme" saydığı için miktarsız kaydı elde ederiz.
+      final noQuantity = InvestmentEntity(
+        id: custom.id,
+        userId: custom.userId,
+        walletId: custom.walletId,
+        name: custom.name,
+        amount: 1000.0,
+        currentValue: 1200.0,
+        type: InvestmentType.custom,
+        color: custom.color,
+        dateAdded: custom.dateAdded,
+      );
+
+      final result = applyPartialSale(noQuantity, ratio: 0.5);
+
+      expect(result.quantity, isNull);
+      expect(result.amount, 500.0);
+      expect(result.currentValue, 600.0);
+    });
+
+    test('kuruş artığı bırakmaz', () {
+      final odd = gold.copyWith(amount: 1000.0, currentValue: 1000.0);
+      final result = applyPartialSale(odd, ratio: 1 / 3);
+
+      expect(result.amount, 666.67);
+      expect(result.currentValue, 666.67);
     });
   });
 }

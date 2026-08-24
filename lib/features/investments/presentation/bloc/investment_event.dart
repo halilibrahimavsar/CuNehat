@@ -19,6 +19,26 @@ final class GetInvestmentsEvent extends InvestmentEvent {
   List<Object> get props => [userId, walletId];
 }
 
+/// Hedef ekleme/güncelleme (aynı yol: kimlik çağıranda üretilir).
+final class SaveGoalEvent extends InvestmentEvent {
+  final GoalEntity goal;
+
+  const SaveGoalEvent(this.goal);
+
+  @override
+  List<Object> get props => [goal];
+}
+
+/// Hedefi siler; ÜYELERİ SİLMEZ, bağlarını koparır (bkz. [DeleteGoalUseCase]).
+final class DeleteGoalEvent extends InvestmentEvent {
+  final GoalEntity goal;
+
+  const DeleteGoalEvent(this.goal);
+
+  @override
+  List<Object> get props => [goal];
+}
+
 final class CreateInvestmentEvent extends InvestmentEvent {
   final String userId;
   final String walletId;
@@ -37,6 +57,11 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
   final String userId;
   final String walletId;
   final InvestmentEntity investment;
+
+  /// Nakit mutabakatı bu ikisinin FARKINDAN türer ve ikisi de kaydın
+  /// deftere İŞLENMİŞ maliyetidir (`InvestmentEntity.bookedCost`), ham
+  /// `amount` değil: "zaten bende" denen kısım cüzdandan hiç çıkmadığı için
+  /// değişimi de cüzdana yazılmaz.
   final double prevAmount;
   final double newAmount;
 
@@ -74,13 +99,47 @@ final class RefreshPricesEvent extends InvestmentEvent {
       [userId, walletId, walletCurrency, investmentId ?? ''];
 }
 
+/// Kısmi satış: kaydın bir bölümü elden çıkar, kayıt silinmez.
+///
+/// Nakit kuplajı maliyet farkından TÜRETİLEMEZ (bkz. [UpdateInvestmentEvent]):
+/// satışta cüzdana giren, maliyetin düşen kısmı değil kullanıcının eline
+/// geçen [proceeds]'tir. Bu yüzden ayrı bir olay.
+final class PartialSellInvestmentEvent extends InvestmentEvent {
+  final String userId;
+  final String walletId;
+
+  /// Satıştan ÖNCEKİ hâli; geri alma bunu aynı kimlikle geri yazar.
+  final InvestmentEntity previous;
+
+  /// Satıştan sonra kalan kayıt (miktar/maliyet/değer düşülmüş).
+  final InvestmentEntity remaining;
+
+  /// Cüzdana gelir olarak yazılacak tutar.
+  final double proceeds;
+
+  const PartialSellInvestmentEvent({
+    required this.previous,
+    required this.remaining,
+    required this.proceeds,
+    required this.userId,
+    required this.walletId,
+  });
+
+  @override
+  List<Object> get props => [previous, remaining, proceeds, userId, walletId];
+}
+
 final class DeleteInvestmentEvent extends InvestmentEvent {
   final String userId;
   final String walletId;
   final String id;
+
+  /// Silme düzeltmesinde iade edilecek tutar: kaydın deftere İŞLENMİŞ
+  /// maliyeti (`InvestmentEntity.bookedCost`), ham `amount` değil.
   final double amount;
 
-  /// Satışta nakit gelire dönüşen güncel değer.
+  /// Satışta nakit gelire dönüşen tutar — kaydın `currentValue` alanı değil,
+  /// satış sayfasında onaylanan tutar (kayıttaki değer bayat olabilir).
   final double currentValue;
 
   /// true → satış: güncel değer kadar nakit gelir oluşturulur.

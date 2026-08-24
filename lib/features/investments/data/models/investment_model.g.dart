@@ -28,10 +28,10 @@ class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
       dateAdded: fields[8] as DateTime,
       symbol: fields[9] as String?,
       returnRate: fields[10] as double?,
-      targetAmount: fields[11] as double?,
       quantity: fields[12] as double?,
-      goalCategory: fields[13] as String?,
+      goalId: fields[16] as String?,
       currency: fields[14] as String?,
+      unbookedCost: fields[15] as double,
     );
   }
 
@@ -61,14 +61,14 @@ class InvestmentModelAdapter extends TypeAdapter<InvestmentModel> {
       ..write(obj.symbol)
       ..writeByte(10)
       ..write(obj.returnRate)
-      ..writeByte(11)
-      ..write(obj.targetAmount)
       ..writeByte(12)
       ..write(obj.quantity)
-      ..writeByte(13)
-      ..write(obj.goalCategory)
       ..writeByte(14)
-      ..write(obj.currency);
+      ..write(obj.currency)
+      ..writeByte(15)
+      ..write(obj.unbookedCost)
+      ..writeByte(16)
+      ..write(obj.goalId);
   }
 
   @override

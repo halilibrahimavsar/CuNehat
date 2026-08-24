@@ -1535,10 +1535,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alinanAdetHisseHint => 'Shares bought (lot)';
 
   @override
-  String get odenenTutarHint => 'Amount paid (₺) · 0 if gift';
+  String get odenenTutarHint => 'Amount paid · 0 if gift';
 
   @override
-  String get tutarHint => 'Amount (₺)';
+  String get tutarHint => 'Amount';
 
   @override
   String get gecerliMiktarGirin => 'Enter a valid amount';
@@ -3563,4 +3563,332 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txPeriodYesterday => 'Yesterday';
+
+  @override
+  String get lot => 'lot';
+
+  @override
+  String get katkiKipiMiktar => 'By quantity';
+
+  @override
+  String get katkiKipiTutar => 'By amount';
+
+  @override
+  String katkiTakipBirimi(Object unit) {
+    return 'This holding is tracked in $unit.';
+  }
+
+  @override
+  String katkiFarkliTurBaslik(Object unit) {
+    return '$unit can\'t be added to this record';
+  }
+
+  @override
+  String katkiFarkliTurAciklama(Object recordUnit, Object selectedUnit) {
+    return 'This record is tracked in $recordUnit; adding $selectedUnit would mix both quantity and value. Create a separate record for that type.';
+  }
+
+  @override
+  String katkiFarkliTurButon(Object unit) {
+    return 'Create a new $unit record';
+  }
+
+  @override
+  String katkiMiktaraCevrilecek(Object qty, Object unit) {
+    return '≈ $qty $unit will be added';
+  }
+
+  @override
+  String get katkiFiyatGerekli =>
+      'Fetch the live price first to convert the amount into quantity.';
+
+  @override
+  String get katkiOdenenBosUyari =>
+      'Amount paid is empty: this purchase counts as a gift and nothing is deducted from your wallet.';
+
+  @override
+  String get katkiTutarKipiAciklama =>
+      'Enter the amount you put in; it is converted into quantity at the live price.';
+
+  @override
+  String get katkiYatirilanTutarHint => 'Amount invested';
+
+  @override
+  String duzenlemeTurDegisikligiUyari(Object qty, Object newUnit) {
+    return 'Type is changing: the recorded quantity of $qty will now count as $newUnit, and price refresh will value it accordingly. If you bought a different type, leave this record alone and create a new one.';
+  }
+
+  @override
+  String alinanMiktarBirimHint(Object unit) {
+    return 'Quantity bought ($unit)';
+  }
+
+  @override
+  String get yeniAlimMiktarVeyaTutar =>
+      'New purchase: by quantity or by amount';
+
+  @override
+  String kartBirimFiyat(Object price) {
+    return 'Unit $price';
+  }
+
+  @override
+  String kartMiktarBirim(Object qty, Object unit) {
+    return '$qty $unit';
+  }
+
+  @override
+  String get yatirimTuruHisse => 'Stock';
+
+  @override
+  String get yatirimTuruAltin => 'Gold';
+
+  @override
+  String get yatirimTuruOzel => 'Custom';
+
+  @override
+  String satisSheetBaslik(Object name) {
+    return '$name · Sell';
+  }
+
+  @override
+  String satilanMiktarBirimHint(Object unit) {
+    return 'Quantity sold ($unit)';
+  }
+
+  @override
+  String get satilanDegerHint => 'Amount sold (of current value)';
+
+  @override
+  String get alinanTutarHint => 'Proceeds (added to wallet)';
+
+  @override
+  String get satTumunuSec => 'All';
+
+  @override
+  String satElindeki(Object qty, Object unit) {
+    return 'You hold: $qty $unit';
+  }
+
+  @override
+  String satGuncelDegerBilgi(Object value) {
+    return 'Current value: $value';
+  }
+
+  @override
+  String get satTamSatisUyari =>
+      'Selling the whole record: it will be deleted.';
+
+  @override
+  String satKismiKalanBilgi(Object qty, Object unit, Object value) {
+    return 'Remaining: $qty $unit · $value';
+  }
+
+  @override
+  String satKismiKalanTutar(Object value) {
+    return 'Remaining record: $value';
+  }
+
+  @override
+  String get gecerliSatisMiktariGirin => 'Enter a valid quantity to sell';
+
+  @override
+  String satisMiktariAsim(Object max) {
+    return 'You can\'t sell more than you hold (max $max)';
+  }
+
+  @override
+  String get gecerliAlinanTutarGirin => 'Enter a valid proceeds amount';
+
+  @override
+  String get satisFiyatTazeleIpucu =>
+      'The recorded value may be stale; fetch the live price to refresh the proceeds.';
+
+  @override
+  String get kismiSatisBasarili => 'Part of the investment was sold';
+
+  @override
+  String get kismiSatisGeriAlindi => 'Partial sale undone';
+
+  @override
+  String get alimTarihi => 'Purchase date';
+
+  @override
+  String get zatenBendeBaslik => 'I already own this asset';
+
+  @override
+  String get zatenBendeAciklama =>
+      'Bought before using the app; don\'t deduct its cost from the wallet';
+
+  @override
+  String alimCuzdandanDusulecek(Object amount, Object date) {
+    return '$amount will be deducted from the wallet as an expense dated $date.';
+  }
+
+  @override
+  String get alimCuzdandanDusulmeyecek =>
+      'Nothing will be deducted from the wallet; the record is only added to the portfolio.';
+
+  @override
+  String get birikimBosBaslik => 'No savings yet';
+
+  @override
+  String get birikimBosAciklama =>
+      'Build your portfolio by adding gold, a stock or your own asset. The purchase amount is deducted from your wallet as an expense.';
+
+  @override
+  String get yatirimEklendiMesaji => 'Investment added';
+
+  @override
+  String get yatirimGuncellendiMesaji => 'Investment updated';
+
+  @override
+  String get yatirimSatildiMesaji => 'Investment sold';
+
+  @override
+  String get yatirimKismenSatildiMesaji => 'Part of the investment was sold';
+
+  @override
+  String get yatirimSilindiDuzeltildiMesaji =>
+      'Record deleted, purchase entry corrected';
+
+  @override
+  String fiyatlarGuncellendiMesaji(Object count) {
+    return 'Refreshed the price of $count investments';
+  }
+
+  @override
+  String fiyatlarKismenGuncellendiMesaji(Object updated, Object failed) {
+    return '$updated refreshed, $failed failed';
+  }
+
+  @override
+  String get yenilenebilirYatirimYokMesaji =>
+      'No refreshable investment (symbol and quantity required)';
+
+  @override
+  String get fiyatlarAlinamadiMesaji =>
+      'Prices could not be fetched; values were left unchanged';
+
+  @override
+  String get bakiyeGuncellenemediUyarisi =>
+      ' (Warning: the balance could not be updated, refresh the wallet.)';
+
+  @override
+  String get yatirimGecmisiBuradaListelenecek =>
+      'Your investment history will be listed here.';
+
+  @override
+  String get hedefKategoriEv => 'Home';
+
+  @override
+  String get hedefKategoriDugun => 'Wedding';
+
+  @override
+  String get hedefKategoriAraba => 'Car';
+
+  @override
+  String get hedefKategoriAcilFon => 'Emergency fund';
+
+  @override
+  String get hedefKategoriEgitim => 'Education';
+
+  @override
+  String get hedefKategoriDiger => 'Other';
+
+  @override
+  String get maliyetVeyaDegerSifirdanBuyuk =>
+      'At least one of cost or current value must be greater than zero';
+
+  @override
+  String get hedeflerim => 'My goals';
+
+  @override
+  String get bagsizVarliklar => 'Unassigned assets';
+
+  @override
+  String get yeniHedefOlustur => 'Create a goal';
+
+  @override
+  String get hedefiDuzenle => 'Edit goal';
+
+  @override
+  String get hedefiSil => 'Delete goal';
+
+  @override
+  String hedefSilOnayBaslik(Object name) {
+    return 'Delete the goal $name?';
+  }
+
+  @override
+  String hedefSilOnayMesaj(Object count) {
+    return 'The goal is deleted. Its $count assets are NOT deleted; they move to the unassigned list.';
+  }
+
+  @override
+  String get hedefAdiHint => 'Goal name · e.g. House down payment';
+
+  @override
+  String get hedefTutariHint => 'Target amount';
+
+  @override
+  String get hedefAdiGirin => 'Enter a goal name';
+
+  @override
+  String get hedefAlaniEtiketi => 'Goal';
+
+  @override
+  String get hedefeBagliDegil => 'Not linked to a goal';
+
+  @override
+  String get hedefeVarlikEkle => 'Add an asset to this goal';
+
+  @override
+  String get hedefBosAciklama => 'No asset is linked to this goal yet.';
+
+  @override
+  String hedefIlerlemeSatiri(Object saved, Object target) {
+    return '$saved / $target';
+  }
+
+  @override
+  String hedefKalanTutar(Object amount) {
+    return '$amount to go';
+  }
+
+  @override
+  String get hedefeUlasildi => 'Goal reached';
+
+  @override
+  String hedefUyeSayisi(Object count) {
+    return '$count assets';
+  }
+
+  @override
+  String get hedefKaydedildiMesaji => 'Goal saved';
+
+  @override
+  String get hedefSilindiMesaji =>
+      'Goal deleted; its assets moved to the unassigned list';
+
+  @override
+  String get varlikTuruSec => 'What would you like to add?';
+
+  @override
+  String gecmisAlimUyarisi(Object date) {
+    return 'Purchase dated $date. \"Current Value\" is TODAY\'s value, not the value on that day; cost is what you paid back then.';
+  }
+
+  @override
+  String get bugunkuDegeriHesapla => 'Calculate today\'s value';
+
+  @override
+  String get hedefYonetimi => 'Goals';
+
+  @override
+  String get hedefYokAciklama =>
+      'No goals yet. Create one and gather gold, quarter coins and stocks under the same goal.';
+
+  @override
+  String get hedefEkleKisa => 'Add goal';
 }

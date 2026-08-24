@@ -67,6 +67,20 @@ void main() {
     dateAdded: DateTime(2026, 1, 1),
   );
 
+  final goldInvestment = InvestmentEntity(
+    id: 'inv_gold',
+    userId: 'user_123',
+    walletId: 'wallet_123',
+    name: 'Altın Birikimi',
+    amount: 4000.0,
+    currentValue: 4400.0,
+    type: InvestmentType.gold,
+    color: Colors.amber,
+    dateAdded: DateTime(2026, 1, 1),
+    symbol: 'gram-altin',
+    quantity: 2.0,
+  );
+
   final assetInvestment = InvestmentEntity(
     id: 'inv_asset',
     userId: 'user_123',
@@ -133,10 +147,10 @@ void main() {
     InvestmentEntity? savedInvestment;
 
     final completer = Completer<Either<Failure, LivePriceQuote>>();
-    when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold,
-    targetCurrency: 'TRY'))
-        .thenAnswer((_) => completer.future);
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'XAU',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -175,9 +189,11 @@ void main() {
 
     // Complete the live price fetch
     completer.complete(const Right(
-      LivePriceQuote(price: 1800.0, currency: 'TRY',
- convertedPrice: 1800.0,
- targetCurrency: 'TRY'),
+      LivePriceQuote(
+          price: 1800.0,
+          currency: 'TRY',
+          convertedPrice: 1800.0,
+          targetCurrency: 'TRY'),
     ));
     await tester.pumpAndSettle(); // Settle live price response
 
@@ -199,10 +215,10 @@ void main() {
 
   testWidgets('handles live price quote failure gracefully',
       (WidgetTester tester) async {
-    when(() =>
-            mockGetLiveQuoteUseCase(symbol: 'XAU', type: InvestmentType.gold,
-    targetCurrency: 'TRY'))
-        .thenAnswer(
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'XAU',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
       (_) async => const Left(ServerFailure('Connection Error')),
     );
 
@@ -221,5 +237,209 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Fiyat alınamadı.'), findsOneWidget);
+  });
+
+  testWidgets('farklı altın türü seçilince katkı yerine yeni kayıt sunulur',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    String? requestedType;
+    InvestmentEntity? saved;
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        ContributeSheet(
+          investment: goldInvestment,
+          walletCurrency: 'TRY',
+          onSave: (inv) => saved = inv,
+          onCreateForGoldType: (type) => requestedType = type,
+        ),
+      ),
+    );
+
+    // Kaydın kendi türünde form açık.
+    expect(find.text('Ekle'), findsOneWidget);
+    expect(find.text('Bu birikim Gram Altın cinsinden takip ediliyor.'),
+        findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Çeyrek Altın').last);
+    await tester.pumpAndSettle();
+
+    // Form kapanır: bu kayda çeyrek eklenemez.
+    expect(find.text('Çeyrek Altın bu kayda eklenemez'), findsOneWidget);
+    expect(find.text('Ekle'), findsNothing);
+    expect(find.byType(TextField), findsNothing);
+
+    await tester.tap(find.text('Çeyrek Altın için yeni kayıt aç'));
+    await tester.pumpAndSettle();
+
+    expect(requestedType, 'ceyrek-altin');
+    expect(saved, isNull, reason: 'karışık birimle kayıt güncellenmemeli');
+  });
+
+  testWidgets('tutar kipi güncel fiyat olmadan kaydetmez',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    InvestmentEntity? saved;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        ContributeSheet(
+          investment: goldInvestment,
+          walletCurrency: 'TRY',
+          onSave: (inv) => saved = inv,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Tutar ile'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '5.000');
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    expect(saved, isNull);
+    expect(find.text('Tutarı miktara çevirmek için önce güncel fiyatı getir.'),
+        findsOneWidget);
+  });
+
+  testWidgets('tutar kipi yatırılan parayı güncel fiyattan miktara çevirir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
+      (_) async => const Right(LivePriceQuote(
+        price: 2500.0,
+        currency: 'TRY',
+        convertedPrice: 2500.0,
+        targetCurrency: 'TRY',
+      )),
+    );
+
+    InvestmentEntity? saved;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        ContributeSheet(
+          investment: goldInvestment,
+          walletCurrency: 'TRY',
+          onSave: (inv) => saved = inv,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Tutar ile'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '5.000');
+    await tester.tap(find.text('Güncel Fiyatı Getir'));
+    await tester.pumpAndSettle();
+
+    // 5.000 / 2.500 = 2 gram eklenecek.
+    expect(find.text('≈ 2 Gram Altın eklenecek'), findsOneWidget);
+
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    expect(saved, isNotNull);
+    expect(saved!.quantity, 4.0); // 2 + 2
+    expect(saved!.amount, 9000.0); // 4000 + 5000
+    expect(saved!.currentValue, 10000.0); // 4 × 2500
+  });
+
+  testWidgets('miktar kipinde ödenen boşsa hediye uyarısı görünür',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        ContributeSheet(
+          investment: goldInvestment,
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+
+    expect(find.textContaining('bedelsiz (hediye) sayılacak'), findsNothing);
+
+    await tester.enterText(find.byType(TextField).first, '1');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('bedelsiz (hediye) sayılacak'), findsOneWidget);
+  });
+
+  testWidgets('fiyat miktardan ÖNCE çekilse de ödenen tutar önerilir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
+      (_) async => const Right(LivePriceQuote(
+        price: 2500.0,
+        currency: 'TRY',
+        convertedPrice: 2500.0,
+        targetCurrency: 'TRY',
+      )),
+    );
+
+    InvestmentEntity? saved;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        ContributeSheet(
+          investment: goldInvestment,
+          walletCurrency: 'TRY',
+          onSave: (inv) => saved = inv,
+        ),
+      ),
+    );
+
+    // Kullanıcının doğal sırası: önce fiyata bak, sonra miktarı yaz.
+    await tester.tap(find.text('Güncel Fiyatı Getir'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '2');
+    await tester.pumpAndSettle();
+
+    // Ödenen alanı kendiliğinden dolar; alım sessizce hediyeye dönmez.
+    expect(find.textContaining('bedelsiz (hediye) sayılacak'), findsNothing);
+
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    expect(saved, isNotNull);
+    expect(saved!.quantity, 4.0);
+    expect(saved!.amount, 9000.0, reason: '2 × 2.500 maliyete eklenmeli');
   });
 }

@@ -4,11 +4,13 @@ import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
+import 'package:cunehat/features/investments/domain/usecases/goal_usecases.dart';
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
@@ -28,12 +30,20 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
   final UpdateInvestmentUseCase updateInvestmentUseCase;
   final DeleteInvestmentUseCase deleteInvestmentUseCase;
   final GetLiveQuoteUseCase getLiveQuoteUseCase;
+  final GetGoalsUseCase getGoalsUseCase;
+  final SaveGoalUseCase saveGoalUseCase;
+  final DeleteGoalUseCase deleteGoalUseCase;
   final WalletMetricsService walletMetricsService;
   final TransactionsChangedNotifier transactionsChangedNotifier;
 
   /// Defter dışarıdan değişince aynı listeyi tazelemek için son sorgu.
   String? _lastUserId;
   String? _lastWalletId;
+
+  /// Son başarılı liste. Hata yayınlandıktan sonra geri konur: sayfa yalnız
+  /// [InvestmentLoaded] durumunda veri çiziyor, hata durumunda portföyü
+  /// SIFIR gösteriyordu — kullanıcı kayıtlarını kaybettiğini sanıyordu.
+  InvestmentLoaded? _lastLoaded;
   StreamSubscription<TransactionsChange>? _changedSubscription;
 
   InvestmentBloc({
@@ -42,6 +52,9 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
     required this.updateInvestmentUseCase,
     required this.deleteInvestmentUseCase,
     required this.getLiveQuoteUseCase,
+    required this.getGoalsUseCase,
+    required this.saveGoalUseCase,
+    required this.deleteGoalUseCase,
     required this.walletMetricsService,
     required this.transactionsChangedNotifier,
   }) : super(InvestmentInitial()) {
@@ -64,12 +77,59 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
         walletId: event.walletId,
       );
 
+      // Hedefler listeyle BİRLİKTE okunur: ilerleme üyelerden hesaplandığı
+      // için ikisi ayrı karelerde gelirse hedef kartları bir kare boş çizilir.
+      final goalsResult = await getGoalsUseCase(
+        userId: event.userId,
+        walletId: event.walletId,
+      );
+      final goals = goalsResult.getOrElse(() => const []);
+
       result.fold(
-        (failure) => emit(InvestmentError(failure.message)),
+        (failure) => _emitError(emit, RawFailureNotice(failure.message)),
         (investments) {
           final total =
               investments.fold<double>(0, (sum, item) => sum + item.amount);
-          emit(InvestmentLoaded(investments, totalAmount: total));
+          final loaded = InvestmentLoaded(
+            investments,
+            goals: goals,
+            totalAmount: total,
+          );
+          _lastLoaded = loaded;
+          emit(loaded);
+        },
+      );
+    });
+
+    // Hedef Kaydet (ekle/güncelle). Defterle ilişkisi YOK: hedef bir kap,
+    // para hareketi değil — nakit kuplajı üyelerin kendi kayıtlarında.
+    on<SaveGoalEvent>((event, emit) async {
+      emit(InvestmentLoading());
+      final result = await saveGoalUseCase(event.goal);
+      await result.fold(
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
+        (_) async {
+          emit(const InvestmentActionSuccess(GoalSavedNotice()));
+          add(GetInvestmentsEvent(
+            userId: event.goal.userId,
+            walletId: event.goal.walletId,
+          ));
+        },
+      );
+    });
+
+    // Hedef Sil: üyeler SİLİNMEZ, bağları koparılır.
+    on<DeleteGoalEvent>((event, emit) async {
+      emit(InvestmentLoading());
+      final result = await deleteGoalUseCase(event.goal);
+      await result.fold(
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
+        (_) async {
+          emit(const InvestmentActionSuccess(GoalDeletedNotice()));
+          add(GetInvestmentsEvent(
+            userId: event.goal.userId,
+            walletId: event.goal.walletId,
+          ));
         },
       );
     });
@@ -80,20 +140,32 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       final result = await addInvestmentUseCase.call(event.investment);
 
       await result.fold(
-        (failure) async => emit(InvestmentError(failure.message)),
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
         (_) async {
           // Nakit kuplajı: yatırım alımı → maliyet kadar gider.
-          final cashOk = await walletMetricsService.recordCashMovement(
-            walletId: event.walletId,
-            userId: event.userId,
-            amount: event.investment.amount,
-            isIncome: false,
-            title: event.investment.name,
-            tag: CashMovementTags.investmentBuy,
-          );
+          //
+          // İki incelik:
+          // - Yalnız DEFTERE İŞLENECEK kısım yazılır. "Bu varlık zaten bende"
+          //   denen tutar (unbookedCost) cüzdandan hiç çıkmadı; bugünün
+          //   defterine sahte gider yazmak bakiyeyi olduğundan düşük gösterir.
+          // - Gider kaydın TARİHİNE yazılır (bugüne değil): geçmişte alınmış
+          //   bir varlık kendi ayında görünür. Yeni kayıtta tarih zaten bugün.
+          final bookedCost = event.investment.bookedCost;
+          var cashOk = true;
+          if (bookedCost > 0) {
+            cashOk = await walletMetricsService.recordCashMovement(
+              walletId: event.walletId,
+              userId: event.userId,
+              amount: bookedCost,
+              isIncome: false,
+              title: event.investment.name,
+              tag: CashMovementTags.investmentBuy,
+              date: event.investment.dateAdded,
+            );
+          }
           await _safeSyncInvestment(event.walletId);
-          emit(InvestmentActionSuccess(
-              'Yatırım başarıyla eklendi${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+          emit(InvestmentActionSuccess(const InvestmentAddedNotice(),
+              cashOk: cashOk));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -106,7 +178,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       final result = await updateInvestmentUseCase.call(event.investment);
 
       await result.fold(
-        (failure) async => emit(InvestmentError(failure.message)),
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
         (_) async {
           // Mutabakat: maliyet (anapara) değişimi kadar nakit.
           // Maliyet arttı → gider; azaldı → gelir. (currentValue değişimi
@@ -124,8 +196,8 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
             );
           }
           await _safeSyncInvestment(event.walletId);
-          emit(InvestmentActionSuccess(
-              'Yatırım güncellendi${cashOk ? '' : CashCouplingMixin.cashWarning}'));
+          emit(InvestmentActionSuccess(const InvestmentUpdatedNotice(),
+              cashOk: cashOk));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -144,7 +216,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       );
 
       await listResult.fold(
-        (failure) async => emit(InvestmentError(failure.message)),
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
         (investments) async {
           final targets = investments
               .where((inv) =>
@@ -153,8 +225,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               .toList();
 
           if (targets.isEmpty) {
-            emit(const InvestmentError(
-                'Yenilenebilir yatırım yok (sembol ve miktar gerekli)'));
+            _emitError(emit, const NoRefreshablePricesNotice());
             return;
           }
 
@@ -188,13 +259,59 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
 
           await _safeSyncInvestment(event.walletId);
           if (updatedCount == 0) {
-            emit(const InvestmentError(
-                'Fiyatlar alınamadı, değerler değiştirilmedi'));
+            emit(const InvestmentError(PricesUnavailableNotice()));
+            // Bu yol zaten aşağıda listeyi yeniden yüklüyor; _emitError
+            // gereksiz ikinci bir kare çizdirirdi.
           } else {
-            emit(InvestmentActionSuccess(failedCount == 0
-                ? '$updatedCount yatırımın fiyatı güncellendi'
-                : '$updatedCount güncellendi, $failedCount alınamadı'));
+            emit(InvestmentActionSuccess(PricesRefreshedNotice(
+              updated: updatedCount,
+              failed: failedCount,
+            )));
           }
+          add(GetInvestmentsEvent(
+              userId: event.userId, walletId: event.walletId));
+        },
+      );
+    });
+
+    // Kısmi Satış: kayıt kalır, elden çıkan kadarı cüzdana gelir olur.
+    on<PartialSellInvestmentEvent>((event, emit) async {
+      emit(InvestmentLoading());
+      final result = await updateInvestmentUseCase.call(event.remaining);
+
+      await result.fold(
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
+        (_) async {
+          // Bedelsiz devir (proceeds = 0) defterde 0 tutarlı bir hareket
+          // bırakmasın; bkz. CreateInvestmentEvent'teki aynı koruma.
+          var cashResult = const CashWriteResult(ok: true);
+          if (event.proceeds > 0) {
+            cashResult = await walletMetricsService.recordCashMovements(
+              walletId: event.walletId,
+              entries: [
+                CashMovement(
+                  userId: event.userId,
+                  amount: event.proceeds,
+                  isIncome: true,
+                  title: 'Yatırım Satışı',
+                  tag: CashMovementTags.investmentSell,
+                ),
+              ],
+            );
+          }
+          await _safeSyncInvestment(event.walletId);
+          emit(InvestmentActionSuccess(
+            const InvestmentPartiallySoldNotice(),
+            cashOk: cashResult.ok,
+            // Geri alma kaydı ESKİ hâliyle geri yazar (aynı kimlik → üzerine
+            // yazar) ve satış gelirini defterden siler.
+            undo: InvestmentDeletionUndo(
+              investment: event.previous,
+              userId: event.userId,
+              walletId: event.walletId,
+              reversalTransactionIds: cashResult.transactionIds,
+            ),
+          ));
           add(GetInvestmentsEvent(
               userId: event.userId, walletId: event.walletId));
         },
@@ -216,7 +333,7 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       final result = await deleteInvestmentUseCase.call(event.id);
 
       await result.fold(
-        (failure) async => emit(InvestmentError(failure.message)),
+        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
         (_) async {
           // Nakit kuplajı: satışta güncel değer kadar gelir. Satış DEĞİLSE
           // (hatalı kayıt silme) eklemede yazılan alım gideri ters kayıtla
@@ -239,8 +356,9 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               ],
             );
           } else if (event.amount > 0) {
-            // event.amount = güncel maliyet (alım + Σ maliyet güncellemeleri);
-            // kümülatif alım hareketlerini birebir tersine çevirir.
+            // event.amount = deftere İŞLENMİŞ maliyet (alım + Σ maliyet
+            // güncellemeleri, "zaten bende" kısmı hariç); kümülatif alım
+            // hareketlerini birebir tersine çevirir.
             //
             // Ters kayıt kaydın AÇILIŞ tarihine yazılır, bugüne değil: hatalı
             // girilip silinen kayıt (baskın durum) böylece kendi ayında
@@ -265,9 +383,9 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           await _safeSyncInvestment(event.walletId);
           emit(InvestmentActionSuccess(
             event.recordSale
-                ? 'Yatırım satıldı${cashOk ? '' : CashCouplingMixin.cashWarning}'
-                : 'Kayıt silindi, alım kaydı düzeltildi'
-                    '${cashOk ? '' : CashCouplingMixin.cashWarning}',
+                ? const InvestmentSoldNotice()
+                : const InvestmentDeletedNotice(),
+            cashOk: cashOk,
             undo: snapshot == null
                 ? null
                 : InvestmentDeletionUndo(
@@ -288,6 +406,15 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
   Future<void> close() {
     _changedSubscription?.cancel();
     return super.close();
+  }
+
+  /// Hatayı yayınlar ve ardından son bilinen listeyi geri koyar: mesaj
+  /// (snackbar) görülür ama ekran boşalmaz. Liste hiç yüklenmemişse yalnız
+  /// hata kalır.
+  void _emitError(Emitter<InvestmentState> emit, InvestmentNotice notice) {
+    emit(InvestmentError(notice));
+    final last = _lastLoaded;
+    if (last != null) emit(last);
   }
 
   Future<void> _safeSyncInvestment(String walletId) => safeSyncMetric(

@@ -9,17 +9,20 @@ import 'package:cunehat/core/services/deletion_undo_service.dart';
 ///
 /// [context] yalnız metinleri okumak için kullanılır (senkron); mesajın
 /// yaşam döngüsü çağıran widget'a bağlı DEĞİLDİR (bkz. [AppMessenger]).
+/// [undoneMessage] verilmezse "Silme geri alındı" kullanılır; silme dışı geri
+/// alınabilir eylemler (ör. kısmi satış) kendi cümlesini geçirir.
 void showDeletionMessage(
   BuildContext context, {
   required String message,
   required DeletionUndo? undo,
+  String? undoneMessage,
 }) {
   final l = context.l10n;
   showDeletionMessageWithTexts(
     message: message,
     undo: undo,
     undoLabel: l.geriAl,
-    undoneMessage: l.silmeGeriAlindi,
+    undoneMessage: undoneMessage ?? l.silmeGeriAlindi,
     undoFailedMessage: l.silmeGeriAlinamadi,
   );
 }

@@ -60,8 +60,7 @@ void main() {
     color: Colors.amber,
     dateAdded: DateTime(2026, 1, 1),
     symbol: 'XAU',
-    quantity: 0.5,
-    targetAmount: 5000.0, // isGoal = true
+    quantity: 0.5, // isGoal = true
   );
 
   final stockNonRefreshableInvestment = InvestmentEntity(

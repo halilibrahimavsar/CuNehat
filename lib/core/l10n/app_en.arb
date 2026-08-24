@@ -726,8 +726,8 @@
   },
   "alinanMiktarAltinHint": "Amount bought (e.g. gram/qty)",
   "alinanAdetHisseHint": "Shares bought (lot)",
-  "odenenTutarHint": "Amount paid (₺) · 0 if gift",
-  "tutarHint": "Amount (₺)",
+  "odenenTutarHint": "Amount paid · 0 if gift",
+  "tutarHint": "Amount",
   "gecerliMiktarGirin": "Enter a valid amount",
   "gecerliOdenenTutarGirin": "Enter a valid paid amount",
   "gecerliTutarGirin": "Enter a valid amount",
@@ -1822,5 +1822,227 @@
   "dateRangeLast3Months": "Last 3 Months",
   "dateRangeThisYear": "This Year",
   "txPeriodToday": "Today",
-  "txPeriodYesterday": "Yesterday"
+  "txPeriodYesterday": "Yesterday",
+  "lot": "lot",
+  "katkiKipiMiktar": "By quantity",
+  "katkiKipiTutar": "By amount",
+  "katkiTakipBirimi": "This holding is tracked in {unit}.",
+  "@katkiTakipBirimi": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "katkiFarkliTurBaslik": "{unit} can't be added to this record",
+  "@katkiFarkliTurBaslik": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "katkiFarkliTurAciklama": "This record is tracked in {recordUnit}; adding {selectedUnit} would mix both quantity and value. Create a separate record for that type.",
+  "@katkiFarkliTurAciklama": {
+    "placeholders": {
+      "recordUnit": {},
+      "selectedUnit": {}
+    }
+  },
+  "katkiFarkliTurButon": "Create a new {unit} record",
+  "@katkiFarkliTurButon": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "katkiMiktaraCevrilecek": "≈ {qty} {unit} will be added",
+  "@katkiMiktaraCevrilecek": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "katkiFiyatGerekli": "Fetch the live price first to convert the amount into quantity.",
+  "katkiOdenenBosUyari": "Amount paid is empty: this purchase counts as a gift and nothing is deducted from your wallet.",
+  "katkiTutarKipiAciklama": "Enter the amount you put in; it is converted into quantity at the live price.",
+  "katkiYatirilanTutarHint": "Amount invested",
+  "duzenlemeTurDegisikligiUyari": "Type is changing: the recorded quantity of {qty} will now count as {newUnit}, and price refresh will value it accordingly. If you bought a different type, leave this record alone and create a new one.",
+  "@duzenlemeTurDegisikligiUyari": {
+    "placeholders": {
+      "qty": {},
+      "newUnit": {}
+    }
+  },
+  "alinanMiktarBirimHint": "Quantity bought ({unit})",
+  "@alinanMiktarBirimHint": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "yeniAlimMiktarVeyaTutar": "New purchase: by quantity or by amount",
+  "kartBirimFiyat": "Unit {price}",
+  "@kartBirimFiyat": {
+    "placeholders": {
+      "price": {}
+    }
+  },
+  "kartMiktarBirim": "{qty} {unit}",
+  "@kartMiktarBirim": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "yatirimTuruHisse": "Stock",
+  "yatirimTuruAltin": "Gold",
+  "yatirimTuruOzel": "Custom",
+  "satisSheetBaslik": "{name} · Sell",
+  "@satisSheetBaslik": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "satilanMiktarBirimHint": "Quantity sold ({unit})",
+  "@satilanMiktarBirimHint": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "satilanDegerHint": "Amount sold (of current value)",
+  "alinanTutarHint": "Proceeds (added to wallet)",
+  "satTumunuSec": "All",
+  "satElindeki": "You hold: {qty} {unit}",
+  "@satElindeki": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "satGuncelDegerBilgi": "Current value: {value}",
+  "@satGuncelDegerBilgi": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "satTamSatisUyari": "Selling the whole record: it will be deleted.",
+  "satKismiKalanBilgi": "Remaining: {qty} {unit} · {value}",
+  "@satKismiKalanBilgi": {
+    "placeholders": {
+      "qty": {},
+      "unit": {},
+      "value": {}
+    }
+  },
+  "satKismiKalanTutar": "Remaining record: {value}",
+  "@satKismiKalanTutar": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "gecerliSatisMiktariGirin": "Enter a valid quantity to sell",
+  "satisMiktariAsim": "You can't sell more than you hold (max {max})",
+  "@satisMiktariAsim": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "gecerliAlinanTutarGirin": "Enter a valid proceeds amount",
+  "satisFiyatTazeleIpucu": "The recorded value may be stale; fetch the live price to refresh the proceeds.",
+  "kismiSatisBasarili": "Part of the investment was sold",
+  "kismiSatisGeriAlindi": "Partial sale undone",
+  "alimTarihi": "Purchase date",
+  "zatenBendeBaslik": "I already own this asset",
+  "zatenBendeAciklama": "Bought before using the app; don't deduct its cost from the wallet",
+  "alimCuzdandanDusulecek": "{amount} will be deducted from the wallet as an expense dated {date}.",
+  "@alimCuzdandanDusulecek": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "alimCuzdandanDusulmeyecek": "Nothing will be deducted from the wallet; the record is only added to the portfolio.",
+  "birikimBosBaslik": "No savings yet",
+  "birikimBosAciklama": "Build your portfolio by adding gold, a stock or your own asset. The purchase amount is deducted from your wallet as an expense.",
+  "yatirimEklendiMesaji": "Investment added",
+  "yatirimGuncellendiMesaji": "Investment updated",
+  "yatirimSatildiMesaji": "Investment sold",
+  "yatirimKismenSatildiMesaji": "Part of the investment was sold",
+  "yatirimSilindiDuzeltildiMesaji": "Record deleted, purchase entry corrected",
+  "fiyatlarGuncellendiMesaji": "Refreshed the price of {count} investments",
+  "@fiyatlarGuncellendiMesaji": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "fiyatlarKismenGuncellendiMesaji": "{updated} refreshed, {failed} failed",
+  "@fiyatlarKismenGuncellendiMesaji": {
+    "placeholders": {
+      "updated": {},
+      "failed": {}
+    }
+  },
+  "yenilenebilirYatirimYokMesaji": "No refreshable investment (symbol and quantity required)",
+  "fiyatlarAlinamadiMesaji": "Prices could not be fetched; values were left unchanged",
+  "bakiyeGuncellenemediUyarisi": " (Warning: the balance could not be updated, refresh the wallet.)",
+  "yatirimGecmisiBuradaListelenecek": "Your investment history will be listed here.",
+  "hedefKategoriEv": "Home",
+  "hedefKategoriDugun": "Wedding",
+  "hedefKategoriAraba": "Car",
+  "hedefKategoriAcilFon": "Emergency fund",
+  "hedefKategoriEgitim": "Education",
+  "hedefKategoriDiger": "Other",
+  "maliyetVeyaDegerSifirdanBuyuk": "At least one of cost or current value must be greater than zero",
+  "hedeflerim": "My goals",
+  "bagsizVarliklar": "Unassigned assets",
+  "yeniHedefOlustur": "Create a goal",
+  "hedefiDuzenle": "Edit goal",
+  "hedefiSil": "Delete goal",
+  "hedefSilOnayBaslik": "Delete the goal {name}?",
+  "@hedefSilOnayBaslik": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "hedefSilOnayMesaj": "The goal is deleted. Its {count} assets are NOT deleted; they move to the unassigned list.",
+  "@hedefSilOnayMesaj": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hedefAdiHint": "Goal name · e.g. House down payment",
+  "hedefTutariHint": "Target amount",
+  "hedefAdiGirin": "Enter a goal name",
+  "hedefAlaniEtiketi": "Goal",
+  "hedefeBagliDegil": "Not linked to a goal",
+  "hedefeVarlikEkle": "Add an asset to this goal",
+  "hedefBosAciklama": "No asset is linked to this goal yet.",
+  "hedefIlerlemeSatiri": "{saved} / {target}",
+  "@hedefIlerlemeSatiri": {
+    "placeholders": {
+      "saved": {},
+      "target": {}
+    }
+  },
+  "hedefKalanTutar": "{amount} to go",
+  "@hedefKalanTutar": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "hedefeUlasildi": "Goal reached",
+  "hedefUyeSayisi": "{count} assets",
+  "@hedefUyeSayisi": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hedefKaydedildiMesaji": "Goal saved",
+  "hedefSilindiMesaji": "Goal deleted; its assets moved to the unassigned list",
+  "varlikTuruSec": "What would you like to add?",
+  "gecmisAlimUyarisi": "Purchase dated {date}. \"Current Value\" is TODAY's value, not the value on that day; cost is what you paid back then.",
+  "@gecmisAlimUyarisi": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "bugunkuDegeriHesapla": "Calculate today's value",
+  "hedefYonetimi": "Goals",
+  "hedefYokAciklama": "No goals yet. Create one and gather gold, quarter coins and stocks under the same goal.",
+  "hedefEkleKisa": "Add goal"
 }

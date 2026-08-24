@@ -2,18 +2,21 @@ import 'dart:ui';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/delete_investment_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_investments_usecase.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
+import 'package:cunehat/features/investments/domain/usecases/goal_usecases.dart';
 import 'package:cunehat/features/investments/domain/usecases/update_investment_usecase.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/services/deletion_undo_service.dart';
 
 class MockGetInvestmentsUseCase extends Mock implements GetInvestmentsUseCase {}
 
@@ -29,6 +32,12 @@ class MockGetLiveQuoteUseCase extends Mock implements GetLiveQuoteUseCase {}
 
 class MockWalletMetricsService extends Mock implements WalletMetricsService {}
 
+class MockGetGoalsUseCase extends Mock implements GetGoalsUseCase {}
+
+class MockSaveGoalUseCase extends Mock implements SaveGoalUseCase {}
+
+class MockDeleteGoalUseCase extends Mock implements DeleteGoalUseCase {}
+
 void main() {
   late MockGetInvestmentsUseCase mockGetInvestmentsUseCase;
   late MockAddInvestmentUseCase mockAddInvestmentUseCase;
@@ -36,6 +45,9 @@ void main() {
   late MockDeleteInvestmentUseCase mockDeleteUseCase;
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
   late MockWalletMetricsService mockMetricsService;
+  late MockGetGoalsUseCase mockGetGoalsUseCase;
+  late MockSaveGoalUseCase mockSaveGoalUseCase;
+  late MockDeleteGoalUseCase mockDeleteGoalUseCase;
   late InvestmentBloc investmentBloc;
   late TransactionsChangedNotifier changedNotifier;
 
@@ -64,6 +76,14 @@ void main() {
     mockDeleteUseCase = MockDeleteInvestmentUseCase();
     mockGetLiveQuoteUseCase = MockGetLiveQuoteUseCase();
     mockMetricsService = MockWalletMetricsService();
+    mockGetGoalsUseCase = MockGetGoalsUseCase();
+    mockSaveGoalUseCase = MockSaveGoalUseCase();
+    mockDeleteGoalUseCase = MockDeleteGoalUseCase();
+    // Hedefler listeyle birlikte okunuyor; varsayılan olarak boş.
+    when(() => mockGetGoalsUseCase(
+          userId: any(named: 'userId'),
+          walletId: any(named: 'walletId'),
+        )).thenAnswer((_) async => const Right([]));
 
     investmentBloc = InvestmentBloc(
       getInvestmentsUseCase: mockGetInvestmentsUseCase,
@@ -71,6 +91,9 @@ void main() {
       updateInvestmentUseCase: mockUpdateUseCase,
       deleteInvestmentUseCase: mockDeleteUseCase,
       getLiveQuoteUseCase: mockGetLiveQuoteUseCase,
+      getGoalsUseCase: mockGetGoalsUseCase,
+      saveGoalUseCase: mockSaveGoalUseCase,
+      deleteGoalUseCase: mockDeleteGoalUseCase,
       walletMetricsService: mockMetricsService,
       transactionsChangedNotifier: changedNotifier,
     );
@@ -126,7 +149,7 @@ void main() {
           userId: 'user_123', walletId: 'wallet_123')),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentError('Fetch Error'),
+        const InvestmentError(RawFailureNotice('Fetch Error')),
       ],
     );
   });
@@ -144,6 +167,7 @@ void main() {
               isIncome: false,
               title: 'Apple Inc.',
               tag: CashMovementTags.investmentBuy,
+              date: any(named: 'date'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
@@ -160,7 +184,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Yatırım başarıyla eklendi'),
+        const InvestmentActionSuccess(InvestmentAddedNotice()),
         InvestmentLoading(),
         InvestmentLoaded([testInvestment], totalAmount: 1000.0),
       ],
@@ -173,6 +197,7 @@ void main() {
               isIncome: false,
               title: 'Apple Inc.',
               tag: CashMovementTags.investmentBuy,
+              date: any(named: 'date'),
             )).called(1);
         verify(() => mockMetricsService.syncInvestment('wallet_123')).called(1);
       },
@@ -190,6 +215,7 @@ void main() {
               isIncome: any(named: 'isIncome'),
               title: any(named: 'title'),
               tag: any(named: 'tag'),
+              date: any(named: 'date'),
             )).thenAnswer((_) async => false);
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
@@ -206,8 +232,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess(
-            'Yatırım başarıyla eklendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        const InvestmentActionSuccess(InvestmentAddedNotice(), cashOk: false),
         InvestmentLoading(),
         InvestmentLoaded([testInvestment], totalAmount: 1000.0),
       ],
@@ -227,7 +252,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentError('Add failed'),
+        const InvestmentError(RawFailureNotice('Add failed')),
       ],
       verify: (_) {
         verifyNever(() => mockMetricsService.recordCashMovement(
@@ -237,7 +262,79 @@ void main() {
               isIncome: any(named: 'isIncome'),
               title: any(named: 'title'),
               tag: any(named: 'tag'),
+              date: any(named: 'date'),
             ));
+      },
+    );
+    blocTest<InvestmentBloc, InvestmentState>(
+      '"zaten bende" kaydı deftere gider yazmaz',
+      build: () {
+        when(() => mockAddInvestmentUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(CreateInvestmentEvent(
+        investment: testInvestment.copyWith(unbookedCost: 1000.0),
+        userId: 'user_123',
+        walletId: 'wallet_123',
+      )),
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+            ));
+      },
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'alım gideri BUGÜNE değil kaydın alım TARİHİNE yazılır',
+      build: () {
+        when(() => mockAddInvestmentUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(CreateInvestmentEvent(
+        // Geçen ay alınmış varlık: gider kendi ayında görünmeli.
+        investment: testInvestment.copyWith(dateAdded: DateTime(2026, 5, 3)),
+        userId: 'user_123',
+        walletId: 'wallet_123',
+      )),
+      verify: (_) {
+        verify(() => mockMetricsService.recordCashMovement(
+              walletId: 'wallet_123',
+              userId: 'user_123',
+              amount: 1000.0,
+              isIncome: false,
+              title: any(named: 'title'),
+              tag: CashMovementTags.investmentBuy,
+              date: DateTime(2026, 5, 3),
+            )).called(1);
       },
     );
   });
@@ -257,6 +354,7 @@ void main() {
                   false, // positive cost diff means we spent money (expense)
               title: 'Yatırım güncellendi: Apple Inc.',
               tag: CashMovementTags.investmentBuy,
+              date: any(named: 'date'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
@@ -275,7 +373,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Yatırım güncellendi'),
+        const InvestmentActionSuccess(InvestmentUpdatedNotice()),
         InvestmentLoading(),
         InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)],
             totalAmount: 1500.0),
@@ -296,6 +394,7 @@ void main() {
                   true, // negative cost diff means we got money back (income)
               title: 'Yatırım güncellendi: Apple Inc.',
               tag: CashMovementTags.investmentBuy,
+              date: any(named: 'date'),
             )).thenAnswer((_) async => true);
         when(() => mockMetricsService.syncInvestment('wallet_123'))
             .thenAnswer((_) async => true);
@@ -314,7 +413,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Yatırım güncellendi'),
+        const InvestmentActionSuccess(InvestmentUpdatedNotice()),
         InvestmentLoading(),
         InvestmentLoaded([testInvestment.copyWith(amount: 800.0)],
             totalAmount: 800.0),
@@ -343,7 +442,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Yatırım güncellendi'),
+        const InvestmentActionSuccess(InvestmentUpdatedNotice()),
         InvestmentLoading(),
         InvestmentLoaded([testInvestment], totalAmount: 1000.0),
       ],
@@ -355,6 +454,7 @@ void main() {
               isIncome: any(named: 'isIncome'),
               title: any(named: 'title'),
               tag: any(named: 'tag'),
+              date: any(named: 'date'),
             ));
       },
     );
@@ -392,7 +492,8 @@ void main() {
     const testQuote = LivePriceQuote(
       price: 1500.0,
       currency: 'USD',
-      convertedPrice: 1600.0, targetCurrency: 'TRY',
+      convertedPrice: 1600.0,
+      targetCurrency: 'TRY',
     );
 
     blocTest<InvestmentBloc, InvestmentState>(
@@ -420,7 +521,8 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('1 yatırımın fiyatı güncellendi'),
+        const InvestmentActionSuccess(
+            PricesRefreshedNotice(updated: 1, failed: 0)),
         InvestmentLoading(),
         InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
       ],
@@ -509,8 +611,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentError(
-            'Yenilenebilir yatırım yok (sembol ve miktar gerekli)'),
+        const InvestmentError(NoRefreshablePricesNotice()),
       ],
     );
 
@@ -538,7 +639,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentError('Fiyatlar alınamadı, değerler değiştirilmedi'),
+        const InvestmentError(PricesUnavailableNotice()),
         InvestmentLoading(),
         InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
       ],
@@ -570,14 +671,16 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('1 yatırımın fiyatı güncellendi'),
+        const InvestmentActionSuccess(
+            PricesRefreshedNotice(updated: 1, failed: 0)),
         InvestmentLoading(),
         InvestmentLoaded([refreshableInvestment], totalAmount: 2000.0),
       ],
       verify: (_) {
         verify(() => mockGetLiveQuoteUseCase(
-            symbol: 'XAU', type: InvestmentType.gold,
-                targetCurrency: 'TRY')).called(1);
+            symbol: 'XAU',
+            type: InvestmentType.gold,
+            targetCurrency: 'TRY')).called(1);
       },
     );
 
@@ -614,7 +717,8 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('1 güncellendi, 1 alınamadı'),
+        const InvestmentActionSuccess(
+            PricesRefreshedNotice(updated: 1, failed: 1)),
         InvestmentLoading(),
         InvestmentLoaded([refreshableInvestment, secondInvestment],
             totalAmount: 5000.0),
@@ -635,6 +739,7 @@ void main() {
             isIncome: any(named: 'isIncome'),
             title: any(named: 'title'),
             tag: any(named: 'tag'),
+            date: any(named: 'date'),
           )).thenAnswer((_) async => false);
       when(() => mockMetricsService.syncInvestment('wallet_123'))
           .thenAnswer((_) async => true);
@@ -653,13 +758,237 @@ void main() {
     )),
     expect: () => [
       InvestmentLoading(),
-      const InvestmentActionSuccess(
-          'Yatırım güncellendi (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+      const InvestmentActionSuccess(InvestmentUpdatedNotice(), cashOk: false),
       InvestmentLoading(),
       InvestmentLoaded([testInvestment.copyWith(amount: 1500.0)],
           totalAmount: 1500.0),
     ],
   );
+
+  blocTest<InvestmentBloc, InvestmentState>(
+    'hata yayınlandıktan sonra son liste geri konur (ekran boşalmaz)',
+    build: () {
+      when(() => mockGetInvestmentsUseCase(
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          )).thenAnswer((_) async => Right([testInvestment]));
+      when(() => mockUpdateUseCase(any()))
+          .thenAnswer((_) async => const Left(CacheFailure('Yazılamadı')));
+      return investmentBloc;
+    },
+    act: (bloc) async {
+      bloc.add(GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123'));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(UpdateInvestmentEvent(
+        investment: testInvestment,
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        prevAmount: 1000.0,
+        newAmount: 1000.0,
+      ));
+    },
+    expect: () => [
+      InvestmentLoading(),
+      InvestmentLoaded([testInvestment], totalAmount: 1000.0),
+      InvestmentLoading(),
+      const InvestmentError(RawFailureNotice('Yazılamadı')),
+      // Hata mesajı gösterilir ama portföy "0 yatırım"a düşmez.
+      InvestmentLoaded([testInvestment], totalAmount: 1000.0),
+    ],
+  );
+
+  group('hedef olayları', () {
+    final goal = GoalEntity(
+      id: 'goal_1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Ev peşinatı',
+      targetAmount: 100000,
+      category: 'ev',
+      color: const Color(0xFF00897B),
+      createdAt: DateTime(2026, 1, 1),
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'liste hedeflerle BİRLİKTE yüklenir',
+      build: () {
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => Right([testInvestment]));
+        when(() => mockGetGoalsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => Right([goal]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc
+          .add(GetInvestmentsEvent(userId: 'user_123', walletId: 'wallet_123')),
+      expect: () => [
+        InvestmentLoading(),
+        InvestmentLoaded([testInvestment], goals: [goal], totalAmount: 1000.0),
+      ],
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'hedef kaydetmek DEFTERE dokunmaz (hedef bir kap, para hareketi değil)',
+      build: () {
+        when(() => mockSaveGoalUseCase(goal))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(SaveGoalEvent(goal)),
+      expect: () => [
+        InvestmentLoading(),
+        const InvestmentActionSuccess(GoalSavedNotice()),
+        InvestmentLoading(),
+        const InvestmentLoaded([], totalAmount: 0.0),
+      ],
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+            ));
+        verifyNever(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            ));
+      },
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'hedef silme başarılı olunca liste tazelenir',
+      build: () {
+        when(() => mockDeleteGoalUseCase(goal))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(DeleteGoalEvent(goal)),
+      expect: () => [
+        InvestmentLoading(),
+        const InvestmentActionSuccess(GoalDeletedNotice()),
+        InvestmentLoading(),
+        const InvestmentLoaded([], totalAmount: 0.0),
+      ],
+    );
+  });
+
+  group('PartialSellInvestmentEvent', () {
+    final previous = InvestmentEntity(
+      id: 'inv_123',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Altın Birikimi',
+      amount: 4000.0,
+      currentValue: 5000.0,
+      type: InvestmentType.gold,
+      color: const Color(0xFFFFC107),
+      dateAdded: DateTime(2026, 1, 1),
+      symbol: 'gram-altin',
+      quantity: 4.0,
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'cüzdana MALİYET FARKI değil ELİNE GEÇEN tutar gelir yazılır',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovements(
+                  walletId: any(named: 'walletId'),
+                  entries: any(named: 'entries'),
+                ))
+            .thenAnswer((_) async =>
+                const CashWriteResult(ok: true, transactionIds: ['tx_1']));
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(PartialSellInvestmentEvent(
+        previous: previous,
+        // Çeyreği satıldı: maliyet 3.000, değer 3.750, miktar 3.
+        remaining: previous.copyWith(
+          amount: 3000.0,
+          currentValue: 3750.0,
+          quantity: 3.0,
+        ),
+        proceeds: 1300.0,
+        userId: 'user_123',
+        walletId: 'wallet_123',
+      )),
+      expect: () => [
+        InvestmentLoading(),
+        isA<InvestmentActionSuccess>()
+            .having((s) => s.notice, 'notice',
+                const InvestmentPartiallySoldNotice())
+            .having(
+              (s) => s.undo,
+              'undo',
+              isA<InvestmentDeletionUndo>()
+                  .having((u) => u.investment, 'satıştan önceki hâli', previous)
+                  .having(
+                      (u) => u.reversalTransactionIds, 'satış kaydı', ['tx_1']),
+            ),
+        InvestmentLoading(),
+        const InvestmentLoaded([], totalAmount: 0.0),
+      ],
+      verify: (_) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(1));
+        // Maliyet farkı 1.000 olurdu; deftere giren satış bedeli 1.300.
+        expect(entries.single.amount, 1300.0);
+        expect(entries.single.isIncome, isTrue);
+        expect(entries.single.tag, CashMovementTags.investmentSell);
+      },
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
+      'bedelsiz devirde (0) deftere 0 tutarlı hareket yazılmaz',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => const Right([]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(PartialSellInvestmentEvent(
+        previous: previous,
+        remaining: previous.copyWith(quantity: 3.0),
+        proceeds: 0.0,
+        userId: 'user_123',
+        walletId: 'wallet_123',
+      )),
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            ));
+      },
+    );
+  });
 
   group('DeleteInvestmentEvent', () {
     blocTest<InvestmentBloc, InvestmentState>(
@@ -690,7 +1019,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Yatırım satıldı'),
+        const InvestmentActionSuccess(InvestmentSoldNotice()),
         InvestmentLoading(),
         const InvestmentLoaded([], totalAmount: 0.0),
       ],
@@ -736,7 +1065,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Kayıt silindi, alım kaydı düzeltildi'),
+        const InvestmentActionSuccess(InvestmentDeletedNotice()),
         InvestmentLoading(),
         const InvestmentLoaded([], totalAmount: 0.0),
       ],
@@ -783,8 +1112,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess(
-            'Yatırım satıldı (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'),
+        const InvestmentActionSuccess(InvestmentSoldNotice(), cashOk: false),
         InvestmentLoading(),
         const InvestmentLoaded([], totalAmount: 0.0),
       ],
@@ -814,7 +1142,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentActionSuccess('Kayıt silindi, alım kaydı düzeltildi'),
+        const InvestmentActionSuccess(InvestmentDeletedNotice()),
         InvestmentLoading(),
         const InvestmentLoaded([], totalAmount: 0.0),
       ],
@@ -826,6 +1154,7 @@ void main() {
               isIncome: any(named: 'isIncome'),
               title: any(named: 'title'),
               tag: any(named: 'tag'),
+              date: any(named: 'date'),
             ));
       },
     );
@@ -848,7 +1177,7 @@ void main() {
       )),
       expect: () => [
         InvestmentLoading(),
-        const InvestmentError('Delete failed'),
+        const InvestmentError(RawFailureNotice('Delete failed')),
       ],
     );
   });

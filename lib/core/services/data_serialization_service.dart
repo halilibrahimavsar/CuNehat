@@ -9,6 +9,8 @@ import 'package:cunehat/features/debt_and_receivable/data/models/receivable_mode
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart';
+import 'package:cunehat/features/investments/data/models/goal_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -59,6 +61,7 @@ class _ParsedBackup {
   final List<RecurringTransactionModel> recurringTransactions;
   final Map<String, Map> users;
   final List<CategoryModel> categories;
+  final List<GoalModel> goals;
 
   /// Yedeğin alındığı an (`timestamp`). Önizleme bunu gösterir; bozuksa null.
   final DateTime? timestamp;
@@ -73,6 +76,7 @@ class _ParsedBackup {
     required this.recurringTransactions,
     required this.users,
     required this.categories,
+    required this.goals,
     required this.timestamp,
   });
 }
@@ -116,7 +120,19 @@ class DataSerializationService {
   /// - `id` kullanıcının verdiği ad değil UUID; ad ayrı `name` alanında.
   /// - `parentId` (nullable): iki seviyeli hiyerarşi.
   /// - `isDefault` kaldırıldı — varsayılan kategori kavramı yok.
-  static const int schemaVersion = 7;
+  ///
+  /// v8 (2026-08-24): yatırım kaydına `unbookedCost` (HiveField 15).
+  /// - Uygulamaya girmeden ÖNCE alınmış varlık ("bu varlık zaten bende")
+  ///   eklenirken maliyet cüzdandan düşülmez; düşülmeyen kısım burada durur.
+  /// - Silme düzeltmesi yalnız deftere işlenmiş kısmı iade eder.
+  ///
+  /// v9 (2026-08-24): birikim hedefi kendi kaydı oldu (`goals` kutusu,
+  /// typeId 16).
+  /// - Yatırımdaki `targetAmount` (HiveField 11) ve `goalCategory` (13)
+  ///   KALDIRILDI; yerine `goalId` (16) geldi.
+  /// - Böylece gram altın + çeyrek altın + hisse TEK hedefin altında
+  ///   toplanabiliyor; ilerleme üyelerin güncel değerlerinden hesaplanır.
+  static const int schemaVersion = 9;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;
@@ -163,6 +179,7 @@ class DataSerializationService {
 
     await (await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName))
         .clear();
+    await (await _hive.openBox<GoalModel>(GoalLocalDataSource.boxName)).clear();
 
     // İşlemlere iliştirilmiş fiş görselleri de cihaz-yerel; onları da temizle.
     await _receiptStorage.clearAll();
@@ -196,6 +213,7 @@ class DataSerializationService {
 
     final categoryBox =
         await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
+    final goalBox = await _hive.openBox<GoalModel>(GoalLocalDataSource.boxName);
 
     return jsonEncode({
       'version': schemaVersion,
@@ -210,6 +228,7 @@ class DataSerializationService {
           recurringBox.values.map((r) => r.toJson()).toList(),
       'users': users,
       'categories': categoryBox.values.map((c) => c.toJson()).toList(),
+      'goals': goalBox.values.map((g) => g.toJson()).toList(),
     });
   }
 
@@ -240,6 +259,9 @@ class DataSerializationService {
     final categoryBox =
         await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
     final categorySnapshot = Map.of(categoryBox.toMap());
+
+    final goalBox = await _hive.openBox<GoalModel>(GoalLocalDataSource.boxName);
+    final goalSnapshot = Map.of(goalBox.toMap());
 
     final walletSnapshot = Map.of(walletBox.toMap());
     final transactionSnapshot = Map.of(transactionBox.toMap());
@@ -303,6 +325,13 @@ class DataSerializationService {
         await categoryBox.put(model.id, model);
       }
 
+      // Hedefler de tam değişim: yedekte olmayan bir hedef kalırsa hiçbir
+      // yatırımın bağlı olmadığı boş bir ilerleme çubuğu olurdu.
+      await goalBox.clear();
+      for (final model in parsedBackup.goals) {
+        await goalBox.put(model.id, model);
+      }
+
       // Yalnız başarıda yörünge temizliği: geri yüklenen veri fiş binary'si
       // taşımaz. Hâlâ atıfta bulunulan görseller korunur (aynı-cihaz geri
       // yüklemede kayıp olmaz); atıfsız kalanlar silinir. (Başarısızlıkta
@@ -334,6 +363,7 @@ class DataSerializationService {
         await _rollback(recurringBox, recurringSnapshot);
         await _rollback(userBox, userSnapshot);
         await _rollback(categoryBox, categorySnapshot);
+        await _rollback(goalBox, goalSnapshot);
       } catch (rollbackError, rollbackSt) {
         debugPrint(
           'DataSerializationService rollback FAILED: '
@@ -363,6 +393,7 @@ class DataSerializationService {
           budgetCount: parsed.budgets.length,
           recurringCount: parsed.recurringTransactions.length,
           categoryCount: parsed.categories.length,
+          goalCount: parsed.goals.length,
           createdAt: parsed.timestamp,
         ),
         schemaVersion,
@@ -392,6 +423,7 @@ class DataSerializationService {
 
     final categoryBox =
         await _hive.openBox<CategoryModel>(CategoryLocalDataSource.boxName);
+    final goalBox = await _hive.openBox<GoalModel>(GoalLocalDataSource.boxName);
 
     return _summarize(
       wallets: walletBox.values.toList(),
@@ -402,6 +434,7 @@ class DataSerializationService {
       budgetCount: budgetBox.length,
       recurringCount: recurringBox.length,
       categoryCount: categoryBox.length,
+      goalCount: goalBox.length,
       createdAt: null,
     );
   }
@@ -415,6 +448,7 @@ class DataSerializationService {
     required int budgetCount,
     required int recurringCount,
     required int categoryCount,
+    required int goalCount,
     required DateTime? createdAt,
   }) {
     DateTime? first;
@@ -445,6 +479,7 @@ class DataSerializationService {
       budgetCount: budgetCount,
       recurringCount: recurringCount,
       categoryCount: categoryCount,
+      goalCount: goalCount,
       wallets: [
         for (final w in wallets)
           BackupWalletSummary(
@@ -488,6 +523,10 @@ class DataSerializationService {
         .map((c) => CategoryModel.fromJson(Map<String, dynamic>.from(c as Map)))
         .toList();
 
+    final goals = _list(decoded, 'goals')
+        .map((g) => GoalModel.fromJson(Map<String, dynamic>.from(g as Map)))
+        .toList();
+
     return _ParsedBackup(
       wallets: _list(decoded, 'wallets').map((w) {
         final data = Map<String, dynamic>.from(w as Map);
@@ -517,6 +556,7 @@ class DataSerializationService {
           .toList(),
       users: users,
       categories: categories,
+      goals: goals,
       timestamp: DateTime.tryParse(decoded['timestamp'] as String? ?? ''),
     );
   }

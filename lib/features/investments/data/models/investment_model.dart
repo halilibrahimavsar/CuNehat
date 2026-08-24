@@ -17,10 +17,10 @@ class InvestmentModel extends InvestmentEntity {
     required super.dateAdded,
     super.symbol,
     super.returnRate,
-    super.targetAmount,
     super.quantity,
-    super.goalCategory,
+    super.goalId,
     super.currency,
+    super.unbookedCost,
   });
 
   // Create Investment from firestore document
@@ -38,10 +38,10 @@ class InvestmentModel extends InvestmentEntity {
       dateAdded: DateTime.parse(json['dateAdded'] as String),
       symbol: json['symbol'] as String?,
       returnRate: (json['returnRate'] as num?)?.toDouble(),
-      targetAmount: (json['targetAmount'] as num?)?.toDouble(),
       quantity: (json['quantity'] as num?)?.toDouble(),
-      goalCategory: json['goalCategory'] as String?,
+      goalId: json['goalId'] as String?,
       currency: json['currency'] as String?,
+      unbookedCost: (json['unbookedCost'] as num).toDouble(),
     );
   }
 
@@ -58,10 +58,10 @@ class InvestmentModel extends InvestmentEntity {
           dateAdded: entity.dateAdded,
           symbol: entity.symbol,
           returnRate: entity.returnRate,
-          targetAmount: entity.targetAmount,
           quantity: entity.quantity,
-          goalCategory: entity.goalCategory,
+          goalId: entity.goalId,
           currency: entity.currency,
+          unbookedCost: entity.unbookedCost,
         );
 
   Map<String, dynamic> toJson() {
@@ -77,10 +77,10 @@ class InvestmentModel extends InvestmentEntity {
       'dateAdded': dateAdded.toIso8601String(),
       'symbol': symbol,
       'returnRate': returnRate,
-      'targetAmount': targetAmount,
       'quantity': quantity,
-      'goalCategory': goalCategory,
+      'goalId': goalId,
       'currency': currency,
+      'unbookedCost': unbookedCost,
     };
   }
 
@@ -98,10 +98,10 @@ class InvestmentModel extends InvestmentEntity {
     DateTime? dateAdded,
     String? symbol,
     double? returnRate,
-    double? targetAmount,
     double? quantity,
-    String? goalCategory,
+    String? goalId,
     String? currency,
+    double? unbookedCost,
   }) {
     return InvestmentModel(
       id: id ?? this.id,
@@ -115,10 +115,10 @@ class InvestmentModel extends InvestmentEntity {
       dateAdded: dateAdded ?? this.dateAdded,
       symbol: symbol ?? this.symbol,
       returnRate: returnRate ?? this.returnRate,
-      targetAmount: targetAmount ?? this.targetAmount,
       quantity: quantity ?? this.quantity,
-      goalCategory: goalCategory ?? this.goalCategory,
+      goalId: goalId ?? this.goalId,
       currency: currency ?? this.currency,
+      unbookedCost: unbookedCost ?? this.unbookedCost,
     );
   }
 
@@ -157,18 +157,20 @@ class InvestmentModel extends InvestmentEntity {
   double? get returnRate => super.returnRate;
 
   @override
-  @HiveField(11)
-  double? get targetAmount => super.targetAmount;
-
-  @override
   @HiveField(12)
   double? get quantity => super.quantity;
 
   @override
-  @HiveField(13)
-  String? get goalCategory => super.goalCategory;
-
-  @override
   @HiveField(14)
   String? get currency => super.currency;
+
+  @override
+  @HiveField(15)
+  double get unbookedCost => super.unbookedCost;
+
+  /// 11 (targetAmount) ve 13 (goalCategory) EMEKLİ: hedef artık ayrı kayıt
+  /// (`GoalModel`, typeId 16). Sıradaki alan indeksi 17.
+  @override
+  @HiveField(16)
+  String? get goalId => super.goalId;
 }

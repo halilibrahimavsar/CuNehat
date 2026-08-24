@@ -689,16 +689,31 @@ O gün geldi. Yayından sonra:
   }
   ```
 
-  v1.0.0 **`schemaVersion = 7`** ile çıkıyor (`:119`; 6'dan 7'ye kategori
-  hiyerarşisi turunda çıkarıldı — kategoriler prefs'ten Hive kutusuna taşındı
-  ve kimlik ad yerine UUID oldu). Bu sıkı eşitlik, sürüm **7→8** olduğu anda
-  v1.0.0 kullanıcısının Drive yedeğini geri yüklenemez yapar. Telefon
-  değiştiren ilk kullanıcı verisini kaybeder. Şemayı yayından sonra ilk kez
-  değiştirmeden ÖNCE bunu "eski sürümü oku ve yükselt" akışına çevir.
+  v1.0.0 **`schemaVersion = 9`** ile çıkıyor (`:130`). Son iki adım aynı
+  yatırım turunda çıktı: **8** → `InvestmentModel.unbookedCost` (HiveField 15,
+  uygulamaya girmeden önce alınmış varlığın cüzdandan düşülmeyen maliyeti);
+  **9** → birikim hedefi kendi kaydı oldu (`goals` kutusu, **typeId 16**;
+  yatırımdaki `targetAmount`/`goalCategory` kaldırıldı, yerine `goalId`
+  HiveField 16 geldi). 6'dan 7'ye ise kategori hiyerarşisi turunda çıkmıştı —
+  kategoriler prefs'ten Hive kutusuna taşındı ve kimlik ad yerine UUID oldu.
+  Bu sıkı eşitlik, sürüm **9→10** olduğu anda v1.0.0 kullanıcısının Drive
+  yedeğini geri yüklenemez yapar. Telefon değiştiren ilk kullanıcı verisini
+  kaybeder. Şemayı yayından sonra ilk kez değiştirmeden ÖNCE bunu "eski
+  sürümü oku ve yükselt" akışına çevir.
 
-  > Yayın anında dondurulan sayı **7**'dir. Kapalı test sürecinde şema
+  > Yayın anında dondurulan sayı **9**'dur. Kapalı test sürecinde şema
   > değişirse bu sayıyı burada güncelle — yanlış sayı, migrasyonu yanlış
   > sürümden başlatır.
+  >
+  > 8 ve 9'a geçiş **eski kurulumların yatırım kutusunu okunamaz yapar**
+  > (`fields[15] as double` → null cast). Yayın öncesi politika gereği çözüm
+  > migrasyon değil veri silme; cihazda test ederken uygulama verisini temizle.
+  >
+  > Yeni kutu eklerken üç yer birlikte güncellenir: `app_initialization.dart`
+  > (adapter kaydı + `openBox`), `DataSerializationService` (dışa aktarma,
+  > geri yükleme, rollback, özet sayacı) ve `WalletMetricsService
+  > .purgeWalletData` (cüzdan silinince temizlik). Hedef kutusu bunların
+  > üçünde de var; sonraki kutu için örnek olarak bak.
   >
   > Migrasyonun neye benzediğinin çalışan bir örneği elde var:
   > `tools/migrate_backup_v6_to_v7.py` (6→7 geçişinde geliştiricinin kendi

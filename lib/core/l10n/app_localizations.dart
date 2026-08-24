@@ -2823,13 +2823,13 @@ abstract class AppLocalizations {
   /// No description provided for @odenenTutarHint.
   ///
   /// In tr, this message translates to:
-  /// **'Ödenen tutar (₺) · hediye ise 0'**
+  /// **'Ödenen tutar · hediye ise 0'**
   String get odenenTutarHint;
 
   /// No description provided for @tutarHint.
   ///
   /// In tr, this message translates to:
-  /// **'Tutar (₺)'**
+  /// **'Tutar'**
   String get tutarHint;
 
   /// No description provided for @gecerliMiktarGirin.
@@ -6383,6 +6383,528 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dün'**
   String get txPeriodYesterday;
+
+  /// No description provided for @lot.
+  ///
+  /// In tr, this message translates to:
+  /// **'lot'**
+  String get lot;
+
+  /// No description provided for @katkiKipiMiktar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Miktar ile'**
+  String get katkiKipiMiktar;
+
+  /// No description provided for @katkiKipiTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar ile'**
+  String get katkiKipiTutar;
+
+  /// No description provided for @katkiTakipBirimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu birikim {unit} cinsinden takip ediliyor.'**
+  String katkiTakipBirimi(Object unit);
+
+  /// No description provided for @katkiFarkliTurBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{unit} bu kayda eklenemez'**
+  String katkiFarkliTurBaslik(Object unit);
+
+  /// No description provided for @katkiFarkliTurAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kayıt {recordUnit} cinsinden takip ediliyor; araya {selectedUnit} eklenirse miktar da değer de karışır. Bu tür için ayrı bir kayıt aç.'**
+  String katkiFarkliTurAciklama(Object recordUnit, Object selectedUnit);
+
+  /// No description provided for @katkiFarkliTurButon.
+  ///
+  /// In tr, this message translates to:
+  /// **'{unit} için yeni kayıt aç'**
+  String katkiFarkliTurButon(Object unit);
+
+  /// No description provided for @katkiMiktaraCevrilecek.
+  ///
+  /// In tr, this message translates to:
+  /// **'≈ {qty} {unit} eklenecek'**
+  String katkiMiktaraCevrilecek(Object qty, Object unit);
+
+  /// No description provided for @katkiFiyatGerekli.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarı miktara çevirmek için önce güncel fiyatı getir.'**
+  String get katkiFiyatGerekli;
+
+  /// No description provided for @katkiOdenenBosUyari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödenen tutar boş: bu alım bedelsiz (hediye) sayılacak, cüzdandan para düşülmeyecek.'**
+  String get katkiOdenenBosUyari;
+
+  /// No description provided for @katkiTutarKipiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırdığın tutarı yaz; güncel fiyattan miktara çevrilir.'**
+  String get katkiTutarKipiAciklama;
+
+  /// No description provided for @katkiYatirilanTutarHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırılan tutar'**
+  String get katkiYatirilanTutarHint;
+
+  /// No description provided for @duzenlemeTurDegisikligiUyari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tür değişiyor: kayıttaki {qty} miktarı bundan sonra {newUnit} sayılacak ve fiyat güncellemesinde değer buna göre hesaplanacak. Farklı bir tür aldıysan bu kaydı olduğu gibi bırakıp yeni bir kayıt aç.'**
+  String duzenlemeTurDegisikligiUyari(Object qty, Object newUnit);
+
+  /// No description provided for @alinanMiktarBirimHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınan miktar ({unit})'**
+  String alinanMiktarBirimHint(Object unit);
+
+  /// No description provided for @yeniAlimMiktarVeyaTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni alım: miktar ya da yatırılan tutar'**
+  String get yeniAlimMiktarVeyaTutar;
+
+  /// No description provided for @kartBirimFiyat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birim {price}'**
+  String kartBirimFiyat(Object price);
+
+  /// No description provided for @kartMiktarBirim.
+  ///
+  /// In tr, this message translates to:
+  /// **'{qty} {unit}'**
+  String kartMiktarBirim(Object qty, Object unit);
+
+  /// No description provided for @yatirimTuruHisse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hisse Senedi'**
+  String get yatirimTuruHisse;
+
+  /// No description provided for @yatirimTuruAltin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın'**
+  String get yatirimTuruAltin;
+
+  /// No description provided for @yatirimTuruOzel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel'**
+  String get yatirimTuruOzel;
+
+  /// No description provided for @satisSheetBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} · Sat'**
+  String satisSheetBaslik(Object name);
+
+  /// No description provided for @satilanMiktarBirimHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satılan miktar ({unit})'**
+  String satilanMiktarBirimHint(Object unit);
+
+  /// No description provided for @satilanDegerHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satılan tutar (güncel değerinden)'**
+  String get satilanDegerHint;
+
+  /// No description provided for @alinanTutarHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınan tutar (cüzdana girecek)'**
+  String get alinanTutarHint;
+
+  /// No description provided for @satTumunuSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get satTumunuSec;
+
+  /// No description provided for @satElindeki.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elindeki: {qty} {unit}'**
+  String satElindeki(Object qty, Object unit);
+
+  /// No description provided for @satGuncelDegerBilgi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güncel değer: {value}'**
+  String satGuncelDegerBilgi(Object value);
+
+  /// No description provided for @satTamSatisUyari.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydın tamamı satılıyor: kayıt silinecek.'**
+  String get satTamSatisUyari;
+
+  /// No description provided for @satKismiKalanBilgi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan: {qty} {unit} · {value}'**
+  String satKismiKalanBilgi(Object qty, Object unit, Object value);
+
+  /// No description provided for @satKismiKalanTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan kayıt: {value}'**
+  String satKismiKalanTutar(Object value);
+
+  /// No description provided for @gecerliSatisMiktariGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir satış miktarı girin'**
+  String get gecerliSatisMiktariGirin;
+
+  /// No description provided for @satisMiktariAsim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elindekinden fazlasını satamazsın (en çok {max})'**
+  String satisMiktariAsim(Object max);
+
+  /// No description provided for @gecerliAlinanTutarGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir alınan tutar girin'**
+  String get gecerliAlinanTutarGirin;
+
+  /// No description provided for @satisFiyatTazeleIpucu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıttaki değer eskimiş olabilir; güncel fiyatı getirip alınan tutarı tazeleyebilirsin.'**
+  String get satisFiyatTazeleIpucu;
+
+  /// No description provided for @kismiSatisBasarili.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırımın bir kısmı satıldı'**
+  String get kismiSatisBasarili;
+
+  /// No description provided for @kismiSatisGeriAlindi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısmi satış geri alındı'**
+  String get kismiSatisGeriAlindi;
+
+  /// No description provided for @alimTarihi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alım tarihi'**
+  String get alimTarihi;
+
+  /// No description provided for @zatenBendeBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu varlık zaten bende'**
+  String get zatenBendeBaslik;
+
+  /// No description provided for @zatenBendeAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin'**
+  String get zatenBendeAciklama;
+
+  /// No description provided for @alimCuzdandanDusulecek.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount}, {date} tarihli gider olarak cüzdandan düşülecek.'**
+  String alimCuzdandanDusulecek(Object amount, Object date);
+
+  /// No description provided for @alimCuzdandanDusulmeyecek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdandan para düşülmeyecek; kayıt yalnız portföye eklenir.'**
+  String get alimCuzdandanDusulmeyecek;
+
+  /// No description provided for @birikimBosBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz birikimin yok'**
+  String get birikimBosBaslik;
+
+  /// No description provided for @birikimBosAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın, hisse ya da kendi tanımladığın bir varlığı ekleyerek portföyünü oluştur. Alım tutarı cüzdanından gider olarak düşülür.'**
+  String get birikimBosAciklama;
+
+  /// No description provided for @yatirimEklendiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım başarıyla eklendi'**
+  String get yatirimEklendiMesaji;
+
+  /// No description provided for @yatirimGuncellendiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım güncellendi'**
+  String get yatirimGuncellendiMesaji;
+
+  /// No description provided for @yatirimSatildiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım satıldı'**
+  String get yatirimSatildiMesaji;
+
+  /// No description provided for @yatirimKismenSatildiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırımın bir kısmı satıldı'**
+  String get yatirimKismenSatildiMesaji;
+
+  /// No description provided for @yatirimSilindiDuzeltildiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt silindi, alım kaydı düzeltildi'**
+  String get yatirimSilindiDuzeltildiMesaji;
+
+  /// No description provided for @fiyatlarGuncellendiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} yatırımın fiyatı güncellendi'**
+  String fiyatlarGuncellendiMesaji(Object count);
+
+  /// No description provided for @fiyatlarKismenGuncellendiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{updated} güncellendi, {failed} alınamadı'**
+  String fiyatlarKismenGuncellendiMesaji(Object updated, Object failed);
+
+  /// No description provided for @yenilenebilirYatirimYokMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenilenebilir yatırım yok (sembol ve miktar gerekli)'**
+  String get yenilenebilirYatirimYokMesaji;
+
+  /// No description provided for @fiyatlarAlinamadiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyatlar alınamadı, değerler değiştirilmedi'**
+  String get fiyatlarAlinamadiMesaji;
+
+  /// No description provided for @bakiyeGuncellenemediUyarisi.
+  ///
+  /// In tr, this message translates to:
+  /// **' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)'**
+  String get bakiyeGuncellenemediUyarisi;
+
+  /// No description provided for @yatirimGecmisiBuradaListelenecek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım geçmişiniz burada listelenecektir.'**
+  String get yatirimGecmisiBuradaListelenecek;
+
+  /// No description provided for @hedefKategoriEv.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev'**
+  String get hedefKategoriEv;
+
+  /// No description provided for @hedefKategoriDugun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düğün'**
+  String get hedefKategoriDugun;
+
+  /// No description provided for @hedefKategoriAraba.
+  ///
+  /// In tr, this message translates to:
+  /// **'Araba'**
+  String get hedefKategoriAraba;
+
+  /// No description provided for @hedefKategoriAcilFon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil Fon'**
+  String get hedefKategoriAcilFon;
+
+  /// No description provided for @hedefKategoriEgitim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğitim'**
+  String get hedefKategoriEgitim;
+
+  /// No description provided for @hedefKategoriDiger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get hedefKategoriDiger;
+
+  /// No description provided for @maliyetVeyaDegerSifirdanBuyuk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı'**
+  String get maliyetVeyaDegerSifirdanBuyuk;
+
+  /// No description provided for @hedeflerim.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedeflerim'**
+  String get hedeflerim;
+
+  /// No description provided for @bagsizVarliklar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağsız varlıklar'**
+  String get bagsizVarliklar;
+
+  /// No description provided for @yeniHedefOlustur.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni hedef oluştur'**
+  String get yeniHedefOlustur;
+
+  /// No description provided for @hedefiDuzenle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefi düzenle'**
+  String get hedefiDuzenle;
+
+  /// No description provided for @hedefiSil.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefi sil'**
+  String get hedefiSil;
+
+  /// No description provided for @hedefSilOnayBaslik.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} hedefi silinsin mi?'**
+  String hedefSilOnayBaslik(Object name);
+
+  /// No description provided for @hedefSilOnayMesaj.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef silinir. İçindeki {count} varlık SİLİNMEZ, bağsız listeye düşer.'**
+  String hedefSilOnayMesaj(Object count);
+
+  /// No description provided for @hedefAdiHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef adı · örn. Ev peşinatı'**
+  String get hedefAdiHint;
+
+  /// No description provided for @hedefTutariHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef tutar'**
+  String get hedefTutariHint;
+
+  /// No description provided for @hedefAdiGirin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef adı girin'**
+  String get hedefAdiGirin;
+
+  /// No description provided for @hedefAlaniEtiketi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef'**
+  String get hedefAlaniEtiketi;
+
+  /// No description provided for @hedefeBagliDegil.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefe bağlı değil'**
+  String get hedefeBagliDegil;
+
+  /// No description provided for @hedefeVarlikEkle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hedefe varlık ekle'**
+  String get hedefeVarlikEkle;
+
+  /// No description provided for @hedefBosAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hedefe henüz varlık bağlanmadı.'**
+  String get hedefBosAciklama;
+
+  /// No description provided for @hedefIlerlemeSatiri.
+  ///
+  /// In tr, this message translates to:
+  /// **'{saved} / {target}'**
+  String hedefIlerlemeSatiri(Object saved, Object target);
+
+  /// No description provided for @hedefKalanTutar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan {amount}'**
+  String hedefKalanTutar(Object amount);
+
+  /// No description provided for @hedefeUlasildi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefe ulaşıldı'**
+  String get hedefeUlasildi;
+
+  /// No description provided for @hedefUyeSayisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} varlık'**
+  String hedefUyeSayisi(Object count);
+
+  /// No description provided for @hedefKaydedildiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef kaydedildi'**
+  String get hedefKaydedildiMesaji;
+
+  /// No description provided for @hedefSilindiMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef silindi, varlıklar bağsız listeye taşındı'**
+  String get hedefSilindiMesaji;
+
+  /// No description provided for @varlikTuruSec.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne eklemek istersin?'**
+  String get varlikTuruSec;
+
+  /// No description provided for @gecmisAlimUyarisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} tarihli alım. \"Mevcut Değer\" BUGÜNKÜ değerdir, alım günündeki değil; maliyet ise o gün ödediğin tutardır.'**
+  String gecmisAlimUyarisi(Object date);
+
+  /// No description provided for @bugunkuDegeriHesapla.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünkü değeri hesapla'**
+  String get bugunkuDegeriHesapla;
+
+  /// No description provided for @hedefYonetimi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefler'**
+  String get hedefYonetimi;
+
+  /// No description provided for @hedefYokAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz hedefin yok. Hedef aç, gram altını, çeyreği ve hisseyi aynı hedefin altında topla.'**
+  String get hedefYokAciklama;
+
+  /// No description provided for @hedefEkleKisa.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef ekle'**
+  String get hedefEkleKisa;
 }
 
 class _AppLocalizationsDelegate

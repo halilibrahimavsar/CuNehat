@@ -39,6 +39,7 @@ BackupSummary _summary({int transactionCount = 42}) => BackupSummary(
       budgetCount: 0,
       recurringCount: 0,
       categoryCount: 0,
+      goalCount: 0,
       wallets: const [],
       firstTransactionDate: null,
       lastTransactionDate: null,

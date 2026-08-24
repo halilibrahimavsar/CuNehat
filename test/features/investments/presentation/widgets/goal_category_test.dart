@@ -1,16 +1,21 @@
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
+import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('GoalCategory Model Tests', () {
     test('GoalCategory.byKey resolves correct categories', () {
-      expect(GoalCategory.byKey('ev')?.label, 'Ev');
-      expect(GoalCategory.byKey('dugun')?.label, 'Düğün');
-      expect(GoalCategory.byKey('araba')?.label, 'Araba');
-      expect(GoalCategory.byKey('acil_fon')?.label, 'Acil Fon');
-      expect(GoalCategory.byKey('egitim')?.label, 'Eğitim');
-      expect(GoalCategory.byKey('diger')?.label, 'Diğer');
+      // Etiket artık sabit metin değil; anahtar → ikon eşlemesi burada,
+      // metin l10n'da (widget testinde doğrulanıyor).
+      expect(GoalCategory.byKey('ev')?.icon, Icons.home_rounded);
+      expect(GoalCategory.byKey('dugun')?.icon, Icons.favorite_rounded);
+      expect(GoalCategory.byKey('araba')?.icon, Icons.directions_car_rounded);
+      expect(GoalCategory.byKey('acil_fon')?.icon,
+          Icons.health_and_safety_rounded);
+      expect(GoalCategory.byKey('egitim')?.icon, Icons.school_rounded);
+      expect(GoalCategory.byKey('diger')?.icon, Icons.flag_rounded);
 
       expect(GoalCategory.byKey(null), isNull);
       expect(GoalCategory.byKey('unknown_key'), isNull);
@@ -20,6 +25,16 @@ void main() {
   group('GoalCategorySelector Widget Tests', () {
     Widget buildTestableWidget(Widget child) {
       return MaterialApp(
+        // Kategori etiketleri artık l10n'dan geliyor; delege olmadan
+        // context.l10n çözülmez.
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('tr'), Locale('en')],
+        locale: const Locale('tr'),
         home: Scaffold(
           body: child,
         ),

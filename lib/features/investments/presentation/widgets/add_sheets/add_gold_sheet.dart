@@ -8,10 +8,12 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_form_validation.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
-import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
+import 'package:cunehat/features/investments/presentation/widgets/gold_types.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 
@@ -20,6 +22,16 @@ class AddGoldSheet extends StatefulWidget {
   final String userId;
   final InvestmentEntity? investmentToEdit;
   final Function(InvestmentEntity) onSave;
+
+  /// Cüzdanın birikim hedefleri — "hedefe bağla" seçicisini besler.
+  final List<GoalEntity> goals;
+
+  /// Yeni kayıt hedeften açıldıysa ön seçili hedef.
+  final String? initialGoalId;
+
+  /// Yeni kayıt açılırken ön seçili altın türü (ör. katkı sayfasından
+  /// "çeyrek için ayrı kayıt aç" ile gelinmişse). Düzenlemede yok sayılır.
+  final String? initialGoldType;
 
   /// Cüzdanın para birimi: maliyet ve güncel değer bu birimdedir, canlı fiyat
   /// da buna çevrilir (altın fiyatı kaynağında TL'dir).
@@ -31,7 +43,10 @@ class AddGoldSheet extends StatefulWidget {
     required this.userId,
     required this.onSave,
     required this.walletCurrency,
+    this.goals = const [],
+    this.initialGoalId,
     this.investmentToEdit,
+    this.initialGoldType,
   });
 
   static Future<void> show(
@@ -40,7 +55,10 @@ class AddGoldSheet extends StatefulWidget {
     required String userId,
     required Function(InvestmentEntity) onSave,
     required String walletCurrency,
+    List<GoalEntity> goals = const [],
+    String? initialGoalId,
     InvestmentEntity? investmentToEdit,
+    String? initialGoldType,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -51,7 +69,10 @@ class AddGoldSheet extends StatefulWidget {
         userId: userId,
         onSave: onSave,
         walletCurrency: walletCurrency,
+        goals: goals,
+        initialGoalId: initialGoalId,
         investmentToEdit: investmentToEdit,
+        initialGoldType: initialGoldType,
       ),
     );
   }
@@ -73,28 +94,16 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   final _amountController = TextEditingController();
   final _quantityController = TextEditingController();
   final _currentValueController = TextEditingController();
-  final _targetAmountController = TextEditingController();
 
   String _selectedGoldType = 'gram-altin';
-  String? _selectedGoalCategory;
+  String? _goalId;
 
-  static const _goldTypeKeys = {
-    'gram-altin',
-    'ceyrek-altin',
-    'yarim-altin',
-    'tam-altin',
-    'cumhuriyet-altini',
-    'ata-altin',
-  };
+  /// Alım tarihi: kayıt açılırken seçilir, gider bu tarihe yazılır.
+  DateTime _purchaseDate = DateTime.now();
 
-  Map<String, String> get _goldTypes => {
-        'gram-altin': context.l10n.gramAltin,
-        'ceyrek-altin': context.l10n.ceyrekAltin,
-        'yarim-altin': context.l10n.yarimAltin,
-        'tam-altin': context.l10n.tamAltin,
-        'cumhuriyet-altini': context.l10n.cumhuriyetAltini,
-        'ata-altin': context.l10n.ataAltin,
-      };
+  /// "Bu varlık zaten bende": maliyet cüzdandan düşülmez
+  /// (bkz. `InvestmentEntity.unbookedCost`).
+  bool _alreadyOwned = false;
 
   Color _selectedColor = Colors.amber;
 
@@ -118,22 +127,26 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       _nameController.text = item.name;
       _amountController.text = _fmt(item.amount);
       _currentValueController.text = _fmt(item.currentValue);
-      if (item.targetAmount != null) {
-        _targetAmountController.text = _fmt(item.targetAmount!);
-      }
       if (item.quantity != null) {
         // Adet hassas kalır (0,125 gr); paradan farklı olarak 4 hane.
         _quantityController.text =
             formatAmountForInput(item.quantity!, decimalDigits: 4);
       }
-      _selectedGoalCategory = item.goalCategory;
+      _goalId = item.goalId;
       _selectedColor = item.color;
-      if (item.symbol != null && _goldTypeKeys.contains(item.symbol)) {
+      _purchaseDate = item.dateAdded;
+      if (item.symbol != null) {
         _selectedGoldType = item.symbol!;
       }
+      _goalId = item.goalId;
+    } else {
+      _goalId = widget.initialGoalId;
+      if (widget.initialGoldType != null) {
+        _selectedGoldType = widget.initialGoldType!;
+      }
     }
-    // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
-    _targetAmountController.addListener(() => setState(() {}));
+    // Alım özeti ("şu kadarı cüzdandan düşülecek") maliyetten türer.
+    _amountController.addListener(() => setState(() {}));
   }
 
   @override
@@ -142,7 +155,6 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     _amountController.dispose();
     _quantityController.dispose();
     _currentValueController.dispose();
-    _targetAmountController.dispose();
     super.dispose();
   }
 
@@ -153,8 +165,6 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   double? get _parsedQuantity => parseAmountInput(_quantityController.text);
   double? get _parsedCurrentValue =>
       parseMoneyInput(_currentValueController.text);
-  double? get _parsedTargetAmount =>
-      parseMoneyInput(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
@@ -209,16 +219,11 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     );
   }
 
-  String? _validate() {
-    // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
-    if (_parsedAmount == null) {
-      return context.l10n.gecerliYatirimMiktariGirin;
-    }
-    if (_parsedCurrentValue == null) {
-      return context.l10n.gecerliMevcutDegerGirin;
-    }
-    return null;
-  }
+  String? _validate() => validateInvestmentForm(
+        context,
+        cost: _parsedAmount,
+        currentValue: _parsedCurrentValue,
+      );
 
   void _save() {
     final err = _validate();
@@ -232,20 +237,26 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       id: widget.investmentToEdit?.id ?? UidGenerator.generateV7(),
       userId: widget.userId,
       walletId: widget.walletId,
+      // Adsız kayıt türüyle anılır ("Çeyrek Altın"); her altın kaydının
+      // "Altın Yatırımı" olması ayrı türleri ayırt edilemez kılıyordu.
       name: _nameController.text.trim().isEmpty
-          ? context.l10n.altinYatirimi
+          ? goldTypeLabel(context, _selectedGoldType)
           : _nameController.text.trim(),
       amount: _parsedAmount!,
       currentValue: _parsedCurrentValue!,
       type: InvestmentType.gold,
       color: _selectedColor,
-      dateAdded: widget.investmentToEdit?.dateAdded ?? DateTime.now(),
+      dateAdded: widget.investmentToEdit?.dateAdded ?? _purchaseDate,
       symbol: _selectedGoldType,
       returnRate: 0,
-      targetAmount: _parsedTargetAmount,
-      quantity: _parsedQuantity ?? widget.investmentToEdit?.quantity,
-      goalCategory: _parsedTargetAmount != null ? _selectedGoalCategory : null,
+      // Alanın kendisi kaydın miktarıdır: boşaltılırsa miktar takibi
+      // gerçekten kalkar. `?? eskiDeğer` kullanıcının silmesini yok sayıyordu.
+      quantity: _parsedQuantity,
+      goalId: _goalId,
       currency: 'TRY',
+      // "Zaten bende" seçilirse maliyetin tamamı deftere işlenmez; sonraki
+      // katkılar (ödenen tutar) normal şekilde cüzdandan düşer.
+      unbookedCost: _resolveUnbookedCost(_parsedAmount ?? 0.0),
     );
 
     widget.onSave(investment);
@@ -339,11 +350,13 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         ),
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
+                      ...?_purchaseRowSlot(),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(
                           context.l10n.altinTuruVeOtomatikFiyat),
                       const SizedBox(height: 10),
                       _buildGoldTypeSelector(cs),
+                      ...?_typeChangeWarningSlot(),
                       const SizedBox(height: 14),
                       Showcase(
                         key: OnboardingKeys.investmentAddQuantity,
@@ -353,6 +366,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                             context.l10n.onboardingInvestmentAddQuantityDesc,
                         child: InvestmentQuantityAndFetch(
                           accent: _accent,
+                          unitLabel: goldTypeLabel(context, _selectedGoldType),
                           quantityController: _quantityController,
                           onQuantityChanged: _clearError,
                           isLoading: _isLoading,
@@ -372,27 +386,15 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                         onChanged: _clearError,
                       ),
                       const SizedBox(height: 14),
-                      InvestmentFilledField(
-                        controller: _targetAmountController,
-                        hint: context.l10n.hedefTutarIstegeBagli,
-                        icon: Icons.flag_rounded,
+                      InvestmentSectionLabel(context.l10n.hedefAlaniEtiketi),
+                      const SizedBox(height: 10),
+                      InvestmentGoalPicker(
+                        goals: widget.goals,
+                        selectedGoalId: _goalId,
                         accent: _accent,
-                        onChanged: _clearError,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [AmountInputFormatter()],
+                        walletCurrency: widget.walletCurrency,
+                        onChanged: (id) => setState(() => _goalId = id),
                       ),
-                      if (_targetAmountController.text.trim().isNotEmpty) ...[
-                        const SizedBox(height: 14),
-                        InvestmentSectionLabel(context.l10n.hedefKategorisi),
-                        const SizedBox(height: 10),
-                        GoalCategorySelector(
-                          selectedKey: _selectedGoalCategory,
-                          onChanged: (key) =>
-                              setState(() => _selectedGoalCategory = key),
-                          accentColor: Colors.amber.shade700,
-                        ),
-                      ],
                       if (_isEditing) ...[
                         const SizedBox(height: 14),
                         const InvestmentCostEditWarning(),
@@ -427,36 +429,72 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     );
   }
 
-  Widget _buildGoldTypeSelector(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+  /// Alım tarihi + "zaten bende" satırı yalnız YENİ kayıtta gösterilir:
+  /// düzenlemede alım defterde çoktan yazılı, tarihi geriye almak o kaydı
+  /// bulup taşımaz — sessizce tutarsızlık üretirdi.
+  List<Widget>? _purchaseRowSlot() {
+    if (_isEditing) return null;
+    final cost = _parsedAmount;
+    return [
+      const SizedBox(height: 14),
+      InvestmentPurchaseRow(
+        accent: _accent,
+        date: _purchaseDate,
+        onDateChanged: (d) => setState(() => _purchaseDate = d),
+        alreadyOwned: _alreadyOwned,
+        onAlreadyOwnedChanged: (v) => setState(() => _alreadyOwned = v),
+        costText: (cost == null || cost <= 0)
+            ? null
+            : formatMoney(cost, currency: widget.walletCurrency),
+        // Aynı sorgu "Hesapla" düğmesininki: miktar × güncel fiyat →
+        // mevcut değer. Geçmiş tarihli alımda kullanıcı bunu arıyor.
+        onCalculateTodayValue: _isLoading ? null : _fetchLivePrice,
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedGoldType,
-          isExpanded: true,
-          dropdownColor: cs.surface,
-          icon: Icon(Icons.arrow_drop_down_rounded, color: cs.onSurfaceVariant),
-          items: _goldTypes.entries.map((e) {
-            return DropdownMenuItem(
-              value: e.key,
-              child: Text(
-                e.value,
-                style: TextStyle(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: (val) {
-            if (val != null) setState(() => _selectedGoldType = val);
-          },
-        ),
+    ];
+  }
+
+  Widget _buildGoldTypeSelector(ColorScheme cs) {
+    return GoldTypeDropdown(
+      value: _selectedGoldType,
+      onChanged: (val) => setState(() => _selectedGoldType = val),
+    );
+  }
+
+  /// Uyarı varsa aralığıyla birlikte döner; yoksa null (satır hiç eklenmez).
+  List<Widget>? _typeChangeWarningSlot() {
+    final warning = _buildTypeChangeWarning();
+    if (warning == null) return null;
+    return [const SizedBox(height: 10), warning];
+  }
+
+  /// Düzenlemede tür değişirse kayıttaki miktar sessizce yeni türün miktarı
+  /// sayılır (10 gram → 10 çeyrek) ve ilk fiyat yenilemesinde değer buna göre
+  /// hesaplanır. Kullanıcı bunu görmeden kaydedemesin.
+  Widget? _buildTypeChangeWarning() {
+    final item = widget.investmentToEdit;
+    if (!_isEditing || item == null) return null;
+    final quantity = item.quantity;
+    if (quantity == null || quantity <= 0) return null;
+    if (item.symbol == _selectedGoldType) return null;
+    return InvestmentWarningBanner(
+      context.l10n.duzenlemeTurDegisikligiUyari(
+        formatAmountForInput(quantity, decimalDigits: 4),
+        goldTypeLabel(context, _selectedGoldType),
       ),
     );
+  }
+
+  /// Kaydın deftere işlenmemiş maliyeti.
+  ///
+  /// Yeni kayıtta "zaten bende" anahtarının kendisi. DÜZENLEMEDE: kayıt
+  /// tamamen işlenmemişse (uygulamadan önce alınmış) maliyet değişse de öyle
+  /// kalır — o para uygulamadan önce çıktığı için farkı bugün cüzdana
+  /// yazmak hayali gelir/gider üretirdi. Kısmen işlenmiş kayıtta işlenmemiş
+  /// kısım sabit tutulur, fark defteri etkiler.
+  double _resolveUnbookedCost(double cost) {
+    final item = widget.investmentToEdit;
+    if (item == null) return _alreadyOwned ? cost : 0.0;
+    if (item.amount > 0 && item.unbookedCost >= item.amount) return cost;
+    return item.unbookedCost > cost ? cost : item.unbookedCost;
   }
 }

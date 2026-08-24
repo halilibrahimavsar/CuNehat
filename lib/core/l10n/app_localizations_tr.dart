@@ -1538,10 +1538,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get alinanAdetHisseHint => 'Alınan adet (lot)';
 
   @override
-  String get odenenTutarHint => 'Ödenen tutar (₺) · hediye ise 0';
+  String get odenenTutarHint => 'Ödenen tutar · hediye ise 0';
 
   @override
-  String get tutarHint => 'Tutar (₺)';
+  String get tutarHint => 'Tutar';
 
   @override
   String get gecerliMiktarGirin => 'Geçerli bir miktar girin';
@@ -3564,4 +3564,331 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get txPeriodYesterday => 'Dün';
+
+  @override
+  String get lot => 'lot';
+
+  @override
+  String get katkiKipiMiktar => 'Miktar ile';
+
+  @override
+  String get katkiKipiTutar => 'Tutar ile';
+
+  @override
+  String katkiTakipBirimi(Object unit) {
+    return 'Bu birikim $unit cinsinden takip ediliyor.';
+  }
+
+  @override
+  String katkiFarkliTurBaslik(Object unit) {
+    return '$unit bu kayda eklenemez';
+  }
+
+  @override
+  String katkiFarkliTurAciklama(Object recordUnit, Object selectedUnit) {
+    return 'Bu kayıt $recordUnit cinsinden takip ediliyor; araya $selectedUnit eklenirse miktar da değer de karışır. Bu tür için ayrı bir kayıt aç.';
+  }
+
+  @override
+  String katkiFarkliTurButon(Object unit) {
+    return '$unit için yeni kayıt aç';
+  }
+
+  @override
+  String katkiMiktaraCevrilecek(Object qty, Object unit) {
+    return '≈ $qty $unit eklenecek';
+  }
+
+  @override
+  String get katkiFiyatGerekli =>
+      'Tutarı miktara çevirmek için önce güncel fiyatı getir.';
+
+  @override
+  String get katkiOdenenBosUyari =>
+      'Ödenen tutar boş: bu alım bedelsiz (hediye) sayılacak, cüzdandan para düşülmeyecek.';
+
+  @override
+  String get katkiTutarKipiAciklama =>
+      'Yatırdığın tutarı yaz; güncel fiyattan miktara çevrilir.';
+
+  @override
+  String get katkiYatirilanTutarHint => 'Yatırılan tutar';
+
+  @override
+  String duzenlemeTurDegisikligiUyari(Object qty, Object newUnit) {
+    return 'Tür değişiyor: kayıttaki $qty miktarı bundan sonra $newUnit sayılacak ve fiyat güncellemesinde değer buna göre hesaplanacak. Farklı bir tür aldıysan bu kaydı olduğu gibi bırakıp yeni bir kayıt aç.';
+  }
+
+  @override
+  String alinanMiktarBirimHint(Object unit) {
+    return 'Alınan miktar ($unit)';
+  }
+
+  @override
+  String get yeniAlimMiktarVeyaTutar =>
+      'Yeni alım: miktar ya da yatırılan tutar';
+
+  @override
+  String kartBirimFiyat(Object price) {
+    return 'Birim $price';
+  }
+
+  @override
+  String kartMiktarBirim(Object qty, Object unit) {
+    return '$qty $unit';
+  }
+
+  @override
+  String get yatirimTuruHisse => 'Hisse Senedi';
+
+  @override
+  String get yatirimTuruAltin => 'Altın';
+
+  @override
+  String get yatirimTuruOzel => 'Özel';
+
+  @override
+  String satisSheetBaslik(Object name) {
+    return '$name · Sat';
+  }
+
+  @override
+  String satilanMiktarBirimHint(Object unit) {
+    return 'Satılan miktar ($unit)';
+  }
+
+  @override
+  String get satilanDegerHint => 'Satılan tutar (güncel değerinden)';
+
+  @override
+  String get alinanTutarHint => 'Alınan tutar (cüzdana girecek)';
+
+  @override
+  String get satTumunuSec => 'Tümü';
+
+  @override
+  String satElindeki(Object qty, Object unit) {
+    return 'Elindeki: $qty $unit';
+  }
+
+  @override
+  String satGuncelDegerBilgi(Object value) {
+    return 'Güncel değer: $value';
+  }
+
+  @override
+  String get satTamSatisUyari => 'Kaydın tamamı satılıyor: kayıt silinecek.';
+
+  @override
+  String satKismiKalanBilgi(Object qty, Object unit, Object value) {
+    return 'Kalan: $qty $unit · $value';
+  }
+
+  @override
+  String satKismiKalanTutar(Object value) {
+    return 'Kalan kayıt: $value';
+  }
+
+  @override
+  String get gecerliSatisMiktariGirin => 'Geçerli bir satış miktarı girin';
+
+  @override
+  String satisMiktariAsim(Object max) {
+    return 'Elindekinden fazlasını satamazsın (en çok $max)';
+  }
+
+  @override
+  String get gecerliAlinanTutarGirin => 'Geçerli bir alınan tutar girin';
+
+  @override
+  String get satisFiyatTazeleIpucu =>
+      'Kayıttaki değer eskimiş olabilir; güncel fiyatı getirip alınan tutarı tazeleyebilirsin.';
+
+  @override
+  String get kismiSatisBasarili => 'Yatırımın bir kısmı satıldı';
+
+  @override
+  String get kismiSatisGeriAlindi => 'Kısmi satış geri alındı';
+
+  @override
+  String get alimTarihi => 'Alım tarihi';
+
+  @override
+  String get zatenBendeBaslik => 'Bu varlık zaten bende';
+
+  @override
+  String get zatenBendeAciklama =>
+      'Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin';
+
+  @override
+  String alimCuzdandanDusulecek(Object amount, Object date) {
+    return '$amount, $date tarihli gider olarak cüzdandan düşülecek.';
+  }
+
+  @override
+  String get alimCuzdandanDusulmeyecek =>
+      'Cüzdandan para düşülmeyecek; kayıt yalnız portföye eklenir.';
+
+  @override
+  String get birikimBosBaslik => 'Henüz birikimin yok';
+
+  @override
+  String get birikimBosAciklama =>
+      'Altın, hisse ya da kendi tanımladığın bir varlığı ekleyerek portföyünü oluştur. Alım tutarı cüzdanından gider olarak düşülür.';
+
+  @override
+  String get yatirimEklendiMesaji => 'Yatırım başarıyla eklendi';
+
+  @override
+  String get yatirimGuncellendiMesaji => 'Yatırım güncellendi';
+
+  @override
+  String get yatirimSatildiMesaji => 'Yatırım satıldı';
+
+  @override
+  String get yatirimKismenSatildiMesaji => 'Yatırımın bir kısmı satıldı';
+
+  @override
+  String get yatirimSilindiDuzeltildiMesaji =>
+      'Kayıt silindi, alım kaydı düzeltildi';
+
+  @override
+  String fiyatlarGuncellendiMesaji(Object count) {
+    return '$count yatırımın fiyatı güncellendi';
+  }
+
+  @override
+  String fiyatlarKismenGuncellendiMesaji(Object updated, Object failed) {
+    return '$updated güncellendi, $failed alınamadı';
+  }
+
+  @override
+  String get yenilenebilirYatirimYokMesaji =>
+      'Yenilenebilir yatırım yok (sembol ve miktar gerekli)';
+
+  @override
+  String get fiyatlarAlinamadiMesaji =>
+      'Fiyatlar alınamadı, değerler değiştirilmedi';
+
+  @override
+  String get bakiyeGuncellenemediUyarisi =>
+      ' (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)';
+
+  @override
+  String get yatirimGecmisiBuradaListelenecek =>
+      'Yatırım geçmişiniz burada listelenecektir.';
+
+  @override
+  String get hedefKategoriEv => 'Ev';
+
+  @override
+  String get hedefKategoriDugun => 'Düğün';
+
+  @override
+  String get hedefKategoriAraba => 'Araba';
+
+  @override
+  String get hedefKategoriAcilFon => 'Acil Fon';
+
+  @override
+  String get hedefKategoriEgitim => 'Eğitim';
+
+  @override
+  String get hedefKategoriDiger => 'Diğer';
+
+  @override
+  String get maliyetVeyaDegerSifirdanBuyuk =>
+      'Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı';
+
+  @override
+  String get hedeflerim => 'Hedeflerim';
+
+  @override
+  String get bagsizVarliklar => 'Bağsız varlıklar';
+
+  @override
+  String get yeniHedefOlustur => 'Yeni hedef oluştur';
+
+  @override
+  String get hedefiDuzenle => 'Hedefi düzenle';
+
+  @override
+  String get hedefiSil => 'Hedefi sil';
+
+  @override
+  String hedefSilOnayBaslik(Object name) {
+    return '$name hedefi silinsin mi?';
+  }
+
+  @override
+  String hedefSilOnayMesaj(Object count) {
+    return 'Hedef silinir. İçindeki $count varlık SİLİNMEZ, bağsız listeye düşer.';
+  }
+
+  @override
+  String get hedefAdiHint => 'Hedef adı · örn. Ev peşinatı';
+
+  @override
+  String get hedefTutariHint => 'Hedef tutar';
+
+  @override
+  String get hedefAdiGirin => 'Hedef adı girin';
+
+  @override
+  String get hedefAlaniEtiketi => 'Hedef';
+
+  @override
+  String get hedefeBagliDegil => 'Hedefe bağlı değil';
+
+  @override
+  String get hedefeVarlikEkle => 'Bu hedefe varlık ekle';
+
+  @override
+  String get hedefBosAciklama => 'Bu hedefe henüz varlık bağlanmadı.';
+
+  @override
+  String hedefIlerlemeSatiri(Object saved, Object target) {
+    return '$saved / $target';
+  }
+
+  @override
+  String hedefKalanTutar(Object amount) {
+    return 'Kalan $amount';
+  }
+
+  @override
+  String get hedefeUlasildi => 'Hedefe ulaşıldı';
+
+  @override
+  String hedefUyeSayisi(Object count) {
+    return '$count varlık';
+  }
+
+  @override
+  String get hedefKaydedildiMesaji => 'Hedef kaydedildi';
+
+  @override
+  String get hedefSilindiMesaji =>
+      'Hedef silindi, varlıklar bağsız listeye taşındı';
+
+  @override
+  String get varlikTuruSec => 'Ne eklemek istersin?';
+
+  @override
+  String gecmisAlimUyarisi(Object date) {
+    return '$date tarihli alım. \"Mevcut Değer\" BUGÜNKÜ değerdir, alım günündeki değil; maliyet ise o gün ödediğin tutardır.';
+  }
+
+  @override
+  String get bugunkuDegeriHesapla => 'Bugünkü değeri hesapla';
+
+  @override
+  String get hedefYonetimi => 'Hedefler';
+
+  @override
+  String get hedefYokAciklama =>
+      'Henüz hedefin yok. Hedef aç, gram altını, çeyreği ve hisseyi aynı hedefin altında topla.';
+
+  @override
+  String get hedefEkleKisa => 'Hedef ekle';
 }

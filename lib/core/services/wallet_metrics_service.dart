@@ -6,6 +6,7 @@ import 'package:cunehat/features/debt_and_receivable/domain/repositories/receiva
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/investments/domain/repositories/goal_repository.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -92,6 +93,7 @@ class WalletMetricsService {
   final DebtRepository debtRepository;
   final ReceivableRepository receivableRepository;
   final InvestmentRepository investmentRepository;
+  final GoalRepository goalRepository;
   final TransactionsRepository transactionsRepository;
   final TransactionsChangedNotifier transactionsChangedNotifier;
 
@@ -100,6 +102,7 @@ class WalletMetricsService {
     required this.debtRepository,
     required this.receivableRepository,
     required this.investmentRepository,
+    required this.goalRepository,
     required this.transactionsRepository,
     required this.transactionsChangedNotifier,
   });
@@ -489,6 +492,21 @@ class WalletMetricsService {
           if (inv.id != null) {
             await investmentRepository.deleteInvestment(inv.id!);
           }
+        }
+      },
+    );
+
+    // Birikim hedefleri de cüzdana bağlı: üyeleri silinmiş bir hedef
+    // listede "%0" olarak kalırdı.
+    final goalsResult = await goalRepository.getGoals(
+      userId: userId,
+      walletId: walletId,
+    );
+    await goalsResult.fold(
+      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
+      (goals) async {
+        for (final goal in goals) {
+          await goalRepository.deleteGoal(goal.id);
         }
       },
     );

@@ -16,6 +16,8 @@ import 'package:cunehat/features/finance_transactions/data/datasources/category_
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart';
+import 'package:cunehat/features/investments/data/models/goal_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
 import 'package:cunehat/features/investments/data/models/investment_type_adapter.dart';
 import 'package:cunehat/features/debt_and_receivable/data/models/debt_model.dart';
@@ -118,6 +120,7 @@ class AppInitialization {
       Hive.openBox<Map>('users'),
       Hive.openBox<TransactionModel>('transactions'),
       Hive.openBox<InvestmentModel>('investments_box'),
+      Hive.openBox<GoalModel>(GoalLocalDataSource.boxName),
       Hive.openBox<DebtModel>('debts'),
       Hive.openBox<ReceivableModel>('receivables'),
       Hive.openBox<BudgetModel>('budgets_box'),
@@ -143,6 +146,7 @@ class AppInitialization {
     register(TransactionModelAdapter());
     register(TransactionTypeModelAdapter());
     register(InvestmentModelAdapter());
+    register(GoalModelAdapter());
     register(InvestmentTypeAdapter());
     register(DebtModelAdapter());
     register(ReceivableModelAdapter());

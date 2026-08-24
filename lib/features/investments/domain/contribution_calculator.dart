@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 
 /// Katkı muhasebesinin saf kuralları. UI'dan bağımsız test edilebilsin diye
@@ -39,5 +40,35 @@ InvestmentEntity applyAssetPurchase(
     currentValue: newCurrentValue,
     quantity: newQuantity,
     currency: liveCurrency ?? inv.currency,
+  );
+}
+
+/// Kısmi satış: kaydın [ratio] kadarlık kısmı elden çıkar.
+///
+/// Maliyet ORTALAMA maliyetten düşülür (FIFO/LIFO yok — kayıt tek kalemde
+/// kümülatif `amount` tutuyor), böylece kalanın birim maliyeti değişmez ve
+/// kâr/zarar yüzdesi satıştan etkilenmez.
+///
+/// Güncel değer: [livePrice] verilirse kalan miktar piyasaya oturtulur,
+/// verilmezse aynı oranda düşülür. Satıştan gelen NAKİT burada hesaplanmaz;
+/// kullanıcının eline geçen tutar ayrı girilir (defter kuplajı bloc'ta).
+InvestmentEntity applyPartialSale(
+  InvestmentEntity inv, {
+  required double ratio,
+  double? livePrice,
+}) {
+  assert(ratio > 0 && ratio < 1, 'ratio 0 ile 1 arasında olmalı');
+  final remaining = 1 - ratio;
+  final newQuantity = inv.quantity == null ? null : inv.quantity! * remaining;
+  final newValue = (livePrice != null && newQuantity != null)
+      ? newQuantity * livePrice
+      : inv.currentValue * remaining;
+  return inv.copyWith(
+    amount: roundToCents(inv.amount * remaining),
+    currentValue: roundToCents(newValue),
+    quantity: newQuantity,
+    // Deftere işlenmemiş maliyet de aynı oranda küçülür: kalan kaydın
+    // "iade edilebilir" kısmı maliyetiyle aynı oranı korumalı.
+    unbookedCost: roundToCents(inv.unbookedCost * remaining),
   );
 }

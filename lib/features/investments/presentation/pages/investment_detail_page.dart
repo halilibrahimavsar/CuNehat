@@ -129,7 +129,7 @@ class _InvestmentDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Yatırım geçmişiniz burada listelenecektir.',
+                context.l10n.yatirimGecmisiBuradaListelenecek,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

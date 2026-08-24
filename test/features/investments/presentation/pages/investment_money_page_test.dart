@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
@@ -157,6 +158,25 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
+  testWidgets('boş portföyde sıfır kartı değil yönlendirme gösterilir',
+      (WidgetTester tester) async {
+    when(() => mockInvestmentBloc.state)
+        .thenReturn(const InvestmentLoaded([], totalAmount: 0.0));
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Henüz birikimin yok'), findsOneWidget);
+    // Sıfırlarla dolu özet kartı ve bölüm başlıkları gösterilmez.
+    expect(find.text('Hedeflerim'), findsNothing);
+    expect(find.text('Bağsız varlıklar'), findsNothing);
+    // İki yol da ekranda: hedefle başla ya da doğrudan varlık ekle.
+    expect(find.text('Yeni hedef oluştur'), findsOneWidget);
+    expect(find.text('Varlık Ekle'), findsOneWidget);
+  });
+
   testWidgets('renders loaded state with metrics, chart and cards',
       (WidgetTester tester) async {
     when(() => mockInvestmentBloc.state).thenReturn(
@@ -178,8 +198,8 @@ void main() {
         findsOneWidget); // totalCurrentValue = 1250 + 2000 = 3250
     expect(find.text('3.000,00 ₺'), findsOneWidget); // totalInvestment = 3000
 
-    // Verify Portföyüm header
-    expect(find.text('Portföyüm'), findsOneWidget);
+    // Hedefsiz kayıtlar "Bağsız varlıklar" başlığı altında listelenir.
+    expect(find.text('Bağsız varlıklar'), findsOneWidget);
     expect(find.text('2 yatırım'), findsOneWidget); // investments.length = 2
 
     // Verify investment cards render name
@@ -312,10 +332,11 @@ void main() {
     await tester.tap(find.text('Sat'));
     await tester.pumpAndSettle();
 
-    // Verify dialog title
-    expect(find.text('Gram Altın satılsın mı?'), findsOneWidget);
+    // Satış sayfası açılır (onay diyaloğu değil): ne kadarını sattığın ve
+    // eline ne geçtiği burada onaylanır.
+    expect(find.text('Gram Altın · Sat'), findsOneWidget);
 
-    // Tap Sat confirmation button (FilledButton with text 'Sat')
+    // Varsayılan tam satış; Sat düğmesine dokun.
     final satButtonFinder = find.descendant(
       of: find.byType(FilledButton),
       matching: find.text('Sat'),
@@ -324,11 +345,12 @@ void main() {
     await tester.tap(satButtonFinder);
     await tester.pumpAndSettle();
 
-    // Verify event dispatched
+    // Verify event dispatched — cüzdana giren tutar onaylanan tutardır.
     verify(() => mockInvestmentBloc.add(any(
           that: isA<DeleteInvestmentEvent>()
               .having((e) => e.recordSale, 'recordSale', true)
-              .having((e) => e.id, 'id', 'inv_1'),
+              .having((e) => e.id, 'id', 'inv_1')
+              .having((e) => e.currentValue, 'proceeds', 1250.0),
         ))).called(1);
   });
 
@@ -406,12 +428,13 @@ void main() {
       ),
     );
 
-    // Emit success state
-    controller.add(const InvestmentActionSuccess('İşlem başarıyla tamamlandı'));
+    // Emit success state — bloc metin değil TİP yayınlar; cümle sayfada
+    // çevrilir.
+    controller.add(const InvestmentActionSuccess(InvestmentAddedNotice()));
     await tester.pumpAndSettle();
 
     // Verify snackbar/success text is shown
-    expect(find.text('İşlem başarıyla tamamlandı'), findsOneWidget);
+    expect(find.text('Yatırım başarıyla eklendi'), findsOneWidget);
     // Verify reload was triggered
     verify(() => mockInvestmentBloc.add(any(that: isA<GetInvestmentsEvent>())))
         .called(2);
@@ -432,10 +455,88 @@ void main() {
     );
 
     // Emit error state
-    controller.add(const InvestmentError('Bir hata oluştu'));
+    controller.add(const InvestmentError(RawFailureNotice('Bir hata oluştu')));
     await tester.pumpAndSettle();
 
     expect(find.text('Bir hata oluştu'), findsOneWidget);
+  });
+
+  testWidgets('nakit hareketi yazılamazsa mesaja bakiye uyarısı eklenir',
+      (WidgetTester tester) async {
+    final controller = StreamController<InvestmentState>.broadcast();
+    addTearDown(controller.close);
+
+    when(() => mockInvestmentBloc.stream).thenAnswer((_) => controller.stream);
+    when(() => mockInvestmentBloc.state).thenReturn(InvestmentLoading());
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        InvestmentMoneyPage(activeWallet: testWallet),
+      ),
+    );
+
+    controller.add(
+        const InvestmentActionSuccess(InvestmentSoldNotice(), cashOk: false));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Yatırım satıldı (Uyarı: bakiye güncellenemedi, '
+          'cüzdanı yenileyin.)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('kısmi satış kaydı silmez, PartialSellInvestmentEvent atar',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded([testInvestment1], totalAmount: 1000.0),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Gram Altın'),
+        )
+        .first;
+    await tester.ensureVisible(cardFinder);
+    await tester.tap(cardFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sat'));
+    await tester.pumpAndSettle();
+
+    // 1 adetin 0,25'i satılıyor.
+    await tester.enterText(find.byType(TextField).first, '0,25');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.descendant(
+      of: find.byType(FilledButton),
+      matching: find.text('Sat'),
+    ));
+    await tester.pumpAndSettle();
+
+    verifyNever(
+        () => mockInvestmentBloc.add(any(that: isA<DeleteInvestmentEvent>())));
+    verify(() => mockInvestmentBloc.add(any(
+          that: isA<PartialSellInvestmentEvent>()
+              // Kalan: 0,75 adet, maliyet 750, değer 937,50.
+              .having((e) => e.remaining.quantity, 'kalan miktar', 0.75)
+              .having((e) => e.remaining.amount, 'kalan maliyet', 750.0)
+              .having((e) => e.remaining.currentValue, 'kalan değer', 937.5)
+              // Eline geçen: 0,25 × 1.250 = 312,50.
+              .having((e) => e.proceeds, 'eline geçen', 312.5),
+        ))).called(1);
   });
 
   testWidgets('tapping cancel on sell dialog does not trigger dispatch',
@@ -477,8 +578,8 @@ void main() {
     await tester.tap(find.text('Sat'));
     await tester.pumpAndSettle();
 
-    // Verify dialog title
-    expect(find.text('Gram Altın satılsın mı?'), findsOneWidget);
+    // Verify sell sheet title
+    expect(find.text('Gram Altın · Sat'), findsOneWidget);
 
     // Tap Vazgeç button
     await tester.tap(find.text('Vazgeç'));
@@ -828,5 +929,239 @@ void main() {
           that: isA<RefreshPricesEvent>()
               .having((e) => e.walletCurrency, 'walletCurrency', 'USD'),
         ))).called(1);
+  });
+
+  testWidgets('"zaten bende" kaydın maliyeti düzenlenince cüzdana yazılmaz',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    // Uygulamadan önce alınmış kayıt: maliyetin tamamı işlenmemiş.
+    final alreadyOwned = testInvestment2.copyWith(unbookedCost: 2000.0);
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded([alreadyOwned], totalAmount: 2000.0),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    final cardFinder = find
+        .descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text('Bireysel Emeklilik'),
+        )
+        .first;
+    await tester.ensureVisible(cardFinder);
+    await tester.tap(cardFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Düzenle'));
+    await tester.pumpAndSettle();
+
+    // Maliyeti 2.000 → 1.500 düşür.
+    final costField = find.byWidgetPredicate((widget) =>
+        widget is TextField &&
+        widget.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)');
+    await tester.ensureVisible(costField);
+    await tester.enterText(costField, '1.500');
+    await tester.pumpAndSettle();
+
+    final saveButton = find.text('Güncelle');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    // Deftere hiç girmemiş paranın azalması cüzdana GELİR yazılamaz:
+    // işlenmiş maliyet iki tarafta da sıfır.
+    verify(() => mockInvestmentBloc.add(any(
+          that: isA<UpdateInvestmentEvent>()
+              .having((e) => e.prevAmount, 'önceki işlenmiş maliyet', 0.0)
+              .having((e) => e.newAmount, 'yeni işlenmiş maliyet', 0.0)
+              .having((e) => e.investment.unbookedCost, 'işlenmemiş maliyet',
+                  1500.0),
+        ))).called(1);
+  });
+
+  testWidgets(
+      'hedef kartı KARIŞIK portföyün toplamını gösterir, üyeleri '
+      'bağsız listede tekrar etmez', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final goal = GoalEntity(
+      id: 'goal_1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Ev peşinatı',
+      targetAmount: 10000.0,
+      category: 'ev',
+      color: Colors.teal,
+      createdAt: DateTime(2026, 1, 1),
+    );
+    final gram = testInvestment1.copyWith(goalId: 'goal_1');
+    final ceyrek = InvestmentEntity(
+      id: 'inv_3',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Çeyrek Birikimi',
+      amount: 1000.0,
+      currentValue: 1750.0,
+      type: InvestmentType.gold,
+      color: Colors.amber,
+      dateAdded: DateTime(2026, 1, 1),
+      symbol: 'ceyrek-altin',
+      quantity: 1.0,
+      goalId: 'goal_1',
+    );
+
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded(
+        [gram, ceyrek, testInvestment2],
+        goals: [goal],
+        totalAmount: 4000.0,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    // Birikmiş = 1.250 + 1.750 = 3.000 (iki farklı altın türü TEK hedefte).
+    expect(find.text('Ev peşinatı'), findsOneWidget);
+    expect(find.text('3.000,00 ₺ / 10.000,00 ₺'), findsOneWidget);
+    expect(find.text('%30'), findsOneWidget);
+    expect(find.text('2 varlık'), findsOneWidget);
+
+    // Kapalıyken üyeler çizilmez; bağsız kayıt listede durur.
+    // (Ad, grafik göstergesinde de geçiyor — yalnız kartlara bakılır.)
+    Finder inCard(String name) => find.descendant(
+          of: find.byType(InvestmentCard),
+          matching: find.text(name),
+        );
+    expect(find.text('Bağsız varlıklar'), findsOneWidget);
+    expect(inCard('Bireysel Emeklilik'), findsOneWidget);
+    expect(inCard('Çeyrek Birikimi'), findsNothing);
+
+    // Başlığa dokun → üyeler açılır.
+    await tester.tap(find.text('Ev peşinatı'));
+    await tester.pumpAndSettle();
+    expect(inCard('Çeyrek Birikimi'), findsOneWidget);
+    expect(find.text('Bu hedefe varlık ekle'), findsOneWidget);
+  });
+
+  testWidgets('hedef silme onayı üye sayısını söyler ve DeleteGoalEvent atar',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final goal = GoalEntity(
+      id: 'goal_1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Ev peşinatı',
+      targetAmount: 10000.0,
+      category: 'ev',
+      color: Colors.teal,
+      createdAt: DateTime(2026, 1, 1),
+    );
+
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded(
+        [testInvestment1.copyWith(goalId: 'goal_1')],
+        goals: [goal],
+        totalAmount: 1000.0,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hedefi sil'));
+    await tester.pumpAndSettle();
+
+    // Kullanıcı varlıklarının silinmeyeceğini onay ekranında görür.
+    expect(find.text('Ev peşinatı hedefi silinsin mi?'), findsOneWidget);
+    expect(
+      find.textContaining('İçindeki 1 varlık SİLİNMEZ'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.descendant(
+      of: find.byType(FilledButton),
+      matching: find.text('Hedefi sil'),
+    ));
+    await tester.pumpAndSettle();
+
+    verify(() => mockInvestmentBloc.add(any(
+          that: isA<DeleteGoalEvent>()
+              .having((e) => e.goal.id, 'goal id', 'goal_1'),
+        ))).called(1);
+  });
+  testWidgets('gerçek telefon genişliğinde (360dp) hiçbir satır taşmaz',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(360, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final goal = GoalEntity(
+      id: 'goal_1',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Kızımın düğünü için altın birikimi',
+      targetAmount: 1250000.0,
+      category: 'dugun',
+      color: Colors.teal,
+      createdAt: DateTime(2026, 1, 1),
+    );
+    final big = InvestmentEntity(
+      id: 'big',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      name: 'Düğün Altınları',
+      amount: 900000.0,
+      currentValue: 987654.32,
+      type: InvestmentType.gold,
+      color: Colors.amber,
+      dateAdded: DateTime(2026, 1, 1),
+      symbol: 'gram-altin',
+      quantity: 224.5,
+      goalId: 'goal_1',
+    );
+
+    when(() => mockInvestmentBloc.state).thenReturn(
+      InvestmentLoaded([big, testInvestment2],
+          goals: [goal], totalAmount: 902000.0),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(InvestmentMoneyPage(activeWallet: testWallet)),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Kızımın düğünü için altın birikimi'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

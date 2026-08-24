@@ -92,11 +92,11 @@ class InvestmentActionSheet extends StatelessWidget {
               color: investment.color,
               title: investment.symbol != null
                   ? context.l10n.varlikEkle
-                  : (investment.isGoal
+                  : (investment.goalId != null
                       ? context.l10n.hedefeParaEkle
                       : context.l10n.paraEkle),
               subtitle: investment.symbol != null
-                  ? context.l10n.yeniAlimMiktarVeOdenenTutar
+                  ? context.l10n.yeniAlimMiktarVeyaTutar
                   : context.l10n.maliyeteVeDegereEklenir,
               action: InvestmentAction.contribute,
             ),

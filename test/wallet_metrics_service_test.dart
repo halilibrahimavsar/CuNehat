@@ -11,6 +11,8 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
+import 'package:cunehat/features/investments/domain/repositories/goal_repository.dart';
 import 'package:cunehat/features/investments/domain/repositories/investment_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -192,6 +194,32 @@ class FakeReceivableRepository implements ReceivableRepository {
   Future<Either<Failure, List<ReceivableEntity>>> getReceivablesByWalletId(
           String walletId) async =>
       Right(store.where((r) => r.walletId == walletId).toList());
+}
+
+class FakeGoalRepository implements GoalRepository {
+  final List<GoalEntity> store = [];
+
+  @override
+  Future<Either<Failure, List<GoalEntity>>> getGoals({
+    required String userId,
+    required String walletId,
+  }) async =>
+      Right(store
+          .where((g) => g.userId == userId && g.walletId == walletId)
+          .toList());
+
+  @override
+  Future<Either<Failure, void>> saveGoal(GoalEntity goal) async {
+    final idx = store.indexWhere((g) => g.id == goal.id);
+    idx >= 0 ? store[idx] = goal : store.add(goal);
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteGoal(String id) async {
+    store.removeWhere((g) => g.id == id);
+    return const Right(null);
+  }
 }
 
 class FakeInvestmentRepository implements InvestmentRepository {
@@ -422,6 +450,7 @@ void main() {
       debtRepository: debts,
       receivableRepository: FakeReceivableRepository(),
       investmentRepository: FakeInvestmentRepository(),
+      goalRepository: FakeGoalRepository(),
       transactionsRepository: txs,
       transactionsChangedNotifier: TransactionsChangedNotifier(),
     );
@@ -485,6 +514,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: FailingTransactionsRepository(),
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -563,6 +593,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -611,6 +642,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: receivables,
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -648,6 +680,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FailingReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -669,6 +702,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: investments,
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -710,6 +744,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: investments,
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -737,6 +772,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FailingInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -758,6 +794,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: receivables,
         investmentRepository: investments,
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -835,6 +872,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: FailingTransactionsRepository(),
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -851,6 +889,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -866,6 +905,7 @@ void main() {
         debtRepository: FailingDebtRepository(),
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -881,6 +921,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -907,6 +948,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -926,6 +968,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -941,6 +984,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -955,6 +999,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FailingReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -969,6 +1014,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -999,6 +1045,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: investments,
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -1013,6 +1060,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: FailingTransactionsRepository(),
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -1026,6 +1074,7 @@ void main() {
         debtRepository: FailingDebtRepository(),
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -1040,6 +1089,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FailingReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -1054,6 +1104,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FailingInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -1070,6 +1121,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );
@@ -1176,6 +1228,7 @@ void main() {
         debtRepository: debts,
         receivableRepository: FakeReceivableRepository(),
         investmentRepository: investments,
+        goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
       );

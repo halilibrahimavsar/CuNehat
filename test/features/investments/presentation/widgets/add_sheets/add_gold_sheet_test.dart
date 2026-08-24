@@ -120,7 +120,7 @@ void main() {
 
     // Locate quantity textfield (hint: 'Adet')
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField && widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'Gram Altın');
     expect(quantityFinder, findsOneWidget);
     await tester.enterText(quantityFinder, '2.0');
 
@@ -225,7 +225,7 @@ void main() {
 
     // Now test Live Price fetch failure
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField && widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'Gram Altın');
     await tester.enterText(quantityFinder, '1.5');
     await tester.tap(find.text('Hesapla'));
     await tester.pumpAndSettle();
@@ -280,20 +280,6 @@ void main() {
             'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
         findsOneWidget);
 
-    // Enter a target amount to trigger goal category selection
-    final targetFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Hedef Tutar (İsteğe Bağlı)');
-    await tester.enterText(targetFinder, '10000');
-    await tester.pumpAndSettle();
-
-    // Now Goal Category section should be visible
-    expect(find.text('Hedef Kategorisi'), findsOneWidget);
-
-    // Tap category chip 'Araba'
-    await tester.tap(find.text('Araba'), warnIfMissed: false);
-    await tester.pumpAndSettle();
-
     // Tap color option circle to change color (e.g. Colors.blue)
     final colorFinders = find.byWidgetPredicate((widget) =>
         widget is GestureDetector && widget.child is AnimatedContainer);
@@ -308,8 +294,6 @@ void main() {
     expect(updatedInvestment, isNotNull);
     expect(updatedInvestment!.name, 'Yastık Altı Altın');
     expect(updatedInvestment!.amount, 2000.0);
-    expect(updatedInvestment!.targetAmount, 10000.0);
-    expect(updatedInvestment!.goalCategory, 'araba');
     expect(updatedInvestment!.color, Colors.blue);
   });
 
@@ -330,5 +314,260 @@ void main() {
     expect(showcase.isTargetRendered(OnboardingKeys.investmentAddCost), isTrue);
     expect(showcase.isTargetRendered(OnboardingKeys.investmentAddQuantity),
         isTrue);
+  });
+
+  testWidgets('"zaten bende" seçilince maliyet deftere işlenmez',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    InvestmentEntity? saved;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          onSave: (inv) => saved = inv,
+        ),
+      ),
+    );
+
+    // Mevcut değer ve maliyet.
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '5.000');
+    await tester.enterText(fields.at(1), '4.000');
+    await tester.pumpAndSettle();
+
+    // Varsayılan: tamamı cüzdandan düşülür.
+    expect(find.textContaining('cüzdandan düşülecek'), findsOneWidget);
+
+    final switchFinder = find.byType(SwitchListTile);
+    await tester.ensureVisible(switchFinder);
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+
+    expect(
+        find.text(
+            'Cüzdandan para düşülmeyecek; kayıt yalnız portföye eklenir.'),
+        findsOneWidget);
+
+    final saveButton = find.text('Kaydet');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(saved, isNotNull);
+    expect(saved!.amount, 4000.0);
+    // Maliyetin tamamı işlenmemiş → deftere gider yazılmaz, silmede de
+    // iade edilecek bir şey yoktur.
+    expect(saved!.unbookedCost, 4000.0);
+    expect(saved!.bookedCost, 0.0);
+  });
+
+  testWidgets('düzenlemede alım tarihi/zaten bende satırı gösterilmez',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          investmentToEdit: testInvestment,
+          onSave: (_) {},
+        ),
+      ),
+    );
+
+    expect(find.byType(SwitchListTile), findsNothing);
+    expect(find.textContaining('Alım tarihi'), findsNothing);
+  });
+
+  testWidgets('düzenlemede altın türü değişirse miktar uyarısı çıkar',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          investmentToEdit: testInvestment,
+          onSave: (_) {},
+        ),
+      ),
+    );
+
+    expect(find.textContaining('Tür değişiyor'), findsNothing);
+
+    final dropdown = find.byType(DropdownButton<String>);
+    await tester.ensureVisible(dropdown);
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Çeyrek Altın').last);
+    await tester.pumpAndSettle();
+
+    // 1 gram sessizce 1 çeyreğe dönüşmesin: uyarı kaydetmeden önce görünür.
+    expect(find.textContaining('kayıttaki 1 miktarı bundan sonra Çeyrek Altın'),
+        findsOneWidget);
+  });
+
+  testWidgets('maliyet ve değer birlikte sıfırsa boş kayıt reddedilir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    InvestmentEntity? saved;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          onSave: (inv) => saved = inv,
+        ),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '0');
+    await tester.enterText(fields.at(1), '0');
+    await tester.pumpAndSettle();
+
+    final saveButton = find.text('Kaydet');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(saved, isNull);
+    expect(
+        find.text(
+            'Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı'),
+        findsOneWidget);
+  });
+
+  testWidgets('düzenlemede miktar alanı boşaltılırsa miktar silinir',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    InvestmentEntity? saved;
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          investmentToEdit: testInvestment,
+          onSave: (inv) => saved = inv,
+        ),
+      ),
+    );
+
+    final quantityField = find.byWidgetPredicate((widget) =>
+        widget is TextField && widget.decoration?.hintText == 'Gram Altın');
+    await tester.ensureVisible(quantityField);
+    await tester.enterText(quantityField, '');
+    await tester.pumpAndSettle();
+
+    final saveButton = find.text('Güncelle');
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(saved, isNotNull);
+    expect(saved!.quantity, isNull);
+  });
+
+  testWidgets('geçmiş tarihli alımda mevcut değer uyarısı ve kısayol çıkar',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
+      (_) async => const Right(LivePriceQuote(
+        price: 2500.0,
+        currency: 'TRY',
+        convertedPrice: 2500.0,
+        targetCurrency: 'TRY',
+      )),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'wallet_123',
+          userId: 'user_123',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+
+    // Bugün seçiliyken uyarı yok.
+    expect(find.textContaining('BUGÜNKÜ değerdir'), findsNothing);
+
+    // Takvimden dünü seç.
+    final dateField = find.textContaining('Alım tarihi:');
+    await tester.ensureVisible(dateField);
+    await tester.tap(dateField);
+    await tester.pumpAndSettle();
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    await tester.tap(find.text('${yesterday.day}').last);
+    await tester.tap(find.text('Tamam'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('BUGÜNKÜ değerdir'), findsOneWidget);
+
+    // Kısayol miktar × güncel fiyattan bugünkü değeri yazar.
+    final quantityField = find.byWidgetPredicate((widget) =>
+        widget is TextField && widget.decoration?.hintText == 'Gram Altın');
+    await tester.ensureVisible(quantityField);
+    await tester.enterText(quantityField, '2');
+    await tester.pumpAndSettle();
+
+    final shortcut = find.text('Bugünkü değeri hesapla');
+    await tester.ensureVisible(shortcut);
+    await tester.tap(shortcut);
+    await tester.pumpAndSettle();
+
+    final currentValueField = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0');
+    expect(
+      tester.widget<TextField>(currentValueField).controller?.text,
+      '5.000',
+    );
   });
 }

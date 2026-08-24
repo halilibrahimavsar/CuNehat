@@ -1,22 +1,35 @@
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 
-/// Birikim hedefi kategorileri. Anahtarlar Hive/Firestore'da String olarak
-/// saklanır; etiket ve ikonlar yalnızca sunum katmanındadır.
+/// Birikim hedefi kategorileri. Anahtarlar Hive'da String olarak saklanır;
+/// etiket ve ikonlar yalnızca sunum katmanındadır — etiket sabit metin
+/// DEĞİL, uygulamanın diline göre çözülür.
 class GoalCategory {
   final String key;
-  final String label;
   final IconData icon;
 
-  const GoalCategory(this.key, this.label, this.icon);
+  const GoalCategory(this.key, this.icon);
 
   static const List<GoalCategory> all = [
-    GoalCategory('ev', 'Ev', Icons.home_rounded),
-    GoalCategory('dugun', 'Düğün', Icons.favorite_rounded),
-    GoalCategory('araba', 'Araba', Icons.directions_car_rounded),
-    GoalCategory('acil_fon', 'Acil Fon', Icons.health_and_safety_rounded),
-    GoalCategory('egitim', 'Eğitim', Icons.school_rounded),
-    GoalCategory('diger', 'Diğer', Icons.flag_rounded),
+    GoalCategory('ev', Icons.home_rounded),
+    GoalCategory('dugun', Icons.favorite_rounded),
+    GoalCategory('araba', Icons.directions_car_rounded),
+    GoalCategory('acil_fon', Icons.health_and_safety_rounded),
+    GoalCategory('egitim', Icons.school_rounded),
+    GoalCategory('diger', Icons.flag_rounded),
   ];
+
+  String label(BuildContext context) {
+    final l10n = context.l10n;
+    return switch (key) {
+      'ev' => l10n.hedefKategoriEv,
+      'dugun' => l10n.hedefKategoriDugun,
+      'araba' => l10n.hedefKategoriAraba,
+      'acil_fon' => l10n.hedefKategoriAcilFon,
+      'egitim' => l10n.hedefKategoriEgitim,
+      _ => l10n.hedefKategoriDiger,
+    };
+  }
 
   static GoalCategory? byKey(String? key) {
     if (key == null) return null;
@@ -56,7 +69,7 @@ class GoalCategorySelector extends StatelessWidget {
             size: 16,
             color: isSelected ? Colors.white : cs.onSurfaceVariant,
           ),
-          label: Text(category.label),
+          label: Text(category.label(context)),
           labelStyle: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,

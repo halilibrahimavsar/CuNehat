@@ -5,9 +5,11 @@ import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_form_validation.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
-import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -17,6 +19,12 @@ class AddCustomSheet extends StatefulWidget {
   final String userId;
   final InvestmentEntity? investmentToEdit;
   final Function(InvestmentEntity) onSave;
+
+  /// Cüzdanın birikim hedefleri — "hedefe bağla" seçicisini besler.
+  final List<GoalEntity> goals;
+
+  /// Yeni kayıt hedeften açıldıysa ön seçili hedef.
+  final String? initialGoalId;
 
   /// Cüzdanın para birimi: maliyet ve güncel değer bu birimdedir. Özel
   /// varlığın canlı fiyat kaynağı yoktur, değerler elle girilir.
@@ -28,6 +36,8 @@ class AddCustomSheet extends StatefulWidget {
     required this.userId,
     required this.onSave,
     required this.walletCurrency,
+    this.goals = const [],
+    this.initialGoalId,
     this.investmentToEdit,
   });
 
@@ -37,6 +47,8 @@ class AddCustomSheet extends StatefulWidget {
     required String userId,
     required Function(InvestmentEntity) onSave,
     required String walletCurrency,
+    List<GoalEntity> goals = const [],
+    String? initialGoalId,
     InvestmentEntity? investmentToEdit,
   }) {
     return showModalBottomSheet(
@@ -48,6 +60,8 @@ class AddCustomSheet extends StatefulWidget {
         userId: userId,
         onSave: onSave,
         walletCurrency: walletCurrency,
+        goals: goals,
+        initialGoalId: initialGoalId,
         investmentToEdit: investmentToEdit,
       ),
     );
@@ -66,10 +80,16 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _currentValueController = TextEditingController();
-  final _targetAmountController = TextEditingController();
+
+  /// Alım tarihi: kayıt açılırken seçilir, gider bu tarihe yazılır.
+  DateTime _purchaseDate = DateTime.now();
+
+  /// "Bu varlık zaten bende": maliyet cüzdandan düşülmez
+  /// (bkz. `InvestmentEntity.unbookedCost`).
+  bool _alreadyOwned = false;
 
   Color _selectedColor = Colors.purple;
-  String? _selectedGoalCategory;
+  String? _goalId;
 
   final List<Color> _colorOptions = [
     Colors.purple,
@@ -91,14 +111,12 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
       _nameController.text = item.name;
       _amountController.text = _fmt(item.amount);
       _currentValueController.text = _fmt(item.currentValue);
-      if (item.targetAmount != null) {
-        _targetAmountController.text = _fmt(item.targetAmount!);
-      }
-      _selectedGoalCategory = item.goalCategory;
+      _goalId = item.goalId;
       _selectedColor = item.color;
+      _purchaseDate = item.dateAdded;
     }
-    // Kategori satırı hedef tutar girildiğinde görünür hale gelir.
-    _targetAmountController.addListener(() => setState(() {}));
+    // Alım özeti ("şu kadarı cüzdandan düşülecek") maliyetten türer.
+    _amountController.addListener(() => setState(() {}));
   }
 
   @override
@@ -106,7 +124,6 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
     _nameController.dispose();
     _amountController.dispose();
     _currentValueController.dispose();
-    _targetAmountController.dispose();
     super.dispose();
   }
 
@@ -115,27 +132,16 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   double? get _parsedAmount => parseMoneyInput(_amountController.text);
   double? get _parsedCurrentValue =>
       parseMoneyInput(_currentValueController.text);
-  double? get _parsedTargetAmount =>
-      parseMoneyInput(_targetAmountController.text);
 
   void _clearError() {
     if (_error != null) setState(() => _error = null);
   }
 
-  String? _validate() {
-    // if (_nameController.text.trim().isEmpty) return 'Lütfen bir isim girin';
-    if (_parsedAmount == null || _parsedAmount! <= 0) {
-      return context.l10n.gecerliYatirimMiktariGirin;
-    }
-    if (_parsedCurrentValue == null || _parsedCurrentValue! < 0) {
-      return context.l10n.gecerliMevcutDegerGirin;
-    }
-    if (_targetAmountController.text.trim().isNotEmpty &&
-        (_parsedTargetAmount == null || _parsedTargetAmount! <= 0)) {
-      return context.l10n.gecerliHedefTutarGirin;
-    }
-    return null;
-  }
+  String? _validate() => validateInvestmentForm(
+        context,
+        cost: _parsedAmount,
+        currentValue: _parsedCurrentValue,
+      );
 
   void _save() {
     final err = _validate();
@@ -156,13 +162,17 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
       currentValue: _parsedCurrentValue!,
       type: InvestmentType.custom,
       color: _selectedColor,
-      dateAdded: widget.investmentToEdit?.dateAdded ?? DateTime.now(),
+      dateAdded: widget.investmentToEdit?.dateAdded ?? _purchaseDate,
       symbol: null,
       returnRate: 0,
-      targetAmount: _parsedTargetAmount,
       quantity: widget.investmentToEdit?.quantity,
-      goalCategory: _parsedTargetAmount != null ? _selectedGoalCategory : null,
-      currency: 'TRY',
+      goalId: _goalId,
+      // Özel varlığın canlı fiyat kaynağı yok; `currency` fiyat KAYNAĞININ
+      // birimidir, değerleme birimi cüzdandan gelir → boş bırakılır.
+      currency: null,
+      // "Zaten bende" seçilirse maliyetin tamamı deftere işlenmez; sonraki
+      // katkılar (ödenen tutar) normal şekilde cüzdandan düşer.
+      unbookedCost: _resolveUnbookedCost(_parsedAmount ?? 0.0),
     );
 
     widget.onSave(investment);
@@ -263,28 +273,17 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                           inputFormatters: [AmountInputFormatter()],
                         ),
                       ),
+                      ...?_purchaseRowSlot(),
                       const SizedBox(height: 14),
-                      InvestmentFilledField(
-                        controller: _targetAmountController,
-                        hint: context.l10n.hedefTutarIstegeBagli,
-                        icon: Icons.flag_rounded,
+                      InvestmentSectionLabel(context.l10n.hedefAlaniEtiketi),
+                      const SizedBox(height: 10),
+                      InvestmentGoalPicker(
+                        goals: widget.goals,
+                        selectedGoalId: _goalId,
                         accent: _accent,
-                        onChanged: _clearError,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [AmountInputFormatter()],
+                        walletCurrency: widget.walletCurrency,
+                        onChanged: (id) => setState(() => _goalId = id),
                       ),
-                      if (_targetAmountController.text.trim().isNotEmpty) ...[
-                        const SizedBox(height: 14),
-                        InvestmentSectionLabel(context.l10n.hedefKategorisi),
-                        const SizedBox(height: 10),
-                        GoalCategorySelector(
-                          selectedKey: _selectedGoalCategory,
-                          onChanged: (key) =>
-                              setState(() => _selectedGoalCategory = key),
-                          accentColor: Colors.purple.shade600,
-                        ),
-                      ],
                       if (_isEditing) ...[
                         const SizedBox(height: 14),
                         const InvestmentCostEditWarning(),
@@ -317,5 +316,40 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
         ),
       ),
     );
+  }
+
+  /// Alım tarihi + "zaten bende" satırı yalnız YENİ kayıtta gösterilir:
+  /// düzenlemede alım defterde çoktan yazılı, tarihi geriye almak o kaydı
+  /// bulup taşımaz — sessizce tutarsızlık üretirdi.
+  List<Widget>? _purchaseRowSlot() {
+    if (_isEditing) return null;
+    final cost = _parsedAmount;
+    return [
+      const SizedBox(height: 14),
+      InvestmentPurchaseRow(
+        accent: _accent,
+        date: _purchaseDate,
+        onDateChanged: (d) => setState(() => _purchaseDate = d),
+        alreadyOwned: _alreadyOwned,
+        onAlreadyOwnedChanged: (v) => setState(() => _alreadyOwned = v),
+        costText: (cost == null || cost <= 0)
+            ? null
+            : formatMoney(cost, currency: widget.walletCurrency),
+      ),
+    ];
+  }
+
+  /// Kaydın deftere işlenmemiş maliyeti.
+  ///
+  /// Yeni kayıtta "zaten bende" anahtarının kendisi. DÜZENLEMEDE: kayıt
+  /// tamamen işlenmemişse (uygulamadan önce alınmış) maliyet değişse de öyle
+  /// kalır — o para uygulamadan önce çıktığı için farkı bugün cüzdana
+  /// yazmak hayali gelir/gider üretirdi. Kısmen işlenmiş kayıtta işlenmemiş
+  /// kısım sabit tutulur, fark defteri etkiler.
+  double _resolveUnbookedCost(double cost) {
+    final item = widget.investmentToEdit;
+    if (item == null) return _alreadyOwned ? cost : 0.0;
+    if (item.amount > 0 && item.unbookedCost >= item.amount) return cost;
+    return item.unbookedCost > cost ? cost : item.unbookedCost;
   }
 }

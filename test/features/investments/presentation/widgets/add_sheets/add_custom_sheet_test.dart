@@ -162,16 +162,16 @@ void main() {
         (w) => w is TextField && w.decoration?.hintText == '0');
     await tester.enterText(currentValueFinder, '2200');
 
-    // Geçersiz hedef tutar → doğrulama hatası. AmountInputFormatter
-    // allowNegative:false olduğundan '-' zaten yazılamıyor; sıfır bu alanda
-    // hâlâ geçersizdir (bkz. AddCustomSheet doğrulaması: targetAmount <= 0).
-    final targetFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Hedef Tutar (İsteğe Bağlı)');
-    await tester.enterText(targetFinder, '0');
+    // Hedef tutar alanı formdan kalktı (hedef artık ayrı kayıt). Yerine
+    // ortak kural: maliyet ve değer birlikte sıfır olamaz.
+    await tester.enterText(amountFinder, '0');
+    await tester.enterText(currentValueFinder, '0');
     await tester.tap(find.text('Kaydet'));
     await tester.pumpAndSettle();
-    expect(find.text('Geçerli bir hedef tutar girin'), findsOneWidget);
+    expect(
+        find.text(
+            'Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı'),
+        findsOneWidget);
   });
 
   testWidgets(
@@ -220,20 +220,6 @@ void main() {
             'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
         findsOneWidget);
 
-    // Enter a target amount to trigger goal category selection
-    final targetFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Hedef Tutar (İsteğe Bağlı)');
-    await tester.enterText(targetFinder, '15000');
-    await tester.pumpAndSettle();
-
-    // Now Goal Category section should be visible
-    expect(find.text('Hedef Kategorisi'), findsOneWidget);
-
-    // Tap category chip 'Acil Fon'
-    await tester.tap(find.text('Acil Fon'), warnIfMissed: false);
-    await tester.pumpAndSettle();
-
     // Tap color option circle to change color (e.g. index 5 is Teal)
     final colorFinders = find.byWidgetPredicate((widget) =>
         widget is GestureDetector && widget.child is AnimatedContainer);
@@ -248,8 +234,6 @@ void main() {
     expect(updatedInvestment, isNotNull);
     expect(updatedInvestment!.name, 'Bireysel Emeklilik');
     expect(updatedInvestment!.amount, 3000.0);
-    expect(updatedInvestment!.targetAmount, 15000.0);
-    expect(updatedInvestment!.goalCategory, 'acil_fon');
     expect(updatedInvestment!.color, Colors.teal);
   });
 

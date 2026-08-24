@@ -1,10 +1,19 @@
+import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
+import 'package:cunehat/features/investments/domain/goal_progress.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
+import 'package:cunehat/features/investments/presentation/investment_notice_text.dart';
 import 'package:cunehat/features/investments/presentation/widgets/contribute_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/goal_form_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/goal_group_card.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_action_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_card.dart';
+import 'package:cunehat/features/investments/presentation/widgets/investment_type_chooser.dart';
+import 'package:cunehat/features/investments/presentation/widgets/sell_investment_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/investment_chart.dart';
 import 'package:cunehat/features/investments/presentation/widgets/summary_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -31,17 +40,14 @@ class InvestmentMoneyPage extends StatefulWidget {
 class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   late ConfettiController _confettiController;
 
-  /// Satış onayı: güncel değer cüzdana gelir olarak işlenir.
-  Future<bool> _confirmSell(InvestmentEntity investment) {
-    return ConfirmDialog.show(
-      context,
-      title: context.l10n.yatirimSatOnayBaslik(investment.name),
-      message: context.l10n.guncelDegerFormatmoneyInvestment(
-          formatMoney(investment.currentValue, currency: _currency)),
-      confirmText: context.l10n.sat,
-      cancelText: context.l10n.vazgec,
-    );
-  }
+  /// Açık hedef grupları. Sayfa yeniden çizildiğinde (her katkı/fiyat
+  /// yenilemesi listeyi tazeler) açık grup kapanmasın diye sayfada durur.
+  final Set<String> _expandedGoals = {};
+
+  /// Son yüklemede hedefine ULAŞMIŞ hedeflerin kimlikleri. Konfeti,
+  /// bu kümeye YENİ bir kimlik eklendiğinde atılır — böylece kutlama
+  /// yalnız eşiğin geçildiği anda olur, her yüklemede değil.
+  Set<String>? _reachedGoalIds;
 
   /// Kayıt silme onayı: hatalı girişler için, alım gideri iade edilir.
   Future<bool> _confirmDelete(InvestmentEntity investment) {
@@ -49,7 +55,7 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
       context,
       title: context.l10n.yatirimSilOnayBaslik(investment.name),
       message: context.l10n.hataliGirislerIcinAlim(
-          formatMoney(investment.amount, currency: _currency)),
+          formatMoney(investment.bookedCost, currency: _currency)),
       confirmText: context.l10n.kaydiSil,
       cancelText: context.l10n.vazgec,
       danger: true,
@@ -68,6 +74,10 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
   void didUpdateWidget(covariant InvestmentMoneyPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.activeWallet.id != oldWidget.activeWallet.id) {
+      // Cüzdan değişti: hedefler de değişti, açık gruplar ve ulaşılmış
+      // hedef kümesi eski cüzdanındı.
+      _expandedGoals.clear();
+      _reachedGoalIds = null;
       _loadInvestments();
     }
   }
@@ -85,54 +95,169 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
         ));
   }
 
+  /// Değerlemenin yapıldığı birim: cüzdanın kendi birimi.
+  String get _currency => widget.activeWallet.currency;
+
+  String get _userId => widget.activeWallet.userId;
+  String get _walletId => widget.activeWallet.id!;
+
+  /// Hedef listesi bloc durumundan okunur; sayfa ikinci bir kopya tutmaz.
+  List<GoalEntity> get _currentGoals {
+    final state = context.read<InvestmentBloc>().state;
+    return state is InvestmentLoaded ? state.goals : const [];
+  }
+
+  // ======================================================== yatırım eylemleri
+
   /// Sat: nakit gelir işlenir; Kaydı Sil: alım gideri ters kayıtla iade.
-  void _dispatchDelete(InvestmentEntity investment, {required bool sell}) {
+  ///
+  /// [proceeds] yalnız satışta anlamlıdır: cüzdana giren tutar kaydın (belki
+  /// bayat) güncel değeri değil, satış sayfasında onaylanan tutardır.
+  void _dispatchDelete(
+    InvestmentEntity investment, {
+    required bool sell,
+    double? proceeds,
+  }) {
     context.read<InvestmentBloc>().add(DeleteInvestmentEvent(
           id: investment.id!,
-          userId: widget.activeWallet.userId,
-          walletId: widget.activeWallet.id!,
-          amount: investment.amount,
-          currentValue: investment.currentValue,
+          userId: _userId,
+          walletId: _walletId,
+          // Yalnız cüzdandan gerçekten çıkmış kısım iade edilebilir.
+          amount: investment.bookedCost,
+          currentValue: proceeds ?? investment.currentValue,
           dateAdded: investment.dateAdded,
           recordSale: sell,
         ));
   }
 
-  /// Katkı (Mod A: nakit, Mod B: varlık alımı) — muhasebe contribute_sheet'te.
+  /// Satış: tamamı ya da bir kısmı.
+  Future<void> _sell(InvestmentEntity investment) async {
+    final request = await SellInvestmentSheet.show(
+      context,
+      investment: investment,
+      walletCurrency: _currency,
+    );
+    if (request == null || !mounted) return;
+
+    if (request.sellAll) {
+      _dispatchDelete(investment, sell: true, proceeds: request.proceeds);
+      return;
+    }
+    context.read<InvestmentBloc>().add(PartialSellInvestmentEvent(
+          previous: investment,
+          remaining: request.remaining!,
+          proceeds: request.proceeds,
+          userId: _userId,
+          walletId: _walletId,
+        ));
+  }
+
+  /// Katkı (miktar / tutar kipi) — muhasebe contribute_sheet'te.
   void _showContributeSheet(InvestmentEntity investment) {
     final bloc = context.read<InvestmentBloc>();
+    final state = bloc.state;
+    final goal = investment.goalId == null || state is! InvestmentLoaded
+        ? null
+        : state.goals.where((g) => g.id == investment.goalId).firstOrNull;
+
     ContributeSheet.show(
       context,
       investment: investment,
       walletCurrency: _currency,
+      // Hedef satırı kaydın değil, bağlı olduğu HEDEFİN ilerlemesini gösterir.
+      goalProgress: goal == null || state is! InvestmentLoaded
+          ? null
+          : GoalProgress.from(goal, state.investments),
+      // Kaydınkinden farklı altın türü seçildiğinde katkı değil YENİ kayıt:
+      // tek kayıtta iki tür karışırsa miktar da değer de anlamını yitirir.
+      onCreateForGoldType: (goldType) => _showCreateSheet(
+        InvestmentType.gold,
+        goldType: goldType,
+        goalId: investment.goalId,
+      ),
       onSave: (updated) {
         bloc.add(UpdateInvestmentEvent(
           investment: updated,
-          userId: widget.activeWallet.userId,
-          walletId: widget.activeWallet.id!,
-          prevAmount: investment.amount,
-          newAmount: updated.amount,
+          userId: _userId,
+          walletId: _walletId,
+          // Defteri yalnız İŞLENMİŞ maliyetin değişimi ilgilendirir:
+          // "zaten bende" kısmı cüzdandan hiç çıkmadı.
+          prevAmount: investment.bookedCost,
+          newAmount: updated.bookedCost,
         ));
-        if (updated.isTargetReached && !investment.isTargetReached) {
-          _confettiController.play();
-        }
       },
     );
   }
 
+  /// Yeni kayıt. [goalId] verilirse hedef ön seçili gelir (hedefin
+  /// "varlık ekle" düğmesinden gelinmişse).
+  void _showCreateSheet(
+    InvestmentType type, {
+    String? goldType,
+    String? goalId,
+  }) {
+    final bloc = context.read<InvestmentBloc>();
+    final goals = _currentGoals;
+    void onSave(InvestmentEntity investment) {
+      bloc.add(CreateInvestmentEvent(
+        investment: investment,
+        userId: _userId,
+        walletId: _walletId,
+      ));
+    }
+
+    switch (type) {
+      case InvestmentType.gold:
+        AddGoldSheet.show(
+          context,
+          userId: _userId,
+          walletId: _walletId,
+          walletCurrency: _currency,
+          goals: goals,
+          initialGoalId: goalId,
+          initialGoldType: goldType,
+          onSave: onSave,
+        );
+      case InvestmentType.stock:
+        AddStockSheet.show(
+          context,
+          userId: _userId,
+          walletId: _walletId,
+          walletCurrency: _currency,
+          goals: goals,
+          initialGoalId: goalId,
+          onSave: onSave,
+        );
+      case InvestmentType.custom:
+        AddCustomSheet.show(
+          context,
+          userId: _userId,
+          walletId: _walletId,
+          walletCurrency: _currency,
+          goals: goals,
+          initialGoalId: goalId,
+          onSave: onSave,
+        );
+    }
+  }
+
+  /// "Ne eklemek istersin?" — hedeften ya da boş durumdan gelinir.
+  Future<void> _chooseTypeAndCreate({String? goalId}) async {
+    final type = await InvestmentTypeChooser.show(context);
+    if (type == null || !mounted) return;
+    _showCreateSheet(type, goalId: goalId);
+  }
+
   void _openEditSheet(InvestmentEntity item) {
+    final goals = _currentGoals;
     void onSave(InvestmentEntity updatedInvestment) {
       context.read<InvestmentBloc>().add(UpdateInvestmentEvent(
             investment: updatedInvestment,
-            userId: widget.activeWallet.userId,
-            walletId: widget.activeWallet.id!,
-            prevAmount: item.amount,
-            newAmount: updatedInvestment.amount,
+            userId: _userId,
+            walletId: _walletId,
+            prevAmount: item.bookedCost,
+            newAmount: updatedInvestment.bookedCost,
           ));
-
-      if (updatedInvestment.isTargetReached && !item.isTargetReached) {
-        _confettiController.play();
-      }
     }
 
     switch (item.type) {
@@ -142,35 +267,34 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           userId: item.userId,
           walletId: item.walletId,
           walletCurrency: _currency,
+          goals: goals,
           investmentToEdit: item,
           onSave: onSave,
         );
-        break;
       case InvestmentType.stock:
         AddStockSheet.show(
           context,
           userId: item.userId,
           walletId: item.walletId,
           walletCurrency: _currency,
+          goals: goals,
           investmentToEdit: item,
           onSave: onSave,
         );
-        break;
       case InvestmentType.custom:
         AddCustomSheet.show(
           context,
           userId: item.userId,
           walletId: item.walletId,
           walletCurrency: _currency,
+          goals: goals,
           investmentToEdit: item,
           onSave: onSave,
         );
-        break;
     }
   }
 
-  /// Karta dokunma: Sat / Sil / Düzenle / Katkı / Fiyat eylemleri ayrı
-  /// satırlar olarak sunulur.
+  /// Karta dokunma: Sat / Sil / Düzenle / Katkı / Fiyat eylemleri.
   Future<void> _showActionSheet(InvestmentEntity investment) async {
     final action =
         await InvestmentActionSheet.show(context, investment: investment);
@@ -179,64 +303,96 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
     switch (action) {
       case InvestmentAction.contribute:
         _showContributeSheet(investment);
-        break;
       case InvestmentAction.refreshPrice:
         context.read<InvestmentBloc>().add(RefreshPricesEvent(
-              userId: widget.activeWallet.userId,
-              walletId: widget.activeWallet.id!,
+              userId: _userId,
+              walletId: _walletId,
               walletCurrency: _currency,
               investmentId: investment.id,
             ));
-        break;
       case InvestmentAction.edit:
         _openEditSheet(investment);
-        break;
       case InvestmentAction.sell:
-        final confirmed = await _confirmSell(investment);
-        if (confirmed && mounted) {
-          _dispatchDelete(investment, sell: true);
-        }
-        break;
+        await _sell(investment);
       case InvestmentAction.delete:
         final confirmed = await _confirmDelete(investment);
         if (confirmed && mounted) {
           _dispatchDelete(investment, sell: false);
         }
-        break;
     }
   }
 
-  /// Değerlemenin yapıldığı birim: cüzdanın kendi birimi. Maliyet, güncel
-  /// değer ve kâr/zarar bu birimdedir; canlı fiyat da buna çevrilir.
-  String get _currency => widget.activeWallet.currency;
+  // =========================================================== hedef eylemleri
+
+  void _showGoalForm({GoalEntity? goal}) {
+    final bloc = context.read<InvestmentBloc>();
+    GoalFormSheet.show(
+      context,
+      userId: _userId,
+      walletId: _walletId,
+      walletCurrency: _currency,
+      goalToEdit: goal,
+      onSave: (saved) => bloc.add(SaveGoalEvent(saved)),
+    );
+  }
+
+  Future<void> _confirmDeleteGoal(GoalProgress progress) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.hedefSilOnayBaslik(progress.goal.name),
+      message: context.l10n.hedefSilOnayMesaj(progress.members.length),
+      confirmText: context.l10n.hedefiSil,
+      cancelText: context.l10n.vazgec,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+    context.read<InvestmentBloc>().add(DeleteGoalEvent(progress.goal));
+  }
+
+  /// Hedefe ULAŞMA anını yakalar: küme büyüdüyse kutla. İlk yüklemede
+  /// (referans kümesi yokken) kutlama yok — açılışta konfeti atmasın.
+  void _celebrateNewlyReachedGoals(InvestmentLoaded state) {
+    final reached = <String>{
+      for (final p in buildGoalProgress(state.goals, state.investments))
+        if (p.isReached) p.goal.id,
+    };
+    final previous = _reachedGoalIds;
+    if (previous != null && reached.difference(previous).isNotEmpty) {
+      _confettiController.play();
+    }
+    _reachedGoalIds = reached;
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<InvestmentBloc, InvestmentState>(
       listener: (context, state) {
-        if (state is InvestmentActionSuccess) {
-          showDeletionMessage(context,
-              message: state.message, undo: state.undo);
+        if (state is InvestmentLoaded) {
+          _celebrateNewlyReachedGoals(state);
+        } else if (state is InvestmentActionSuccess) {
+          showDeletionMessage(
+            context,
+            message: investmentNoticeText(context, state.notice,
+                cashOk: state.cashOk),
+            undo: state.undo,
+            // Kısmi satış silme değil: geri alınınca "silme geri alındı"
+            // demek kullanıcıyı yanıltıyordu.
+            undoneMessage: state.notice is InvestmentPartiallySoldNotice
+                ? context.l10n.kismiSatisGeriAlindi
+                : null,
+          );
           _loadInvestments();
         } else if (state is InvestmentError) {
-          AppMessenger.error(state.message);
+          AppMessenger.error(investmentNoticeText(context, state.notice));
         }
       },
       builder: (context, investmentState) {
-        // Özet metrikler state üzerinde hazır (InvestmentLoaded getters).
         final loaded =
             investmentState is InvestmentLoaded ? investmentState : null;
-        // Hedefli birikimler listenin başında gösterilir (kararlı sıra).
-        final allInvestments =
-            loaded?.investments ?? const <InvestmentEntity>[];
-        final investments = [
-          ...allInvestments.where((i) => i.isGoal),
-          ...allInvestments.where((i) => !i.isGoal),
-        ];
-        final totalInvestment = loaded?.totalAmount ?? 0.0;
-        final totalCurrentValue = loaded?.totalCurrentValue ?? 0.0;
-        final totalProfit = loaded?.totalProfit ?? 0.0;
-        final totalProfitPercentage = loaded?.totalProfitPercentage ?? 0.0;
+        final investments = loaded?.investments ?? const <InvestmentEntity>[];
+        final goals = loaded?.goals ?? const <GoalEntity>[];
+        final goalProgress = buildGoalProgress(goals, investments);
+        final unassigned = unassignedInvestments(investments, goals);
 
         return Stack(
           children: [
@@ -246,91 +402,15 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
                   : SingleChildScrollView(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SummaryCard(
-                              totalInvestment: totalInvestment,
-                              totalCurrentValue: totalCurrentValue,
-                              totalProfit: totalProfit,
-                              totalProfitPercentage: totalProfitPercentage,
-                              currency: _currency,
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Grafik
-                            if (investments.isNotEmpty)
-                              InvestmentChart(investments: investments),
-
-                            const SizedBox(height: 24),
-
-                            // Portföy Başlığı
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  context.l10n.portfoyum,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      context.l10n.investmentsLengthYatirim(
-                                          investments.length),
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    if (investments
-                                        .any((i) => i.canRefreshPrice))
-                                      IconButton(
-                                        tooltip: context
-                                            .l10n.tooltipFiyatlariGuncelle,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () => context
-                                            .read<InvestmentBloc>()
-                                            .add(RefreshPricesEvent(
-                                              userId:
-                                                  widget.activeWallet.userId,
-                                              walletId: widget.activeWallet.id!,
-                                              walletCurrency: _currency,
-                                            )),
-                                        icon: const Icon(
-                                          Icons.refresh_rounded,
-                                          size: 20,
-                                          color: Colors.teal,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Yatırım Listesi
-                            ...investments.map((investment) {
-                              return Column(
-                                children: [
-                                  GestureDetector(
-                                    // Dokunuş eylem menüsünü açar: katkı,
-                                    // fiyat, düzenle, sat ve sil ayrı ayrı.
-                                    onTap: () => _showActionSheet(investment),
-                                    child: InvestmentCard(
-                                      investment: investment,
-                                      currency: _currency,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
-                              );
-                            }),
-                          ],
-                        ),
+                        child: investments.isEmpty && goals.isEmpty
+                            ? _buildEmptyState(context)
+                            : _buildContent(
+                                context,
+                                loaded: loaded,
+                                investments: investments,
+                                goalProgress: goalProgress,
+                                unassigned: unassigned,
+                              ),
                       ),
                     ),
             ),
@@ -349,6 +429,215 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context, {
+    required InvestmentLoaded? loaded,
+    required List<InvestmentEntity> investments,
+    required List<GoalProgress> goalProgress,
+    required List<InvestmentEntity> unassigned,
+  }) {
+    final canRefreshAny = investments.any((i) => i.canRefreshPrice);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SummaryCard(
+          totalInvestment: loaded?.totalAmount ?? 0.0,
+          totalCurrentValue: loaded?.totalCurrentValue ?? 0.0,
+          totalProfit: loaded?.totalProfit ?? 0.0,
+          totalProfitPercentage: loaded?.totalProfitPercentage ?? 0.0,
+          currency: _currency,
+        ),
+        const SizedBox(height: 20),
+        if (investments.isNotEmpty) ...[
+          InvestmentChart(investments: investments),
+          const SizedBox(height: 20),
+        ],
+        _sectionHeader(
+          context,
+          title: context.l10n.hedeflerim,
+          trailing: Row(
+            children: [
+              if (canRefreshAny)
+                IconButton(
+                  tooltip: context.l10n.tooltipFiyatlariGuncelle,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () =>
+                      context.read<InvestmentBloc>().add(RefreshPricesEvent(
+                            userId: _userId,
+                            walletId: _walletId,
+                            walletCurrency: _currency,
+                          )),
+                  icon: const Icon(Icons.refresh_rounded,
+                      size: 20, color: Colors.teal),
+                ),
+              TextButton.icon(
+                onPressed: () => _showGoalForm(),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                // Kısa etiket: uzun hâli ("Yeni hedef oluştur") yenileme
+                // ikonuyla birlikte başlık satırını taşırıyordu.
+                label: Text(context.l10n.hedefEkleKisa),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (goalProgress.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              context.l10n.hedefYokAciklama,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          ...goalProgress.map(
+            (progress) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GoalGroupCard(
+                progress: progress,
+                currency: _currency,
+                expanded: _expandedGoals.contains(progress.goal.id),
+                onToggle: () => setState(() {
+                  if (!_expandedGoals.remove(progress.goal.id)) {
+                    _expandedGoals.add(progress.goal.id);
+                  }
+                }),
+                onMemberTap: _showActionSheet,
+                onAddAsset: () =>
+                    _chooseTypeAndCreate(goalId: progress.goal.id),
+                onEdit: () => _showGoalForm(goal: progress.goal),
+                onDelete: () => _confirmDeleteGoal(progress),
+              ),
+            ),
+          ),
+        if (unassigned.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          _sectionHeader(
+            context,
+            title: context.l10n.bagsizVarliklar,
+            trailing: Text(
+              context.l10n.investmentsLengthYatirim(unassigned.length),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...unassigned.map(
+            (investment) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () => _showActionSheet(investment),
+                child: InvestmentCard(
+                  investment: investment,
+                  currency: _currency,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _sectionHeader(
+    BuildContext context, {
+    required String title,
+    required Widget trailing,
+  }) {
+    return Row(
+      children: [
+        // Başlık kısalabilir, eylemler kısalamaz: 360dp'de ikisi birlikte
+        // satırı 20px taşırıyordu (ölçüldü).
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(width: 8),
+        trailing,
+      ],
+    );
+  }
+
+  /// Portföy boşken: sıfırlarla dolu özet kartı yerine ne yapılacağını
+  /// söyleyen bir kart. Ekleme yolu yalnız alttaki kaydırmalı menüdeydi;
+  /// yeni kullanıcı için görünmez bir kapıydı.
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: AppCard(
+        section: AppSection.savings,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.savings_rounded,
+                    size: 42, color: scheme.primary),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.birikimBosBaslik,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.birikimBosAciklama,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () => _showGoalForm(),
+              icon: const Icon(Icons.flag_rounded, size: 20),
+              label: Text(context.l10n.yeniHedefOlustur),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => _chooseTypeAndCreate(),
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: Text(context.l10n.varlikEkle),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

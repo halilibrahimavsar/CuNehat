@@ -27,18 +27,29 @@ class InvestmentEntity extends Equatable {
   final DateTime dateAdded;
   final String? symbol;
   final double? returnRate;
-  final double? targetAmount;
 
   /// Toplam birim (gram/lot/adet). null = miktar takibi olmayan yatırım
   /// (ör. özel varlık).
   final double? quantity;
 
-  /// Hedef kategorisi anahtarı (ev, dugun, araba, acil_fon, egitim, diger).
-  final String? goalCategory;
+  /// Bağlı olduğu birikim hedefi (`GoalEntity.id`); null → bağsız varlık.
+  ///
+  /// Hedef artık kaydın kendi alanı DEĞİL: bir hedefe gram altın, çeyrek
+  /// altın ve hisse birlikte bağlanabilsin diye üst kayıt oldu. Bir yatırım
+  /// en fazla bir hedefe bağlanır.
+  final String? goalId;
 
   /// Fiyat KAYNAĞININ para birimi (örn. AAPL → 'USD', altın → 'TRY').
   /// Kaydın değerleme birimi DEĞİLDİR — o cüzdandan gelir; bkz. sınıf notu.
   final String? currency;
+
+  /// [amount]'un deftere İŞLENMEMİŞ kısmı: kaydı açarken "bu varlık zaten
+  /// bende, cüzdandan düşme" denen tutar. Uygulamaya girmeden önce alınmış
+  /// varlıklar bugünün defterine sahte gider yazmasın diye tutulur.
+  ///
+  /// Silme düzeltmesi yalnız [bookedCost]'u iade eder: işlenmemiş kısım
+  /// cüzdandan hiç çıkmadığı için geri de verilemez.
+  final double unbookedCost;
 
   const InvestmentEntity({
     required this.id,
@@ -52,10 +63,10 @@ class InvestmentEntity extends Equatable {
     required this.dateAdded,
     this.symbol,
     this.returnRate,
-    this.targetAmount,
     this.quantity,
-    this.goalCategory,
+    this.goalId,
     this.currency,
+    this.unbookedCost = 0,
   });
 
   InvestmentEntity copyWith({
@@ -70,10 +81,10 @@ class InvestmentEntity extends Equatable {
     DateTime? dateAdded,
     String? symbol,
     double? returnRate,
-    double? targetAmount,
     double? quantity,
-    String? goalCategory,
+    String? goalId,
     String? currency,
+    double? unbookedCost,
   }) {
     return InvestmentEntity(
       id: id ?? this.id,
@@ -87,28 +98,43 @@ class InvestmentEntity extends Equatable {
       dateAdded: dateAdded ?? this.dateAdded,
       symbol: symbol ?? this.symbol,
       returnRate: returnRate ?? this.returnRate,
-      targetAmount: targetAmount ?? this.targetAmount,
       quantity: quantity ?? this.quantity,
-      goalCategory: goalCategory ?? this.goalCategory,
+      goalId: goalId ?? this.goalId,
       currency: currency ?? this.currency,
+      unbookedCost: unbookedCost ?? this.unbookedCost,
     );
+  }
+
+  /// Maliyetin deftere gider olarak işlenmiş kısmı; silme düzeltmesinde
+  /// cüzdana iade edilecek tutar budur.
+  double get bookedCost {
+    final booked = amount - unbookedCost;
+    return booked > 0 ? booked : 0;
   }
 
   double get profit => currentValue - amount;
   double get profitPercentage => amount > 0 ? (profit / amount) * 100 : 0;
   bool get isProfitable => profit >= 0;
 
-  double get targetProgress {
-    if (targetAmount == null || targetAmount! <= 0) return 0.0;
-    return (currentValue / targetAmount!).clamp(0.0, 1.0);
-  }
-
-  bool get isTargetReached =>
-      targetAmount != null &&
-      targetAmount! > 0 &&
-      currentValue >= targetAmount!;
-
-  bool get isGoal => targetAmount != null && targetAmount! > 0;
+  /// Hedefle bağı KOPARIR. `copyWith` null'ı "değiştirme" saydığı için
+  /// bağı kaldırmanın ayrı bir yolu olmak zorunda.
+  InvestmentEntity clearGoal() => InvestmentEntity(
+        id: id,
+        userId: userId,
+        walletId: walletId,
+        name: name,
+        amount: amount,
+        currentValue: currentValue,
+        type: type,
+        color: color,
+        dateAdded: dateAdded,
+        symbol: symbol,
+        returnRate: returnRate,
+        quantity: quantity,
+        goalId: null,
+        currency: currency,
+        unbookedCost: unbookedCost,
+      );
 
   /// Birim başına güncel değer; miktar takibi yoksa null.
   double? get unitValue =>
@@ -131,9 +157,9 @@ class InvestmentEntity extends Equatable {
         dateAdded,
         symbol,
         returnRate,
-        targetAmount,
         quantity,
-        goalCategory,
+        goalId,
         currency,
+        unbookedCost,
       ];
 }

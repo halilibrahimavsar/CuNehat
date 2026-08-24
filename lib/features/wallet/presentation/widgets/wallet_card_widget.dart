@@ -151,12 +151,12 @@ class WalletCardWidget extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildStatItem('Birikim', wallet.investment, Colors.green,
-                      Icons.savings, scheme),
-                  _buildStatItem('Alacak', wallet.credit, Colors.teal,
-                      Icons.arrow_upward, scheme),
-                  _buildStatItem('Borç', wallet.debt, Colors.red,
-                      Icons.arrow_downward, scheme),
+                  _buildStatItem(context.l10n.birikimLabel, wallet.investment,
+                      Colors.green, Icons.savings, scheme),
+                  _buildStatItem(context.l10n.alacakLabel, wallet.credit,
+                      Colors.teal, Icons.arrow_upward, scheme),
+                  _buildStatItem(context.l10n.borcLabel, wallet.debt,
+                      Colors.red, Icons.arrow_downward, scheme),
                 ],
               ),
             ),

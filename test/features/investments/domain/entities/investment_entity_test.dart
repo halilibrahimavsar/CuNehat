@@ -16,9 +16,7 @@ void main() {
       color: Colors.orange,
       dateAdded: date,
       symbol: 'BTC',
-      targetAmount: 2000.0,
       quantity: 0.05,
-      goalCategory: 'acil_fon',
       currency: 'USD',
     );
 
@@ -35,9 +33,7 @@ void main() {
           color: Colors.orange,
           dateAdded: date,
           symbol: 'BTC',
-          targetAmount: 2000.0,
           quantity: 0.05,
-          goalCategory: 'acil_fon',
           currency: 'USD',
         ),
         InvestmentEntity(
@@ -51,9 +47,7 @@ void main() {
           color: Colors.orange,
           dateAdded: date,
           symbol: 'BTC',
-          targetAmount: 2000.0,
           quantity: 0.05,
-          goalCategory: 'acil_fon',
           currency: 'USD',
         ),
       );
@@ -72,9 +66,7 @@ void main() {
         dateAdded: DateTime(2026, 6, 2),
         symbol: 'ETH',
         returnRate: 5.0,
-        targetAmount: 3000.0,
         quantity: 1.0,
-        goalCategory: 'diger',
         currency: 'TRY',
       );
 
@@ -89,9 +81,7 @@ void main() {
       expect(updated.dateAdded, DateTime(2026, 6, 2));
       expect(updated.symbol, 'ETH');
       expect(updated.returnRate, 5.0);
-      expect(updated.targetAmount, 3000.0);
       expect(updated.quantity, 1.0);
-      expect(updated.goalCategory, 'diger');
       expect(updated.currency, 'TRY');
     });
 
@@ -116,39 +106,13 @@ void main() {
         expect(zeroAmount.profitPercentage, 0.0);
       });
 
-      test('targetProgress and isTargetReached return correct values', () {
-        expect(entity.targetProgress, 0.6); // 1200 / 2000 = 0.6
-        expect(entity.isTargetReached, false);
-        expect(entity.isGoal, true);
-
-        final reachedEntity = entity.copyWith(currentValue: 2500.0);
-        expect(reachedEntity.targetProgress, 1.0);
-        expect(reachedEntity.isTargetReached, true);
-      });
-
-      test('targetProgress returns 0 if targetAmount is null or <= 0', () {
-        final noTarget = InvestmentEntity(
-          id: 'inv_1',
-          userId: 'user_1',
-          walletId: 'wallet_1',
-          name: 'Bitcoin',
-          amount: 1000.0,
-          currentValue: 1200.0,
-          type: InvestmentType.custom,
-          color: Colors.orange,
-          dateAdded: date,
-          symbol: 'BTC',
-          targetAmount: null,
-          quantity: 0.05,
-          goalCategory: 'acil_fon',
-          currency: 'USD',
-        );
-        expect(noTarget.targetProgress, 0.0);
-        expect(noTarget.isGoal, false);
-
-        final zeroTarget = entity.copyWith(targetAmount: 0.0);
-        expect(zeroTarget.targetProgress, 0.0);
-        expect(zeroTarget.isGoal, false);
+      test('clearGoal hedef bağını koparır (copyWith null ile yapamaz)', () {
+        final linked = entity.copyWith(goalId: 'goal_1');
+        expect(linked.goalId, 'goal_1');
+        expect(linked.copyWith().goalId, 'goal_1');
+        expect(linked.clearGoal().goalId, isNull);
+        // Diğer alanlar korunur.
+        expect(linked.clearGoal().copyWith(goalId: 'goal_1'), linked);
       });
 
       test('unitValue calculation', () {
@@ -165,9 +129,7 @@ void main() {
           color: Colors.orange,
           dateAdded: date,
           symbol: 'BTC',
-          targetAmount: 2000.0,
           quantity: null,
-          goalCategory: 'acil_fon',
           currency: 'USD',
         );
         expect(noQuantity.unitValue, null);
@@ -192,9 +154,7 @@ void main() {
           color: Colors.orange,
           dateAdded: date,
           symbol: null,
-          targetAmount: 2000.0,
           quantity: 0.05,
-          goalCategory: 'acil_fon',
           currency: 'USD',
         );
         expect(noSymbol.canRefreshPrice, false);
@@ -210,9 +170,7 @@ void main() {
           color: Colors.orange,
           dateAdded: date,
           symbol: 'BTC',
-          targetAmount: 2000.0,
           quantity: null,
-          goalCategory: 'acil_fon',
           currency: 'USD',
         );
         expect(noQuantity.canRefreshPrice, false);

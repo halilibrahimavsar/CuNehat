@@ -22,9 +22,7 @@ void main() {
         color: Colors.orange,
         dateAdded: date,
         symbol: 'BTC',
-        targetAmount: 2000.0,
         quantity: 0.05,
-        goalCategory: 'acil_fon',
         currency: 'USD',
       );
     });
@@ -41,9 +39,8 @@ void main() {
       expect(model.color, testEntity.color);
       expect(model.dateAdded, testEntity.dateAdded);
       expect(model.symbol, testEntity.symbol);
-      expect(model.targetAmount, testEntity.targetAmount);
       expect(model.quantity, testEntity.quantity);
-      expect(model.goalCategory, testEntity.goalCategory);
+      expect(model.goalId, testEntity.goalId);
       expect(model.currency, testEntity.currency);
     });
 
@@ -59,9 +56,7 @@ void main() {
         color: Colors.orange,
         dateAdded: date,
         symbol: 'BTC',
-        targetAmount: 2000.0,
         quantity: 0.05,
-        goalCategory: 'acil_fon',
         currency: 'USD',
       );
       expect(model, isA<InvestmentEntity>());
@@ -80,9 +75,7 @@ void main() {
         color: Colors.orange,
         dateAdded: date,
         symbol: 'BTC',
-        targetAmount: 2000.0,
         quantity: 0.05,
-        goalCategory: 'acil_fon',
         currency: 'USD',
       );
       final json = model.toJson();
@@ -104,10 +97,9 @@ void main() {
         'color': Colors.orange.toARGB32(),
         'dateAdded': date.toIso8601String(),
         'symbol': 'BTC',
-        'targetAmount': 2000.0,
         'quantity': 0.05,
-        'goalCategory': 'acil_fon',
         'currency': 'USD',
+        'unbookedCost': 400.0,
       };
       final model = InvestmentModel.fromJson('inv_1', json);
       expect(model.id, 'inv_1');
@@ -115,6 +107,23 @@ void main() {
       expect(model.type, InvestmentType.custom);
       expect(model.color.toARGB32(), Colors.orange.toARGB32());
       expect(model.dateAdded, date);
+      expect(model.unbookedCost, 400.0);
+      // Deftere işlenmiş kısım: 1.000 - 400.
+      expect(model.bookedCost, 600.0);
+    });
+
+    test('fromJson unbookedCost eksikse REDDEDER (şema sürüm kapılı)', () {
+      final json = {
+        'userId': 'user_1',
+        'walletId': 'wallet_1',
+        'name': 'Bitcoin',
+        'amount': 1000.0,
+        'currentValue': 1200.0,
+        'type': 'InvestmentType.custom',
+        'color': Colors.orange.toARGB32(),
+        'dateAdded': date.toIso8601String(),
+      };
+      expect(() => InvestmentModel.fromJson('inv_1', json), throwsA(anything));
     });
 
     test('copyWith returns updated object', () {

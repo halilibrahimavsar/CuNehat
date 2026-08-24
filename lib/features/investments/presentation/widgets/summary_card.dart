@@ -41,14 +41,23 @@ class SummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                context.l10n.tOPLAMPortfoyDegeri,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+              // Etiket harf aralıklı ve uzun; 360dp'de ikonla birlikte
+              // satırı taşırıyordu (ölçüm: 283,5 + 36 > 272).
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    context.l10n.tOPLAMPortfoyDegeri,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -87,91 +96,110 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Bottom details row (Maliyet & Kar/Zarar) with bold contrast
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Cost column
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.tOPLAMMaliyet,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    formatMoney(totalInvestment, currency: currency),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                ],
+          // Maliyet ve kâr/zarar ALT ALTA: yan yana iki sütun, büyük
+          // tutarlarda kartın iç genişliğini (360dp ekranda 272px) katlayarak
+          // aşıyordu — ölçülen taşma 401px. Her satırda etiket solda, değer
+          // sağda; değer sığmazsa küçülerek sığar, asla taşmaz.
+          _MetricBlock(
+            label: context.l10n.tOPLAMMaliyet,
+            labelStyle: theme.textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
+            value: Text(
+              formatMoney(totalInvestment, currency: currency),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
               ),
-
-              // Profit/Loss column
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    context.l10n.kAZANCZarar,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _MetricBlock(
+            label: context.l10n.kAZANCZarar,
+            labelStyle: theme.textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
+            value: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Yüzde kapsülü ve tutar TEK parça olarak ölçeklenir:
+                // ayrı ayrı küçülselerdi biri diğerinden büyük görünürdü.
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: profitColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: profitColor.withValues(alpha: 0.3),
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Percentage Capsule
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: profitColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: profitColor.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          context.l10n
-                              .isProfitTotalprofitpercentageTostringasfixed(
-                                  isProfit ? '+' : '',
-                                  totalProfitPercentage.toStringAsFixed(1)),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: profitColor,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        formatMoney(totalProfit, currency: currency),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: profitColor,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    context.l10n.isProfitTotalprofitpercentageTostringasfixed(
+                        isProfit ? '+' : '',
+                        totalProfitPercentage.toStringAsFixed(1)),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: profitColor,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  formatMoney(totalProfit, currency: currency),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: profitColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Etiket üstte (tam genişlik), değer altta sağa yaslı.
+///
+/// Etiketi değerle AYNI satıra koymak iki kötü seçenekten birini
+/// dayatıyordu: ya değer küçülür ya etiket üç noktaya düşer (ölçüldü:
+/// "TOPLAM MALİYET" 168px iken satırdan 86,7px pay alıyordu). Ayrı satırda
+/// ikisi de tam okunur; değer yine [FittedBox] içinde, yani uzun tutarda
+/// küçülerek sığar ve asla taşmaz.
+class _MetricBlock extends StatelessWidget {
+  final String label;
+  final TextStyle? labelStyle;
+  final Widget value;
+
+  const _MetricBlock({
+    required this.label,
+    required this.labelStyle,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(label,
+            maxLines: 1, overflow: TextOverflow.ellipsis, style: labelStyle),
+        const SizedBox(height: 6),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerEnd,
+          child: value,
+        ),
+      ],
     );
   }
 }

@@ -83,4 +83,40 @@ void main() {
     expect(find.byIcon(Icons.trending_down), findsOneWidget);
     expect(find.byIcon(Icons.trending_up), findsNothing);
   });
+
+  testWidgets('milyonluk tutarlar 360dp ekranda taşmaz',
+      (WidgetTester tester) async {
+    // Gerçek telefon genişliği: kartın içine 272px kalıyor. Eski düzende
+    // maliyet ve kâr/zarar yan yanaydı ve 401px taşıyordu; başlık satırı da
+    // 48px taşıyordu.
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: SummaryCard(
+            totalInvestment: 1234567.89,
+            totalCurrentValue: 1500000.55,
+            totalProfit: 265432.66,
+            totalProfitPercentage: 21.5,
+            currency: 'TRY',
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    // Etiketler kırpılmadan durur; tutarlar sığmazsa küçülür.
+    expect(find.text('TOPLAM MALİYET'), findsOneWidget);
+    expect(find.text('KAZANÇ / ZARAR'), findsOneWidget);
+    expect(find.text('1.234.567,89 ₺'), findsOneWidget);
+    expect(find.text('265.432,66 ₺'), findsOneWidget);
+  });
 }

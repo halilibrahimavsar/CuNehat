@@ -15,6 +15,8 @@ import 'package:cunehat/features/debt_and_receivable/data/models/receivable_mode
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/finance_transactions/data/datasources/category_local_datasource.dart';
 import 'package:cunehat/features/finance_transactions/data/models/category_model.dart';
+import 'package:cunehat/features/investments/data/datasource/goal_local_datasource.dart';
+import 'package:cunehat/features/investments/data/models/goal_model.dart';
 import 'package:cunehat/features/finance_transactions/data/models/transaction_model.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/investments/data/models/investment_model.dart';
@@ -52,6 +54,8 @@ class FakeBudgetModel extends Fake implements BudgetModel {}
 
 class FakeCategoryModel extends Fake implements CategoryModel {}
 
+class FakeGoalModel extends Fake implements GoalModel {}
+
 class FakeRecurringTransactionModel extends Fake
     implements RecurringTransactionModel {}
 
@@ -70,6 +74,7 @@ void main() {
     registerFallbackValue(FakeBudgetModel());
     registerFallbackValue(FakeRecurringTransactionModel());
     registerFallbackValue(FakeCategoryModel());
+    registerFallbackValue(FakeGoalModel());
 
     tempDir = await Directory.systemTemp.createTemp('cunehat_backup_test_');
     Hive.init(tempDir.path);
@@ -301,6 +306,7 @@ void main() {
     final recurringBox = MockBox<RecurringTransactionModel>();
     final userBox = MockBox<Map>();
     final categoryBox = MockBox<CategoryModel>();
+    final goalBox = MockBox<GoalModel>();
 
     _stubBox(walletBox, {'old-wallet': _wallet(id: 'old-wallet')});
     _stubBox<TransactionModel>(transactionBox, {});
@@ -311,6 +317,7 @@ void main() {
     _stubBox<RecurringTransactionModel>(recurringBox, {});
     _stubBox<Map>(userBox, {});
     _stubBox<CategoryModel>(categoryBox, {'old-cat': _category(id: 'old-cat')});
+    _stubBox<GoalModel>(goalBox, {});
 
     when(() => walletBox.put(any(), any()))
         .thenThrow(Exception('write failed'));
@@ -332,6 +339,8 @@ void main() {
     when(() => mockHive.openBox<Map>('users')).thenAnswer((_) async => userBox);
     when(() => mockHive.openBox<CategoryModel>(CategoryLocalDataSource.boxName))
         .thenAnswer((_) async => categoryBox);
+    when(() => mockHive.openBox<GoalModel>(GoalLocalDataSource.boxName))
+        .thenAnswer((_) async => goalBox);
 
     final failingService = DataSerializationService.withHive(
       mockHive,
@@ -587,7 +596,6 @@ InvestmentModel _investment() {
     type: InvestmentType.gold,
     color: const Color(0xFFFFD700),
     dateAdded: DateTime(2024, 1, 3),
-    goalCategory: 'araba',
   );
 }
 

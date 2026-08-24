@@ -726,8 +726,8 @@
   },
   "alinanMiktarAltinHint": "Alınan miktar (örn. gram/adet)",
   "alinanAdetHisseHint": "Alınan adet (lot)",
-  "odenenTutarHint": "Ödenen tutar (₺) · hediye ise 0",
-  "tutarHint": "Tutar (₺)",
+  "odenenTutarHint": "Ödenen tutar · hediye ise 0",
+  "tutarHint": "Tutar",
   "gecerliMiktarGirin": "Geçerli bir miktar girin",
   "gecerliOdenenTutarGirin": "Geçerli bir ödenen tutar girin",
   "gecerliTutarGirin": "Geçerli bir tutar girin",
@@ -1843,5 +1843,227 @@
   "dateRangeLast3Months": "Son 3 Ay",
   "dateRangeThisYear": "Bu Yıl",
   "txPeriodToday": "Bugün",
-  "txPeriodYesterday": "Dün"
+  "txPeriodYesterday": "Dün",
+  "lot": "lot",
+  "katkiKipiMiktar": "Miktar ile",
+  "katkiKipiTutar": "Tutar ile",
+  "katkiTakipBirimi": "Bu birikim {unit} cinsinden takip ediliyor.",
+  "@katkiTakipBirimi": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "katkiFarkliTurBaslik": "{unit} bu kayda eklenemez",
+  "@katkiFarkliTurBaslik": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "katkiFarkliTurAciklama": "Bu kayıt {recordUnit} cinsinden takip ediliyor; araya {selectedUnit} eklenirse miktar da değer de karışır. Bu tür için ayrı bir kayıt aç.",
+  "@katkiFarkliTurAciklama": {
+    "placeholders": {
+      "recordUnit": {},
+      "selectedUnit": {}
+    }
+  },
+  "katkiFarkliTurButon": "{unit} için yeni kayıt aç",
+  "@katkiFarkliTurButon": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "katkiMiktaraCevrilecek": "≈ {qty} {unit} eklenecek",
+  "@katkiMiktaraCevrilecek": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "katkiFiyatGerekli": "Tutarı miktara çevirmek için önce güncel fiyatı getir.",
+  "katkiOdenenBosUyari": "Ödenen tutar boş: bu alım bedelsiz (hediye) sayılacak, cüzdandan para düşülmeyecek.",
+  "katkiTutarKipiAciklama": "Yatırdığın tutarı yaz; güncel fiyattan miktara çevrilir.",
+  "katkiYatirilanTutarHint": "Yatırılan tutar",
+  "duzenlemeTurDegisikligiUyari": "Tür değişiyor: kayıttaki {qty} miktarı bundan sonra {newUnit} sayılacak ve fiyat güncellemesinde değer buna göre hesaplanacak. Farklı bir tür aldıysan bu kaydı olduğu gibi bırakıp yeni bir kayıt aç.",
+  "@duzenlemeTurDegisikligiUyari": {
+    "placeholders": {
+      "qty": {},
+      "newUnit": {}
+    }
+  },
+  "alinanMiktarBirimHint": "Alınan miktar ({unit})",
+  "@alinanMiktarBirimHint": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "yeniAlimMiktarVeyaTutar": "Yeni alım: miktar ya da yatırılan tutar",
+  "kartBirimFiyat": "Birim {price}",
+  "@kartBirimFiyat": {
+    "placeholders": {
+      "price": {}
+    }
+  },
+  "kartMiktarBirim": "{qty} {unit}",
+  "@kartMiktarBirim": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "yatirimTuruHisse": "Hisse Senedi",
+  "yatirimTuruAltin": "Altın",
+  "yatirimTuruOzel": "Özel",
+  "satisSheetBaslik": "{name} · Sat",
+  "@satisSheetBaslik": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "satilanMiktarBirimHint": "Satılan miktar ({unit})",
+  "@satilanMiktarBirimHint": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "satilanDegerHint": "Satılan tutar (güncel değerinden)",
+  "alinanTutarHint": "Alınan tutar (cüzdana girecek)",
+  "satTumunuSec": "Tümü",
+  "satElindeki": "Elindeki: {qty} {unit}",
+  "@satElindeki": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "satGuncelDegerBilgi": "Güncel değer: {value}",
+  "@satGuncelDegerBilgi": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "satTamSatisUyari": "Kaydın tamamı satılıyor: kayıt silinecek.",
+  "satKismiKalanBilgi": "Kalan: {qty} {unit} · {value}",
+  "@satKismiKalanBilgi": {
+    "placeholders": {
+      "qty": {},
+      "unit": {},
+      "value": {}
+    }
+  },
+  "satKismiKalanTutar": "Kalan kayıt: {value}",
+  "@satKismiKalanTutar": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "gecerliSatisMiktariGirin": "Geçerli bir satış miktarı girin",
+  "satisMiktariAsim": "Elindekinden fazlasını satamazsın (en çok {max})",
+  "@satisMiktariAsim": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "gecerliAlinanTutarGirin": "Geçerli bir alınan tutar girin",
+  "satisFiyatTazeleIpucu": "Kayıttaki değer eskimiş olabilir; güncel fiyatı getirip alınan tutarı tazeleyebilirsin.",
+  "kismiSatisBasarili": "Yatırımın bir kısmı satıldı",
+  "kismiSatisGeriAlindi": "Kısmi satış geri alındı",
+  "alimTarihi": "Alım tarihi",
+  "zatenBendeBaslik": "Bu varlık zaten bende",
+  "zatenBendeAciklama": "Uygulamadan önce alındı; maliyeti cüzdandan düşülmesin",
+  "alimCuzdandanDusulecek": "{amount}, {date} tarihli gider olarak cüzdandan düşülecek.",
+  "@alimCuzdandanDusulecek": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "alimCuzdandanDusulmeyecek": "Cüzdandan para düşülmeyecek; kayıt yalnız portföye eklenir.",
+  "birikimBosBaslik": "Henüz birikimin yok",
+  "birikimBosAciklama": "Altın, hisse ya da kendi tanımladığın bir varlığı ekleyerek portföyünü oluştur. Alım tutarı cüzdanından gider olarak düşülür.",
+  "yatirimEklendiMesaji": "Yatırım başarıyla eklendi",
+  "yatirimGuncellendiMesaji": "Yatırım güncellendi",
+  "yatirimSatildiMesaji": "Yatırım satıldı",
+  "yatirimKismenSatildiMesaji": "Yatırımın bir kısmı satıldı",
+  "yatirimSilindiDuzeltildiMesaji": "Kayıt silindi, alım kaydı düzeltildi",
+  "fiyatlarGuncellendiMesaji": "{count} yatırımın fiyatı güncellendi",
+  "@fiyatlarGuncellendiMesaji": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "fiyatlarKismenGuncellendiMesaji": "{updated} güncellendi, {failed} alınamadı",
+  "@fiyatlarKismenGuncellendiMesaji": {
+    "placeholders": {
+      "updated": {},
+      "failed": {}
+    }
+  },
+  "yenilenebilirYatirimYokMesaji": "Yenilenebilir yatırım yok (sembol ve miktar gerekli)",
+  "fiyatlarAlinamadiMesaji": "Fiyatlar alınamadı, değerler değiştirilmedi",
+  "bakiyeGuncellenemediUyarisi": " (Uyarı: bakiye güncellenemedi, cüzdanı yenileyin.)",
+  "yatirimGecmisiBuradaListelenecek": "Yatırım geçmişiniz burada listelenecektir.",
+  "hedefKategoriEv": "Ev",
+  "hedefKategoriDugun": "Düğün",
+  "hedefKategoriAraba": "Araba",
+  "hedefKategoriAcilFon": "Acil Fon",
+  "hedefKategoriEgitim": "Eğitim",
+  "hedefKategoriDiger": "Diğer",
+  "maliyetVeyaDegerSifirdanBuyuk": "Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı",
+  "hedeflerim": "Hedeflerim",
+  "bagsizVarliklar": "Bağsız varlıklar",
+  "yeniHedefOlustur": "Yeni hedef oluştur",
+  "hedefiDuzenle": "Hedefi düzenle",
+  "hedefiSil": "Hedefi sil",
+  "hedefSilOnayBaslik": "{name} hedefi silinsin mi?",
+  "@hedefSilOnayBaslik": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "hedefSilOnayMesaj": "Hedef silinir. İçindeki {count} varlık SİLİNMEZ, bağsız listeye düşer.",
+  "@hedefSilOnayMesaj": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hedefAdiHint": "Hedef adı · örn. Ev peşinatı",
+  "hedefTutariHint": "Hedef tutar",
+  "hedefAdiGirin": "Hedef adı girin",
+  "hedefAlaniEtiketi": "Hedef",
+  "hedefeBagliDegil": "Hedefe bağlı değil",
+  "hedefeVarlikEkle": "Bu hedefe varlık ekle",
+  "hedefBosAciklama": "Bu hedefe henüz varlık bağlanmadı.",
+  "hedefIlerlemeSatiri": "{saved} / {target}",
+  "@hedefIlerlemeSatiri": {
+    "placeholders": {
+      "saved": {},
+      "target": {}
+    }
+  },
+  "hedefKalanTutar": "Kalan {amount}",
+  "@hedefKalanTutar": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "hedefeUlasildi": "Hedefe ulaşıldı",
+  "hedefUyeSayisi": "{count} varlık",
+  "@hedefUyeSayisi": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "hedefKaydedildiMesaji": "Hedef kaydedildi",
+  "hedefSilindiMesaji": "Hedef silindi, varlıklar bağsız listeye taşındı",
+  "varlikTuruSec": "Ne eklemek istersin?",
+  "gecmisAlimUyarisi": "{date} tarihli alım. \"Mevcut Değer\" BUGÜNKÜ değerdir, alım günündeki değil; maliyet ise o gün ödediğin tutardır.",
+  "@gecmisAlimUyarisi": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "bugunkuDegeriHesapla": "Bugünkü değeri hesapla",
+  "hedefYonetimi": "Hedefler",
+  "hedefYokAciklama": "Henüz hedefin yok. Hedef aç, gram altını, çeyreği ve hisseyi aynı hedefin altında topla.",
+  "hedefEkleKisa": "Hedef ekle"
 }

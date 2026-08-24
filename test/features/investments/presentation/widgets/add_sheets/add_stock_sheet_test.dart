@@ -153,7 +153,7 @@ void main() {
 
     // Enters quantity
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField && widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'lot');
     expect(quantityFinder, findsOneWidget);
     await tester.enterText(quantityFinder, '10.0');
 
@@ -318,20 +318,6 @@ void main() {
             'Maliyeti değiştirirseniz fark, cüzdana düzeltme hareketi olarak işlenir.'),
         findsOneWidget);
 
-    // Enter a target amount to trigger goal category selection
-    final targetFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == 'Hedef Tutar (İsteğe Bağlı)');
-    await tester.enterText(targetFinder, '12000');
-    await tester.pumpAndSettle();
-
-    // Now Goal Category section should be visible
-    expect(find.text('Hedef Kategorisi'), findsOneWidget);
-
-    // Tap category chip 'Eğitim'
-    await tester.tap(find.text('Eğitim'), warnIfMissed: false);
-    await tester.pumpAndSettle();
-
     // Tap color option circle to change color (e.g. index 5 is Orange)
     final colorFinders = find.byWidgetPredicate((widget) =>
         widget is GestureDetector && widget.child is AnimatedContainer);
@@ -346,8 +332,6 @@ void main() {
     expect(updatedInvestment, isNotNull);
     expect(updatedInvestment!.name, 'Apple Inc');
     expect(updatedInvestment!.amount, 5000.0);
-    expect(updatedInvestment!.targetAmount, 12000.0);
-    expect(updatedInvestment!.goalCategory, 'egitim');
     expect(updatedInvestment!.color, Colors.orange);
   });
 
@@ -392,7 +376,7 @@ void main() {
 
     // Enter quantity
     final quantityFinder = find.byWidgetPredicate((widget) =>
-        widget is TextField && widget.decoration?.hintText == 'Adet');
+        widget is TextField && widget.decoration?.hintText == 'lot');
     await tester.enterText(quantityFinder, '2');
 
     // Tap Hesapla

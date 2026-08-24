@@ -2,6 +2,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/widgets/add_entry_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/presentation/bloc/investment_bloc.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_stock_sheet.dart';
@@ -241,12 +242,21 @@ class _SliderButtonViewState extends State<SliderButtonView> {
     }
   }
 
+  /// Ana menüden açılan formların hedef seçicisini besler. Hedefler bloc
+  /// durumundan okunur; birikim sayfası hiç açılmadıysa liste boş gelir ve
+  /// seçici "önce hedef oluştur" der.
+  List<GoalEntity> _goalsOf(BuildContext context) {
+    final state = context.read<InvestmentBloc>().state;
+    return state is InvestmentLoaded ? state.goals : const [];
+  }
+
   void _showAddGoldSheet(BuildContext context, dynamic activeWallet) {
     AddGoldSheet.show(
       context,
       userId: activeWallet.userId,
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
+      goals: _goalsOf(context),
       onSave: (investment) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
@@ -263,6 +273,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       userId: activeWallet.userId,
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
+      goals: _goalsOf(context),
       onSave: (investment) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,
@@ -279,6 +290,7 @@ class _SliderButtonViewState extends State<SliderButtonView> {
       userId: activeWallet.userId,
       walletId: activeWallet.id!,
       walletCurrency: activeWallet.currency,
+      goals: _goalsOf(context),
       onSave: (investment) {
         context.read<InvestmentBloc>().add(CreateInvestmentEvent(
               investment: investment,

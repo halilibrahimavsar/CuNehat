@@ -2,6 +2,9 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -319,6 +322,20 @@ class InvestmentCostEditWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return InvestmentWarningBanner(
+        context.l10n.maliyetiDegistirirsenizFarkCuzdana);
+  }
+}
+
+/// Formda kaydetmeden ÖNCE görülmesi gereken uyarı şeridi (turuncu, info
+/// ikonlu). Sessizce veri anlamı değiştiren seçimler bunun arkasında durmaz.
+class InvestmentWarningBanner extends StatelessWidget {
+  final String text;
+
+  const InvestmentWarningBanner(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -327,13 +344,17 @@ class InvestmentCostEditWarning extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline_rounded,
-              size: 16, color: Colors.orange),
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(Icons.info_outline_rounded,
+                size: 16, color: Colors.orange),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              context.l10n.maliyetiDegistirirsenizFarkCuzdana,
+              text,
               style: TextStyle(
                 color: cs.onSurfaceVariant,
                 fontSize: 12,
@@ -488,6 +509,11 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
   final Color fetchedColor;
   final VoidCallback onFetch;
 
+  /// Miktarın birimi ("Gram Altın", "lot"); null → genel "Adet".
+  /// Altın kaydında birim türün kendisidir; "Adet" yazmak 1 çeyreği 1 grama
+  /// eş gösteriyordu.
+  final String? unitLabel;
+
   const InvestmentQuantityAndFetch({
     super.key,
     required this.accent,
@@ -497,6 +523,7 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
     required this.fetchedMessage,
     required this.fetchedColor,
     required this.onFetch,
+    this.unitLabel,
   });
 
   @override
@@ -508,7 +535,7 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
           flex: 2,
           child: InvestmentFilledField(
             controller: quantityController,
-            hint: context.l10n.adet,
+            hint: unitLabel ?? context.l10n.adet,
             icon: Icons.numbers_rounded,
             accent: accent,
             onChanged: onQuantityChanged,
@@ -565,6 +592,248 @@ class InvestmentQuantityAndFetch extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Alım tarihi + "bu varlık zaten bende" anahtarı ve ikisinin cüzdana
+/// etkisinin tek cümlelik özeti.
+///
+/// Neden gerekli: kayıt açıldığında maliyet BUGÜNÜN defterine gider yazılıyor.
+/// Uygulamaya girmeden önce alınmış 50 gram altını eklemek, o parayı bugün
+/// harcamış gibi gösteriyor ve bakiyeyi bozuyordu. Tarih geçmişe alınabilir,
+/// hiç işlenmemesi de seçilebilir (bkz. `InvestmentEntity.unbookedCost`).
+class InvestmentPurchaseRow extends StatelessWidget {
+  final MaterialColor accent;
+  final DateTime date;
+  final ValueChanged<DateTime> onDateChanged;
+  final bool alreadyOwned;
+  final ValueChanged<bool> onAlreadyOwnedChanged;
+
+  /// Cüzdandan düşülecek tutarın biçimlenmiş hâli; null → tutar henüz
+  /// girilmedi (özet satırı yalnız anahtarın etkisini anlatır).
+  final String? costText;
+
+  /// Geçmiş tarihli alımda "bugünkü değeri hesapla" kısayolu. null →
+  /// kısayol yok (özel varlığın canlı fiyat kaynağı yoktur).
+  final VoidCallback? onCalculateTodayValue;
+
+  const InvestmentPurchaseRow({
+    super.key,
+    required this.accent,
+    required this.date,
+    required this.onDateChanged,
+    required this.alreadyOwned,
+    required this.onAlreadyOwnedChanged,
+    required this.costText,
+    this.onCalculateTodayValue,
+  });
+
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime(2000),
+      // İleri tarihli alım yok: gider defterine geleceğe kayıt düşürürdü.
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      onDateChanged(DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: cs.onSurface.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: () => _pickDate(context),
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today_rounded,
+                      size: 18, color: accent.shade600),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '${context.l10n.alimTarihi}: '
+                      '${AppFormatters.dateLong.format(date)}',
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.edit_rounded,
+                      size: 16, color: cs.onSurfaceVariant),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        // ListTile zeminini/ink dalgasını en yakın Material'a boyar; sheet'in
+        // renkli DecoratedBox'ı araya girdiğinde Flutter debug'da assert atar.
+        // Kendi (saydam) Material'ı içinde durur.
+        Material(
+          type: MaterialType.transparency,
+          child: SwitchListTile(
+            value: alreadyOwned,
+            onChanged: onAlreadyOwnedChanged,
+            contentPadding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            activeThumbColor: accent.shade600,
+            title: Text(
+              context.l10n.zatenBendeBaslik,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.zatenBendeAciklama,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+          ),
+        ),
+        InvestmentHintCaption(
+          alreadyOwned || costText == null
+              ? context.l10n.alimCuzdandanDusulmeyecek
+              : context.l10n.alimCuzdandanDusulecek(
+                  costText!,
+                  AppFormatters.dateLong.format(date),
+                ),
+        ),
+        // Geçmiş tarihli alımda kafa karıştıran nokta: "Mevcut Değer" alanı
+        // alım GÜNÜNÜN değeri sanılıyor. Kâr/zarar yanlış okunmasın diye
+        // açıkça söylenir; altın/hissede bugünkü değeri hesaplama kısayolu
+        // da buradan verilir.
+        if (!_isToday(date)) ...[
+          const SizedBox(height: 10),
+          InvestmentWarningBanner(
+            context.l10n.gecmisAlimUyarisi(AppFormatters.dateLong.format(date)),
+          ),
+          if (onCalculateTodayValue != null)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: onCalculateTodayValue,
+                icon: const Icon(Icons.calculate_rounded, size: 18),
+                label: Text(context.l10n.bugunkuDegeriHesapla),
+                style: TextButton.styleFrom(foregroundColor: accent.shade700),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  static bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+}
+
+/// Kaydı bir birikim hedefine bağlayan seçici.
+///
+/// Hedef tutarı ve kategorisi ARTIK BURADA DEĞİL: onlar hedefin kendi
+/// alanları. Formda kalan tek soru "bu varlık hangi hedefe sayılsın".
+class InvestmentGoalPicker extends StatelessWidget {
+  final List<GoalEntity> goals;
+  final String? selectedGoalId;
+  final MaterialColor accent;
+  final String walletCurrency;
+  final ValueChanged<String?> onChanged;
+
+  const InvestmentGoalPicker({
+    super.key,
+    required this.goals,
+    required this.selectedGoalId,
+    required this.accent,
+    required this.walletCurrency,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (goals.isEmpty) {
+      return InvestmentHintCaption(context.l10n.hedefYokAciklama);
+    }
+
+    // Silinmiş/başka cüzdana ait bir kimlik seçili kalırsa DropdownButton
+    // assert atar; bilinmeyen değer "bağlı değil"e düşer.
+    final value =
+        goals.any((g) => g.id == selectedGoalId) ? selectedGoalId : null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String?>(
+          value: value,
+          isExpanded: true,
+          dropdownColor: cs.surface,
+          icon: Icon(Icons.arrow_drop_down_rounded, color: cs.onSurfaceVariant),
+          items: [
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Row(
+                children: [
+                  Icon(Icons.remove_circle_outline_rounded,
+                      size: 18, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.hedefeBagliDegil,
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            for (final goal in goals)
+              DropdownMenuItem<String?>(
+                value: goal.id,
+                child: Row(
+                  children: [
+                    Icon(Icons.flag_rounded, size: 18, color: goal.color),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        goal.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      formatMoney(goal.targetAmount, currency: walletCurrency),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+          onChanged: onChanged,
+        ),
+      ),
     );
   }
 }
