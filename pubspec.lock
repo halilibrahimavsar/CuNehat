@@ -1392,7 +1392,7 @@ packages:
       path: "packages/unified_flutter_features"
       relative: true
     source: path
-    version: "2.0.0"
+    version: "3.0.0"
   universal_io:
     dependency: transitive
     description:
