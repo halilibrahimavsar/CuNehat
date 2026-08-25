@@ -8,7 +8,11 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+1`
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+2`
+
+> `versionCode 1` **yakıldı.** Play sürüm kodlarını kalıcı tüketir: bir kod
+> herhangi bir kanala bir kez yüklendiyse, o sürüm silinse/atılsa bile geri
+> gelmez. Bir sonraki yükleme `+3` olmalı.
 
 ---
 
@@ -28,7 +32,7 @@ Cloud projesi, Flutter SDK kurulu.
 | 8c | **Mağaza girişi (metin + ikon + görseller)** | ⬜ **KALAN** — varlıkların hepsi hazır, Console'a girilmedi |
 | 8d | **Etiketler (3 tane)** | ⬜ **KALAN** |
 | — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 14 maddenin hiçbiri işaretli değil |
-| 9 | **AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi** | ⬜ **KALAN — takvimi başlatan adım** |
+| 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | 🟡 AAB dahili teste yayınlandı (`1.0.0+2`), SHA-1 alındı; **3. OAuth istemcisi KALAN** |
 | 11 | Kapalı test 12 tester × 14 gün | ⬜ Testerlar toplandı, sayaç başlamadı |
 | 12 | Production | ⬜ |
 
@@ -504,8 +508,13 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 1. **Test ve yayınlama → Test → Dahili test** → yeni sürüm oluştur
 2. `build/app/outputs/bundle/release/app-release.aab` dosyasını yükle
 3. Play App Signing'i **etkin bırak** (varsayılan)
-4. Yükleme bittikten sonra: **Test ve yayınlama → Kurulum → Uygulama imzalama**
-   sayfasını aç. Burada **App signing key certificate** altında bir SHA-1 var.
+4. Yükleme bittikten sonra imzalama sayfasını aç. **Menüdeki "Uygulama
+   imzalama" adı emekli oldu** — sayfa artık **Test ve yayınlama → Uygulama
+   bütünlüğü** altında (Console sürümüne göre "Kurulum → Uygulama bütünlüğü"
+   ya da "Play ile korunuyor → Play uygulama imzalamayı yönet"). Menüde
+   aramak yerine adres çubuğunda `.../app/<appId>/keymanagement` en garantisi.
+   Sayfada **İKİ** sertifika var; gereken **App signing key certificate**,
+   "Upload key certificate" değil (ikisi `C6…` / `CB…` diye benzer başlıyor).
 5. Bu SHA-1'i Cloud Console'a **aynı paket adıyla** kaydet:
    `dev.halilibrahim.cunehat`.
 
@@ -526,7 +535,7 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 |---|---|---|
 | Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ "Android client 1" (30 Tem 2026) |
 | Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ✅ "ÇuNehat upload key" (10 Ağu 2026) |
-| **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra alınır* | ⬜ Adım 9'da eklenecek |
+| **Play App Signing** — mağazadan inen sürüm | `CB:7A:0E:17:88:F4:AC:AD:AE:14:2D:5F:3F:AF:A0:57:2B:01:90:C4` | 26 Ağu 2026'da alındı — Cloud Console'a eklenecek |
 
 **Hangisi ne zaman ısırır:**
 
