@@ -660,7 +660,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get fullBackupCancelled => 'Yedekleme işlemi iptal edildi.';
 
   @override
-  String get fullBackupShareText => 'CuNehat tam yedeği';
+  String get fullBackupShareText => 'ÇuNehat tam yedeği';
 
   @override
   String get activeWalletRequiredForExport =>
@@ -2050,7 +2050,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationRationaleBody =>
-      'CuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.';
+      'ÇuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.';
 
   @override
   String get notificationRationaleLater => 'Şimdi Değil';
@@ -2086,7 +2086,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationTestFailed => 'Test bildirimi gönderilemedi';
 
   @override
-  String get notificationTestTitle => 'CuNehat test bildirimi';
+  String get notificationTestTitle => 'ÇuNehat test bildirimi';
 
   @override
   String get notificationTestBody =>
@@ -2161,7 +2161,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get notifDailyReminderTitle => 'CuNehat';
+  String get notifDailyReminderTitle => 'ÇuNehat';
 
   @override
   String get notifDailyReminder1 =>
@@ -2971,7 +2971,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyIntro =>
-      'CuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.';
+      'ÇuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.';
 
   @override
   String get privacyLocalDataTitle => 'Cihazınızda saklanan veriler';
@@ -2999,7 +2999,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupOfferBody =>
-      'CuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.';
+      'ÇuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.';
 
   @override
   String get backupOfferSetup => 'Yedeklemeyi Kur';
@@ -3055,7 +3055,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyConsentBody =>
-      'CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.';
+      'ÇuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.';
 
   @override
   String get privacyConsentAcknowledge => 'Anladım';

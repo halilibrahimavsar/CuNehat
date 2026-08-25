@@ -21,7 +21,8 @@ kendi hesabını yazıp ekrandaki rakamları değiştirir:
   * iki altın kaydı da varsayılan amber → halka grafiğinin renk ayrıştırması
     ekranda görünür
   * biri taksitli (12 ay), biri taksitsiz (termMonths=0 + vade tarihi) borç
-  * 2 onay bekleyen düzenli işlem (sıfır sayaç özelliği anlatmıyor)
+  * 7 düzenli şablon; 2'si onay bekliyor, 5'i yaklaşan
+    (iki sekme de dolu görünmeli — sıfır/az sayaç özelliği anlatmıyor)
   * bu ayda maaş dışında 2 gelir kalemi (rapor tek dilime düşmesin)
   * bütçelerde biri aşılmış (%111), gerisi %27'ye kadar iniyor
 
@@ -100,20 +101,24 @@ INCOME_PACK = [
 # Tutarlar 2026 Türkiye'si için makul tutuldu; ekran görüntüsünde "bu rakamlar
 # olmaz" dedirtmemeli.
 PLAN = {
-    "Manav":           (["Manav Şen", "Semt Pazarı", "Yeşil Manav"], (180, 520), 4),
-    "Kasap":           (["Kasap Yalçın", "Et Dünyası"], (450, 1250), 2),
+    # Başlıklar BİLEREK jenerik: gerçek marka adı (Migros, Starbucks, Netflix…)
+    # mağaza görselinde uygulamanın o kurumla resmî bir ilişkisi varmış
+    # izlenimi verir ve Play incelemesinde fikri mülkiyet itirazına açık alan
+    # bırakır. Kategori zaten `tag` ile atandığı için CategoryGuesser'ın marka
+    # sözlüğüne burada ihtiyaç yok.
+    "Manav":           (["Manav", "Semt Pazarı", "Sebze Meyve"], (180, 520), 4),
+    "Kasap":           (["Kasap", "Et Reyonu"], (450, 1250), 2),
     "Su & İçecek":     (["Damacana Su", "Bakkal"], (90, 260), 3),
-    "Market":          (["Migros", "A101", "BİM", "ŞOK Market", "CarrefourSA"],
-                        (420, 2400), 6),
-    "Restoran":        (["Kebapçı Halil", "Balıkçı Nadir", "Köfteci Ramiz",
-                         "Pide Salonu"], (380, 1450), 4),
-    "Kafe":            (["Kahve Dünyası", "Starbucks", "Espressolab"], (120, 380), 6),
-    "Paket Servis":    (["Yemeksepeti", "Getir Yemek", "Trendyol Yemek"],
-                        (240, 720), 4),
-    "Yakıt":           (["Opet", "Shell", "Petrol Ofisi"], (1400, 2600), 3),
-    "Toplu Taşıma":    (["İstanbulkart Yükleme", "Metro Bilet"], (150, 400), 3),
-    "Taksi":           (["BiTaksi", "iTaksi"], (180, 520), 2),
-    "Otopark":         (["Katlı Otopark", "İSPARK"], (60, 180), 3),
+    "Market":          (["Market Alışverişi", "Haftalık Market", "Süpermarket",
+                         "Zincir Market"], (420, 2400), 6),
+    "Restoran":        (["Kebapçı", "Balıkçı", "Köfteci", "Pide Salonu"],
+                        (380, 1450), 4),
+    "Kafe":            (["Kahveci", "Kafe", "Fırın & Pastane"], (120, 380), 6),
+    "Paket Servis":    (["Paket Servis", "Eve Sipariş"], (240, 720), 4),
+    "Yakıt":           (["Akaryakıt İstasyonu", "Benzin"], (1400, 2600), 3),
+    "Toplu Taşıma":    (["Ulaşım Kartı Yükleme", "Metro Bileti"], (150, 400), 3),
+    "Taksi":           (["Taksi", "Şehir İçi Taksi"], (180, 520), 2),
+    "Otopark":         (["Katlı Otopark", "Otopark Ücreti"], (60, 180), 3),
     "Elektrik":        (["Elektrik Faturası"], (880, 1480), 1),
     "Su":              (["Su Faturası"], (210, 390), 1),
     "Doğalgaz":        (["Doğalgaz Faturası"], (340, 1650), 1),
@@ -122,19 +127,21 @@ PLAN = {
     "Kira":            (["Ev Kirası"], (18500, 18500), 1),
     "Aidat":           (["Apartman Aidatı"], (1750, 1750), 1),
     "Bakım & Onarım":  (["Tesisatçı", "Boya Badana"], (600, 2400), 0.4),
-    "Giyim":           (["LC Waikiki", "DeFacto", "Koton"], (450, 2200), 1.5),
-    "Elektronik":      (["Teknosa", "MediaMarkt"], (1200, 6500), 0.4),
-    "Ev Eşyası":       (["IKEA", "Koçtaş", "Madame Coco"], (350, 2400), 0.8),
-    "İlaç":            (["Eczane Nur", "Eczane Merkez"], (180, 620), 1.5),
+    "Giyim":           (["Giyim Mağazası", "Ayakkabı", "Kışlık Mont"],
+                        (450, 2200), 1.5),
+    "Elektronik":      (["Elektronik Mağazası", "Kulaklık"], (1200, 6500), 0.4),
+    "Ev Eşyası":       (["Mobilya", "Hırdavat", "Ev Tekstili"], (350, 2400), 0.8),
+    "İlaç":            (["Eczane", "Nöbetçi Eczane"], (180, 620), 1.5),
     "Doktor":          (["Özel Muayene", "Diş Hekimi"], (900, 2600), 0.4),
     "Spor":            (["Spor Salonu Üyeliği"], (1100, 1100), 1),
     "Okul & Kurs":     (["İngilizce Kursu"], (2400, 2400), 0.5),
-    "Kitap":           (["D&R", "Kitapyurdu"], (180, 640), 0.8),
-    "Sinema & Konser": (["Cinemaximum", "Konser Bileti"], (280, 1400), 1),
-    "Abonelikler":     (["Netflix", "Spotify", "YouTube Premium"], (99, 299), 3),
-    "Oyun":            (["Steam", "PlayStation Store"], (240, 900), 0.6),
-    "Kuaför":          (["Kuaför Emre", "Berber"], (250, 700), 1.2),
-    "Kozmetik":        (["Gratis", "Watsons"], (200, 780), 1),
+    "Kitap":           (["Kitapçı", "Kırtasiye"], (180, 640), 0.8),
+    "Sinema & Konser": (["Sinema Bileti", "Konser Bileti"], (280, 1400), 1),
+    "Abonelikler":     (["Dijital Abonelik", "Müzik Aboneliği",
+                         "Video Aboneliği"], (99, 299), 3),
+    "Oyun":            (["Oyun Satın Alma", "Oyun İçi Kredi"], (240, 900), 0.6),
+    "Kuaför":          (["Kuaför", "Berber"], (250, 700), 1.2),
+    "Kozmetik":        (["Kozmetik", "Kişisel Bakım"], (200, 780), 1),
     "Diğer":           (["Hediye", "Bağış", "Kargo"], (120, 900), 1.5),
 }
 
@@ -306,7 +313,7 @@ def build():
     personal_payments = [{"id": uid(), "date": iso(pd, 14),
                           "amount": personal_paid,
                           "overdueInterestPart": 0.0, "notes": "Elden ödendi"}]
-    add(w_main, "Borç Ödemesi — Kerem Aydın", TAG_DEBT_PAYMENT,
+    add(w_main, "Borç Ödemesi — Ayşe Kaya", TAG_DEBT_PAYMENT,
         personal_paid, pd, system=True)
 
     debts = [
@@ -323,7 +330,7 @@ def build():
          "notes": "Aylık 6.120 ₺ sabit taksit",
          "expectedTotalAmount": loan_total, "principalToWallet": False},
         {"id": uid(), "userId": USER, "walletId": w_main,
-         "title": "Arkadaş Borcu", "counterparty": "Kerem Aydın",
+         "title": "Arkadaş Borcu", "counterparty": "Ayşe Kaya",
          "type": "personalDebt", "calcMode": "none",
          "principalAmount": personal_principal, "interestRate": 0.0,
          "termMonths": 0, "overdueInterestRate": 0.0,
@@ -453,6 +460,25 @@ def build():
          "amount": 1250.0, "type": "expense", "frequency": "monthly",
          "nextExecutionDate": iso(TODAY - timedelta(days=1), 9),
          "anchorDay": 20, "isActive": True},
+        # Aşağıdaki üçü "Şablonlar" sekmesi İÇİN var: iki kalemle sekme
+        # ekranın %60'ını boş bırakıyor ve mağaza karesinde "kimse
+        # kullanmıyor" izlenimi veriyordu. Hiçbiri işlem üretmez, yalnız
+        # ileri tarihli şablondur — cüzdan değişmezlerine dokunmaz.
+        {"id": uid(), "userId": USER, "walletId": w_main,
+         "title": "İnternet Faturası", "tag": cat[(True, "İnternet")],
+         "amount": 649.0, "type": "expense", "frequency": "monthly",
+         "nextExecutionDate": iso(date(nxt.year, nxt.month, 8), 9),
+         "anchorDay": 8, "isActive": True},
+        {"id": uid(), "userId": USER, "walletId": w_main,
+         "title": "Elektrik Faturası", "tag": cat[(True, "Elektrik")],
+         "amount": 1480.0, "type": "expense", "frequency": "monthly",
+         "nextExecutionDate": iso(date(nxt.year, nxt.month, 15), 9),
+         "anchorDay": 15, "isActive": True},
+        {"id": uid(), "userId": USER, "walletId": w_main,
+         "title": "Müzik Aboneliği", "tag": cat[(True, "Abonelikler")],
+         "amount": 199.99, "type": "expense", "frequency": "monthly",
+         "nextExecutionDate": iso(date(nxt.year, nxt.month, 22), 9),
+         "anchorDay": 22, "isActive": True},
     ]
 
     # --- Bütçeler: içinde bulunulan ayın GERÇEK harcamasından türetilir ----

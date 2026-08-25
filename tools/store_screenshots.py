@@ -66,9 +66,16 @@ CHIP_GAP = 12
 CHIP_TOP_GAP = 26
 SHOT_W = 900          # her karede sabit: set tutarlı görünsün
 SHOT_RADIUS = 44
-STATUS_BAR = 78       # kişisel bildirim ikonu + %16 kırmızı pil kırpılıyor
+# Durum çubuğu ÖLÇÜLDÜ: saat/pil satırı kaynakta y≈16–40 arasında bitiyor.
+# Eski değer (108) fazla cömertti ve ekranın kendi içeriğini yiyordu:
+#   * başlıktaki cüzdan rozeti (y≈67–120) ikiye bölünüyor, geriye render
+#     hatası gibi duran boş bir yay kalıyordu;
+#   * "Banka Ekstresi İçe Aktar"da İ'nin noktası (y≈100–107) kesiliyor,
+#     başlık cihazda "Içe" olarak okunuyordu.
+# 52 hem saati/pili atar hem 8px pay bırakır. DEĞİŞTİRMEDEN ÖNCE ÖLÇ.
+STATUS_BAR = 52
 
-SRC_DIR = Path.home() / "Masaüstü" / "cunehat new screenshots"
+SRC_DIR = Path.home() / "Masaüstü" / "cunehat emulator shots"
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "store" / "screenshots"
 
 
@@ -83,69 +90,84 @@ class Shot:
     # Bu karede GÖRÜNEN özelliklerin adları. Karenin taşıdığı yükün yarısı
     # bunlar; ekranın kendisi tek bir anı gösterir, çipler kapsamı söyler.
     chips: tuple[str, ...] = ()
-    crop: tuple[int, int] = (STATUS_BAR, 2712)   # kaynakta korunacak satır aralığı
+    crop: tuple[int, int] = (STATUS_BAR, 2290)   # kaynakta korunacak satır aralığı
     anchor: float = 0.0       # taşma nereden kırpılsın: 0=üstü koru, 1=altı koru
     notes: str = field(default="", repr=False)
 
 
-N = "Screenshot_2026-08-25-01-{}_dev.halilibrahim.cunehat.jpg"
+# Kaynak: 1080x2400 emülatör çekimleri (aynı en-boy oranı, durum çubuğu
+# zaten kırpıldığı için cihaz farkı görsele yansımıyor). Hepsi TEK oturumda
+# ve TEK veri kümesiyle alındı — set içi tutarlılık için önemli.
 
-# ALTI kare, 18 adlandırılmış özellik. Eski set 8 karede 8 ekran gösteriyordu.
+# SEKİZ kare, 24 adlandırılmış özellik — Play'in telefon için verdiği yuvanın
+# tamamı. Eski set 8 karede 8 EKRAN gösteriyordu; bu set 8 karede 8 KATEGORİ
+# gösterip her birinin altında üç özelliği adıyla sayıyor.
+#
+# Sıra: tanınma → farklılaşma → derinlik → güven.
+#   1 defter    arama sonucunda "bu benim para uygulamam" dedirten kare
+#   2 ekstre    rakiplerde olmayan tek şey, dönüşümü o alıyor
+#   3-4 hedef+portföy   birikim tarafı, duygusal kanca
+#   5-6 bütçe+borç      disiplin tarafı
+#   7 düzenli   otomasyon
+#   8 gizlilik  kapanış güvencesi
 SHOTS = [
-    Shot(1, N.format("51-53-871"),
-         "Her harcaman\n*kendi yerinde*",
+    Shot(1, "01_liste.png",
+         "Gelir ve giderin\n*tek defterde*",
          "Aylık net durum, günlük döküm ve tek dokunuşla kayıt.",
          slug="islem-defteri",
-         chips=("Takvim görünümü", "Arama ve filtre", "Çoklu cüzdan"),
-         crop=(108, 2500), anchor=0.0),
+         chips=("Takvim görünümü", "Arama ve filtre", "Çoklu cüzdan")),
 
-    Shot(2, N.format("55-21-911"),
+    Shot(2, "02_ekstre.png",
          "Ekstreni at,\n*satırlar hazır* gelsin",
          "Okunan tutarlar ekstrenin kendi bakiyesiyle doğrulanır.",
          slug="banka-ekstresi",
-         chips=("PDF ve Excel", "Fotoğraftan OCR", "Aritmetik doğrulama"),
-         crop=(108, 2400), anchor=0.0,
-         notes="ZORUNLU YENİDEN ÇEKİM: karede GERÇEK ekstre verisi var "
-               "(banka açıklamaları, 134.000 ₺ transfer). Mağazaya gidemez — "
-               "demo yedeğiyle üretilmiş bir ekstre dosyasıyla tekrar çek."),
+         chips=("PDF ve Excel", "Fotoğraftan OCR", "Aritmetik doğrulama")),
 
-    Shot(3, N.format("53-20-417"),
+    Shot(3, "03_hedefler.png",
          "Hedefini kur,\n*varlıklarını* bağla",
          "Altın ve hisseni hedefe bağla, ilerlemeyi tek bakışta gör.",
          slug="birikim-hedefleri",
-         chips=("Altın, hisse ve fon", "Canlı fiyat", "Kâr/zarar takibi"),
-         crop=(108, 2500), anchor=0.0),
+         chips=("Altın, hisse ve fon", "Canlı fiyat", "Kâr/zarar takibi")),
 
-    Shot(4, N.format("55-42-449"),
-         "Limitini aşmadan\n*önce* uyarır",
-         "Her kategoriye aylık limit; harcadıkça çubuk dolar.",
+    Shot(4, "07_portfoy.png",
+         "Portföyün *ne kadar*\nkazandırdı?",
+         "Toplam değer, maliyet ve kâr/zarar; dağılımı halkada gör.",
+         slug="portfoy",
+         chips=("Maliyet muhasebesi", "Kısmi satış", "Çoklu para birimi")),
+
+    Shot(5, "04_butce.png",
+         # ESKİ ŞERİT: "Limitini aşmadan *önce* uyarır". Kare bunu YALANLIYOR:
+         # özet kartında "1 bütçe aşıldı" rozeti ve kırmızı çubuk duruyor.
+         # Uygulamada kartın "limite yaklaşıyor" görsel durumu YOK (yalnız
+         # tam %100'de turuncu); %80 uyarısı bildirim olarak çıkıyor — o
+         # yüzden söz alt satıra, karenin kanıtlayabildiği iddia şeride.
+         "Bütçeni *aşınca*\nhemen gör",
+         "Her kategoriye aylık limit; %80'ini geçince bildirim gelir.",
          slug="butce",
-         chips=("Kategori limitleri", "Aşım uyarısı", "Gelir–gider raporu"),
-         crop=(108, 2500), anchor=0.0),
+         chips=("Kategori limitleri", "Aşım uyarısı", "Gelir–gider raporu")),
 
-    Shot(5, N.format("52-57-165"),
+    Shot(6, "05_borc.png",
          "Borcunu ve alacağını\n*unutma*",
          "Taksit, vade ve kalan tutar; ödedikçe ilerlemeyi gör.",
          slug="borc-takibi",
-         chips=("Taksit ve vade", "Düzenli işlemler", "Vade hatırlatması"),
-         crop=(108, 2100), anchor=0.0,
-         notes="YENİDEN ÇEKİM: karedeki 'Arkadaş Borcu' elle girilmiş eski "
-               "kayıt (Halil / 'Vade: 1 Ay | 0/1 taksit'). Demo yedeği "
-               "geri yüklenip tekrar çekilmeli — kişisel borçta artık vade "
-               "satırı yerine vade TARİHİ çıkıyor."),
+         # Çipler karenin KENDİ kategorisinden olmalı: "Düzenli işlemler"
+         # buradaydı, borç ekranıyla ilgisi yoktu ve 7. karenin konusunu
+         # çalıyordu.
+         chips=("Taksit ve vade", "Kısmi ödeme", "Gecikme faizi")),
 
-    Shot(6, N.format("57-48-119"),
+    Shot(7, "08_duzenli.png",
+         "Kira, maaş, abonelik —\n*kendiliğinden* gelsin",
+         "Bir kez tanımla; zamanı gelince onayınla deftere işlensin.",
+         slug="duzenli-islemler",
+         chips=("Aylık şablonlar", "Onay bekleyenler", "Bildirim hatırlatması")),
+
+    Shot(8, "06_yedek.png",
          "Verilerin\n*sende* kalır",
          "Sunucumuz yok. Yedek senin Google Drive hesabına gider.",
          slug="gizlilik",
-         chips=("PIN ve parmak izi", "Google Drive yedeği", "Reklam yok"),
-         crop=(108, 2400), anchor=0.0),
+         chips=("Google Drive yedeği", "CSV dışa aktarım", "Reklam yok")),
 ]
 
-# Sette YER ALMAYANLAR — 8 yuvanın tamamı kullanılmak istenirse en güçlü iki
-# aday bunlar (ikisi de temiz, yeniden çekim istemiyor):
-#   01-53-10  portföy halkası (toplam/maliyet/kâr + dağılım)
-#   01-52-03  akıllı içgörüler (birikim oranı, harcama sıçraması uyarısı)
 
 
 def load_font(size: int, weight: str = "Bold") -> ImageFont.FreeTypeFont:

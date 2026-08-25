@@ -1,4 +1,4 @@
-# CuNehat — Proje Kuralları
+# ÇuNehat — Proje Kuralları
 
 ## Geriye uyumluluk politikası (yayın öncesi)
 

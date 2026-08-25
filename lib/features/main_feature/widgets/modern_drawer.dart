@@ -854,7 +854,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           ),
           const SizedBox(width: 8),
           Text(
-            'CuNehat v1.0.0',
+            'ÇuNehat v1.0.0',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

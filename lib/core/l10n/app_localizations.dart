@@ -1314,7 +1314,7 @@ abstract class AppLocalizations {
   /// No description provided for @fullBackupShareText.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat tam yedeği'**
+  /// **'ÇuNehat tam yedeği'**
   String get fullBackupShareText;
 
   /// No description provided for @activeWalletRequiredForExport.
@@ -3788,7 +3788,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationRationaleBody.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.'**
+  /// **'ÇuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.'**
   String get notificationRationaleBody;
 
   /// No description provided for @notificationRationaleLater.
@@ -3854,7 +3854,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationTestTitle.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat test bildirimi'**
+  /// **'ÇuNehat test bildirimi'**
   String get notificationTestTitle;
 
   /// No description provided for @notificationTestBody.
@@ -3974,7 +3974,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifDailyReminderTitle.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat'**
+  /// **'ÇuNehat'**
   String get notifDailyReminderTitle;
 
   /// No description provided for @notifDailyReminder1.
@@ -5378,7 +5378,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyIntro.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.'**
+  /// **'ÇuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.'**
   String get privacyIntro;
 
   /// No description provided for @privacyLocalDataTitle.
@@ -5426,7 +5426,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupOfferBody.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.'**
+  /// **'ÇuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.'**
   String get backupOfferBody;
 
   /// No description provided for @backupOfferSetup.
@@ -5522,7 +5522,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyConsentBody.
   ///
   /// In tr, this message translates to:
-  /// **'CuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.'**
+  /// **'ÇuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.'**
   String get privacyConsentBody;
 
   /// No description provided for @privacyConsentAcknowledge.

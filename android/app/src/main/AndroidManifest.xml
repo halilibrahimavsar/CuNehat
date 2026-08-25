@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <application
-        android:label="CuNehat"
+        android:label="ÇuNehat"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:allowBackup="false"
@@ -39,7 +39,7 @@
             <!-- Banka ekstresini PAYLAŞ menüsünden alma (bkz.
                  SharedStatementPlugin.kt). Bu bir İZİN DEĞİLDİR: uygulamayı
                  yalnızca paylaş menüsünde görünür yapar; depolamaya erişim
-                 vermez. Kullanıcı CuNehat'i seçtiğinde Android o tek öğe için
+                 vermez. Kullanıcı ÇuNehat'i seçtiğinde Android o tek öğe için
                  tek seferlik salt-okunur URI izni verir.
 
                  MIME listesi geniş tutuldu: bankadan/tarayıcıdan inen ekstreler
@@ -66,7 +66,7 @@
                  yöneticisinden ekstreye dokunmak da buraya düşer.
 
                  SEND'den DAHA DAR: burada `image/*`, `text/*` ve
-                 `octet-stream` YOK. Onları eklemek CuNehat'i her fotoğrafın
+                 `octet-stream` YOK. Onları eklemek ÇuNehat'i her fotoğrafın
                  ve her indirilen dosyanın "aç ile" listesine sokardı. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>

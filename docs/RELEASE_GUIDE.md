@@ -1,4 +1,4 @@
-# CuNehat — Google Play İlk Yayın Rehberi
+# ÇuNehat — Google Play İlk Yayın Rehberi
 
 Kod tarafı hazır. Bu doküman **kodla halledilemeyen, senin yapman gereken**
 adımları sırayla anlatır. Adımlar birbirine bağımlı — özellikle 4 ve 9
@@ -20,7 +20,7 @@ Cloud projesi, Flutter SDK kurulu.
 | 2 | Syncfusion Community License | ✅ Onaylandı (#863579, 18 Ağu 2026). **Kodda yapılacak iş yok** — aşağıdaki nota bak |
 | 3 | Gizlilik politikası yayında | ✅ `privacy-policy.html` → 200; `RELEASE_GUIDE.html` ve analiz dokümanı → 404 (sızıntı yok) |
 | 4 | OAuth consent ekranı | ✅ Published; `drive.appdata` **non-sensitive** tabloda doğrulandı |
-| 5 | Android OAuth istemcisi (upload anahtarı) | ✅ "CuNehat upload key" (10 Ağu 2026) |
+| 5 | Android OAuth istemcisi (upload anahtarı) | ✅ "ÇuNehat upload key" (10 Ağu 2026) |
 | 6 | Play Console'da uygulama | ✅ Oluşturuldu |
 | 7 | Data Safety formu | ✅ Dolduruldu |
 | 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
@@ -236,9 +236,9 @@ Yani `registerLicense(...)` çağırsan da **hiçbir etkisi olmaz**. Bu yüzden:
 açık bir URL istiyor.
 
 > **✅ YAYINDA ve doğrulandı (21 Ağu 2026).** Üç adres ölçüldü:
-> `.../CuNehat/privacy-policy.html` → **200** (TR+EN içerik yerinde),
-> `.../CuNehat/RELEASE_GUIDE.html` → **404**,
-> `.../CuNehat/cunehat-mantiksal-analiz.html` → **404**.
+> `.../ÇuNehat/privacy-policy.html` → **200** (TR+EN içerik yerinde),
+> `.../ÇuNehat/RELEASE_GUIDE.html` → **404**,
+> `.../ÇuNehat/cunehat-mantiksal-analiz.html` → **404**.
 > Yani `_config.yml`'deki `exclude` listesi çalışıyor, sızıntı yok.
 > Aşağıdaki 1–6 adımları yeniden yapmana gerek yok; **ancak `_config.yml`'i
 > değiştirirsen 6. maddedeki 404 kontrolünü tekrarla.**
@@ -247,7 +247,7 @@ açık bir URL istiyor.
 > Pages bu dosyaları tarayıcıda okunur ve indekslenebilir sayfalara çevirir.
 > 2026-08-08'de buna göre düzenlendi:
 > - `cunehat-monetizasyon-plani.md` **repodan çıkarıldı** (kişisel vergi /
->   BAĞ-KUR ayrıntıları içeriyordu) → `../CuNehat-ozel/` altında duruyor.
+>   BAĞ-KUR ayrıntıları içeriyordu) → `../ÇuNehat-ozel/` altında duruyor.
 > - `docs/_config.yml` eklendi: `RELEASE_GUIDE.md`, eski analiz dokümanı ve
 >   `store/` siteden hariç tutuluyor.
 > - `docs/index.html` eklendi ki site kökü 404 vermesin.
@@ -262,11 +262,11 @@ açık bir URL istiyor.
 1. GitHub → repo → **Settings → Pages**
 2. Source: **Deploy from a branch** → Branch: `main`, klasör: `/docs`
 3. Birkaç dakika sonra URL:
-   `https://halilibrahimavsar.github.io/CuNehat/privacy-policy.html`
+   `https://halilibrahimavsar.github.io/ÇuNehat/privacy-policy.html`
 4. Tarayıcıda aç, TR ve EN bölümlerinin ikisinin de göründüğünü doğrula.
 5. İçindeki iletişim e-postasını (`halirlnj@gmail.com`) teyit et.
-6. **Sızıntı kontrolü:** `.../CuNehat/RELEASE_GUIDE.html` ve
-   `.../CuNehat/cunehat-mantiksal-analiz.html` adreslerinin **404 verdiğini**
+6. **Sızıntı kontrolü:** `.../ÇuNehat/RELEASE_GUIDE.html` ve
+   `.../ÇuNehat/cunehat-mantiksal-analiz.html` adreslerinin **404 verdiğini**
    doğrula. Veriyorlarsa `_config.yml` işlememiş demektir.
 
 Bu URL'i iki yerde kullanacaksın: Play Console store listing + Google Cloud
@@ -282,7 +282,7 @@ Drive yedeği `drive.appdata` kapsamını kullanıyor (hassas kapsam).
 2. **APIs & Services → Library** → **Google Drive API** → Enable
 3. **APIs & Services → OAuth consent screen**
    - User type: **External**
-   - App name: `CuNehat`
+   - App name: `ÇuNehat`
    - User support email + Developer contact: kendi e-postan
    - App domain → **Privacy policy link**: Adım 3'teki URL
 4. **Scopes** (yeni arayüzde **Data Access**) → Add or remove scopes → yalnız
@@ -308,7 +308,7 @@ Drive yedeği `drive.appdata` kapsamını kullanıyor (hassas kapsam).
 Consent screen sayfasında bu sayaç **her projede** görünür, korkutucu ama
 seni bağlamıyor. Console'un kendi tanımı: cap, *"unapproved **sensitive or
 restricted** scopes"* isteyen uygulamalardaki izin veren kullanıcı sayısını
-sınırlar. CuNehat hiç sensitive/restricted kapsam istemiyor → sınırlayacak
+sınırlar. ÇuNehat hiç sensitive/restricted kapsam istemiyor → sınırlayacak
 bir şey yok. Sayaç yine artar, sadece bir sayaçtır.
 
 > **Yine de gözünle doğrula:** Consent screen → **Scopes** sayfasında
@@ -364,16 +364,16 @@ ilk yüklemeden sonra alınabiliyor — **Adım 9**.
 
 | Alan | Değer |
 |---|---|
-| Uygulama adı | **`CuNehat: Gelir Gider Takibi`** *(27 kr — gerekçesi `store-listing.md`)* |
+| Uygulama adı | **`ÇuNehat: Gelir Gider Takibi`** *(27 kr — gerekçesi `store-listing.md`)* |
 | Varsayılan dil | Türkçe (tr-TR) |
 | Uygulama mı oyun mu | Uygulama |
 | Ücretsiz mi ücretli mi | Ücretsiz *(ücretliye sonradan geçilemez)* |
 | Kategori | Finans |
 
-> **Uygulama adı ≠ `android:label`.** Manifest'teki `CuNehat` telefondaki
+> **Uygulama adı ≠ `android:label`.** Manifest'teki `ÇuNehat` telefondaki
 > simgenin altında yazan ad; buradaki alan **mağazada aranan ve indekslenen**
 > ad. Play'in en ağır ASO alanı bu, 30 karakterin 23'ünü sıfır arama hacimli
-> markaya harcamak en pahalı hata olurdu. Uygulama oluştururken sade "CuNehat"
+> markaya harcamak en pahalı hata olurdu. Uygulama oluştururken sade "ÇuNehat"
 > girdiysen sorun değil — **Mağaza girişi** ekranından değiştirilebiliyor.
 
 ### Etiketler (en fazla 5)
@@ -445,18 +445,21 @@ Bu tablo uygulamanın gerçek davranışından çıkarıldı; olduğu gibi gir.
   (yazıldı, karakter sayıları ölçüldü, kopyala-yapıştır hazır)
 
 - **Telefon ekran görüntüleri** → ✅ `docs/store/screenshots/` altında **8 adet**
-  hazır (18 Ağu 2026). Ham çekimler `tools/store_screenshots.py` ile 1080×1920
-  tuvale, marka zemini ve başlık şeridiyle yerleştirildi. Şerit metni ya da
-  renk değişirse betiği tekrar çalıştır, elle düzenleme.
+  hazır (26 Ağu 2026, düzeltilmiş yapı + demo veriyle yeniden çekildi). Ham
+  çekimler `tools/store_screenshots.py` ile 1080×1920 tuvale, marka zemini,
+  başlık şeridi ve özellik çipleriyle yerleştirildi. Şerit metni ya da renk
+  değişirse betiği tekrar çalıştır, elle düzenleme.
+  **Tablet (7"/10") görselleri YOK** — telefon yayınını bloke etmez ama Play'in
+  büyük ekran vitrininde geri plana atar; ilk güncellemeye yazıldı.
 
 > **Kalan iş bu adımda yalnız Console'a girmek:** metinleri `store-listing.md`'den
-> kopyala, üç görsel setini yükle. Uygulama adının **`CuNehat: Gelir Gider Takibi`**
-> olduğundan emin ol — sadece "CuNehat" bırakılırsa 30 karakterlik en ağır ASO
+> kopyala, üç görsel setini yükle. Uygulama adının **`ÇuNehat: Gelir Gider Takibi`**
+> olduğundan emin ol — sadece "ÇuNehat" bırakılırsa 30 karakterlik en ağır ASO
 > alanının 23'ü boşa gider.
 
 > **Metin yazarken dikkat:** "kredi verme", "borç para verme", "faizsiz kredi"
 > gibi ifadeler Play'in Finansal Hizmetler politikasını tetikler ve ek beyan
-> ister. CuNehat borç/alacak **takibi** yapıyor, finansal ürün sunmuyor —
+> ister. ÇuNehat borç/alacak **takibi** yapıyor, finansal ürün sunmuyor —
 > metin bunu net söylemeli. "Borçlarını ve alacaklarını takip et" güvenli;
 > "kredi çöz" değil.
 
@@ -522,7 +525,7 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 | Ne için | SHA-1 | İstemci / durum (2026-08-10) |
 |---|---|---|
 | Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ "Android client 1" (30 Tem 2026) |
-| Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ✅ "CuNehat upload key" (10 Ağu 2026) |
+| Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ✅ "ÇuNehat upload key" (10 Ağu 2026) |
 | **Play App Signing** — mağazadan inen sürüm | *ilk yüklemeden sonra alınır* | ⬜ Adım 9'da eklenecek |
 
 **Hangisi ne zaman ısırır:**

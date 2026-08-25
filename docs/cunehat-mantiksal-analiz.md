@@ -1,7 +1,7 @@
-# CuNehat — Derinlemesine Mantıksal Analiz ve Düzeltme Planı (DÜZELTİLMİŞ)
+# ÇuNehat — Derinlemesine Mantıksal Analiz ve Düzeltme Planı (DÜZELTİLMİŞ)
 
 ## Context
-Kullanıcı, kendi geliştirdiği kişisel finans uygulamasında (CuNehat — Flutter, clean architecture + flutter_bloc + Hive + GetIt/injectable + Firebase, ~151 Dart dosyası / ~19.7k satır) **mantıksal hataların kanıtlarıyla** tespitini istedi. Sadece planlama; kod değişikliği henüz yok.
+Kullanıcı, kendi geliştirdiği kişisel finans uygulamasında (ÇuNehat — Flutter, clean architecture + flutter_bloc + Hive + GetIt/injectable + Firebase, ~151 Dart dosyası / ~19.7k satır) **mantıksal hataların kanıtlarıyla** tespitini istedi. Sadece planlama; kod değişikliği henüz yok.
 
 Proje **sağlıklı**: `dart analyze` temiz (yalnız 7 info-lint), derleme hatası yok, mimari tutarlı, finansal matematik (basit faiz, yatırım kâr %'si, işlem bakiye delta'ları) doğru.
 

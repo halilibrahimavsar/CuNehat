@@ -3,7 +3,7 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- CuNehat işareti: ağzı sağa açık halka + yükselen ok.
+    <!-- ÇuNehat işareti: ağzı sağa açık halka + yükselen ok.
          Durum çubuğu ikonunun yalnızca alfa kanalı kullanılır (sistem tek
          renge boyar), o yüzden katman düz siluet. Geometri app_icon'dan
          ölçüldü: merkez çizgi R=8.465, gövde 3.069, yay 24.2°..335.8°

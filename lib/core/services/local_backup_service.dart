@@ -69,7 +69,7 @@ class LocalBackupService {
       final backupJson = await _dataSerializationService.exportDataToJson();
       final bytes = Uint8List.fromList(utf8.encode(backupJson));
       final path = await FilePicker.saveFile(
-        dialogTitle: 'CuNehat yedeğini kaydet',
+        dialogTitle: 'ÇuNehat yedeğini kaydet',
         fileName: _backupFileName(),
         type: FileType.custom,
         allowedExtensions: const ['json'],
@@ -147,7 +147,7 @@ class LocalBackupService {
 
       await SharePlus.instance.share(ShareParams(
         files: [XFile(path)],
-        text: shareText ?? 'CuNehat yedeği',
+        text: shareText ?? 'ÇuNehat yedeği',
       ));
 
       return const LocalBackupResult.success();

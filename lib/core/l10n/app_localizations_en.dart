@@ -656,7 +656,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullBackupCancelled => 'Backup action cancelled.';
 
   @override
-  String get fullBackupShareText => 'CuNehat full backup';
+  String get fullBackupShareText => 'ÇuNehat full backup';
 
   @override
   String get activeWalletRequiredForExport =>
@@ -2047,7 +2047,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationRationaleBody =>
-      'CuNehat can remind you when debt and receivable due dates approach and when recurring transactions await approval. This requires notification permission. You can keep using the app without it; you just won\'t see reminders.';
+      'ÇuNehat can remind you when debt and receivable due dates approach and when recurring transactions await approval. This requires notification permission. You can keep using the app without it; you just won\'t see reminders.';
 
   @override
   String get notificationRationaleLater => 'Not Now';
@@ -2083,7 +2083,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationTestFailed => 'Test notification could not be sent';
 
   @override
-  String get notificationTestTitle => 'CuNehat test notification';
+  String get notificationTestTitle => 'ÇuNehat test notification';
 
   @override
   String get notificationTestBody =>
@@ -2158,7 +2158,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notifDailyReminderTitle => 'CuNehat';
+  String get notifDailyReminderTitle => 'ÇuNehat';
 
   @override
   String get notifDailyReminder1 =>
@@ -2970,7 +2970,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyIntro =>
-      'CuNehat is a personal finance app that helps you track your financial records. It is designed offline-first: your data stays on your device unless you explicitly enable cloud backup. We operate no server.';
+      'ÇuNehat is a personal finance app that helps you track your financial records. It is designed offline-first: your data stays on your device unless you explicitly enable cloud backup. We operate no server.';
 
   @override
   String get privacyLocalDataTitle => 'Data stored on your device';
@@ -2998,7 +2998,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupOfferBody =>
-      'CuNehat keeps your records on no server. If you lose your phone, reset it, or uninstall the app, this data is gone for good. Turning on automatic backup keeps a regular copy in a private folder inside your own Google Drive.';
+      'ÇuNehat keeps your records on no server. If you lose your phone, reset it, or uninstall the app, this data is gone for good. Turning on automatic backup keeps a regular copy in a private folder inside your own Google Drive.';
 
   @override
   String get backupOfferSetup => 'Set Up Backup';
@@ -3054,7 +3054,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyConsentBody =>
-      'CuNehat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.';
+      'ÇuNehat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.';
 
   @override
   String get privacyConsentAcknowledge => 'Got it';
