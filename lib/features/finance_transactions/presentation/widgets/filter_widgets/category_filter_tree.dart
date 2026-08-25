@@ -1,6 +1,7 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/text_search.dart';
+import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
@@ -241,7 +242,7 @@ class _CategoryFilterTreeState extends State<CategoryFilterTree> {
           Icon(icon, size: 14, color: widget.accent),
           const SizedBox(width: 6),
           Text(
-            title.toUpperCase(),
+            upperTr(title),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,

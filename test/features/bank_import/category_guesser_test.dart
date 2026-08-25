@@ -40,6 +40,26 @@ void main() {
     ],
   ];
 
+  test('jenerik ekstre karşılıkları da eşleşir (marka adı olmadan)', () {
+    // Bankaların çoğu üye işyeri adı yerine jenerik karşılık basıyor.
+    // Sözlük yalnız markadan ibaret kalırsa bu satırlar kategorisiz kalır.
+    for (final desc in const [
+      'KIRTASIYE ODEMESI',
+      'KUAFOR ODEMESI',
+      'BERBER ODEMESI',
+    ]) {
+      expect(
+        guesser.guess(
+          description: desc,
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        'id-Alışveriş',
+        reason: desc,
+      );
+    }
+  });
+
   test('bilinen market zinciri Market kategorisine eşlenir', () {
     // Market (gıda) ile Alışveriş (giyim/elektronik) bilerek ayrı gruplar.
     final result = guesser.guess(

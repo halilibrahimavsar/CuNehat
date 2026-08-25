@@ -131,6 +131,12 @@ class CategoryGuesser {
       'rossmann',
       ' ikea ',
       'decathlon',
+      // Marka değil, bankaların yazdığı JENERİK karşılıklar. Ekstrelerin
+      // çoğu üye işyeri adı yerine bunu basıyor; sözlük yalnız markadan
+      // ibaret kalınca bu satırlar kategorisiz düşüyordu.
+      'kirtasiye',
+      'kuafor',
+      'berber',
     ],
     'Kira': ['kira odeme', ' kira ', 'kiraci'],
     'Eğitim': [

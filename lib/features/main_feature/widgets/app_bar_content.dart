@@ -7,6 +7,7 @@ import 'package:cunehat/core/shared/animations/animated_scaffold_wrapper.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/main_feature/utils/app_constants.dart';
 import 'package:cunehat/features/main_feature/widgets/wallet_headline.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -203,18 +204,17 @@ class _AppBarContentState extends State<AppBarContent> {
       switch (st) {
         case SliderState.savedMoney:
           value = state.activeWallet?.investment ?? 0.0;
-          valueName = context.l10n.drawerInvestment.toUpperCase();
+          valueName = upperTr(context.l10n.drawerInvestment);
         case SliderState.transactions:
           value = state.activeWallet?.balance ?? 0.0;
-          valueName = context.l10n.drawerBalance.toUpperCase();
+          valueName = upperTr(context.l10n.drawerBalance);
         case SliderState.debt:
           value = state.activeWallet?.debt ?? 0.0;
-          valueName = context.l10n.drawerDebt.toUpperCase();
+          valueName = upperTr(context.l10n.drawerDebt);
       }
     }
 
-    final walletName = state.activeWallet?.name.toUpperCase() ??
-        context.l10n.wallet.toUpperCase();
+    final walletName = upperTr(state.activeWallet?.name ?? context.l10n.wallet);
 
     return Showcase(
       key: OnboardingKeys.appBarWalletArea,
