@@ -466,6 +466,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get privacyGuardTitle => 'Gizlilik Koruması';
 
   @override
+  String get stateOnLabel => 'Açık';
+
+  @override
+  String get stateOffLabel => 'Kapalı';
+
+  @override
+  String get stateUnsupportedLabel => 'Desteklenmiyor';
+
+  @override
+  String get methodBiometricLabel => 'biyometrik kimlik doğrulama';
+
+  @override
+  String get methodGenericLabel => 'kimlik doğrulama';
+
+  @override
+  String get unitSecondsLabel => 'saniye';
+
+  @override
+  String get unitMinutesLabel => 'dakika';
+
+  @override
   String get privacyGuardEnabledSubtitle => 'Ekran koruması etkin';
 
   @override
@@ -786,7 +807,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.';
 
   @override
-  String get haftalikNetAkis => 'Haftalık Net Akış';
+  String get reportDailyFlowTitle => 'Günlük Gelir–Gider';
 
   @override
   String get kategoriDagilimi => 'Kategori Dağılımı';
@@ -940,18 +961,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get karZarar => 'Kar/Zarar';
 
   @override
-  String investmentProfitpercentageTostringasfixed(Object toStringAsFixed) {
-    return '$toStringAsFixed%';
-  }
-
-  @override
   String hedefCurrencyformatFormatInvestment(Object targetAmount) {
     return 'Hedef: $targetAmount';
-  }
-
-  @override
-  String investmentTargetprogressTostringasfixed(Object toStringAsFixed) {
-    return '$toStringAsFixed%';
   }
 
   @override
@@ -961,11 +972,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get portfoyDagilimi => 'Portföy Dağılımı';
 
   @override
-  String percentage(Object percentage) {
-    return '%$percentage';
-  }
-
-  @override
   String get tOPLAMPortfoyDegeri => 'TOPLAM PORTFÖY DEĞERİ';
 
   @override
@@ -973,12 +979,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get kAZANCZarar => 'KAZANÇ / ZARAR';
-
-  @override
-  String isProfitTotalprofitpercentageTostringasfixed(
-      Object isProfit, Object toStringAsFixed) {
-    return '$isProfit$toStringAsFixed%';
-  }
 
   @override
   String templateTitleDuzenliIslemi(Object title) {
@@ -2899,6 +2899,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get drawerBankImportSubtitle => 'PDF/Excel hesap ekstresi içe aktarma';
 
   @override
+  String get drawerBankImportTitle => 'Banka Ekstresi';
+
+  @override
   String get drawerSettingsSubtitle => 'Tema, para birimi ve genel tercihler';
 
   @override
@@ -2924,6 +2927,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportNetLabel => 'Net';
+
+  @override
+  String get reportNoPreviousPeriod => 'Önceki dönem yok';
 
   @override
   String reportCompareTopSlice(String ad, String tutar) {

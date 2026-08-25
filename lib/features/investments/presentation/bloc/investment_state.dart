@@ -96,10 +96,19 @@ final class InvestmentLoaded extends InvestmentState {
   });
 
   /// Portföy özet metrikleri — UI build içinde hesap yapmasın diye state'te.
-  double get totalCurrentValue =>
-      investments.fold(0.0, (sum, item) => sum + item.currentValue);
+  ///
+  /// Yuvarlama, cüzdan metriğiyle (`WalletMetricsService._syncInvestmentImpl`)
+  /// AYNI olmalı: üst çubuk oradan, özet kart buradan besleniyor. Ham
+  /// bırakıldığında toplam .085'e denk geldiğinde iki yol ayrışıyordu —
+  /// `roundToCents` yarımı yukarı, `NumberFormat` çifte yuvarlar; üst çubuk
+  /// 5.968.277,09 ₺ derken kart 5.968.277,08 ₺ diyordu.
+  double get totalCurrentValue => roundToCents(
+      investments.fold(0.0, (sum, item) => sum + item.currentValue));
 
-  double get totalProfit => totalCurrentValue - totalAmount;
+  /// Kâr da yuvarlanmış iki toplamın farkı: kullanıcı ekranda gördüğü iki
+  /// sayıyı çıkarıp aynı sonucu bulabilmeli (ham farkta -4.092,67 yazarken
+  /// gösterilen değerlerin farkı -4.092,68 çıkıyordu).
+  double get totalProfit => roundToCents(totalCurrentValue - totalAmount);
 
   double get totalProfitPercentage =>
       totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0.0;

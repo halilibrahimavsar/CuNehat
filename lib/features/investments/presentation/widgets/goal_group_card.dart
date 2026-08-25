@@ -112,7 +112,7 @@ class GoalGroupCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '%${progress.percentage.toStringAsFixed(0)}',
+                        formatPercent(progress.percentage),
                         maxLines: 1,
                         style: TextStyle(
                           fontSize: 15,

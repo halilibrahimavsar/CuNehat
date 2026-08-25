@@ -173,6 +173,13 @@
   "biometricAuthTileSubtitleOn": "On - Sign in with fingerprint or face recognition",
   "biometricAuthTileSubtitleOff": "Off",
   "privacyGuardTitle": "Privacy Guard",
+  "stateOnLabel": "On",
+  "stateOffLabel": "Off",
+  "stateUnsupportedLabel": "Unsupported",
+  "methodBiometricLabel": "biometric authentication",
+  "methodGenericLabel": "authentication",
+  "unitSecondsLabel": "seconds",
+  "unitMinutesLabel": "minutes",
   "privacyGuardEnabledSubtitle": "Screen protection enabled",
   "privacyGuardDisabledSubtitle": "Screen protection disabled",
   "screenProtectionTileTitle": "Screen Protection",
@@ -326,7 +333,7 @@
   "gelirVeyaGiderKaydettikten": "Analysis details will be listed here after you save income or expense.",
   "henuzIslemYok": "No transactions yet",
   "buDonemIcinKayit": "No records for this period.\nUse the slider button to add a new transaction.",
-  "haftalikNetAkis": "Weekly Net Flow",
+  "reportDailyFlowTitle": "Daily Income–Expense",
   "kategoriDagilimi": "Category Distribution",
   "titleIcinVeriYok": "No data for {title}",
   "@titleIcinVeriYok": {
@@ -426,42 +433,17 @@
   "guncelFiyatiGetir": "Get Current Price",
   "ekle": "Add",
   "karZarar": "Profit/Loss",
-  "investmentProfitpercentageTostringasfixed": "{toStringAsFixed}%",
-  "@investmentProfitpercentageTostringasfixed": {
-    "placeholders": {
-      "toStringAsFixed": {}
-    }
-  },
   "hedefCurrencyformatFormatInvestment": "Target: {targetAmount}",
   "@hedefCurrencyformatFormatInvestment": {
     "placeholders": {
       "targetAmount": {}
     }
   },
-  "investmentTargetprogressTostringasfixed": "{toStringAsFixed}%",
-  "@investmentTargetprogressTostringasfixed": {
-    "placeholders": {
-      "toStringAsFixed": {}
-    }
-  },
   "grafikIcinYatirimBulunmuyor": "No investments for chart",
   "portfoyDagilimi": "Portfolio Distribution",
-  "percentage": "{percentage}%",
-  "@percentage": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "tOPLAMPortfoyDegeri": "TOTAL PORTFOLIO VALUE",
   "tOPLAMMaliyet": "TOTAL COST",
   "kAZANCZarar": "PROFIT / LOSS",
-  "isProfitTotalprofitpercentageTostringasfixed": "{isProfit}{toStringAsFixed}%",
-  "@isProfitTotalprofitpercentageTostringasfixed": {
-    "placeholders": {
-      "isProfit": {},
-      "toStringAsFixed": {}
-    }
-  },
   "templateTitleDuzenliIslemi": "Delete recurring transaction \"{title}\"?\n\nPast transactions recorded in the ledger will not be deleted.",
   "@templateTitleDuzenliIslemi": {
     "placeholders": {
@@ -1439,6 +1421,7 @@
   "drawerBudgetSubtitle": "Category-based budget tracking and spending limits",
   "drawerRecurringSubtitle": "Automatic income and expense templates",
   "drawerBankImportSubtitle": "Import PDF/Excel account statements",
+  "drawerBankImportTitle": "Bank Statement",
   "drawerSettingsSubtitle": "Theme, currency and general preferences",
   "drawerSecurityTitle": "Security & Biometrics",
   "drawerSecuritySubtitle": "App lock and PIN settings",
@@ -1448,6 +1431,7 @@
   "reportIncomesTitle": "Incomes",
   "reportNoDataTitle": "No Data to Build a Report",
   "reportNetLabel": "Net",
+  "reportNoPreviousPeriod": "No prior period",
   "reportCompareTopSlice": "Largest: {ad} · {tutar}",
   "@reportCompareTopSlice": {
     "placeholders": {

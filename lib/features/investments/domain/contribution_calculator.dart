@@ -10,8 +10,8 @@ InvestmentEntity applyCashContribution(
   double contribution,
 ) {
   return inv.copyWith(
-    amount: inv.amount + contribution,
-    currentValue: inv.currentValue + contribution,
+    amount: roundToCents(inv.amount + contribution),
+    currentValue: roundToCents(inv.currentValue + contribution),
   );
 }
 
@@ -36,8 +36,10 @@ InvestmentEntity applyAssetPurchase(
   final newCurrentValue =
       livePrice != null ? newQuantity * livePrice : inv.currentValue + paid;
   return inv.copyWith(
-    amount: inv.amount + paid,
-    currentValue: newCurrentValue,
+    amount: roundToCents(inv.amount + paid),
+    // miktar × fiyat kuruş altı artık üretir; yuvarlanmazsa portföy
+    // toplamı iki farklı yolda farklı kuruşa düşüyor (bkz. applyPartialSale).
+    currentValue: roundToCents(newCurrentValue),
     quantity: newQuantity,
     currency: liveCurrency ?? inv.currency,
   );

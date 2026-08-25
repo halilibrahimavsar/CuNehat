@@ -307,8 +307,14 @@ class _AddEntrySheetState extends State<AddEntrySheet> {
           isPersonal ? 0.0 : (parseAmountInput(_overdueController.text) ?? 0);
       final monthlyInstallment =
           parseMoneyInput(_installmentController.text) ?? 0;
+      // Kişisel borçta vade YOKTUR; 0 bunu söyler. Eskiden 1 yazılıyordu ve
+      // bu bir SENTINEL'di: kart "Vade: 1 Ay | 0/1 taksit" diyordu, oysa
+      // ortada taksit planı yok. Değer güvenle 0 olabilir çünkü
+      // `DebtCalcMode.none` toplamı anaparadan alır (vadeyi hiç kullanmaz) ve
+      // taksit yardımcıları `termMonths <= 0`'ı zaten boş plan sayıyor
+      // (installment_progress.dart:103, :184).
       final term =
-          isPersonal ? 1 : (int.tryParse(_termController.text.trim()) ?? 1);
+          isPersonal ? 0 : (int.tryParse(_termController.text.trim()) ?? 1);
 
       // Önizleme ile aynı hesaplayıcı → kaydedilen tutar önizlenenle birebir.
       // Kaydedilen toplam kuruşa yuvarlanır; "Tümü" ödemesi bu değerle eşleşir.

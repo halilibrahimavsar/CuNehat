@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
@@ -69,7 +70,7 @@ class CategorySpikeCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          '+%${spike.percentIncrease.toStringAsFixed(0)}',
+                          formatPercent(spike.percentIncrease, signed: true),
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppGradients.debt,

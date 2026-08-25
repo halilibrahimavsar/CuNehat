@@ -124,7 +124,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
 
       return PieChartSectionData(
         value: item.totalAmount,
-        title: '%${percent.toStringAsFixed(0)}',
+        title: formatPercent(percent.toDouble()),
         radius: radius,
         color: item.color,
         titleStyle: TextStyle(

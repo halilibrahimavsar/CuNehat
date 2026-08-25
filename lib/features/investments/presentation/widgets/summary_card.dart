@@ -142,9 +142,8 @@ class SummaryCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    context.l10n.isProfitTotalprofitpercentageTostringasfixed(
-                        isProfit ? '+' : '',
-                        totalProfitPercentage.toStringAsFixed(1)),
+                    formatPercent(totalProfitPercentage,
+                        decimals: 1, signed: true),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: profitColor,
                       fontWeight: FontWeight.w900,

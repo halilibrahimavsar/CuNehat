@@ -59,3 +59,6 @@ cunehat_demo.json
 **/ios/Flutter/flutter_export_environment.sh
 **/ios/**/xcuserdata
 **/ios/**/DerivedData/
+
+# Sentetik mağaza ekstresi: tarihe göreli, tazesini üretmek saklamaktan iyi.
+ornek_ekstre.csv

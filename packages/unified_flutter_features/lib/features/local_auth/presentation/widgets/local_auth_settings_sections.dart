@@ -31,8 +31,6 @@ class LocalAuthSettingsHeader extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
         );
 
-    final isEn = texts.logoutLabel == 'Logout';
-
     return Container(
       padding: style.headerPadding,
       decoration: BoxDecoration(
@@ -87,20 +85,20 @@ class LocalAuthSettingsHeader extends StatelessWidget {
             children: [
               LocalAuthStatusChip(
                 label: state.isPinSet
-                    ? '${texts.pinLockTitle} ${isEn ? 'On' : 'Açık'}'
-                    : '${texts.pinLockTitle} ${isEn ? 'Off' : 'Kapalı'}',
+                    ? '${texts.pinLockTitle} ${texts.stateOnLabel}'
+                    : '${texts.pinLockTitle} ${texts.stateOffLabel}',
                 enabled: state.isPinSet,
               ),
               LocalAuthStatusChip(
                 label: state.isBiometricEnabled
-                    ? '${texts.biometricLoginTitle} ${isEn ? 'On' : 'Açık'}'
-                    : '${texts.biometricLoginTitle} ${isEn ? 'Off' : 'Kapalı'}',
+                    ? '${texts.biometricLoginTitle} ${texts.stateOnLabel}'
+                    : '${texts.biometricLoginTitle} ${texts.stateOffLabel}',
                 enabled: state.isBiometricEnabled,
               ),
               LocalAuthStatusChip(
                 label: state.isPrivacyGuardEnabled
-                    ? '${texts.privacyGuardTitle} ${isEn ? 'On' : 'Açık'}'
-                    : '${texts.privacyGuardTitle} ${isEn ? 'Off' : 'Kapalı'}',
+                    ? '${texts.privacyGuardTitle} ${texts.stateOnLabel}'
+                    : '${texts.privacyGuardTitle} ${texts.stateOffLabel}',
                 enabled: state.isPrivacyGuardEnabled,
               ),
             ],
@@ -131,7 +129,6 @@ class LocalAuthPinSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = texts.logoutLabel == 'Logout';
     return LocalAuthSectionCard(
       style: style,
       title: texts.pinLockTitle,
@@ -139,8 +136,7 @@ class LocalAuthPinSection extends StatelessWidget {
           state.isPinSet ? texts.pinEnabledSubtitle : texts.pinNotSetSubtitle,
       icon: Icons.dialpad,
       trailing: LocalAuthStatusChip(
-        label:
-            state.isPinSet ? (isEn ? 'On' : 'Açık') : (isEn ? 'Off' : 'Kapalı'),
+        label: state.isPinSet ? texts.stateOnLabel : texts.stateOffLabel,
         enabled: state.isPinSet,
       ),
       children: [
@@ -188,7 +184,6 @@ class LocalAuthBiometricSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = texts.logoutLabel == 'Logout';
     if (!state.isBiometricAvailable) {
       return LocalAuthSectionCard(
         style: style,
@@ -196,7 +191,7 @@ class LocalAuthBiometricSection extends StatelessWidget {
         subtitle: texts.biometricNotAvailableSubtitle,
         icon: Icons.fingerprint,
         trailing: LocalAuthStatusChip(
-          label: isEn ? 'Unsupported' : 'Desteklenmiyor',
+          label: texts.stateUnsupportedLabel,
           enabled: false,
         ),
         children: [
@@ -212,17 +207,14 @@ class LocalAuthBiometricSection extends StatelessWidget {
 
     return LocalAuthSectionCard(
       style: style,
+      // Şerit KAPALI: altındaki tek anahtar satırı adı, açıklamayı ve durumu
+      // zaten taşıyor (bkz. LocalAuthSectionCard.showHeader).
+      showHeader: false,
       title: texts.biometricLoginTitle,
       subtitle: state.isBiometricEnabled
           ? texts.biometricEnabledSubtitle
           : texts.biometricDisabledSubtitle,
       icon: Icons.fingerprint,
-      trailing: LocalAuthStatusChip(
-        label: state.isBiometricEnabled
-            ? (isEn ? 'On' : 'Açık')
-            : (isEn ? 'Off' : 'Kapalı'),
-        enabled: state.isBiometricEnabled,
-      ),
       children: [
         LocalAuthSwitchTile(
           style: style,
@@ -261,20 +253,15 @@ class LocalAuthPrivacyGuardSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = texts.logoutLabel == 'Logout';
     return LocalAuthSectionCard(
       style: style,
+      // Bkz. biyometrik bölümü: tek anahtar, şerit tekrar.
+      showHeader: false,
       title: texts.privacyGuardTitle,
       subtitle: state.isPrivacyGuardEnabled
           ? texts.privacyGuardEnabledSubtitle
           : texts.privacyGuardDisabledSubtitle,
       icon: Icons.privacy_tip_outlined,
-      trailing: LocalAuthStatusChip(
-        label: state.isPrivacyGuardEnabled
-            ? (isEn ? 'On' : 'Açık')
-            : (isEn ? 'Off' : 'Kapalı'),
-        enabled: state.isPrivacyGuardEnabled,
-      ),
       children: [
         LocalAuthSwitchTile(
           style: style,
@@ -309,11 +296,10 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentTimeout = state.backgroundLockTimeoutSeconds;
     final canEdit = state.isPinSet || state.isBiometricEnabled;
-    final isEn = texts.logoutLabel == 'Logout';
 
     final subtitle = currentTimeout > 0
         ? '${texts.backgroundLockSubtitlePrefix}${_formatDuration(currentTimeout)} (${_getAuthMethod(state, texts)})'
-        : (isEn ? 'Off' : 'Kapalı');
+        : texts.stateOffLabel;
 
     return LocalAuthSectionCard(
       style: style,
@@ -321,9 +307,7 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
       subtitle: subtitle,
       icon: Icons.lock_outline,
       trailing: LocalAuthStatusChip(
-        label: currentTimeout > 0
-            ? (isEn ? 'On' : 'Açık')
-            : (isEn ? 'Off' : 'Kapalı'),
+        label: currentTimeout > 0 ? texts.stateOnLabel : texts.stateOffLabel,
         enabled: currentTimeout > 0,
       ),
       children: [
@@ -346,7 +330,7 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
           runSpacing: 8,
           children: [
             LocalAuthChoiceChip(
-              label: isEn ? 'Off' : 'Kapalı',
+              label: texts.stateOffLabel,
               selected: currentTimeout == 0,
               enabled: canEdit || currentTimeout == 0,
               onSelected: () => onTimeoutSelected(0),
@@ -376,16 +360,19 @@ class LocalAuthBackgroundLockSection extends StatelessWidget {
   }
 
   String _formatDuration(int seconds) {
-    return LocalAuthUtils.getRemainingTimeText(seconds);
+    return LocalAuthUtils.getRemainingTimeText(
+      seconds,
+      secondsLabel: texts.unitSecondsLabel,
+      minutesLabel: texts.unitMinutesLabel,
+    );
   }
 
   String _getAuthMethod(LocalAuthSettingsState state, LocalAuthTexts texts) {
-    final isEn = texts.logoutLabel == 'Logout';
     if (state.isBiometricEnabled) {
-      return isEn ? 'biometric authentication' : 'biyometrik kimlik doğrulama';
+      return texts.methodBiometricLabel;
     } else if (state.isPinSet) {
       return 'PIN';
     }
-    return isEn ? 'authentication' : 'kimlik doğrulama';
+    return texts.methodGenericLabel;
   }
 }

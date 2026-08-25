@@ -4,6 +4,7 @@ import 'package:cunehat/core/blocs/cash_coupling_mixin.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/usecases/add_investment_usecase.dart';
@@ -88,8 +89,10 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
       result.fold(
         (failure) => _emitError(emit, RawFailureNotice(failure.message)),
         (investments) {
-          final total =
-              investments.fold<double>(0, (sum, item) => sum + item.amount);
+          // Bkz. InvestmentLoaded.totalCurrentValue: maliyet toplamı da
+          // kuruşa oturmalı, yoksa kâr/zarar farkı bir kuruş kayıyor.
+          final total = roundToCents(
+              investments.fold<double>(0, (sum, item) => sum + item.amount));
           final loaded = InvestmentLoaded(
             investments,
             goals: goals,
@@ -245,7 +248,14 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
                 final updated = inv.copyWith(
                   // convertedPrice cüzdanın biriminde; `amount` (maliyet) de
                   // öyle olduğundan kâr/zarar aynı birimde hesaplanır.
-                  currentValue: inv.quantity! * quote.convertedPrice,
+                  //
+                  // YUVARLAMA ŞART: miktar × fiyat kuruş altı artık üretir
+                  // (510 × 7.184,17… gibi). Ham bırakılırsa portföy toplamı
+                  // .085'e denk gelip cüzdan metriği (roundToCents) ile özet
+                  // kart (NumberFormat) farklı kuruşa yuvarlıyordu — üst
+                  // çubuk 5.968.277,09 ₺ derken kart 5.968.277,08 ₺ diyordu.
+                  currentValue:
+                      roundToCents(inv.quantity! * quote.convertedPrice),
                   // Kaydedilen birim fiyat KAYNAĞININ birimi (bilgi amaçlı),
                   // değerleme birimi değil.
                   currency: quote.currency,

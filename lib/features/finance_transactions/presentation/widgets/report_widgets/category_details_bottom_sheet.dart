@@ -302,7 +302,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
               child.totalAmount,
               budgetNote: budget == null
                   ? null
-                  : '%${(budget.progress * 100).toStringAsFixed(0)} / '
+                  : '${formatPercent(budget.progress * 100)} / '
                       '${_formatCurrency(context, budget.limit)}',
               budgetExceeded: budget?.isExceeded ?? false,
             );
@@ -341,7 +341,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '%${(budget.progress * 100).toStringAsFixed(0)} / ${_formatCurrency(context, budget.limit)}',
+          '${formatPercent(budget.progress * 100)} / ${_formatCurrency(context, budget.limit)}',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,

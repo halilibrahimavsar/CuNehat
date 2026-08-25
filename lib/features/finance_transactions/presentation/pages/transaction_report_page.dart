@@ -26,7 +26,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_weekly_net_flow_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -348,13 +348,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    context.l10n.haftalikNetAkis,
+                    context.l10n.reportDailyFlowTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ReportWeeklyNetFlowChart(
+                  ReportDailyNetFlowChart(
                     transactions: filteredTransactions,
                   ),
                   const SizedBox(height: 24),

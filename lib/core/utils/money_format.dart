@@ -86,6 +86,28 @@ String _trimZero(double v) {
       : s;
 }
 
+/// Uygulamadaki TEK yüzde gösterim noktası — `formatMoney`'nin yüzde karşılığı.
+/// Elle `'%$x'` ya da `'$x%'` kurmak YOK.
+///
+/// Biçim: işaret + `%` + locale ayracıyla sayı — `%61,4`, `-%1,71`, `+%9,5`.
+/// İki karar bilinçli:
+///
+/// * **`%` önde.** Türkçe yazım kuralı bu (`%15`), ve uygulamanın çoğu yeri
+///   zaten öyleydi. `toStringAsFixed` kullanan üç çağrı yeri ise `%` sonda
+///   VE nokta ayraçlı basıyordu; birikim ekranında tek karede üç ayrı biçim
+///   görünüyordu (`38.5%`, `%61.4`, `-0.1%`).
+/// * **İşaret `%`'den önce.** `-%1,71` doğru; `%-1,71` okunmuyor.
+///
+/// [signed] true ise pozitif değerlere `+` eklenir (kâr/zarar rozetleri).
+String formatPercent(
+  double value, {
+  int decimals = 0,
+  bool signed = false,
+}) {
+  final sign = value < 0 ? '-' : (signed && value > 0 ? '+' : '');
+  return '$sign%${formatMoneyNumber(value.abs(), decimals: decimals)}';
+}
+
 final RegExp _anyNonZeroDigit = RegExp('[1-9]');
 
 NumberFormat _decimalFormat(int decimals) => NumberFormat.decimalPatternDigits(

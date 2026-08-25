@@ -63,7 +63,8 @@ void main() {
     expect(find.text('6.000,00 ₺'), findsOneWidget);
     expect(find.text('Kar/Zarar'), findsOneWidget);
     expect(find.text('1.000,00 ₺'), findsOneWidget);
-    expect(find.text('20.00%'), findsOneWidget);
+    // Türkçe biçim: işaret + % önde, virgül ayraç.
+    expect(find.text('+%20,00'), findsOneWidget);
   });
 
   testWidgets('renders InvestmentCard with Stock type and symbol',
@@ -98,7 +99,7 @@ void main() {
 
     // Verify negative profit rendering
     expect(find.text('-200,00 ₺'), findsOneWidget);
-    expect(find.text('-10.00%'), findsOneWidget);
+    expect(find.text('-%10,00'), findsOneWidget);
 
     // Verify no target indicators are shown since targetAmount is null
     expect(find.textContaining('Hedef:'), findsNothing);

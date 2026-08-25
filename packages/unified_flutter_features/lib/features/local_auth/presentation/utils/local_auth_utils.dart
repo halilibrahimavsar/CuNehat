@@ -23,23 +23,22 @@ class LocalAuthUtils {
     }
   }
 
-  static String getLockoutDurationText(int level) {
-    if (level <= 0) return '30 seconds';
-    if (level == 1) return '2 minutes';
-    if (level == 2) return '5 minutes';
-    return '16.7 minutes';
-  }
-
   static int getLockoutDurationSeconds(int level) {
     return LocalAuthConstants.lockoutDurations[level] ??
         LocalAuthConstants.lockoutDurations[3]!;
   }
 
-  static String getRemainingTimeText(int seconds) {
-    if (seconds < 60) return '$seconds seconds';
+  /// Süre metni. Birim adları ÇAĞIRANDAN gelir: burada gömülüyken Türkçe
+  /// arayüzde arka plan kilidi seçenekleri "5 seconds" yazıyordu.
+  static String getRemainingTimeText(
+    int seconds, {
+    String secondsLabel = 'seconds',
+    String minutesLabel = 'minutes',
+  }) {
+    if (seconds < 60) return '$seconds $secondsLabel';
     final minutes = seconds ~/ 60;
     final remainingSeconds = seconds % 60;
-    if (remainingSeconds == 0) return '$minutes minutes';
-    return '$minutes minutes $remainingSeconds seconds';
+    if (remainingSeconds == 0) return '$minutes $minutesLabel';
+    return '$minutes $minutesLabel $remainingSeconds $secondsLabel';
   }
 }

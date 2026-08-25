@@ -4,8 +4,21 @@
 Ham cihaz çekimini (9:20 — Play'in kabul etmediği bir oran) 1080x1920 tam 9:16
 bir tuvale, marka zemini ve başlık şeridiyle yerleştirir.
 
-Neden betik: şerit metni ya da renk değişince 8 görselin hepsi tek komutla
-yeniden üretilir. Elle tasarımda her değişiklik 8 kez tekrar iş demek.
+Neden betik: şerit metni ya da renk değişince görsellerin hepsi tek komutla
+yeniden üretilir. Elle tasarımda her değişiklik N kez tekrar iş demek.
+
+KARE BAŞINA BİR EKRAN DEĞİL, BİR KATEGORİ. Play telefon için en fazla 8 görsel
+alıyor; eski set 8 karede 8 ekran gösteriyordu, yani 23 yetenek alanının
+6'sı. Şimdi her kare bir TEMA ve başlığın altında o temanın özelliklerini
+adıyla sayan bir çip satırı var: ekran sayısı düşerken anlatılan özellik
+sayısı artıyor. Çipler karenin TEMSİL ETTİĞİ kategorinin özelliklerini
+adlandırır, illa o karede piksel olarak görüneni değil — ama uygulamada
+GERÇEKTEN bulunmalı ve o kategoriye ait olmalı. Olmayan bir özelliği çipe
+yazmak Play politikasında yanıltıcı beyandır; "Reklam yok" gibi iddialar da
+Data safety formundaki beyanla birebir uyuşmalı.
+
+Sıra "en güzel ekran" değil "en ikna edici iddia" mantığıyla: ilk 3 görsel
+arama sonucunda kaydırmadan görülen tek şey.
 
 Kullanım:
     python3 tools/store_screenshots.py            # tamamı
@@ -46,11 +59,16 @@ CAPTION_LEAD = 92
 SUB_SIZE = 37
 SUB_GAP = 30
 SHOT_GAP = 58
+CHIP_SIZE = 31        # çip yazısı; 30'un altında Play küçük resimde okunmuyor
+CHIP_PAD_X = 22
+CHIP_PAD_Y = 13
+CHIP_GAP = 12
+CHIP_TOP_GAP = 26
 SHOT_W = 900          # her karede sabit: set tutarlı görünsün
 SHOT_RADIUS = 44
 STATUS_BAR = 78       # kişisel bildirim ikonu + %16 kırmızı pil kırpılıyor
 
-SRC_DIR = Path.home() / "Masaüstü" / "cunehat screenshots"
+SRC_DIR = Path.home() / "Masaüstü" / "cunehat new screenshots"
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "store" / "screenshots"
 
 
@@ -60,54 +78,74 @@ class Shot:
     source: str
     caption: str              # *yıldız* içindeki kelime vurgu rengiyle çizilir
     subtitle: str = ""
+    # Çıktı dosyasının adı; Play'e yüklerken sıra buradan okunur.
+    slug: str = ""
+    # Bu karede GÖRÜNEN özelliklerin adları. Karenin taşıdığı yükün yarısı
+    # bunlar; ekranın kendisi tek bir anı gösterir, çipler kapsamı söyler.
+    chips: tuple[str, ...] = ()
     crop: tuple[int, int] = (STATUS_BAR, 2712)   # kaynakta korunacak satır aralığı
     anchor: float = 0.0       # taşma nereden kırpılsın: 0=üstü koru, 1=altı koru
     notes: str = field(default="", repr=False)
 
 
-# Sıra "en güzel ekran" değil "en ikna edici iddia" mantığıyla: ilk 3 görsel
-# arama sonucunda kaydırmadan görülen tek şey.
+N = "Screenshot_2026-08-25-01-{}_dev.halilibrahim.cunehat.jpg"
+
+# ALTI kare, 18 adlandırılmış özellik. Eski set 8 karede 8 ekran gösteriyordu.
 SHOTS = [
-    # crop üstü 700: tutar satırı (kaynakta ~719-841) ortadan bölünmesin diye
-    # tam üstünden başlıyor. 400'den başlatınca taşma "500 ₺"yi ikiye kesiyordu.
-    Shot(1, "Ekstra_1_Islem_Ekleme.jpg",
-         "Gider ekle,\n*10 saniyede* bitsin",
-         "Kategori, fiş fotoğrafı ve tekrar eden ödeme",
-         crop=(700, 2712), anchor=0.0),
-    Shot(2, "3_4_Akilli_Icgoru.jpg",
-         "Paran nereye\n*gidiyor*, gör",
-         "En çok harcanan kategori ve birikim oranın",
-         crop=(STATUS_BAR, 2100), anchor=0.0),
-    Shot(3, "2_1_Butce_Planlama.jpg",
-         "Bütçeni *aşmadan*\nönce uyarır",
-         "Kategori bazlı aylık limit ve ilerleme takibi",
-         crop=(STATUS_BAR, 2090), anchor=0.0),
-    Shot(4, "1_2_Islemler.jpg",
-         "Tüm hesapların\n*tek ekranda*",
-         "Nakit, banka, kredi kartı — anlık net durum",
-         crop=(STATUS_BAR, 2070), anchor=0.0),
-    Shot(5, "3_3_Pasta_Grafikleri.jpg",
-         "Gelir ve gider,\n*grafiklerle*",
-         "Kategori dağılımı, trend ve dönem karşılaştırması",
-         crop=(STATUS_BAR, 2420), anchor=0.30,
-         notes="Pasta tek dilim (%98 Yatırım Alımı) — 6-8 kategoriyle yeniden çek"),
-    Shot(6, "5_1_Varlik_Portfoyu.jpg",
-         "Döviz ve altın,\n*güncel kurla*",
-         "Portföyünün anlık değeri ve dağılımı",
-         crop=(STATUS_BAR, 2420), anchor=0.12,
-         notes="Kazanç +0,0% / ₺0 ve tek varlık — birkaç varlık ve kâr/zararla çek"),
-    Shot(7, "4_2_Borc_Takibi.jpg",
-         "Kime ne borçlusun,\n*unutma*",
-         "Borç ve alacak, taksit planı ve vade takibi",
-         crop=(STATUS_BAR, 2070), anchor=0.0,
-         notes="Tek borç kaydı, ekranın yarısı boş — 3-4 kayıtla yeniden çek"),
-    Shot(8, "5_2_Banka_Ekstresi_Ice_Aktar.jpg",
-         "Ekstreni oku,\n*tek tek girme*",
-         "PDF, Excel ve CSV — işlemler hazır gelir",
-         crop=(STATUS_BAR, 2070), anchor=0.0,
-         notes="ZORUNLU: bu boş form. Ayrıştırılmış satırların olduğu "
-               "INCELEME ekranını çek — en güçlü farkımızın kanıtı bu"),
+    Shot(1, N.format("51-53-871"),
+         "Her harcaman\n*kendi yerinde*",
+         "Aylık net durum, günlük döküm ve tek dokunuşla kayıt.",
+         slug="islem-defteri",
+         chips=("Takvim görünümü", "Arama ve filtre", "Çoklu cüzdan"),
+         crop=(108, 2500), anchor=0.0),
+
+    Shot(2, N.format("55-21-911"),
+         "Ekstreni at,\n*satırlar hazır* gelsin",
+         "Okunan tutarlar ekstrenin kendi bakiyesiyle doğrulanır.",
+         slug="banka-ekstresi",
+         chips=("PDF ve Excel", "Fotoğraftan OCR", "Aritmetik doğrulama"),
+         crop=(108, 2400), anchor=0.0,
+         notes="ZORUNLU YENİDEN ÇEKİM: karede GERÇEK ekstre verisi var "
+               "(banka açıklamaları, 134.000 ₺ transfer). Mağazaya gidemez — "
+               "demo yedeğiyle üretilmiş bir ekstre dosyasıyla tekrar çek."),
+
+    Shot(3, N.format("53-20-417"),
+         "Hedefini kur,\n*varlıklarını* bağla",
+         "Altın ve hisseni hedefe bağla, ilerlemeyi tek bakışta gör.",
+         slug="birikim-hedefleri",
+         chips=("Altın, hisse ve fon", "Canlı fiyat", "Kâr/zarar takibi"),
+         crop=(108, 2500), anchor=0.0),
+
+    Shot(4, N.format("55-42-449"),
+         "Limitini aşmadan\n*önce* uyarır",
+         "Her kategoriye aylık limit; harcadıkça çubuk dolar.",
+         slug="butce",
+         chips=("Kategori limitleri", "Aşım uyarısı", "Gelir–gider raporu"),
+         crop=(108, 2500), anchor=0.0),
+
+    Shot(5, N.format("52-57-165"),
+         "Borcunu ve alacağını\n*unutma*",
+         "Taksit, vade ve kalan tutar; ödedikçe ilerlemeyi gör.",
+         slug="borc-takibi",
+         chips=("Taksit ve vade", "Düzenli işlemler", "Vade hatırlatması"),
+         crop=(108, 2100), anchor=0.0,
+         notes="YENİDEN ÇEKİM: karedeki 'Arkadaş Borcu' elle girilmiş eski "
+               "kayıt (Halil / 'Vade: 1 Ay | 0/1 taksit'). Demo yedeği "
+               "geri yüklenip tekrar çekilmeli — kişisel borçta artık vade "
+               "satırı yerine vade TARİHİ çıkıyor."),
+
+    Shot(6, N.format("57-48-119"),
+         "Verilerin\n*sende* kalır",
+         "Sunucumuz yok. Yedek senin Google Drive hesabına gider.",
+         slug="gizlilik",
+         chips=("PIN ve parmak izi", "Google Drive yedeği", "Reklam yok"),
+         crop=(108, 2400), anchor=0.0),
 ]
+
+# Sette YER ALMAYANLAR — 8 yuvanın tamamı kullanılmak istenirse en güçlü iki
+# aday bunlar (ikisi de temiz, yeniden çekim istemiyor):
+#   01-53-10  portföy halkası (toplam/maliyet/kâr + dağılım)
+#   01-52-03  akıllı içgörüler (birikim oranı, harcama sıçraması uyarısı)
 
 
 def load_font(size: int, weight: str = "Bold") -> ImageFont.FreeTypeFont:
@@ -171,7 +209,35 @@ def draw_caption(canvas: Image.Image, shot: Shot) -> int:
             draw.text((MARGIN_X, y), line, font=sub, fill=SUBTEXT)
             y += SUB_SIZE + 12
 
+    if shot.chips:
+        y = draw_chips(canvas, draw, shot.chips, y + CHIP_TOP_GAP)
+
     return y + SHOT_GAP
+
+
+def draw_chips(canvas, draw, chips: tuple[str, ...], y: int) -> int:
+    """Özellik adlarını kapsül rozetler halinde satıra dizer, sığmayanı alt
+    satıra taşır. Rozetler yarı saydam: ekran görüntüsünün önüne geçmesinler,
+    başlıkla ekran arasında bir köprü olsunlar."""
+    font = load_font(CHIP_SIZE, "Medium")
+    max_x = CANVAS[0] - MARGIN_X
+    x = MARGIN_X
+    row_h = CHIP_SIZE + 2 * CHIP_PAD_Y
+
+    for text in chips:
+        w = round(draw.textlength(text, font=font)) + 2 * CHIP_PAD_X
+        if x + w > max_x and x > MARGIN_X:
+            x = MARGIN_X
+            y += row_h + CHIP_GAP
+        chip = Image.new("RGBA", (w, row_h), (0, 0, 0, 0))
+        ImageDraw.Draw(chip).rounded_rectangle(
+            (0, 0, w - 1, row_h - 1), radius=row_h // 2,
+            fill=(*ACCENT, 38), outline=(*ACCENT, 120), width=2)
+        canvas.alpha_composite(chip, (x, y))
+        draw.text((x + CHIP_PAD_X, y + CHIP_PAD_Y), text, font=font, fill=TEXT)
+        x += w + CHIP_GAP
+
+    return y + row_h
 
 
 def wrap(text: str, font, max_w: int, draw) -> list[str]:
@@ -243,7 +309,7 @@ def compose(shot: Shot) -> Path:
         radius=SHOT_RADIUS, outline=(255, 255, 255, 90), width=3)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out = OUT_DIR / f"{shot.index:02d}_{Path(shot.source).stem.lower()}.png"
+    out = OUT_DIR / f"{shot.index:02d}_{shot.slug}.png"
     canvas.convert("RGB").save(out, "PNG")   # 24-bit, alfa yok — Play şartı
     return out
 

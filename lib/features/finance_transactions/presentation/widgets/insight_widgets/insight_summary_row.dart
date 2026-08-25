@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
 import 'package:flutter/material.dart';
 
@@ -39,7 +40,7 @@ class InsightSummaryRow extends StatelessWidget {
         _statTile(
           context,
           context.l10n.birikimOrani,
-          '${(insights.savingsRate * 100).toStringAsFixed(0)}%',
+          formatPercent(insights.savingsRate * 100),
           savingsColor,
         ),
       ],

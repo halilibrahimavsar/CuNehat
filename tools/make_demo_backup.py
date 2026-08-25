@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mağaza ekran görüntüleri için SAHTE veri yedeği üretir (şema v7).
+"""Mağaza ekran görüntüleri için SAHTE veri yedeği üretir (şema v9).
 
 Neden: Play listelemesinde gerçek kişisel finans verisi gösterilmemeli, ama
 3 işlemlik boş bir liste de "kimse kullanmıyor" izlenimi verir. Bu betik
@@ -15,6 +15,22 @@ kendi hesabını yazıp ekrandaki rakamları değiştirir:
   debt       = Σ remainingAmount(ödenmemiş borçlar)        (syncDebt)
   credit     = Σ amount(tahsil edilmemiş alacaklar)        (syncCredit)
   investment = Σ currentValue(yatırımlar)                  (syncInvestment)
+
+İçerik, önerilen ekran görüntüsü setine göre seçildi:
+  * 3 birikim hedefi FARKLI dolulukta (%28 / %69 / %87) + 1 bağsız varlık
+  * iki altın kaydı da varsayılan amber → halka grafiğinin renk ayrıştırması
+    ekranda görünür
+  * biri taksitli (12 ay), biri taksitsiz (termMonths=0 + vade tarihi) borç
+  * 2 onay bekleyen düzenli işlem (sıfır sayaç özelliği anlatmıyor)
+  * bu ayda maaş dışında 2 gelir kalemi (rapor tek dilime düşmesin)
+  * bütçelerde biri aşılmış (%111), gerisi %27'ye kadar iniyor
+
+Üçüncü taraf marka adı YOK: gerçek banka/şirket adı, uygulamanın o kurumla
+resmî bir ilişkisi varmış izlenimi verip Play incelemesinde fikri mülkiyet
+itirazına açık alan bırakıyor.
+
+Şema uyumu `test/tools/demo_backup_generator_test.dart` ile kilitli: betik
+çalıştırılıp çıktısı uygulamanın KENDİ ayrıştırıcısına veriliyor.
 
 Kullanım:
     python3 tools/make_demo_backup.py cunehat_demo.json
@@ -227,6 +243,15 @@ def build():
         day_in(months[2]), income=True)
     add(w_main, "Dükkan Kirası", cat[(False, "Kira Geliri")], 9500,
         day_in(months[-2], 12), income=True)
+    # İçinde bulunulan ay: rapor ekranı varsayılan olarak bu aya bakıyor ve
+    # tek gelir kalemi varsa kategori dağılımı "%100 Maaş" tek dilimine
+    # düşüyordu — grafik hiçbir şey anlatmıyor.
+    if TODAY.day >= 8:
+        add(w_main, "Dükkan Kirası", cat[(False, "Kira Geliri")], 9500,
+            date(TODAY.year, TODAY.month, min(8, TODAY.day)), income=True)
+    if TODAY.day >= 14:
+        add(w_main, "Logo Tasarımı", cat[(False, "Serbest Çalışma")], 6200,
+            date(TODAY.year, TODAY.month, min(14, TODAY.day)), income=True)
 
     # --- Gider: plana göre --------------------------------------------------
     for ms in months:
@@ -272,7 +297,7 @@ def build():
         loan_payments.append({"id": uid(), "date": iso(pd, 10),
                               "amount": loan_installment,
                               "overdueInterestPart": 0.0, "notes": None})
-        add(w_main, "Kredi Taksiti — Ziraat Bankası", TAG_DEBT_PAYMENT,
+        add(w_main, "Kredi Taksiti — Örnek Banka", TAG_DEBT_PAYMENT,
             loan_installment, pd, system=True, hour=10)
 
     personal_principal = 7500.0
@@ -281,12 +306,12 @@ def build():
     personal_payments = [{"id": uid(), "date": iso(pd, 14),
                           "amount": personal_paid,
                           "overdueInterestPart": 0.0, "notes": "Elden ödendi"}]
-    add(w_main, "Borç Ödemesi — Ahmet Yılmaz", TAG_DEBT_PAYMENT,
+    add(w_main, "Borç Ödemesi — Kerem Aydın", TAG_DEBT_PAYMENT,
         personal_paid, pd, system=True)
 
     debts = [
         {"id": uid(), "userId": USER, "walletId": w_main,
-         "title": "İhtiyaç Kredisi", "counterparty": "Ziraat Bankası",
+         "title": "İhtiyaç Kredisi", "counterparty": "Örnek Banka",
          "type": "bankLoan", "calcMode": "fixedInstallment",
          "principalAmount": loan_principal, "interestRate": 0.0,
          "termMonths": loan_term, "overdueInterestRate": 0.0,
@@ -298,7 +323,7 @@ def build():
          "notes": "Aylık 6.120 ₺ sabit taksit",
          "expectedTotalAmount": loan_total, "principalToWallet": False},
         {"id": uid(), "userId": USER, "walletId": w_main,
-         "title": "Arkadaş Borcu", "counterparty": "Ahmet Yılmaz",
+         "title": "Arkadaş Borcu", "counterparty": "Kerem Aydın",
          "type": "personalDebt", "calcMode": "none",
          "principalAmount": personal_principal, "interestRate": 0.0,
          "termMonths": 0, "overdueInterestRate": 0.0,
@@ -327,34 +352,85 @@ def build():
          "collectedAt": iso(coll_d, 16), "isPaid": True, "notes": None},
     ]
 
-    # --- Yatırımlar --------------------------------------------------------
-    gold_d, stock_d, fund_d = day_in(months[0]), day_in(months[1]), day_in(months[2])
+    # --- Birikim hedefleri + yatırımlar ------------------------------------
+    # Hedefler kasıtlı olarak ÜÇ FARKLI doluluk seviyesinde: erken / orta /
+    # neredeyse tamam. Üçü de %60 civarı olsaydı ekran görüntüsü tek bir
+    # durumu anlatırdı.
+    g_ev, g_araba, g_acil = uid(), uid(), uid()
+    goals = [
+        {"id": g_ev, "userId": USER, "walletId": w_main, "name": "Ev Peşinatı",
+         "targetAmount": 150000.0, "category": "ev", "color": 0xFF009688,
+         "createdAt": iso(months[0] - timedelta(days=5), 10)},
+        {"id": g_araba, "userId": USER, "walletId": w_main, "name": "Yeni Araba",
+         "targetAmount": 60000.0, "category": "araba", "color": 0xFF3F51B5,
+         "createdAt": iso(months[1] + timedelta(days=2), 10)},
+        {"id": g_acil, "userId": USER, "walletId": w_main, "name": "Acil Fon",
+         "targetAmount": 12000.0, "category": "acil_fon", "color": 0xFF4CAF50,
+         "createdAt": iso(months[2] + timedelta(days=1), 10)},
+    ]
+
+    # Deftere işlenen alımlar. "Zaten bende" olan kısım (unbookedCost)
+    # cüzdandan HİÇ çıkmadı, dolayısıyla karşılık gelen işlem de yok —
+    # portföy inandırıcı büyüklükte kalırken bakiye şişmiyor.
+    gold_d, quarter_d = day_in(months[0]), day_in(months[0], 12)
+    stock_d, fund_d = day_in(months[1]), day_in(months[2])
+    silver_d = day_in(months[3], 20)
     add(w_main, "Gram Altın Alımı", TAG_INVESTMENT_BUY, 24600, gold_d, system=True)
-    add(w_main, "THYAO Alımı", TAG_INVESTMENT_BUY, 15400, stock_d, system=True)
+    add(w_main, "Örnek Havacılık Alımı", TAG_INVESTMENT_BUY, 15400, stock_d,
+        system=True)
     add(w_main, "Serbest Fon Alımı", TAG_INVESTMENT_BUY, 10000, fund_d, system=True)
+    add(w_main, "Vadeli Mevduat", TAG_INVESTMENT_BUY, 3500, silver_d, system=True)
 
     investments = [
+        # İKİ altın kaydı da varsayılan amber ile geliyor (ekleme sayfasının
+        # varsayılanı). Halka grafiği artık çakışan rengi kendi ton ailesinde
+        # kaydırıyor — bu veri o düzeltmeyi ekranda gösteriyor.
         {"id": uid(), "userId": USER, "walletId": w_main, "name": "Gram Altın",
-         "amount": 24600.0, "currentValue": 27340.50,
+         "amount": 49200.0, "currentValue": 54681.00,
          "type": "InvestmentType.gold", "color": 0xFFFFC107,
          "dateAdded": iso(gold_d, 11), "symbol": "gram-altin",
-         "returnRate": 0.0, "targetAmount": 150000.0, "quantity": 6.0,
-         "goalCategory": None, "currency": "TRY"},
+         "returnRate": 0.0, "quantity": 12.0, "goalId": g_ev,
+         "currency": "TRY", "unbookedCost": 24600.0},
+        {"id": uid(), "userId": USER, "walletId": w_main, "name": "Çeyrek Altın",
+         "amount": 46000.0, "currentValue": 48900.00,
+         "type": "InvestmentType.gold", "color": 0xFFFFC107,
+         "dateAdded": iso(quarter_d, 11), "symbol": "ceyrek-altin",
+         "returnRate": 0.0, "quantity": 10.0, "goalId": g_ev,
+         "currency": "TRY", "unbookedCost": 46000.0},
         {"id": uid(), "userId": USER, "walletId": w_main,
-         "name": "Türk Hava Yolları", "amount": 15400.0, "currentValue": 16985.0,
+         "name": "Örnek Havacılık", "amount": 15400.0, "currentValue": 16985.0,
          "type": "InvestmentType.stock", "color": 0xFF2196F3,
-         "dateAdded": iso(stock_d, 11), "symbol": "THYAO.IS",
-         "returnRate": 0.0, "targetAmount": None, "quantity": 55.0,
-         "goalCategory": None, "currency": "TRY"},
+         "dateAdded": iso(stock_d, 11), "symbol": "ORNK",
+         "returnRate": 0.0, "quantity": 55.0, "goalId": g_araba,
+         "currency": "TRY", "unbookedCost": 0.0},
         {"id": uid(), "userId": USER, "walletId": w_main, "name": "Serbest Fon",
          "amount": 10000.0, "currentValue": 10420.0,
          "type": "InvestmentType.custom", "color": 0xFF4CAF50,
          "dateAdded": iso(fund_d, 11), "symbol": None,
-         "returnRate": 4.2, "targetAmount": 50000.0, "quantity": None,
-         "goalCategory": "emeklilik", "currency": "TRY"},
+         "returnRate": 4.2, "quantity": None, "goalId": g_acil,
+         "currency": "TRY", "unbookedCost": 0.0},
+        # Hedefe bağlı DEĞİL: "Bağsız varlıklar" bölümü de dolu görünsün.
+        #
+        # Tür `custom`: gümüş bu uygulamada bir ALTIN TÜRÜ değil
+        # (`kGoldTypeKeys`). `gold` + `symbol: "gumus"` denendiğinde
+        # `goldTypeLabel` tanımadığı anahtarı olduğu gibi döndürüyor ve kart
+        # "gumus" rozetiyle, "100 gumus · Birim…" satırıyla, tür olarak da
+        # "Altın" yazıyordu. Sembolsüz `custom` doğru kayıt: rozet ve miktar
+        # satırı hiç kurulmaz.
+        {"id": uid(), "userId": USER, "walletId": w_main,
+         "name": "Vadeli Mevduat", "amount": 3500.0, "currentValue": 3780.0,
+         "type": "InvestmentType.custom", "color": 0xFF00897B,
+         "dateAdded": iso(silver_d, 11), "symbol": None,
+         "returnRate": 8.0, "quantity": None, "goalId": None,
+         "currency": "TRY", "unbookedCost": 0.0},
     ]
 
     # --- Tekrarlayan şablonlar --------------------------------------------
+    # İKİSİ BEKLEMEDE (nextExecutionDate geçmişte): `isRecurringDue` kuralı
+    # `isActive && nextExecutionDate <= now`. Hepsi geleceğe tarihlenirse
+    # "Onay Bekleyenler 0" görünür ve sekme özelliğin ne işe yaradığını
+    # anlatmaz. DİKKAT: bekleyen kalem varken uygulama açılışta onay
+    # hatırlatmasını gösterir — ekran görüntüsünden önce kapat.
     nxt = date(TODAY.year + (1 if TODAY.month == 12 else 0),
                TODAY.month % 12 + 1, 1)
     recurring = [
@@ -367,11 +443,16 @@ def build():
          "frequency": "monthly",
          "nextExecutionDate": iso(date(nxt.year, nxt.month, 5), 9),
          "anchorDay": 5, "isActive": True},
-        {"id": uid(), "userId": USER, "walletId": w_main, "title": "Netflix",
-         "tag": cat[(True, "Abonelikler")], "amount": 229.99, "type": "expense",
-         "frequency": "monthly",
-         "nextExecutionDate": iso(date(nxt.year, nxt.month, 12), 9),
+        {"id": uid(), "userId": USER, "walletId": w_main,
+         "title": "Dijital Abonelik", "tag": cat[(True, "Abonelikler")],
+         "amount": 229.99, "type": "expense", "frequency": "monthly",
+         "nextExecutionDate": iso(TODAY - timedelta(days=2), 9),
          "anchorDay": 12, "isActive": True},
+        {"id": uid(), "userId": USER, "walletId": w_main,
+         "title": "Spor Salonu", "tag": cat[(True, "Spor")],
+         "amount": 1250.0, "type": "expense", "frequency": "monthly",
+         "nextExecutionDate": iso(TODAY - timedelta(days=1), 9),
+         "anchorDay": 20, "isActive": True},
     ]
 
     # --- Bütçeler: içinde bulunulan ayın GERÇEK harcamasından türetilir ----
@@ -442,7 +523,7 @@ def build():
     txs.sort(key=lambda t: t["date"])
 
     return {
-        "version": 7,
+        "version": 9,
         "timestamp": datetime.now().isoformat(),
         "wallets": wallets,
         "transactions": txs,
@@ -453,6 +534,7 @@ def build():
         "recurringTransactions": recurring,
         "users": {USER: {"activeWalletId": w_main}},
         "categories": cats,
+        "goals": goals,
     }
 
 
@@ -464,7 +546,22 @@ if __name__ == "__main__":
     print(f"{out} yazıldı")
     print(f"  {len(data['categories'])} kategori, {len(data['transactions'])} işlem, "
           f"{len(data['budgets'])} bütçe, {len(data['debts'])} borç, "
-          f"{len(data['receivables'])} alacak, {len(data['investments'])} yatırım")
+          f"{len(data['receivables'])} alacak, {len(data['investments'])} yatırım, "
+          f"{len(data['goals'])} hedef")
+    inv_by_goal = {}
+    for i in data["investments"]:
+        inv_by_goal.setdefault(i["goalId"], []).append(i)
+    for g in data["goals"]:
+        saved = sum(i["currentValue"] for i in inv_by_goal.get(g["id"], []))
+        pct = saved / g["targetAmount"] * 100 if g["targetAmount"] else 0
+        print(f"  hedef {g['name']:<14} %{pct:5.1f}  "
+              f"{saved:>12,.2f} / {g['targetAmount']:,.2f}  "
+              f"({len(inv_by_goal.get(g['id'], []))} varlık)")
+    loose = len(inv_by_goal.get(None, []))
+    print(f"  bağsız varlık: {loose}")
+    pending = sum(1 for r in data["recurringTransactions"]
+                  if r["isActive"] and r["nextExecutionDate"] <= datetime.now().isoformat())
+    print(f"  onay bekleyen şablon: {pending}  (açılışta hatırlatma çıkar)")
     for w in data["wallets"]:
         print(f"  {w['name']:<14} bakiye {w['balance']:>12,.2f} {w['currency']}"
               f"  borç {w['debt']:>10,.2f}  alacak {w['credit']:>8,.2f}"

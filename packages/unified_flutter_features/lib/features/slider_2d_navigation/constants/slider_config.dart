@@ -36,7 +36,14 @@ class SliderConfig {
   /// `knobLabelStyle` artık AÇIK `height` taşıyor; taşımadığında Material 3'ün
   /// `bodyMedium`'undan `height: 1.43` miras alıyor ve satır kutusu 16 px'lik
   /// puntoda 23 px'e çıkıyordu (ölçüldü).
-  static const knobLabelLineHeight = 1.08;
+  ///
+  /// ALT SINIR fontun KENDİ oranıdır: Roboto'da çıkıcı+inici ≈ 1.17. Değer
+  /// 1.08 iken satır kutusu glif kutusundan dardı ve `ShaderMask` kendi
+  /// sınırlarına kırptığı için taban çizgisinin altı gidiyordu — "Geçmiş"
+  /// cihazda "Gecmis" olarak görünüyordu (ç ve ş sedilleri kesik). Türkçe
+  /// etiketlerde bu, uygulamanın yazım hatası yaptığı izlenimi veriyor.
+  /// Buranın altına inme; Material'ın 1.43'üne de çıkma.
+  static const knobLabelLineHeight = 1.2;
 
   /// Hapın alt kenarı ile komşu etiket arasındaki boşluk.
   static const knobLabelGap = 5.0;

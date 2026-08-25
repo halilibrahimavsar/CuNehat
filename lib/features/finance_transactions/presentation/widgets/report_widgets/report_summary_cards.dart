@@ -148,7 +148,10 @@ class SummaryTile extends StatelessWidget {
   ) {
     if (change.percent == null) {
       return Text(
-        context.l10n.yeni,
+        // "Yeni" DEĞİL: rozet para tutarının hemen altında duruyor ve
+        // kullanıcı "yeni gelir" diye okuyordu. Anlatılmak istenen
+        // kıyaslanacak önceki dönemin olmadığı.
+        context.l10n.reportNoPreviousPeriod,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,

@@ -2,7 +2,7 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_weekly_net_flow_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -75,9 +75,9 @@ void main() {
         .toList();
   }
 
-  group('ReportWeeklyNetFlowChart', () {
+  group('ReportDailyNetFlowChart', () {
     testWidgets('veri yoksa hiçbir şey çizmez', (tester) async {
-      await tester.pumpWidget(host(const ReportWeeklyNetFlowChart(
+      await tester.pumpWidget(host(const ReportDailyNetFlowChart(
         transactions: [],
       )));
       expect(find.byType(BarChart), findsNothing);
@@ -85,7 +85,7 @@ void main() {
 
     testWidgets('tooltip tutarı formatMoney ile yazar (ham double değil)',
         (tester) async {
-      await tester.pumpWidget(host(ReportWeeklyNetFlowChart(
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
         transactions: [
           tx(date: DateTime(2026, 6, 1), amount: 1234.56, isIncome: true),
           tx(date: DateTime(2026, 6, 1), amount: 40.5, isIncome: false),
@@ -108,7 +108,7 @@ void main() {
     });
 
     testWidgets('gelir/gider açıklaması (legend) gösterilir', (tester) async {
-      await tester.pumpWidget(host(ReportWeeklyNetFlowChart(
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
         transactions: series(3),
       )));
       await tester.pumpAndSettle();
@@ -118,7 +118,7 @@ void main() {
     });
 
     testWidgets('az günde her güne tarih etiketi basılır', (tester) async {
-      await tester.pumpWidget(host(ReportWeeklyNetFlowChart(
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
         transactions: series(4),
       )));
       await tester.pumpAndSettle();
@@ -128,7 +128,7 @@ void main() {
 
     testWidgets('çok günde tarih etiketleri seyreltilir (üst üste binmez)',
         (tester) async {
-      await tester.pumpWidget(host(ReportWeeklyNetFlowChart(
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
         transactions: series(30),
       )));
       await tester.pumpAndSettle();

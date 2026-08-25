@@ -63,6 +63,13 @@ class InvestmentCard extends StatelessWidget {
     final accent = investment.color;
     final profitColor = investment.isProfitable ? Colors.green : Colors.red;
     final quantityLine = _quantityLine(context);
+    // Altında ham anahtar ("gram-altin") değil adı; hissede sembolün kendisi
+    // zaten okunur (AAPL).
+    final badgeLabel = investment.symbol == null
+        ? null
+        : (investment.type == InvestmentType.gold
+            ? goldTypeLabel(context, investment.symbol!)
+            : investment.symbol!);
 
     return AppCard(
       accent: accent,
@@ -103,7 +110,12 @@ class InvestmentCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (investment.symbol != null)
+                    // Rozet yalnız ADDAN FARKLI bilgi taşıyorsa çizilir.
+                    // Ad boş bırakılan altın kaydı türünün etiketiyle anılıyor
+                    // (bkz. add_gold_sheet), yani rozet birebir aynı metni
+                    // tekrarlıyordu: kart "Gram Altın"ı başlıkta, rozette ve
+                    // birim satırında olmak üzere üç kez yazıyordu.
+                    if (badgeLabel != null && badgeLabel != investment.name)
                       // Rozet ESNEK: "Gram Altın" gibi uzun etiketler dar
                       // kartta (hedef grubunun içinde 104px) taşırıyordu.
                       // Ad değil rozet kısalır — ad kaydın kimliği.
@@ -118,11 +130,7 @@ class InvestmentCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            // Altında ham anahtar ("gram-altin") değil adı;
-                            // hissede sembolün kendisi zaten okunur (AAPL).
-                            investment.type == InvestmentType.gold
-                                ? goldTypeLabel(context, investment.symbol!)
-                                : investment.symbol!,
+                            badgeLabel,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -224,10 +232,8 @@ class InvestmentCard extends StatelessWidget {
                             fit: BoxFit.scaleDown,
                             alignment: AlignmentDirectional.centerEnd,
                             child: Text(
-                              context.l10n
-                                  .investmentProfitpercentageTostringasfixed(
-                                      investment.profitPercentage
-                                          .toStringAsFixed(2)),
+                              formatPercent(investment.profitPercentage,
+                                  decimals: 2, signed: true),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: profitColor,

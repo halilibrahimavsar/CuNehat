@@ -57,6 +57,16 @@ class LocalAuthSectionCard extends StatelessWidget {
   final Widget? trailing;
   final List<Widget> children;
 
+  /// Başlık şeridi (ikon + başlık + alt metin + durum rozeti) çizilsin mi.
+  ///
+  /// İçinde TEK bir anahtar satırı olan bölümlerde şerit aynı bilgiyi
+  /// tekrarlıyordu: "Biyometrik Giriş / Biyometrik giriş etkin / [Açık]"
+  /// başlığının altındaki tek çocuk "Biyometrik Kimlik Doğrulama / Açık –
+  /// Parmak izi veya yüz tanıma ile giriş yapın / [anahtar açık]" idi — tek
+  /// boolean, iki satırda üç kez. Böyle bölümler şeridi kapatır; kart yüzeyi
+  /// ve boşlukları korunur, yalnız tekrar kalkar.
+  final bool showHeader;
+
   const LocalAuthSectionCard({
     super.key,
     required this.style,
@@ -65,6 +75,7 @@ class LocalAuthSectionCard extends StatelessWidget {
     required this.icon,
     required this.children,
     this.trailing,
+    this.showHeader = true,
   });
 
   @override
@@ -82,37 +93,39 @@ class LocalAuthSectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _IconBadge(icon: icon),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: titleStyle),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: subtitleStyle),
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[
+          if (showHeader) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _IconBadge(icon: icon),
                 const SizedBox(width: 12),
-                trailing!,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: titleStyle),
+                      const SizedBox(height: 4),
+                      Text(subtitle, style: subtitleStyle),
+                    ],
+                  ),
+                ),
+                if (trailing != null) ...[
+                  const SizedBox(width: 12),
+                  trailing!,
+                ],
               ],
-            ],
-          ),
-          SizedBox(height: dividerStyle.spacing),
-          Divider(
-            height: 1,
-            thickness: dividerStyle.thickness,
-            color: dividerStyle.color ??
-                theme.colorScheme.primary.withValues(alpha: 0.12),
-            indent: dividerStyle.indent,
-            endIndent: dividerStyle.endIndent,
-          ),
-          SizedBox(height: dividerStyle.spacing),
+            ),
+            SizedBox(height: dividerStyle.spacing),
+            Divider(
+              height: 1,
+              thickness: dividerStyle.thickness,
+              color: dividerStyle.color ??
+                  theme.colorScheme.primary.withValues(alpha: 0.12),
+              indent: dividerStyle.indent,
+              endIndent: dividerStyle.endIndent,
+            ),
+            SizedBox(height: dividerStyle.spacing),
+          ],
           ...children,
         ],
       ),

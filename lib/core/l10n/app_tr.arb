@@ -173,6 +173,13 @@
   "biometricAuthTileSubtitleOn": "Açık - Parmak izi veya yüz tanıma ile giriş yapın",
   "biometricAuthTileSubtitleOff": "Kapalı",
   "privacyGuardTitle": "Gizlilik Koruması",
+  "stateOnLabel": "Açık",
+  "stateOffLabel": "Kapalı",
+  "stateUnsupportedLabel": "Desteklenmiyor",
+  "methodBiometricLabel": "biyometrik kimlik doğrulama",
+  "methodGenericLabel": "kimlik doğrulama",
+  "unitSecondsLabel": "saniye",
+  "unitMinutesLabel": "dakika",
   "privacyGuardEnabledSubtitle": "Ekran koruması etkin",
   "privacyGuardDisabledSubtitle": "Ekran koruması devre dışı",
   "screenProtectionTileTitle": "Ekran Koruması",
@@ -326,7 +333,7 @@
   "gelirVeyaGiderKaydettikten": "Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.",
   "henuzIslemYok": "Henüz işlem yok",
   "buDonemIcinKayit": "Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.",
-  "haftalikNetAkis": "Haftalık Net Akış",
+  "reportDailyFlowTitle": "Günlük Gelir–Gider",
   "kategoriDagilimi": "Kategori Dağılımı",
   "titleIcinVeriYok": "{title} için veri yok",
   "@titleIcinVeriYok": {
@@ -426,42 +433,17 @@
   "guncelFiyatiGetir": "Güncel Fiyatı Getir",
   "ekle": "Ekle",
   "karZarar": "Kar/Zarar",
-  "investmentProfitpercentageTostringasfixed": "{toStringAsFixed}%",
-  "@investmentProfitpercentageTostringasfixed": {
-    "placeholders": {
-      "toStringAsFixed": {}
-    }
-  },
   "hedefCurrencyformatFormatInvestment": "Hedef: {targetAmount}",
   "@hedefCurrencyformatFormatInvestment": {
     "placeholders": {
       "targetAmount": {}
     }
   },
-  "investmentTargetprogressTostringasfixed": "{toStringAsFixed}%",
-  "@investmentTargetprogressTostringasfixed": {
-    "placeholders": {
-      "toStringAsFixed": {}
-    }
-  },
   "grafikIcinYatirimBulunmuyor": "Grafik için yatırım bulunmuyor",
   "portfoyDagilimi": "Portföy Dağılımı",
-  "percentage": "%{percentage}",
-  "@percentage": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "tOPLAMPortfoyDegeri": "TOPLAM PORTFÖY DEĞERİ",
   "tOPLAMMaliyet": "TOPLAM MALİYET",
   "kAZANCZarar": "KAZANÇ / ZARAR",
-  "isProfitTotalprofitpercentageTostringasfixed": "{isProfit}{toStringAsFixed}%",
-  "@isProfitTotalprofitpercentageTostringasfixed": {
-    "placeholders": {
-      "isProfit": {},
-      "toStringAsFixed": {}
-    }
-  },
   "templateTitleDuzenliIslemi": "\"{title}\" düzenli işlemi silinsin mi?\n\nDeftere işlenmiş geçmiş işlemler silinmez.",
   "@templateTitleDuzenliIslemi": {
     "placeholders": {
@@ -1460,6 +1442,7 @@
   "drawerBudgetSubtitle": "Kategori bazlı bütçe takibi ve harcama limitleri",
   "drawerRecurringSubtitle": "Otomatik gelir ve gider şablonları",
   "drawerBankImportSubtitle": "PDF/Excel hesap ekstresi içe aktarma",
+  "drawerBankImportTitle": "Banka Ekstresi",
   "drawerSettingsSubtitle": "Tema, para birimi ve genel tercihler",
   "drawerSecurityTitle": "Güvenlik & Biyometrik",
   "drawerSecuritySubtitle": "Uygulama kilidi ve PIN ayarları",
@@ -1469,6 +1452,7 @@
   "reportIncomesTitle": "Gelirler",
   "reportNoDataTitle": "Rapor Oluşturmak İçin Veri Yok",
   "reportNetLabel": "Net",
+  "reportNoPreviousPeriod": "Önceki dönem yok",
   "reportCompareTopSlice": "En büyük: {ad} · {tutar}",
   "@reportCompareTopSlice": {
     "placeholders": {

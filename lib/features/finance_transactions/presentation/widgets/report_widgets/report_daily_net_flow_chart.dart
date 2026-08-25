@@ -13,10 +13,10 @@ import 'package:flutter/material.dart';
 ///
 /// Çubuklar renkten başka bir şey söylemediği için üstte açıklama (legend)
 /// var; dokununca tooltip tam tutarı [formatMoney] ile yazar.
-class ReportWeeklyNetFlowChart extends StatelessWidget {
+class ReportDailyNetFlowChart extends StatelessWidget {
   final List<TransactionEntity> transactions;
 
-  const ReportWeeklyNetFlowChart({
+  const ReportDailyNetFlowChart({
     super.key,
     required this.transactions,
   });
@@ -210,10 +210,10 @@ class _Legend extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _dot(context, ReportWeeklyNetFlowChart._incomeColor,
+        _dot(context, ReportDailyNetFlowChart._incomeColor,
             context.l10n.detailLabelGelir),
         const SizedBox(width: 14),
-        _dot(context, ReportWeeklyNetFlowChart._expenseColor,
+        _dot(context, ReportDailyNetFlowChart._expenseColor,
             context.l10n.detailLabelGider),
       ],
     );

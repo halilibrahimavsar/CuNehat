@@ -172,7 +172,11 @@ class _ModernDrawerState extends State<ModernDrawer>
                       _buildAnimatedMenuItem(
                         index: 2,
                         icon: Icons.document_scanner_rounded,
-                        title: context.l10n.bankStatementSectionHeader,
+                        // `bankStatementSectionHeader` DEĞİL: o metin ayarlar
+                        // sayfasındaki bölüm başlığı için yazıldı ve büyük
+                        // harf ("BANKA EKSTRESİ"). Menüde komşuları başlık
+                        // düzeninde olduğu için tek başına bağırıyordu.
+                        title: context.l10n.drawerBankImportTitle,
                         subtitle: context.l10n.drawerBankImportSubtitle,
                         gradientColors: const [
                           Color(0xFF11998E),

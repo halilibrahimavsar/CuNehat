@@ -464,6 +464,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyGuardTitle => 'Privacy Guard';
 
   @override
+  String get stateOnLabel => 'On';
+
+  @override
+  String get stateOffLabel => 'Off';
+
+  @override
+  String get stateUnsupportedLabel => 'Unsupported';
+
+  @override
+  String get methodBiometricLabel => 'biometric authentication';
+
+  @override
+  String get methodGenericLabel => 'authentication';
+
+  @override
+  String get unitSecondsLabel => 'seconds';
+
+  @override
+  String get unitMinutesLabel => 'minutes';
+
+  @override
   String get privacyGuardEnabledSubtitle => 'Screen protection enabled';
 
   @override
@@ -782,7 +803,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No records for this period.\nUse the slider button to add a new transaction.';
 
   @override
-  String get haftalikNetAkis => 'Weekly Net Flow';
+  String get reportDailyFlowTitle => 'Daily Income–Expense';
 
   @override
   String get kategoriDagilimi => 'Category Distribution';
@@ -937,18 +958,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get karZarar => 'Profit/Loss';
 
   @override
-  String investmentProfitpercentageTostringasfixed(Object toStringAsFixed) {
-    return '$toStringAsFixed%';
-  }
-
-  @override
   String hedefCurrencyformatFormatInvestment(Object targetAmount) {
     return 'Target: $targetAmount';
-  }
-
-  @override
-  String investmentTargetprogressTostringasfixed(Object toStringAsFixed) {
-    return '$toStringAsFixed%';
   }
 
   @override
@@ -958,11 +969,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfoyDagilimi => 'Portfolio Distribution';
 
   @override
-  String percentage(Object percentage) {
-    return '$percentage%';
-  }
-
-  @override
   String get tOPLAMPortfoyDegeri => 'TOTAL PORTFOLIO VALUE';
 
   @override
@@ -970,12 +976,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kAZANCZarar => 'PROFIT / LOSS';
-
-  @override
-  String isProfitTotalprofitpercentageTostringasfixed(
-      Object isProfit, Object toStringAsFixed) {
-    return '$isProfit$toStringAsFixed%';
-  }
 
   @override
   String templateTitleDuzenliIslemi(Object title) {
@@ -2897,6 +2897,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerBankImportSubtitle => 'Import PDF/Excel account statements';
 
   @override
+  String get drawerBankImportTitle => 'Bank Statement';
+
+  @override
   String get drawerSettingsSubtitle =>
       'Theme, currency and general preferences';
 
@@ -2923,6 +2926,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportNetLabel => 'Net';
+
+  @override
+  String get reportNoPreviousPeriod => 'No prior period';
 
   @override
   String reportCompareTopSlice(String ad, String tutar) {

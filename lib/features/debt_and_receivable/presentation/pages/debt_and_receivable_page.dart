@@ -391,20 +391,41 @@ class DebtListSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  // Ödeme KAYDI sayısı değil taksit ilerlemesi: 12×1.000'lik
-                  // borca üç kez 100 ₺ ödeyen kullanıcı "3 Ödeme" görüp üç
-                  // taksitin kapandığını sanıyordu.
-                  context.l10n.vadeTaksitIlerleme(
-                      debt.termMonths, paidInstallmentCount(debt)),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isOverdue
-                        ? Colors.red
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                // Taksit satırı yalnız TAKSİTLİ borçta anlamlı.
+                // `DebtCalcMode.none` (faizsiz kişisel borç) vadesizdir ve
+                // `termMonths` 0'dır; satır koşulsuz çizildiği için
+                // "Vade: 0 Ay | 0/0 taksit" yazıyordu. Vade tarihi varsa onu
+                // göster, yoksa satırı hiç kurma (düğme sağda kalsın diye
+                // yerine boş bir kutu geçer).
+                if (debt.termMonths > 0)
+                  Text(
+                    // Ödeme KAYDI sayısı değil taksit ilerlemesi: 12×1.000'lik
+                    // borca üç kez 100 ₺ ödeyen kullanıcı "3 Ödeme" görüp üç
+                    // taksitin kapandığını sanıyordu.
+                    context.l10n.vadeTaksitIlerleme(
+                        debt.termMonths, paidInstallmentCount(debt)),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isOverdue
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else if (debt.dueDate != null)
+                  Text(
+                    context.l10n.vadeDateformatDdMmm(
+                        DateFormat('dd MMM yyyy').format(debt.dueDate!)),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isOverdue
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  const SizedBox.shrink(),
                 FilledButton.icon(
                   onPressed: () =>
                       DebtPaymentDialog.show(context, debt, currency: currency),

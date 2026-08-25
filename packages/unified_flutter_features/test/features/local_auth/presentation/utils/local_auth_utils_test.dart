@@ -107,25 +107,6 @@ void main() {
     });
   });
 
-  group('LocalAuthUtils.getLockoutDurationText', () {
-    test('returns "30 seconds" for level 0', () {
-      expect(LocalAuthUtils.getLockoutDurationText(0), '30 seconds');
-    });
-
-    test('returns "2 minutes" for level 1', () {
-      expect(LocalAuthUtils.getLockoutDurationText(1), '2 minutes');
-    });
-
-    test('returns "5 minutes" for level 2', () {
-      expect(LocalAuthUtils.getLockoutDurationText(2), '5 minutes');
-    });
-
-    test('returns "16.7 minutes" for level 3+', () {
-      expect(LocalAuthUtils.getLockoutDurationText(3), '16.7 minutes');
-      expect(LocalAuthUtils.getLockoutDurationText(10), '16.7 minutes');
-    });
-  });
-
   group('LocalAuthUtils.getLockoutDurationSeconds', () {
     test('returns 30 for level 0', () {
       expect(LocalAuthUtils.getLockoutDurationSeconds(0), 30);
@@ -149,6 +130,21 @@ void main() {
   });
 
   group('LocalAuthUtils.getRemainingTimeText', () {
+    test(
+        'birim adları çağırandan gelir (Türkçe arayüzde "5 seconds" yazıyordu)',
+        () {
+      expect(
+        LocalAuthUtils.getRemainingTimeText(5,
+            secondsLabel: 'saniye', minutesLabel: 'dakika'),
+        '5 saniye',
+      );
+      expect(
+        LocalAuthUtils.getRemainingTimeText(90,
+            secondsLabel: 'saniye', minutesLabel: 'dakika'),
+        '1 dakika 30 saniye',
+      );
+    });
+
     test('returns seconds for < 60', () {
       expect(LocalAuthUtils.getRemainingTimeText(30), '30 seconds');
       expect(LocalAuthUtils.getRemainingTimeText(59), '59 seconds');

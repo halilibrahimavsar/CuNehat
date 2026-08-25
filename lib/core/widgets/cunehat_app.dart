@@ -112,6 +112,13 @@ class CuNehatApp extends StatelessWidget {
                         l10n.biometricAuthTileSubtitleOn,
                     biometricAuthTileSubtitleOff:
                         l10n.biometricAuthTileSubtitleOff,
+                    stateOnLabel: l10n.stateOnLabel,
+                    stateOffLabel: l10n.stateOffLabel,
+                    stateUnsupportedLabel: l10n.stateUnsupportedLabel,
+                    methodBiometricLabel: l10n.methodBiometricLabel,
+                    methodGenericLabel: l10n.methodGenericLabel,
+                    unitSecondsLabel: l10n.unitSecondsLabel,
+                    unitMinutesLabel: l10n.unitMinutesLabel,
                     privacyGuardTitle: l10n.privacyGuardTitle,
                     privacyGuardEnabledSubtitle:
                         l10n.privacyGuardEnabledSubtitle,

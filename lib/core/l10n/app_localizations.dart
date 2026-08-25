@@ -951,6 +951,48 @@ abstract class AppLocalizations {
   /// **'Gizlilik Koruması'**
   String get privacyGuardTitle;
 
+  /// No description provided for @stateOnLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get stateOnLabel;
+
+  /// No description provided for @stateOffLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get stateOffLabel;
+
+  /// No description provided for @stateUnsupportedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desteklenmiyor'**
+  String get stateUnsupportedLabel;
+
+  /// No description provided for @methodBiometricLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'biyometrik kimlik doğrulama'**
+  String get methodBiometricLabel;
+
+  /// No description provided for @methodGenericLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'kimlik doğrulama'**
+  String get methodGenericLabel;
+
+  /// No description provided for @unitSecondsLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'saniye'**
+  String get unitSecondsLabel;
+
+  /// No description provided for @unitMinutesLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'dakika'**
+  String get unitMinutesLabel;
+
   /// No description provided for @privacyGuardEnabledSubtitle.
   ///
   /// In tr, this message translates to:
@@ -1497,11 +1539,11 @@ abstract class AppLocalizations {
   /// **'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.'**
   String get buDonemIcinKayit;
 
-  /// No description provided for @haftalikNetAkis.
+  /// No description provided for @reportDailyFlowTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Haftalık Net Akış'**
-  String get haftalikNetAkis;
+  /// **'Günlük Gelir–Gider'**
+  String get reportDailyFlowTitle;
 
   /// No description provided for @kategoriDagilimi.
   ///
@@ -1751,23 +1793,11 @@ abstract class AppLocalizations {
   /// **'Kar/Zarar'**
   String get karZarar;
 
-  /// No description provided for @investmentProfitpercentageTostringasfixed.
-  ///
-  /// In tr, this message translates to:
-  /// **'{toStringAsFixed}%'**
-  String investmentProfitpercentageTostringasfixed(Object toStringAsFixed);
-
   /// No description provided for @hedefCurrencyformatFormatInvestment.
   ///
   /// In tr, this message translates to:
   /// **'Hedef: {targetAmount}'**
   String hedefCurrencyformatFormatInvestment(Object targetAmount);
-
-  /// No description provided for @investmentTargetprogressTostringasfixed.
-  ///
-  /// In tr, this message translates to:
-  /// **'{toStringAsFixed}%'**
-  String investmentTargetprogressTostringasfixed(Object toStringAsFixed);
 
   /// No description provided for @grafikIcinYatirimBulunmuyor.
   ///
@@ -1780,12 +1810,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Portföy Dağılımı'**
   String get portfoyDagilimi;
-
-  /// No description provided for @percentage.
-  ///
-  /// In tr, this message translates to:
-  /// **'%{percentage}'**
-  String percentage(Object percentage);
 
   /// No description provided for @tOPLAMPortfoyDegeri.
   ///
@@ -1804,13 +1828,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'KAZANÇ / ZARAR'**
   String get kAZANCZarar;
-
-  /// No description provided for @isProfitTotalprofitpercentageTostringasfixed.
-  ///
-  /// In tr, this message translates to:
-  /// **'{isProfit}{toStringAsFixed}%'**
-  String isProfitTotalprofitpercentageTostringasfixed(
-      Object isProfit, Object toStringAsFixed);
 
   /// No description provided for @templateTitleDuzenliIslemi.
   ///
@@ -5232,6 +5249,12 @@ abstract class AppLocalizations {
   /// **'PDF/Excel hesap ekstresi içe aktarma'**
   String get drawerBankImportSubtitle;
 
+  /// No description provided for @drawerBankImportTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka Ekstresi'**
+  String get drawerBankImportTitle;
+
   /// No description provided for @drawerSettingsSubtitle.
   ///
   /// In tr, this message translates to:
@@ -5285,6 +5308,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Net'**
   String get reportNetLabel;
+
+  /// No description provided for @reportNoPreviousPeriod.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki dönem yok'**
+  String get reportNoPreviousPeriod;
 
   /// No description provided for @reportCompareTopSlice.
   ///

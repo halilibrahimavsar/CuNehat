@@ -58,6 +58,25 @@ class LocalAuthTexts {
   final String biometricAuthTileTitle;
   final String biometricAuthTileSubtitleOn;
   final String biometricAuthTileSubtitleOff;
+
+  /// Durum sözcükleri. Bunlar ÇEVİRİ NOKTASI: eskiden bölümlerde
+  /// `texts.logoutLabel == 'Logout'` karşılaştırmasıyla dil tahmin edilip
+  /// 'On'/'Açık' gömülü yazılıyordu — "Logout" bir gün "Log out" olsa
+  /// İngilizce yapıda 13 metin sessizce Türkçeye dönerdi.
+  final String stateOnLabel;
+  final String stateOffLabel;
+  final String stateUnsupportedLabel;
+
+  /// Süre birimleri. Arka plan kilidi seçenekleri ("5 saniye", "1 dakika")
+  /// bunlardan kurulur; eskiden `LocalAuthUtils` içinde İngilizce gömülüydü
+  /// ve Türkçe arayüzde "5 seconds" yazıyordu.
+  final String unitSecondsLabel;
+  final String unitMinutesLabel;
+
+  /// Kilit ekranı cümlesinde geçen yöntem adı ("… ile giriş yapın").
+  final String methodBiometricLabel;
+  final String methodGenericLabel;
+
   final String privacyGuardTitle;
   final String privacyGuardEnabledSubtitle;
   final String privacyGuardDisabledSubtitle;
@@ -135,6 +154,13 @@ class LocalAuthTexts {
     this.biometricAuthTileSubtitleOn =
         'On - Sign in with fingerprint or face recognition',
     this.biometricAuthTileSubtitleOff = 'Off',
+    this.stateOnLabel = 'On',
+    this.stateOffLabel = 'Off',
+    this.stateUnsupportedLabel = 'Unsupported',
+    this.unitSecondsLabel = 'seconds',
+    this.unitMinutesLabel = 'minutes',
+    this.methodBiometricLabel = 'biometric authentication',
+    this.methodGenericLabel = 'authentication',
     this.privacyGuardTitle = 'Privacy Guard',
     this.privacyGuardEnabledSubtitle = 'Screen protection enabled',
     this.privacyGuardDisabledSubtitle = 'Screen protection disabled',

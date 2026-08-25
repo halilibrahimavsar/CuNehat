@@ -52,7 +52,7 @@ void main() {
     expect(find.text('12.500,00 ₺'), findsOneWidget); // Total Current Value
     expect(find.text('10.000,00 ₺'), findsOneWidget); // Total Investment
     expect(find.text('2.500,00 ₺'), findsOneWidget); // Total Profit
-    expect(find.text('+25.0%'), findsOneWidget); // Total Profit Percentage
+    expect(find.text('+%25,0'), findsOneWidget); // Total Profit Percentage
 
     // Verify Profit Trend Icon
     expect(find.byIcon(Icons.trending_up), findsOneWidget);
@@ -77,7 +77,7 @@ void main() {
     expect(find.text('8.000,00 ₺'), findsOneWidget); // Total Current Value
     expect(find.text('10.000,00 ₺'), findsOneWidget); // Total Investment
     expect(find.text('-2.000,00 ₺'), findsOneWidget); // Total Profit
-    expect(find.text('-20.0%'), findsOneWidget); // Total Profit Percentage
+    expect(find.text('-%20,0'), findsOneWidget); // Total Profit Percentage
 
     // Verify Loss Trend Icon
     expect(find.byIcon(Icons.trending_down), findsOneWidget);
