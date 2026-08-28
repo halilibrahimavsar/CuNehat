@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/services/recent_categories_service.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockBankImportCubit extends MockCubit<BankImportState>
     implements BankImportCubit {}
@@ -62,7 +64,13 @@ void main() {
   late MockCategoryRepository categoryRepo;
   late int fullscreenToggles;
 
-  setUp(() {
+  setUp(() async {
+    // Seçici "son kullanılanlar" şeridini bu servisten okuyor.
+    SharedPreferences.setMockInitialValues({});
+    getIt.registerSingleton<RecentCategoriesService>(
+      RecentCategoriesService(await SharedPreferences.getInstance()),
+    );
+
     cubit = MockBankImportCubit();
     fullscreenToggles = 0;
     when(() => cubit.setAllSelected(any())).thenReturn(null);
@@ -416,7 +424,9 @@ void main() {
 
     // Seçim sayfası: yeni kategori kurma girişi + mevcut kategoriler.
     expect(find.byTooltip('Yeni Kategori Ekle'), findsOneWidget);
-    await tester.tap(find.text('Fatura'));
+    // Seçici iki sütun: ana kategorinin adı SOLDA (gezinme) ve SAĞDA
+    // (seçilebilir satır) görünür. Seçen satır sağdaki, yani sonuncusu.
+    await tester.tap(find.text('Fatura').last);
     await tester.pumpAndSettle();
 
     verify(() => cubit.setDraftCategory(1, 'Fatura')).called(1);
@@ -492,7 +502,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Görünen 1 satıra'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Fatura'));
+    // Seçici iki sütun: ana kategorinin adı SOLDA (gezinme) ve SAĞDA
+    // (seçilebilir satır) görünür. Seçen satır sağdaki, yani sonuncusu.
+    await tester.tap(find.text('Fatura').last);
     await tester.pumpAndSettle();
 
     // Doğru tahmin edilmiş 0. satıra DOKUNULMAZ: kapsamı süzgeç belirler.

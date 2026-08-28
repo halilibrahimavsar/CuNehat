@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -10,22 +11,24 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
 /// Premium işlem kartı: kategori glyph'i, marka renkleri, baskın tutar.
 ///
-/// Dokununca tek-işlem detay sayfasını açar. Düzenle/sil için üç yol vardır ve
-/// hepsi aynı eylemlere çıkar:
-/// - sağa kaydır → Düzenle, sola kaydır → Sil ([enableSwipeActions])
-/// - uzun bas → eylem sayfası
+/// Dokununca tek-işlem detay sayfasını açar. Düzenle/sil için iki yol vardır ve
+/// ikisi de aynı eylemlere çıkar:
+/// - **uzun bas → eylem sayfası** ([TransactionActionSheet])
 /// - detay sayfasındaki düğmeler
 ///
-/// Kaydırma eylemleri sonradan eklendi çünkü uzun basmanın hiçbir görsel
-/// ipucu yoktu: kullanıcı bir işlemi silebileceğini ancak tesadüfen
-/// keşfediyordu. Kilitli (`isSystem`) işlemlerde kaydırma kapalıdır — onlar
-/// zaten kaynağından yönetilir.
+/// **Kaydırma eylemleri KALDIRILDI (29 Ağu 2026, cihaz duman testi).** Sola
+/// kaydırmak onaysız siliyordu ve %32'lik eşik listede gezinirken yanlışlıkla
+/// aşılabiliyordu: tek bir kazara jest bir kaydı yok ediyordu. Kaydırma
+/// bir zamanlar "uzun basmanın görsel ipucu yok" diye eklenmişti; o boşluğu
+/// kapatmanın yolu yıkıcı bir eylemi tek jeste bağlamak değil.
+///
+/// Yan etki: satırlar artık yatay sürüklemeyi yutmuyor, yani `MainContentSwipe`
+/// sayfa jesti liste üzerinde de çalışır.
 class TransactionCard extends StatelessWidget {
   final TransactionWithBalance item;
   final IconData? categoryIcon;
@@ -35,22 +38,14 @@ class TransactionCard extends StatelessWidget {
   /// kategorilerden kalan tag'ler için doğru davranış budur.
   final String? categoryLabel;
 
-  /// Kaydırma eylemleri açık mı? İşlem listesi ve takvimde açık; yatırım
-  /// geçmişi gibi salt-okunur dökümlerde kapalı.
-  final bool enableSwipeActions;
-
   const TransactionCard({
     super.key,
     required this.item,
     this.categoryIcon,
     this.categoryLabel,
-    this.enableSwipeActions = false,
   });
 
   String get _heroTag => 'tx_${item.transaction.id ?? item.hashCode}';
-
-  bool get _canMutate =>
-      !item.transaction.isSystem && item.transaction.id != null;
 
   Future<void> _showActionSheet(BuildContext context, Color accent) async {
     final t = item.transaction;
@@ -69,7 +64,7 @@ class TransactionCard extends StatelessWidget {
       case TransactionAction.edit:
         _edit(context);
       case TransactionAction.delete:
-        _delete(context);
+        await _delete(context);
     }
   }
 
@@ -84,100 +79,31 @@ class TransactionCard extends StatelessWidget {
     );
   }
 
-  /// Onay diyaloğu YOK: silme anında yapılır, snackbar 6 saniye boyunca
-  /// "Geri al" sunar (bkz. showDeletionMessage). İşlem silme en sık ve en
-  /// hafif yıkıcı eylem; modal onay burada geri almanın yerini tutmuyor,
-  /// yalnız akışı yavaşlatıyordu. Borç/alacak/birikim ödeme geçmişi
-  /// taşıdığı için onaylarını KORUR.
-  void _delete(BuildContext context) {
+  /// Onay VE geri alma birlikte; ikisi farklı hataları yakalar: onay
+  /// *yanlışlıkla* silmeyi durdurur, snackbar'daki "Geri al" (bkz.
+  /// [showDeletionMessage]) *bilerek* verilip pişman olunan kararı kurtarır.
+  ///
+  /// Bu yorumun eski hali "onay diyaloğu YOK" diyordu ve gerekçesi "kaydırma
+  /// hızlı yol, modal onu yavaşlatıyor"du. Kaydırma kaldırıldı (bkz. sınıf
+  /// dokümanı), yani o gerekçe de kalktı.
+  Future<void> _delete(BuildContext context) async {
     final id = item.transaction.id;
     if (id == null) return;
+
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: context.l10n.islemiSil,
+      message: context.l10n.islemSilOnayMesaji(item.transaction.title),
+      confirmText: context.l10n.sil,
+      danger: true,
+    );
+    if (!confirmed || !context.mounted) return;
+
     context.read<TransactionBloc>().add(DeleteTransactionEvent(id));
   }
 
   @override
-  Widget build(BuildContext context) {
-    final card = _buildCard(context);
-    if (!enableSwipeActions || !_canMutate) return card;
-
-    return Dismissible(
-      key: ValueKey('tx-swipe-${item.transaction.id}'),
-      // confirmDismiss HER ZAMAN false döner: eylemi kendimiz yaparız ve kart
-      // yerine yaylanır. true dönmek Dismissible'ı "bu satır listeden çıktı"
-      // varsayımına sokar; silme bloc üzerinden asenkron gittiği için silme
-      // başarısız olursa widget ağaçta kalır ve framework assertion atar.
-      confirmDismiss: (direction) async {
-        HapticFeedback.mediumImpact();
-        if (direction == DismissDirection.endToStart) {
-          _delete(context);
-        } else {
-          _edit(context);
-        }
-        return false;
-      },
-      dismissThresholds: const {
-        DismissDirection.startToEnd: 0.32,
-        DismissDirection.endToStart: 0.32,
-      },
-      background: _swipeBackground(
-        context,
-        alignment: Alignment.centerLeft,
-        color: AppGradients.transactions,
-        icon: Icons.edit_rounded,
-        label: context.l10n.duzenle,
-      ),
-      secondaryBackground: _swipeBackground(
-        context,
-        alignment: Alignment.centerRight,
-        color: AppGradients.debt,
-        icon: Icons.delete_outline_rounded,
-        label: context.l10n.sil,
-      ),
-      child: card,
-    );
-  }
-
-  Widget _swipeBackground(
-    BuildContext context, {
-    required Alignment alignment,
-    required Color color,
-    required IconData icon,
-    required String label,
-  }) {
-    final isLeading = alignment == Alignment.centerLeft;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        alignment: alignment,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLeading) ...[
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-              ),
-            ),
-            if (!isLeading) ...[
-              const SizedBox(width: 8),
-              Icon(icon, color: color, size: 20),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _buildCard(context);
 
   Widget _buildCard(BuildContext context) {
     final t = item.transaction;

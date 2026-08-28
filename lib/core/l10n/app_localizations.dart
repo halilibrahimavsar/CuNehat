@@ -2423,6 +2423,12 @@ abstract class AppLocalizations {
   /// **'Ana kategori (üst yok)'**
   String get ustKategoriYok;
 
+  /// No description provided for @anaKategoriEtiketi.
+  ///
+  /// In tr, this message translates to:
+  /// **'ana kategori'**
+  String get anaKategoriEtiketi;
+
   /// No description provided for @henuzKategoriYok.
   ///
   /// In tr, this message translates to:
@@ -2542,6 +2548,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İşlemi Sil'**
   String get islemiSil;
+
+  /// No description provided for @islemSilOnayMesaji.
+  ///
+  /// In tr, this message translates to:
+  /// **'{baslik} işlemini silmek istediğinizden emin misiniz? Cüzdan bakiyesine etkisi de geri alınır.'**
+  String islemSilOnayMesaji(String baslik);
 
   /// No description provided for @silSubtitle.
   ///

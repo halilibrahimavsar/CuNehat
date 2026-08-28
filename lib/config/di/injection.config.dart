@@ -30,6 +30,7 @@ import 'package:cunehat/core/services/notification_settings_service.dart'
     as _i721;
 import 'package:cunehat/core/services/receipt_ocr_service.dart' as _i51;
 import 'package:cunehat/core/services/receipt_storage_service.dart' as _i40;
+import 'package:cunehat/core/services/recent_categories_service.dart' as _i1010;
 import 'package:cunehat/core/services/reminder_sync_service.dart' as _i534;
 import 'package:cunehat/core/services/transactions_changed_notifier.dart'
     as _i777;
@@ -258,6 +259,8 @@ extension GetItInjectableX on _i174.GetIt {
         _i477.NotificationPermissionChannel(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i371.OnboardingCoordinator>(
         () => _i371.OnboardingCoordinator(gh<_i460.SharedPreferences>()));
+    gh.lazySingleton<_i1010.RecentCategoriesService>(
+        () => _i1010.RecentCategoriesService(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i500.ExchangeRateService>(() => _i500.ExchangeRateService(
           client: gh<_i519.Client>(),
           prefs: gh<_i460.SharedPreferences>(),

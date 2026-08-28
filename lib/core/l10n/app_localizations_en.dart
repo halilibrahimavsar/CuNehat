@@ -1300,6 +1300,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ustKategoriYok => 'Main category (no parent)';
 
   @override
+  String get anaKategoriEtiketi => 'top-level category';
+
+  @override
   String get henuzKategoriYok => 'No categories yet';
 
   @override
@@ -1374,6 +1377,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get islemiSil => 'Delete Transaction';
+
+  @override
+  String islemSilOnayMesaji(String baslik) {
+    return 'Are you sure you want to delete the transaction $baslik? Its effect on the wallet balance will be reversed as well.';
+  }
 
   @override
   String get silSubtitle => 'Balance reverts to previous state';

@@ -582,6 +582,7 @@
   "altKategoriEkle": "Add subcategory",
   "ustKategori": "Parent category",
   "ustKategoriYok": "Main category (no parent)",
+  "anaKategoriEtiketi": "top-level category",
   "henuzKategoriYok": "No categories yet",
   "oneriSetindenBasla": "Start from suggestions",
   "kategoriSilTasiTitle": "Move transactions",
@@ -638,6 +639,14 @@
   "butceAltKategorideVar": "A subcategory already has a budget",
   "duzenleSubtitle": "Amount, date, category and other details",
   "islemiSil": "Delete Transaction",
+  "islemSilOnayMesaji": "Are you sure you want to delete the transaction {baslik}? Its effect on the wallet balance will be reversed as well.",
+  "@islemSilOnayMesaji": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
   "silSubtitle": "Balance reverts to previous state",
   "gramAltin": "Gram Gold",
   "ceyrekAltin": "Quarter Gold",

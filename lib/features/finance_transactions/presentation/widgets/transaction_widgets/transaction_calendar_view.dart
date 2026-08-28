@@ -253,7 +253,6 @@ class _TransactionCalendarViewState extends State<TransactionCalendarView> {
                             .categoryIcons[dayItems[index].transaction.tag],
                         categoryLabel: widget
                             .categoryLabels[dayItems[index].transaction.tag],
-                        enableSwipeActions: true,
                       ),
                     ),
                     childCount: dayItems.length,

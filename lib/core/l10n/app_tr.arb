@@ -582,6 +582,7 @@
   "altKategoriEkle": "Alt kategori ekle",
   "ustKategori": "Üst kategori",
   "ustKategoriYok": "Ana kategori (üst yok)",
+  "anaKategoriEtiketi": "ana kategori",
   "henuzKategoriYok": "Henüz kategori yok",
   "oneriSetindenBasla": "Öneri setinden başla",
   "kategoriSilTasiTitle": "İşlemleri taşı",
@@ -638,6 +639,14 @@
   "butceAltKategorideVar": "Alt kategorilerinde bütçe var",
   "duzenleSubtitle": "Tutar, tarih, kategori ve diğer detaylar",
   "islemiSil": "İşlemi Sil",
+  "islemSilOnayMesaji": "{baslik} işlemini silmek istediğinizden emin misiniz? Cüzdan bakiyesine etkisi de geri alınır.",
+  "@islemSilOnayMesaji": {
+    "placeholders": {
+      "baslik": {
+        "type": "String"
+      }
+    }
+  },
   "silSubtitle": "Bakiye eski haline döner",
   "gramAltin": "Gram Altın",
   "ceyrekAltin": "Çeyrek Altın",

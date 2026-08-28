@@ -1304,6 +1304,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get ustKategoriYok => 'Ana kategori (üst yok)';
 
   @override
+  String get anaKategoriEtiketi => 'ana kategori';
+
+  @override
   String get henuzKategoriYok => 'Henüz kategori yok';
 
   @override
@@ -1378,6 +1381,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get islemiSil => 'İşlemi Sil';
+
+  @override
+  String islemSilOnayMesaji(String baslik) {
+    return '$baslik işlemini silmek istediğinizden emin misiniz? Cüzdan bakiyesine etkisi de geri alınır.';
+  }
 
   @override
   String get silSubtitle => 'Bakiye eski haline döner';

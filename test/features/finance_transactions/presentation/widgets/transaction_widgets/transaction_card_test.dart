@@ -276,42 +276,6 @@ void main() {
   });
 
   testWidgets(
-      'long press delete dispatches immediately, no confirmation dialog',
-      (WidgetTester tester) async {
-    final tx = createTx(isSystem: false, id: 'tx_123');
-    final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
-
-    when(() => mockTransactionBloc.state).thenReturn(
-      TransactionLoaded(
-        groupedTransactions: {
-          testDate: [tx]
-        },
-        allTransactions: [tx],
-      ),
-    );
-
-    await tester.pumpWidget(
-      buildTestableWidget(
-        TransactionCard(item: item),
-      ),
-    );
-
-    await tester.longPress(find.text('Normal İşlem'));
-    await tester.pumpAndSettle();
-
-    // Tap İşlemi Sil
-    await tester.tap(find.text('İşlemi Sil'));
-    await tester.pumpAndSettle();
-
-    // Onay diyaloğu YOK: koruma modal değil, 6 saniyelik "Geri al" penceresi
-    // (bkz. showDeletionMessage).
-    expect(find.text('İptal'), findsNothing);
-    verify(() =>
-            mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
-        .called(1);
-  });
-
-  testWidgets(
       'long press delete non-system transaction dispatches DeleteTransactionEvent',
       (WidgetTester tester) async {
     final tx = createTx(isSystem: false, id: 'tx_123');
@@ -335,17 +299,21 @@ void main() {
     await tester.longPress(find.text('Normal İşlem'));
     await tester.pumpAndSettle();
 
-    // Tap İşlemi Sil
     await tester.tap(find.text('İşlemi Sil'));
     await tester.pumpAndSettle();
 
-    // Verify DeleteTransactionEvent was dispatched
+    // Eylem sayfası kapandı, onay diyaloğu açıldı: olay HENÜZ yollanmadı.
+    verifyNever(() => mockTransactionBloc.add(any()));
+
+    await tester.tap(find.text('Sil'));
+    await tester.pumpAndSettle();
+
     verify(() =>
             mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
         .called(1);
   });
 
-  group('kaydırma eylemleri', () {
+  group('silme onayı', () {
     void seedLoaded(TransactionEntity tx) {
       when(() => mockTransactionBloc.state).thenReturn(
         TransactionLoaded(
@@ -357,8 +325,11 @@ void main() {
       );
     }
 
-    testWidgets('varsayılan olarak KAPALI (salt-okunur dökümler için)',
-        (tester) async {
+    // REGRESYON: kaydırma eylemleri 29 Ağu 2026'da kaldırıldı. Sola kaydırmak
+    // ONAYSIZ siliyordu ve %32'lik eşik listede gezinirken yanlışlıkla
+    // aşılabiliyordu — tek kazara jest bir kaydı yok ediyordu. Bu test
+    // `Dismissible`ın sessizce geri gelmesini engeller.
+    testWidgets('kart hiçbir koşulda Dismissible kurmaz', (tester) async {
       final tx = createTx(isSystem: false, id: 'tx_123');
       seedLoaded(tx);
 
@@ -371,76 +342,48 @@ void main() {
       expect(find.byType(Dismissible), findsNothing);
     });
 
-    testWidgets('kilitli (isSystem) işlemde kaydırma açılmaz', (tester) async {
+    // Onay ile geri alma FARKLI hataları yakalar: onay yanlışlıkla silmeyi
+    // durdurur, snackbar'daki "Geri al" bilerek verilen kararı kurtarır.
+    // Onaydan vazgeçmek hiçbir şey yollamamalı.
+    testWidgets('onay iptal edilirse silme olayı yollanmaz', (tester) async {
+      final tx = createTx(isSystem: false, id: 'tx_123');
+      seedLoaded(tx);
+
+      await tester.pumpWidget(buildTestableWidget(
+        TransactionCard(
+          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
+        ),
+      ));
+
+      await tester.longPress(find.text('Normal İşlem'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('İşlemi Sil'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('İptal'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockTransactionBloc.add(any()));
+      expect(find.text('Normal İşlem'), findsOneWidget);
+    });
+
+    // Kilitli işlemlerde eylem sayfası Düzenle/Sil yerine bilgi notu gösterir,
+    // yani silme yolu hiç açılmaz.
+    testWidgets('kilitli (isSystem) işlemde silme seçeneği çıkmaz',
+        (tester) async {
       final tx = createTx(isSystem: true, id: 'tx_sys');
       seedLoaded(tx);
 
       await tester.pumpWidget(buildTestableWidget(
         TransactionCard(
           item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
-          enableSwipeActions: true,
         ),
       ));
 
-      expect(find.byType(Dismissible), findsNothing);
-    });
-
-    testWidgets('sola kaydırma silme event\'i yollar', (tester) async {
-      final tx = createTx(isSystem: false, id: 'tx_123');
-      seedLoaded(tx);
-
-      await tester.pumpWidget(buildTestableWidget(
-        TransactionCard(
-          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
-          enableSwipeActions: true,
-        ),
-      ));
-
-      await tester.drag(find.byType(Dismissible), const Offset(-400, 0));
+      await tester.longPress(find.text('Sistem İşlemi'));
       await tester.pumpAndSettle();
 
-      verify(() =>
-              mockTransactionBloc.add(const DeleteTransactionEvent('tx_123')))
-          .called(1);
-    });
-
-    testWidgets('sağa kaydırma düzenleme sayfasını açar', (tester) async {
-      final tx = createTx(isSystem: false, id: 'tx_123');
-      seedLoaded(tx);
-
-      await tester.pumpWidget(buildTestableWidget(
-        TransactionCard(
-          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
-          enableSwipeActions: true,
-        ),
-      ));
-
-      await tester.drag(find.byType(Dismissible), const Offset(400, 0));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Güncelle'), findsOneWidget);
-      verifyNever(() => mockTransactionBloc.add(any()));
-    });
-
-    testWidgets('kart kaydırma sonrası ağaçta KALIR (silme asenkron)',
-        (tester) async {
-      // confirmDismiss false döndüğü için Dismissible kartı ağaçtan atmaz;
-      // true dönseydi silme başarısız olduğunda framework assertion atardı.
-      final tx = createTx(isSystem: false, id: 'tx_123');
-      seedLoaded(tx);
-
-      await tester.pumpWidget(buildTestableWidget(
-        TransactionCard(
-          item: TransactionWithBalance(transaction: tx, balanceAfter: 0),
-          enableSwipeActions: true,
-        ),
-      ));
-
-      await tester.drag(find.byType(Dismissible), const Offset(-400, 0));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Normal İşlem'), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      expect(find.text('İşlemi Sil'), findsNothing);
     });
   });
 }
