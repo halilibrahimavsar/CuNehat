@@ -3134,6 +3134,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.';
 
   @override
+  String get driveErrTokenFailed =>
+      'Google hesabınızdan Drive erişim izni alınamadı. Ayarlar’dan bağlantıyı kesip yeniden bağlanın; sorun sürerse Google hesabınızın izinlerini kontrol edin.';
+
+  @override
   String get driveErrQuotaExceeded =>
       'Google Drive depolama alanınız dolu. Yer açıp tekrar deneyin.';
 

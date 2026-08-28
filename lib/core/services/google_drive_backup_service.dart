@@ -102,6 +102,11 @@ class GoogleDriveBackupService {
     return _guard(() async {
       final account = await _googleSignIn.signInSilently(suppressErrors: false);
       _currentUser = account;
+      // Sonucu da bas: yalnız hata yolları günlüğe düşünce "hiçbir şey
+      // basılmadı" hâli üç ayrı sonucu birden gizliyor (başarı / null / hiç
+      // tamamlanmayan Future). E-posta BASILMAZ, yalnız varlığı.
+      debugPrint('GoogleDriveBackupService silentSignIn -> '
+          '${account == null ? 'null (notSignedIn)' : 'hesap alındı'}');
       if (account == null) {
         return const DriveResult<GoogleSignInAccount>.failure(
           DriveOperationStatus.notSignedIn,
@@ -115,8 +120,14 @@ class GoogleDriveBackupService {
   /// [DriveOperationStatus.cancelled] olur — "bağlantı başarısız" değil.
   Future<DriveResult<GoogleSignInAccount>> signIn() {
     return _guard(() async {
+      debugPrint('GoogleDriveBackupService signIn -> başladı');
       final account = await _googleSignIn.signIn();
       _currentUser = account;
+      // Bkz. [silentSignIn]: bu satır olmadan "hesap seçici açılıp kapandı,
+      // sonra hiçbir şey" durumu teşhis edilemiyor — Future'ın hiç
+      // tamamlanmadığı hâl ile null döndüğü hâl birbirinden ayrılmıyor.
+      debugPrint('GoogleDriveBackupService signIn -> '
+          '${account == null ? 'null (cancelled)' : 'hesap alındı'}');
       if (account == null) {
         return const DriveResult<GoogleSignInAccount>.failure(
           DriveOperationStatus.cancelled,
@@ -624,12 +635,27 @@ class GoogleDriveBackupService {
     }
   }
 
+  /// Eklentinin token alma yolunun (`GoogleSignInPlugin.getAccessToken`) hata
+  /// kodları. Giriş başarılıyken `authHeaders` bu kodlarla patlayabilir ve
+  /// hiçbiri `sign_in_*` ailesinden değildir. Bkz. [DriveOperationStatus.tokenFailed].
+  static const Set<String> _tokenErrorCodes = <String>{
+    'exception',
+    'user_recoverable_auth',
+    'failed_to_recover_auth',
+  };
+
   /// Google Sign-In platform hatalarını sınıflandırır.
   ///
   /// `DEVELOPER_ERROR (10)` özel: OAuth Android istemcisi uygulamanın paket adı
   /// + imza SHA-1'i ile eşleşmiyor demektir. Kullanıcının yapabileceği bir şey
   /// yok; "bağlantı başarısız" demek onu boşuna uğraştırır.
   DriveOperationStatus _mapPlatformException(PlatformException e) {
+    // Ham kodu HER ZAMAN günlüğe bas. Bu eşlemenin tanımadığı her kod
+    // `serverError`a düşüyor ve kullanıcıya "sonra tekrar deneyin" diyor;
+    // 2026-08-27'de Drive arızasının teşhisi tam olarak bu yüzden bir gün
+    // kaybettirdi — cihazda hatanın gerçek kodunu görmenin hiçbir yolu yoktu.
+    debugPrint('GoogleDriveBackupService platform error: '
+        'code=${e.code} message=${e.message} details=${e.details}');
     if (e.code == GoogleSignIn.kSignInCanceledError) {
       return DriveOperationStatus.cancelled;
     }
@@ -639,10 +665,16 @@ class GoogleDriveBackupService {
     if (e.code == GoogleSignIn.kSignInRequiredError) {
       return DriveOperationStatus.notSignedIn;
     }
+    // Kod kontrolünden ÖNCE: `DEVELOPER_ERROR` token yolundan da gelebiliyor,
+    // yani `exception` kodunun içinde. Yapılandırma hatası olduğunu bilmek
+    // "yeniden bağlan" demekten daha doğru bir teşhis.
     final message = '${e.message ?? ''} ${e.details ?? ''}';
     if (RegExp(r'ApiException:\s*10\b').hasMatch(message) ||
         message.contains('DEVELOPER_ERROR')) {
       return DriveOperationStatus.configError;
+    }
+    if (_tokenErrorCodes.contains(e.code)) {
+      return DriveOperationStatus.tokenFailed;
     }
     return DriveOperationStatus.serverError;
   }

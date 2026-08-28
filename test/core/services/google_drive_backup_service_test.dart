@@ -194,6 +194,46 @@ void main() {
       expect(result.status, DriveOperationStatus.configError);
     });
 
+    // REGRESYON: token alma yolu (`authHeaders` → `GoogleAuthUtil.getToken`)
+    // giriş yolundan AYRI hata kodları üretiyor ve hiçbiri `sign_in_*`
+    // ailesinde değil. Üçü de `serverError`a düşüyordu, yani kullanıcıya
+    // "Drive şu anda yanıt veremiyor, sonra tekrar deneyin" deniyordu —
+    // tekrar denemenin asla çözmeyeceği bir arıza için.
+    for (final code in const <String>[
+      'exception',
+      'user_recoverable_auth',
+      'failed_to_recover_auth',
+    ]) {
+      test('token hatası `$code` tokenFailed olur, serverError değil',
+          () async {
+        when(() => mockGoogleSignIn.signInSilently(
+                suppressErrors: any(named: 'suppressErrors')))
+            .thenThrow(PlatformException(code: code));
+
+        final result = await service.silentSignIn();
+
+        expect(result.status, DriveOperationStatus.tokenFailed);
+      });
+    }
+
+    // `DEVELOPER_ERROR` token yolundan da gelebiliyor: kod `exception` olsa
+    // bile yapılandırma hatası teşhisi "yeniden bağlan" önerisini yenmeli.
+    test('`exception` kodu DEVELOPER_ERROR taşıyorsa configError kazanır',
+        () async {
+      when(() => mockGoogleSignIn.signInSilently(
+          suppressErrors: any(named: 'suppressErrors'))).thenThrow(
+        PlatformException(
+          code: 'exception',
+          message: 'com.google.android.gms.auth.GoogleAuthException: '
+              'DEVELOPER_ERROR',
+        ),
+      );
+
+      final result = await service.silentSignIn();
+
+      expect(result.status, DriveOperationStatus.configError);
+    });
+
     test('sessiz girişte ağ hatası noNetwork olarak sınıflandırılır', () async {
       when(() => mockGoogleSignIn.signInSilently(
               suppressErrors: any(named: 'suppressErrors')))

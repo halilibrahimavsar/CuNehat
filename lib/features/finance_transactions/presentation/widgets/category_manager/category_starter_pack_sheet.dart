@@ -82,36 +82,46 @@ class _CategoryStarterPackSheetState extends State<CategoryStarterPackSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Container(
+    // Material (renkli Container değil): içerideki CheckboxListTile'lar
+    // zeminlerini ve ink dalgalarını EN YAKIN Material'a boyar. Araya renkli
+    // bir Container girerse dalga da seçili zemin de görünmez olur — kullanıcı
+    // dokunduğunda hiçbir şey olmuyor sanır. Cihazda ölçüldü (28 Ağu 2026):
+    // bu sheet açılınca Flutter'ın `ListTile background color or ink splashes
+    // may be invisible` assert'i yüzlerce kez düşüyordu. Kardeş sheet'lerin
+    // hepsi (transaction_action_sheet, category_picker_sheet, ...) bu kalıbı
+    // zaten kullanıyor; burası atlanmıştı.
+    return SizedBox(
       height: MediaQuery.of(context).size.height * 0.88,
-      decoration: BoxDecoration(
+      child: Material(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            _header(cs),
-            const Divider(height: 1),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                children: [
-                  _sectionLabel(context.l10n.menuExpense, cs),
-                  for (final g in CategoryStarterPack.expense)
-                    _groupTile(g, isExpense: true),
-                  const SizedBox(height: 12),
-                  _sectionLabel(context.l10n.menuIncome, cs),
-                  for (final g in CategoryStarterPack.income)
-                    _groupTile(g, isExpense: false),
-                ],
+        clipBehavior: Clip.antiAlias,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              _header(cs),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  children: [
+                    _sectionLabel(context.l10n.menuExpense, cs),
+                    for (final g in CategoryStarterPack.expense)
+                      _groupTile(g, isExpense: true),
+                    const SizedBox(height: 12),
+                    _sectionLabel(context.l10n.menuIncome, cs),
+                    for (final g in CategoryStarterPack.income)
+                      _groupTile(g, isExpense: false),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            _actions(cs),
-          ],
+              const Divider(height: 1),
+              _actions(cs),
+            ],
+          ),
         ),
       ),
     );

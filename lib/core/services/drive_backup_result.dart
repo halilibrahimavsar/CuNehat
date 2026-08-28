@@ -32,6 +32,18 @@ enum DriveOperationStatus {
   /// Cloud Console kaydı eksik — bu yüzden ayrı bir durum.
   configError,
 
+  /// Google hesabından erişim jetonu (access token) alınamadı.
+  ///
+  /// Giriş BAŞARILI olduğu hâlde `authHeaders` patlar: Android'de bu ayrı bir
+  /// çağrıdır (`GoogleAuthUtil.getToken`) ve paket + imza + kapsam üçlüsünü
+  /// sunucuda yeniden doğrular. Eklenti bu yolun hatalarını `exception` /
+  /// `user_recoverable_auth` / `failed_to_recover_auth` kodlarıyla verir —
+  /// hiçbiri [configError]'ın tanıdığı `DEVELOPER_ERROR` değildir, bu yüzden
+  /// üçü de [serverError]'a düşüyordu ve kullanıcıya "sonra tekrar deneyin"
+  /// deniyordu. Oysa tekrar denemek bunu çözmez; hesabı ayırıp yeniden
+  /// bağlamak (ya da onay ekranını yeniden geçmek) gerekir.
+  tokenFailed,
+
   /// Drive API Cloud projesinde etkin değil (403 `accessNotConfigured` /
   /// `SERVICE_DISABLED`). [scopeDenied] ile AYNI HTTP kodunu paylaşır ama
   /// bambaşka bir olgudur: kullanıcı ne yaparsa yapsın, izin vererek

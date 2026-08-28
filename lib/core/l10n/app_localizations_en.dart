@@ -3133,6 +3133,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google Drive is not configured in this build (the OAuth client does not match the package name/signature). This is a setup error; backup is unavailable for now.';
 
   @override
+  String get driveErrTokenFailed =>
+      'Drive access could not be authorized with your Google account. Disconnect and reconnect in Settings; if it persists, check your Google account permissions.';
+
+  @override
   String get driveErrQuotaExceeded =>
       'Your Google Drive storage is full. Free up space and try again.';
 

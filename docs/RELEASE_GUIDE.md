@@ -8,11 +8,17 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+2`
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+3` (yüklenmedi)
 
-> `versionCode 1` **yakıldı.** Play sürüm kodlarını kalıcı tüketir: bir kod
-> herhangi bir kanala bir kez yüklendiyse, o sürüm silinse/atılsa bile geri
-> gelmez. Bir sonraki yükleme `+3` olmalı.
+> **Sürüm kodları kalıcı tüketilir.** Bir kod herhangi bir kanala bir kez
+> yüklendiyse, o sürüm silinse/atılsa bile geri gelmez. `1` yakıldı (ilk
+> deneme reddedildi), `2` kapalı testte yayında. `3` **repoda hazır ama Play'e
+> yüklenmedi** — yüklenene kadar yeni işler aynı `+3` içinde birikebilir,
+> her commit için artırmaya gerek yok.
+>
+> `versionName` `1.0.0` duruyor. Kapalı test turlarında kullanıcıya görünen
+> adı sabit tutmak normal; kullanıcıya duyurulacak bir davranış değişikliği
+> çıkarken `1.0.1`'e geç.
 
 ---
 
@@ -29,20 +35,80 @@ Cloud projesi, Flutter SDK kurulu.
 | 7 | Data Safety formu | ✅ Dolduruldu |
 | 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
-| 8c | **Mağaza girişi (metin + ikon + görseller)** | ⬜ **KALAN** — varlıkların hepsi hazır, Console'a girilmedi |
-| 8d | **Etiketler (3 tane)** | ⬜ **KALAN** |
+| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi. Uygulama adı **bilerek `CuNehat`** bırakıldı (28 Ağu kullanıcı kararı) — ama tanıtım görseli, gizlilik politikası, `android:label` ve tüm uygulama içi metinler `ÇuNehat`; **tutarsızlık duruyor** |
+| 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
 | — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 14 maddenin hiçbiri işaretli değil |
-| 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | 🟡 AAB dahili teste yayınlandı (`1.0.0+2`), SHA-1 alındı; **3. OAuth istemcisi KALAN** |
-| 11 | Kapalı test 12 tester × 14 gün | ⬜ Testerlar toplandı, sayaç başlamadı |
+| 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | 🔴 **KALAN** — AAB yayınlandı ama istemciye yanlış SHA-1 girilmiş; doğrusu `3C:64:FF:8D:…` (28 Ağu'da cihazdan ölçüldü) |
+| 11 | Kapalı test 12 tester × 14 gün | 🟢 **SAYAÇ İŞLİYOR** — 13 tester opt-in oldu (28 Ağu). Panoda ilk iki madde ✔; kalan: "en az 12 kullanıcıyla 14 gün". Production başvurusu en erken **~11 Eyl**, inceleme ≤7 gün → **~18 Eyl** |
 | 12 | Production | ⬜ |
 
 **Kod tarafı sağlık (21 Ağu 2026 ölçümü):** `flutter test` **1804/1804**,
 `dart analyze` **0 sorun**, `flutter build appbundle --release` **başarılı**
 (88,1 MB). Yayını bloke eden teknik hata yok.
 
-**Kritik yol:** cihaz duman testi → AAB yükle (Adım 9) → Play SHA-1'ini
-Cloud Console'a ekle → kapalı test 14 gün → production ≤7 gün.
-**En erken yayın ~3 hafta.** Adım 9 geciken her gün doğrudan yayına ekleniyor.
+**Kritik yol:** mağaza girişi (8c/8d) → kapalı test track'i + 12 tester ×
+14 gün → production ≤7 gün. **En erken yayın ~3 hafta.**
+
+> **⚠️ Play imzalama parmak izi CİHAZDAN ölçüldü (28 Ağu 2026).** Console'a
+> 26 Ağustos'ta girilen `CB:7A:0E:…:90:C4` **yanlış**. Play'in kurduğu APK
+> `apksigner` ile okundu ve gerçek imza `3C:64:FF:8D:…:65:FC`
+> (`CN=Android, O=Google Inc.`, 4096-bit RSA, `installerPackageName=
+> com.android.vending`, `versionCode=2`). Yer gerçeği cihazdaki APK'dır;
+> Play Console'daki "App signing key certificate" değerini yeniden oku ve
+> hangisinin doğru olduğunu karşılaştır. Ölçüm komutu:
+>
+> ```bash
+> P=$(adb shell pm path dev.halilibrahim.cunehat | grep base.apk | sed 's/package://' | tr -d '\r')
+> adb pull "$P" /tmp/play.apk
+> ~/Android/Sdk/build-tools/36.0.0/apksigner verify --print-certs /tmp/play.apk
+> ```
+>
+> Bugün Drive **çalışıyor** olmasına rağmen bu kayıt düzeltilmeli: access
+> token yolu bu eşleşme olmadan da yürüyor, ama ileride idToken /
+> serverAuthCode eklenirse ya da Google bu yolu sıkılaştırırsa sessizce
+> patlar. Doğru parmak izi için ayrı bir Android istemcisi aç; yanlış olanı
+> ancak doğrusunun çalıştığı doğrulandıktan sonra sil.
+
+> **🔴 KÖK NEDEN BULUNDU — Drive yedekleme (28 Ağu 2026).** Play'den inen
+> `1.0.0+2`'de **giriş yapılıyor ama "Yedekle" patlıyor.** Bu ikisi AYRI
+> yollar ve ayrı olmaları teşhisi bir gün geciktirdi:
+>
+> | Yol | Kayıtlı OAuth istemcisi gerekir mi | Play sürümünde |
+> |---|---|---|
+> | `signIn()` — hesap seçici | **Hayır** | ✅ çalışıyor |
+> | `authHeaders` → `GoogleAuthUtil.getToken` | **Evet** — paket + imza + kapsam üçlüsü sunucuda eşleştirilir | ❌ patlıyor |
+>
+> **Sebep: Console'daki Play imzalama parmak izi yanlış.** Girilen
+> `CB:7A:0E:…:90:C4`; cihazdan ölçülen gerçek imza
+> `3C:64:FF:8D:…:65:FC`. Yani Play'den inen sürüm için kayıtlı istemci
+> pratikte **yok**.
+>
+> Üç derleme bunu doğruluyor:
+>
+> | Derleme | İmza | Kayıtlı mı | R8 | Drive |
+> |---|---|---|---|---|
+> | debug | `C5:0D:…` | ✅ | kapalı | ✅ |
+> | sideload release | `C6:75:…` | ✅ | **açık** | ✅ |
+> | Play dahili test | `3C:64:…` | ❌ | açık | ❌ yedekleme |
+>
+> Sideload satırı **R8'i eliyor**: aynı minify'lı kod, kayıtlı imzayla
+> çalışıyor. Tek değişken kayıtlı-olmayan sertifika.
+>
+> **ÇÖZÜM:** Cloud Console → Clients → Create client → Android:
+> paket `dev.halilibrahim.cunehat`, SHA-1
+> `3C:64:FF:8D:AB:77:B5:7F:34:00:8D:A4:7B:6B:07:FD:93:D8:65:FC`.
+> Sonra uygulamayı **kaldırıp Play'den yeniden kur** — Play Hizmetleri
+> (paket+imza+kapsam) için olumsuz sonucu önbelleğe alıyor ve beklemekle
+> düşmüyor. Yanlış `CB:7A:…` istemcisini ancak yenisi doğrulandıktan sonra
+> sil. Uygulamada değişiklik gerekmez, yeni sürüm yüklenmez.
+>
+> **Kod tarafında düzeltilen teşhis körlüğü:** `_mapPlatformException`
+> tanımadığı her platform hatasını `serverError`a düşürüyordu → kullanıcıya
+> *"Google Drive şu anda yanıt veremiyor, sonra tekrar deneyin"*, yani
+> tekrar denemenin asla çözmeyeceği bir arıza için yanlış öneri. Artık ham
+> `code/message/details` günlüğe basılıyor ve token yolunun kodları
+> (`exception`, `user_recoverable_auth`, `failed_to_recover_auth`)
+> `DriveOperationStatus.tokenFailed`e ayrılıyor.
 
 ---
 
@@ -56,6 +122,8 @@ başvurabilmek için önce **kapalı test (closed testing)** yürütmek zorunda:
 | Minimum tester | **12** |
 | Süre | **14 gün kesintisiz** opt-in |
 | Dahili test sayılır mı | **HAYIR** — Google: *"internal testing does not satisfy this requirement"* |
+| Sayaç ne zaman başlar | Kişinin **kapalı teste opt-in olduğu an**; kurulum değil opt-in sayılıyor |
+| Kesinti olursa | 14 gün **ardışık** olmak zorunda; çıkıp giren kişinin sayacı SIFIRLANIR → 12 değil **14–15 kişi** hedefle |
 | Sonrası | Dashboard'dan production erişimi başvurusu → inceleme **≤7 gün** |
 
 > Kural Kasım 2023'te **20 tester** olarak başlamıştı; Google **11 Aralık 2024'te
@@ -472,7 +540,7 @@ Bu tablo uygulamanın gerçek davranışından çıkarıldı; olduğu gibi gir.
 | Form | Cevap |
 |---|---|
 | İçerik derecelendirmesi | Anket; kategori Finans, şiddet/cinsellik/kumar/IAP yok → düşük derece |
-| Hedef kitle ve içerik | 13+ *(çocuklara yönelik değil)* |
+| Hedef kitle ve içerik | Planlanan 13+; **gönderilen 18+** (Play bunu `18 - 2147483647` diye gösteriyor). Finans uygulaması için savunulabilir ama kitleyi daraltır — bilinçli miydi, doğrula |
 | Reklamlar | **Uygulamada reklam yok** |
 | App access (uygulama erişimi) | **"Evet"** seç, kullanıcı adı/parola alanlarını **boş bırak**, talimat gir: *"Uygulamanın tüm işlevleri girişsiz kullanılabilir; hesap gerekmez. Google ile giriş yalnız isteğe bağlı Drive yedeği içindir. Uygulama kilidi (PIN/biyometrik) varsayılan olarak kapalıdır."* |
 | Devlet uygulaması mı | Hayır |
@@ -535,7 +603,7 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 |---|---|---|
 | Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ "Android client 1" (30 Tem 2026) |
 | Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ✅ "ÇuNehat upload key" (10 Ağu 2026) |
-| **Play App Signing** — mağazadan inen sürüm | `CB:7A:0E:17:88:F4:AC:AD:AE:14:2D:5F:3F:AF:A0:57:2B:01:90:C4` | 26 Ağu 2026'da alındı — Cloud Console'a eklenecek |
+| **Play App Signing** — mağazadan inen sürüm | **`3C:64:FF:8D:AB:77:B5:7F:34:00:8D:A4:7B:6B:07:FD:93:D8:65:FC`** (cihazdan ölçüldü) | 🔴 **KAYITLI DEĞİL** — mevcut istemciye yanlışlıkla `CB:7A:…` girilmiş; Play sürümünde yedekleme bu yüzden çalışmıyor |
 
 **Hangisi ne zaman ısırır:**
 
@@ -631,6 +699,27 @@ R8 kaynaklı bir çökme çıkarsa `android/app/proguard-rules.pro`'ya ilgili
 
 ## Adım 11 — Kapalı test: 12 tester × 14 gün (muafsan atla)
 
+> **⛔ ÖLÇÜLDÜ (28 Ağu 2026) — dahili test kapalı testi BLOKLUYOR.**
+> Dahili teste opt-in olmuş bir hesap kapalı testi almaya **uygun değil**;
+> Play ona dahili kanalı servis etmeye devam eder ve 12 kişilik sayaca
+> yazılmaz. Google'ın kendi ifadesi:
+>
+> > *"A user who opts into your app's internal test is no longer eligible to
+> > receive an open or closed test. To access an open or closed test, the user
+> > must first opt out of the internal test and then opt in to the open or
+> > closed test."*
+>
+> Kapalı test linkine tıklayıp kurmak **yetmiyor** — semptom "indirdi ama
+> tester sayılmıyor". Opt-in durumu kullanıcı hesabına bağlı: developer
+> tarafından listeden silmek onların kaydını DÜŞÜRMEZ. Her tester sırasıyla:
+> (1) dahili test linki → "Programdan ayrıl", (2) kapalı test linki →
+> opt-in, (3) uygulamayı kaldırıp Play'den yeniden kur.
+>
+> **Yapısal çözüm: listeleri kesiştirme.** Dahili testte yalnız geliştirici
+> kalsın; 14–15 kişilik grup yalnız kapalı testte olsun.
+
+
+
 Bu adım production'ın ön koşulu. Sayaç ancak 12 kişi opt-in **olduktan sonra**
 işlemeye başlar, o yüzden testerları önce topla, sonra sürümü yayınla.
 
@@ -684,16 +773,22 @@ sürebilir. Reddedilirse gerekçe e-postayla gelir.
 
 Bunlar v1'i bloke etmiyor ama **ilk güncellemeden önce** çözülmeli.
 
-### 14.1 `CLAUDE.md` geriye-uyumluluk politikasını emekliye ayır
+### 14.1 `CLAUDE.md` geriye-uyumluluk politikası — ✅ EMEKLİYE AYRILDI (29 Ağu 2026)
 
-Politika metninde zaten yazıyor: "ilk mağaza yayınına kadar geçerlidir."
-O gün geldi. Yayından sonra:
+Tetikleyici mağaza yayını değil, **gerçek kullanıcının veriye sahip olması**ydı
+ve o eşik 28 Ağustos'ta kapalı testle geçildi: 13 testerın cihazında gerçek veri
+var ve production erişimi onların uygulamayı **kurulu tutmasına** bağlı. Verisi
+uçan tester uygulamayı siler, 14 günlük sayaç kırılır.
+
+`CLAUDE.md` yeniden yazıldı: Hive alan kuralları, yedek migrasyon şartı ve
+*"veriyi sil, yeniden kur artık bir çözüm değildir"* maddesi eklendi. Aşağıdaki
+teknik gerekçe referans olarak duruyor:
 
 - **`defaultValue` yasağı kalkmalı.** Mevcut bir `HiveType`'a yeni `HiveField`
   eklersen Hive eski kayıtlarda o alanı `null` döner; alan non-nullable ise
   üretilen adapter `fields[N] as String` yapıp **okuma anında çöker**.
   Çözüm: `@HiveField(20, defaultValue: 'TRY')` ya da alanı nullable yap.
-- **Yedek şeması artık silinemez.** `data_serialization_service.dart:474`:
+- **Yedek şeması artık silinemez.** `data_serialization_service.dart:509`:
 
   ```dart
   if (version != schemaVersion) {
@@ -701,7 +796,7 @@ O gün geldi. Yayından sonra:
   }
   ```
 
-  v1.0.0 **`schemaVersion = 9`** ile çıkıyor (`:130`). Son iki adım aynı
+  v1.0.0 **`schemaVersion = 9`** ile çıkıyor (`:135`). Son iki adım aynı
   yatırım turunda çıktı: **8** → `InvestmentModel.unbookedCost` (HiveField 15,
   uygulamaya girmeden önce alınmış varlığın cüzdandan düşülmeyen maliyeti);
   **9** → birikim hedefi kendi kaydı oldu (`goals` kutusu, **typeId 16**;
@@ -717,9 +812,11 @@ O gün geldi. Yayından sonra:
   > değişirse bu sayıyı burada güncelle — yanlış sayı, migrasyonu yanlış
   > sürümden başlatır.
   >
-  > 8 ve 9'a geçiş **eski kurulumların yatırım kutusunu okunamaz yapar**
-  > (`fields[15] as double` → null cast). Yayın öncesi politika gereği çözüm
-  > migrasyon değil veri silme; cihazda test ederken uygulama verisini temizle.
+  > ⚠️ **Bu paragrafın eski hali artık geçersizdi.** 8 ve 9'a geçiş eski
+  > kurulumların yatırım kutusunu okunamaz yapmıştı (`fields[15] as double` →
+  > null cast) ve o dönemin çözümü "veriyi sil"di. **Bir daha o çözüm
+  > kullanılamaz:** sahada veri var. Aynı sınıftan bir değişiklik gerekirse
+  > alan nullable olmalı ya da `defaultValue` almalı.
   >
   > Yeni kutu eklerken üç yer birlikte güncellenir: `app_initialization.dart`
   > (adapter kaydı + `openBox`), `DataSerializationService` (dışa aktarma,

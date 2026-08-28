@@ -22,6 +22,7 @@ String driveStatusMessage(
     DriveOperationStatus.authExpired => l.driveErrAuthExpired,
     DriveOperationStatus.scopeDenied => l.driveErrScopeDenied,
     DriveOperationStatus.configError => l.driveErrConfigError,
+    DriveOperationStatus.tokenFailed => l.driveErrTokenFailed,
     DriveOperationStatus.apiNotEnabled => l.driveErrApiNotEnabled,
     DriveOperationStatus.quotaExceeded => l.driveErrQuotaExceeded,
     DriveOperationStatus.serverError => l.driveErrServerError,

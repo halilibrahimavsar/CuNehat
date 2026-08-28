@@ -5651,6 +5651,12 @@ abstract class AppLocalizations {
   /// **'Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.'**
   String get driveErrConfigError;
 
+  /// No description provided for @driveErrTokenFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google hesabınızdan Drive erişim izni alınamadı. Ayarlar’dan bağlantıyı kesip yeniden bağlanın; sorun sürerse Google hesabınızın izinlerini kontrol edin.'**
+  String get driveErrTokenFailed;
+
   /// No description provided for @driveErrQuotaExceeded.
   ///
   /// In tr, this message translates to:

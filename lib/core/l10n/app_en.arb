@@ -1547,6 +1547,7 @@
   "driveErrAuthExpired": "Your Google session expired. Disconnect and connect again.",
   "driveErrScopeDenied": "Drive app-folder permission was not granted. Backup cannot work without it.",
   "driveErrConfigError": "Google Drive is not configured in this build (the OAuth client does not match the package name/signature). This is a setup error; backup is unavailable for now.",
+  "driveErrTokenFailed": "Drive access could not be authorized with your Google account. Disconnect and reconnect in Settings; if it persists, check your Google account permissions.",
   "driveErrQuotaExceeded": "Your Google Drive storage is full. Free up space and try again.",
   "driveErrServerError": "Google Drive is not responding right now. Try again later.",
   "driveErrEmptyLocalData": "There is nothing on this device to back up. An empty backup would replace the full backup in your Drive.",
