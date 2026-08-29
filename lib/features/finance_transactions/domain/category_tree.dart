@@ -117,6 +117,14 @@ List<CategoryEntity> childrenOf(String id, Iterable<CategoryEntity> all) {
   return children;
 }
 
+/// Ana ve alt kategoriyi ayıran işaret — **tek kaynak.**
+///
+/// Üç ayrı yerde tanımlıydı (burada satır içinde, `kCategoryPathSeparator`,
+/// `kCategoryBreadcrumb`) ve biri "Fatura › Su" üretirken diğeri onu geri
+/// AYRIŞTIRIYORDU (`parseCategoryTarget`). Biri değişse round-trip sessizce
+/// kopardı.
+const String kCategorySeparator = '›';
+
 /// `id → "Fatura › Elektrik"` haritası. Kökler yalnız kendi adlarını taşır.
 ///
 /// Bildirim gövdesi, CSV dışa aktarımı ve seçici alt yazısı gibi bağlamın ada
@@ -126,7 +134,7 @@ Map<String, String> buildBreadcrumbs(Iterable<CategoryEntity> all) {
   return {
     for (final c in all)
       c.id: switch (byId[c.parentId]) {
-        final parent? => '${parent.name} › ${c.name}',
+        final parent? => '${parent.name} $kCategorySeparator ${c.name}',
         null => c.name,
       },
   };

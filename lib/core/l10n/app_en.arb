@@ -1293,14 +1293,6 @@
   "bankImportExitFullscreen": "Exit full screen",
   "bankImportSummarySheet": "Summary and warnings",
   "bankImportMoreActions": "More actions",
-  "bankImportAssignVisible": "Assign a category to the {count} shown rows",
-  "@bankImportAssignVisible": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "bankImportAssignVisibleDone": "{count} rows moved to “{category}”.",
   "@bankImportAssignVisibleDone": {
     "placeholders": {
@@ -1312,6 +1304,59 @@
       }
     }
   },
+  "bankImportAssignUncategorized": "Assign to the {count} uncategorized rows",
+  "@bankImportAssignUncategorized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignOverwrite": "Replace on all {count} shown rows (categorized included)",
+  "@bankImportAssignOverwrite": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignTypeMismatch": "The picked category does not match these rows' type; nothing changed.",
+  "bankImportGroupSimilar": "Group similar rows",
+  "bankImportGroupSimilarTitle": "Similar transactions",
+  "bankImportGroupSimilarHint": "Rows with similar descriptions are collected into one group. Picking a category for a group applies it to ALL rows in it.",
+  "bankImportGroupScopeUncategorized": "Uncategorized only",
+  "bankImportGroupScopeAll": "All",
+  "bankImportGroupRows": "{count} rows",
+  "@bankImportGroupRows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportGroupMixed": "Mixed categories",
+  "bankImportGroupNone": "Uncategorized",
+  "bankImportGroupEmpty": "No similar rows found.",
+  "bankImportGroupFillRest": "Fill the rest with “{category}”",
+  "@bankImportGroupFillRest": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportApplyToSimilar": "{count} more uncategorized rows look like this: {sample}",
+  "@bankImportApplyToSimilar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "sample": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportApplyToSimilarAction": "Apply to all",
   "bankImportUncategorizedBlocked": "{count} selected rows have no category. They can't be added without one: they would count towards no category in budgets and reports.",
   "@bankImportUncategorizedBlocked": {
     "placeholders": {

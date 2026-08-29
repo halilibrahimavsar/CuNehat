@@ -33,6 +33,7 @@
 /// eksik kalanı kullanıcı görür.
 library;
 
+import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 
@@ -59,7 +60,7 @@ List<ImportDraft> markDuplicateDrafts(
   final withinFile = <String>{};
 
   for (final d in drafts) {
-    final money = _money(d.date, d.amount, d.type.name == 'expense');
+    final money = _money(d.date, d.amount, !d.isIncome);
     final reference = _norm(d.reference);
     final weakKey = '$money|${_normTitle(d.description)}';
 
@@ -111,5 +112,11 @@ String _money(DateTime date, double amount, bool isExpense) {
   return '$day|$cents';
 }
 
-String _normTitle(String desc) =>
-    desc.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+/// Zayıf anahtarın başlık parçası.
+///
+/// [foldTr] kullanılır, `toLowerCase()` DEĞİL: Dart noktasız `I`'yı `i`'ye
+/// çevirir, `ı`'ya değil. Ekstre "IŞIK ELEKTRİK" yazar (`işik elektrik`),
+/// kullanıcı elle "Işık Elektrik" girer (`ışık elektrik`) — iki taraf hiç
+/// eşleşmez ve aynı hareket ikinci kez deftere yazılırdı. (Trim + iç
+/// boşlukların teklenmesi [foldTr]'nin içinde.)
+String _normTitle(String desc) => foldTr(desc);

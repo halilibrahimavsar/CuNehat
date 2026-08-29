@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/recent_categories_service.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
@@ -25,11 +26,18 @@ class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class FakeCategoryEntity extends Fake implements CategoryEntity {}
 
-CategoryEntity _cat(String id, {bool expense = true}) => CategoryEntity(
+CategoryEntity _cat(
+  String id, {
+  bool expense = true,
+  String? name,
+  String? parent,
+}) =>
+    CategoryEntity(
       id: id,
-      name: id,
+      name: name ?? id,
       iconName: 'category',
       isExpense: expense,
+      parentId: parent,
       sortOrder: 1,
     );
 
@@ -114,10 +122,12 @@ void main() {
     bool sourceTruncated = false,
     int sourceUnresolvedCells = 0,
     StatementVerification verification = StatementVerification.none,
+    List<CategoryEntity>? expenseCategories,
   }) =>
       BankImportReview(
         drafts: drafts,
-        expenseCategories: [_cat('Market'), _cat('Fatura')],
+        expenseCategories:
+            expenseCategories ?? [_cat('Market'), _cat('Fatura')],
         incomeCategories: [_cat('Maaş', expense: false)],
         skippedRows: skippedRows,
         walletCurrency: walletCurrency,
@@ -136,6 +146,9 @@ void main() {
     when(() => cubit.state).thenReturn(state);
     await tester.pumpWidget(
       MaterialApp(
+        // Öneri mesajı [AppMessenger] üzerinden gösteriliyor; anahtar üretimde
+        // olduğu gibi burada da bağlanmalı, yoksa snackbar hiç doğmaz.
+        scaffoldMessengerKey: appMessengerKey,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -500,7 +513,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
     await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('Görünen 1 satıra'));
+    await tester.tap(find.textContaining('Kategorisiz 1 satıra'));
     await tester.pumpAndSettle();
     // Seçici iki sütun: ana kategorinin adı SOLDA (gezinme) ve SAĞDA
     // (seçilebilir satır) görünür. Seçen satır sağdaki, yani sonuncusu.
@@ -512,5 +525,232 @@ void main() {
       () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
     ).captured;
     expect(captured.single, [1]);
+  });
+
+  testWidgets(
+      'REGRESYON: süzgeçsiz toplu atama elle seçilmiş kategorileri EZMEZ',
+      (tester) async {
+    // Bildirilen hata: kullanıcı bazı satırları elle kategorize edip kalan
+    // boşlar için toplu atama düğmesine basınca, ELLE seçtikleri dahil TÜM
+    // liste tek kategoriye dönüyordu (varsayılan süzgeç "tümü" olduğu için
+    // "görünen satırlar" bütün listeydi).
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+        _draft(description: 'BILINMEYEN ISLEM', day: 6),
+        _draft(description: 'BASKA BILINMEYEN', day: 7),
+      ]),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Kategorisiz 2 satıra'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fatura').last);
+    await tester.pumpAndSettle();
+
+    final captured = verify(
+      () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
+    ).captured;
+    expect(captured.single, [1, 2]);
+  });
+
+  testWidgets('üzerine yazma AYRI bir eylem ve kapsamı adında yazıyor',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+        _draft(description: 'BILINMEYEN ISLEM', day: 6),
+      ]),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Görünen 2 satırı değiştir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fatura').last);
+    await tester.pumpAndSettle();
+
+    final captured = verify(
+      () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
+    ).captured;
+    expect(captured.single, [0, 1]);
+  });
+
+  testWidgets('kategorisiz satır kalmayınca boşluk doldurma eylemi görünmez',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+        _draft(description: 'FATURA ODEMESI', categoryId: 'Fatura', day: 6),
+      ]),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Kategorisiz'), findsNothing);
+    expect(find.textContaining('Görünen 2 satırı değiştir'), findsOneWidget);
+  });
+
+  testWidgets('Türkçe arama büyük harfli açıklamayı bulur', (tester) async {
+    // Dart noktasız `I`'yı `i`'ye çevirir: "IŞIK" → `işik`. Kullanıcı doğal
+    // yazımıyla "ışık" arayınca eski `toLowerCase()` yolu HİÇ bulmuyordu.
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'IŞIK ELEKTRİK ODEMESI'),
+        _draft(description: 'SHELL ANKARA', day: 6),
+      ]),
+    );
+
+    await tester.enterText(find.byType(TextField), 'ışık');
+    await tester.pumpAndSettle();
+
+    expect(find.text('IŞIK ELEKTRİK ODEMESI'), findsOneWidget);
+    expect(find.text('SHELL ANKARA'), findsNothing);
+  });
+
+  testWidgets('aynı adlı alt kategoriler ana kategorileriyle ayırt edilir',
+      (tester) async {
+    // "Su" hem Fatura hem Market altında olabilir (tekillik yalnız kardeşler
+    // arasında aranır); satırda çıplak "Su" yazmak ikisini ayırt edilemez
+    // kılıyordu.
+    await pump(
+      tester,
+      review(
+        drafts: [_draft(description: 'ISKI ODEME', categoryId: 'fatura-su')],
+        expenseCategories: [
+          _cat('Fatura'),
+          _cat('fatura-su', name: 'Su', parent: 'Fatura'),
+          _cat('Market'),
+          _cat('market-su', name: 'Su', parent: 'Market'),
+        ],
+      ),
+    );
+
+    expect(find.text('Fatura › Su'), findsOneWidget);
+    expect(find.text('Su'), findsNothing);
+  });
+
+  testWidgets('benzer hareketler sayfası grubun TÜM satırlarına uygular',
+      (tester) async {
+    await pump(
+      tester,
+      review(drafts: [
+        _draft(description: 'SOK-10419-USKUDAR', day: 5),
+        _draft(description: 'SOK 22133 KADIKOY', day: 6),
+        _draft(description: 'BASKA BIR ISLEM', day: 7),
+      ]),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Benzerleri grupla'));
+    await tester.pumpAndSettle();
+
+    // Grup başlığı ekstrenin kendi yazımıyla; satır sayısı rozette, altında
+    // hangi satırların toplandığı örneklenir.
+    expect(find.text('SOK'), findsOneWidget);
+    expect(
+        find.text('SOK-10419-USKUDAR  ·  SOK 22133 KADIKOY'), findsOneWidget);
+
+    await tester.tap(find.text('SOK'));
+    await tester.pumpAndSettle();
+    // Seçicide açılışta ilk kök etkin: adı hem solda (gezinme) hem sağda
+    // (seçilebilir satır) görünür, seçen sonuncusu.
+    await tester.tap(find.text('Fatura').last);
+    await tester.pumpAndSettle();
+
+    final captured = verify(
+      () => cubit.applyCategoryToIndexes(captureAny(), 'Fatura'),
+    ).captured;
+    // "BASKA BIR ISLEM" gruba GİRMEZ: yalnız benzer olanlar toplu değişir.
+    expect(captured.single, [0, 1]);
+  });
+
+  testWidgets('benzer gruplar sayfası dar ekranda taşmaz ve "kalanı" doldurur',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pump(
+      tester,
+      review(
+        drafts: [
+          _draft(
+            description: 'ENERJISA ELEKTRIK FATURA ODEMESI 2026/03 ISTANBUL',
+            categoryId: 'fatura-elektrik',
+            amount: 1234567.89,
+          ),
+          _draft(
+            description: 'ENERJISA ELEKTRIK FATURA ODEMESI 2026/04 ISTANBUL',
+            categoryId: 'fatura-elektrik',
+            day: 6,
+          ),
+          _draft(
+            description: 'ENERJISA ELEKTRIK FATURA ODEMESI 2026/05 ISTANBUL',
+            day: 7,
+          ),
+        ],
+        expenseCategories: [
+          _cat('Fatura'),
+          _cat('fatura-elektrik',
+              name: 'Elektrik ve Aydınlatma Giderleri', parent: 'Fatura'),
+        ],
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Benzerleri grupla'));
+    await tester.pumpAndSettle();
+
+    // Varsayılan kapsam "yalnız kategorisiz": tek satır kalıyor, grup yok.
+    expect(find.textContaining('Birbirine benzeyen'), findsOneWidget);
+
+    // "Tümü"ye geçince üç satır tek grup; ikisi kategorili, biri boş.
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Tümü').last);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.textContaining('Kalanını'));
+    await tester.pumpAndSettle();
+
+    // Yalnız BOŞ satır doldurulur; kategorili ikisinin üzerine yazılmaz.
+    final captured = verify(
+      () => cubit.applyCategoryToIndexes(captureAny(), 'fatura-elektrik'),
+    ).captured;
+    expect(captured.single, [2]);
+    expect(tester.takeException(), isNull);
+  });
+  // F1 güvenlik ağı: kümeleme ortak ÖN EKE bakıyor ve ön ek her zaman marka
+  // değil ("TURK HAVA YOLLARI" + "TURK EKONOMI BANKASI" tek grup —
+  // `description_grouper.dart` "BİLİNEN SINIR"). Tek dokunuşluk kısayol yalnız
+  // SAYI gösterirse kullanıcı neye dokunduğunu görmeden onaylar; öneri
+  // etkilenecek satırdan örnek metin taşımalı.
+  testWidgets('benzer satır önerisi örnek açıklama gösterir', (tester) async {
+    final drafts = [
+      _draft(description: 'MIGROS SANAL MARKET'),
+      _draft(description: 'MIGROS JET KADIKOY', day: 6),
+    ];
+
+    await pump(tester, review(drafts: drafts));
+
+    await tester.tap(find.text('Kategori seç').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fatura').last);
+    await tester.pumpAndSettle();
+
+    // Satırın kendisi de aynı metni taşıyor; iddia MESAJIN tamamına kurulur.
+    expect(
+      find.textContaining('daha var: MIGROS JET KADIKOY'),
+      findsOneWidget,
+    );
+    expect(find.text('Hepsine uygula'), findsOneWidget);
   });
 }

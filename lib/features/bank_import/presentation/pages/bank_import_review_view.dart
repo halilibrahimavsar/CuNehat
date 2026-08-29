@@ -9,11 +9,15 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
+import 'package:cunehat/features/bank_import/data/description_grouper.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
+import 'package:cunehat/features/bank_import/presentation/import_category_labels.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/similar_group_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
@@ -84,8 +88,13 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// Görünür taslaklar; cubit mutasyonları İNDEKS tabanlı olduğu için gerçek
   /// (filtrelenmemiş) indeks satırla birlikte taşınır — aksi halde filtreliyken
   /// yapılan her düzenleme başka bir satıra uygulanırdı.
+  ///
+  /// Arama `toLowerCase()` DEĞİL [matchesFolded] ile yapılır: Dart noktasız
+  /// `I`'yı `i`'ye çevirir, `ı`'ya değil. Ekstre açıklamaları BÜYÜK HARF
+  /// olduğu için "IŞIK ELEKTRİK" satırı `işik...` diye küçülüyor ve
+  /// kullanıcının doğal yazımı olan "ışık" onu hiç bulamıyordu.
   List<(int, ImportDraft)> get _visible {
-    final q = _query.trim().toLowerCase();
+    final q = _query;
     final filter = _effectiveFilter;
     final out = <(int, ImportDraft)>[];
     for (var i = 0; i < _s.drafts.length; i++) {
@@ -96,7 +105,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         _ReviewFilter.duplicates => d.isDuplicate,
       };
       if (!passesFilter) continue;
-      if (q.isNotEmpty && !d.description.toLowerCase().contains(q)) continue;
+      if (!matchesFolded(d.description, q)) continue;
       out.add((i, d));
     }
     return out;
@@ -122,6 +131,28 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
 
   List<CategoryEntity> _catsFor(bool income) =>
       income ? _s.incomeCategories : _s.expenseCategories;
+
+  ({List<CategoryEntity> expense, List<CategoryEntity> income})? _labelKey;
+  Map<String, String> _labelCache = const {};
+
+  /// `id → gösterilecek kategori adı`; alt kategori adı tür içinde tekil
+  /// değilse ana kategorisiyle birlikte ("Fatura › Su"). Bkz.
+  /// [buildImportCategoryLabels].
+  ///
+  /// Liste kimliğine göre önbelleklenir: kategoriler yalnız inceleme sırasında
+  /// yeni kategori kurulunca değişiyor, her satır için yeniden kurmak 85
+  /// satırlık bir ekstrede her karede boşuna iş demek.
+  Map<String, String> get _categoryLabels {
+    if (_labelKey?.expense != _s.expenseCategories ||
+        _labelKey?.income != _s.incomeCategories) {
+      _labelKey = (expense: _s.expenseCategories, income: _s.incomeCategories);
+      _labelCache = {
+        ...buildImportCategoryLabels(_s.expenseCategories),
+        ...buildImportCategoryLabels(_s.incomeCategories),
+      };
+    }
+    return _labelCache;
+  }
 
   CategoryEntity? _categoryById(List<CategoryEntity> cats, String? id) {
     if (id == null) return null;
@@ -433,8 +464,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
 
   Widget _toolbar(BuildContext context) {
     final visibleCount = _visible.length;
-    final filtered =
-        _effectiveFilter != _ReviewFilter.all || _query.trim().isNotEmpty;
+    final filtered = _effectiveFilter != _ReviewFilter.all || _query.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
@@ -442,7 +472,8 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
         children: [
           TextField(
             controller: _searchController,
-            onChanged: (v) => setState(() => _query = v),
+            // Sorgu tuş başına BİR kez katlanır, aday satır başına değil.
+            onChanged: (v) => setState(() => _query = foldTr(v)),
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -534,16 +565,40 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   /// Seyrek kullanılan işlemler tek taşma menüsünde: eylem satırına dördüncü
   /// bir simge daha sığmıyor (dar telefonda taşıyordu).
   Widget _overflowMenu(BuildContext context) {
-    final visibleCount = _visible.length;
+    final visible = _visible;
+    final blank = [
+      for (final (index, draft) in visible)
+        if (draft.categoryId == null) index,
+    ];
+    final all = [for (final (index, _) in visible) index];
+
     return PopupMenuButton<void>(
       tooltip: context.l10n.bankImportMoreActions,
       icon: const Icon(Icons.more_vert_rounded, size: 20),
       itemBuilder: (ctx) => [
-        if (visibleCount > 0)
+        // Toplu atamanın kapsamı artık eylemin ADINDA. Tek bir "görünen
+        // satırlara ata" eylemi vardı ve varsayılan süzgeç "tümü" olduğu için
+        // kullanıcının ELLE seçtiği kategorilerin üzerine de yazıyordu:
+        // "kalan boşları doldur" diye dokunulan düğme bütün listeyi tek
+        // kategoriye çeviriyordu. Boşları doldurmak ile üzerine yazmak artık
+        // iki ayrı eylem; ikincisi sayısıyla birlikte açıkça söylüyor.
+        if (blank.isNotEmpty)
           _menuItem(
             icon: Icons.label_outline_rounded,
-            label: context.l10n.bankImportAssignVisible(visibleCount),
-            onTap: _assignCategoryToVisible,
+            label: context.l10n.bankImportAssignUncategorized(blank.length),
+            onTap: () => _assignCategoryTo(blank),
+          ),
+        if (all.length > blank.length)
+          _menuItem(
+            icon: Icons.edit_note_rounded,
+            label: context.l10n.bankImportAssignOverwrite(all.length),
+            onTap: () => _assignCategoryTo(all),
+          ),
+        if (_s.drafts.length >= kMinGroupSize)
+          _menuItem(
+            icon: Icons.workspaces_outline,
+            label: context.l10n.bankImportGroupSimilar,
+            onTap: () => showSimilarGroupSheet(context),
           ),
         _menuItem(
           icon: Icons.view_agenda_outlined,
@@ -627,20 +682,81 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
       initialIsExpense: !d.isIncome,
       currentId: d.categoryId,
     );
-    if (picked != null) _cubit.setDraftCategory(i, picked.id);
+    if (picked == null || !mounted) return;
+    _cubit.setDraftCategory(i, picked.id);
+    _offerSimilar(i, picked.id);
   }
 
-  /// Görünen (arama + filtre sonucu) satırlara toplu kategori uygular.
+  /// Bu satıra benzeyen KATEGORİSİZ satırlar varsa tek dokunuşla hepsine
+  /// uygulamayı önerir.
   ///
-  /// Kapsamı kullanıcının kurduğu süzgeç belirler: "kategorisiz" + "MIGROS"
-  /// → yalnız o satırlar. Kategori kendi türündeki satırlara uygulanır; karışık
-  /// listede seçilmeyen tür olduğu gibi kalır.
+  /// Öneri, kullanıcı zaten doğru kararı verdiği anda gelir: aynı üye
+  /// işyerinin 12 satırını tek tek gezmek yerine ilkini seçip "hepsine uygula"
+  /// demek yeter. Eylem basıldığında hedefler YENİDEN süzülür — arada elle
+  /// kategori verilmiş bir satırın üzerine yazmaz.
+  void _offerSimilar(int index, String categoryId) {
+    final state = _cubit.state;
+    if (state is! BankImportReview) return;
+    final similar = [
+      for (final i in similarDraftIndexes(state.drafts, index))
+        if (state.drafts[i].categoryId == null) i,
+    ];
+    if (similar.isEmpty) return;
+
+    AppMessenger.info(
+      context.l10n.bankImportApplyToSimilar(
+        similar.length,
+        _sampleDescription(state.drafts, similar),
+      ),
+      action: AppMessageAction(
+        label: context.l10n.bankImportApplyToSimilarAction,
+        onPressed: () {
+          final fresh = _cubit.state;
+          if (fresh is! BankImportReview) return;
+          final targets = [
+            for (final i in similar)
+              if (fresh.drafts[i].categoryId == null) i,
+          ];
+          if (targets.isNotEmpty) {
+            _cubit.applyCategoryToIndexes(targets, categoryId);
+          }
+        },
+      ),
+    );
+  }
+
+  /// Önerinin ETKİLEYECEĞİ satırlardan bir örnek.
+  ///
+  /// Kritik: kümeleme ortak ÖN EKE bakıyor ve ön ek her zaman marka olmuyor.
+  /// Ölçüldü — "TURK HAVA YOLLARI" ile "TURK EKONOMI BANKASI" tek grupta
+  /// birleşiyor, tıpkı "ŞOK Üsküdar" + "ŞOK Kadıköy" gibi; ikisi yapısal
+  /// olarak AYNI ve hiçbir eşik birini kesip diğerini bırakamıyor
+  /// (bkz. `description_grouper.dart` "BİLİNEN SINIR").
+  ///
+  /// Bu yüzden öneri sayı ile yetinmez: kullanıcı neye dokunacağını görmeden
+  /// "hepsine uygula" dememeli. Grup sayfası zaten örnek gösteriyordu; tek
+  /// dokunuşluk bu kısayol göstermiyordu.
+  static String _sampleDescription(
+      List<ImportDraft> drafts, List<int> indexes) {
+    final first = drafts[indexes.first].description.trim();
+    final shown = first.length <= 40 ? first : '${first.substring(0, 39)}…';
+    return indexes.length > 1 ? '$shown …' : shown;
+  }
+
+  /// [targets] indekslerine toplu kategori uygular. Kapsamı ÇAĞIRAN belirler
+  /// (yalnız kategorisiz olanlar / görünenlerin tamamı); bu fonksiyon verilen
+  /// kümenin dışına asla çıkmaz.
+  ///
+  /// Kategori kendi türündeki satırlara uygulanır; karışık listede seçilmeyen
+  /// tür olduğu gibi kalır. Hiç eşleşen satır kalmazsa sessizce dönmek yerine
+  /// söylenir — eskiden gider kategorisi seçilen gelir listesinde düğme hiçbir
+  /// şey yapmıyor gibi görünüyordu.
   ///
   /// `context` bilerek parametre DEĞİL: seçim sayfası beklenirken sayfa
   /// kapanmış olabilir, `mounted` ancak State'in kendi context'ini korur.
-  Future<void> _assignCategoryToVisible() async {
-    final rows = _visible;
-    if (rows.isEmpty) return;
+  Future<void> _assignCategoryTo(List<int> targets) async {
+    if (targets.isEmpty) return;
+    final rows = [for (final i in targets) (i, _s.drafts[i])];
     final hasExpense = rows.any((r) => !r.$2.isIncome);
     final hasIncome = rows.any((r) => r.$2.isIncome);
 
@@ -651,17 +767,19 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     );
     if (picked == null || !mounted) return;
 
-    final targets = [
+    final matching = [
       for (final (index, draft) in rows)
         if (draft.isIncome != picked.isExpense) index,
     ];
-    if (targets.isEmpty) return;
-    _cubit.applyCategoryToIndexes(targets, picked.id);
+    if (matching.isEmpty) {
+      AppMessenger.warning(context.l10n.bankImportAssignTypeMismatch);
+      return;
+    }
+    _cubit.applyCategoryToIndexes(matching, picked.id);
 
-    final label = _categoryById(_catsFor(!picked.isExpense), picked.id);
     AppMessenger.success(context.l10n.bankImportAssignVisibleDone(
-      targets.length,
-      label == null ? picked.id : label.name,
+      matching.length,
+      _categoryLabels[picked.id] ?? picked.id,
     ));
   }
 
@@ -800,7 +918,9 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-                missing ? context.l10n.bankImportPickCategoryHint : cat.name,
+                missing
+                    ? context.l10n.bankImportPickCategoryHint
+                    : (_categoryLabels[cat.id] ?? cat.name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

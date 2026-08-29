@@ -1314,14 +1314,6 @@
   "bankImportExitFullscreen": "Tam ekrandan çık",
   "bankImportSummarySheet": "Özet ve uyarılar",
   "bankImportMoreActions": "Diğer işlemler",
-  "bankImportAssignVisible": "Görünen {count} satıra kategori ata",
-  "@bankImportAssignVisible": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "bankImportAssignVisibleDone": "{count} satır “{category}” kategorisine alındı.",
   "@bankImportAssignVisibleDone": {
     "placeholders": {
@@ -1333,6 +1325,59 @@
       }
     }
   },
+  "bankImportAssignUncategorized": "Kategorisiz {count} satıra ata",
+  "@bankImportAssignUncategorized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignOverwrite": "Görünen {count} satırı değiştir (kategorili olanlar dahil)",
+  "@bankImportAssignOverwrite": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportAssignTypeMismatch": "Seçilen kategori bu satırların türüne uymuyor; hiçbir satır değişmedi.",
+  "bankImportGroupSimilar": "Benzerleri grupla",
+  "bankImportGroupSimilarTitle": "Benzer hareketler",
+  "bankImportGroupSimilarHint": "Açıklaması birbirine benzeyen satırlar tek grupta toplandı. Bir gruba kategori seçmek gruptaki TÜM satırlara uygulanır.",
+  "bankImportGroupScopeUncategorized": "Yalnız kategorisiz",
+  "bankImportGroupScopeAll": "Tümü",
+  "bankImportGroupRows": "{count} satır",
+  "@bankImportGroupRows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportGroupMixed": "Karışık kategori",
+  "bankImportGroupNone": "Kategorisiz",
+  "bankImportGroupEmpty": "Birbirine benzeyen satır bulunamadı.",
+  "bankImportGroupFillRest": "Kalanını “{category}” yap",
+  "@bankImportGroupFillRest": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportApplyToSimilar": "Buna benzeyen {count} kategorisiz satır daha var: {sample}",
+  "@bankImportApplyToSimilar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "sample": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportApplyToSimilarAction": "Hepsine uygula",
   "bankImportUncategorizedBlocked": "Seçili {count} satırın kategorisi yok. Kategori seçilmeden eklenemez: bütçe ve raporlarda hiçbir kategoriye sayılmazlar.",
   "@bankImportUncategorizedBlocked": {
     "placeholders": {
@@ -1577,7 +1622,7 @@
   "driveErrAuthExpired": "Google oturumunuzun süresi doldu. Bağlantıyı kesip yeniden bağlanın.",
   "driveErrScopeDenied": "Drive uygulama klasörü izni verilmedi. Yedekleme bu izin olmadan çalışamaz.",
   "driveErrConfigError": "Google Drive bu uygulama sürümünde yapılandırılmamış (OAuth istemcisi paket adı/imza ile eşleşmiyor). Bu bir kurulum hatası; yedekleme şimdilik kullanılamıyor.",
-  "driveErrTokenFailed": "Google hesabınızdan Drive erişim izni alınamadı. Ayarlar\u2019dan bağlantıyı kesip yeniden bağlanın; sorun sürerse Google hesabınızın izinlerini kontrol edin.",
+  "driveErrTokenFailed": "Google hesabınızdan Drive erişim izni alınamadı. Ayarlar’dan bağlantıyı kesip yeniden bağlanın; sorun sürerse Google hesabınızın izinlerini kontrol edin.",
   "driveErrQuotaExceeded": "Google Drive depolama alanınız dolu. Yer açıp tekrar deneyin.",
   "driveErrServerError": "Google Drive şu anda yanıt veremiyor. Daha sonra tekrar deneyin.",
   "driveErrEmptyLocalData": "Cihazda yedeklenecek kayıt yok. Boş bir yedek, Drive'daki dolu yedeğinizin yerini alırdı.",

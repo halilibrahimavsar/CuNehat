@@ -11,6 +11,7 @@ import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
@@ -19,6 +20,7 @@ import 'package:cunehat/features/bank_import/presentation/pages/bank_import_revi
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 
 /// Banka ekstresi içe aktarma akışı (Ayarlar → Banka ekstresi içe aktar).
 class BankImportPage extends StatefulWidget {
@@ -353,8 +355,10 @@ class _CategorySuggestionStep extends StatefulWidget {
 }
 
 class _CategorySuggestionStepState extends State<_CategorySuggestionStep> {
-  late final Set<String> _approved =
-      widget.state.suggestions.map((s) => s.name).toSet();
+  /// Onay kimliği önerinin KENDİSİ; ad tekil değil (bkz.
+  /// `BankImportCubit.resolveCategorySuggestions`).
+  late final Set<CategorySuggestion> _approved =
+      widget.state.suggestions.toSet();
 
   @override
   Widget build(BuildContext context) {
@@ -382,16 +386,21 @@ class _CategorySuggestionStepState extends State<_CategorySuggestionStep> {
             children: [
               for (final s in widget.state.suggestions)
                 CheckboxListTile(
-                  value: _approved.contains(s.name),
+                  value: _approved.contains(s),
                   onChanged: (v) => setState(() {
                     if (v == true) {
-                      _approved.add(s.name);
+                      _approved.add(s);
                     } else {
-                      _approved.remove(s.name);
+                      _approved.remove(s);
                     }
                   }),
                   secondary: Icon(AppIcons.getIconData(s.iconName)),
-                  title: Text(s.name),
+                  // Öneri bir ALT kategori olabilir; nereye kurulacağı
+                  // görünmeli. Ana kategori kullanıcıda yoksa o da birlikte
+                  // kurulur — kullanıcı bunu onaylamadan önce bilmeli.
+                  title: Text(s.parentName == null
+                      ? s.name
+                      : '${s.parentName} $kCategorySeparator ${s.name}'),
                   subtitle: Text(s.isIncome
                       ? context.l10n.detailLabelGelir
                       : context.l10n.detailLabelGider),

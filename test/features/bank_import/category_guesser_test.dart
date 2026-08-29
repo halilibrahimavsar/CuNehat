@@ -7,57 +7,67 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Kimlik artık UUID; eşleşme ADA göre yapılır. Test kimliği okunur tutmak
 /// için `id-<ad>` biçiminde üretir.
-CategoryEntity _cat(String name, {bool isExpense = true}) => CategoryEntity(
+CategoryEntity _cat(String name, {bool isExpense = true, String? parent}) =>
+    CategoryEntity(
       id: 'id-$name',
       name: name,
       iconName: 'x',
       isExpense: isExpense,
+      parentId: parent == null ? null : 'id-$parent',
     );
 
-ImportDraft _draft(String desc, {bool income = false}) => ImportDraft(
+ImportDraft _draft(String desc, {bool income = false, String? sourceTag}) =>
+    ImportDraft(
       date: DateTime(2026, 3, 25),
       description: desc,
       amount: 10,
       type: income ? TransactionTypeModel.income : TransactionTypeModel.expense,
+      sourceTag: sourceTag,
     );
 
 void main() {
   final guesser = CategoryGuesser();
 
-  // Sabit liste yerine GERÇEK başlangıç paketi: tahmin grupları paketteki
+  // Sabit liste yerine GERÇEK başlangıç paketi: tahmin hedefleri paketteki
   // adlarla eşleşmek zorunda, elle kopyalanan liste sessizce kayıyordu.
   // (Paket ↔ sözlük bağı ayrıca `category_starter_pack_test.dart`te kilitli.)
+  //
+  // Hiyerarşi de KURULUR (çocuklara `parentId` verilir): sözlük artık
+  // "Fatura › Elektrik" gibi yollar hedefliyor ve düz bir liste bu ayrımı
+  // ölçemez.
   final defaultExpenseCats = <CategoryEntity>[
     for (final g in CategoryStarterPack.expense) ...[
       _cat(g.name),
-      for (final c in g.children) _cat(c.name),
+      for (final c in g.children) _cat(c.name, parent: g.name),
     ],
   ];
   final defaultIncomeCats = <CategoryEntity>[
     for (final g in CategoryStarterPack.income) ...[
       _cat(g.name, isExpense: false),
-      for (final c in g.children) _cat(c.name, isExpense: false),
+      for (final c in g.children)
+        _cat(c.name, isExpense: false, parent: g.name),
     ],
   ];
 
   test('jenerik ekstre karşılıkları da eşleşir (marka adı olmadan)', () {
     // Bankaların çoğu üye işyeri adı yerine jenerik karşılık basıyor.
     // Sözlük yalnız markadan ibaret kalırsa bu satırlar kategorisiz kalır.
-    for (final desc in const [
-      'KIRTASIYE ODEMESI',
-      'KUAFOR ODEMESI',
-      'BERBER ODEMESI',
-    ]) {
+    const expected = {
+      'KIRTASIYE ODEMESI': 'id-Alışveriş',
+      'KUAFOR ODEMESI': 'id-Kuaför',
+      'BERBER ODEMESI': 'id-Kuaför',
+    };
+    expected.forEach((desc, id) {
       expect(
         guesser.guess(
           description: desc,
           isIncome: false,
           candidates: defaultExpenseCats,
         ),
-        'id-Alışveriş',
+        id,
         reason: desc,
       );
-    }
+    });
   });
 
   test('bilinen market zinciri Market kategorisine eşlenir', () {
@@ -70,22 +80,23 @@ void main() {
     expect(result, 'id-Market');
   });
 
-  test('akaryakıt markası Ulaşım kategorisine eşlenir', () {
+  test('akaryakıt markası Ulaşım › Yakıt alt kategorisine eşlenir', () {
     final result = guesser.guess(
       description: 'SHELL PETROL ISTASYONU',
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'id-Ulaşım');
+    expect(result, 'id-Yakıt');
   });
 
-  test('yemek servisi markası Yemek kategorisine eşlenir', () {
+  test('yemek servisi markası Yemek › Paket Servis alt kategorisine eşlenir',
+      () {
     final result = guesser.guess(
       description: 'YEMEKSEPETI*SIPARIS',
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'id-Yemek');
+    expect(result, 'id-Paket Servis');
   });
 
   test('maaş açıklaması gelir tarafında Maaş kategorisine eşlenir', () {
@@ -164,6 +175,115 @@ void main() {
     expect(result, isNull);
   });
 
+  // --- Alt kategori (hiyerarşi) uyumu ---
+
+  group('alt kategori hedefleri', () {
+    test('elektrik faturası kökte değil Fatura › Elektrik altına düşer', () {
+      final result = guesser.guess(
+        description: 'ENERJISA ELEKTRIK FATURA ODEMESI',
+        isIncome: false,
+        candidates: defaultExpenseCats,
+      );
+      expect(result, 'id-Elektrik');
+    });
+
+    test('alt kategori kullanıcıda yoksa ANA kategoriye düşer', () {
+      // Alt kategorilerini silmiş/hiç kurmamış kullanıcı, eskiden olduğu gibi
+      // kök eşleşmesi almalı — davranış geriye dönük bozulmamalı.
+      final rootsOnly = [
+        for (final g in CategoryStarterPack.expense) _cat(g.name),
+      ];
+      final result = guesser.guess(
+        description: 'ENERJISA ELEKTRIK FATURA ODEMESI',
+        isIncome: false,
+        candidates: rootsOnly,
+      );
+      expect(result, 'id-Fatura');
+    });
+
+    test('kullanıcı alt kategoriyi köke taşımışsa yine ADA göre bulunur', () {
+      final moved = [_cat('Fatura'), _cat('Elektrik')];
+      final result = guesser.guess(
+        description: 'ENERJISA ELEKTRIK',
+        isIncome: false,
+        candidates: moved,
+      );
+      expect(result, 'id-Elektrik');
+    });
+
+    test('ne alt ne ana kategori varsa null döner', () {
+      final result = guesser.guess(
+        description: 'ENERJISA ELEKTRIK',
+        isIncome: false,
+        candidates: [_cat('Market')],
+      );
+      expect(result, isNull);
+    });
+
+    test('aynı ad iki seviyede varsa doğru ANA altındaki seçilir', () {
+      // Kullanıcı "Su"yu hem Market hem Fatura altında tutuyor: sözlüğün
+      // hedefi "Fatura › Su" olduğu için Fatura'nınki seçilmeli.
+      final candidates = [
+        _cat('Market'),
+        _cat('Su', parent: 'Market'),
+        _cat('Fatura'),
+        _cat('Su2'),
+      ];
+      // Aynı adı iki kez kurmak `validateCategory` ile mümkün (farklı ana
+      // kategori), test kimliği ayırt edebilmek için ikincisini elle kurar.
+      final faturaSu = CategoryEntity(
+        id: 'id-FaturaSu',
+        name: 'Su',
+        iconName: 'x',
+        isExpense: true,
+        parentId: 'id-Fatura',
+      );
+      final result = guesser.guess(
+        description: 'ISKI SU FATURASI',
+        isIncome: false,
+        candidates: [...candidates, faturaSu],
+      );
+      expect(result, 'id-FaturaSu');
+    });
+
+    test('en UZUN anahtar kelime kazanır (sözlük sırası değil)', () {
+      // "trendyol" Alışveriş'te, "trendyol yemek" Paket Servis'te geçiyor.
+      expect(
+        guesser.guess(
+          description: 'TRENDYOL YEMEK SIPARIS',
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        'id-Paket Servis',
+      );
+      expect(
+        guesser.guess(
+          description: 'TRENDYOL SIPARIS',
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        'id-Alışveriş',
+      );
+    });
+
+    test('banka etiketi de hedef üzerinden çözülür', () {
+      expect(
+        guesser.guessFromSourceTag(
+          sourceTag: 'Fatura Ödemesi',
+          candidates: defaultExpenseCats,
+        ),
+        'id-Fatura',
+      );
+      expect(
+        guesser.guessFromSourceTag(
+          sourceTag: 'Para Çekme',
+          candidates: defaultExpenseCats,
+        ),
+        isNull,
+      );
+    });
+  });
+
   // --- Gerçek Akbank ekstre örneği (bkz. akbank_pdf_parser_test.dart) ---
   // REGRESYON: kullanıcının canlı testinde bu satırların çoğu eşleşmiyordu.
 
@@ -185,7 +305,7 @@ void main() {
       isIncome: false,
       candidates: defaultExpenseCats,
     );
-    expect(result, 'id-Ulaşım');
+    expect(result, 'id-Yakıt');
   });
 
   test(
@@ -223,13 +343,13 @@ void main() {
     expect(result, isNull);
   });
 
-  test('eczane açıklaması Sağlık grubuna düşer (kategori varsa)', () {
+  test('eczane açıklaması Sağlık › İlaç alt kategorisine düşer', () {
     final result = guesser.guess(
       description: 'ECZANESI ISTANBUL TR Pos satış.',
       isIncome: false,
-      candidates: [...defaultExpenseCats, _cat('Sağlık')],
+      candidates: defaultExpenseCats,
     );
-    expect(result, 'id-Sağlık');
+    expect(result, 'id-İlaç');
   });
 
   group('suggestNewCategories', () {
@@ -290,6 +410,40 @@ void main() {
       );
       expect(suggestions.single.name, 'Maaş');
       expect(suggestions.single.isIncome, isTrue);
+    });
+
+    test('ANA kategorisi duran alt kategori hedefi öneri ÜRETMEZ', () {
+      // "Fatura › Elektrik" hedefi, kullanıcıda yalnız "Fatura" varken zaten
+      // köke düşerek çalışıyor; her ekstrede 10 alt kategori önerip kullanıcıyı
+      // onaya boğmanın anlamı yok.
+      final suggestions = guesser.suggestNewCategories(
+        drafts: [_draft('ENERJISA ELEKTRIK FATURA')],
+        expenseCategories: [_cat('Fatura')],
+        incomeCategories: const [],
+      );
+      expect(suggestions, isEmpty);
+    });
+
+    test('hiç karşılığı olmayan alt kategori hedefi ANA KATEGORİSİYLE önerilir',
+        () {
+      final suggestions = guesser.suggestNewCategories(
+        drafts: [_draft('ENERJISA ELEKTRIK FATURA')],
+        expenseCategories: const [],
+        incomeCategories: const [],
+      );
+      expect(suggestions.single.name, 'Elektrik');
+      expect(suggestions.single.parentName, 'Fatura');
+    });
+
+    test('bankanın kendi etiketi de öneri üretir', () {
+      // Açıklamada anahtar kelime yok; sinyal yalnız ekstrenin Etiket sütunu.
+      // Eskiden bu satır sessizce kategorisiz kalıyordu.
+      final suggestions = guesser.suggestNewCategories(
+        drafts: [_draft('ACIKLAMA YOK', sourceTag: 'Fatura Ödemesi')],
+        expenseCategories: const [],
+        incomeCategories: const [],
+      );
+      expect(suggestions.single.name, 'Fatura');
     });
   });
 }

@@ -439,16 +439,23 @@ class BankImportCubit extends Cubit<BankImportState> {
     ));
   }
 
-  /// Kategori öneri adımının sonucu: [approvedNames] içindekiler yaratılır
+  /// Kategori öneri adımının sonucu: [approved] içindekiler yaratılır
   /// (kullanıcının o türdeki listesine eklenir), geri kalanı hiç
   /// oluşturulmaz. Ardından incelemeye geçilir (yeni yaratılanlar artık
   /// `_toReview`'daki `guess()` çağrısında bulunur).
-  Future<void> resolveCategorySuggestions(Set<String> approvedNames) async {
+  ///
+  /// Onay kimliği ÖNERİNİN KENDİSİDİR (Equatable), yalnız adı değil: aynı ad
+  /// iki öneride birden bulunabiliyor — "Yatırım" hem gider hem gelir
+  /// tarafında var ve alt kategori hedefleriyle birlikte aynı yaprak adı iki
+  /// ana kategori altında da gelebilir. Ada bakan eski sürümde birini
+  /// işaretlemek diğerini de kuruyordu.
+  Future<void> resolveCategorySuggestions(
+      Set<CategorySuggestion> approved) async {
     final s = state;
     if (s is! BankImportCategorySuggestion) return;
 
     for (final suggestion in s.suggestions) {
-      if (!approvedNames.contains(suggestion.name)) continue;
+      if (!approved.contains(suggestion)) continue;
       final isExpense = !suggestion.isIncome;
       try {
         // Öneri pakette bir alt kategoriyse ("Konut › Kira") önce üst
@@ -655,10 +662,16 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// Tüm taslakları tek türe (gider/gelir) çevirir. Tek pozitif "Tutar"
   /// sütunlu (işaretsiz) ekstrelerde tüm satırlar yanlışlıkla aynı yöne
   /// (ör. hep gelir) düşerse kullanıcı tek dokunuşla düzeltebilsin diye.
-  /// Kategori, `setDraftType` ile aynı biçimde yeni tür için yeniden tahmin
-  /// edilir.
-  void setAllType(TransactionTypeModel type) =>
-      _mutate((d) => [for (final x in d) _retyped(x, type)]);
+  ///
+  /// Türü ZATEN hedef olan satırlara DOKUNULMAZ. Tür değişimi kategoriyi
+  /// geçersiz kılar (gider kategorisi gelir satırına yazılamaz), bu yüzden
+  /// çevrilen satırda yeniden tahmin doğrudur — ama zaten doğru türdeki bir
+  /// satırı da yeniden tahmin etmek, kullanıcının ELLE seçtiği kategoriyi
+  /// sessizce tahminle (çoğu zaman `null` ile) eziyordu.
+  void setAllType(TransactionTypeModel type) => _mutate((d) => [
+        for (final x in d)
+          if (x.type == type) x else _retyped(x, type),
+      ]);
 
   void setDraftSelected(int i, bool value) => _mutate(
         (d) => [
@@ -767,6 +780,26 @@ class BankImportCubit extends Cubit<BankImportState> {
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
     emit(const BankImportInitial());
+  }
+
+  /// Test tohumu: cubit'i doğrudan kategori ÖNERİ adımına sokar.
+  @visibleForTesting
+  void debugSeedSuggestions({
+    required String userId,
+    required String walletId,
+    required List<CategorySuggestion> suggestions,
+    List<CategoryEntity> expenseCategories = const [],
+    List<CategoryEntity> incomeCategories = const [],
+  }) {
+    _userId = userId;
+    _walletId = walletId;
+    _expenseCats = expenseCategories;
+    _incomeCats = incomeCategories;
+    emit(BankImportCategorySuggestion(
+      suggestions: suggestions,
+      rawDrafts: const [],
+      skippedRows: 0,
+    ));
   }
 
   /// Test tohumu: cubit'i doğrudan inceleme durumuna sokar (normalde dosya

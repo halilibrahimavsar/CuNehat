@@ -1,9 +1,13 @@
 /// Kullanıcı metni karşılaştırma/arama için TEK normalizasyon noktası.
 ///
-/// `toLowerCase()` tek başına Türkçe'de yanlıştır ve bu iki yönlü bozar:
-/// - 'İ'.toLowerCase() Dart'ta 'i̇' (i + U+0307 birleşen nokta) üretir; 'i'
-///   ile eşleşmez. Yani "İnternet" araması "internet" faturasını bulamaz.
-/// - 'I'.toLowerCase() 'i' verir, 'ı' değil. "Işık" araması "ışık"ı bulamaz.
+/// `toLowerCase()` tek başına Türkçe'de yanlıştır: 'I'.toLowerCase() 'i'
+/// verir, 'ı' değil. Yani "Işık" araması "ışık"ı bulamaz — ve ekstre gibi
+/// BÜYÜK HARF yazılmış metinlerde ("IŞIK" → "işik") kullanıcının doğal
+/// yazımıyla hiçbir zaman eşleşmez.
+///
+/// (Ölçüldü, Dart 3.12: 'İ'.toLowerCase() düz 'i' üretiyor — birleşen noktalı
+/// biçim değil. Yani bozan yön yalnız noktasız I; katlama yine de iki yönü de
+/// tek anahtara indiriyor.)
 ///
 /// Bu yüzden büyük harfler ÖNCE elle katlanır, sonra küçültme yapılır.
 library;

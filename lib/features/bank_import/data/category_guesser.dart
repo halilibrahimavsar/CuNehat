@@ -1,10 +1,29 @@
 import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
+
+/// Sözlüğün hedeflediği kategori: alt kategori ise [parentName] doludur.
+///
+/// Hedef bir ÇİFT olmak zorunda, çünkü kullanıcının hiyerarşisi bizimkinden
+/// sapabilir: "Elektrik" hem `Fatura` altında hem kökte durabilir, hem de hiç
+/// olmayabilir. Çözüm sırası [CategoryGuesser.resolveTarget] içinde.
+typedef CategoryTarget = ({String name, String? parentName});
+
+/// Sözlük anahtarlarında ana ve alt kategoriyi ayıran işaret ("Fatura › Su").
+
+/// `"Fatura › Elektrik"` → `(name: 'Elektrik', parentName: 'Fatura')`.
+/// Ayraç yoksa kök hedef.
+CategoryTarget parseCategoryTarget(String path) {
+  final parts = path.split(kCategorySeparator);
+  if (parts.length < 2) return (name: path.trim(), parentName: null);
+  return (name: parts.last.trim(), parentName: parts.first.trim());
+}
 
 /// Yeni kategori önerisi: [drafts] içinde eşleşen ama kullanıcının GERÇEK
 /// listesinde karşılığı olmayan bir grup. Yalnız kullanıcı onayıyla
@@ -32,48 +51,64 @@ class CategorySuggestion extends Equatable {
 /// Banka ekstresi açıklamasından kategori tahmini (best-effort/tahminî).
 ///
 /// Yalnız şu ikisi birden sağlandığında bir kategori döner: (1) açıklamada
-/// bilinen bir anahtar kelime geçiyor VE (2) tahmin edilen grup adına
-/// karşılık gelen kategori kullanıcının GERÇEK listesinde var (silinmemiş/
-/// yeniden adlandırılmamış). Aksi halde `null` — çağıran taraf mevcut
-/// varsayılana (türün ilk kategorisi) düşer; yani bu sınıf hiçbir zaman
-/// önceki davranıştan daha kötü bir sonuç üretmez. Kullanıcı yine de her
-/// satırın kategorisini elle değiştirebilir (bkz. inceleme ekranı).
+/// bilinen bir anahtar kelime geçiyor VE (2) tahmin edilen hedefe karşılık
+/// gelen kategori kullanıcının GERÇEK listesinde var (silinmemiş/yeniden
+/// adlandırılmamış). Aksi halde `null` — çağıran taraf satırı kategorisiz
+/// bırakır; yani bu sınıf hiçbir zaman önceki davranıştan daha kötü bir sonuç
+/// üretmez. Kullanıcı yine de her satırın kategorisini elle değiştirebilir
+/// (bkz. inceleme ekranı).
 ///
-/// Grup karşılığı YOKSA [suggestNewCategories] onu kullanıcı onayına sunar;
-/// onaysız hiçbir kategori yaratılmaz (bkz. kullanıcı talebi 2026-07-21).
+/// Hedef karşılığı HİÇ YOKSA [suggestNewCategories] onu kullanıcı onayına
+/// sunar; onaysız hiçbir kategori yaratılmaz (bkz. kullanıcı talebi 2026-07-21).
 @lazySingleton
 class CategoryGuesser {
-  /// Grup adları varsayılan kategori **id**'leriyle (`CategoryModel`) birebir
-  /// eşleşecek şekilde seçildi ki kurulumdan hiç dokunulmamış kategori
-  /// listesinde doğrudan tutsun. Eşleşme id üzerinden olduğu için kullanıcının
-  /// kategoriyi yeniden adlandırması (`displayName`) tahmini bozmaz.
+  /// Anahtar: hedef kategori YOLU. Başlangıç paketinde bir alt kategori
+  /// karşılığı olan gruplar `"Ana › Alt"` biçiminde yazılır — ekstre
+  /// tahmininin iki seviyeli hiyerarşiyi hiç kullanmaması, kullanıcının
+  /// kurduğu 31 alt kategoriyi ölü ağırlığa çeviriyordu ("elektrik faturası"
+  /// `Fatura` köküne düşüyor, `Fatura › Elektrik` boş kalıyordu).
   ///
-  /// Gider tarafındaki `Yatırım` varsayılanda YOK (yalnız gelirde var); bu grup
-  /// yalnız [suggestNewCategories] üzerinden, onaylanırsa ortaya çıkar (gerçek
-  /// Akbank ekstresi örneğinde "Midas Menkul Değerler" transferi hiçbir
-  /// varsayılana uymadığı için eklendi).
+  /// Karşılığı olmayan bir hedef sessizce ana kategoriye düşer
+  /// ([resolveTarget]), yani alt kategorisini silen kullanıcı eskisi gibi kök
+  /// eşleşmesi almaya devam eder.
+  ///
+  /// Adlar başlangıç paketiyle SÖZLEŞMEDİR: buradaki bir ad pakette karşılık
+  /// bulmazsa dokunulmamış bir kurulumda o grubun tahmini hiçbir zaman tutmaz.
+  /// Bağ test edilir (`category_starter_pack_test.dart`).
   static const Map<String, List<String>> _expenseGroups = {
-    'Yemek': [
+    'Yemek › Restoran': [
+      'restoran',
+      'restaurant',
+      'lokanta',
+      'sushi',
+      'pizza',
+      'baklava',
+      'kebap',
+      'doner',
+    ],
+    'Yemek › Kafe': [
       'starbucks',
+      'cafe',
+      'kafe',
+      'kahve dunyasi',
+      'simit saray',
+      'gloria jean',
+    ],
+    'Yemek › Paket Servis': [
+      'yemeksepeti',
+      'trendyol yemek',
+      'getir yemek',
+      'tikla gelsin',
+    ],
+    'Yemek': [
       'burger king',
       'mcdonalds',
       'mcdonald',
       ' kfc ',
       'domino',
-      'pizza',
-      'sushi',
-      'yemeksepeti',
-      'trendyol yemek',
-      'restoran',
-      'restaurant',
-      'lokanta',
-      'cafe',
-      'kafe',
-      'simit saray',
-      'kahve dunyasi',
-      'baklava',
+      'popeyes',
     ],
-    'Ulaşım': [
+    'Ulaşım › Yakıt': [
       'shell',
       'opet',
       'petrol ofisi',
@@ -81,23 +116,26 @@ class CategoryGuesser {
       ' total ',
       'aytemiz',
       'akaryakit',
-      'otopark',
-      'otoyol',
-      ' hgs ',
-      ' ogs ',
-      ' iett ',
-      'istanbulkart',
-      'marmaray',
-      'metrobus',
+      'benzin',
+      'motorin',
+      ' lpg ',
+    ],
+    'Ulaşım › Taksi': [
       'taksi',
       'uber',
       'bitaksi',
       ' bolt ',
       ' marti ',
-      'benzin',
-      'motorin',
-      ' lpg ',
     ],
+    'Ulaşım › Toplu Taşıma': [
+      ' iett ',
+      'istanbulkart',
+      'marmaray',
+      'metrobus',
+      'ego kart',
+    ],
+    'Ulaşım › Otopark': ['otopark'],
+    'Ulaşım': ['otoyol', ' hgs ', ' ogs ', 'kgm gecis'],
     // Market (gıda/temel ihtiyaç) ile Alışveriş (giyim/elektronik/genel)
     // bilerek AYRI: ikisi tek kovada toplanınca aylık gıda harcaması
     // görünmez oluyor ve o kaleme bütçe koymak imkânsızlaşıyordu.
@@ -114,64 +152,74 @@ class CategoryGuesser {
       'tarim kredi',
       'metro market',
     ],
-    'Alışveriş': [
-      'teknosa',
-      'mediamarkt',
+    'Konut › Kira': ['kira odeme', ' kira ', 'kiraci'],
+    'Konut › Aidat': ['aidat', 'site yonetim', 'apartman yonetim'],
+    'Eğitim › Okul & Kurs': [
+      'universite',
+      'okul taksit',
+      ' dershane ',
+      ' kurs ',
+    ],
+    'Eğitim › Kitap': ['yayinlari', 'kitabevi', 'kitapyurdu'],
+    'Eğitim': ['egitim'],
+    'Fatura › Elektrik': ['elektrik', 'enerjisa', 'bedas', 'ayedas'],
+    'Fatura › Su': [' iski ', ' aski ', ' asat ', ' izsu ', 'su faturasi'],
+    'Fatura › Doğalgaz': ['dogalgaz', 'igdas', 'izgaz', 'baskentgaz'],
+    'Fatura › İnternet': [
+      'superonline',
+      'turknet',
+      'tellcom',
+      ' ttnet ',
+      'internet faturasi',
+    ],
+    'Fatura › Telefon': ['turk telekom', 'turkcell', 'vodafone'],
+    'Fatura': ['fatura'],
+    'Eğlence › Abonelikler': [
+      'netflix',
+      'spotify',
+      'youtube',
+      'amazon prime',
+      ' blutv ',
+      ' exxen ',
+      'abonelik',
+    ],
+    'Eğlence › Oyun': ['playstation', 'steam', 'epic games', ' riot '],
+    'Eğlence › Sinema & Konser': [
+      'sinema',
+      'cinemaximum',
+      'biletix',
+      'bilet',
+      'konser',
+    ],
+    'Sağlık › İlaç': ['eczane'],
+    'Sağlık › Doktor': ['hastane', 'klinik', 'poliklinik', 'laboratuvar'],
+    'Sağlık › Spor': ['spor salonu', 'fitness', 'macfit', 'gym'],
+    'Sağlık': [' saglik '],
+    'Kişisel › Kuaför': ['kuafor', 'berber'],
+    'Kişisel › Kozmetik': ['gratis', 'watsons', 'rossmann'],
+    'Alışveriş › Giyim': [
       'lc waikiki',
       'defacto',
       ' koton ',
       ' zara ',
       'boyner',
+      'decathlon',
+    ],
+    'Alışveriş › Elektronik': ['teknosa', 'mediamarkt', 'vatan bilgisayar'],
+    'Alışveriş › Ev Eşyası': [' ikea ', 'bellona', 'istikbal'],
+    'Alışveriş': [
       'trendyol',
       'hepsiburada',
       ' n11 ',
       'amazon',
-      'gratis',
-      'watsons',
-      'rossmann',
-      ' ikea ',
-      'decathlon',
       // Marka değil, bankaların yazdığı JENERİK karşılıklar. Ekstrelerin
       // çoğu üye işyeri adı yerine bunu basıyor; sözlük yalnız markadan
       // ibaret kalınca bu satırlar kategorisiz düşüyordu.
       'kirtasiye',
-      'kuafor',
-      'berber',
     ],
-    'Kira': ['kira odeme', ' kira ', 'kiraci'],
-    'Eğitim': [
-      'universite',
-      'okul taksit',
-      ' dershane ',
-      ' kurs ',
-      'egitim',
-      'yayinlari',
-    ],
-    'Fatura': [
-      'elektrik',
-      'dogalgaz',
-      ' iski ',
-      ' aski ',
-      'turk telekom',
-      'turkcell',
-      'vodafone',
-      'superonline',
-      'turknet',
-      'tellcom',
-      'fatura',
-      'aidat',
-    ],
-    'Eğlence': [
-      'netflix',
-      'spotify',
-      'youtube',
-      'playstation',
-      'steam',
-      'sinema',
-      'cinemaximum',
-      'biletix',
-      'bilet',
-    ],
+    // Gider tarafındaki `Yatırım`, ekstredeki hisse/fon/altın ALIMIDIR:
+    // cüzdandan çıkan paradır. (Uygulama içinden yapılan yatırım hareketleri
+    // sistem etiketi taşır, buraya düşmez.)
     'Yatırım': [
       'midas',
       'menkul deger',
@@ -179,44 +227,53 @@ class CategoryGuesser {
       'borsa istanbul',
       'hisse senedi',
     ],
-    'Sağlık': ['eczane', 'hastane', 'klinik', ' saglik '],
   };
 
   static const Map<String, List<String>> _incomeGroups = {
     'Maaş': ['maas', 'salary', 'bordro'],
-    'Ek Gelir': ['ek gelir', 'prim odemesi', 'ikramiye'],
+    'Ek Gelir › Prim & İkramiye': ['prim odemesi', 'ikramiye'],
+    'Ek Gelir': ['ek gelir'],
+    'Kira Geliri': ['kira geliri'],
   };
 
-  /// Yeni kategori oluşturulması gerektiğinde kullanılacak ikon (bkz.
-  /// `AppIcons` — burada yalnız isim tutulur, widget bağımlılığı yok).
-  /// Sözlüğün hedeflediği kategori adları.
-  ///
-  /// Dışa açıktır çünkü bunlar başlangıç paketiyle ARASINDAKİ SÖZLEŞMEDİR:
-  /// buradaki bir ad pakette karşılık bulmazsa, dokunulmamış bir kurulumda o
-  /// grubun tahmini hiçbir zaman tutmaz. Bağ test edilir
-  /// (`category_starter_pack_test.dart`).
-  static Iterable<String> get expenseGroupNames => _expenseGroups.keys;
-  static Iterable<String> get incomeGroupNames => _incomeGroups.keys;
+  /// Sözlüğün hedefleri. Başlangıç paketiyle olan sözleşme bunlar üzerinden
+  /// test edilir: hem alt kategori adının hem üstündeki ana kategorinin
+  /// pakette gerçekten var olması gerekir.
+  static Iterable<CategoryTarget> get expenseTargets =>
+      _expenseGroups.keys.map(parseCategoryTarget);
+  static Iterable<CategoryTarget> get incomeTargets =>
+      _incomeGroups.keys.map(parseCategoryTarget);
   static Iterable<String> get tagGroupTargets => _tagGroups.values;
 
+  /// Sözlüğün ham hâli — yalnız sözleşme testleri için (aynı anahtar kelimenin
+  /// iki hedefte birden yazılmadığını doğrular). Eşleşme her zaman
+  /// [guess] üzerinden yapılır.
+  @visibleForTesting
+  static Map<String, List<String>> get expenseKeywords => _expenseGroups;
+  @visibleForTesting
+  static Map<String, List<String>> get incomeKeywords => _incomeGroups;
+
+  /// Pakette karşılığı olmayan bir hedef için son çare ikon.
   static const Map<String, String> _groupIcons = {
     'Market': 'shopping_cart',
     'Yemek': 'restaurant',
     'Ulaşım': 'directions_bus',
     'Fatura': 'receipt_long',
-    'Kira': 'home',
+    'Konut': 'home',
     'Alışveriş': 'shopping_bag',
     'Sağlık': 'medical_services',
     'Eğitim': 'school',
     'Eğlence': 'movie',
+    'Kişisel': 'face',
     'Yatırım': 'trending_up',
     'Maaş': 'payments',
     'Ek Gelir': 'savings',
+    'Kira Geliri': 'apartment',
   };
 
-  /// [description] içinde bilinen bir anahtar kelime bulunursa VE grup adı
-  /// [candidates] (kullanıcının o türdeki kategorileri) içinde varsa o
-  /// kategorinin gerçek `id`'sini döner; aksi halde `null`.
+  /// [description] içinde bilinen bir anahtar kelime bulunursa VE hedef
+  /// [candidates] (kullanıcının o türdeki kategorileri) içinde çözülebiliyorsa
+  /// o kategorinin gerçek `id`'sini döner; aksi halde `null`.
   String? guess({
     required String description,
     required bool isIncome,
@@ -224,14 +281,10 @@ class CategoryGuesser {
   }) {
     final matched = _matchGroup(description, isIncome);
     if (matched == null) return null;
-    final normGroup = _normalizeTr(matched);
-    for (final c in candidates) {
-      if (_normalizeTr(c.name) == normGroup) return c.id;
-    }
-    return null;
+    return resolveTarget(parseCategoryTarget(matched), candidates)?.id;
   }
 
-  /// Bankanın KENDİ etiketi ([ImportDraft.sourceTag]) → uygulamadaki grup adı.
+  /// Bankanın KENDİ etiketi ([ImportDraft.sourceTag]) → uygulamadaki hedef.
   /// Yalnız anlamlı olanlar eşlenir: "Para Çekme"/"Para Transferi"/"Komisyon"
   /// gibi etiketler bir harcama TÜRÜ değil bir kanal bildirir, kategoriye
   /// çevrilmeleri yanlış güven verirdi — bilerek listede yok (o satırlar
@@ -253,20 +306,71 @@ class CategoryGuesser {
     required String? sourceTag,
     required List<CategoryEntity> candidates,
   }) {
+    final target = _tagTarget(sourceTag);
+    if (target == null) return null;
+    return resolveTarget(target, candidates)?.id;
+  }
+
+  static CategoryTarget? _tagTarget(String? sourceTag) {
     if (sourceTag == null) return null;
     final group = _tagGroups[sourceTag];
-    if (group == null) return null;
-    final normGroup = _normalizeTr(group);
-    for (final c in candidates) {
-      if (_normalizeTr(c.name) == normGroup) return c.id;
+    return group == null ? null : parseCategoryTarget(group);
+  }
+
+  /// Hedefi kullanıcının GERÇEK kategori listesine bağlar.
+  ///
+  /// Sıra bilinçli — daha özelden daha genele:
+  /// 1. Doğru yerdeki alt kategori (`Fatura › Elektrik`),
+  /// 2. adı tutan herhangi bir kategori (kullanıcı "Elektrik"i kökte tutuyor
+  ///    ya da başka bir ana kategorinin altına taşımış olabilir),
+  /// 3. hedefin ANA kategorisi (alt kategoriyi hiç kurmamış/silmiş kullanıcı
+  ///    eskisi gibi kök eşleşmesi alır — davranış geriye dönük bozulmaz),
+  /// 4. hiçbiri yoksa `null`.
+  CategoryEntity? resolveTarget(
+    CategoryTarget target,
+    List<CategoryEntity> candidates,
+  ) {
+    final byId = {for (final c in candidates) c.id: c};
+    final leaf = normalized(target.name);
+    final parent =
+        target.parentName == null ? null : normalized(target.parentName!);
+
+    if (parent != null) {
+      for (final c in candidates) {
+        if (normalized(c.name) != leaf) continue;
+        final p = c.parentId == null ? null : byId[c.parentId];
+        if (p != null && normalized(p.name) == parent) return c;
+      }
     }
-    return null;
+
+    final byName = _firstNamed(leaf, candidates);
+    if (byName != null) return byName;
+    if (parent == null) return null;
+    return _firstNamed(parent, candidates);
+  }
+
+  /// Adı tutan ilk kategori; eşitlikte ANA kategori tercih edilir (aynı ad iki
+  /// seviyede birden bulunabilir, kökteki daha genel/olası hedeftir).
+  static CategoryEntity? _firstNamed(
+    String normalizedName,
+    List<CategoryEntity> candidates,
+  ) {
+    CategoryEntity? fallback;
+    for (final c in candidates) {
+      if (normalized(c.name) != normalizedName) continue;
+      if (c.isRoot) return c;
+      fallback ??= c;
+    }
+    return fallback;
   }
 
   /// Kullanıcının GEÇMİŞ işlemlerinden bir açıklama-token → kategori indeksi
   /// kurar (tür bazında). Bir kez kurulur, tüm taslaklar için tekrar kullanılır
   /// ([guessFromHistory]). Sabit anahtar-kelime sözlüğünün aksine kullanıcının
   /// kendi kategorize etme alışkanlığından öğrenir ve kendini iyileştirir.
+  ///
+  /// Geçmiş `tag` alanı doğrudan kategori id'sidir; alt kategoriye yazılmış bir
+  /// geçmiş, alt kategoriyi öğretir — hiyerarşi burada bedavaya çalışır.
   HistoryCategoryIndex buildHistoryIndex(List<TransactionEntity> history) {
     final expense = <String, Map<String, int>>{};
     final income = <String, Map<String, int>>{};
@@ -321,45 +425,57 @@ class CategoryGuesser {
     return best;
   }
 
-  /// [drafts] içinde eşleşen ama ilgili tür (gider/gelir) için kullanıcının
-  /// GERÇEK kategori listesinde karşılığı olmayan grupları döner
-  /// (tekilleştirilmiş). İçe aktarım incelemesinden ÖNCE kullanıcıya
-  /// "bu kategorileri oluşturayım mı?" diye sormak için kullanılır.
+  /// [drafts] içinde eşleşen ama kullanıcının GERÇEK kategori listesinde
+  /// HİÇBİR karşılığı olmayan hedefleri döner (tekilleştirilmiş). İçe aktarım
+  /// incelemesinden ÖNCE kullanıcıya "bu kategorileri oluşturayım mı?" diye
+  /// sormak için kullanılır.
+  ///
+  /// Ölçüt "adı birebir yok" değil, [resolveTarget]'ın HİÇ çözememesidir: alt
+  /// kategorisi olmayan ama ana kategorisi duran bir hedef zaten köke düşerek
+  /// çalışıyor, kullanıcıyı gereksiz onaya boğmanın anlamı yok.
+  ///
+  /// Bankanın kendi etiketi ([ImportDraft.sourceTag]) de hesaba katılır:
+  /// açıklamada anahtar kelime geçmese bile etiketten gelen hedef
+  /// çözülemiyorsa o kategori önerilir — aksi halde `guessFromSourceTag`
+  /// kurulabilecek bir kategori yok diye sessizce boş dönüyordu.
   List<CategorySuggestion> suggestNewCategories({
     required List<ImportDraft> drafts,
     required List<CategoryEntity> expenseCategories,
     required List<CategoryEntity> incomeCategories,
   }) {
-    final foundIsIncome = <String, bool>{};
+    final wanted = <String, ({CategoryTarget target, bool isIncome})>{};
+    void want(String? path, bool isIncome) {
+      if (path == null) return;
+      wanted['$isIncome|$path'] =
+          (target: parseCategoryTarget(path), isIncome: isIncome);
+    }
+
     for (final d in drafts) {
-      final group = _matchGroup(d.description, d.isIncome);
-      if (group != null) foundIsIncome[group] = d.isIncome;
+      want(_matchGroup(d.description, d.isIncome), d.isIncome);
+      want(_tagGroups[d.sourceTag], d.isIncome);
     }
 
     final result = <CategorySuggestion>[];
-    foundIsIncome.forEach((name, isIncome) {
-      final existing = isIncome ? incomeCategories : expenseCategories;
-      final normName = _normalizeTr(name);
-      final alreadyExists =
-          existing.any((c) => _normalizeTr(c.name) == normName);
-      if (!alreadyExists) {
-        // Başlangıç paketinde alt kategori olarak geçen bir ad ("Kira")
-        // kökte ikinci kez kurulmamalı; üst kategorisiyle birlikte önerilir.
-        final parentName = CategoryStarterPack.parentNameOf(
-          name,
-          isExpense: !isIncome,
-        );
-        result.add(CategorySuggestion(
-          name: name,
-          parentName: parentName,
-          isIncome: isIncome,
-          iconName:
-              CategoryStarterPack.iconNameOf(name, isExpense: !isIncome) ??
-                  _groupIcons[name] ??
-                  'category',
-        ));
-      }
-    });
+    for (final entry in wanted.values) {
+      final existing = entry.isIncome ? incomeCategories : expenseCategories;
+      if (resolveTarget(entry.target, existing) != null) continue;
+
+      final name = entry.target.name;
+      // Başlangıç paketinde alt kategori olarak geçen bir ad ("Kira") kökte
+      // ikinci kez kurulmamalı; üst kategorisiyle birlikte önerilir. Sözlük
+      // hedefi zaten yol taşıyorsa o kullanılır.
+      final parentName = entry.target.parentName ??
+          CategoryStarterPack.parentNameOf(name, isExpense: !entry.isIncome);
+      result.add(CategorySuggestion(
+        name: name,
+        parentName: parentName,
+        isIncome: entry.isIncome,
+        iconName:
+            CategoryStarterPack.iconNameOf(name, isExpense: !entry.isIncome) ??
+                _groupIcons[name] ??
+                'category',
+      ));
+    }
     return result;
   }
 
@@ -379,7 +495,7 @@ class CategoryGuesser {
   /// Açıklamayı geçmiş-eşleşmesi için anlamlı token'lara böler: Türkçe
   /// sadeleştirme + boşluk; kısa (<3), tamamen sayısal (mağaza kodu) ve
   /// jenerik banka kelimeleri elenir.
-  List<String> _tokens(String s) => _normalizeTr(s)
+  List<String> _tokens(String s) => normalized(s)
       .split(' ')
       .where((t) =>
           t.length >= 3 &&
@@ -387,15 +503,31 @@ class CategoryGuesser {
           !RegExp(r'^[0-9]+$').hasMatch(t))
       .toList();
 
-  /// [description] hangi gruba (varsa) düşüyor; kullanıcının kategori
+  /// [description] hangi hedefe (varsa) düşüyor; kullanıcının kategori
   /// listesinden bağımsız, saf anahtar-kelime eşleşmesi.
+  ///
+  /// **En UZUN anahtar kelime kazanır**, sözlükteki sıra değil: "TRENDYOL
+  /// YEMEK" hem `trendyol` (Alışveriş) hem `trendyol yemek` (Paket Servis)
+  /// içinde geçiyor ve doğru olan daha özel olanı. Sıraya dayanmak, alt
+  /// kategori hedefleri eklendikçe sözlüğü görünmez bir sıralama sözleşmesine
+  /// bağlardı. Uzunluk kelime-sınırı boşlukları hariç ölçülür (` sok ` ile
+  /// `market` adil karşılaşsın).
   String? _matchGroup(String description, bool isIncome) {
-    final norm = ' ${_normalizeTr(description)} ';
+    final norm = ' ${normalized(description)} ';
     final groups = isIncome ? _incomeGroups : _expenseGroups;
+    String? bestKey;
+    var bestLength = 0;
     for (final entry in groups.entries) {
-      if (entry.value.any(norm.contains)) return entry.key;
+      for (final keyword in entry.value) {
+        final length = keyword.trim().length;
+        if (length <= bestLength) continue;
+        if (norm.contains(keyword)) {
+          bestKey = entry.key;
+          bestLength = length;
+        }
+      }
     }
-    return null;
+    return bestKey;
   }
 
   /// Türkçe aksanları sadeleştirip küçük harfe çevirir, noktalama/ayraçları
@@ -405,7 +537,7 @@ class CategoryGuesser {
   /// anahtar kelimeler (` sok `) hiçbir zaman eşleşmez. (bkz. `ColumnMapper._norm`
   /// — aynı Türkçe sadeleştirme, farklı dosyada ayrı kalması bilinçli: kolon
   /// başlığı eşleşmesiyle işlem-açıklaması eşleşmesi ayrı evrilebilir.)
-  String _normalizeTr(String s) {
+  static String normalized(String s) {
     final folded = s
         .replaceAll('İ', 'I')
         .replaceAll('ı', 'i')

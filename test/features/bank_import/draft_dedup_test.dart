@@ -232,4 +232,16 @@ void main() {
       expect(markDuplicateDrafts(pdfSecond, xlsFirst)[0].isDuplicate, isTrue);
     });
   });
+
+  test('Türkçe noktasız I zayıf anahtarı bozmaz (IŞIK ↔ Işık)', () {
+    // Dart `'IŞIK'.toLowerCase()` → `işik` verir (`ışık` değil). Ekstre büyük
+    // harf, kullanıcının elle girdiği kayıt normal yazım: eski `toLowerCase()`
+    // yolunda iki taraf hiç eşleşmiyor, aynı hareket ikinci kez yazılıyordu.
+    final existing = [_tx(DateTime(2026, 6, 15), 90, 'Işık Elektrik')];
+    final marked = markDuplicateDrafts(
+      [_draft(DateTime(2026, 6, 15), 90, 'IŞIK ELEKTRİK')],
+      existing,
+    );
+    expect(marked.single.isDuplicate, isTrue);
+  });
 }

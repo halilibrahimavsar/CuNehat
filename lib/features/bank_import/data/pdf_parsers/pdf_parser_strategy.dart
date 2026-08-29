@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/bank_import/data/statement_amount_parser.dart';
 import 'package:cunehat/features/bank_import/data/statement_date_parser.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
@@ -19,8 +20,8 @@ abstract class PdfParserStrategy {
   /// Satır başındaki tarih. Yıl-önce (ISO) biçimi ÖNCE denenir: aksi halde
   /// `2026-07-16` satırında hiçbir alternatif tutmaz (`\d{1,2}` "20"yi alır,
   /// ardından ayraç gelmez) ve satır bir öncekinin devamı sanılırdı.
-  static final _dateRe = RegExp(
-      r'\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}');
+  static final _dateRe =
+      RegExp(r'\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}');
 
   /// Tutarın hemen ardından gelen para birimi eki ("-4.400,00 TL12,28 TL").
   /// Sayı çıkarıldığında bu ek açıklamada kalıp her satırın sonuna "TLTL"
@@ -102,10 +103,16 @@ abstract class PdfParserStrategy {
   /// bankası olarak "Akbank" geçebilir — tüm metinde arama bu durumda yanlış
   /// stratejiyi (Akbank) sessizce tetikler. Banka adı gerçekte hep ekstre
   /// başlığında/logosunda yer alır, satır listesinde değil.
+  /// Karşılaştırma [foldTr] ile yapılır, `toLowerCase()` ile DEĞİL.
+  ///
+  /// Ölçüldü: `'GARANTİ BANKASI'.toLowerCase()` → `garanti bankasi` (Dart
+  /// noktasız `I`'yı `i`'ye çevirir, `ı`'ya değil) ve `'garanti bankası'`
+  /// anahtarını hiç bulmuyordu. Ekstre başlıkları BÜYÜK HARFTİR, yani
+  /// `garanti bankası` / `ziraat bankası` anahtarları pratikte ölüydü: banka
+  /// tanınmayınca ayrıştırma sessizce jenerik sezgisel yola düşüyor.
   static bool keywordInHeader(String text, List<String> keywords) {
-    final header =
-        text.split('\n').take(_headerLineLimit).join('\n').toLowerCase();
-    return keywords.any(header.contains);
+    final header = foldTr(text.split('\n').take(_headerLineLimit).join('\n'));
+    return keywords.any((k) => header.contains(foldTr(k)));
   }
 
   static bool isNegativeToken(String token) {

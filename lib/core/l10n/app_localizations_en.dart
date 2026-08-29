@@ -2762,14 +2762,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportMoreActions => 'More actions';
 
   @override
-  String bankImportAssignVisible(int count) {
-    return 'Assign a category to the $count shown rows';
-  }
-
-  @override
   String bankImportAssignVisibleDone(int count, String category) {
     return '$count rows moved to “$category”.';
   }
+
+  @override
+  String bankImportAssignUncategorized(int count) {
+    return 'Assign to the $count uncategorized rows';
+  }
+
+  @override
+  String bankImportAssignOverwrite(int count) {
+    return 'Replace on all $count shown rows (categorized included)';
+  }
+
+  @override
+  String get bankImportAssignTypeMismatch =>
+      'The picked category does not match these rows\' type; nothing changed.';
+
+  @override
+  String get bankImportGroupSimilar => 'Group similar rows';
+
+  @override
+  String get bankImportGroupSimilarTitle => 'Similar transactions';
+
+  @override
+  String get bankImportGroupSimilarHint =>
+      'Rows with similar descriptions are collected into one group. Picking a category for a group applies it to ALL rows in it.';
+
+  @override
+  String get bankImportGroupScopeUncategorized => 'Uncategorized only';
+
+  @override
+  String get bankImportGroupScopeAll => 'All';
+
+  @override
+  String bankImportGroupRows(int count) {
+    return '$count rows';
+  }
+
+  @override
+  String get bankImportGroupMixed => 'Mixed categories';
+
+  @override
+  String get bankImportGroupNone => 'Uncategorized';
+
+  @override
+  String get bankImportGroupEmpty => 'No similar rows found.';
+
+  @override
+  String bankImportGroupFillRest(String category) {
+    return 'Fill the rest with “$category”';
+  }
+
+  @override
+  String bankImportApplyToSimilar(int count, String sample) {
+    return '$count more uncategorized rows look like this: $sample';
+  }
+
+  @override
+  String get bankImportApplyToSimilarAction => 'Apply to all';
 
   @override
   String bankImportUncategorizedBlocked(int count) {

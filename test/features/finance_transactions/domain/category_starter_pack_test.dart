@@ -82,30 +82,48 @@ void main() {
 
   group('CategoryGuesser sözleşmesi', () {
     // Ekstre tahmini kullanıcının kategorilerini ADA göre eşler. Pakette
-    // karşılığı olmayan bir grup adı, dokunulmamış bir kurulumda hiçbir zaman
+    // karşılığı olmayan bir hedef, dokunulmamış bir kurulumda hiçbir zaman
     // tutmaz — bağlantı sessizce kopar.
-    test('her gider grubu adı pakette bir kategoriye çözülür', () {
-      final available = expenseNames.map(normalizeCategoryName).toSet();
-
-      for (final group in CategoryGuesser.expenseGroupNames) {
+    void expectResolvable(
+      Iterable<CategoryTarget> targets,
+      List<StarterPackGroup> pack,
+    ) {
+      final roots = {
+        for (final g in pack) normalizeCategoryName(g.name): g,
+      };
+      for (final target in targets) {
+        final parentName = target.parentName;
+        if (parentName == null) {
+          expect(
+            roots.containsKey(normalizeCategoryName(target.name)),
+            isTrue,
+            reason: '"${target.name}" pakette kök olarak yok',
+          );
+          continue;
+        }
+        // Alt kategori hedefi: ana kategori pakette VAR olmalı (son çare
+        // düşüşü oraya) ve alt kategori gerçekten onun ALTINDA durmalı —
+        // pakette başka bir ananın çocuğuysa düşüş yolu yanlış yere gider.
+        final root = roots[normalizeCategoryName(parentName)];
+        expect(root, isNotNull, reason: '"$parentName" pakette kök olarak yok');
         expect(
-          available.contains(normalizeCategoryName(group)),
+          root!.children.any((c) =>
+              normalizeCategoryName(c.name) ==
+              normalizeCategoryName(target.name)),
           isTrue,
-          reason: '"$group" başlangıç paketinde yok',
+          reason: '"${target.name}", "$parentName" altında yok',
         );
       }
+    }
+
+    test('her gider hedefi pakette bir kategoriye çözülür', () {
+      expectResolvable(
+          CategoryGuesser.expenseTargets, CategoryStarterPack.expense);
     });
 
-    test('her gelir grubu adı pakette bir kategoriye çözülür', () {
-      final available = incomeNames.map(normalizeCategoryName).toSet();
-
-      for (final group in CategoryGuesser.incomeGroupNames) {
-        expect(
-          available.contains(normalizeCategoryName(group)),
-          isTrue,
-          reason: '"$group" başlangıç paketinde yok',
-        );
-      }
+    test('her gelir hedefi pakette bir kategoriye çözülür', () {
+      expectResolvable(
+          CategoryGuesser.incomeTargets, CategoryStarterPack.income);
     });
 
     test('banka etiketi eşlemesinin hedefleri de pakette var', () {
@@ -118,6 +136,24 @@ void main() {
           isTrue,
           reason: '"$group" başlangıç paketinde yok',
         );
+      }
+    });
+
+    test('aynı anahtar kelime iki hedefte birden geçmez', () {
+      // Sözlükte en UZUN anahtar kazanıyor; aynı kelimeyi iki hedefe birden
+      // yazmak, kazananı harita sırasına bağlayan görünmez bir sözleşme kurar.
+      for (final targets in [
+        CategoryGuesser.expenseKeywords,
+        CategoryGuesser.incomeKeywords,
+      ]) {
+        final seen = <String, String>{};
+        targets.forEach((path, keywords) {
+          for (final keyword in keywords) {
+            expect(seen[keyword], isNull,
+                reason: '"$keyword" hem ${seen[keyword]} hem $path içinde');
+            seen[keyword] = path;
+          }
+        });
       }
     });
   });

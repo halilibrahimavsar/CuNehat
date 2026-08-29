@@ -5039,17 +5039,101 @@ abstract class AppLocalizations {
   /// **'Diğer işlemler'**
   String get bankImportMoreActions;
 
-  /// No description provided for @bankImportAssignVisible.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görünen {count} satıra kategori ata'**
-  String bankImportAssignVisible(int count);
-
   /// No description provided for @bankImportAssignVisibleDone.
   ///
   /// In tr, this message translates to:
   /// **'{count} satır “{category}” kategorisine alındı.'**
   String bankImportAssignVisibleDone(int count, String category);
+
+  /// No description provided for @bankImportAssignUncategorized.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorisiz {count} satıra ata'**
+  String bankImportAssignUncategorized(int count);
+
+  /// No description provided for @bankImportAssignOverwrite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünen {count} satırı değiştir (kategorili olanlar dahil)'**
+  String bankImportAssignOverwrite(int count);
+
+  /// No description provided for @bankImportAssignTypeMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen kategori bu satırların türüne uymuyor; hiçbir satır değişmedi.'**
+  String get bankImportAssignTypeMismatch;
+
+  /// No description provided for @bankImportGroupSimilar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benzerleri grupla'**
+  String get bankImportGroupSimilar;
+
+  /// No description provided for @bankImportGroupSimilarTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benzer hareketler'**
+  String get bankImportGroupSimilarTitle;
+
+  /// No description provided for @bankImportGroupSimilarHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklaması birbirine benzeyen satırlar tek grupta toplandı. Bir gruba kategori seçmek gruptaki TÜM satırlara uygulanır.'**
+  String get bankImportGroupSimilarHint;
+
+  /// No description provided for @bankImportGroupScopeUncategorized.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız kategorisiz'**
+  String get bankImportGroupScopeUncategorized;
+
+  /// No description provided for @bankImportGroupScopeAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get bankImportGroupScopeAll;
+
+  /// No description provided for @bankImportGroupRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır'**
+  String bankImportGroupRows(int count);
+
+  /// No description provided for @bankImportGroupMixed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karışık kategori'**
+  String get bankImportGroupMixed;
+
+  /// No description provided for @bankImportGroupNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategorisiz'**
+  String get bankImportGroupNone;
+
+  /// No description provided for @bankImportGroupEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birbirine benzeyen satır bulunamadı.'**
+  String get bankImportGroupEmpty;
+
+  /// No description provided for @bankImportGroupFillRest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalanını “{category}” yap'**
+  String bankImportGroupFillRest(String category);
+
+  /// No description provided for @bankImportApplyToSimilar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Buna benzeyen {count} kategorisiz satır daha var: {sample}'**
+  String bankImportApplyToSimilar(int count, String sample);
+
+  /// No description provided for @bankImportApplyToSimilarAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hepsine uygula'**
+  String get bankImportApplyToSimilarAction;
 
   /// No description provided for @bankImportUncategorizedBlocked.
   ///

@@ -25,6 +25,25 @@ void main() {
       expect(result.drafts.single.description, 'Ziraat İşlemi');
     });
 
+    test('BÜYÜK HARFLİ "GARANTİ BANKASI" başlığı da tanınır', () {
+      // REGRESYON: eşleşme `toLowerCase()` ile yapılıyordu ve Dart noktasız
+      // `I`'yı `i`'ye çeviriyor → 'GARANTİ BANKASI' → `garanti bankasi`,
+      // sözlükteki `garanti bankası` anahtarını HİÇ bulmuyordu. Ekstre
+      // başlıkları büyük harf olduğu için bu anahtar pratikte ölüydü; "bbva"
+      // geçmeyen bir Garanti ekstresi sessizce jenerik yola düşüyordu.
+      const text =
+          'TÜRKİYE GARANTİ BANKASI A.Ş.\nHESAP ÖZETİ\n25/03/2026 100.00 200.00\n';
+      final result = parser.parseText(text);
+      expect(result.drafts.single.description, 'Garanti İşlemi');
+    });
+
+    test('BÜYÜK HARFLİ "ZİRAAT BANKASI" başlığı da tanınır', () {
+      const text =
+          'T.C. ZİRAAT BANKASI A.Ş.\nHESAP ÖZETİ\n25/03/2026 100.00 200.00\n';
+      final result = parser.parseText(text);
+      expect(result.drafts.single.description, 'Ziraat İşlemi');
+    });
+
     test('bilinmeyen banka → DefaultHeuristicPdfParser yedeğine düşer', () {
       const text =
           'BİLİNMEYEN BANKA A.Ş. HESAP ÖZETİ\n25/03/2026 100.00 200.00\n';

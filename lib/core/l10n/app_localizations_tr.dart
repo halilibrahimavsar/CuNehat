@@ -2765,14 +2765,66 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportMoreActions => 'Diğer işlemler';
 
   @override
-  String bankImportAssignVisible(int count) {
-    return 'Görünen $count satıra kategori ata';
-  }
-
-  @override
   String bankImportAssignVisibleDone(int count, String category) {
     return '$count satır “$category” kategorisine alındı.';
   }
+
+  @override
+  String bankImportAssignUncategorized(int count) {
+    return 'Kategorisiz $count satıra ata';
+  }
+
+  @override
+  String bankImportAssignOverwrite(int count) {
+    return 'Görünen $count satırı değiştir (kategorili olanlar dahil)';
+  }
+
+  @override
+  String get bankImportAssignTypeMismatch =>
+      'Seçilen kategori bu satırların türüne uymuyor; hiçbir satır değişmedi.';
+
+  @override
+  String get bankImportGroupSimilar => 'Benzerleri grupla';
+
+  @override
+  String get bankImportGroupSimilarTitle => 'Benzer hareketler';
+
+  @override
+  String get bankImportGroupSimilarHint =>
+      'Açıklaması birbirine benzeyen satırlar tek grupta toplandı. Bir gruba kategori seçmek gruptaki TÜM satırlara uygulanır.';
+
+  @override
+  String get bankImportGroupScopeUncategorized => 'Yalnız kategorisiz';
+
+  @override
+  String get bankImportGroupScopeAll => 'Tümü';
+
+  @override
+  String bankImportGroupRows(int count) {
+    return '$count satır';
+  }
+
+  @override
+  String get bankImportGroupMixed => 'Karışık kategori';
+
+  @override
+  String get bankImportGroupNone => 'Kategorisiz';
+
+  @override
+  String get bankImportGroupEmpty => 'Birbirine benzeyen satır bulunamadı.';
+
+  @override
+  String bankImportGroupFillRest(String category) {
+    return 'Kalanını “$category” yap';
+  }
+
+  @override
+  String bankImportApplyToSimilar(int count, String sample) {
+    return 'Buna benzeyen $count kategorisiz satır daha var: $sample';
+  }
+
+  @override
+  String get bankImportApplyToSimilarAction => 'Hepsine uygula';
 
   @override
   String bankImportUncategorizedBlocked(int count) {

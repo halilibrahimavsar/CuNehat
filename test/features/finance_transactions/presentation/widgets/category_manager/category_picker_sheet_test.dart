@@ -200,8 +200,10 @@ void main() {
       expect(find.text('Market'), findsOneWidget);
     });
 
-    // `foldTr`: 'İ'.toLowerCase() Dart'ta birleşen noktalı 'i̇' üretir ve 'i'
-    // ile eşleşmez. Katlama olmasaydı "internet" araması "İnternet"i bulamazdı.
+    // `foldTr` olmadan bulunamazdı. (Ölçüldü, Dart 3.12: bozan yön noktasız
+    // `I` — 'I'.toLowerCase() 'i' verir, 'ı' değil. 'İ'.toLowerCase() ise düz
+    // 'i' üretiyor, birleşen noktalı biçim DEĞİL; bu yorumun eski hali
+    // yanlıştı.)
     testWidgets('Türkçe katlama: "internet" → "İnternet"', (tester) async {
       await tester.pumpWidget(host((_) {}));
       await open(tester);
