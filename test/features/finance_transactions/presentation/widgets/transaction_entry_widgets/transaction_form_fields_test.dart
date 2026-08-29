@@ -3,6 +3,7 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_picker_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -296,5 +297,133 @@ void main() {
     // Verify TimePicker is open and tap Tamam
     await tester.tap(find.text('Tamam'));
     await tester.pumpAndSettle();
+  });
+  group('kategori: alt kategoriler şeridin altında açılır', () {
+    // Ölçülen gerçek şekle yakın: çocuklu iki kök + çocuksuz bir kök.
+    const fatura = CategoryEntity(
+        id: 'r1', name: 'Fatura', iconName: 'receipt_long', isExpense: true);
+    const elektrik = CategoryEntity(
+        id: 'c1',
+        name: 'Elektrik',
+        iconName: 'lightbulb',
+        isExpense: true,
+        parentId: 'r1');
+    const su = CategoryEntity(
+        id: 'c2',
+        name: 'Su',
+        iconName: 'water_drop',
+        isExpense: true,
+        parentId: 'r1');
+    const market = CategoryEntity(
+        id: 'r2', name: 'Market', iconName: 'shopping_cart', isExpense: true);
+    const manav = CategoryEntity(
+        id: 'c3',
+        name: 'Manav',
+        iconName: 'restaurant',
+        isExpense: true,
+        parentId: 'r2');
+    const kira = CategoryEntity(
+        id: 'r3', name: 'Kira', iconName: 'home', isExpense: true);
+
+    Future<void> pumpForm(WidgetTester tester) async {
+      when(() => mockCategoryRepository.getCategories(true))
+          .thenAnswer((_) async => [fatura, elektrik, su, market, manav, kira]);
+      when(() => mockCategoryRepository.getCategories(false))
+          .thenAnswer((_) async => []);
+      when(() => mockCategoryRepository.getAllCategories())
+          .thenAnswer((_) async => [fatura, elektrik, su, market, manav, kira]);
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          TransactionFormSheet(
+            isExpense: true,
+            walletId: 'wallet_123',
+            userId: 'user_123',
+            onSave: (_, __) {},
+            onCancel: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    // REGRESYON: çocuklu köke dokunmak `showCategoryPickerSheet`'i açıyordu ve
+    // o sayfa ekranda ZATEN duran ana kategorileri bir kez daha listeliyordu.
+    // Üstelik dokunulan kök seçiciye geçirilmediği için sayfa ilk kökle
+    // (Market → Manav) açılıyordu — "Fatura"ya dokunup Manav görmek.
+    testWidgets('çocuklu köke dokunmak modal AÇMAZ', (tester) async {
+      await pumpForm(tester);
+
+      await tester.ensureVisible(find.text('Fatura'));
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CategoryPickerSheet), findsNothing);
+    });
+
+    testWidgets('çocuklu köke dokunmak kökü seçer ve altlarını açar',
+        (tester) async {
+      await pumpForm(tester);
+
+      expect(find.text('Elektrik'), findsNothing);
+
+      await tester.ensureVisible(find.text('Fatura'));
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+
+      // Altlar göründü...
+      expect(find.text('Elektrik'), findsOneWidget);
+      expect(find.text('Su'), findsOneWidget);
+      // ...ve kökün kendisi SEÇİLDİ: kategori uyarısı artık tetiklenmez.
+      await tester.ensureVisible(find.text('Kaydet'));
+      await tester.tap(find.text('Kaydet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bir kategori seçin'), findsNothing);
+    });
+
+    testWidgets('alt kategoriye dokunmak seçimi ona taşır', (tester) async {
+      await pumpForm(tester);
+
+      await tester.ensureVisible(find.text('Fatura'));
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Elektrik'));
+      await tester.pumpAndSettle();
+
+      // Şerit tile'ı seçili yaprağın adını taşır; "Fatura" yazısı yerini
+      // "Elektrik"e bırakır (ikisi de görünür: biri tile, biri çip).
+      expect(find.text('Elektrik'), findsNWidgets(2));
+      expect(find.text('Fatura'), findsNothing);
+    });
+
+    testWidgets('başka köke dokunmak açılan alanı oraya taşır', (tester) async {
+      await pumpForm(tester);
+
+      await tester.ensureVisible(find.text('Fatura'));
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+      expect(find.text('Elektrik'), findsOneWidget);
+
+      await tester.tap(find.text('Market'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Elektrik'), findsNothing);
+      expect(find.text('Manav'), findsOneWidget);
+    });
+
+    testWidgets('çocuksuz köke dokunmak açılan alanı kapatır', (tester) async {
+      await pumpForm(tester);
+
+      await tester.ensureVisible(find.text('Fatura'));
+      await tester.tap(find.text('Fatura'));
+      await tester.pumpAndSettle();
+      expect(find.text('Elektrik'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Kira'));
+      await tester.tap(find.text('Kira'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Elektrik'), findsNothing);
+    });
   });
 }
