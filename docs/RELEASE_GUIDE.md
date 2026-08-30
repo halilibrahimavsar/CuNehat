@@ -35,10 +35,10 @@ Cloud projesi, Flutter SDK kurulu.
 | 7 | Data Safety formu | ✅ Dolduruldu |
 | 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
-| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi. Uygulama adı **bilerek `CuNehat`** bırakıldı (28 Ağu kullanıcı kararı) — ama tanıtım görseli, gizlilik politikası, `android:label` ve tüm uygulama içi metinler `ÇuNehat`; **tutarsızlık duruyor** |
+| 8c | **Mağaza girişi (metin + ikon + görseller)** | ✅ tr-TR + en-US girildi. Mağaza adı **`CuNehat`** olarak KALACAK — bilinçli karar (30 Ağu). Uygulama içi/görsel taraf `ÇuNehat`; fark biliniyor ve kabul edildi, bkz. aşağıdaki not |
 | 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
 | — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 14 maddenin hiçbiri işaretli değil |
-| 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | 🔴 **KALAN** — AAB yayınlandı ama istemciye yanlış SHA-1 girilmiş; doğrusu `3C:64:FF:8D:…` (28 Ağu'da cihazdan ölçüldü) |
+| 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
 | 11 | Kapalı test 12 tester × 14 gün | 🟢 **SAYAÇ İŞLİYOR** — 13 tester opt-in oldu (28 Ağu). Panoda ilk iki madde ✔; kalan: "en az 12 kullanıcıyla 14 gün". Production başvurusu en erken **~11 Eyl**, inceleme ≤7 gün → **~18 Eyl** |
 | 12 | Production | ⬜ |
 
@@ -535,6 +535,17 @@ Bu tablo uygulamanın gerçek davranışından çıkarıldı; olduğu gibi gir.
 > metin bunu net söylemeli. "Borçlarını ve alacaklarını takip et" güvenli;
 > "kredi çöz" değil.
 
+> **Marka yazımı — VERİLMİŞ KARAR (30 Ağu 2026).** Mağaza adı `CuNehat: Gelir
+> Gider Takibi`, düz `C` ile, ve **öyle kalacak.** Bu bilinçli bir karardır,
+> eksik iş değil; ileride "düzeltilecek hata" sanılmasın.
+>
+> Bilinen ve kabul edilen fark: uygulamanın kendisi `ÇuNehat` diyor —
+> `android:label`, 14 l10n dizesi, gizlilik politikası (17 yerde) ve **tanıtım
+> görselindeki kelime işareti**. Sonuncusu mağaza sayfasında başlığın hemen
+> yanında duruyor, yani fark orada görünür. Vazgeçilirse iki alan düzenlemesi
+> yeter (tr-TR + en-US uygulama adı), yeni derleme gerekmez;
+> `docs/store/store-listing.md` hâlâ `Ç`'li metinleri taşıyor.
+
 **Diğer formlar:**
 
 | Form | Cevap |
@@ -603,7 +614,7 @@ promote etmek en güvenlisi: 14 günlük sayacı bozuk bir derlemeyle başlatmaz
 |---|---|---|
 | Debug — `flutter run` | `C5:0D:D6:24:25:FA:FA:AB:6F:7F:5E:68:A2:7F:BB:72:99:D2:92:0B` | ✅ "Android client 1" (30 Tem 2026) |
 | Upload — yerel release APK (yandan yükleme) | `C6:75:6E:55:47:E5:0A:BF:67:2C:BD:8E:F0:14:C5:D7:22:B0:58:EB` | ✅ "ÇuNehat upload key" (10 Ağu 2026) |
-| **Play App Signing** — mağazadan inen sürüm | **`3C:64:FF:8D:AB:77:B5:7F:34:00:8D:A4:7B:6B:07:FD:93:D8:65:FC`** (cihazdan ölçüldü) | 🔴 **KAYITLI DEĞİL** — mevcut istemciye yanlışlıkla `CB:7A:…` girilmiş; Play sürümünde yedekleme bu yüzden çalışmıyor |
+| **Play App Signing** — mağazadan inen sürüm | **`3C:64:FF:8D:AB:77:B5:7F:34:00:8D:A4:7B:6B:07:FD:93:D8:65:FC`** (cihazdan ölçüldü) | ✅ Kayıtlı. Yanlış `CB:7A:…` değeri **yerinde düzeltildi** (yeni istemci açılmadı), Console'da 3 istemci var ve üçü de doğru |
 
 **Hangisi ne zaman ısırır:**
 
