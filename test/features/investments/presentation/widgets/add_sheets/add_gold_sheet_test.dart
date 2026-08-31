@@ -539,13 +539,18 @@ void main() {
     // Bugün seçiliyken uyarı yok.
     expect(find.textContaining('BUGÜNKÜ değerdir'), findsNothing);
 
-    // Takvimden dünü seç.
+    // Takvimden geçmiş bir tarih seç.
     final dateField = find.textContaining('Alım tarihi:');
     await tester.ensureVisible(dateField);
     await tester.tap(dateField);
     await tester.pumpAndSettle();
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    await tester.tap(find.text('${yesterday.day}').last);
+    // Ayın 1'inde "dün" bir önceki aya düşer ve o gün numarası ekrandaki
+    // ızgarada olmayabilir (1 Eylül -> 31 Ağustos, ama Eylül'de 31 yok).
+    // Takvimi bir ay geri al ve her ayda bulunan bir günü seç: tarih böylece
+    // bugünün takvimine bağlı olmadan her zaman geçmişte kalır.
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('15').last);
     await tester.tap(find.text('Tamam'));
     await tester.pumpAndSettle();
 
