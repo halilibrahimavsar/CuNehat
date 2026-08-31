@@ -882,3 +882,81 @@ kur = tüm veri gider. Hata ekranına **"Drive yedeğinden geri yükle"** eklenm
   bunu bir gün **sert hataya** çevirecek — yayını bloke etmez, ilk büyük Flutter
   yükseltmesinden önce hallet.
   Kılavuz: <https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers>
+
+---
+
+## Adım 15 — Kapalı test yayındayken güncelleme yükleme (tekrarlanabilir)
+
+Adım 9 *ilk* yüklemeyi anlatıyor; bu bölüm sonraki her sürüm için geçerli.
+İlk kullanımı: **1 Eylül 2026, kapalı testin 3. günü, `1.0.0+3`.**
+
+> **Sayaç bozulmaz.** 14 günlük kesintisiz-12-tester şartı *opt-in* durumunu
+> sayar, sürüm sayısını değil. Kapalı test yayındayken sürüm atmak beklenen
+> davranıştır; testerlar güncellemeyi Play üzerinden otomatik alır.
+
+### 15.1 Yüklemeden önce — kod tarafı
+
+```bash
+dart analyze                                  # 0 sorun beklenir
+flutter test                                  # tamamı yeşil olmalı
+grep -n "schemaVersion = " lib/core/services/data_serialization_service.dart
+git diff <yayındaki-commit>..HEAD -- lib/ | grep -E "^[-+].*(HiveField|typeId|schemaVersion)"
+```
+
+Son iki komut **veri uyumluluğu kapısıdır** (bkz. `CLAUDE.md`): 28 Ağustos'tan
+beri testerların cihazında gerçek veri var.
+
+- Çıktı boşsa → şema aynı, güncelleme mevcut veriyle ve mevcut Drive
+  yedekleriyle uyumlu. Yükleyebilirsin.
+- `schemaVersion` artmışsa → **önce migrasyon zinciri yazılmalı.** Migrasyonsuz
+  yüklenen sürüm, testerların Drive'ındaki yedekleri geri yüklenemez hale
+  getirir (`_parseBackup` sıkı eşitlik kontrolü, `data_serialization_service.dart`).
+- `HiveField` / `typeId` satırları değişmişse → indeks yakma kurallarına uyduğunu
+  ve yeni alanların eski kayıtlarda güvenli varsayılana düştüğünü doğrula.
+
+### 15.2 versionCode
+
+`pubspec.yaml` → `version: 1.0.0+N`. `N`, **herhangi bir kanala** yüklenmiş en
+yüksek koddan büyük olmalı; yüklenen kod kalıcı tüketilir (bkz. dokümanın
+başındaki not). Yükleme yapılmadığı sürece yeni işler aynı `+N` altında
+birikebilir — her commit için artırmak gerekmez.
+
+`versionName` (`1.0.0`) kapalı test turlarında sabit kalabilir; kullanıcıya
+duyurulacak bir davranış değişikliği çıkarken artır.
+
+### 15.3 Derle ve imzayı doğrula
+
+```bash
+flutter build appbundle --release
+
+T=$(mktemp -d); unzip -q -o -d "$T" build/app/outputs/bundle/release/app-release.aab "META-INF/*"
+keytool -printcert -file "$T"/META-INF/*.RSA | grep -E "Owner|Sahibi"; rm -rf "$T"
+```
+
+`CN=Halil Ibrahim Avsar` görmelisin. `CN=Android Debug` çıkarsa
+`android/key.properties` okunmamış demektir — Play o dosyayı reddeder.
+
+### 15.4 Play Console
+
+1. **Test ve yayınlama → Test → Kapalı test** → yürüyen track → **Yeni sürüm
+   oluştur** (mevcut sürümü "düzenleme", yeni sürüm oluştur).
+2. `build/app/outputs/bundle/release/app-release.aab` dosyasını yükle.
+   Play App Signing zaten açık; dosya otomatik yeniden imzalanır.
+3. **Sürüm ayrıntıları → Bu sürümdeki yenilikler:** metni **her dil için ayrı**
+   gir (tr-TR ve en-US). Hazır metinler: `docs/store/store-listing.md` →
+   *Sürüm notları*. Sınır dil başına 500 karakter.
+4. **Kaydet → Sürümü incele → İncelemeye gönder.** Kapalı test sürümleri de
+   incelemeden geçer; ilk yayından sonraki turlar genelde saatler sürer.
+5. Yayına alma yüzdesini **%100** bırak (kapalı testte kademeli dağıtım,
+   güncellemeyi bazı testerlardan gizler ve sayacı izlemeyi zorlaştırır).
+
+### 15.5 Yüklendikten sonra
+
+- Bu dokümanın başındaki **sürüm satırını** güncelle (`+N (yüklenmedi)` →
+  yüklendi / hangi kanalda).
+- **Test ve yayınlama → Kapalı test → Testerlar** panosunda 12/14 sayacının
+  bozulmadığını doğrula.
+- Kendi cihazına Play'den güncellemeyi al ve Adım 10 duman testinin **dokunulan
+  alanlarını** tekrarla (tümünü değil).
+- Güncelleme mevcut kurulumun üzerine iner: en az bir cihazda **veri yerinde mi**
+  diye bak — temiz kurulum bu riski göstermez.

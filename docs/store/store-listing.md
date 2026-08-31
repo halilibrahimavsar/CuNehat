@@ -331,6 +331,47 @@ No ads, no subscriptions. Your data stays on your device.
 
 ---
 
+## Sürüm notları — 1.0.0 (versionCode 3)
+
+Kapalı testin 3. gününde çıkan ilk güncelleme. Kapsam: `edab5a1..6c9f534`
+(ekstre gruplama + alt kategori eşleme, kategori seçici, Drive hata ayrımı).
+Hive şeması ve `schemaVersion` **değişmedi (9)** — testerların mevcut verisi ve
+Drive'daki yedekleri olduğu gibi çalışır.
+
+### Türkçe (492 karakter, sınır 500)
+
+```
+Banka ekstresi
+• Benzer hareketler gruplanıyor; grubun tamamına tek seferde kategori atanıyor.
+• Otomatik tahmin artık alt kategorileri de eşleştiriyor.
+• Türkçe harf hataları giderildi: banka adları tanınıyor, aynı hareket ikinci kez eklenemiyor.
+
+Kategori seçimi
+• Seçim işlem formuna taşındı: iki sütunlu, aranabilir, son kullandıkların üstte.
+• İşlem kartında kazara silmeye yol açan kaydırma kaldırıldı.
+
+Google Drive
+• Yedekleme hataları artık gerçek nedeni ve doğru çözümü gösteriyor.
+```
+
+### English (485 karakter, sınır 500)
+
+```
+Bank statement import
+• Similar transactions are grouped; categorize a whole group at once.
+• Auto-detection now matches subcategories too.
+• Fixed Turkish letter casing: bank names are recognized, and the same transaction can no longer be imported twice.
+
+Category picking
+• Moved into the transaction form: two columns, searchable, recently used first.
+• Removed the card swipe that caused accidental deletes.
+
+Google Drive
+• Backup errors now show the real cause and the right fix.
+```
+
+---
+
 ## Ekran görüntüleri — ✅ ÜRETİLDİ (26 Ağu 2026)
 
 **8 görsel hazır:** `docs/store/screenshots/` (`01_…` – `08_…`). Ham cihaz
