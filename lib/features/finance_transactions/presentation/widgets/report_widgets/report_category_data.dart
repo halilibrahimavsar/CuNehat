@@ -508,16 +508,13 @@ class ReportCategoryDataBuilder {
     // Renk sırayı izler: rank 1 rampanın ilk adımını alır. Sıralama anlamlı
     // olduğu için bu bir sıralı (ordinal) kodlamadır, kimlik kodlaması değil —
     // kimliği efsane ve etiketler taşır.
+    //
+    // `copyWith` ŞART: elle kurulan bir `CategoryData` önceki dönem tutarını
+    // düşürüyordu, yani karşılaştırma kartının efsanesinde değişim rozeti
+    // hiç görünmüyordu.
     return [
       for (int i = 0; i < slices.length; i++)
-        CategoryData(
-          slices[i].name,
-          slices[i].totalAmount,
-          slices[i].transactions,
-          ramp[i],
-          isOther: slices[i].isOther,
-          children: slices[i].children,
-        ),
+        slices[i].copyWith(color: ramp[i]),
     ];
   }
 

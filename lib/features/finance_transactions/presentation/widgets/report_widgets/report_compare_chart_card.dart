@@ -6,6 +6,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:flutter/material.dart';
 
 /// Gelir ve gideri TEK grafikte karşılaştıran kart.
@@ -500,7 +501,15 @@ class ReportCompareChartCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
+                      // Kategori bazlı değişim AÇILIŞ modunda da görünmeli:
+                      // "bu ay 44.620 harcadım" eylem üretmiyor, "Market %38
+                      // arttı" üretiyor.
+                      ReportChangeBadge(
+                        percent: slice.changePercent,
+                        increaseIsGood: !isExpense,
+                      ),
+                      const SizedBox(width: 6),
                       Text(
                         context.l10n.formatMoneyItemTotalamountPercent(
                           money(slice.totalAmount),

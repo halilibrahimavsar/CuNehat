@@ -4,6 +4,7 @@ import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_bar_list.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_sunburst_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -271,6 +272,11 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                         ),
                       ),
                     ),
+                    ReportChangeBadge(
+                      percent: item.changePercent,
+                      increaseIsGood: !widget.isExpense,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
                       context.l10n.formatMoneyItemTotalamountPercent(
                           _money(item.totalAmount), percent.toStringAsFixed(0)),

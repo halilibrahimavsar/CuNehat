@@ -20,6 +20,7 @@ import 'package:cunehat/features/finance_transactions/presentation/pages/transac
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
@@ -594,5 +595,48 @@ void main() {
       // Başlık merceği izler.
       expect(find.text('Bakiye Trendi'), findsOneWidget);
     });
+  });
+
+  testWidgets('kategori bazlı değişim rozeti AÇILIŞ modunda görünür',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    // Geçen ay + ondan önceki ay: kıyas kurulabilsin.
+    final now = DateTime.now();
+    final prevBase = DateTime(now.year, now.month - 2, 1);
+    final txs = [
+      ...lastMonth(),
+      TransactionEntity(
+        id: 'prev-kira',
+        userId: 'u',
+        walletId: 'w',
+        title: 'Kira',
+        tag: 'Kira',
+        amount: 12000,
+        date: prevBase.add(const Duration(days: 1)),
+        type: TransactionTypeModel.expense,
+      ),
+    ];
+    when(() => bloc.state).thenReturn(
+      TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+    );
+    await tester.pumpWidget(app(
+      const TransactionReportPage(userId: 'u', walletId: 'w'),
+    ));
+    await tester.pumpAndSettle();
+
+    // Kira 12.000 → 24.000 = %100 artış; gider tarafında artış KÖTÜ.
+    expect(find.byType(ReportCompareChartCard), findsOneWidget);
+    final badges = find.descendant(
+      of: find.byType(ReportCompareChartCard),
+      matching: find.byType(ReportChangeBadge),
+    );
+    expect(badges, findsWidgets);
+    expect(
+      find.descendant(of: badges, matching: find.text('%100')),
+      findsOneWidget,
+    );
   });
 }
