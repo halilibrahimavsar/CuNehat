@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/shared/widgets/date_range_chips.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -300,7 +301,7 @@ void main() {
     expect(find.text('Gelirler'), findsNothing);
   });
 
-  testWidgets('opens DateRangePickerDialog on Değiştir tap',
+  testWidgets('opens DateRangePickerDialog on takvim düğmesi tap',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1.0;
@@ -341,8 +342,9 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Tap Değiştir button in ReportRangeHeader
-    await tester.tap(find.text('Değiştir'));
+    // "Değiştir" metin düğmesi ikona döndü: hızlı çipler aynı satıra
+    // geldiğinde metin 360dp'de dar kalıyordu.
+    await tester.tap(find.byIcon(Icons.edit_calendar_rounded));
     await tester.pumpAndSettle();
 
     // Tap Choose from calendar in the quick options sheet to open the dialog
@@ -484,9 +486,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Date range header and Değiştir button MUST be visible even when empty!
+    // Aralık başlığı VE dönem kontrolü, dönem boş olsa da görünür kalmalı:
+    // aksi hâlde kullanıcı aralığı değiştirecek kontrolü bulamıyordu.
     expect(find.byType(ReportRangeHeader), findsOneWidget);
-    expect(find.text('Değiştir'), findsOneWidget);
+    expect(find.byIcon(Icons.edit_calendar_rounded), findsOneWidget);
+    // Hızlı çipler de burada: dönem değiştirmek artık tek dokunuş.
+    expect(find.byType(DateRangeChips), findsOneWidget);
   });
 
   testWidgets('tapping legend item opens category details bottom sheet',

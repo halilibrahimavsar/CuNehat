@@ -2145,5 +2145,6 @@
       }
   },
   "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
-  "reportShareTooltip": "Raporu paylaş"
+  "reportShareTooltip": "Raporu paylaş",
+  "reportNoIncomeForRate": "Bu dönemde gelir yok"
 }

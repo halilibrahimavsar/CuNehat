@@ -5,6 +5,7 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/widgets/date_range_chips.dart';
 import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
@@ -15,7 +16,6 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/category_spike_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/daily_safe_to_spend_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_range_chips.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_stat_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_summary_row.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
@@ -231,7 +231,7 @@ class _InsightsViewState extends State<_InsightsView> {
                       ),
                 ),
                 const SizedBox(height: 12),
-                InsightRangeChips(
+                DateRangeChips(
                   quickOptions:
                       DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
                   selectedRange: _range,

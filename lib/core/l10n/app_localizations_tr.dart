@@ -4011,4 +4011,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportShareTooltip => 'Raporu paylaş';
+
+  @override
+  String get reportNoIncomeForRate => 'Bu dönemde gelir yok';
 }

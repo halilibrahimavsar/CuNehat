@@ -126,11 +126,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _range = DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
-      end: now,
-    );
+    // İçgörüler sayfasıyla AYNI dönem tanımı. Eskiden rapor "ayın 1'i →
+    // şimdi" kullanıyordu: hızlı seçenekteki "Bu Ay" çipi hiçbir zaman
+    // seçili görünmüyor, iki kardeş sayfa aynı ayı farklı tanımlıyordu.
+    _range = DateRangeHelper.thisMonth();
     _loadCategoryIcons();
     _categoriesSub = getIt<CategoriesChangedNotifier>()
         .stream
@@ -207,8 +206,20 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// rozeti anlamsız bir kıyasa çevirirdi ("bu ay %70 az harcadın" — çünkü
   /// geçen ayın rakamında bir transfer duruyor).
   ReportTotals _previousPeriodTotals(List<TransactionEntity> allTransactions) {
-    final dayCount = _range.end.difference(_range.start).inDays + 1;
-    final previousEnd = _range.start.subtract(const Duration(days: 1));
+    // Pencere seçili aralığın BUGÜNE kadar GEÇMİŞ kısmı kadardır. "Bu Ay"
+    // seçiliyken ayın 3'ünde tam ayı tam ayla kıyaslamak "geçen aya göre %90
+    // az harcadın" derdi — çünkü bu ayın 27 günü henüz yaşanmadı.
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay =
+        DateTime(_range.start.year, _range.start.month, _range.start.day);
+    final rangeEnd = DateTime(_range.end.year, _range.end.month, _range.end.day);
+    final elapsedEnd = rangeEnd.isAfter(today) ? today : rangeEnd;
+    // Aralık tamamen gelecekteyse kıyaslanacak bir şey yok.
+    if (elapsedEnd.isBefore(startDay)) return const ReportTotals();
+
+    final dayCount = elapsedEnd.difference(startDay).inDays + 1;
+    final previousEnd = startDay.subtract(const Duration(days: 1));
     final previousStart = previousEnd.subtract(Duration(days: dayCount - 1));
     final previousTransactions = _reportService.filterByRange(
       allTransactions,
@@ -414,6 +425,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                 ReportRangeHeader(
                   range: _range,
                   onPickDateRange: _pickDateRange,
+                  quickOptions:
+                      DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
+                  onQuickOptionSelected: (picked) => setState(() {
+                    _range = picked;
+                    _hasUserPickedRange = true;
+                    _unitOverride = null;
+                  }),
                 ),
                 const SizedBox(height: 16),
 

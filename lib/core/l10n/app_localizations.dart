@@ -7114,6 +7114,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Raporu paylaş'**
   String get reportShareTooltip;
+
+  /// No description provided for @reportNoIncomeForRate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönemde gelir yok'**
+  String get reportNoIncomeForRate;
 }
 
 class _AppLocalizationsDelegate

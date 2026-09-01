@@ -2124,5 +2124,6 @@
       }
   },
   "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending — the money moves, it isn't spent. The balance line always includes them.",
-  "reportShareTooltip": "Share the report"
+  "reportShareTooltip": "Share the report",
+  "reportNoIncomeForRate": "No income this period"
 }
