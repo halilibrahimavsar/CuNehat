@@ -43,9 +43,8 @@ void main() {
         tag: 'Market',
         amount: a,
         date: d,
-        type: income
-            ? TransactionTypeModel.income
-            : TransactionTypeModel.expense,
+        type:
+            income ? TransactionTypeModel.income : TransactionTypeModel.expense,
       );
 
   ReportSeries series() => const ReportSeriesService().build(
@@ -128,8 +127,7 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('karşılaştırma çubukları taraf ve toplam söyler',
-      (tester) async {
+  testWidgets('karşılaştırma çubukları taraf ve toplam söyler', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(host(ReportCompareChartCard(
       incomeSlices: [CategoryData('Maaş', 6200, const [], Colors.green)],
@@ -139,9 +137,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final all = labels(tester).toList();
-    expect(all.any((l) => l.contains('Gelir çubuğu') && l.contains('6.200,00 ₺')),
+    expect(
+        all.any((l) => l.contains('Gelir çubuğu') && l.contains('6.200,00 ₺')),
         isTrue);
-    expect(all.any((l) => l.contains('Gider çubuğu') && l.contains('2.400,00 ₺')),
+    expect(
+        all.any((l) => l.contains('Gider çubuğu') && l.contains('2.400,00 ₺')),
         isTrue);
     handle.dispose();
   });

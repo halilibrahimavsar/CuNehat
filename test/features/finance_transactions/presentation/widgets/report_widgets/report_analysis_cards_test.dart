@@ -158,7 +158,7 @@ void main() {
 
     testWidgets('şube kodlu başlıklar TEK kaleme iner', (tester) async {
       await tester.pumpWidget(host(ReportTopPayeesCard(
-        transactions: statementLike(),
+        groups: ReportTopPayeesCard.buildGroups(statementLike()),
         onGroupTap: (_, __) {},
       )));
       await tester.pumpAndSettle();
@@ -171,7 +171,7 @@ void main() {
 
     testWidgets('tek seferlik başlık grup KURMAZ', (tester) async {
       await tester.pumpWidget(host(ReportTopPayeesCard(
-        transactions: statementLike(),
+        groups: ReportTopPayeesCard.buildGroups(statementLike()),
         onGroupTap: (_, __) {},
       )));
       await tester.pumpAndSettle();
@@ -182,7 +182,7 @@ void main() {
       String? label;
       List<TransactionEntity>? items;
       await tester.pumpWidget(host(ReportTopPayeesCard(
-        transactions: statementLike(),
+        groups: ReportTopPayeesCard.buildGroups(statementLike()),
         onGroupTap: (l, i) {
           label = l;
           items = i;
@@ -198,7 +198,8 @@ void main() {
 
     testWidgets('grup yoksa kart HİÇ çizilmez', (tester) async {
       await tester.pumpWidget(host(ReportTopPayeesCard(
-        transactions: [tx(DateTime(2026, 6, 1), 'Tek', 100)],
+        groups: ReportTopPayeesCard.buildGroups(
+            [tx(DateTime(2026, 6, 1), 'Tek', 100)]),
         onGroupTap: (_, __) {},
       )));
       await tester.pumpAndSettle();

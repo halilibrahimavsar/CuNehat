@@ -53,8 +53,7 @@ void main() {
         iconName: 'water',
         isExpense: true,
         parentId: 'fatura'),
-    CategoryEntity(
-        id: 'kira', name: 'Kira', iconName: 'home', isExpense: true),
+    CategoryEntity(id: 'kira', name: 'Kira', iconName: 'home', isExpense: true),
   ];
 
   TransactionEntity tx(String tag, double amount) => TransactionEntity(
@@ -162,7 +161,8 @@ void main() {
       )));
       await tester.pumpAndSettle();
 
-      final charts = tester.widgetList<PieChart>(find.byType(PieChart)).toList();
+      final charts =
+          tester.widgetList<PieChart>(find.byType(PieChart)).toList();
       expect(charts, hasLength(2), reason: 'iç + dış halka');
 
       double sumOf(PieChart c) =>

@@ -197,8 +197,7 @@ void main() {
       expect(tapped?.name, 'Market');
     });
 
-    testWidgets('en küçük kalem bile görünür genişlikte kalır',
-        (tester) async {
+    testWidgets('en küçük kalem bile görünür genişlikte kalır', (tester) async {
       final data = full({'Kira': 100000, 'Sakiz': 5});
 
       await tester.pumpWidget(host(ReportCategoryChartCard(

@@ -188,8 +188,7 @@ void main() {
       expect(slices.fold<double>(0, (sum, s) => sum + s.totalAmount), 1670);
     });
 
-    test('REGRESYON: "Diğer" kovası tutarına göre sıralanır, sona itilmez',
-        () {
+    test('REGRESYON: "Diğer" kovası tutarına göre sıralanır, sona itilmez', () {
       // Gerçek bir ayda ölçüldü: Kira %54, Market %27, Sağlık %5, Fatura %5
       // tutuluyor, kova %9 çıkıyordu — yani 3. büyük kalem "en küçük" rampa
       // adımını (en soluk rengi) alıyor ve en sonda çiziliyordu.

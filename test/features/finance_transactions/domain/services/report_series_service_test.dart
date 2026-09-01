@@ -21,9 +21,8 @@ void main() {
         tag: 'Market',
         amount: amount,
         date: date,
-        type: income
-            ? TransactionTypeModel.income
-            : TransactionTypeModel.expense,
+        type:
+            income ? TransactionTypeModel.income : TransactionTypeModel.expense,
       );
 
   group('kova iskeleti', () {

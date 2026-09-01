@@ -69,9 +69,8 @@ void main() {
         tag: 'Market',
         amount: a,
         date: d,
-        type: income
-            ? TransactionTypeModel.income
-            : TransactionTypeModel.expense,
+        type:
+            income ? TransactionTypeModel.income : TransactionTypeModel.expense,
       );
 
   /// 6.200 gelir + 1.500 gider, iki günlük seri.
@@ -104,8 +103,8 @@ void main() {
         const Padding(
           padding: EdgeInsets.all(16),
           child: ReportSummaryCards(
-            totals: ReportTotals(
-                totalIncome: 6200, totalExpense: 1500, net: 4700),
+            totals:
+                ReportTotals(totalIncome: 6200, totalExpense: 1500, net: 4700),
             previousTotals: ReportTotals(),
           ),
         ),
@@ -213,8 +212,8 @@ void main() {
         const Padding(
           padding: EdgeInsets.all(16),
           child: ReportSummaryCards(
-            totals: ReportTotals(
-                totalIncome: 6200, totalExpense: 1500, net: 4700),
+            totals:
+                ReportTotals(totalIncome: 6200, totalExpense: 1500, net: 4700),
             previousTotals: ReportTotals(),
           ),
         ),

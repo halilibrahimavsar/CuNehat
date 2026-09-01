@@ -56,8 +56,7 @@ void main() {
     testWidgets('REGRESYON: net negatifken "%-25 Birikim" YAZMAZ',
         (tester) async {
       await tester.pumpWidget(host(const ReportSummaryCards(
-        totals:
-            ReportTotals(totalIncome: 4000, totalExpense: 5000, net: -1000),
+        totals: ReportTotals(totalIncome: 4000, totalExpense: 5000, net: -1000),
         previousTotals: ReportTotals(),
       )));
       await tester.pump();
@@ -71,8 +70,7 @@ void main() {
 
     testWidgets('net pozitifken birikim oranı yazılır', (tester) async {
       await tester.pumpWidget(host(const ReportSummaryCards(
-        totals:
-            ReportTotals(totalIncome: 10000, totalExpense: 7000, net: 3000),
+        totals: ReportTotals(totalIncome: 10000, totalExpense: 7000, net: 3000),
         previousTotals: ReportTotals(),
       )));
       await tester.pump();
@@ -88,10 +86,10 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(host(const ReportSummaryCards(
-        totals: ReportTotals(
-            totalIncome: 66700, totalExpense: 44620, net: 22080),
-        previousTotals: ReportTotals(
-            totalIncome: 60000, totalExpense: 50000, net: 10000),
+        totals:
+            ReportTotals(totalIncome: 66700, totalExpense: 44620, net: 22080),
+        previousTotals:
+            ReportTotals(totalIncome: 60000, totalExpense: 50000, net: 10000),
       )));
       await tester.pump();
 
@@ -104,8 +102,7 @@ void main() {
     testWidgets('net kartı tam genişlik — gelir/giderden geniş',
         (tester) async {
       await tester.pumpWidget(host(const ReportSummaryCards(
-        totals:
-            ReportTotals(totalIncome: 10000, totalExpense: 7000, net: 3000),
+        totals: ReportTotals(totalIncome: 10000, totalExpense: 7000, net: 3000),
         previousTotals: ReportTotals(),
       )));
       await tester.pump();
@@ -123,10 +120,10 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(host(const ReportSummaryCards(
-        totals: ReportTotals(
-            totalIncome: 66700, totalExpense: 44620, net: 22080),
-        previousTotals: ReportTotals(
-            totalIncome: 54000, totalExpense: 40000, net: 14000),
+        totals:
+            ReportTotals(totalIncome: 66700, totalExpense: 44620, net: 22080),
+        previousTotals:
+            ReportTotals(totalIncome: 54000, totalExpense: 40000, net: 14000),
       )));
       await tester.pump();
 

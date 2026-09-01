@@ -710,8 +710,7 @@ void main() {
         (tester) async {
       when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
         (_) async => const Right<Failure, List<BudgetEntity>>([
-          BudgetEntity(
-              categoryId: 'Food', limitAmount: 1000, spentAmount: 0),
+          BudgetEntity(categoryId: 'Food', limitAmount: 1000, spentAmount: 0),
         ]),
       );
       final txs = withFood();
@@ -741,8 +740,7 @@ void main() {
       var limit = 1000.0;
       when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
         (_) async => Right<Failure, List<BudgetEntity>>([
-          BudgetEntity(
-              categoryId: 'Food', limitAmount: limit, spentAmount: 0),
+          BudgetEntity(categoryId: 'Food', limitAmount: limit, spentAmount: 0),
         ]),
       );
       final txs = withFood();

@@ -408,6 +408,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         );
       }(),
       budgetStatuses: _budgetStatuses(context, expenseFull),
+      // Kümeleme trie kurup dolaşıyor; build içinde İKİ kez çağrılıyordu
+      // (biri "kart çizilsin mi" kontrolü için). Türetmeye alındı.
+      payeeGroups: ReportTopPayeesCard.buildGroups(analysed),
     );
 
     _derivedKey = key;
@@ -771,17 +774,14 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                       onTap: (status) => _openBudgetCategory(status),
                     ),
                   ],
-                  if (ReportTopPayeesCard.buildGroups(
-                          _universeOf(filteredTransactions))
-                      .isNotEmpty) ...[
+                  if (derived.payeeGroups.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     ReportSectionHeader(
                         title: context.l10n.reportTopPayeesTitle),
                     const SizedBox(height: 12),
                     ReportTopPayeesCard(
-                      transactions: _universeOf(filteredTransactions),
-                      onGroupTap: _openPayeeGroup,
-                    ),
+                        groups: derived.payeeGroups,
+                        onGroupTap: _openPayeeGroup),
                   ],
                 ],
               ],
@@ -864,6 +864,8 @@ class _ReportDerived {
   final ReportSeries balanceSeries;
   final ReportSeries trendSeries;
   final List<BudgetStatus> budgetStatuses;
+  final List<({String label, double total, List<TransactionEntity> items})>
+      payeeGroups;
 
   const _ReportDerived({
     required this.dataBuilder,
@@ -881,5 +883,6 @@ class _ReportDerived {
     required this.balanceSeries,
     required this.trendSeries,
     required this.budgetStatuses,
+    required this.payeeGroups,
   });
 }

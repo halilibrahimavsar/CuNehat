@@ -23,8 +23,13 @@ import 'package:flutter/material.dart';
 /// Tek seferlik başlıklar (bir kez geçen "Kahve") grup kurmaz; onları
 /// listelemek "en çok harcanan yer" sorusunu cevaplamaz, yalnız listeyi şişirir.
 class ReportTopPayeesCard extends StatelessWidget {
-  /// Dönemin GİDER işlemleri (sistem hareketleri süzülmüş olarak gelir).
-  final List<TransactionEntity> transactions;
+  /// Hazır gruplar (bkz. [buildGroups]).
+  ///
+  /// Kümeleme kartın İÇİNDE değil, sayfanın türetme önbelleğinde yapılır:
+  /// trie kurup dolaşmak build başına iki kez tekrarlanıyordu (biri "kart
+  /// çizilsin mi" kontrolü için).
+  final List<({String label, double total, List<TransactionEntity> items})>
+      groups;
 
   /// Bir gruba dokunulduğunda o gruptaki işlemler.
   final void Function(String label, List<TransactionEntity> transactions)
@@ -32,7 +37,7 @@ class ReportTopPayeesCard extends StatelessWidget {
 
   const ReportTopPayeesCard({
     super.key,
-    required this.transactions,
+    required this.groups,
     required this.onGroupTap,
   });
 
@@ -75,7 +80,6 @@ class ReportTopPayeesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final groups = buildGroups(transactions);
     if (groups.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
