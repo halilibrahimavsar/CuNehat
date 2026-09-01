@@ -803,9 +803,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'No records for this period.\nUse the slider button to add a new transaction.';
 
   @override
-  String get reportDailyFlowTitle => 'Daily Income–Expense';
-
-  @override
   String get kategoriDagilimi => 'Category Distribution';
 
   @override
@@ -3961,4 +3958,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hedefEkleKisa => 'Add goal';
+
+  @override
+  String get reportFlowTitleDay => 'Daily Income–Expense';
+
+  @override
+  String get reportFlowTitleWeek => 'Weekly Income–Expense';
+
+  @override
+  String get reportFlowTitleMonth => 'Monthly Income–Expense';
+
+  @override
+  String get reportUnitDay => 'Day';
+
+  @override
+  String get reportUnitWeek => 'Week';
+
+  @override
+  String get reportUnitMonth => 'Month';
+
+  @override
+  String get reportUnitSelectorLabel => 'Resolution';
+
+  @override
+  String reportUnitTooDense(Object count) {
+    return '$count columns won\'t fit';
+  }
+
+  @override
+  String reportFlowChartSemantics(Object count, Object income, Object expense) {
+    return 'Income–expense chart: $count periods, total income $income, total expense $expense. Tap the columns for values.';
+  }
+
+  @override
+  String reportBalanceChartSemantics(Object start, Object end) {
+    return 'Balance chart: $start at the start of the period, $end at the end. Tap the line for values in between.';
+  }
 }

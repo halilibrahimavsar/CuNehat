@@ -1539,12 +1539,6 @@ abstract class AppLocalizations {
   /// **'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.'**
   String get buDonemIcinKayit;
 
-  /// No description provided for @reportDailyFlowTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük Gelir–Gider'**
-  String get reportDailyFlowTitle;
-
   /// No description provided for @kategoriDagilimi.
   ///
   /// In tr, this message translates to:
@@ -7036,6 +7030,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Hedef ekle'**
   String get hedefEkleKisa;
+
+  /// No description provided for @reportFlowTitleDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük Gelir–Gider'**
+  String get reportFlowTitleDay;
+
+  /// No description provided for @reportFlowTitleWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık Gelir–Gider'**
+  String get reportFlowTitleWeek;
+
+  /// No description provided for @reportFlowTitleMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık Gelir–Gider'**
+  String get reportFlowTitleMonth;
+
+  /// No description provided for @reportUnitDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün'**
+  String get reportUnitDay;
+
+  /// No description provided for @reportUnitWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta'**
+  String get reportUnitWeek;
+
+  /// No description provided for @reportUnitMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ay'**
+  String get reportUnitMonth;
+
+  /// No description provided for @reportUnitSelectorLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çözünürlük'**
+  String get reportUnitSelectorLabel;
+
+  /// No description provided for @reportUnitTooDense.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sütun sığmaz'**
+  String reportUnitTooDense(Object count);
+
+  /// No description provided for @reportFlowChartSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir–gider grafiği: {count} dönem, toplam gelir {income}, toplam gider {expense}. Değerler için sütunlara dokunun.'**
+  String reportFlowChartSemantics(Object count, Object income, Object expense);
+
+  /// No description provided for @reportBalanceChartSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokunun.'**
+  String reportBalanceChartSemantics(Object start, Object end);
 }
 
 class _AppLocalizationsDelegate

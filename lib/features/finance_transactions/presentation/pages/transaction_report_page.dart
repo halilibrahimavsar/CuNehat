@@ -12,6 +12,7 @@ import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -25,8 +26,10 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
+import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -82,6 +85,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   bool _showIncomeBarChart = false;
   FinanceMode _categoryMode = FinanceMode.compare;
 
+  /// Kullanıcının seçtiği zaman çözünürlüğü; null ise aralığa göre otomatik
+  /// (bkz. [ReportSeriesService.autoUnitFor]). Aralık DEĞİŞİNCE sıfırlanır:
+  /// "Bu Yıl"da elle seçilen "Ay", "Bu Ay"a dönüldüğünde tek çubuk çizerdi.
+  ReportBucketUnit? _unitOverride;
+
   Map<String, IconData> _categoryIcons = {};
 
   /// `tag` → görünen ad. Kırılım anahtarı hep `tag` (kategori id'si) kalır;
@@ -96,6 +104,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   StreamSubscription<void>? _categoriesSub;
 
   static const _reportService = TransactionReportService();
+  static const _seriesService = ReportSeriesService();
 
   /// Kategori kırılımı/renk paleti/bütçe eşlemesi tek yerde; detay bottom
   /// sheet'i de aynı nesneyi alır.
@@ -178,6 +187,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       setState(() {
         _range = picked;
         _hasUserPickedRange = true;
+        _unitOverride = null;
       });
     }
   }
@@ -242,8 +252,25 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     setState(() {
       _range = DateTimeRange(start: start, end: end);
       _hasAutoAdjustedRange = true;
+      _unitOverride = null;
     });
   }
+
+  /// Akış grafiğinin başlığı çözünürlüğü İZLER: haftalık kovalarda "Günlük
+  /// Gelir–Gider" yazmak, mağaza denetiminde yakalanan hatanın aynısıdır.
+  String _flowTitle(BuildContext context, ReportBucketUnit unit) =>
+      switch (unit) {
+        ReportBucketUnit.day => context.l10n.reportFlowTitleDay,
+        ReportBucketUnit.week => context.l10n.reportFlowTitleWeek,
+        ReportBucketUnit.month => context.l10n.reportFlowTitleMonth,
+      };
+
+  /// Her çözünürlüğün seçili aralıkta kaç kova ürettiği — seçicinin hangi
+  /// seçeneği kapatacağına bununla karar verilir.
+  Map<ReportBucketUnit, int> _bucketCounts() => {
+        for (final unit in ReportBucketUnit.values)
+          unit: _seriesService.bucketCountFor(_range.start, _range.end, unit),
+      };
 
   void _openCategoryDetails(
       CategoryData cat, bool isExpense, ReportSliceMode sliceMode) {
@@ -315,6 +342,21 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           final brightness =
               (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
 
+          // Zaman serisi: kovalar dönemin TAMAMINI kaplar (boş günler dahil)
+          // ve bakiye çizgisi cüzdanın gerçek açılış bakiyesine çapalanır.
+          final series = _seriesService.build(
+            inRange: filteredTransactions,
+            start: _range.start,
+            end: _range.end,
+            unit: _unitOverride,
+            openingBalance: _seriesService.openingBalanceFor(
+              all: transactions,
+              start: _range.start,
+              walletOpeningBalance:
+                  context.walletById(widget.walletId)?.openingBalance ?? 0,
+            ),
+          );
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -347,42 +389,28 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                     previousTotals: previousTotals,
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    context.l10n.reportDailyFlowTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  ReportSectionHeader(
+                    title: _flowTitle(context, series.unit),
+                    trailing: ReportUnitSelector(
+                      selected: series.unit,
+                      bucketCounts: _bucketCounts(),
+                      onChanged: (u) => setState(() => _unitOverride = u),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ReportDailyNetFlowChart(
-                    transactions: filteredTransactions,
-                  ),
+                  ReportDailyNetFlowChart(series: series),
                   const SizedBox(height: 24),
-                  Text(
-                    context.l10n.reportBalanceTrend,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  ReportSectionHeader(
+                      title: context.l10n.reportBalanceTrend),
                   const SizedBox(height: 12),
-                  ReportCumulativeBalanceChart(
-                    transactions: filteredTransactions,
-                  ),
+                  ReportCumulativeBalanceChart(series: series),
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        context.l10n.kategoriDagilimi,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      FinanceModeSegment(
-                        currentMode: _categoryMode,
-                        onModeChanged: (m) => setState(() => _categoryMode = m),
-                      ),
-                    ],
+                  ReportSectionHeader(
+                    title: context.l10n.kategoriDagilimi,
+                    trailing: FinanceModeSegment(
+                      currentMode: _categoryMode,
+                      onModeChanged: (m) => setState(() => _categoryMode = m),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   if (isCompare)

@@ -807,9 +807,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.';
 
   @override
-  String get reportDailyFlowTitle => 'Günlük Gelir–Gider';
-
-  @override
   String get kategoriDagilimi => 'Kategori Dağılımı';
 
   @override
@@ -3961,4 +3958,40 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hedefEkleKisa => 'Hedef ekle';
+
+  @override
+  String get reportFlowTitleDay => 'Günlük Gelir–Gider';
+
+  @override
+  String get reportFlowTitleWeek => 'Haftalık Gelir–Gider';
+
+  @override
+  String get reportFlowTitleMonth => 'Aylık Gelir–Gider';
+
+  @override
+  String get reportUnitDay => 'Gün';
+
+  @override
+  String get reportUnitWeek => 'Hafta';
+
+  @override
+  String get reportUnitMonth => 'Ay';
+
+  @override
+  String get reportUnitSelectorLabel => 'Çözünürlük';
+
+  @override
+  String reportUnitTooDense(Object count) {
+    return '$count sütun sığmaz';
+  }
+
+  @override
+  String reportFlowChartSemantics(Object count, Object income, Object expense) {
+    return 'Gelir–gider grafiği: $count dönem, toplam gelir $income, toplam gider $expense. Değerler için sütunlara dokunun.';
+  }
+
+  @override
+  String reportBalanceChartSemantics(Object start, Object end) {
+    return 'Bakiye grafiği: dönem başı $start, dönem sonu $end. Ara değerler için çizgiye dokunun.';
+  }
 }

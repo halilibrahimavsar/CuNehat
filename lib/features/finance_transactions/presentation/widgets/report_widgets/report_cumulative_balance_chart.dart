@@ -1,22 +1,33 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_time_axis.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-/// Dönem boyunca birikimli bakiye çizgisi.
+/// Dönem boyunca cüzdan bakiyesinin seyri.
 ///
-/// Dokununca tooltip o günün tarihini ve birikimli tutarı [MoneyWriter] ile
-/// yazar (göz düğmesine duyarlı); sıfırın altına inen dönemlerde ayrıca sıfır
+/// İki şey buradan okunmalı ve ikisi de eskiden yanlıştı:
+///
+///  1. **Eksen takvimdir.** Hareketsiz kovalar da çizilir, çizgi onlarda düz
+///     gider. Eskiden yalnız işlem OLAN günler yan yana diziliyordu; eğim
+///     tamamen uydurmaydı.
+///  2. **Çizgi GERÇEK bakiyeyi gösterir.** Eskiden her dönem 0'dan
+///     başlıyordu, yani cüzdanında 50.000 TL olan bir kullanıcı sadece
+///     gideri olan bir ayda "-700"e inen bir "Bakiye Trendi" görüyordu.
+///     Çıpa [ReportSeries.openingBalance]'tır.
+///
+/// Dokununca tooltip o kovanın tarihini ve bakiyeyi [MoneyWriter] ile yazar
+/// (göz düğmesine duyarlı); sıfırın altına inen dönemlerde ayrıca sıfır
 /// çizgisi gösterilir.
 class ReportCumulativeBalanceChart extends StatelessWidget {
-  final List<TransactionEntity> transactions;
+  final ReportSeries series;
 
   const ReportCumulativeBalanceChart({
     super.key,
-    required this.transactions,
+    required this.series,
   });
 
   /// Bu sayıdan çok nokta varken tek tek noktalar çizgiyi boğuyor.
@@ -27,29 +38,21 @@ class ReportCumulativeBalanceChart extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    if (transactions.isEmpty) return const SizedBox();
+    if (series.isEmpty || series.hasNoActivity) return const SizedBox();
 
-    final Map<DateTime, double> dailyNet = {};
-    for (final t in transactions) {
-      final day = DateTime(t.date.year, t.date.month, t.date.day);
-      final signed = t.isIncome ? t.amount : -t.amount;
-      dailyNet[day] = (dailyNet[day] ?? 0) + signed;
-    }
+    final buckets = series.buckets;
+    final balances = series.cumulativeBalance;
 
-    final entries = dailyNet.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-    if (entries.isEmpty) return const SizedBox();
+    final spots = <FlSpot>[
+      for (var i = 0; i < balances.length; i++)
+        FlSpot(i.toDouble(), balances[i]),
+    ];
 
-    final List<FlSpot> spots = [];
-    double cumulative = 0;
-    double minValue = 0;
-    double maxValue = 0;
-
-    for (int i = 0; i < entries.length; i++) {
-      cumulative += entries[i].value;
-      spots.add(FlSpot(i.toDouble(), cumulative));
-      if (cumulative < minValue) minValue = cumulative;
-      if (cumulative > maxValue) maxValue = cumulative;
+    var minValue = balances.first;
+    var maxValue = balances.first;
+    for (final v in balances) {
+      if (v < minValue) minValue = v;
+      if (v > maxValue) maxValue = v;
     }
 
     if (minValue == maxValue) {
@@ -73,134 +76,141 @@ class ReportCumulativeBalanceChart extends StatelessWidget {
     return AppCard(
       section: AppSection.transactions,
       padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
-      child: SizedBox(
-        height: 220,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final step = dateLabelStep(
-              pointCount: entries.length,
-              availableWidth: constraints.maxWidth - kValueAxisWidth,
-              slotWidth: scaledDateLabelSlot(context),
-            );
+      child: Semantics(
+        label: context.l10n.reportBalanceChartSemantics(
+          money(balances.first),
+          money(balances.last),
+        ),
+        child: SizedBox(
+          height: 220,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final step = dateLabelStep(
+                pointCount: buckets.length,
+                availableWidth: constraints.maxWidth - kValueAxisWidth,
+                slotWidth: scaledDateLabelSlot(context),
+              );
 
-            return LineChart(
-              LineChartData(
-                minY: axisMin,
-                maxY: axisMax,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    color: scheme.primary,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(show: spots.length <= _maxDotCount),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: scheme.primary.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ],
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    fitInsideHorizontally: true,
-                    fitInsideVertically: true,
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final index = spot.x.toInt();
-                        final date = index >= 0 && index < entries.length
-                            ? '${chartTooltipDate(entries[index].key)}\n'
-                            : '';
-                        return LineTooltipItem(
-                          '$date${money(spot.y)}',
-                          kChartTooltipStyle,
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    if (crossesZero)
-                      HorizontalLine(
-                        y: 0,
-                        color: scheme.onSurface.withValues(alpha: 0.35),
-                        strokeWidth: 1,
-                        dashArray: [4, 3],
+              return LineChart(
+                LineChartData(
+                  minY: axisMin,
+                  maxY: axisMax,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: scheme.primary,
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(show: spots.length <= _maxDotCount),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: scheme.primary.withValues(alpha: 0.1),
                       ),
+                    ),
                   ],
-                ),
-                titlesData: FlTitlesData(
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: kValueAxisWidth,
-                      interval: yInterval > 0 ? yInterval : 1,
-                      getTitlesWidget: (value, meta) {
-                        // fl_chart aralık etiketlerinin YANINDA eksenin uç
-                        // değerlerini de basıyor; bunlar nefes payından gelen
-                        // rastgele sayılar ("-581") ve komşularının 16px
-                        // dibine düşüp okunmaz bir küme oluşturuyorlardı.
-                        // Yalnız gerçek veri aralığındakileri çiziyoruz.
-                        if (value < minValue || value > maxValue) {
-                          return const SizedBox.shrink();
-                        }
-                        // Tutarlar gizliyken değer ekseni yazılmaz (bkz.
-                        // günlük akış grafiği); çizginin şekli görünür kalır.
-                        if (!money.visible) return const SizedBox.shrink();
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          child: Text(
-                            money.compact(value, symbol: false),
-                            style: chartAxisLabelStyle(scheme),
-                          ),
-                        );
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                      fitInsideHorizontally: true,
+                      fitInsideVertically: true,
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          final index = spot.x.toInt();
+                          final date = index >= 0 && index < buckets.length
+                              ? '${bucketTooltipDate(buckets[index], series.unit)}\n'
+                              : '';
+                          return LineTooltipItem(
+                            '$date${money(spot.y)}',
+                            kChartTooltipStyle,
+                          );
+                        }).toList();
                       },
                     ),
                   ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 24,
-                      interval: 1,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 ||
-                            index >= entries.length ||
-                            index % step != 0) {
-                          return const SizedBox.shrink();
-                        }
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          // Serinin ilk/son tarihi eksenin tam ucuna denk
-                          // geliyor ve kartın dışına taşıyordu.
-                          fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
-                          child: Text(
-                            chartDateLabel(entries[index].key),
-                            style: chartAxisLabelStyle(scheme),
-                          ),
-                        );
-                      },
+                  extraLinesData: ExtraLinesData(
+                    horizontalLines: [
+                      if (crossesZero)
+                        HorizontalLine(
+                          y: 0,
+                          color: scheme.onSurface.withValues(alpha: 0.35),
+                          strokeWidth: 1,
+                          dashArray: [4, 3],
+                        ),
+                    ],
+                  ),
+                  titlesData: FlTitlesData(
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: kValueAxisWidth,
+                        interval: yInterval > 0 ? yInterval : 1,
+                        getTitlesWidget: (value, meta) {
+                          // fl_chart aralık etiketlerinin YANINDA eksenin uç
+                          // değerlerini de basıyor; bunlar nefes payından gelen
+                          // rastgele sayılar ("-581") ve komşularının 16px
+                          // dibine düşüp okunmaz bir küme oluşturuyorlardı.
+                          // Yalnız gerçek veri aralığındakileri çiziyoruz.
+                          if (value < minValue || value > maxValue) {
+                            return const SizedBox.shrink();
+                          }
+                          // Tutarlar gizliyken değer ekseni yazılmaz (bkz.
+                          // günlük akış grafiği); çizginin şekli görünür kalır.
+                          if (!money.visible) return const SizedBox.shrink();
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            child: Text(
+                              money.compact(value, symbol: false),
+                              style: chartAxisLabelStyle(scheme),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 24,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 ||
+                              index >= buckets.length ||
+                              index % step != 0) {
+                            return const SizedBox.shrink();
+                          }
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            // Serinin ilk/son tarihi eksenin tam ucuna denk
+                            // geliyor ve kartın dışına taşıyordu.
+                            fitInside:
+                                SideTitleFitInsideData.fromTitleMeta(meta),
+                            child: Text(
+                              bucketAxisLabel(buckets[index], series.unit),
+                              style: chartAxisLabelStyle(scheme),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: yInterval > 0 ? yInterval : 1,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: scheme.onSurface.withValues(alpha: 0.1),
-                    strokeWidth: 1,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: yInterval > 0 ? yInterval : 1,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: scheme.onSurface.withValues(alpha: 0.1),
+                      strokeWidth: 1,
+                    ),
                   ),
+                  borderData: FlBorderData(show: false),
                 ),
-                borderData: FlBorderData(show: false),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

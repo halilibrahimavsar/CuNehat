@@ -1,7 +1,7 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
@@ -72,6 +72,16 @@ void main() {
         type: income
             ? TransactionTypeModel.income
             : TransactionTypeModel.expense,
+      );
+
+  /// 6.200 gelir + 1.500 gider, iki günlük seri.
+  ReportSeries flowSeries() => const ReportSeriesService().build(
+        inRange: [
+          tx(DateTime(2026, 6, 1), 6200, true),
+          tx(DateTime(2026, 6, 2), 1500, false),
+        ],
+        start: DateTime(2026, 6, 1),
+        end: DateTime(2026, 6, 2),
       );
 
   List<CategoryData> slices() => [
@@ -159,10 +169,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(host(
         visible: false,
-        ReportDailyNetFlowChart(transactions: [
-          tx(DateTime(2026, 6, 1), 6200, true),
-          tx(DateTime(2026, 6, 2), 1500, false),
-        ]),
+        ReportDailyNetFlowChart(series: flowSeries()),
       ));
       await tester.pump();
 
@@ -184,10 +191,7 @@ void main() {
     testWidgets('bakiye grafiğinin tooltip\'i maskelenir', (tester) async {
       await tester.pumpWidget(host(
         visible: false,
-        ReportCumulativeBalanceChart(transactions: [
-          tx(DateTime(2026, 6, 1), 6200, true),
-          tx(DateTime(2026, 6, 2), 1500, false),
-        ]),
+        ReportCumulativeBalanceChart(series: flowSeries()),
       ));
       await tester.pump();
 

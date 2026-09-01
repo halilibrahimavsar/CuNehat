@@ -333,7 +333,6 @@
   "gelirVeyaGiderKaydettikten": "Analysis details will be listed here after you save income or expense.",
   "henuzIslemYok": "No transactions yet",
   "buDonemIcinKayit": "No records for this period.\nUse the slider button to add a new transaction.",
-  "reportDailyFlowTitle": "Daily Income–Expense",
   "kategoriDagilimi": "Category Distribution",
   "titleIcinVeriYok": "No data for {title}",
   "@titleIcinVeriYok": {
@@ -2083,5 +2082,33 @@
   "bugunkuDegeriHesapla": "Calculate today's value",
   "hedefYonetimi": "Goals",
   "hedefYokAciklama": "No goals yet. Create one and gather gold, quarter coins and stocks under the same goal.",
-  "hedefEkleKisa": "Add goal"
+  "hedefEkleKisa": "Add goal",
+  "reportFlowTitleDay": "Daily Income–Expense",
+  "reportFlowTitleWeek": "Weekly Income–Expense",
+  "reportFlowTitleMonth": "Monthly Income–Expense",
+  "reportUnitDay": "Day",
+  "reportUnitWeek": "Week",
+  "reportUnitMonth": "Month",
+  "reportUnitSelectorLabel": "Resolution",
+  "reportUnitTooDense": "{count} columns won't fit",
+  "@reportUnitTooDense": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportFlowChartSemantics": "Income–expense chart: {count} periods, total income {income}, total expense {expense}. Tap the columns for values.",
+  "@reportFlowChartSemantics": {
+      "placeholders": {
+          "count": {},
+          "income": {},
+          "expense": {}
+      }
+  },
+  "reportBalanceChartSemantics": "Balance chart: {start} at the start of the period, {end} at the end. Tap the line for values in between.",
+  "@reportBalanceChartSemantics": {
+      "placeholders": {
+          "start": {},
+          "end": {}
+      }
+  }
 }

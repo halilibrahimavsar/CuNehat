@@ -1,6 +1,7 @@
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -17,7 +18,10 @@ import 'package:intl/intl.dart';
 ///     dokununca "1234.5600000000001" görüyordu.
 ///  2. Alt eksende tarihler seyreltilir. Her noktaya etiket basıldığında
 ///     30 günlük veride yazılar üst üste biniyordu.
+///  3. Eksen TAKVİM'dir: hareketsiz kovalar da çizilir ve bakiye çizgisi
+///     cüzdanın gerçek açılış bakiyesine çapalanır (bkz. [ReportSeries]).
 void main() {
+  const seriesService = ReportSeriesService();
   // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
   // sessizce sistem locale'ine (genelde en_US) bağlar ve beklentiler
   // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
@@ -49,6 +53,24 @@ void main() {
         ],
       ];
 
+  /// [txs] işlemlerinden, onları kapsayan aralık üzerinde seri kurar.
+  ReportSeries seriesOf(
+    List<TransactionEntity> txs, {
+    DateTime? start,
+    DateTime? end,
+    ReportBucketUnit? unit,
+    double openingBalance = 0,
+  }) {
+    final dates = txs.map((t) => t.date).toList()..sort();
+    return seriesService.build(
+      inRange: txs,
+      start: start ?? (dates.isEmpty ? DateTime(2026, 6, 1) : dates.first),
+      end: end ?? (dates.isEmpty ? DateTime(2026, 6, 1) : dates.last),
+      unit: unit,
+      openingBalance: openingBalance,
+    );
+  }
+
   Widget host(Widget child, {double width = 360}) {
     return MaterialApp(
       localizationsDelegates: const [
@@ -77,8 +99,8 @@ void main() {
 
   group('ReportDailyNetFlowChart', () {
     testWidgets('veri yoksa hiçbir şey çizmez', (tester) async {
-      await tester.pumpWidget(host(const ReportDailyNetFlowChart(
-        transactions: [],
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
+        series: seriesOf(const []),
       )));
       expect(find.byType(BarChart), findsNothing);
     });
@@ -86,10 +108,10 @@ void main() {
     testWidgets('tooltip tutarı formatMoney ile yazar (ham double değil)',
         (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        transactions: [
+        series: seriesOf([
           tx(date: DateTime(2026, 6, 1), amount: 1234.56, isIncome: true),
           tx(date: DateTime(2026, 6, 1), amount: 40.5, isIncome: false),
-        ],
+        ]),
       )));
       await tester.pumpAndSettle();
 
@@ -109,7 +131,7 @@ void main() {
 
     testWidgets('gelir/gider açıklaması (legend) gösterilir', (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        transactions: series(3),
+        series: seriesOf(series(3)),
       )));
       await tester.pumpAndSettle();
 
@@ -119,7 +141,7 @@ void main() {
 
     testWidgets('az günde her güne tarih etiketi basılır', (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        transactions: series(4),
+        series: seriesOf(series(4)),
       )));
       await tester.pumpAndSettle();
 
@@ -129,7 +151,7 @@ void main() {
     testWidgets('çok günde tarih etiketleri seyreltilir (üst üste binmez)',
         (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        transactions: series(30),
+        series: seriesOf(series(30)),
       )));
       await tester.pumpAndSettle();
 
@@ -139,12 +161,61 @@ void main() {
       expect(labels.length, lessThanOrEqualTo(8));
       expect(labels, isNotEmpty);
     });
+
+    testWidgets('REGRESYON: hareketsiz günler çubuk olarak DA çizilir',
+        (tester) async {
+      // 1 ve 25 Haziran'daki iki işlem eskiden yan yana iki çubuk oluyordu:
+      // eksen takvim değil, "işlem olan günler" listesiydi.
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
+        series: seriesOf(
+          [
+            tx(date: DateTime(2026, 6, 1), amount: 100, isIncome: true),
+            tx(date: DateTime(2026, 6, 25), amount: 300, isIncome: false),
+          ],
+          start: DateTime(2026, 6, 1),
+          end: DateTime(2026, 6, 30),
+        ),
+      )));
+      await tester.pumpAndSettle();
+
+      final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+      expect(data.barGroups.length, 30, reason: 'Haziran 30 gün');
+      expect(data.barGroups[0].barRods[0].toY, 100);
+      expect(data.barGroups[24].barRods[1].toY, 300);
+      // Aradaki 23 gün sıfır çubukla duruyor, atlanmıyor.
+      expect(
+        data.barGroups
+            .sublist(1, 24)
+            .every((g) => g.barRods.every((r) => r.toY == 0)),
+        isTrue,
+      );
+    });
+
+    testWidgets('haftalık kovada tooltip tek gün değil ARALIK yazar',
+        (tester) async {
+      await tester.pumpWidget(host(ReportDailyNetFlowChart(
+        series: seriesOf(
+          [tx(date: DateTime(2026, 6, 3), amount: 500, isIncome: true)],
+          start: DateTime(2026, 6, 1),
+          end: DateTime(2026, 6, 14),
+          unit: ReportBucketUnit.week,
+        ),
+      )));
+      await tester.pumpAndSettle();
+
+      final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+      final group = data.barGroups.first;
+      final item = data.barTouchData.touchTooltipData
+          .getTooltipItem(group, 0, group.barRods[0], 0);
+      // Tek tarih, yanındaki tutarın YEDİ günün toplamı olduğunu gizlerdi.
+      expect(item!.text, contains('1 – 7 Haziran 2026'));
+    });
   });
 
   group('ReportCumulativeBalanceChart', () {
     testWidgets('veri yoksa hiçbir şey çizmez', (tester) async {
-      await tester.pumpWidget(host(const ReportCumulativeBalanceChart(
-        transactions: [],
+      await tester.pumpWidget(host(ReportCumulativeBalanceChart(
+        series: seriesOf(const []),
       )));
       expect(find.byType(LineChart), findsNothing);
     });
@@ -152,10 +223,10 @@ void main() {
     testWidgets('tooltip birikimli tutarı formatMoney ile yazar',
         (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        transactions: [
+        series: seriesOf([
           tx(date: DateTime(2026, 6, 1), amount: 2500.5, isIncome: true),
           tx(date: DateTime(2026, 6, 2), amount: 300, isIncome: false),
-        ],
+        ]),
       )));
       await tester.pumpAndSettle();
 
@@ -173,7 +244,7 @@ void main() {
     testWidgets('nokta sayısı azken noktalar görünür, çokken gizlenir',
         (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        transactions: series(5),
+        series: seriesOf(series(5)),
       )));
       await tester.pumpAndSettle();
       expect(
@@ -188,7 +259,7 @@ void main() {
       );
 
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        transactions: series(30),
+        series: seriesOf(series(30)),
       )));
       await tester.pumpAndSettle();
       expect(
@@ -205,7 +276,7 @@ void main() {
 
     testWidgets('çok günde tarih etiketleri seyreltilir', (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        transactions: series(30),
+        series: seriesOf(series(30)),
       )));
       await tester.pumpAndSettle();
 
@@ -218,10 +289,10 @@ void main() {
     testWidgets('seri sıfırın altına inince sıfır çizgisi eklenir',
         (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        transactions: [
+        series: seriesOf([
           tx(date: DateTime(2026, 6, 1), amount: 100, isIncome: true),
           tx(date: DateTime(2026, 6, 2), amount: 400, isIncome: false),
-        ],
+        ]),
       )));
       await tester.pumpAndSettle();
 
@@ -232,12 +303,55 @@ void main() {
 
     testWidgets('seri hep pozitifken sıfır çizgisi eklenmez', (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        transactions: series(4),
+        series: seriesOf(series(4)),
       )));
       await tester.pumpAndSettle();
 
       final data = tester.widget<LineChart>(find.byType(LineChart)).data;
       expect(data.extraLinesData.horizontalLines, isEmpty);
+    });
+
+    testWidgets('REGRESYON: çizgi 0\'dan değil GERÇEK bakiyeden başlar',
+        (tester) async {
+      // Cüzdanında 50.000 TL olan bir kullanıcı, sadece gideri olan bir ayda
+      // "-700"e inen bir "Bakiye Trendi" görüyordu.
+      await tester.pumpWidget(host(ReportCumulativeBalanceChart(
+        series: seriesOf(
+          [
+            tx(date: DateTime(2026, 6, 1), amount: 500, isIncome: false),
+            tx(date: DateTime(2026, 6, 2), amount: 200, isIncome: false),
+          ],
+          openingBalance: 50000,
+        ),
+      )));
+      await tester.pumpAndSettle();
+
+      final bar = tester
+          .widget<LineChart>(find.byType(LineChart))
+          .data
+          .lineBarsData
+          .first;
+      expect(bar.spots.map((s) => s.y).toList(), [49500, 49300]);
+    });
+
+    testWidgets('hareketsiz kovada çizgi düz gider, nokta atlanmaz',
+        (tester) async {
+      await tester.pumpWidget(host(ReportCumulativeBalanceChart(
+        series: seriesOf(
+          [tx(date: DateTime(2026, 6, 1), amount: 100, isIncome: false)],
+          start: DateTime(2026, 6, 1),
+          end: DateTime(2026, 6, 4),
+          openingBalance: 1000,
+        ),
+      )));
+      await tester.pumpAndSettle();
+
+      final bar = tester
+          .widget<LineChart>(find.byType(LineChart))
+          .data
+          .lineBarsData
+          .first;
+      expect(bar.spots.map((s) => s.y).toList(), [900, 900, 900, 900]);
     });
   });
 }

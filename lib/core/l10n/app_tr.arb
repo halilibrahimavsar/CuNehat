@@ -333,7 +333,6 @@
   "gelirVeyaGiderKaydettikten": "Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.",
   "henuzIslemYok": "Henüz işlem yok",
   "buDonemIcinKayit": "Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.",
-  "reportDailyFlowTitle": "Günlük Gelir–Gider",
   "kategoriDagilimi": "Kategori Dağılımı",
   "titleIcinVeriYok": "{title} için veri yok",
   "@titleIcinVeriYok": {
@@ -2104,5 +2103,33 @@
   "bugunkuDegeriHesapla": "Bugünkü değeri hesapla",
   "hedefYonetimi": "Hedefler",
   "hedefYokAciklama": "Henüz hedefin yok. Hedef aç, gram altını, çeyreği ve hisseyi aynı hedefin altında topla.",
-  "hedefEkleKisa": "Hedef ekle"
+  "hedefEkleKisa": "Hedef ekle",
+  "reportFlowTitleDay": "Günlük Gelir–Gider",
+  "reportFlowTitleWeek": "Haftalık Gelir–Gider",
+  "reportFlowTitleMonth": "Aylık Gelir–Gider",
+  "reportUnitDay": "Gün",
+  "reportUnitWeek": "Hafta",
+  "reportUnitMonth": "Ay",
+  "reportUnitSelectorLabel": "Çözünürlük",
+  "reportUnitTooDense": "{count} sütun sığmaz",
+  "@reportUnitTooDense": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportFlowChartSemantics": "Gelir–gider grafiği: {count} dönem, toplam gelir {income}, toplam gider {expense}. Değerler için sütunlara dokunun.",
+  "@reportFlowChartSemantics": {
+      "placeholders": {
+          "count": {},
+          "income": {},
+          "expense": {}
+      }
+  },
+  "reportBalanceChartSemantics": "Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokunun.",
+  "@reportBalanceChartSemantics": {
+      "placeholders": {
+          "start": {},
+          "end": {}
+      }
+  }
 }
