@@ -4020,4 +4020,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportViewBars => 'Çubuk görünümü';
+
+  @override
+  String reportPieSemantics(Object title, Object count, Object total) {
+    return '$title kategori dağılımı: $count kalem, toplam $total. Kalem başına ayrıntı için aşağıdaki listeye bakın.';
+  }
+
+  @override
+  String reportCompareBarSemantics(Object side, Object total, Object count) {
+    return '$side çubuğu: $total, $count kalem.';
+  }
 }

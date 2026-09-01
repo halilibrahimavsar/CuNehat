@@ -40,12 +40,21 @@ class ReportCompareChartCard extends StatelessWidget {
   /// söyler (detay sayfası kırılımı kendi yeniden hesaplar).
   final void Function(CategoryData slice, bool isExpense) onSliceTap;
 
+  /// Gider kalemlerinin bütçe ilerlemesi; verilmezse çubuk çizilmez.
+  ///
+  /// Bütçeler eskiden YALNIZ tek taraflı pasta kartına geçiriliyordu, oysa
+  /// sayfanın açılış modu karşılaştırma — yani bütçe uyarıları varsayılan
+  /// görünümde hiç görünmüyordu.
+  final ({double progress, bool isExceeded, double limit})? Function(
+      String tag, double spent)? budgetProgressFor;
+
   const ReportCompareChartCard({
     super.key,
     required this.incomeSlices,
     required this.expenseSlices,
     required this.onSliceTap,
     this.categoryLabels = const {},
+    this.budgetProgressFor,
   });
 
   /// Çubuk kalınlığı — mark tavanı 24dp; biraz hava bırakılır.
@@ -232,13 +241,22 @@ class ReportCompareChartCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        LayoutBuilder(
-          builder: (context, constraints) => _buildBar(
-            slices: slices,
-            sideTotal: sideTotal,
-            axisMax: axisMax,
-            fullWidth: constraints.maxWidth,
-            isExpense: isExpense,
+        Semantics(
+          // Yığılmış çubuk ekran okuyucuya görünmezdi; kırılımı aşağıdaki
+          // efsane satırları taşıyor, buradaki etiket tarafın toplamını verir.
+          label: context.l10n.reportCompareBarSemantics(
+            sideLabel,
+            money(sideTotal),
+            slices.length.toString(),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => _buildBar(
+              slices: slices,
+              sideTotal: sideTotal,
+              axisMax: axisMax,
+              fullWidth: constraints.maxWidth,
+              isExpense: isExpense,
+            ),
           ),
         ),
         const SizedBox(height: 6),
@@ -458,46 +476,81 @@ class ReportCompareChartCard extends StatelessWidget {
             onTap: () => onSliceTap(slice, isExpense),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 9),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: slice.color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      slice.labelIn(context, categoryLabels),
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurface,
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: slice.color,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          slice.labelIn(context, categoryLabels),
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.l10n.formatMoneyItemTotalamountPercent(
+                          money(slice.totalAmount),
+                          (sideTotal <= 0
+                                  ? 0.0
+                                  : slice.totalAmount / sideTotal * 100)
+                              .toStringAsFixed(0),
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    context.l10n.formatMoneyItemTotalamountPercent(
-                      money(slice.totalAmount),
-                      (sideTotal <= 0
-                              ? 0.0
-                              : slice.totalAmount / sideTotal * 100)
-                          .toStringAsFixed(0),
-                    ),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
+                  // Bütçe yalnız gider tarafında ve yalnız tanımlıysa.
+                  ..._buildBudgetBar(theme, slice, isExpense: isExpense),
                 ],
               ),
             ),
           ),
       ],
     );
+  }
+
+  List<Widget> _buildBudgetBar(
+    ThemeData theme,
+    CategoryData slice, {
+    required bool isExpense,
+  }) {
+    if (!isExpense) return const [];
+    final budget = budgetProgressFor?.call(slice.name, slice.totalAmount);
+    if (budget == null) return const [];
+    final scheme = theme.colorScheme;
+
+    return [
+      Padding(
+        padding: const EdgeInsets.only(left: 22, top: 6),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(
+            value: budget.progress,
+            minHeight: 4,
+            backgroundColor: scheme.onSurface.withValues(alpha: 0.08),
+            valueColor: AlwaysStoppedAnimation(
+              budget.isExceeded ? Colors.redAccent : Colors.green,
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 }

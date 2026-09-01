@@ -7132,6 +7132,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çubuk görünümü'**
   String get reportViewBars;
+
+  /// No description provided for @reportPieSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'{title} kategori dağılımı: {count} kalem, toplam {total}. Kalem başına ayrıntı için aşağıdaki listeye bakın.'**
+  String reportPieSemantics(Object title, Object count, Object total);
+
+  /// No description provided for @reportCompareBarSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'{side} çubuğu: {total}, {count} kalem.'**
+  String reportCompareBarSemantics(Object side, Object total, Object count);
 }
 
 class _AppLocalizationsDelegate

@@ -220,63 +220,76 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
           const SizedBox(height: 24),
           widget.showBarChart
               ? const SizedBox.shrink()
-              : SizedBox(
-                  height: 200,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      _buildCenterLabel(context, theme, total),
-                      PieChart(
-                    PieChartData(
-                      pieTouchData: PieTouchData(
-                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          final isTapUp = event is FlTapUpEvent;
-                          int? tappedIndex;
-
-                          setState(() {
-                            if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
-                              final touchIndex = pieTouchResponse
-                                      ?.touchedSection?.touchedSectionIndex ??
-                                  -1;
-                              final actualIndex =
-                                  touchIndex != -1 ? touchIndex : _touchedIndex;
-
-                              if (isTapUp &&
-                                  actualIndex != -1 &&
-                                  actualIndex < widget.pieData.length) {
-                                tappedIndex = actualIndex;
-                              }
-
-                              _touchedIndex = -1;
-                              return;
-                            }
-
-                            final newIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
-                            _touchedIndex = newIndex;
-
-                            if (isTapUp &&
-                                newIndex != -1 &&
-                                newIndex < widget.pieData.length) {
-                              tappedIndex = newIndex;
-                            }
-                          });
-
-                          if (tappedIndex != null) {
-                            widget.onCategoryTap(widget.pieData[tappedIndex!],
-                                ReportSliceMode.pie);
-                          }
-                        },
-                      ),
-                      sections: sections,
-                      sectionsSpace: 3,
-                      centerSpaceRadius: 40,
-                      borderData: FlBorderData(show: false),
-                    ),
+              : Semantics(
+                  // Pasta ekran okuyucuya hiçbir şey söylemiyordu; kırılımın
+                  // kendisi altındaki efsane satırlarında okunur.
+                  label: context.l10n.reportPieSemantics(
+                    widget.title,
+                    widget.pieData.length.toString(),
+                    _money(total),
                   ),
-                    ],
+                  child: SizedBox(
+                    height: 200,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        _buildCenterLabel(context, theme, total),
+                        PieChart(
+                          PieChartData(
+                            pieTouchData: PieTouchData(
+                              touchCallback:
+                                  (FlTouchEvent event, pieTouchResponse) {
+                                final isTapUp = event is FlTapUpEvent;
+                                int? tappedIndex;
+
+                                setState(() {
+                                  if (!event.isInterestedForInteractions ||
+                                      pieTouchResponse == null ||
+                                      pieTouchResponse.touchedSection == null) {
+                                    final touchIndex = pieTouchResponse
+                                            ?.touchedSection
+                                            ?.touchedSectionIndex ??
+                                        -1;
+                                    final actualIndex = touchIndex != -1
+                                        ? touchIndex
+                                        : _touchedIndex;
+
+                                    if (isTapUp &&
+                                        actualIndex != -1 &&
+                                        actualIndex < widget.pieData.length) {
+                                      tappedIndex = actualIndex;
+                                    }
+
+                                    _touchedIndex = -1;
+                                    return;
+                                  }
+
+                                  final newIndex = pieTouchResponse
+                                      .touchedSection!.touchedSectionIndex;
+                                  _touchedIndex = newIndex;
+
+                                  if (isTapUp &&
+                                      newIndex != -1 &&
+                                      newIndex < widget.pieData.length) {
+                                    tappedIndex = newIndex;
+                                  }
+                                });
+
+                                if (tappedIndex != null) {
+                                  widget.onCategoryTap(
+                                      widget.pieData[tappedIndex!],
+                                      ReportSliceMode.pie);
+                                }
+                              },
+                            ),
+                            sections: sections,
+                            sectionsSpace: 3,
+                            centerSpaceRadius: 40,
+                            borderData: FlBorderData(show: false),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
           const SizedBox(height: 24),
@@ -389,8 +402,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                     ),
                     Text(
                       context.l10n.formatMoneyItemTotalamountPercent(
-                          _money(item.totalAmount),
-                          percent.toStringAsFixed(0)),
+                          _money(item.totalAmount), percent.toStringAsFixed(0)),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                         color: scheme.onSurfaceVariant,

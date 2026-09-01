@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/core/shared/widgets/date_range_chips.dart';
@@ -73,6 +74,9 @@ void main() {
     // kanala abone olur (bkz. CategoriesChangedNotifier).
     getIt.registerSingleton<CategoriesChangedNotifier>(
         CategoriesChangedNotifier());
+    // Bütçeler Bütçeler sayfasından değiştirildiğinde rapor kendi kopyasını
+    // tazeler (bkz. BudgetsChangedNotifier).
+    getIt.registerSingleton<BudgetsChangedNotifier>(BudgetsChangedNotifier());
     getIt.registerSingleton<BudgetRepository>(mockBudgetRepository);
     getIt.registerSingleton<OnboardingCoordinator>(mockOnboardingCoordinator);
 
@@ -671,5 +675,101 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
+  });
+
+  group('bütçeler', () {
+    List<TransactionEntity> withFood() {
+      final now = DateTime.now();
+      return [
+        TransactionEntity(
+          id: 'tx_food',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Market',
+          tag: 'Food',
+          amount: 1500,
+          date: now,
+          type: TransactionTypeModel.expense,
+        ),
+        TransactionEntity(
+          id: 'tx_salary',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Maaş',
+          tag: 'Salary',
+          amount: 5000,
+          date: now,
+          type: TransactionTypeModel.income,
+        ),
+      ];
+    }
+
+    testWidgets(
+        'REGRESYON: bütçe ilerlemesi VARSAYILAN (karşılaştırma) modda görünür',
+        (tester) async {
+      when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
+        (_) async => const Right<Failure, List<BudgetEntity>>([
+          BudgetEntity(
+              categoryId: 'Food', limitAmount: 1000, spentAmount: 0),
+        ]),
+      );
+      final txs = withFood();
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      // Karşılaştırma kartı açılış modu; bütçe çubuğu eskiden yalnız tek
+      // taraflı pasta kartına geçiriliyordu.
+      expect(find.byType(ReportCompareChartCard), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ReportCompareChartCard),
+          matching: find.byType(LinearProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('bütçe değişince rapor kendi kopyasını TAZELER',
+        (tester) async {
+      var limit = 1000.0;
+      when(() => mockBudgetRepository.getBudgets(any())).thenAnswer(
+        (_) async => Right<Failure, List<BudgetEntity>>([
+          BudgetEntity(
+              categoryId: 'Food', limitAmount: limit, spentAmount: 0),
+        ]),
+      );
+      final txs = withFood();
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      double progressOf() => tester
+          .widget<LinearProgressIndicator>(find.descendant(
+            of: find.byType(ReportCompareChartCard),
+            matching: find.byType(LinearProgressIndicator),
+          ))
+          .value!;
+
+      // 1500 / 1000 → tavana kırpılır.
+      expect(progressOf(), 1.0);
+
+      // Bütçeler sayfasında limit yükseltildi.
+      limit = 3000;
+      getIt<BudgetsChangedNotifier>().notify();
+      await tester.pumpAndSettle();
+
+      expect(progressOf(), closeTo(0.5, 0.001));
+    });
   });
 }

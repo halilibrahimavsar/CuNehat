@@ -2148,5 +2148,21 @@
   "reportShareTooltip": "Raporu paylaş",
   "reportNoIncomeForRate": "Bu dönemde gelir yok",
   "reportViewPie": "Pasta görünümü",
-  "reportViewBars": "Çubuk görünümü"
+  "reportViewBars": "Çubuk görünümü",
+  "reportPieSemantics": "{title} kategori dağılımı: {count} kalem, toplam {total}. Kalem başına ayrıntı için aşağıdaki listeye bakın.",
+  "@reportPieSemantics": {
+      "placeholders": {
+          "title": {},
+          "count": {},
+          "total": {}
+      }
+  },
+  "reportCompareBarSemantics": "{side} çubuğu: {total}, {count} kalem.",
+  "@reportCompareBarSemantics": {
+      "placeholders": {
+          "side": {},
+          "total": {},
+          "count": {}
+      }
+  }
 }

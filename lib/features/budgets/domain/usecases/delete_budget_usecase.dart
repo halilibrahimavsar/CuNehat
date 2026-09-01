@@ -1,16 +1,21 @@
 import 'package:dartz/dartz.dart';
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
 class DeleteBudgetUsecase {
   final BudgetRepository repository;
+  final BudgetsChangedNotifier budgetsChangedNotifier;
 
-  DeleteBudgetUsecase(this.repository);
+  DeleteBudgetUsecase(this.repository, this.budgetsChangedNotifier);
 
-  Future<Either<Failure, void>> call(String walletId, String categoryId) {
-    return repository.deleteBudget(walletId, categoryId);
+  Future<Either<Failure, void>> call(
+      String walletId, String categoryId) async {
+    final result = await repository.deleteBudget(walletId, categoryId);
+    result.fold((_) {}, (_) => budgetsChangedNotifier.notify());
+    return result;
   }
 }
 
@@ -19,11 +24,14 @@ class DeleteBudgetUsecase {
 @injectable
 class DeleteBudgetsForCategoryUsecase {
   final BudgetRepository repository;
+  final BudgetsChangedNotifier budgetsChangedNotifier;
 
-  DeleteBudgetsForCategoryUsecase(this.repository);
+  DeleteBudgetsForCategoryUsecase(this.repository, this.budgetsChangedNotifier);
 
-  Future<Either<Failure, void>> call(String categoryId) {
-    return repository.deleteBudgetsForCategory(categoryId);
+  Future<Either<Failure, void>> call(String categoryId) async {
+    final result = await repository.deleteBudgetsForCategory(categoryId);
+    result.fold((_) {}, (_) => budgetsChangedNotifier.notify());
+    return result;
   }
 }
 
@@ -31,10 +39,13 @@ class DeleteBudgetsForCategoryUsecase {
 @injectable
 class DeleteBudgetsForWalletUsecase {
   final BudgetRepository repository;
+  final BudgetsChangedNotifier budgetsChangedNotifier;
 
-  DeleteBudgetsForWalletUsecase(this.repository);
+  DeleteBudgetsForWalletUsecase(this.repository, this.budgetsChangedNotifier);
 
-  Future<Either<Failure, void>> call(String walletId) {
-    return repository.deleteBudgetsForWallet(walletId);
+  Future<Either<Failure, void>> call(String walletId) async {
+    final result = await repository.deleteBudgetsForWallet(walletId);
+    result.fold((_) {}, (_) => budgetsChangedNotifier.notify());
+    return result;
   }
 }

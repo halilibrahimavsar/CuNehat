@@ -4020,4 +4020,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportViewBars => 'Bar view';
+
+  @override
+  String reportPieSemantics(Object title, Object count, Object total) {
+    return '$title category breakdown: $count items, $total in total. See the list below for per-item detail.';
+  }
+
+  @override
+  String reportCompareBarSemantics(Object side, Object total, Object count) {
+    return '$side bar: $total, $count items.';
+  }
 }

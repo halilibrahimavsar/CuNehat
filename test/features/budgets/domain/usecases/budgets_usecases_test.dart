@@ -1,3 +1,4 @@
+import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/budgets/domain/repositories/budget_repository.dart';
@@ -38,6 +39,8 @@ void main() {
     );
   });
 
+  late BudgetsChangedNotifier budgetsChangedNotifier;
+
   setUp(() {
     mockBudgetRepo = MockBudgetRepository();
     mockTransactionsRepo = MockTransactionsRepository();
@@ -47,8 +50,9 @@ void main() {
 
     getUseCase = GetBudgetsUsecase(
         mockBudgetRepo, mockTransactionsRepo, mockCategoryRepo);
-    saveUseCase = SaveBudgetUsecase(mockBudgetRepo);
-    deleteUseCase = DeleteBudgetUsecase(mockBudgetRepo);
+    budgetsChangedNotifier = BudgetsChangedNotifier();
+    saveUseCase = SaveBudgetUsecase(mockBudgetRepo, budgetsChangedNotifier);
+    deleteUseCase = DeleteBudgetUsecase(mockBudgetRepo, budgetsChangedNotifier);
   });
 
   final testBudget = const BudgetEntity(

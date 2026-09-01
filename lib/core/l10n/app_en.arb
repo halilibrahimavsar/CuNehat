@@ -2127,5 +2127,21 @@
   "reportShareTooltip": "Share the report",
   "reportNoIncomeForRate": "No income this period",
   "reportViewPie": "Pie view",
-  "reportViewBars": "Bar view"
+  "reportViewBars": "Bar view",
+  "reportPieSemantics": "{title} category breakdown: {count} items, {total} in total. See the list below for per-item detail.",
+  "@reportPieSemantics": {
+      "placeholders": {
+          "title": {},
+          "count": {},
+          "total": {}
+      }
+  },
+  "reportCompareBarSemantics": "{side} bar: {total}, {count} items.",
+  "@reportCompareBarSemantics": {
+      "placeholders": {
+          "side": {},
+          "total": {},
+          "count": {}
+      }
+  }
 }
