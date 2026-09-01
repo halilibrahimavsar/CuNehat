@@ -350,12 +350,6 @@ abstract class AppLocalizations {
   /// **'Tarih Aralığı'**
   String get tooltipTarihAraligi;
 
-  /// No description provided for @raporuPaylas.
-  ///
-  /// In tr, this message translates to:
-  /// **'Raporu Paylaş'**
-  String get raporuPaylas;
-
   /// No description provided for @oncekiDonemeGorePercent.
   ///
   /// In tr, this message translates to:
@@ -7090,6 +7084,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokunun.'**
   String reportBalanceChartSemantics(Object start, Object end);
+
+  /// No description provided for @reportSystemMovementsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer ve kuplaj hareketleri'**
+  String get reportSystemMovementsTitle;
+
+  /// No description provided for @reportSystemMovementsOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hareket gelir–giderin dışında'**
+  String reportSystemMovementsOff(Object count);
+
+  /// No description provided for @reportSystemMovementsOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hareket gelir–gidere dahil'**
+  String reportSystemMovementsOn(Object count);
+
+  /// No description provided for @reportSystemMovementsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.'**
+  String get reportSystemMovementsHint;
+
+  /// No description provided for @reportShareTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Raporu paylaş'**
+  String get reportShareTooltip;
 }
 
 class _AppLocalizationsDelegate

@@ -142,9 +142,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tooltipTarihAraligi => 'Tarih Aralığı';
 
   @override
-  String get raporuPaylas => 'Raporu Paylaş';
-
-  @override
   String oncekiDonemeGorePercent(Object percent) {
     return '%$percent önceki döneme göre';
   }
@@ -3994,4 +3991,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String reportBalanceChartSemantics(Object start, Object end) {
     return 'Bakiye grafiği: dönem başı $start, dönem sonu $end. Ara değerler için çizgiye dokunun.';
   }
+
+  @override
+  String get reportSystemMovementsTitle => 'Transfer ve kuplaj hareketleri';
+
+  @override
+  String reportSystemMovementsOff(Object count) {
+    return '$count hareket gelir–giderin dışında';
+  }
+
+  @override
+  String reportSystemMovementsOn(Object count) {
+    return '$count hareket gelir–gidere dahil';
+  }
+
+  @override
+  String get reportSystemMovementsHint =>
+      'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.';
+
+  @override
+  String get reportShareTooltip => 'Raporu paylaş';
 }

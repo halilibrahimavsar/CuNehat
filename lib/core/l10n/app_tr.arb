@@ -52,7 +52,6 @@
   "islemDetayi": "İşlem Detayı",
   "islemRaporu": "İşlem Raporu",
   "tooltipTarihAraligi": "Tarih Aralığı",
-  "raporuPaylas": "Raporu Paylaş",
   "oncekiDonemeGorePercent": "%{percent} önceki döneme göre",
   "@oncekiDonemeGorePercent": {
     "placeholders": {
@@ -2131,5 +2130,20 @@
           "start": {},
           "end": {}
       }
-  }
+  },
+  "reportSystemMovementsTitle": "Transfer ve kuplaj hareketleri",
+  "reportSystemMovementsOff": "{count} hareket gelir–giderin dışında",
+  "@reportSystemMovementsOff": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportSystemMovementsOn": "{count} hareket gelir–gidere dahil",
+  "@reportSystemMovementsOn": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
+  "reportShareTooltip": "Raporu paylaş"
 }

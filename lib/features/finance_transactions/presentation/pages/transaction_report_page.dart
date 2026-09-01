@@ -28,6 +28,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +90,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// (bkz. [ReportSeriesService.autoUnitFor]). Aralık DEĞİŞİNCE sıfırlanır:
   /// "Bu Yıl"da elle seçilen "Ay", "Bu Ay"a dönüldüğünde tek çubuk çizerdi.
   ReportBucketUnit? _unitOverride;
+
+  /// Transfer/borç/yatırım kuplaj hareketleri gelir–gidere sayılsın mı?
+  /// Varsayılan KAPALI: raporun sorusu "ne harcadım", oysa bu hareketlerde
+  /// para harcanmaz, yer değiştirir (bkz.
+  /// [TransactionReportService.splitSystemMovements]).
+  bool _includeSystemMovements = false;
 
   Map<String, IconData> _categoryIcons = {};
 
@@ -194,6 +201,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   /// Seçili [_range] ile aynı gün sayısına sahip, hemen öncesindeki dönemin
   /// toplamlarını hesaplar (dönemsel değişim rozetleri için).
+  ///
+  /// Evren, güncel dönemle AYNI olmak zorunda: kuplaj hareketleri gelir–
+  /// giderin dışında tutulurken önceki dönemin onları saymaya devam etmesi,
+  /// rozeti anlamsız bir kıyasa çevirirdi ("bu ay %70 az harcadın" — çünkü
+  /// geçen ayın rakamında bir transfer duruyor).
   ReportTotals _previousPeriodTotals(List<TransactionEntity> allTransactions) {
     final dayCount = _range.end.difference(_range.start).inDays + 1;
     final previousEnd = _range.start.subtract(const Duration(days: 1));
@@ -203,7 +215,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       previousStart,
       previousEnd,
     );
-    return _reportService.calculateTotals(previousTransactions);
+    final universe = _includeSystemMovements
+        ? previousTransactions
+        : _reportService.splitSystemMovements(previousTransactions).spending;
+    return _reportService.calculateTotals(universe);
   }
 
   Future<void> _shareReport() async {
@@ -295,11 +310,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
               title: Text(context.l10n.islemRaporu),
               centerTitle: true,
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.ios_share_rounded),
-                  onPressed: _shareReport,
-                  tooltip: context.l10n.raporuPaylas,
-                ),
+                // Paylaş düğmesi AppBar'dan ALINDI: sayfa üretimde
+                // AppBar'sız kuruluyor, bu yüzden artık sayfa başlığında
+                // duruyor ve her iki kurulumda da erişilebilir.
                 IconButton(
                   icon: const Icon(Icons.date_range),
                   onPressed: _pickDateRange,
@@ -326,12 +339,19 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           final dataBuilder = _dataBuilder(context);
           final filteredTransactions = _filterTransactionsByRange(transactions);
 
-          final totals = _reportService.calculateTotals(filteredTransactions);
+          // Kuplaj hareketleri "ne harcadım" sorusunun dışında tutulur;
+          // bakiye çizgisi ise defterin TAMAMINDAN türer (aşağıda).
+          final split =
+              _reportService.splitSystemMovements(filteredTransactions);
+          final analysed =
+              _includeSystemMovements ? filteredTransactions : split.spending;
+
+          final totals = _reportService.calculateTotals(analysed);
           final previousTotals = _previousPeriodTotals(transactions);
           final expenseFull =
-              dataBuilder.buildFull(filteredTransactions, isExpense: true);
+              dataBuilder.buildFull(analysed, isExpense: true);
           final incomeFull =
-              dataBuilder.buildFull(filteredTransactions, isExpense: false);
+              dataBuilder.buildFull(analysed, isExpense: false);
           final expensePie = dataBuilder.buildPie(expenseFull);
           final incomePie = dataBuilder.buildPie(incomeFull);
 
@@ -342,9 +362,20 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           final brightness =
               (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
 
-          // Zaman serisi: kovalar dönemin TAMAMINI kaplar (boş günler dahil)
-          // ve bakiye çizgisi cüzdanın gerçek açılış bakiyesine çapalanır.
-          final series = _seriesService.build(
+          // Zaman serisi: kovalar dönemin TAMAMINI kaplar (boş günler dahil).
+          //
+          // İKİ ayrı seri kurulur ve bu bilinçlidir:
+          //  • akış çubukları özet kartlarıyla AYNI evreni gösterir (kuplaj
+          //    hareketleri hariç tutulmuşsa onlarda da yok);
+          //  • bakiye çizgisi defterin TAMAMINDAN türer — transferi düşmek
+          //    bakiyeyi cüzdanın gerçek bakiyesinden koparırdı.
+          final flowSeries = _seriesService.build(
+            inRange: analysed,
+            start: _range.start,
+            end: _range.end,
+            unit: _unitOverride,
+          );
+          final balanceSeries = _seriesService.build(
             inRange: filteredTransactions,
             start: _range.start,
             end: _range.end,
@@ -362,12 +393,20 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.l10n.islemRaporu,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+                ReportSectionHeader(
+                  title: context.l10n.islemRaporu,
+                  fontSize: 20,
+                  // Paylaş düğmesi eskiden YALNIZ AppBar'daydı ve sayfa
+                  // üretimde `showAppBar: false` ile kuruluyor (bkz.
+                  // SubViewFactory) — yani CSV dışa aktarımı hiç
+                  // erişilemiyordu, `_shareReport` ölü koddu.
+                  trailing: filteredTransactions.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.ios_share_rounded),
+                          tooltip: context.l10n.reportShareTooltip,
+                          onPressed: _shareReport,
+                        ),
                 ),
                 const SizedBox(height: 12),
                 // Tarih başlığı aralık boş olsa da görünür kalır; aksi
@@ -388,22 +427,33 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                     totals: totals,
                     previousTotals: previousTotals,
                   ),
+                  // Kart yalnız dönemde kuplaj hareketi VARKEN çizilir;
+                  // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
+                  if (split.system.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    ReportSystemMovementsToggle(
+                      included: _includeSystemMovements,
+                      count: split.system.length,
+                      onChanged: (v) =>
+                          setState(() => _includeSystemMovements = v),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   ReportSectionHeader(
-                    title: _flowTitle(context, series.unit),
+                    title: _flowTitle(context, flowSeries.unit),
                     trailing: ReportUnitSelector(
-                      selected: series.unit,
+                      selected: flowSeries.unit,
                       bucketCounts: _bucketCounts(),
                       onChanged: (u) => setState(() => _unitOverride = u),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ReportDailyNetFlowChart(series: series),
+                  ReportDailyNetFlowChart(series: flowSeries),
                   const SizedBox(height: 24),
                   ReportSectionHeader(
                       title: context.l10n.reportBalanceTrend),
                   const SizedBox(height: 12),
-                  ReportCumulativeBalanceChart(series: series),
+                  ReportCumulativeBalanceChart(series: balanceSeries),
                   const SizedBox(height: 24),
                   ReportSectionHeader(
                     title: context.l10n.kategoriDagilimi,

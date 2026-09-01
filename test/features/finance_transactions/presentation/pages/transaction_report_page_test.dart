@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -19,6 +20,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/finan
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -536,5 +538,133 @@ void main() {
 
     expect(find.text('Food'), findsWidgets);
     expect(find.text('50,00 ₺'), findsWidgets);
+  });
+
+  group('kuplaj hareketleri', () {
+    /// Nakitten bankaya 20.000 TL transfer + 1.500 TL gerçek harcama.
+    List<TransactionEntity> withTransfer() {
+      final now = DateTime.now();
+      return [
+        TransactionEntity(
+          id: 'tx_market',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Market',
+          tag: 'Food',
+          amount: 1500,
+          date: now,
+          type: TransactionTypeModel.expense,
+        ),
+        TransactionEntity(
+          id: 'tx_transfer',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Transfer',
+          tag: CashMovementTags.transfer,
+          amount: 20000,
+          date: now,
+          type: TransactionTypeModel.expense,
+          isSystem: true,
+        ),
+      ];
+    }
+
+    testWidgets('REGRESYON: transfer varsayılan olarak GİDERE sayılmaz',
+        (tester) async {
+      final txs = withTransfer();
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      // Gider özeti yalnız gerçek harcamayı sayar.
+      expect(find.text('1.500,00 ₺'), findsWidgets);
+      expect(find.text('21.500,00 ₺'), findsNothing,
+          reason: 'transfer gidere eklenmemeli');
+      // Anahtar kartı görünür ve kaç hareketin dışarıda kaldığını söyler.
+      expect(find.byType(ReportSystemMovementsToggle), findsOneWidget);
+      expect(find.text('1 hareket gelir–giderin dışında'), findsOneWidget);
+    });
+
+    testWidgets('anahtar açılınca kuplaj hareketleri gidere katılır',
+        (tester) async {
+      final txs = withTransfer();
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      final toggle = find.byType(Switch).first;
+      await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(find.text('21.500,00 ₺'), findsWidgets);
+      expect(find.text('1 hareket gelir–gidere dahil'), findsOneWidget);
+    });
+
+    testWidgets('kuplaj hareketi yokken anahtar kartı hiç çizilmez',
+        (tester) async {
+      final now = DateTime.now();
+      final txs = [
+        TransactionEntity(
+          id: 'tx_market',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Market',
+          tag: 'Food',
+          amount: 1500,
+          date: now,
+          type: TransactionTypeModel.expense,
+        ),
+      ];
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReportSystemMovementsToggle), findsNothing);
+    });
+  });
+
+  testWidgets('REGRESYON: paylaş düğmesi AppBar OLMADAN da erişilebilir',
+      (tester) async {
+    final now = DateTime.now();
+    final txs = [
+      TransactionEntity(
+        id: 'tx_1',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Market',
+        tag: 'Food',
+        amount: 50,
+        date: now,
+        type: TransactionTypeModel.expense,
+      ),
+    ];
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+    );
+
+    await tester.pumpWidget(buildTestableWidget(
+      // SubViewFactory sayfayı böyle kuruyor: showAppBar VERİLMEZ.
+      const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
   });
 }

@@ -70,6 +70,28 @@ class TransactionReportService {
         .toList();
   }
 
+  /// Kuplajla üretilen sistem hareketlerini (transfer, borç ödemesi, yatırım
+  /// alımı…) ayrı ayırır.
+  ///
+  /// **Neden gerekli:** `WalletMetricsService` her kuplaj hareketini gerçek
+  /// bir işlem olarak deftere yazar (`isSystem: true`). Rapor bunları
+  /// süzmediği için nakitten bankaya 20.000 TL taşımak, o cüzdanın
+  /// raporunda 20.000 TL "Gider" + pastada en büyük dilim + çöken bir
+  /// birikim oranı demekti. Oysa bu para harcanmadı, yer değiştirdi.
+  ///
+  /// Ayırma bakiyeyi İLGİLENDİRMEZ: cüzdan bakiyesi defterin tamamından
+  /// türer, bu yüzden bakiye çizgisi her zaman tüm hareketleri içerir.
+  /// Buradaki ayrım yalnız "ne harcadım" sorusu içindir.
+  ({List<TransactionEntity> spending, List<TransactionEntity> system})
+      splitSystemMovements(List<TransactionEntity> transactions) {
+    final spending = <TransactionEntity>[];
+    final system = <TransactionEntity>[];
+    for (final t in transactions) {
+      (t.isSystem ? system : spending).add(t);
+    }
+    return (spending: spending, system: system);
+  }
+
   /// Gelir ve gider toplamlarını ve net (gelir − gider) değerini hesaplar.
   ReportTotals calculateTotals(List<TransactionEntity> transactions) {
     double income = 0;

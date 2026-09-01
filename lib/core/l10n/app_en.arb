@@ -52,7 +52,6 @@
   "islemDetayi": "Transaction Detail",
   "islemRaporu": "Transaction Report",
   "tooltipTarihAraligi": "Date Range",
-  "raporuPaylas": "Share Report",
   "oncekiDonemeGorePercent": "{percent}% vs previous period",
   "@oncekiDonemeGorePercent": {
     "placeholders": {
@@ -2110,5 +2109,20 @@
           "start": {},
           "end": {}
       }
-  }
+  },
+  "reportSystemMovementsTitle": "Transfers & linked movements",
+  "reportSystemMovementsOff": "{count} movements kept out of income–expense",
+  "@reportSystemMovementsOff": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportSystemMovementsOn": "{count} movements counted in income–expense",
+  "@reportSystemMovementsOn": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending — the money moves, it isn't spent. The balance line always includes them.",
+  "reportShareTooltip": "Share the report"
 }

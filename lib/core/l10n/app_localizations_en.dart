@@ -142,9 +142,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipTarihAraligi => 'Date Range';
 
   @override
-  String get raporuPaylas => 'Share Report';
-
-  @override
   String oncekiDonemeGorePercent(Object percent) {
     return '$percent% vs previous period';
   }
@@ -3994,4 +3991,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String reportBalanceChartSemantics(Object start, Object end) {
     return 'Balance chart: $start at the start of the period, $end at the end. Tap the line for values in between.';
   }
+
+  @override
+  String get reportSystemMovementsTitle => 'Transfers & linked movements';
+
+  @override
+  String reportSystemMovementsOff(Object count) {
+    return '$count movements kept out of income–expense';
+  }
+
+  @override
+  String reportSystemMovementsOn(Object count) {
+    return '$count movements counted in income–expense';
+  }
+
+  @override
+  String get reportSystemMovementsHint =>
+      'Transfers between wallets, debt payments and investment buys/sells are not spending — the money moves, it isn\'t spent. The balance line always includes them.';
+
+  @override
+  String get reportShareTooltip => 'Share the report';
 }

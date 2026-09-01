@@ -14,10 +14,14 @@ class ReportSectionHeader extends StatelessWidget {
   final String title;
   final Widget? trailing;
 
+  /// Sayfa başlığı bölüm başlıklarından bir tık büyük yazılır.
+  final double? fontSize;
+
   const ReportSectionHeader({
     super.key,
     required this.title,
     this.trailing,
+    this.fontSize,
   });
 
   @override
@@ -27,6 +31,7 @@ class ReportSectionHeader extends StatelessWidget {
       title,
       style: theme.textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.bold,
+        fontSize: fontSize,
       ),
     );
 

@@ -1,6 +1,7 @@
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -306,6 +307,48 @@ void main() {
       );
       expect(result, hasLength(2));
       expect(result.every((c) => c.children.isEmpty), isTrue);
+    });
+  });
+
+  group('splitSystemMovements', () {
+    TransactionEntity make(String tag, {required bool isSystem}) =>
+        TransactionEntity(
+          id: 'tx-\$tag-\$isSystem',
+          userId: 'u',
+          walletId: 'w',
+          title: tag,
+          tag: tag,
+          amount: 100,
+          date: DateTime(2026, 6, 1),
+          type: TransactionTypeModel.expense,
+          isSystem: isSystem,
+        );
+
+    test('kuplaj hareketleri harcamadan ayrılır', () {
+      final result = service.splitSystemMovements([
+        make('Market', isSystem: false),
+        make(CashMovementTags.transfer, isSystem: true),
+        make(CashMovementTags.investmentBuy, isSystem: true),
+        make('Kira', isSystem: false),
+      ]);
+
+      expect(result.spending.map((t) => t.tag), ['Market', 'Kira']);
+      expect(result.system.map((t) => t.tag),
+          [CashMovementTags.transfer, CashMovementTags.investmentBuy]);
+    });
+
+    test('sistem hareketi yoksa liste bölünmez', () {
+      final result = service.splitSystemMovements([
+        make('Market', isSystem: false),
+      ]);
+      expect(result.system, isEmpty);
+      expect(result.spending, hasLength(1));
+    });
+
+    test('boş liste güvenli', () {
+      final result = service.splitSystemMovements(const []);
+      expect(result.spending, isEmpty);
+      expect(result.system, isEmpty);
     });
   });
 }
