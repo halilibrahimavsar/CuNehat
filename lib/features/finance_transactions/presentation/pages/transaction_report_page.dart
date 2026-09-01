@@ -26,7 +26,11 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_monthly_trend_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_top_payees_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
@@ -98,6 +102,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// [TransactionReportService.splitSystemMovements]).
   bool _includeSystemMovements = false;
 
+  /// Aylık seyir kartının ufku (6 | 12 ay). Seçili aralıktan BAĞIMSIZ:
+  /// "daha çok mu harcıyorum" sorusu daha uzun bir pencere ister.
+  int _trendMonths = 6;
+
   Map<String, IconData> _categoryIcons = {};
 
   /// `tag` → görünen ad. Kırılım anahtarı hep `tag` (kategori id'si) kalır;
@@ -132,6 +140,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     String otherLabel,
     Brightness brightness,
     double walletOpening,
+    int trendMonths,
   })? _derivedKey;
   _ReportDerived? _derivedCache;
 
@@ -234,31 +243,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// rozeti anlamsız bir kıyasa çevirirdi ("bu ay %70 az harcadın" — çünkü
   /// geçen ayın rakamında bir transfer duruyor).
   ReportTotals _previousPeriodTotals(List<TransactionEntity> allTransactions) {
-    // Pencere seçili aralığın BUGÜNE kadar GEÇMİŞ kısmı kadardır. "Bu Ay"
-    // seçiliyken ayın 3'ünde tam ayı tam ayla kıyaslamak "geçen aya göre %90
-    // az harcadın" derdi — çünkü bu ayın 27 günü henüz yaşanmadı.
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final startDay =
-        DateTime(_range.start.year, _range.start.month, _range.start.day);
-    final rangeEnd =
-        DateTime(_range.end.year, _range.end.month, _range.end.day);
-    final elapsedEnd = rangeEnd.isAfter(today) ? today : rangeEnd;
-    // Aralık tamamen gelecekteyse kıyaslanacak bir şey yok.
-    if (elapsedEnd.isBefore(startDay)) return const ReportTotals();
-
-    final dayCount = elapsedEnd.difference(startDay).inDays + 1;
-    final previousEnd = startDay.subtract(const Duration(days: 1));
-    final previousStart = previousEnd.subtract(Duration(days: dayCount - 1));
-    final previousTransactions = _reportService.filterByRange(
-      allTransactions,
-      previousStart,
-      previousEnd,
-    );
-    final universe = _includeSystemMovements
-        ? previousTransactions
-        : _reportService.splitSystemMovements(previousTransactions).spending;
-    return _reportService.calculateTotals(universe);
+    final window = _previousPeriodWindow();
+    if (window == null) return const ReportTotals();
+    return _reportService.calculateTotals(_universeOf(
+      _reportService.filterByRange(allTransactions, window.start, window.end),
+    ));
   }
 
   Future<void> _shareReport() async {
@@ -334,6 +323,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       otherLabel: otherLabel,
       brightness: brightness,
       walletOpening: walletOpening,
+      trendMonths: _trendMonths,
     );
     final cached = _derivedCache;
     if (cached != null && _derivedKey == key) return cached;
@@ -351,8 +341,23 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final split = _reportService.splitSystemMovements(filtered);
     final analysed = _includeSystemMovements ? filtered : split.spending;
 
-    final expenseFull = dataBuilder.buildFull(analysed, isExpense: true);
-    final incomeFull = dataBuilder.buildFull(analysed, isExpense: false);
+    // Kategori bazlı karşılaştırma: ÖNCEKİ dönemin aynı kırılımı. Pencere
+    // toplam rozetleriyle AYNI ([_previousPeriodWindow]) — iki ayrı "önceki
+    // dönem" tanımı kartlar arası çelişki üretirdi.
+    final previousWindow = _previousPeriodWindow();
+    final previousUniverse = previousWindow == null
+        ? const <TransactionEntity>[]
+        : _universeOf(_reportService.filterByRange(
+            transactions, previousWindow.start, previousWindow.end));
+
+    final expenseFull = dataBuilder.withPreviousAmounts(
+      dataBuilder.buildFull(analysed, isExpense: true),
+      dataBuilder.buildFull(previousUniverse, isExpense: true),
+    );
+    final incomeFull = dataBuilder.withPreviousAmounts(
+      dataBuilder.buildFull(analysed, isExpense: false),
+      dataBuilder.buildFull(previousUniverse, isExpense: false),
+    );
 
     final derived = _ReportDerived(
       dataBuilder: dataBuilder,
@@ -390,11 +395,88 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           walletOpeningBalance: walletOpening,
         ),
       ),
+      // Aylık seyir seçili aralığı DEĞİL, onun bittiği ayla biten pencereyi
+      // gösterir; kuplaj hareketleri burada da harcama sayılmaz.
+      trendSeries: () {
+        final window = _seriesService.monthsWindow(_range.end, _trendMonths);
+        return _seriesService.build(
+          inRange: _universeOf(_reportService.filterByRange(
+              transactions, window.start, window.end)),
+          start: window.start,
+          end: window.end,
+          unit: ReportBucketUnit.month,
+        );
+      }(),
+      budgetStatuses: _budgetStatuses(context, expenseFull),
     );
 
     _derivedKey = key;
     _derivedCache = derived;
     return derived;
+  }
+
+  /// Analiz evreni: kuplaj hareketleri anahtara göre içeride ya da dışarıda.
+  /// Her kartın AYNI evreni kullanması şart, yoksa toplamlar birbirini tutmaz.
+  List<TransactionEntity> _universeOf(List<TransactionEntity> inRange) =>
+      _includeSystemMovements
+          ? inRange
+          : _reportService.splitSystemMovements(inRange).spending;
+
+  /// Karşılaştırma penceresi — seçili aralığın BUGÜNE kadar GEÇMİŞ kısmı
+  /// kadar, hemen öncesinde. Aralık tamamen gelecekteyse null.
+  ///
+  /// "Bu Ay" seçiliyken ayın 3'ünde tam ayı tam ayla kıyaslamak "geçen aya
+  /// göre %90 az harcadın" derdi — çünkü bu ayın 27 günü henüz yaşanmadı.
+  ({DateTime start, DateTime end})? _previousPeriodWindow() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay =
+        DateTime(_range.start.year, _range.start.month, _range.start.day);
+    final rangeEnd =
+        DateTime(_range.end.year, _range.end.month, _range.end.day);
+    final elapsedEnd = rangeEnd.isAfter(today) ? today : rangeEnd;
+    if (elapsedEnd.isBefore(startDay)) return null;
+
+    final dayCount = elapsedEnd.difference(startDay).inDays + 1;
+    final previousEnd = startDay.subtract(const Duration(days: 1));
+    return (
+      start: previousEnd.subtract(Duration(days: dayCount - 1)),
+      end: previousEnd,
+    );
+  }
+
+  /// Dönemin bütçe durumları — harcama SEÇİLİ ARALIĞA göre hesaplanır
+  /// (BudgetRepository yalnız limitleri döner, "bu ay" varsayımı taşımaz).
+  ///
+  /// Alt kategori bütçesi de listeye girer: bütçe iki seviyeye de konabiliyor
+  /// ama dilimler kök seviyede toplandığı için alt kategori bütçesi kök
+  /// satırında hiç görünmüyordu.
+  List<BudgetStatus> _budgetStatuses(
+    BuildContext context,
+    List<CategoryData> expenseFull,
+  ) {
+    if (_budgets.isEmpty) return const [];
+
+    final spentByTag = <String, double>{};
+    for (final root in expenseFull) {
+      spentByTag[root.name] = root.totalAmount;
+      for (final child in root.children) {
+        if (child.isDirect) continue;
+        spentByTag[child.name] = child.totalAmount;
+      }
+    }
+
+    return [
+      for (final budget in _budgets)
+        if (budget.limitAmount > 0)
+          BudgetStatus(
+            categoryId: budget.categoryId,
+            label: context.categoryLabelForTag(budget.categoryId,
+                labels: _categoryLabels),
+            spent: spentByTag[budget.categoryId] ?? 0,
+            limit: budget.limitAmount,
+          ),
+    ];
   }
 
   /// Akış grafiğinin başlığı çözünürlüğü İZLER: haftalık kovalarda "Günlük
@@ -412,6 +494,60 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         for (final unit in ReportBucketUnit.values)
           unit: _seriesService.bucketCountFor(_range.start, _range.end, unit),
       };
+
+  /// Trend kartında vurgulanacak ay: seçili aralık TAM olarak bir takvim
+  /// ayıysa o ay, değilse yok. Yarım aylık bir aralığı "Ekim" diye
+  /// vurgulamak yanlış olurdu.
+  DateTime? _selectedTrendMonth() {
+    final start = _range.start;
+    final end = _range.end;
+    if (start.day != 1) return null;
+    final lastDay = DateTime(start.year, start.month + 1, 0);
+    if (end.year != lastDay.year ||
+        end.month != lastDay.month ||
+        end.day != lastDay.day) {
+      return null;
+    }
+    return DateTime(start.year, start.month, 1);
+  }
+
+  /// Bütçe satırına dokunmak o kategorinin dönem içi işlemlerini açar.
+  void _openBudgetCategory(BudgetStatus status) {
+    final builder = _dataBuilder(context);
+    final filtered = _filterTransactionsByRange(
+      context.read<TransactionBloc>().state.currentTransactions,
+    );
+    final full = builder.buildFull(_universeOf(filtered), isExpense: true);
+
+    // Bütçe alt kategoriye de konabiliyor: önce kökler, sonra çocuklar.
+    for (final root in full) {
+      if (root.name == status.categoryId) {
+        _openCategoryDetails(root, true, ReportSliceMode.full);
+        return;
+      }
+      for (final child in root.children) {
+        if (!child.isDirect && child.name == status.categoryId) {
+          _openCategoryDetails(child, true, ReportSliceMode.full);
+          return;
+        }
+      }
+    }
+  }
+
+  /// "En çok harcanan yer" satırına dokunmak o gruptaki işlemleri listeler.
+  ///
+  /// Grup bir KATEGORİ değil (kırılım eşleştirmesi yok), o yüzden detay
+  /// sayfası kendi yeniden hesaplamasını yapamaz — liste doğrudan verilir.
+  void _openPayeeGroup(String label, List<TransactionEntity> items) {
+    ReportTransactionListSheet.show(
+      context: context,
+      title: label,
+      transactions: items,
+      isExpense: true,
+      categoryIcons: _categoryIcons,
+      categoryLabels: _categoryLabels,
+    );
+  }
 
   void _openCategoryDetails(
       CategoryData cat, bool isExpense, ReportSliceMode sliceMode) {
@@ -557,6 +693,27 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                   ReportCumulativeBalanceChart(series: balanceSeries),
                   const SizedBox(height: 24),
                   ReportSectionHeader(
+                      title: context.l10n.reportMonthlyTrendTitle),
+                  const SizedBox(height: 12),
+                  ReportMonthlyTrendCard(
+                    series: derived.trendSeries,
+                    months: _trendMonths,
+                    onMonthsChanged: (m) => setState(() => _trendMonths = m),
+                    selectedMonth: _selectedTrendMonth(),
+                    onMonthTap: (bucket) => setState(() {
+                      // Trend kartı gezinme aracıdır: dokunulan ay raporun
+                      // dönemi olur.
+                      _range = DateTimeRange(
+                        start: bucket.start,
+                        end: bucket.endExclusive
+                            .subtract(const Duration(days: 1)),
+                      );
+                      _hasUserPickedRange = true;
+                      _unitOverride = null;
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+                  ReportSectionHeader(
                     title: context.l10n.kategoriDagilimi,
                     trailing: FinanceModeSegment(
                       currentMode: _categoryMode,
@@ -604,6 +761,28 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                       budgetProgressFor: dataBuilder.budgetProgressFor,
                       categoryLabels: _categoryLabels,
                     ),
+                  if (derived.budgetStatuses.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    ReportSectionHeader(
+                        title: context.l10n.reportBudgetSummaryTitle),
+                    const SizedBox(height: 12),
+                    ReportBudgetSummaryCard(
+                      statuses: derived.budgetStatuses,
+                      onTap: (status) => _openBudgetCategory(status),
+                    ),
+                  ],
+                  if (ReportTopPayeesCard.buildGroups(
+                          _universeOf(filteredTransactions))
+                      .isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    ReportSectionHeader(
+                        title: context.l10n.reportTopPayeesTitle),
+                    const SizedBox(height: 12),
+                    ReportTopPayeesCard(
+                      transactions: _universeOf(filteredTransactions),
+                      onGroupTap: _openPayeeGroup,
+                    ),
+                  ],
                 ],
               ],
             ),
@@ -683,6 +862,8 @@ class _ReportDerived {
   final List<CategoryData> expenseRanked;
   final ReportSeries flowSeries;
   final ReportSeries balanceSeries;
+  final ReportSeries trendSeries;
+  final List<BudgetStatus> budgetStatuses;
 
   const _ReportDerived({
     required this.dataBuilder,
@@ -698,5 +879,7 @@ class _ReportDerived {
     required this.expenseRanked,
     required this.flowSeries,
     required this.balanceSeries,
+    required this.trendSeries,
+    required this.budgetStatuses,
   });
 }

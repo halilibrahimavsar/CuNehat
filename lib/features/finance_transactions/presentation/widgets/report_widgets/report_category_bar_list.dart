@@ -2,6 +2,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:flutter/material.dart';
 
 /// Kategorilerin YATAY çubuklarla sıralanmış listesi — pasta kartının "çubuk"
@@ -41,6 +42,10 @@ class ReportCategoryBarList extends StatefulWidget {
   final ({double progress, bool isExceeded, double limit})? Function(
       String tag, double spent)? budgetProgressFor;
 
+  /// Artışın İYİ mi kötü mü olduğu — değişim rozetinin rengi buna bağlı.
+  /// Gelir tarafında artış iyidir, gider tarafında kötü.
+  final bool increaseIsGood;
+
   const ReportCategoryBarList({
     super.key,
     required this.data,
@@ -48,6 +53,7 @@ class ReportCategoryBarList extends StatefulWidget {
     required this.onCategoryTap,
     this.categoryLabels = const {},
     this.budgetProgressFor,
+    this.increaseIsGood = false,
   });
 
   /// Çubuk kalınlığı — mark tavanı 24dp (bkz. karşılaştırma kartı).
@@ -100,6 +106,7 @@ class _ReportCategoryBarListState extends State<ReportCategoryBarList> {
             theme: theme,
             label: item.labelIn(context, widget.categoryLabels),
             budget: widget.budgetProgressFor?.call(item.name, item.totalAmount),
+            increaseIsGood: widget.increaseIsGood,
             expanded: _expanded.contains(item.name),
             onToggleExpanded: item.children.isEmpty
                 ? null
@@ -323,6 +330,8 @@ class _Row extends StatelessWidget {
   final bool expanded;
   final VoidCallback? onToggleExpanded;
 
+  final bool increaseIsGood;
+
   const _Row({
     required this.item,
     required this.fraction,
@@ -333,6 +342,7 @@ class _Row extends StatelessWidget {
     required this.label,
     required this.budget,
     required this.onTap,
+    this.increaseIsGood = false,
     this.expanded = false,
     this.onToggleExpanded,
   });
@@ -379,7 +389,12 @@ class _Row extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  ReportChangeBadge(
+                    percent: item.changePercent,
+                    increaseIsGood: increaseIsGood,
+                  ),
+                  const SizedBox(width: 6),
                   Text(
                     amountText,
                     style: theme.textTheme.bodyMedium?.copyWith(

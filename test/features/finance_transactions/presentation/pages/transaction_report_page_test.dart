@@ -223,9 +223,10 @@ void main() {
 
     // Varsayılan mod Karşılaştırma: kategori dağılımı TEK kart çizer.
     // 'Gelir'/'Gider' özet kartında, karşılaştırma kartının çubuk etiketinde,
-    // efsane başlığında ve haftalık net akış grafiğinin açıklamasında geçer.
-    expect(find.text('Gelir'), findsNWidgets(4));
-    expect(find.text('Gider'), findsNWidgets(4));
+    // efsane başlığında, günlük akış grafiğinin açıklamasında ve aylık seyir
+    // kartının açıklamasında geçer.
+    expect(find.text('Gelir'), findsNWidgets(5));
+    expect(find.text('Gider'), findsNWidgets(5));
     expect(find.text('Net'), findsNWidgets(2));
 
     expect(find.byType(ReportCompareChartCard), findsOneWidget);

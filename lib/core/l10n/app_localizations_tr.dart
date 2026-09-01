@@ -4047,4 +4047,59 @@ class AppLocalizationsTr extends AppLocalizations {
   String reportBreakdownToggle(Object ad) {
     return '$ad alt kırılımı';
   }
+
+  @override
+  String get reportMonthlyTrendTitle => 'Aylık seyir';
+
+  @override
+  String reportMonthsOption(Object ay) {
+    return '$ay ay';
+  }
+
+  @override
+  String reportAverageShort(Object tutar) {
+    return 'Ort. $tutar';
+  }
+
+  @override
+  String get reportMonthlyTrendHint =>
+      'Bir aya dokun: raporun dönemi o aya geçer';
+
+  @override
+  String reportMonthlyTrendSemantics(Object count, Object avg) {
+    return 'Aylık seyir: $count ay, ortalama aylık gider $avg. Ayrıntı için sütunlara dokunun.';
+  }
+
+  @override
+  String get reportTopPayeesTitle => 'En çok harcanan yerler';
+
+  @override
+  String get reportTopPayeesHint =>
+      'İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi';
+
+  @override
+  String reportPayeeCount(Object count) {
+    return '$count işlem';
+  }
+
+  @override
+  String get reportBudgetSummaryTitle => 'Bütçe durumu';
+
+  @override
+  String reportBudgetExceededCount(Object count, Object total) {
+    return '$count bütçeden $total tanesi aşıldı';
+  }
+
+  @override
+  String reportBudgetAllWithinLimit(Object count) {
+    return '$count bütçenin hepsi limit içinde';
+  }
+
+  @override
+  String reportBudgetMoreCount(Object count) {
+    return '+$count bütçe daha';
+  }
+
+  @override
+  String get reportCategoryChange => 'önceki döneme göre';
 }

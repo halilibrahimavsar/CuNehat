@@ -213,6 +213,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
               data: widget.fullData,
               total: total,
               categoryLabels: widget.categoryLabels,
+              increaseIsGood: !widget.isExpense,
               budgetProgressFor:
                   widget.isExpense ? widget.budgetProgressFor : null,
               onCategoryTap: (cat) =>

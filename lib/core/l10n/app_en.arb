@@ -2159,5 +2159,55 @@
       "placeholders": {
           "ad": {}
       }
-  }
+  },
+  "reportMonthlyTrendTitle": "Monthly trend",
+  "reportMonthsOption": "{ay} months",
+  "@reportMonthsOption": {
+      "placeholders": {
+          "ay": {}
+      }
+  },
+  "reportAverageShort": "Avg. {tutar}",
+  "@reportAverageShort": {
+      "placeholders": {
+          "tutar": {}
+      }
+  },
+  "reportMonthlyTrendHint": "Tap a month to switch the report to it",
+  "reportMonthlyTrendSemantics": "Monthly trend: {count} months, {avg} average monthly spending. Tap the columns for detail.",
+  "@reportMonthlyTrendSemantics": {
+      "placeholders": {
+          "count": {},
+          "avg": {}
+      }
+  },
+  "reportTopPayeesTitle": "Top places",
+  "reportTopPayeesHint": "Grouped by transaction title; branch and code suffixes merged",
+  "reportPayeeCount": "{count} transactions",
+  "@reportPayeeCount": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportBudgetSummaryTitle": "Budget status",
+  "reportBudgetExceededCount": "{total} of {count} budgets exceeded",
+  "@reportBudgetExceededCount": {
+      "placeholders": {
+          "count": {},
+          "total": {}
+      }
+  },
+  "reportBudgetAllWithinLimit": "All {count} budgets within limit",
+  "@reportBudgetAllWithinLimit": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportBudgetMoreCount": "+{count} more budgets",
+  "@reportBudgetMoreCount": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportCategoryChange": "vs. previous period"
 }

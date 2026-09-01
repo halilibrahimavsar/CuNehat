@@ -2180,5 +2180,55 @@
       "placeholders": {
           "ad": {}
       }
-  }
+  },
+  "reportMonthlyTrendTitle": "Aylık seyir",
+  "reportMonthsOption": "{ay} ay",
+  "@reportMonthsOption": {
+      "placeholders": {
+          "ay": {}
+      }
+  },
+  "reportAverageShort": "Ort. {tutar}",
+  "@reportAverageShort": {
+      "placeholders": {
+          "tutar": {}
+      }
+  },
+  "reportMonthlyTrendHint": "Bir aya dokun: raporun dönemi o aya geçer",
+  "reportMonthlyTrendSemantics": "Aylık seyir: {count} ay, ortalama aylık gider {avg}. Ayrıntı için sütunlara dokunun.",
+  "@reportMonthlyTrendSemantics": {
+      "placeholders": {
+          "count": {},
+          "avg": {}
+      }
+  },
+  "reportTopPayeesTitle": "En çok harcanan yerler",
+  "reportTopPayeesHint": "İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi",
+  "reportPayeeCount": "{count} işlem",
+  "@reportPayeeCount": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportBudgetSummaryTitle": "Bütçe durumu",
+  "reportBudgetExceededCount": "{count} bütçeden {total} tanesi aşıldı",
+  "@reportBudgetExceededCount": {
+      "placeholders": {
+          "count": {},
+          "total": {}
+      }
+  },
+  "reportBudgetAllWithinLimit": "{count} bütçenin hepsi limit içinde",
+  "@reportBudgetAllWithinLimit": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportBudgetMoreCount": "+{count} bütçe daha",
+  "@reportBudgetMoreCount": {
+      "placeholders": {
+          "count": {}
+      }
+  },
+  "reportCategoryChange": "önceki döneme göre"
 }

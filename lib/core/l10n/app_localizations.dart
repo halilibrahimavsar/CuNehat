@@ -7168,6 +7168,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{ad} alt kırılımı'**
   String reportBreakdownToggle(Object ad);
+
+  /// No description provided for @reportMonthlyTrendTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık seyir'**
+  String get reportMonthlyTrendTitle;
+
+  /// No description provided for @reportMonthsOption.
+  ///
+  /// In tr, this message translates to:
+  /// **'{ay} ay'**
+  String reportMonthsOption(Object ay);
+
+  /// No description provided for @reportAverageShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ort. {tutar}'**
+  String reportAverageShort(Object tutar);
+
+  /// No description provided for @reportMonthlyTrendHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir aya dokun: raporun dönemi o aya geçer'**
+  String get reportMonthlyTrendHint;
+
+  /// No description provided for @reportMonthlyTrendSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık seyir: {count} ay, ortalama aylık gider {avg}. Ayrıntı için sütunlara dokunun.'**
+  String reportMonthlyTrendSemantics(Object count, Object avg);
+
+  /// No description provided for @reportTopPayeesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok harcanan yerler'**
+  String get reportTopPayeesTitle;
+
+  /// No description provided for @reportTopPayeesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi'**
+  String get reportTopPayeesHint;
+
+  /// No description provided for @reportPayeeCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} işlem'**
+  String reportPayeeCount(Object count);
+
+  /// No description provided for @reportBudgetSummaryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe durumu'**
+  String get reportBudgetSummaryTitle;
+
+  /// No description provided for @reportBudgetExceededCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} bütçeden {total} tanesi aşıldı'**
+  String reportBudgetExceededCount(Object count, Object total);
+
+  /// No description provided for @reportBudgetAllWithinLimit.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} bütçenin hepsi limit içinde'**
+  String reportBudgetAllWithinLimit(Object count);
+
+  /// No description provided for @reportBudgetMoreCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} bütçe daha'**
+  String reportBudgetMoreCount(Object count);
+
+  /// No description provided for @reportCategoryChange.
+  ///
+  /// In tr, this message translates to:
+  /// **'önceki döneme göre'**
+  String get reportCategoryChange;
 }
 
 class _AppLocalizationsDelegate

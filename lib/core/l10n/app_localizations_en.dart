@@ -4047,4 +4047,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String reportBreakdownToggle(Object ad) {
     return '$ad breakdown';
   }
+
+  @override
+  String get reportMonthlyTrendTitle => 'Monthly trend';
+
+  @override
+  String reportMonthsOption(Object ay) {
+    return '$ay months';
+  }
+
+  @override
+  String reportAverageShort(Object tutar) {
+    return 'Avg. $tutar';
+  }
+
+  @override
+  String get reportMonthlyTrendHint => 'Tap a month to switch the report to it';
+
+  @override
+  String reportMonthlyTrendSemantics(Object count, Object avg) {
+    return 'Monthly trend: $count months, $avg average monthly spending. Tap the columns for detail.';
+  }
+
+  @override
+  String get reportTopPayeesTitle => 'Top places';
+
+  @override
+  String get reportTopPayeesHint =>
+      'Grouped by transaction title; branch and code suffixes merged';
+
+  @override
+  String reportPayeeCount(Object count) {
+    return '$count transactions';
+  }
+
+  @override
+  String get reportBudgetSummaryTitle => 'Budget status';
+
+  @override
+  String reportBudgetExceededCount(Object count, Object total) {
+    return '$total of $count budgets exceeded';
+  }
+
+  @override
+  String reportBudgetAllWithinLimit(Object count) {
+    return 'All $count budgets within limit';
+  }
+
+  @override
+  String reportBudgetMoreCount(Object count) {
+    return '+$count more budgets';
+  }
+
+  @override
+  String get reportCategoryChange => 'vs. previous period';
 }
