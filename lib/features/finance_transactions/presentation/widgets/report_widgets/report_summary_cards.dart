@@ -1,8 +1,7 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 
 class PeriodChange {
@@ -114,7 +113,7 @@ class SummaryTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              formatMoney(amount, currency: context.activeWalletCurrency),
+              MoneyWriter.of(context)(amount),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,

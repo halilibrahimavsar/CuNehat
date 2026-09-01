@@ -1,18 +1,18 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_time_axis.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 /// Gün gün gelir/gider çubukları.
 ///
 /// Çubuklar renkten başka bir şey söylemediği için üstte açıklama (legend)
-/// var; dokununca tooltip tam tutarı [formatMoney] ile yazar.
+/// var; dokununca tooltip tam tutarı [MoneyWriter] ile yazar — yani göz
+/// düğmesi kapalıyken tooltip de eksen de tutarı ele vermez.
 class ReportDailyNetFlowChart extends StatelessWidget {
   final List<TransactionEntity> transactions;
 
@@ -58,7 +58,9 @@ class ReportDailyNetFlowChart extends StatelessWidget {
     // Etiketler 0 / yarı / tepe hizasına düşsün (tepe maxY'nin altında kalır).
     final yInterval = maxVal == 0 ? 1.0 : maxVal / 2;
 
-    final currency = context.activeWalletCurrency;
+    // Tooltip ve eksen etiketleri closure içinde, yani build DIŞINDA
+    // çalışır: birim ve görünürlük burada bir kez okunup taşınır.
+    final money = MoneyWriter.of(context);
 
     return AppCard(
       section: AppSection.transactions,
@@ -125,7 +127,7 @@ class ReportDailyNetFlowChart extends StatelessWidget {
                               : context.l10n.detailLabelGider;
                           return BarTooltipItem(
                             '${chartTooltipDate(entries[group.x].key)}\n'
-                            '$label: ${formatMoney(rod.toY, currency: currency)}',
+                            '$label: ${money(rod.toY)}',
                             kChartTooltipStyle,
                           );
                         },
@@ -144,10 +146,14 @@ class ReportDailyNetFlowChart extends StatelessWidget {
                           getTitlesWidget: (value, meta) {
                             // Tepe boşluğuna denk gelen etiket çizilmez.
                             if (value > maxVal) return const SizedBox.shrink();
+                            // Tutarlar gizliyken değer ekseni HİÇ yazılmaz:
+                            // üç kere "****" basmak gürültü, üstelik hiçbir
+                            // şey anlatmıyor. Çubukların oranı zaten görünür.
+                            if (!money.visible) return const SizedBox.shrink();
                             return SideTitleWidget(
                               axisSide: meta.axisSide,
                               child: Text(
-                                formatMoneyCompact(value, symbol: false),
+                                money.compact(value, symbol: false),
                                 style: chartAxisLabelStyle(scheme),
                               ),
                             );

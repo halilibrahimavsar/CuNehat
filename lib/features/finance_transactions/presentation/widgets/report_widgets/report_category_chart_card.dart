@@ -1,9 +1,9 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -59,13 +59,16 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
     }
   }
 
-  String _formatCurrency(BuildContext context, double value) =>
-      formatMoney(value, currency: context.activeWalletCurrency);
+  /// Para yazıcısı build başında kurulur ve alt yardımcılara TAŞINIR:
+  /// fl_chart'ın tooltip closure'ı build dışında çalışır, orada `watch`
+  /// yapılamaz (bkz. [MoneyWriter]).
+  late MoneyWriter _money;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    _money = MoneyWriter.of(context);
 
     if (widget.fullData.isEmpty) {
       return AppCard(
@@ -83,7 +86,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                   ),
                 ),
                 Text(
-                  _formatCurrency(context, 0),
+                  _money(0),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: scheme.onSurfaceVariant,
@@ -181,7 +184,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _formatCurrency(context, total),
+                    _money(total),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: widget.isExpense ? Colors.redAccent : Colors.green,
@@ -322,7 +325,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final cat = widget.fullData[group.x];
                       return BarTooltipItem(
-                        '${cat.labelIn(context, widget.categoryLabels)}\n${_formatCurrency(context, rod.toY)}',
+                        '${cat.labelIn(context, widget.categoryLabels)}\n${_money(rod.toY)}',
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -387,7 +390,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                     ),
                     Text(
                       context.l10n.formatMoneyItemTotalamountPercent(
-                          _formatCurrency(context, item.totalAmount),
+                          _money(item.totalAmount),
                           percent.toStringAsFixed(0)),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,

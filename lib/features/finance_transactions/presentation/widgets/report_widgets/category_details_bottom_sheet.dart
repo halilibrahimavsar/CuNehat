@@ -1,5 +1,6 @@
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
@@ -8,7 +9,6 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -73,15 +73,13 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  String _formatCurrency(BuildContext context, double value) =>
-      formatMoney(value, currency: context.activeWalletCurrency);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final brightness =
         (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
+    final money = MoneyWriter.of(context);
 
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
@@ -176,7 +174,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          _formatCurrency(context, updatedCategory.totalAmount),
+                          money(updatedCategory.totalAmount),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isExpense ? Colors.redAccent : Colors.green,
@@ -186,11 +184,12 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                     ),
                     if (budgetInfo != null) ...[
                       const SizedBox(height: 12),
-                      _buildBudgetIndicator(context, theme, budgetInfo),
+                      _buildBudgetIndicator(theme, money, budgetInfo),
                     ],
                     if (updatedCategory.children.isNotEmpty) ...[
                       const SizedBox(height: 14),
-                      _buildChildBreakdown(context, theme, updatedCategory),
+                      _buildChildBreakdown(
+                          context, theme, money, updatedCategory),
                     ],
                   ],
                 ),
@@ -233,6 +232,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   Widget _buildChildBreakdown(
     BuildContext context,
     ThemeData theme,
+    MoneyWriter money,
     CategoryData category,
   ) {
     final scheme = theme.colorScheme;
@@ -277,7 +277,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
               Text(
-                _formatCurrency(context, amount),
+                money(amount),
                 style: const TextStyle(
                     fontSize: 12.5, fontWeight: FontWeight.w600),
               ),
@@ -303,7 +303,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
               budgetNote: budget == null
                   ? null
                   : '${formatPercent(budget.progress * 100)} / '
-                      '${_formatCurrency(context, budget.limit)}',
+                      '${money(budget.limit)}',
               budgetExceeded: budget?.isExceeded ?? false,
             );
           }(),
@@ -321,8 +321,8 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   }
 
   Widget _buildBudgetIndicator(
-    BuildContext context,
     ThemeData theme,
+    MoneyWriter money,
     ({double progress, bool isExceeded, double limit}) budget,
   ) {
     final scheme = theme.colorScheme;
@@ -341,7 +341,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${formatPercent(budget.progress * 100)} / ${_formatCurrency(context, budget.limit)}',
+          '${formatPercent(budget.progress * 100)} / ${money(budget.limit)}',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,

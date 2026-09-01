@@ -3,10 +3,9 @@ import 'dart:math' as math;
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 
 /// Gelir ve gideri TEK grafikte karşılaştıran kart.
@@ -69,15 +68,13 @@ class ReportCompareChartCard extends StatelessWidget {
   double _sumOf(List<CategoryData> slices) =>
       slices.fold<double>(0.0, (sum, s) => sum + s.totalAmount);
 
-  String _money(BuildContext context, double value) =>
-      formatMoney(value, currency: context.activeWalletCurrency);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final brightness =
         (theme.extension<AppSurface>() ?? AppSurface.light).brightness;
+    final money = MoneyWriter.of(context);
 
     final incomeTotal = _sumOf(incomeSlices);
     final expenseTotal = _sumOf(expenseSlices);
@@ -100,6 +97,7 @@ class ReportCompareChartCard extends StatelessWidget {
           _buildSide(
             context,
             theme,
+            money: money,
             brightness: brightness,
             slices: incomeSlices,
             sideTotal: incomeTotal,
@@ -110,6 +108,7 @@ class ReportCompareChartCard extends StatelessWidget {
           _buildSide(
             context,
             theme,
+            money: money,
             brightness: brightness,
             slices: expenseSlices,
             sideTotal: expenseTotal,
@@ -117,7 +116,7 @@ class ReportCompareChartCard extends StatelessWidget {
             isExpense: true,
           ),
           const SizedBox(height: 12),
-          _buildAxis(context, theme, axisMax),
+          _buildAxis(theme, money, axisMax),
           const SizedBox(height: 8),
           // Kartın tüm iddiası bu: uzunluklar kıyaslanabilir. Bir kez yazılır.
           Text(
@@ -128,12 +127,13 @@ class ReportCompareChartCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _buildNetLine(context, theme, incomeTotal, expenseTotal),
+          _buildNetLine(context, theme, money, incomeTotal, expenseTotal),
           const SizedBox(height: 4),
           Divider(color: scheme.onSurface.withValues(alpha: 0.08), height: 24),
           _buildLegendGroup(
             context,
             theme,
+            money: money,
             slices: incomeSlices,
             sideTotal: incomeTotal,
             isExpense: false,
@@ -143,6 +143,7 @@ class ReportCompareChartCard extends StatelessWidget {
           _buildLegendGroup(
             context,
             theme,
+            money: money,
             slices: expenseSlices,
             sideTotal: expenseTotal,
             isExpense: true,
@@ -157,6 +158,7 @@ class ReportCompareChartCard extends StatelessWidget {
   Widget _buildSide(
     BuildContext context,
     ThemeData theme, {
+    required MoneyWriter money,
     required Brightness brightness,
     required List<CategoryData> slices,
     required double sideTotal,
@@ -221,7 +223,7 @@ class ReportCompareChartCard extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              _money(context, sideTotal),
+              money(sideTotal),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: sideColor,
@@ -245,7 +247,7 @@ class ReportCompareChartCard extends StatelessWidget {
         Text(
           context.l10n.reportCompareTopSlice(
             top.labelIn(context, categoryLabels),
-            _money(context, top.totalAmount),
+            money(top.totalAmount),
           ),
           style: theme.textTheme.bodySmall?.copyWith(
             color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
@@ -321,9 +323,8 @@ class ReportCompareChartCard extends StatelessWidget {
 
   // ── eksen: ince çizgi + üç temiz sayı ─────────────────────────────────────
 
-  Widget _buildAxis(BuildContext context, ThemeData theme, double axisMax) {
+  Widget _buildAxis(ThemeData theme, MoneyWriter money, double axisMax) {
     final scheme = theme.colorScheme;
-    final currency = context.activeWalletCurrency;
     final style = theme.textTheme.bodySmall?.copyWith(
       fontSize: 10,
       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -342,15 +343,14 @@ class ReportCompareChartCard extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                formatMoneyCompact(axisMax / 2,
-                    symbol: false, currency: currency),
+                money.compact(axisMax / 2, symbol: false),
                 style: style,
                 textAlign: TextAlign.center,
               ),
             ),
             Expanded(
               child: Text(
-                formatMoneyCompact(axisMax, currency: currency),
+                money.compact(axisMax),
                 style: style,
                 textAlign: TextAlign.right,
               ),
@@ -364,6 +364,7 @@ class ReportCompareChartCard extends StatelessWidget {
   Widget _buildNetLine(
     BuildContext context,
     ThemeData theme,
+    MoneyWriter money,
     double incomeTotal,
     double expenseTotal,
   ) {
@@ -399,7 +400,7 @@ class ReportCompareChartCard extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          '${net >= 0 ? '+' : '−'}${_money(context, net.abs())}',
+          money.withSign(net),
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: netColor,
@@ -430,6 +431,7 @@ class ReportCompareChartCard extends StatelessWidget {
   Widget _buildLegendGroup(
     BuildContext context,
     ThemeData theme, {
+    required MoneyWriter money,
     required List<CategoryData> slices,
     required double sideTotal,
     required bool isExpense,
@@ -480,7 +482,7 @@ class ReportCompareChartCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     context.l10n.formatMoneyItemTotalamountPercent(
-                      _money(context, slice.totalAmount),
+                      money(slice.totalAmount),
                       (sideTotal <= 0
                               ? 0.0
                               : slice.totalAmount / sideTotal * 100)

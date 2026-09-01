@@ -1,16 +1,16 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_time_axis.dart';
-import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 /// Dönem boyunca birikimli bakiye çizgisi.
 ///
-/// Dokununca tooltip o günün tarihini ve birikimli tutarı [formatMoney] ile
-/// yazar; sıfırın altına inen dönemlerde ayrıca sıfır çizgisi gösterilir.
+/// Dokununca tooltip o günün tarihini ve birikimli tutarı [MoneyWriter] ile
+/// yazar (göz düğmesine duyarlı); sıfırın altına inen dönemlerde ayrıca sıfır
+/// çizgisi gösterilir.
 class ReportCumulativeBalanceChart extends StatelessWidget {
   final List<TransactionEntity> transactions;
 
@@ -65,7 +65,9 @@ class ReportCumulativeBalanceChart extends StatelessWidget {
     final axisMax = maxValue + pad;
     final yInterval = (maxValue - minValue).abs() / 2;
 
-    final currency = context.activeWalletCurrency;
+    // Tooltip/eksen closure'ları build dışında çalışır: birim ve görünürlük
+    // burada bir kez okunup taşınır.
+    final money = MoneyWriter.of(context);
     final crossesZero = minValue < 0 && maxValue > 0;
 
     return AppCard(
@@ -110,7 +112,7 @@ class ReportCumulativeBalanceChart extends StatelessWidget {
                             ? '${chartTooltipDate(entries[index].key)}\n'
                             : '';
                         return LineTooltipItem(
-                          '$date${formatMoney(spot.y, currency: currency)}',
+                          '$date${money(spot.y)}',
                           kChartTooltipStyle,
                         );
                       }).toList();
@@ -147,10 +149,13 @@ class ReportCumulativeBalanceChart extends StatelessWidget {
                         if (value < minValue || value > maxValue) {
                           return const SizedBox.shrink();
                         }
+                        // Tutarlar gizliyken değer ekseni yazılmaz (bkz.
+                        // günlük akış grafiği); çizginin şekli görünür kalır.
+                        if (!money.visible) return const SizedBox.shrink();
                         return SideTitleWidget(
                           axisSide: meta.axisSide,
                           child: Text(
-                            formatMoneyCompact(value, symbol: false),
+                            money.compact(value, symbol: false),
                             style: chartAxisLabelStyle(scheme),
                           ),
                         );
