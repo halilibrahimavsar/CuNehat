@@ -4030,4 +4030,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String reportCompareBarSemantics(Object side, Object total, Object count) {
     return '$side bar: $total, $count items.';
   }
+
+  @override
+  String get reportTotalLabel => 'Total';
+
+  @override
+  String reportSunburstSemantics(Object roots, Object children, Object total) {
+    return 'Category ring: $roots top-level categories, $children subcategories, $total in total. The inner ring shows top-level categories, the outer ring the breakdown.';
+  }
+
+  @override
+  String get reportHierarchyHint =>
+      'Tap the inner ring to focus · outer ring: breakdown';
+
+  @override
+  String reportBreakdownToggle(Object ad) {
+    return '$ad breakdown';
+  }
 }

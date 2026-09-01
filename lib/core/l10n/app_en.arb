@@ -2143,5 +2143,21 @@
           "total": {},
           "count": {}
       }
+  },
+  "reportTotalLabel": "Total",
+  "reportSunburstSemantics": "Category ring: {roots} top-level categories, {children} subcategories, {total} in total. The inner ring shows top-level categories, the outer ring the breakdown.",
+  "@reportSunburstSemantics": {
+      "placeholders": {
+          "roots": {},
+          "children": {},
+          "total": {}
+      }
+  },
+  "reportHierarchyHint": "Tap the inner ring to focus · outer ring: breakdown",
+  "reportBreakdownToggle": "{ad} breakdown",
+  "@reportBreakdownToggle": {
+      "placeholders": {
+          "ad": {}
+      }
   }
 }

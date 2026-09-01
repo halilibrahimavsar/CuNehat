@@ -75,8 +75,7 @@ class ReportUnitSelector extends StatelessWidget {
     this.maxBuckets = 62,
   });
 
-  String _label(BuildContext context, ReportBucketUnit unit) =>
-      switch (unit) {
+  String _label(BuildContext context, ReportBucketUnit unit) => switch (unit) {
         ReportBucketUnit.day => context.l10n.reportUnitDay,
         ReportBucketUnit.week => context.l10n.reportUnitWeek,
         ReportBucketUnit.month => context.l10n.reportUnitMonth,

@@ -98,7 +98,8 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('pasta kalem sayısını ve toplamı söyler', (tester) async {
+  testWidgets('kategori çemberi ana/alt sayısını ve toplamı söyler',
+      (tester) async {
     final handle = tester.ensureSemantics();
     final data = [
       CategoryData('Kira', 2400, const [], Colors.red),
@@ -119,7 +120,8 @@ void main() {
 
     expect(
       labels(tester).any((l) =>
-          l.contains('Giderler kategori dağılımı') &&
+          l.contains('Kategori çemberi') &&
+          l.contains('2 ana kategori') &&
           l.contains('3.600,00 ₺')),
       isTrue,
     );

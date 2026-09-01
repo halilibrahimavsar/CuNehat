@@ -17,9 +17,25 @@ class CategoryData {
   /// isimle değil bu bayrakla yapılır.
   final bool isOther;
 
-  /// Alt kategori kırılımı — dilime dokunulduğunda gösterilir. Toplam zaten
-  /// [totalAmount] içinde; bu liste yalnız kırılımı taşır, yeni tutar eklemez.
-  final List<CategoryBreakdown> children;
+  /// Alt kategori kırılımı — çemberin dış halkası, çubuk satırının açılan
+  /// kısmı ve detay sayfası hep bunu okur.
+  ///
+  /// Toplamları [totalAmount]'a EŞİTTİR: kökün doğrudan harcaması da sentetik
+  /// bir çocuk olarak burada durur ([isDirect]). Bu eşitlik çemberin iki
+  /// halkasının hizalanmasının ön koşuludur — dış halka iç halkayla aynı
+  /// toplamı kaplamazsa açılar kayar.
+  ///
+  /// Çocuğu olmayan kategorilerde BOŞTUR (tek çocuklu sentetik bir sarmalayıcı
+  /// üretilmez; "kırılım yok" bilgisi listenin boş olmasıyla taşınır).
+  final List<CategoryData> children;
+
+  /// Bu dilim, bir ana kategorinin KENDİ (alt kategoriye yazılmamış)
+  /// harcaması mı? Yalnız [children] içinde görülür.
+  final bool isDirect;
+
+  /// Aynı uzunluktaki ÖNCEKİ dönemde bu kategorinin toplamı; hesaplanmadıysa
+  /// null. Kategori bazlı değişim rozetleri bunu okur.
+  final double? previousAmount;
 
   const CategoryData(
     this.name,
@@ -27,8 +43,34 @@ class CategoryData {
     this.transactions,
     this.color, {
     this.isOther = false,
+    this.isDirect = false,
     this.children = const [],
+    this.previousAmount,
   });
+
+  /// Önceki döneme göre yüzde değişim; kıyas yoksa ya da önceki dönem sıfırsa
+  /// null (sıfırdan artışın yüzdesi tanımsızdır).
+  double? get changePercent {
+    final previous = previousAmount;
+    if (previous == null || previous == 0) return null;
+    return ((totalAmount - previous) / previous) * 100;
+  }
+
+  CategoryData copyWith({
+    Color? color,
+    List<CategoryData>? children,
+    double? previousAmount,
+  }) =>
+      CategoryData(
+        name,
+        totalAmount,
+        transactions,
+        color ?? this.color,
+        isOther: isOther,
+        isDirect: isDirect,
+        children: children ?? this.children,
+        previousAmount: previousAmount ?? this.previousAmount,
+      );
 }
 
 extension CategoryDataLabel on CategoryData {
@@ -234,8 +276,113 @@ class ReportCategoryDataBuilder {
           breakdowns[i].totalAmount,
           breakdowns[i].transactions,
           colors[i],
-          children: breakdowns[i].children,
+          children: _childSlices(breakdowns[i], colors[i]),
         ),
+    ];
+  }
+
+  /// Bir kökün alt kırılımını renkli dilimlere çevirir.
+  ///
+  /// **Kökün DOĞRUDAN harcaması da bir dilimdir** ([CategoryData.isDirect]):
+  /// çocukların toplamı ile kökün toplamı arasındaki fark. Bu olmadan
+  /// çemberin dış halkası iç halkadan kısa kalır ve iki halkanın açıları
+  /// kayardı. Kuruş artıkları (< 0,5 kuruş) dilim üretmez.
+  ///
+  /// Çocuk renkleri ANA RENKTEN türer: aynı hue, farklı açıklık. Kırılımın
+  /// hangi ana kategoriye ait olduğu böylece renkten okunur — palette'ten
+  /// bağımsız renk vermek dış halkayı anlamsız bir konfetiye çevirirdi.
+  List<CategoryData> _childSlices(CategoryBreakdown root, Color rootColor) {
+    if (root.children.isEmpty) return const [];
+
+    final childrenTotal =
+        root.children.fold<double>(0.0, (sum, c) => sum + c.totalAmount);
+    final direct = root.totalAmount - childrenTotal;
+
+    final tints = _stableTints(
+      [for (final c in root.children) c.name],
+      rootColor,
+    );
+
+    return [
+      for (var i = 0; i < root.children.length; i++)
+        CategoryData(
+          root.children[i].name,
+          root.children[i].totalAmount,
+          root.children[i].transactions,
+          tints[i],
+        ),
+      if (direct > 0.005)
+        CategoryData(
+          root.name,
+          direct,
+          // Kökün doğrudan işlemleri: alt kategoriye yazılmamış olanlar.
+          [
+            for (final t in root.transactions)
+              if (t.tag == root.name) t,
+          ],
+          rootColor,
+          isDirect: true,
+        ),
+    ];
+  }
+
+  /// Alt kategori renkleri: ana rengin açıklık varyantları.
+  ///
+  /// Seçim yine KİMLİĞE bağlı ([ReportCategoryPalette.preferredIndex]), sıraya
+  /// değil — bir alt kategorinin tonu dönemden döneme kaymasın. Çakışmalar
+  /// ileri sondalamayla çözülür; adım sayısını aşan çocukta tekrar kaçınılmaz
+  /// ama o noktada dilim zaten okunmayacak kadar incedir.
+  List<Color> _stableTints(List<String> childIds, Color rootColor) {
+    final hsl = HSLColor.fromColor(rootColor);
+    // Ana renk kökün KENDİ dilimine ayrılır; çocuklar onun etrafında dizilir.
+    // Adımlar simetrik değil: koyu uçta göz farkı daha iyi ayırt ediyor.
+    const offsets = [0.16, -0.12, 0.30, -0.22, 0.08, -0.30];
+
+    final taken = <int>{};
+    final out = <Color>[];
+    for (final id in childIds) {
+      var slot = ReportCategoryPalette.preferredIndex(id) % offsets.length;
+      for (var probe = 0; probe < offsets.length; probe++) {
+        final candidate = (slot + probe) % offsets.length;
+        if (taken.add(candidate)) {
+          slot = candidate;
+          break;
+        }
+      }
+      out.add(
+        hsl
+            .withLightness((hsl.lightness + offsets[slot]).clamp(0.24, 0.80))
+            // Açıklık uçlara giderken doygunluğu biraz düşür: aksi hâlde açık
+            // tonlar neon, koyu tonlar çamur oluyor.
+            .withSaturation(
+                (hsl.saturation - offsets[slot].abs() * 0.5).clamp(0.25, 1.0))
+            .toColor(),
+      );
+    }
+    return out;
+  }
+
+  /// [current] dilimlerine önceki dönem tutarlarını iliştirir.
+  ///
+  /// Eşleştirme kategori KİMLİĞİ üzerinden; sentetik "Diğer" kovası
+  /// dışarıda bırakılır (iki dönemin kovaları farklı kategorilerden kurulur,
+  /// kıyaslamak yanıltıcı olurdu).
+  List<CategoryData> withPreviousAmounts(
+    List<CategoryData> current,
+    List<CategoryData> previous,
+  ) {
+    if (current.isEmpty) return current;
+    final byName = {
+      for (final p in previous)
+        if (!p.isOther) p.name: p.totalAmount,
+    };
+
+    return [
+      for (final item in current)
+        if (item.isOther)
+          item
+        else
+          item.copyWith(previousAmount: byName[item.name] ?? 0),
     ];
   }
 
@@ -392,5 +539,4 @@ class ReportCategoryDataBuilder {
     }
     return null;
   }
-
 }

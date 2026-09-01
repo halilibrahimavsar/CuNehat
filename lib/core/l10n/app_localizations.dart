@@ -7144,6 +7144,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{side} çubuğu: {total}, {count} kalem.'**
   String reportCompareBarSemantics(Object side, Object total, Object count);
+
+  /// No description provided for @reportTotalLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam'**
+  String get reportTotalLabel;
+
+  /// No description provided for @reportSunburstSemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategori çemberi: {roots} ana kategori, {children} alt kategori, toplam {total}. İç halka ana kategorileri, dış halka alt kırılımı gösterir.'**
+  String reportSunburstSemantics(Object roots, Object children, Object total);
+
+  /// No description provided for @reportHierarchyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İç halkaya dokun: odakla · dış halka: alt kırılım'**
+  String get reportHierarchyHint;
+
+  /// No description provided for @reportBreakdownToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{ad} alt kırılımı'**
+  String reportBreakdownToggle(Object ad);
 }
 
 class _AppLocalizationsDelegate

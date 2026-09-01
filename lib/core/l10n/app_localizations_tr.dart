@@ -4030,4 +4030,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String reportCompareBarSemantics(Object side, Object total, Object count) {
     return '$side çubuğu: $total, $count kalem.';
   }
+
+  @override
+  String get reportTotalLabel => 'Toplam';
+
+  @override
+  String reportSunburstSemantics(Object roots, Object children, Object total) {
+    return 'Kategori çemberi: $roots ana kategori, $children alt kategori, toplam $total. İç halka ana kategorileri, dış halka alt kırılımı gösterir.';
+  }
+
+  @override
+  String get reportHierarchyHint =>
+      'İç halkaya dokun: odakla · dış halka: alt kırılım';
+
+  @override
+  String reportBreakdownToggle(Object ad) {
+    return '$ad alt kırılımı';
+  }
 }

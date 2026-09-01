@@ -2164,5 +2164,21 @@
           "total": {},
           "count": {}
       }
+  },
+  "reportTotalLabel": "Toplam",
+  "reportSunburstSemantics": "Kategori çemberi: {roots} ana kategori, {children} alt kategori, toplam {total}. İç halka ana kategorileri, dış halka alt kırılımı gösterir.",
+  "@reportSunburstSemantics": {
+      "placeholders": {
+          "roots": {},
+          "children": {},
+          "total": {}
+      }
+  },
+  "reportHierarchyHint": "İç halkaya dokun: odakla · dış halka: alt kırılım",
+  "reportBreakdownToggle": "{ad} alt kırılımı",
+  "@reportBreakdownToggle": {
+      "placeholders": {
+          "ad": {}
+      }
   }
 }

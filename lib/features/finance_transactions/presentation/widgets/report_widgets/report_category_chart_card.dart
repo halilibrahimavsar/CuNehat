@@ -2,10 +2,9 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
-import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_bar_list.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_sunburst_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -44,28 +43,24 @@ class ReportCategoryChartCard extends StatefulWidget {
 }
 
 class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
-  int _touchedIndex = -1;
+  /// Çemberin iç halkasında odaklanılan ana kategori; null ise odak yok.
+  int? _focusedRoot;
 
-  /// Bir dilimin üzerine yüzde yazılabilmesi için gereken en düşük pay.
-  ///
-  /// Keyfi değil, ölçüldü: fl_chart etiketi varsayılan olarak iç/dış yarıçapın
-  /// ortasına (r ≈ 73) koyar. Orada %1'lik yay 4,6px; "%3" etiketi gerçek
-  /// Roboto ile 15,7px genişliğinde, yani etiketin sığması için dilimin en az
-  /// ~%3,5 olması gerekir. Pay yerine 6 seçildi ki komşu etiketler arasında
-  /// nefes payı da kalsın.
-  static const double _minLabelPercent = 6;
+  /// Dilimlerden en az birinin alt kırılımı var mı? Yoksa dış halka da,
+  /// onu anlatan ipucu da çizilmez.
+  bool get _hasHierarchy => widget.pieData.any((c) => c.children.isNotEmpty);
 
   @override
   void didUpdateWidget(ReportCategoryChartCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Dilim listesi değiştiğinde (tarih aralığı seçimi, işlem ekleme/silme)
-    // eski indeks artık başka bir kategoriyi işaret eder; vurgu sıfırlanır.
+    // eski indeks artık başka bir kategoriyi işaret eder; odak sıfırlanır.
     // Uzunluk yetmez: aynı sayıda ama farklı sıradaki kategoriler de kayar.
     if (!listEquals(
       [for (final c in oldWidget.pieData) c.name],
       [for (final c in widget.pieData) c.name],
     )) {
-      _touchedIndex = -1;
+      _focusedRoot = null;
     }
   }
 
@@ -127,34 +122,6 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
     final total = widget.fullData
         .fold<double>(0.0, (sum, item) => sum + item.totalAmount);
     final activeData = widget.showBarChart ? widget.fullData : widget.pieData;
-
-    final sections =
-        List<PieChartSectionData>.generate(widget.pieData.length, (i) {
-      final item = widget.pieData[i];
-      final percent = total == 0 ? 0.0 : (item.totalAmount / total) * 100;
-      final isTouched = i == _touchedIndex;
-      final radius = isTouched ? 75.0 : 66.0;
-
-      return PieChartSectionData(
-        value: item.totalAmount,
-        // Etiket yalnız YAYA SIĞDIĞINDA basılır. Ölçüldü (gerçek Roboto,
-        // yarıçap 73): "%3" etiketi 15,7px, %3'lük dilimin yayı 13,8px —
-        // etiket kendi diliminden taşıp komşusunun üstüne biniyordu.
-        // Eşiğin altındaki dilimlerin payını efsane satırı taşır.
-        title: percent >= _minLabelPercent ? formatPercent(percent) : '',
-        radius: radius,
-        color: item.color,
-        titleStyle: TextStyle(
-          fontSize: isTouched ? 14 : 12,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          shadows: const [
-            BoxShadow(
-                color: Colors.black45, blurRadius: 4, offset: Offset(0, 1)),
-          ],
-        ),
-      );
-    });
 
     return AppCard(
       section: AppSection.transactions,
@@ -220,78 +187,24 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
           const SizedBox(height: 24),
           widget.showBarChart
               ? const SizedBox.shrink()
-              : Semantics(
-                  // Pasta ekran okuyucuya hiçbir şey söylemiyordu; kırılımın
-                  // kendisi altındaki efsane satırlarında okunur.
-                  label: context.l10n.reportPieSemantics(
-                    widget.title,
-                    widget.pieData.length.toString(),
-                    _money(total),
-                  ),
-                  child: SizedBox(
-                    height: 200,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        _buildCenterLabel(context, theme, total),
-                        PieChart(
-                          PieChartData(
-                            pieTouchData: PieTouchData(
-                              touchCallback:
-                                  (FlTouchEvent event, pieTouchResponse) {
-                                final isTapUp = event is FlTapUpEvent;
-                                int? tappedIndex;
-
-                                setState(() {
-                                  if (!event.isInterestedForInteractions ||
-                                      pieTouchResponse == null ||
-                                      pieTouchResponse.touchedSection == null) {
-                                    final touchIndex = pieTouchResponse
-                                            ?.touchedSection
-                                            ?.touchedSectionIndex ??
-                                        -1;
-                                    final actualIndex = touchIndex != -1
-                                        ? touchIndex
-                                        : _touchedIndex;
-
-                                    if (isTapUp &&
-                                        actualIndex != -1 &&
-                                        actualIndex < widget.pieData.length) {
-                                      tappedIndex = actualIndex;
-                                    }
-
-                                    _touchedIndex = -1;
-                                    return;
-                                  }
-
-                                  final newIndex = pieTouchResponse
-                                      .touchedSection!.touchedSectionIndex;
-                                  _touchedIndex = newIndex;
-
-                                  if (isTapUp &&
-                                      newIndex != -1 &&
-                                      newIndex < widget.pieData.length) {
-                                    tappedIndex = newIndex;
-                                  }
-                                });
-
-                                if (tappedIndex != null) {
-                                  widget.onCategoryTap(
-                                      widget.pieData[tappedIndex!],
-                                      ReportSliceMode.pie);
-                                }
-                              },
-                            ),
-                            sections: sections,
-                            sectionsSpace: 3,
-                            centerSpaceRadius: 40,
-                            borderData: FlBorderData(show: false),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              : ReportSunburstChart(
+                  roots: widget.pieData,
+                  categoryLabels: widget.categoryLabels,
+                  focusedIndex: _focusedRoot,
+                  onFocusChanged: (i) => setState(() => _focusedRoot = i),
+                  onSliceTap: (slice) =>
+                      widget.onCategoryTap(slice, ReportSliceMode.pie),
                 ),
+          if (!widget.showBarChart && _hasHierarchy) ...[
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.reportHierarchyHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           // Çubuk görünümü efsanenin YERİNE geçer (ad, tutar ve pay zaten
           // satırda); pasta görünümünde efsane dilimlerin okunmasını sağlar.
@@ -307,49 +220,6 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
             )
           else
             _buildLegend(context, theme, activeData, total),
-        ],
-      ),
-    );
-  }
-
-  /// Pastanın ortasındaki boşluk (r=40) eskiden boştu. Seçili dilimin adı ve
-  /// payı oraya yazılır: dokunulan dilimi bulmak için efsaneye inip renk
-  /// eşleştirmek gerekmez. Seçim yokken toplam kalem sayısı durur.
-  Widget _buildCenterLabel(
-      BuildContext context, ThemeData theme, double total) {
-    final scheme = theme.colorScheme;
-    final hasSelection =
-        _touchedIndex >= 0 && _touchedIndex < widget.pieData.length;
-    if (!hasSelection) return const SizedBox.shrink();
-
-    final item = widget.pieData[_touchedIndex];
-    final percent = total == 0 ? 0.0 : (item.totalAmount / total) * 100;
-
-    return SizedBox(
-      width: 74,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            item.labelIn(context, widget.categoryLabels),
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
-              color: scheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            formatPercent(percent),
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: item.color,
-            ),
-          ),
         ],
       ),
     );

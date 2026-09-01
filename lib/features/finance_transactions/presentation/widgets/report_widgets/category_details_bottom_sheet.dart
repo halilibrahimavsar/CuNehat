@@ -236,9 +236,6 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     CategoryData category,
   ) {
     final scheme = theme.colorScheme;
-    final childrenTotal =
-        category.children.fold<double>(0.0, (sum, c) => sum + c.totalAmount);
-    final directAmount = category.totalAmount - childrenTotal;
 
     Widget row(
       String label,
@@ -290,6 +287,17 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
       children: [
         for (final child in category.children)
           () {
+            // Kökün DOĞRUDAN harcaması da bir çocuk dilimidir; ayrı bir
+            // "kalan" hesabı yapılmaz (bkz. ReportCategoryDataBuilder).
+            if (child.isDirect) {
+              return row(
+                context.l10n.dogrudanKategoriSec(
+                  category.labelIn(context, categoryLabels),
+                ),
+                child.totalAmount,
+                muted: true,
+              );
+            }
             // Bütçe ALT kategoriye de konabiliyor (tek seviye kilidi yalnız
             // ata+torun ikilisini engeller). Dilimler kök seviyede toplandığı
             // için böyle bir bütçe kök satırında görünmez; tek görünür yeri
@@ -307,15 +315,6 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
               budgetExceeded: budget?.isExceeded ?? false,
             );
           }(),
-        // Kuruş artıkları bir satır üretmesin.
-        if (directAmount > 0.005)
-          row(
-            context.l10n.dogrudanKategoriSec(
-              category.labelIn(context, categoryLabels),
-            ),
-            directAmount,
-            muted: true,
-          ),
       ],
     );
   }
