@@ -24,6 +24,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_monthly_trend_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
@@ -371,9 +372,13 @@ void main() {
     expect(find.byType(ReportRangeHeader), findsOneWidget);
     expect(find.byType(ReportSummaryCards), findsOneWidget);
     expect(find.byType(ReportSystemMovementsToggle), findsOneWidget);
+    // Akış ve bakiye TEK kartta, mercek seçimiyle (bkz.
+    // ReportPeriodChartCard); açılış merceği akış.
+    expect(find.byType(ReportPeriodChartCard), findsOneWidget);
     expect(find.byType(ReportDailyNetFlowChart), findsOneWidget);
-    expect(find.byType(ReportCumulativeBalanceChart), findsOneWidget);
+    expect(find.byType(ReportCumulativeBalanceChart), findsNothing);
     expect(find.byType(ReportMonthlyTrendCard), findsOneWidget);
+    expect(find.byType(ReportPeriodLensSelector), findsOneWidget);
     expect(find.byType(ReportCompareChartCard), findsOneWidget);
     expect(find.byType(ReportBudgetSummaryCard), findsOneWidget);
     expect(find.byType(ReportTopPayeesCard), findsOneWidget);
@@ -450,6 +455,13 @@ void main() {
       const expense =
           24000 + marketTotal + 8 * 180 + 2120 + 2350 + 640 + 1890 + 35000;
 
+      // Bakiye merceğine geç.
+      final balanceChip = find.text('Bakiye');
+      await tester.ensureVisible(balanceChip);
+      await tester.pumpAndSettle();
+      await tester.tap(balanceChip);
+      await tester.pumpAndSettle();
+
       final line = tester.widget<LineChart>(find.byType(LineChart));
       expect(
         line.data.lineBarsData.first.spots.last.y,
@@ -514,5 +526,73 @@ void main() {
       await tester.pumpAndSettle();
     });
     expect(errors, isEmpty, reason: '$errors');
+  });
+
+  group('sayfa yapısı', () {
+    testWidgets('dönem kontrolü YAPIŞKAN — kaydırınca kaybolmaz',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpPage(tester);
+      final before = tester.getTopLeft(find.byType(ReportRangeHeader));
+
+      // Sayfanın sonuna kadar kaydır.
+      await tester.drag(
+          find.byType(ReportSummaryCards), const Offset(0, -1500));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReportRangeHeader), findsOneWidget,
+          reason: 'hangi dönemin raporuna bakıldığı hep görünmeli');
+      expect(tester.getTopLeft(find.byType(ReportRangeHeader)), before);
+    });
+
+    testWidgets('bölümler ÜRÜN ÖNCELİĞİNE göre sıralı', (tester) async {
+      tester.view.physicalSize = const Size(360, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpPage(tester);
+
+      double topOf(String title) =>
+          tester.getTopLeft(find.text(title)).dy;
+
+      // Kullanıcının sorduğu sıra: ne oldu → nereye gitti → bütçeyi aştım mı
+      // → eğilim ne → tam olarak nereye. Kategori dağılımı eskiden 1507dp'de,
+      // yani iki ekran aşağıdaydı.
+      final kategori = topOf('Kategori Dağılımı');
+      final butce = topOf('Bütçe durumu');
+      final aylik = topOf('Aylık seyir');
+      final yerler = topOf('En çok harcanan yerler');
+
+      expect(kategori, lessThan(butce));
+      expect(butce, lessThan(aylik));
+      expect(aylik, lessThan(yerler));
+      // Kategori dağılımı İLK ekranda başlamalı.
+      expect(kategori, lessThan(800));
+    });
+
+    testWidgets('akış ↔ bakiye merceği kartı değiştirir', (tester) async {
+      tester.view.physicalSize = const Size(360, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpPage(tester);
+
+      expect(find.byType(ReportDailyNetFlowChart), findsOneWidget);
+      expect(find.byType(ReportCumulativeBalanceChart), findsNothing);
+
+      final balance = find.text('Bakiye');
+      await tester.ensureVisible(balance);
+      await tester.pumpAndSettle();
+      await tester.tap(balance);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReportDailyNetFlowChart), findsNothing);
+      expect(find.byType(ReportCumulativeBalanceChart), findsOneWidget);
+      // Başlık merceği izler.
+      expect(find.text('Bakiye Trendi'), findsOneWidget);
+    });
   });
 }

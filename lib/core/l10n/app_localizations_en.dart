@@ -4101,4 +4101,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportCategoryChange => 'vs. previous period';
+
+  @override
+  String get reportLensFlow => 'Flow';
+
+  @override
+  String get reportLensBalance => 'Balance';
+
+  @override
+  String get reportPeriodSectionTitle => 'Within the period';
 }

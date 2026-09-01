@@ -25,16 +25,15 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_monthly_trend_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_top_payees_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -105,6 +104,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// Aylık seyir kartının ufku (6 | 12 ay). Seçili aralıktan BAĞIMSIZ:
   /// "daha çok mu harcıyorum" sorusu daha uzun bir pencere ister.
   int _trendMonths = 6;
+
+  /// Dönem içi grafiğin merceği: akış çubukları mı, bakiye çizgisi mi.
+  ReportPeriodLens _periodLens = ReportPeriodLens.flow;
 
   Map<String, IconData> _categoryIcons = {};
 
@@ -622,170 +624,221 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
           // pasta/çubuk kartını gösterir.
           final isCompare = _categoryMode == FinanceMode.compare;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ReportSectionHeader(
-                  title: context.l10n.islemRaporu,
-                  fontSize: 20,
-                  // Paylaş düğmesi eskiden YALNIZ AppBar'daydı ve sayfa
-                  // üretimde `showAppBar: false` ile kuruluyor (bkz.
-                  // SubViewFactory) — yani CSV dışa aktarımı hiç
-                  // erişilemiyordu, `_shareReport` ölü koddu.
-                  trailing: filteredTransactions.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.ios_share_rounded),
-                          tooltip: context.l10n.reportShareTooltip,
-                          onPressed: _shareReport,
+          // Dönem kontrolü YAPIŞKAN. Ölçüldü: sayfa 360×800 telefonda ~3
+          // ekran; kullanıcı ikinci ekranda hangi dönemin raporuna baktığını
+          // göremiyor ve dönemi değiştirmek için en başa dönmesi gerekiyordu.
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ReportSectionHeader(
+                      title: context.l10n.islemRaporu,
+                      fontSize: 20,
+                      // Paylaş düğmesi eskiden YALNIZ AppBar'daydı ve sayfa
+                      // üretimde `showAppBar: false` ile kuruluyor (bkz.
+                      // SubViewFactory) — yani CSV dışa aktarımı hiç
+                      // erişilemiyordu, `_shareReport` ölü koddu.
+                      trailing: filteredTransactions.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.ios_share_rounded),
+                              tooltip: context.l10n.reportShareTooltip,
+                              onPressed: _shareReport,
+                            ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Tarih başlığı aralık boş olsa da görünür kalır; aksi
+                    // halde kullanıcı aralığı değiştirecek kontrolü
+                    // bulamıyordu.
+                    ReportRangeHeader(
+                      range: _range,
+                      onPickDateRange: _pickDateRange,
+                      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(
+                          context.l10n),
+                      onQuickOptionSelected: (picked) => setState(() {
+                        _range = picked;
+                        _hasUserPickedRange = true;
+                        _unitOverride = null;
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              // İçerik yapışkan başlığın ALTINDAN kayıyor; ince bir çizgi
+              // olmadan kartlar başlığa yapışmış gibi görünüyor.
+              Divider(
+                height: 12,
+                thickness: 1,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.06),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (filteredTransactions.isEmpty) ...[
+                        _buildEmptyState(
+                          context,
+                          message: context.l10n.msgSecilenTarihAraligindaIslem,
                         ),
+                      ] else ...[
+                        ReportSummaryCards(
+                          totals: totals,
+                          previousTotals: previousTotals,
+                        ),
+                        // Kart yalnız dönemde kuplaj hareketi VARKEN çizilir;
+                        // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
+                        if (split.system.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          ReportSystemMovementsToggle(
+                            included: _includeSystemMovements,
+                            count: split.system.length,
+                            onChanged: (v) =>
+                                setState(() => _includeSystemMovements = v),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        ReportSectionHeader(
+                          title: context.l10n.kategoriDagilimi,
+                          trailing: FinanceModeSegment(
+                            currentMode: _categoryMode,
+                            onModeChanged: (m) =>
+                                setState(() => _categoryMode = m),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (isCompare)
+                          ReportCompareChartCard(
+                            incomeSlices: derived.incomeRanked,
+                            expenseSlices: derived.expenseRanked,
+                            categoryLabels: _categoryLabels,
+                            // Bütçeler varsayılan modda GÖRÜNMÜYORDU: ilerleme
+                            // çubukları yalnız tek taraflı pasta kartına
+                            // geçiriliyordu, oysa açılış modu karşılaştırma.
+                            budgetProgressFor: dataBuilder.budgetProgressFor,
+                            onSliceTap: (slice, isExpense) =>
+                                _openCategoryDetails(
+                                    slice, isExpense, ReportSliceMode.ranked),
+                          )
+                        else if (_categoryMode == FinanceMode.expense)
+                          ReportCategoryChartCard(
+                            title: context.l10n.reportExpensesTitle,
+                            fullData: expenseFull,
+                            pieData: expensePie,
+                            isExpense: true,
+                            showBarChart: _showExpenseBarChart,
+                            onToggleBarChart: (v) =>
+                                setState(() => _showExpenseBarChart = v),
+                            onCategoryTap: (cat, mode) =>
+                                _openCategoryDetails(cat, true, mode),
+                            budgetProgressFor: dataBuilder.budgetProgressFor,
+                            categoryLabels: _categoryLabels,
+                          )
+                        else
+                          ReportCategoryChartCard(
+                            title: context.l10n.reportIncomesTitle,
+                            fullData: incomeFull,
+                            pieData: incomePie,
+                            isExpense: false,
+                            showBarChart: _showIncomeBarChart,
+                            onToggleBarChart: (v) =>
+                                setState(() => _showIncomeBarChart = v),
+                            onCategoryTap: (cat, mode) =>
+                                _openCategoryDetails(cat, false, mode),
+                            budgetProgressFor: dataBuilder.budgetProgressFor,
+                            categoryLabels: _categoryLabels,
+                          ),
+                        // ── ürün önceliğine göre sıra ────────────────────────
+                        // Ölçüldü: sayfa 360×800'de 2.761dp'ye (3,5 ekran)
+                        // çıkmıştı ve uygulamanın ASIL sorusu olan kategori
+                        // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
+                        // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
+                        // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
+                        if (derived.budgetStatuses.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          ReportSectionHeader(
+                              title: context.l10n.reportBudgetSummaryTitle),
+                          const SizedBox(height: 12),
+                          ReportBudgetSummaryCard(
+                            statuses: derived.budgetStatuses,
+                            onTap: _openBudgetCategory,
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        ReportSectionHeader(
+                            title: context.l10n.reportMonthlyTrendTitle),
+                        const SizedBox(height: 12),
+                        ReportMonthlyTrendCard(
+                          series: derived.trendSeries,
+                          months: _trendMonths,
+                          onMonthsChanged: (m) =>
+                              setState(() => _trendMonths = m),
+                          selectedMonth: _selectedTrendMonth(),
+                          onMonthTap: (bucket) => setState(() {
+                            // Trend kartı gezinme aracıdır: dokunulan ay raporun
+                            // dönemi olur.
+                            _range = DateTimeRange(
+                              start: bucket.start,
+                              end: bucket.endExclusive
+                                  .subtract(const Duration(days: 1)),
+                            );
+                            _hasUserPickedRange = true;
+                            _unitOverride = null;
+                          }),
+                        ),
+                        const SizedBox(height: 24),
+                        ReportSectionHeader(
+                          // Başlık MERCEĞİ ve çözünürlüğü izler: "Dönem içi seyir"
+                          // gibi genel bir başlık ekranda ne olduğunu söylemiyor.
+                          title: _periodLens == ReportPeriodLens.balance
+                              ? context.l10n.reportBalanceTrend
+                              : _flowTitle(context, flowSeries.unit),
+                          trailing: ReportPeriodLensSelector(
+                            selected: _periodLens,
+                            onChanged: (l) => setState(() => _periodLens = l),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Çözünürlük seçicisi artık YÖNETTİĞİ kartın hemen
+                        // üstünde: eskiden akış kartının başlığındaydı ama
+                        // sessizce alttaki bakiye grafiğini de değiştiriyordu.
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: ReportUnitSelector(
+                            selected: flowSeries.unit,
+                            bucketCounts: _bucketCounts(),
+                            onChanged: (u) => setState(() => _unitOverride = u),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ReportPeriodChartCard(
+                          flowSeries: flowSeries,
+                          balanceSeries: balanceSeries,
+                          lens: _periodLens,
+                          onLensChanged: (l) => setState(() => _periodLens = l),
+                        ),
+                        if (derived.payeeGroups.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          ReportSectionHeader(
+                              title: context.l10n.reportTopPayeesTitle),
+                          const SizedBox(height: 12),
+                          ReportTopPayeesCard(
+                              groups: derived.payeeGroups,
+                              onGroupTap: _openPayeeGroup),
+                        ],
+                      ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                // Tarih başlığı aralık boş olsa da görünür kalır; aksi
-                // halde kullanıcı aralığı değiştirecek kontrolü bulamıyordu.
-                ReportRangeHeader(
-                  range: _range,
-                  onPickDateRange: _pickDateRange,
-                  quickOptions:
-                      DateRangeHelper.buildDateRangeQuickOptions(context.l10n),
-                  onQuickOptionSelected: (picked) => setState(() {
-                    _range = picked;
-                    _hasUserPickedRange = true;
-                    _unitOverride = null;
-                  }),
-                ),
-                const SizedBox(height: 16),
-
-                if (filteredTransactions.isEmpty) ...[
-                  _buildEmptyState(
-                    context,
-                    message: context.l10n.msgSecilenTarihAraligindaIslem,
-                  ),
-                ] else ...[
-                  ReportSummaryCards(
-                    totals: totals,
-                    previousTotals: previousTotals,
-                  ),
-                  // Kart yalnız dönemde kuplaj hareketi VARKEN çizilir;
-                  // yoksa hiçbir şeyi açıklamayan bir anahtar yer kaplardı.
-                  if (split.system.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    ReportSystemMovementsToggle(
-                      included: _includeSystemMovements,
-                      count: split.system.length,
-                      onChanged: (v) =>
-                          setState(() => _includeSystemMovements = v),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  ReportSectionHeader(
-                    title: _flowTitle(context, flowSeries.unit),
-                    trailing: ReportUnitSelector(
-                      selected: flowSeries.unit,
-                      bucketCounts: _bucketCounts(),
-                      onChanged: (u) => setState(() => _unitOverride = u),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ReportDailyNetFlowChart(series: flowSeries),
-                  const SizedBox(height: 24),
-                  ReportSectionHeader(title: context.l10n.reportBalanceTrend),
-                  const SizedBox(height: 12),
-                  ReportCumulativeBalanceChart(series: balanceSeries),
-                  const SizedBox(height: 24),
-                  ReportSectionHeader(
-                      title: context.l10n.reportMonthlyTrendTitle),
-                  const SizedBox(height: 12),
-                  ReportMonthlyTrendCard(
-                    series: derived.trendSeries,
-                    months: _trendMonths,
-                    onMonthsChanged: (m) => setState(() => _trendMonths = m),
-                    selectedMonth: _selectedTrendMonth(),
-                    onMonthTap: (bucket) => setState(() {
-                      // Trend kartı gezinme aracıdır: dokunulan ay raporun
-                      // dönemi olur.
-                      _range = DateTimeRange(
-                        start: bucket.start,
-                        end: bucket.endExclusive
-                            .subtract(const Duration(days: 1)),
-                      );
-                      _hasUserPickedRange = true;
-                      _unitOverride = null;
-                    }),
-                  ),
-                  const SizedBox(height: 24),
-                  ReportSectionHeader(
-                    title: context.l10n.kategoriDagilimi,
-                    trailing: FinanceModeSegment(
-                      currentMode: _categoryMode,
-                      onModeChanged: (m) => setState(() => _categoryMode = m),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (isCompare)
-                    ReportCompareChartCard(
-                      incomeSlices: derived.incomeRanked,
-                      expenseSlices: derived.expenseRanked,
-                      categoryLabels: _categoryLabels,
-                      // Bütçeler varsayılan modda GÖRÜNMÜYORDU: ilerleme
-                      // çubukları yalnız tek taraflı pasta kartına
-                      // geçiriliyordu, oysa açılış modu karşılaştırma.
-                      budgetProgressFor: dataBuilder.budgetProgressFor,
-                      onSliceTap: (slice, isExpense) => _openCategoryDetails(
-                          slice, isExpense, ReportSliceMode.ranked),
-                    )
-                  else if (_categoryMode == FinanceMode.expense)
-                    ReportCategoryChartCard(
-                      title: context.l10n.reportExpensesTitle,
-                      fullData: expenseFull,
-                      pieData: expensePie,
-                      isExpense: true,
-                      showBarChart: _showExpenseBarChart,
-                      onToggleBarChart: (v) =>
-                          setState(() => _showExpenseBarChart = v),
-                      onCategoryTap: (cat, mode) =>
-                          _openCategoryDetails(cat, true, mode),
-                      budgetProgressFor: dataBuilder.budgetProgressFor,
-                      categoryLabels: _categoryLabels,
-                    )
-                  else
-                    ReportCategoryChartCard(
-                      title: context.l10n.reportIncomesTitle,
-                      fullData: incomeFull,
-                      pieData: incomePie,
-                      isExpense: false,
-                      showBarChart: _showIncomeBarChart,
-                      onToggleBarChart: (v) =>
-                          setState(() => _showIncomeBarChart = v),
-                      onCategoryTap: (cat, mode) =>
-                          _openCategoryDetails(cat, false, mode),
-                      budgetProgressFor: dataBuilder.budgetProgressFor,
-                      categoryLabels: _categoryLabels,
-                    ),
-                  if (derived.budgetStatuses.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    ReportSectionHeader(
-                        title: context.l10n.reportBudgetSummaryTitle),
-                    const SizedBox(height: 12),
-                    ReportBudgetSummaryCard(
-                      statuses: derived.budgetStatuses,
-                      onTap: (status) => _openBudgetCategory(status),
-                    ),
-                  ],
-                  if (derived.payeeGroups.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    ReportSectionHeader(
-                        title: context.l10n.reportTopPayeesTitle),
-                    const SizedBox(height: 12),
-                    ReportTopPayeesCard(
-                        groups: derived.payeeGroups,
-                        onGroupTap: _openPayeeGroup),
-                  ],
-                ],
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),

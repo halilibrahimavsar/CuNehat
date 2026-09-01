@@ -7246,6 +7246,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'önceki döneme göre'**
   String get reportCategoryChange;
+
+  /// No description provided for @reportLensFlow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akış'**
+  String get reportLensFlow;
+
+  /// No description provided for @reportLensBalance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye'**
+  String get reportLensBalance;
+
+  /// No description provided for @reportPeriodSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem içi seyir'**
+  String get reportPeriodSectionTitle;
 }
 
 class _AppLocalizationsDelegate

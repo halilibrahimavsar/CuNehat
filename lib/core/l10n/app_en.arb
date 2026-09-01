@@ -2209,5 +2209,8 @@
           "count": {}
       }
   },
-  "reportCategoryChange": "vs. previous period"
+  "reportCategoryChange": "vs. previous period",
+  "reportLensFlow": "Flow",
+  "reportLensBalance": "Balance",
+  "reportPeriodSectionTitle": "Within the period"
 }

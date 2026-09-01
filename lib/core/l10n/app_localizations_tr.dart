@@ -4102,4 +4102,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportCategoryChange => 'önceki döneme göre';
+
+  @override
+  String get reportLensFlow => 'Akış';
+
+  @override
+  String get reportLensBalance => 'Bakiye';
+
+  @override
+  String get reportPeriodSectionTitle => 'Dönem içi seyir';
 }

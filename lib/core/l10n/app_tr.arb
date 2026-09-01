@@ -2230,5 +2230,8 @@
           "count": {}
       }
   },
-  "reportCategoryChange": "önceki döneme göre"
+  "reportCategoryChange": "önceki döneme göre",
+  "reportLensFlow": "Akış",
+  "reportLensBalance": "Bakiye",
+  "reportPeriodSectionTitle": "Dönem içi seyir"
 }
