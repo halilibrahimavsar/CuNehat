@@ -7120,6 +7120,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu dönemde gelir yok'**
   String get reportNoIncomeForRate;
+
+  /// No description provided for @reportViewPie.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pasta görünümü'**
+  String get reportViewPie;
+
+  /// No description provided for @reportViewBars.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çubuk görünümü'**
+  String get reportViewBars;
 }
 
 class _AppLocalizationsDelegate

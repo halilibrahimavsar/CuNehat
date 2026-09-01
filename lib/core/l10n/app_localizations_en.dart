@@ -4014,4 +4014,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportNoIncomeForRate => 'No income this period';
+
+  @override
+  String get reportViewPie => 'Pie view';
+
+  @override
+  String get reportViewBars => 'Bar view';
 }

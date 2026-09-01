@@ -3,6 +3,7 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_bar_list.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
@@ -44,6 +45,15 @@ class ReportCategoryChartCard extends StatefulWidget {
 
 class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
   int _touchedIndex = -1;
+
+  /// Bir dilimin üzerine yüzde yazılabilmesi için gereken en düşük pay.
+  ///
+  /// Keyfi değil, ölçüldü: fl_chart etiketi varsayılan olarak iç/dış yarıçapın
+  /// ortasına (r ≈ 73) koyar. Orada %1'lik yay 4,6px; "%3" etiketi gerçek
+  /// Roboto ile 15,7px genişliğinde, yani etiketin sığması için dilimin en az
+  /// ~%3,5 olması gerekir. Pay yerine 6 seçildi ki komşu etiketler arasında
+  /// nefes payı da kalsın.
+  static const double _minLabelPercent = 6;
 
   @override
   void didUpdateWidget(ReportCategoryChartCard oldWidget) {
@@ -121,13 +131,17 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
     final sections =
         List<PieChartSectionData>.generate(widget.pieData.length, (i) {
       final item = widget.pieData[i];
-      final percent = total == 0 ? 0 : (item.totalAmount / total) * 100;
+      final percent = total == 0 ? 0.0 : (item.totalAmount / total) * 100;
       final isTouched = i == _touchedIndex;
       final radius = isTouched ? 75.0 : 66.0;
 
       return PieChartSectionData(
         value: item.totalAmount,
-        title: formatPercent(percent.toDouble()),
+        // Etiket yalnız YAYA SIĞDIĞINDA basılır. Ölçüldü (gerçek Roboto,
+        // yarıçap 73): "%3" etiketi 15,7px, %3'lük dilimin yayı 13,8px —
+        // etiket kendi diliminden taşıp komşusunun üstüne biniyordu.
+        // Eşiğin altındaki dilimlerin payını efsane satırı taşır.
+        title: percent >= _minLabelPercent ? formatPercent(percent) : '',
         radius: radius,
         color: item.color,
         titleStyle: TextStyle(
@@ -148,8 +162,14 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Row DEĞİL Wrap: başlık + iki ikon + toplam tutar tek satıra
+          // sığmadığında (büyük metin ölçeği, uzun İngilizce başlık, yedi
+          // haneli tutar) taşmak yerine alta iner.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
             children: [
               Text(
                 widget.title,
@@ -158,6 +178,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                 ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: Icon(
@@ -166,6 +187,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                           ? scheme.primary
                           : scheme.onSurfaceVariant,
                     ),
+                    tooltip: context.l10n.reportViewPie,
                     onPressed: () => widget.onToggleBarChart(false),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -178,6 +200,7 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                           ? scheme.primary
                           : scheme.onSurfaceVariant,
                     ),
+                    tooltip: context.l10n.reportViewBars,
                     onPressed: () => widget.onToggleBarChart(true),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -196,10 +219,14 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
           ),
           const SizedBox(height: 24),
           widget.showBarChart
-              ? _buildCategoryBarChart(context)
+              ? const SizedBox.shrink()
               : SizedBox(
                   height: 200,
-                  child: PieChart(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _buildCenterLabel(context, theme, total),
+                      PieChart(
                     PieChartData(
                       pieTouchData: PieTouchData(
                         touchCallback: (FlTouchEvent event, pieTouchResponse) {
@@ -249,97 +276,69 @@ class _ReportCategoryChartCardState extends State<ReportCategoryChartCard> {
                       borderData: FlBorderData(show: false),
                     ),
                   ),
+                    ],
+                  ),
                 ),
           const SizedBox(height: 24),
-          _buildLegend(context, theme, activeData, total),
+          // Çubuk görünümü efsanenin YERİNE geçer (ad, tutar ve pay zaten
+          // satırda); pasta görünümünde efsane dilimlerin okunmasını sağlar.
+          if (widget.showBarChart)
+            ReportCategoryBarList(
+              data: widget.fullData,
+              total: total,
+              categoryLabels: widget.categoryLabels,
+              budgetProgressFor:
+                  widget.isExpense ? widget.budgetProgressFor : null,
+              onCategoryTap: (cat) =>
+                  widget.onCategoryTap(cat, ReportSliceMode.full),
+            )
+          else
+            _buildLegend(context, theme, activeData, total),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryBarChart(BuildContext context) {
-    if (widget.fullData.isEmpty) return const SizedBox();
+  /// Pastanın ortasındaki boşluk (r=40) eskiden boştu. Seçili dilimin adı ve
+  /// payı oraya yazılır: dokunulan dilimi bulmak için efsaneye inip renk
+  /// eşleştirmek gerekmez. Seçim yokken toplam kalem sayısı durur.
+  Widget _buildCenterLabel(
+      BuildContext context, ThemeData theme, double total) {
+    final scheme = theme.colorScheme;
+    final hasSelection =
+        _touchedIndex >= 0 && _touchedIndex < widget.pieData.length;
+    if (!hasSelection) return const SizedBox.shrink();
 
-    double maxY = 0;
-    for (final c in widget.fullData) {
-      if (c.totalAmount > maxY) maxY = c.totalAmount;
-    }
-    if (maxY == 0) maxY = 10;
+    final item = widget.pieData[_touchedIndex];
+    final percent = total == 0 ? 0.0 : (item.totalAmount / total) * 100;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final minWidth = widget.fullData.length * 50.0;
-        final width =
-            minWidth > constraints.maxWidth ? minWidth : constraints.maxWidth;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: SizedBox(
-            height: 200,
-            width: width,
-            child: BarChart(
-              BarChartData(
-                minY: 0,
-                maxY: maxY * 1.2,
-                barGroups: List.generate(widget.fullData.length, (i) {
-                  final cat = widget.fullData[i];
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: cat.totalAmount,
-                        color: cat.color,
-                        width: 28,
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(4)),
-                      ),
-                    ],
-                  );
-                }),
-                titlesData: const FlTitlesData(
-                  rightTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                ),
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                barTouchData: BarTouchData(
-                  touchCallback: (FlTouchEvent event, barTouchResponse) {
-                    if (event is FlTapUpEvent &&
-                        barTouchResponse != null &&
-                        barTouchResponse.spot != null) {
-                      final index = barTouchResponse.spot!.touchedBarGroupIndex;
-                      if (index >= 0 && index < widget.fullData.length) {
-                        widget.onCategoryTap(
-                            widget.fullData[index], ReportSliceMode.full);
-                      }
-                    }
-                  },
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final cat = widget.fullData[group.x];
-                      return BarTooltipItem(
-                        '${cat.labelIn(context, widget.categoryLabels)}\n${_money(rod.toY)}',
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
+    return SizedBox(
+      width: 74,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            item.labelIn(context, widget.categoryLabels),
+            maxLines: 2,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              color: scheme.onSurface,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 2),
+          Text(
+            formatPercent(percent),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: item.color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

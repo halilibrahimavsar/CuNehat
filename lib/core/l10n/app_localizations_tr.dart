@@ -4014,4 +4014,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportNoIncomeForRate => 'Bu dönemde gelir yok';
+
+  @override
+  String get reportViewPie => 'Pasta görünümü';
+
+  @override
+  String get reportViewBars => 'Çubuk görünümü';
 }

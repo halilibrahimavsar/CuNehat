@@ -179,11 +179,41 @@ void main() {
       });
 
       expect(slices.length, ReportCompareRamp.maxSlices);
-      expect(slices.take(4).map((s) => s.name), ['A', 'B', 'C', 'D']);
-      expect(slices.last.isOther, isTrue);
-      expect(slices.last.name, 'Diğer');
+      // Kova E+F+G = 270 taşır, yani D'den (200) BÜYÜKTÜR ve sıralamada
+      // onun önüne geçer. Rampa sıralı bir kodlama olduğu için sıranın
+      // gerçek olması şart (bkz. aşağıdaki regresyon testi).
+      expect(slices.map((s) => s.name), ['A', 'B', 'C', 'Diğer', 'D']);
+      expect(slices[3].isOther, isTrue);
       // Toplam KORUNUR: gruplama tutarı değiştirmez.
       expect(slices.fold<double>(0, (sum, s) => sum + s.totalAmount), 1670);
+    });
+
+    test('REGRESYON: "Diğer" kovası tutarına göre sıralanır, sona itilmez',
+        () {
+      // Gerçek bir ayda ölçüldü: Kira %54, Market %27, Sağlık %5, Fatura %5
+      // tutuluyor, kova %9 çıkıyordu — yani 3. büyük kalem "en küçük" rampa
+      // adımını (en soluk rengi) alıyor ve en sonda çiziliyordu.
+      final slices = ranked({
+        'Kira': 24000,
+        'Market': 12180,
+        'Saglik': 2350,
+        'Fatura': 2120,
+        'Giyim': 1890,
+        'Ulasim': 1440,
+        'Eglence': 640,
+      });
+
+      final other = slices.firstWhere((s) => s.isOther);
+      final otherIndex = slices.indexOf(other);
+      expect(other.totalAmount, 1890 + 1440 + 640);
+      // Kovadan SONRA gelen her kalem ondan küçük olmalı.
+      for (final s in slices.skip(otherIndex + 1)) {
+        expect(s.totalAmount, lessThanOrEqualTo(other.totalAmount));
+      }
+      // Renk sırayı izler: kova kendi rank'ının adımını alır.
+      final ramp =
+          ReportCompareRamp.of(isExpense: true, brightness: Brightness.light);
+      expect(other.color, ramp[otherIndex]);
     });
 
     test('payı %3\'ün altındakiler sayı tavanına ulaşılmasa da kovaya iner',

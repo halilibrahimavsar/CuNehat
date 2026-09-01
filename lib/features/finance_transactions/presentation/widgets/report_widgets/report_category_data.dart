@@ -124,6 +124,56 @@ abstract final class ReportCompareRamp {
   }
 }
 
+/// Tek taraflı (yalnız gider ya da yalnız gelir) pasta/çubuk için KATEGORİK
+/// palet.
+///
+/// İki karar bilinçli:
+///
+/// **Tek hue ailesi değil.** Eskiden gider dilimleri kırmızı–turuncu–kehribar
+/// bandından, gelir dilimleri yeşil–turkuaz bandından geliyordu. Ama dilimler
+/// SIRALI değil KATEGORİK veridir: "Market" ile "Ulaşım" arasında bir büyüklük
+/// ilişkisi yok, ayırt edilebilirlik var. Aynı aileden dört ton yan yana
+/// gelince ayırt edilemiyorlardı. Gelir/gider kutupluluğunu kartın başlığı,
+/// toplamı ve mod seçicisi zaten taşıyor — dilimlerin ayrıca kırmızı olmasına
+/// gerek yok. (Karşılaştırma kartı FARKLIDIR: orada sıralama anlamlıdır ve
+/// [ReportCompareRamp]'in sıralı rampası kullanılır.)
+///
+/// **Hue'lar eşit aralıklı değil.** Göz sarı-yeşil bandında yakın hue'ları
+/// ayırt edemez; adımlar el ile açılıp kapatıldı ve açıklık, kartın gerçek
+/// zeminine (light `#DCE9FD`, dark `#213B69`) göre orta bantta tutuldu.
+abstract final class ReportCategoryPalette {
+  static const List<Color> colors = [
+    Color(0xFF2563EB), // mavi
+    Color(0xFFDC2626), // kırmızı
+    Color(0xFF059669), // zümrüt
+    Color(0xFFD97706), // kehribar
+    Color(0xFF7C3AED), // mor
+    Color(0xFF0891B2), // camgöbeği
+    Color(0xFFDB2777), // fuşya
+    Color(0xFF65A30D), // limon-yeşil
+    Color(0xFFEA580C), // turuncu
+    Color(0xFF4F46E5), // indigo
+    Color(0xFF0D9488), // deniz yeşili
+    Color(0xFF9333EA), // menekşe
+  ];
+
+  static int get length => colors.length;
+
+  /// Kategori id'sinden KARARLI bir tercih indeksi.
+  ///
+  /// `String.hashCode` kullanılmaz: Dart'ta çalışma-arası tutarlılığı garanti
+  /// edilmiyor. Basit ve deterministik bir FNV-1a yeterli — amaç kriptografi
+  /// değil, "aynı kategori her dönem aynı rengi alsın".
+  static int preferredIndex(String categoryId) {
+    var hash = 0x811c9dc5;
+    for (final unit in categoryId.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0xFFFFFFFF;
+    }
+    return hash % colors.length;
+  }
+}
+
 /// Rapor sayfasının kategori kırılımını üreten yardımcı: seçili tarih aralığı,
 /// bütçe limitleri ve renk paletini tek yerde tutar.
 ///
@@ -132,19 +182,6 @@ abstract final class ReportCompareRamp {
 /// yeniden hesaplayabilir ve State'e bağımlı kalmaz.
 class ReportCategoryDataBuilder {
   static const _service = TransactionReportService();
-
-  static const _expensePalette = [
-    Colors.redAccent,
-    Colors.orangeAccent,
-    Colors.deepOrangeAccent,
-    Colors.amberAccent,
-  ];
-  static const _incomePalette = [
-    Colors.greenAccent,
-    Colors.tealAccent,
-    Colors.blueAccent,
-    Colors.indigoAccent,
-  ];
 
   /// Kalıcı paletin dışına taşan kategoriler için ayrılan, kategori
   /// renkleriyle çakışmayacak sabit "Diğer" rengi.
@@ -188,16 +225,51 @@ class ReportCategoryDataBuilder {
       rootIndex: rootIndex,
     );
 
+    final colors = _stableColors([for (final b in breakdowns) b.name]);
+
     return [
       for (int i = 0; i < breakdowns.length; i++)
         CategoryData(
           breakdowns[i].name,
           breakdowns[i].totalAmount,
           breakdowns[i].transactions,
-          _colorForIndex(i, isExpense),
+          colors[i],
           children: breakdowns[i].children,
         ),
     ];
+  }
+
+  /// Kategori id'lerine KARARLI renk atar.
+  ///
+  /// **Neden rank değil:** renk eskiden sıraya göre veriliyordu
+  /// (`_colorForIndex(i)`). Ağustos'ta 2. sırada olan "Market" turuncu,
+  /// Eylül'de 1. sıraya çıkınca kırmızı oluyordu; iki ayı yan yana koyan
+  /// kullanıcı aynı kategoriyi tanıyamıyordu. Artık renk kategorinin
+  /// KİMLİĞİNDEN türer, dönemdeki yerinden değil.
+  ///
+  /// Çakışma çözümü ileri sondalama: aynı grafikte iki dilim asla aynı rengi
+  /// almaz (yan yana iki eş renkli dilim tek dilim gibi okunurdu). Bir
+  /// kategorinin rengi ancak kendisiyle çakışan bir kategori listeye
+  /// girip/çıktığında değişir.
+  List<Color> _stableColors(List<String> categoryIds) {
+    final palette = ReportCategoryPalette.colors;
+    final taken = <int>{};
+    final out = <Color>[];
+
+    for (final id in categoryIds) {
+      var index = ReportCategoryPalette.preferredIndex(id);
+      // Palet dolduğunda (kategori sayısı > palet) tekrar kaçınılmaz;
+      // sondalama bir tur atıp durur.
+      for (var probe = 0; probe < palette.length; probe++) {
+        final candidate = (index + probe) % palette.length;
+        if (taken.add(candidate)) {
+          index = candidate;
+          break;
+        }
+      }
+      out.add(palette[index]);
+    }
+    return out;
   }
 
   /// Payı [_pieThresholdPercent]'in altında kalan kategorileri tek "Diğer"
@@ -279,7 +351,12 @@ class ReportCategoryDataBuilder {
           ramp.last,
           isOther: true,
         ),
-    ];
+    ]
+      // "Diğer" kovası her zaman SONA eklenir ama her zaman en küçük DEĞİLDİR:
+      // ölçüldü — Kira %54, Market %27, Sağlık %5, Fatura %5 tutulurken kova
+      // %9 çıkıyordu, yani 3. büyük kalem "en küçük" rampa adımını alıyordu.
+      // Rampa sıralı (ordinal) bir kodlama olduğuna göre sıra GERÇEK olmalı.
+      ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
     // Renk sırayı izler: rank 1 rampanın ilk adımını alır. Sıralama anlamlı
     // olduğu için bu bir sıralı (ordinal) kodlamadır, kimlik kodlaması değil —
@@ -316,19 +393,4 @@ class ReportCategoryDataBuilder {
     return null;
   }
 
-  Color _colorForIndex(int i, bool isExpense) {
-    final palette = isExpense ? _expensePalette : _incomePalette;
-    if (i < palette.length) return palette[i];
-
-    final overflow = i - palette.length;
-    const stepsPerCycle = 8;
-    final hueStart = isExpense ? 0.0 : 95.0;
-    final hueWidth = isExpense ? 45.0 : 150.0;
-    final hue =
-        (hueStart + (overflow % stepsPerCycle) * (hueWidth / stepsPerCycle)) %
-            360;
-    final cycle = overflow ~/ stepsPerCycle;
-    final lightness = (0.42 + (cycle % 3) * 0.12).clamp(0.3, 0.72);
-    return HSLColor.fromAHSL(1, hue, 0.65, lightness).toColor();
-  }
 }
