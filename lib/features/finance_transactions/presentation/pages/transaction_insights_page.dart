@@ -205,7 +205,8 @@ class _InsightsViewState extends State<_InsightsView> {
     if (_hasUserPickedRange || _hasAutoAdjustedRange) return;
     if (transactions.isEmpty) return;
 
-    final startDay = DateTime(_range.start.year, _range.start.month, 1);
+    final startDay =
+        DateTime(_range.start.year, _range.start.month, _range.start.day);
     final endDay = DateTime(_range.end.year, _range.end.month, _range.end.day);
     final hasInRange = transactions.any((t) {
       final d = DateTime(t.date.year, t.date.month, t.date.day);

@@ -277,6 +277,22 @@ void main() {
     expect(find.text('Yaşanan $elapsed gün üzerinden'), findsOneWidget);
   });
 
+  testWidgets('açılış dönemi boşsa verinin OLDUĞU aya kayar', (tester) async {
+    // Uygulamayı bir aylık aradan sonra açan kullanıcı sayfayı tamamen boş
+    // görüyor ve verisinin durduğu döneme kendi elleriyle gitmek zorundaydı.
+    // (Rapor sayfasında zaten çözülmüştü.)
+    final twoMonthsAgo = DateTime(now.year, now.month - 2, 12);
+    seed([tx(id: 'e1', date: twoMonthsAgo, amount: 750)]);
+    await pumpPage(tester);
+
+    expect(find.text('Bu dönemde işlem yok'), findsNothing);
+    expect(find.text(formatMoney(750)), findsWidgets);
+    // Dönem başlığı da kaymış olmalı (etiket tek parça yazılır).
+    final movedStart = DateFormat('dd MMM yyyy')
+        .format(DateTime(twoMonthsAgo.year, twoMonthsAgo.month, 1));
+    expect(find.textContaining(movedStart), findsOneWidget);
+  });
+
   testWidgets('en çok harcanan kategoriye dokunmak işlemleri açar',
       (tester) async {
     seed([
