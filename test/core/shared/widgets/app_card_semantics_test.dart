@@ -21,7 +21,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final data = tester.getSemantics(find.text('Kart')).getSemanticsData();
-    expect(data.hasFlag(SemanticsFlag.isButton), isTrue);
+    expect(data.flagsCollection.isButton, isTrue);
     // Rol eklenirken eylem KAYBOLMAMALI.
     expect(data.hasAction(SemanticsAction.tap), isTrue);
     handle.dispose();
@@ -34,7 +34,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final data = tester.getSemantics(find.text('Kart')).getSemanticsData();
-    expect(data.hasFlag(SemanticsFlag.isButton), isTrue);
+    expect(data.flagsCollection.isButton, isTrue);
     expect(data.hasAction(SemanticsAction.longPress), isTrue);
     handle.dispose();
   });
@@ -45,7 +45,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final data = tester.getSemantics(find.text('Kart')).getSemanticsData();
-    expect(data.hasFlag(SemanticsFlag.isButton), isFalse,
+    expect(data.flagsCollection.isButton, isFalse,
         reason: 'salt okunur kart düğme gibi duyurulursa gezinme kirlenir');
     expect(data.hasAction(SemanticsAction.tap), isFalse);
     handle.dispose();
