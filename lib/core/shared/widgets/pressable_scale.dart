@@ -29,7 +29,7 @@ class _PressableScaleState extends State<PressableScale> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onTap != null || widget.onLongPress != null;
-    return GestureDetector(
+    final Widget detector = GestureDetector(
       onTapDown: enabled ? (_) => _set(true) : null,
       onTapUp: enabled ? (_) => _set(false) : null,
       onTapCancel: enabled ? () => _set(false) : null,
@@ -42,5 +42,16 @@ class _PressableScaleState extends State<PressableScale> {
         child: widget.child,
       ),
     );
+    if (!enabled) return detector;
+
+    // ROL bildirimi. `GestureDetector` düğüme yalnız *eylemi* ekliyor
+    // (TalkBack "çift dokunarak etkinleştir" diyor) ama `isButton` bayrağını
+    // KOYMUYOR: ölçüldü — `AppCard(onTap:)` düğümünde tap eylemi var,
+    // `isButton` false. Sonuç, ekran okuyucunun öğeyi "düğme" diye
+    // adlandırmaması ve denetim türüne göre gezinmenin (yalnız düğmeler
+    // arasında atlama) bu kartları ATLAMASI. Uygulamada dokunulabilir
+    // kartlar gerçek düğme yerine geçiyor: işlem kartı, cüzdan kartı,
+    // hedef kartı, güvenlik ayarı, içgörü kartları.
+    return Semantics(button: true, child: detector);
   }
 }
