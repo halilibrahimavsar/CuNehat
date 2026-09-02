@@ -12,6 +12,8 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/active_filter_chips.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_calendar_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
@@ -330,6 +332,19 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    /// Panelin İÇİNDEKİ metni bulur.
+    ///
+    /// Çıplak `find.text` kullanılamaz: sayfa modal panelin ARDINDA duruyor
+    /// ve varsayılan takvim görünümü seçili günün kartlarını çiziyor. Kart
+    /// kendi kategori rozetini yazdığından, seed edilen kaydın günü takvimin
+    /// açılışta seçtiği güne (bugün) denk geldiğinde aynı metin ekranda İKİ
+    /// kez bulunuyor ve finder "Too many elements" ile patlıyordu — yani test
+    /// ayın 3'ünde kırmızı, 5'inde yeşildi.
+    Finder inPanel(String text) => find.descendant(
+          of: find.byType(FilterView),
+          matching: find.text(text),
+        );
+
     testWidgets('düğme kaç işlemin kalacağını ÖNCEDEN söyler', (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
@@ -364,12 +379,12 @@ void main() {
       await openFilters(tester);
 
       // Kategori ağacındaki "Market" satırı (liste sonunda; görünür kıl).
-      await tester.ensureVisible(find.text('Market'));
+      await tester.ensureVisible(inPanel('Market'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Market'));
+      await tester.tap(inPanel('Market'));
       await tester.pumpAndSettle();
 
-      expect(find.text('1 işlemi göster'), findsOneWidget);
+      expect(inPanel('1 işlemi göster'), findsOneWidget);
     });
 
     testWidgets('seçim panel kapanınca çip olarak görünür ve × kaldırır',
@@ -378,19 +393,27 @@ void main() {
       await pumpPage(tester);
       await openFilters(tester);
 
-      await tester.ensureVisible(find.text('Market'));
+      await tester.ensureVisible(inPanel('Market'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Market'));
+      await tester.tap(inPanel('Market'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('1 işlemi göster'));
+      await tester.tap(inPanel('1 işlemi göster'));
       await tester.pumpAndSettle();
 
-      // Çip tek kategori seçiliyken adı yazar.
-      expect(find.text('Market'), findsOneWidget);
+      // Çip tek kategori seçiliyken adı yazar. Arama çip ŞERİDİNE
+      // daraltılır: aynı ad kartın kategori rozetinde de geçiyor.
+      Finder inChips(String text) => find.descendant(
+            of: find.byType(ActiveFilterChips),
+            matching: find.text(text),
+          );
+      expect(inChips('Market'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close_rounded).first);
+      await tester.tap(find.descendant(
+        of: find.byType(ActiveFilterChips),
+        matching: find.byIcon(Icons.close_rounded),
+      ));
       await tester.pumpAndSettle();
-      expect(find.text('Market'), findsNothing);
+      expect(inChips('Market'), findsNothing);
     });
 
     testWidgets('eşleşme kalmayınca düğme "Eşleşen işlem yok" der',
