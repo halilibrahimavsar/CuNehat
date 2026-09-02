@@ -1,24 +1,33 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:flutter/material.dart';
 
-/// Kategori bazlı harcama sıçraması uyarısı kartı (%25+ artış gösteren kategori).
+/// Kategori bazlı harcama sıçraması uyarısı kartı.
+///
+/// Kıyas penceresi kartın kendi metninde yazar ([CategorySpike.windowDays]):
+/// dönem ortasındayken karşılaştırma "geçen ay" değil, aralığın yaşanmış
+/// kısmı kadar önceki penceredir.
 class CategorySpikeCard extends StatelessWidget {
   final CategorySpike spike;
-  final String Function(double) formatMoney;
+  final MoneyWriter money;
 
   /// `tag` → görünen ad; boşsa kategori id'si l10n'a düşer.
   final Map<String, String> categoryLabels;
 
+  /// Verilirse kart dokunulabilir olur (kategorinin işlemlerini açar).
+  final VoidCallback? onTap;
+
   const CategorySpikeCard({
     super.key,
     required this.spike,
-    required this.formatMoney,
+    required this.money,
     this.categoryLabels = const {},
+    this.onTap,
   });
 
   @override
@@ -33,6 +42,7 @@ class CategorySpikeCard extends StatelessWidget {
       child: AppCard(
         accent: AppGradients.debt,
         padding: const EdgeInsets.all(14),
+        onTap: onTap,
         child: Row(
           children: [
             Container(
@@ -81,7 +91,7 @@ class CategorySpikeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$categoryName: ${formatMoney(spike.currentAmount)}',
+                    '$categoryName: ${money(spike.currentAmount)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: scheme.onSurface,
@@ -90,8 +100,10 @@ class CategorySpikeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    context.l10n
-                        .insightSpikeDesc(formatMoney(spike.previousAmount)),
+                    context.l10n.insightSpikeDesc(
+                      spike.windowDays,
+                      money(spike.previousAmount),
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                       fontSize: 11,
@@ -100,6 +112,12 @@ class CategorySpikeCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (onTap != null)
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
           ],
         ),
       ),

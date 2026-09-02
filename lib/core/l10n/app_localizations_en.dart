@@ -786,7 +786,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'At least two different days of transactions are required for the line chart.';
 
   @override
-  String get detayGosterilecekIslemYok => 'No Transaction to Show Detail';
+  String get detayGosterilecekIslemYok => 'No Insights Yet';
 
   @override
   String get gelirVeyaGiderKaydettikten =>
@@ -1119,7 +1119,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuCustom => 'Custom';
 
   @override
-  String get menuDetails => 'Details';
+  String get menuDetails => 'Insights';
 
   @override
   String get menuIncome => 'Income';
@@ -2929,8 +2929,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get insightSpikeTitle => 'Spending Spike Alert';
 
   @override
-  String insightSpikeDesc(String tutar) {
-    return 'A notable increase compared to the previous period ($tutar).';
+  String insightSpikeDesc(int gun, String tutar) {
+    return 'You spent $tutar over the previous $gun days.';
   }
 
   @override
@@ -4110,4 +4110,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportPeriodSectionTitle => 'Within the period';
+
+  @override
+  String get insightSectionStatus => 'Status';
+
+  @override
+  String get insightSectionPeriod => 'Period summary';
+
+  @override
+  String get insightSectionHabits => 'Spending habits';
+
+  @override
+  String insightDailyLimitObligations(String tutar) {
+    return '$tutar of scheduled payments deducted';
+  }
+
+  @override
+  String get insightOverspentTitle => 'You Are Over Budget';
+
+  @override
+  String insightOverspentDesc(int gun, String tutar) {
+    return 'Nothing left to spend for the remaining $gun days; you are $tutar short.';
+  }
+
+  @override
+  String insightWeekdayHint(int kez) {
+    return 'Average per day · $kez times this period';
+  }
+
+  @override
+  String insightDailyAverageHint(int gun) {
+    return 'Over the $gun days elapsed';
+  }
+
+  @override
+  String get insightTapForTransactions => 'Tap to see the transactions';
+
+  @override
+  String get insightTopExpensesTitle => 'Largest expenses';
+
+  @override
+  String insightSystemMovementsNote(int sayi) {
+    return '$sayi coupling movements (transfer, debt, investment) excluded';
+  }
+
+  @override
+  String get insightDismissSuggestion => 'Dismiss';
+
+  @override
+  String get insightNoSuggestionsLeft =>
+      'No new scheduled payments spotted for now';
 }

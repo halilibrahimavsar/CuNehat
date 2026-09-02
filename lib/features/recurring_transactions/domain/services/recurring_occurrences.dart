@@ -1,3 +1,5 @@
+import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
+
 import '../entities/recurring_frequency_enum.dart';
 import '../entities/recurring_transaction_entity.dart';
 import '../usecases/approve_recurring_transaction_usecase.dart';
@@ -28,6 +30,52 @@ class RecurringOccurrences {
       );
     }
     return count;
+  }
+
+  /// [from]–[to] penceresinde (iki uç dahil, gün bazında) vadesi gelecek
+  /// AKTİF düzenli **giderlerin** toplamı.
+  ///
+  /// "Günde ne kadar harcayabilirim" hedefi bunu netten düşer: 5 gün sonra
+  /// ödenecek kirayı görmezden gelen bir limit kullanıcıyı bilerek yanıltır.
+  ///
+  /// İki bilinçli sınır:
+  ///  • **Vadesi GEÇMİŞ kalemler sayılmaz.** Onları onay akışı ("bekleyen
+  ///    düzenli işlemler") zaten daha yüksek sesle gösteriyor; buraya da
+  ///    katılsalardı, kullanıcının onaysız elle girdiği ödeme iki kez düşülürdü.
+  ///  • **Beklenen GELİR eklenmez.** Henüz gelmemiş parayı bugünden
+  ///    harcanabilir saymak limitin amacına aykırı; hedef temkinli tarafta
+  ///    kalır.
+  static double plannedExpenseTotal(
+    Iterable<RecurringTransactionEntity> templates, {
+    required DateTime from,
+    required DateTime to,
+  }) {
+    final fromDay = DateTime(from.year, from.month, from.day);
+    final toDay = DateTime(to.year, to.month, to.day);
+    if (toDay.isBefore(fromDay)) return 0;
+
+    var total = 0.0;
+    for (final t in templates) {
+      if (!t.isActive) continue;
+      if (t.type != TransactionTypeModel.expense) continue;
+
+      var date = DateTime(
+        t.nextExecutionDate.year,
+        t.nextExecutionDate.month,
+        t.nextExecutionDate.day,
+      );
+      var steps = 0;
+      while (!date.isAfter(toDay) && steps < maxBacklog) {
+        if (!date.isBefore(fromDay)) total += t.amount;
+        date = ApproveRecurringTransactionUsecase.nextExecutionDateAfter(
+          date,
+          t.frequency,
+          anchorDay: t.anchorDay,
+        );
+        steps++;
+      }
+    }
+    return total;
   }
 
   /// Bir şablon kaleminin aylık karşılığı — farklı frekanstaki şablonları

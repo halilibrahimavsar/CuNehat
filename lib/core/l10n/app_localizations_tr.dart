@@ -790,7 +790,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır';
 
   @override
-  String get detayGosterilecekIslemYok => 'Detay Gösterilecek İşlem Yok';
+  String get detayGosterilecekIslemYok => 'Henüz İçgörü Yok';
 
   @override
   String get gelirVeyaGiderKaydettikten =>
@@ -1122,7 +1122,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get menuCustom => 'Özel';
 
   @override
-  String get menuDetails => 'Detay';
+  String get menuDetails => 'İçgörü';
 
   @override
   String get menuIncome => 'Gelir';
@@ -2932,8 +2932,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get insightSpikeTitle => 'Harcama Sıçraması Uyarısı';
 
   @override
-  String insightSpikeDesc(String tutar) {
-    return 'Geçen döneme göre ($tutar) dikkate değer bir artış var.';
+  String insightSpikeDesc(int gun, String tutar) {
+    return 'Önceki $gun günde $tutar harcamıştınız.';
   }
 
   @override
@@ -4111,4 +4111,54 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportPeriodSectionTitle => 'Dönem içi seyir';
+
+  @override
+  String get insightSectionStatus => 'Durum';
+
+  @override
+  String get insightSectionPeriod => 'Dönem özeti';
+
+  @override
+  String get insightSectionHabits => 'Harcama alışkanlığı';
+
+  @override
+  String insightDailyLimitObligations(String tutar) {
+    return '$tutar düzenli ödeme düşüldü';
+  }
+
+  @override
+  String get insightOverspentTitle => 'Bu Dönem Açıktasınız';
+
+  @override
+  String insightOverspentDesc(int gun, String tutar) {
+    return 'Kalan $gun gün için harcanacak tutar kalmadı; $tutar açıktasınız.';
+  }
+
+  @override
+  String insightWeekdayHint(int kez) {
+    return 'Gün başına ortalama · dönemde $kez kez';
+  }
+
+  @override
+  String insightDailyAverageHint(int gun) {
+    return 'Yaşanan $gun gün üzerinden';
+  }
+
+  @override
+  String get insightTapForTransactions => 'İşlemleri görmek için dokunun';
+
+  @override
+  String get insightTopExpensesTitle => 'En büyük harcamalar';
+
+  @override
+  String insightSystemMovementsNote(int sayi) {
+    return '$sayi kuplaj hareketi (transfer, borç, yatırım) sayılmadı';
+  }
+
+  @override
+  String get insightDismissSuggestion => 'Yoksay';
+
+  @override
+  String get insightNoSuggestionsLeft =>
+      'Şimdilik yeni bir düzenli ödeme yakalanmadı';
 }

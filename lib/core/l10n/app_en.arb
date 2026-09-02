@@ -328,7 +328,7 @@
   "nakitAkisi": "Cash Flow",
   "grafikIcinYeterliVeri": "Not enough data for chart",
   "cizgiGrafikIcinEnAzIkiGun": "At least two different days of transactions are required for the line chart.",
-  "detayGosterilecekIslemYok": "No Transaction to Show Detail",
+  "detayGosterilecekIslemYok": "No Insights Yet",
   "gelirVeyaGiderKaydettikten": "Analysis details will be listed here after you save income or expense.",
   "henuzIslemYok": "No transactions yet",
   "buDonemIcinKayit": "No records for this period.\nUse the slider button to add a new transaction.",
@@ -503,7 +503,7 @@
   "menuGold": "Gold",
   "menuStock": "Stock",
   "menuCustom": "Custom",
-  "menuDetails": "Details",
+  "menuDetails": "Insights",
   "menuIncome": "Income",
   "menuExpense": "Expense",
   "menuReport": "Report",
@@ -1460,9 +1460,12 @@
     }
   },
   "insightSpikeTitle": "Spending Spike Alert",
-  "insightSpikeDesc": "A notable increase compared to the previous period ({tutar}).",
+  "insightSpikeDesc": "You spent {tutar} over the previous {gun} days.",
   "@insightSpikeDesc": {
     "placeholders": {
+      "gun": {
+        "type": "int"
+      },
       "tutar": {
         "type": "String"
       }
@@ -2212,5 +2215,56 @@
   "reportCategoryChange": "vs. previous period",
   "reportLensFlow": "Flow",
   "reportLensBalance": "Balance",
-  "reportPeriodSectionTitle": "Within the period"
+  "reportPeriodSectionTitle": "Within the period",
+  "insightSectionStatus": "Status",
+  "insightSectionPeriod": "Period summary",
+  "insightSectionHabits": "Spending habits",
+  "insightDailyLimitObligations": "{tutar} of scheduled payments deducted",
+  "@insightDailyLimitObligations": {
+    "placeholders": {
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "insightOverspentTitle": "You Are Over Budget",
+  "insightOverspentDesc": "Nothing left to spend for the remaining {gun} days; you are {tutar} short.",
+  "@insightOverspentDesc": {
+    "placeholders": {
+      "gun": {
+        "type": "int"
+      },
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "insightWeekdayHint": "Average per day · {kez} times this period",
+  "@insightWeekdayHint": {
+    "placeholders": {
+      "kez": {
+        "type": "int"
+      }
+    }
+  },
+  "insightDailyAverageHint": "Over the {gun} days elapsed",
+  "@insightDailyAverageHint": {
+    "placeholders": {
+      "gun": {
+        "type": "int"
+      }
+    }
+  },
+  "insightTapForTransactions": "Tap to see the transactions",
+  "insightTopExpensesTitle": "Largest expenses",
+  "insightSystemMovementsNote": "{sayi} coupling movements (transfer, debt, investment) excluded",
+  "@insightSystemMovementsNote": {
+    "placeholders": {
+      "sayi": {
+        "type": "int"
+      }
+    }
+  },
+  "insightDismissSuggestion": "Dismiss",
+  "insightNoSuggestionsLeft": "No new scheduled payments spotted for now"
 }

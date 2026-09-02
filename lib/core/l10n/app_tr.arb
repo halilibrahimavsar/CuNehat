@@ -328,7 +328,7 @@
   "nakitAkisi": "Nakit Akışı",
   "grafikIcinYeterliVeri": "Grafik için yeterli veri yok",
   "cizgiGrafikIcinEnAzIkiGun": "Çizgi grafik oluşturmak için en az iki farklı güne ait işlem olmalıdır",
-  "detayGosterilecekIslemYok": "Detay Gösterilecek İşlem Yok",
+  "detayGosterilecekIslemYok": "Henüz İçgörü Yok",
   "gelirVeyaGiderKaydettikten": "Gelir veya gider kaydettikten sonra analiz detayları burada listelenecektir.",
   "henuzIslemYok": "Henüz işlem yok",
   "buDonemIcinKayit": "Bu dönem için kayıt bulunmuyor.\nYeni bir işlem eklemek için sürgü butonunu kullanın.",
@@ -503,7 +503,7 @@
   "menuGold": "Altın",
   "menuStock": "Hisse",
   "menuCustom": "Özel",
-  "menuDetails": "Detay",
+  "menuDetails": "İçgörü",
   "menuIncome": "Gelir",
   "menuExpense": "Gider",
   "menuReport": "Rapor",
@@ -1481,9 +1481,12 @@
     }
   },
   "insightSpikeTitle": "Harcama Sıçraması Uyarısı",
-  "insightSpikeDesc": "Geçen döneme göre ({tutar}) dikkate değer bir artış var.",
+  "insightSpikeDesc": "Önceki {gun} günde {tutar} harcamıştınız.",
   "@insightSpikeDesc": {
     "placeholders": {
+      "gun": {
+        "type": "int"
+      },
       "tutar": {
         "type": "String"
       }
@@ -2233,5 +2236,56 @@
   "reportCategoryChange": "önceki döneme göre",
   "reportLensFlow": "Akış",
   "reportLensBalance": "Bakiye",
-  "reportPeriodSectionTitle": "Dönem içi seyir"
+  "reportPeriodSectionTitle": "Dönem içi seyir",
+  "insightSectionStatus": "Durum",
+  "insightSectionPeriod": "Dönem özeti",
+  "insightSectionHabits": "Harcama alışkanlığı",
+  "insightDailyLimitObligations": "{tutar} düzenli ödeme düşüldü",
+  "@insightDailyLimitObligations": {
+    "placeholders": {
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "insightOverspentTitle": "Bu Dönem Açıktasınız",
+  "insightOverspentDesc": "Kalan {gun} gün için harcanacak tutar kalmadı; {tutar} açıktasınız.",
+  "@insightOverspentDesc": {
+    "placeholders": {
+      "gun": {
+        "type": "int"
+      },
+      "tutar": {
+        "type": "String"
+      }
+    }
+  },
+  "insightWeekdayHint": "Gün başına ortalama · dönemde {kez} kez",
+  "@insightWeekdayHint": {
+    "placeholders": {
+      "kez": {
+        "type": "int"
+      }
+    }
+  },
+  "insightDailyAverageHint": "Yaşanan {gun} gün üzerinden",
+  "@insightDailyAverageHint": {
+    "placeholders": {
+      "gun": {
+        "type": "int"
+      }
+    }
+  },
+  "insightTapForTransactions": "İşlemleri görmek için dokunun",
+  "insightTopExpensesTitle": "En büyük harcamalar",
+  "insightSystemMovementsNote": "{sayi} kuplaj hareketi (transfer, borç, yatırım) sayılmadı",
+  "@insightSystemMovementsNote": {
+    "placeholders": {
+      "sayi": {
+        "type": "int"
+      }
+    }
+  },
+  "insightDismissSuggestion": "Yoksay",
+  "insightNoSuggestionsLeft": "Şimdilik yeni bir düzenli ödeme yakalanmadı"
 }

@@ -95,6 +95,10 @@ class MenuConfigs {
       ],
       subMenus: [
         SubMenuConfig(
+          // `label` burada GÖSTERİM metni değil, ANAHTAR: ekrana yazılan ad
+          // `_getLocalizedSubMenuLabel` üzerinden l10n'den gelir
+          // (`menuDetails` → "İçgörü"). Anahtar Türkçe küçük harfe çevrilerek
+          // eşleştiği için ASCII kalır.
           label: 'Detay',
           icon: Icons.insights,
           viewIndex: 1,

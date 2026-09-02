@@ -1512,7 +1512,7 @@ abstract class AppLocalizations {
   /// No description provided for @detayGosterilecekIslemYok.
   ///
   /// In tr, this message translates to:
-  /// **'Detay Gösterilecek İşlem Yok'**
+  /// **'Henüz İçgörü Yok'**
   String get detayGosterilecekIslemYok;
 
   /// No description provided for @gelirVeyaGiderKaydettikten.
@@ -2090,7 +2090,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuDetails.
   ///
   /// In tr, this message translates to:
-  /// **'Detay'**
+  /// **'İçgörü'**
   String get menuDetails;
 
   /// No description provided for @menuIncome.
@@ -5300,8 +5300,8 @@ abstract class AppLocalizations {
   /// No description provided for @insightSpikeDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Geçen döneme göre ({tutar}) dikkate değer bir artış var.'**
-  String insightSpikeDesc(String tutar);
+  /// **'Önceki {gun} günde {tutar} harcamıştınız.'**
+  String insightSpikeDesc(int gun, String tutar);
 
   /// No description provided for @drawerSectionFinancial.
   ///
@@ -7264,6 +7264,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dönem içi seyir'**
   String get reportPeriodSectionTitle;
+
+  /// No description provided for @insightSectionStatus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durum'**
+  String get insightSectionStatus;
+
+  /// No description provided for @insightSectionPeriod.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönem özeti'**
+  String get insightSectionPeriod;
+
+  /// No description provided for @insightSectionHabits.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcama alışkanlığı'**
+  String get insightSectionHabits;
+
+  /// No description provided for @insightDailyLimitObligations.
+  ///
+  /// In tr, this message translates to:
+  /// **'{tutar} düzenli ödeme düşüldü'**
+  String insightDailyLimitObligations(String tutar);
+
+  /// No description provided for @insightOverspentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu Dönem Açıktasınız'**
+  String get insightOverspentTitle;
+
+  /// No description provided for @insightOverspentDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan {gun} gün için harcanacak tutar kalmadı; {tutar} açıktasınız.'**
+  String insightOverspentDesc(int gun, String tutar);
+
+  /// No description provided for @insightWeekdayHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün başına ortalama · dönemde {kez} kez'**
+  String insightWeekdayHint(int kez);
+
+  /// No description provided for @insightDailyAverageHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaşanan {gun} gün üzerinden'**
+  String insightDailyAverageHint(int gun);
+
+  /// No description provided for @insightTapForTransactions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemleri görmek için dokunun'**
+  String get insightTapForTransactions;
+
+  /// No description provided for @insightTopExpensesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'En büyük harcamalar'**
+  String get insightTopExpensesTitle;
+
+  /// No description provided for @insightSystemMovementsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'{sayi} kuplaj hareketi (transfer, borç, yatırım) sayılmadı'**
+  String insightSystemMovementsNote(int sayi);
+
+  /// No description provided for @insightDismissSuggestion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yoksay'**
+  String get insightDismissSuggestion;
+
+  /// No description provided for @insightNoSuggestionsLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdilik yeni bir düzenli ödeme yakalanmadı'**
+  String get insightNoSuggestionsLeft;
 }
 
 class _AppLocalizationsDelegate

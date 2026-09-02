@@ -141,4 +141,135 @@ void main() {
       RecurringOccurrences.maxBacklog,
     );
   });
+
+  group('plannedExpenseTotal', () {
+    RecurringTransactionEntity tpl({
+      required RecurringFrequency frequency,
+      required DateTime next,
+      double amount = 100,
+      TransactionTypeModel type = TransactionTypeModel.expense,
+      bool isActive = true,
+      String id = 'r',
+    }) =>
+        RecurringTransactionEntity(
+          id: id,
+          userId: 'u',
+          walletId: 'w',
+          title: 'Kira',
+          tag: 'Fatura',
+          amount: amount,
+          type: type,
+          frequency: frequency,
+          nextExecutionDate: next,
+          anchorDay: next.day,
+          isActive: isActive,
+        );
+
+    test('pencereye düşen tek vade toplanır', () {
+      expect(
+        RecurringOccurrences.plannedExpenseTotal(
+          [
+            tpl(
+                frequency: RecurringFrequency.monthly,
+                next: DateTime(2026, 6, 20),
+                amount: 1600),
+          ],
+          from: DateTime(2026, 6, 15),
+          to: DateTime(2026, 6, 30),
+        ),
+        1600,
+      );
+    });
+
+    test('pencerede birden çok kez tekrarlayan şablon KAÇ KEZ düşerse o kadar',
+        () {
+      // 15–30 Haziran arası 3 haftalık vade: 16, 23, 30.
+      expect(
+        RecurringOccurrences.plannedExpenseTotal(
+          [
+            tpl(
+                frequency: RecurringFrequency.weekly,
+                next: DateTime(2026, 6, 16),
+                amount: 200),
+          ],
+          from: DateTime(2026, 6, 15),
+          to: DateTime(2026, 6, 30),
+        ),
+        600,
+      );
+    });
+
+    test('vadesi GEÇMİŞ kalem sayılmaz', () {
+      // Onay akışı zaten gösteriyor; buraya da katılsaydı kullanıcının elle
+      // girdiği ödeme iki kez düşülürdü.
+      expect(
+        RecurringOccurrences.plannedExpenseTotal(
+          [
+            tpl(
+                frequency: RecurringFrequency.monthly,
+                next: DateTime(2026, 6, 5),
+                amount: 1600),
+          ],
+          from: DateTime(2026, 6, 15),
+          to: DateTime(2026, 6, 30),
+        ),
+        0,
+      );
+    });
+
+    test('beklenen GELİR eklenmez, pasif şablon sayılmaz', () {
+      expect(
+        RecurringOccurrences.plannedExpenseTotal(
+          [
+            tpl(
+                id: 'maas',
+                frequency: RecurringFrequency.monthly,
+                next: DateTime(2026, 6, 20),
+                amount: 50000,
+                type: TransactionTypeModel.income),
+            tpl(
+                id: 'pasif',
+                frequency: RecurringFrequency.monthly,
+                next: DateTime(2026, 6, 20),
+                amount: 900,
+                isActive: false),
+          ],
+          from: DateTime(2026, 6, 15),
+          to: DateTime(2026, 6, 30),
+        ),
+        0,
+      );
+    });
+
+    test('pencere geçmişte kaldıysa 0 döner', () {
+      expect(
+        RecurringOccurrences.plannedExpenseTotal(
+          [
+            tpl(
+                frequency: RecurringFrequency.monthly,
+                next: DateTime(2026, 6, 20)),
+          ],
+          from: DateTime(2026, 7, 1),
+          to: DateTime(2026, 6, 30),
+        ),
+        0,
+      );
+    });
+
+    test('çok eski vadeli günlük şablonda güvenlik tavanı devreye girer', () {
+      // Tavan olmasa 1990'dan 2026'ya gün gün ilerlerdi.
+      expect(
+        RecurringOccurrences.plannedExpenseTotal(
+          [
+            tpl(
+                frequency: RecurringFrequency.daily,
+                next: DateTime(1990, 1, 1)),
+          ],
+          from: DateTime(2026, 6, 15),
+          to: DateTime(2026, 6, 30),
+        ),
+        0,
+      );
+    });
+  });
 }
