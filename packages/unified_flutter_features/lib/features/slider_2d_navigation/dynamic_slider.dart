@@ -156,6 +156,9 @@ class _DynamicSliderState extends State<DynamicSlider> {
   final Set<SliderState> _peeked = <SliderState>{};
   bool _isPeeking = false;
 
+  /// Kare sonuna ertelenmiş bir tanıtım denemesi kuyrukta mı.
+  bool _peekRetryScheduled = false;
+
   // Mini buttons overlay state
   bool _showMiniButtons = false;
   OverlayEntry? _overlayEntry;
@@ -200,7 +203,26 @@ class _DynamicSliderState extends State<DynamicSlider> {
     // Ertelenmiş tanıtım için ucuz bir yeniden deneme fırsatı: kapı
     // (`canPeek`) çoğu zaman bir rebuild ile açılır — tur bitince kaydırıcıya
     // ulaşan başka bir sinyal yok.
-    _maybePeek();
+    //
+    // Ama BURADAN doğrudan çağrılamaz: `didUpdateWidget` build fazının
+    // içindedir ve `_maybePeek` başarılı olursa `onPeekPlayed` ile ÜST
+    // durumu `setState`'e sürer. Üst durum tam o anda kendi rebuild'inin
+    // ortasındadır; işaretlenen "kirli" bayrağı build bittikten sonra
+    // temizlenmediği için Flutter `Element.rebuild`'in sonundaki
+    // `assert(!_dirty)`ini patlatır (cihazda görüldü: `Showcase` altındaki
+    // `SliderButtonView` çöküyordu). Kare sonuna ertelenir.
+    _schedulePeekRetry();
+  }
+
+  /// [_maybePeek]'i kare sonuna erteler; kuyrukta en fazla bir deneme durur
+  /// (rebuild başına post-frame callback yığmamak için).
+  void _schedulePeekRetry() {
+    if (_peekRetryScheduled) return;
+    _peekRetryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _peekRetryScheduled = false;
+      if (mounted) _maybePeek();
+    });
   }
 
   @override

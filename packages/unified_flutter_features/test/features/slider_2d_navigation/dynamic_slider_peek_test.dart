@@ -112,6 +112,35 @@ void main() {
         reason: 'Ertelenen tanıtım kayboldu');
   });
 
+  testWidgets(
+      'ertelenen tanıtım, ÜST durumu setState eden bir sahipte de patlamaz',
+      (tester) async {
+    // Uygulamadaki şekil: `onPeekPlayed` üst durumda `setState` çağırıyor
+    // (bekleyen tanıtım kümesinden düşürmek için). Tanıtım `didUpdateWidget`
+    // içinden SENKRON çağrılırsa, üst durum kendi rebuild'inin ortasında
+    // kirletilir ve Flutter `Element.rebuild`'in sonundaki `assert(!_dirty)`
+    // ile çöker (cihazda `Showcase > SliderButtonView` altında görüldü).
+    final played = <SliderState>[];
+    var allowed = false;
+    await tester.pumpWidget(_Host(
+      subs: subs,
+      peekStates: SliderState.values.toSet(),
+      onPeekPlayed: played.add,
+      canPeek: () => allowed,
+      ownerSetsStateOnPeek: true,
+    ));
+    await tester.pumpAndSettle();
+    expect(played, isEmpty);
+
+    allowed = true;
+    tester.state<_PeekOwnerState>(find.byType(_PeekOwner)).bump();
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull,
+        reason: 'tanıtım build fazında üst durumu kirletti');
+    expect(played, [SliderState.transactions]);
+  });
+
   testWidgets('listede olmayan durum için oynamaz', (tester) async {
     final played = <SliderState>[];
     await tester.pumpWidget(_Host(
@@ -132,12 +161,17 @@ class _Host extends StatefulWidget {
     required this.peekStates,
     required this.onPeekPlayed,
     this.canPeek,
+    this.ownerSetsStateOnPeek = false,
   });
 
   final Map<SliderState, List<SubMenuItem>> subs;
   final Set<SliderState> peekStates;
   final ValueChanged<SliderState> onPeekPlayed;
   final bool Function()? canPeek;
+
+  /// Kaydırıcıyı, `onPeekPlayed`'de kendi `setState`'ini çağıran bir durum
+  /// sahibinin altına kurar — uygulamadaki `SliderButtonView` gibi.
+  final bool ownerSetsStateOnPeek;
 
   @override
   State<_Host> createState() => _HostState();
@@ -162,24 +196,86 @@ class _HostState extends State<_Host> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final slider = DynamicSlider(
+      controller: controller,
+      subMenuItems: widget.subs,
+      peekStates: widget.peekStates,
+      onPeekPlayed: widget.onPeekPlayed,
+      canPeek: widget.canPeek,
+      texts: const SliderTexts(
+        savings: 'BİRİKİM',
+        transactions: 'İŞLEMLER',
+        debt: 'BORÇ',
+      ),
+    );
+
     return MaterialApp(
       home: Scaffold(
         body: Column(
           children: [
             const Spacer(),
-            DynamicSlider(
-              controller: controller,
-              subMenuItems: widget.subs,
-              peekStates: widget.peekStates,
-              onPeekPlayed: widget.onPeekPlayed,
-              canPeek: widget.canPeek,
-              texts: const SliderTexts(
-                savings: 'BİRİKİM',
-                transactions: 'İŞLEMLER',
-                debt: 'BORÇ',
-              ),
-            ),
+            if (widget.ownerSetsStateOnPeek)
+              _PeekOwner(
+                controller: controller,
+                subs: widget.subs,
+                peekStates: widget.peekStates,
+                onPeekPlayed: widget.onPeekPlayed,
+                canPeek: widget.canPeek,
+              )
+            else
+              slider,
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// `SliderButtonView`in test karşılığı: tanıtım oynayınca kendi durumunu
+/// `setState` ile günceller ve kaydırıcıyı ARADA bileşen olmadan (yalnız
+/// `Padding`) taşır — kirlenmenin üst duruma ulaştığı gerçek şekil budur.
+class _PeekOwner extends StatefulWidget {
+  const _PeekOwner({
+    required this.controller,
+    required this.subs,
+    required this.peekStates,
+    required this.onPeekPlayed,
+    required this.canPeek,
+  });
+
+  final AnimationController controller;
+  final Map<SliderState, List<SubMenuItem>> subs;
+  final Set<SliderState> peekStates;
+  final ValueChanged<SliderState> onPeekPlayed;
+  final bool Function()? canPeek;
+
+  @override
+  State<_PeekOwner> createState() => _PeekOwnerState();
+}
+
+class _PeekOwnerState extends State<_PeekOwner> {
+  late Set<SliderState> _pending = {...widget.peekStates};
+
+  void bump() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      child: DynamicSlider(
+        controller: widget.controller,
+        subMenuItems: widget.subs,
+        peekStates: _pending,
+        canPeek: widget.canPeek,
+        onPeekPlayed: (state) {
+          widget.onPeekPlayed(state);
+          if (!mounted) return;
+          setState(() => _pending = {..._pending}..remove(state));
+        },
+        texts: const SliderTexts(
+          savings: 'BİRİKİM',
+          transactions: 'İŞLEMLER',
+          debt: 'BORÇ',
         ),
       ),
     );
