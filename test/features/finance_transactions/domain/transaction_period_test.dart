@@ -127,4 +127,84 @@ void main() {
       expect(isDayInRange(DateTime(2026, 8, 31, 8), range), isTrue);
     });
   });
+  group('currentPeriodLike', () {
+    // "Bugüne dön" bir GEZİNME eylemi: kullanıcının seçtiği pencere
+    // GENİŞLİĞİNİ değiştirmemeli. Eski takvimde bir sayfa kaydırmak yıllık
+    // dönemi tek aya düşürüyordu; aynı hatayı düğmeyle tekrarlamayalım.
+    final today = DateTime(2026, 9, 3);
+
+    test('ay dönemi bu aya döner', () {
+      final result =
+          currentPeriodLike(monthRangeOf(DateTime(2026, 3, 1)), now: today);
+      expect(periodKindOf(result), PeriodKind.month);
+      expect(result.start, DateTime(2026, 9, 1));
+    });
+
+    test('hafta dönemi bu haftaya döner (ay olmaz)', () {
+      final result =
+          currentPeriodLike(weekRangeOf(DateTime(2026, 3, 10)), now: today);
+      expect(periodKindOf(result), PeriodKind.week);
+      expect(isDayInRange(today, result), isTrue);
+    });
+
+    test('yıl dönemi bu yıla döner', () {
+      final result =
+          currentPeriodLike(yearRangeOf(DateTime(2024, 5, 5)), now: today);
+      expect(periodKindOf(result), PeriodKind.year);
+      expect(result.start, DateTime(2026, 1, 1));
+    });
+
+    test('gün dönemi bugüne döner', () {
+      final result =
+          currentPeriodLike(dayRangeOf(DateTime(2026, 1, 9)), now: today);
+      expect(periodKindOf(result), PeriodKind.day);
+      expect(result.start, DateTime(2026, 9, 3));
+    });
+
+    test('özel aralık UZUNLUĞUNU korur ve bugünde biter', () {
+      // 45 günlük pencere: 45 gün kalmalı.
+      final custom = DateTimeRange(
+        start: DateTime(2026, 1, 1),
+        end: DateTime(2026, 2, 14, 23, 59, 59),
+      );
+      final result = currentPeriodLike(custom, now: today);
+      expect(dayOf(result.end), DateTime(2026, 9, 3));
+      expect(
+        dayOf(result.end).difference(dayOf(result.start)).inDays,
+        dayOf(custom.end).difference(dayOf(custom.start)).inDays,
+      );
+    });
+  });
+
+  group('daysOf', () {
+    test('uçlar dahil, gün gün ilerler', () {
+      final days = daysOf(DateTimeRange(
+        start: DateTime(2026, 1, 30),
+        end: DateTime(2026, 2, 2, 23, 59),
+      ));
+      expect(days, [
+        DateTime(2026, 1, 30),
+        DateTime(2026, 1, 31),
+        DateTime(2026, 2, 1),
+        DateTime(2026, 2, 2),
+      ]);
+    });
+
+    test('tek günlük aralık tek hücre verir', () {
+      expect(daysOf(dayRangeOf(DateTime(2026, 5, 5))), hasLength(1));
+    });
+
+    test('ayın tamamı gün sayısı kadar hücre verir', () {
+      expect(daysOf(monthRangeOf(DateTime(2026, 2, 1))), hasLength(28));
+      expect(daysOf(monthRangeOf(DateTime(2024, 2, 1))), hasLength(29));
+    });
+
+    test('yaz saati geçişinde gün atlamaz', () {
+      // Duration(days: 1) ile ilerlemek 23/25 saatlik günlerde günü atlar ya
+      // da tekrarlar; ilerleme takvim alanı üzerinden yapılıyor.
+      final days = daysOf(monthRangeOf(DateTime(2026, 3, 1)));
+      expect(days, hasLength(31));
+      expect(days.map((d) => d.day).toSet(), hasLength(31));
+    });
+  });
 }

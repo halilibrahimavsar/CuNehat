@@ -2094,37 +2094,37 @@
   "reportUnitSelectorLabel": "Resolution",
   "reportUnitTooDense": "{count} columns won't fit",
   "@reportUnitTooDense": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportFlowChartSemantics": "Income–expense chart: {count} periods, total income {income}, total expense {expense}. Tap the columns for values.",
   "@reportFlowChartSemantics": {
-      "placeholders": {
-          "count": {},
-          "income": {},
-          "expense": {}
-      }
+    "placeholders": {
+      "count": {},
+      "income": {},
+      "expense": {}
+    }
   },
   "reportBalanceChartSemantics": "Balance chart: {start} at the start of the period, {end} at the end. Tap the line for values in between.",
   "@reportBalanceChartSemantics": {
-      "placeholders": {
-          "start": {},
-          "end": {}
-      }
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
   },
   "reportSystemMovementsTitle": "Transfers & linked movements",
   "reportSystemMovementsOff": "{count} movements kept out of income–expense",
   "@reportSystemMovementsOff": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportSystemMovementsOn": "{count} movements counted in income–expense",
   "@reportSystemMovementsOn": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending — the money moves, it isn't spent. The balance line always includes them.",
   "reportShareTooltip": "Share the report",
@@ -2133,84 +2133,84 @@
   "reportViewBars": "Bar view",
   "reportPieSemantics": "{title} category breakdown: {count} items, {total} in total. See the list below for per-item detail.",
   "@reportPieSemantics": {
-      "placeholders": {
-          "title": {},
-          "count": {},
-          "total": {}
-      }
+    "placeholders": {
+      "title": {},
+      "count": {},
+      "total": {}
+    }
   },
   "reportCompareBarSemantics": "{side} bar: {total}, {count} items.",
   "@reportCompareBarSemantics": {
-      "placeholders": {
-          "side": {},
-          "total": {},
-          "count": {}
-      }
+    "placeholders": {
+      "side": {},
+      "total": {},
+      "count": {}
+    }
   },
   "reportTotalLabel": "Total",
   "reportSunburstSemantics": "Category ring: {roots} top-level categories, {children} subcategories, {total} in total. The inner ring shows top-level categories, the outer ring the breakdown.",
   "@reportSunburstSemantics": {
-      "placeholders": {
-          "roots": {},
-          "children": {},
-          "total": {}
-      }
+    "placeholders": {
+      "roots": {},
+      "children": {},
+      "total": {}
+    }
   },
   "reportHierarchyHint": "Tap the inner ring to focus · outer ring: breakdown",
   "reportBreakdownToggle": "{ad} breakdown",
   "@reportBreakdownToggle": {
-      "placeholders": {
-          "ad": {}
-      }
+    "placeholders": {
+      "ad": {}
+    }
   },
   "reportMonthlyTrendTitle": "Monthly trend",
   "reportMonthsOption": "{ay} months",
   "@reportMonthsOption": {
-      "placeholders": {
-          "ay": {}
-      }
+    "placeholders": {
+      "ay": {}
+    }
   },
   "reportAverageShort": "Avg. {tutar}",
   "@reportAverageShort": {
-      "placeholders": {
-          "tutar": {}
-      }
+    "placeholders": {
+      "tutar": {}
+    }
   },
   "reportMonthlyTrendHint": "Tap a month to switch the report to it",
   "reportMonthlyTrendSemantics": "Monthly trend: {count} months, {avg} average monthly spending. Tap the columns for detail.",
   "@reportMonthlyTrendSemantics": {
-      "placeholders": {
-          "count": {},
-          "avg": {}
-      }
+    "placeholders": {
+      "count": {},
+      "avg": {}
+    }
   },
   "reportTopPayeesTitle": "Top places",
   "reportTopPayeesHint": "Grouped by transaction title; branch and code suffixes merged",
   "reportPayeeCount": "{count} transactions",
   "@reportPayeeCount": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportBudgetSummaryTitle": "Budget status",
   "reportBudgetExceededCount": "{total} of {count} budgets exceeded",
   "@reportBudgetExceededCount": {
-      "placeholders": {
-          "count": {},
-          "total": {}
-      }
+    "placeholders": {
+      "count": {},
+      "total": {}
+    }
   },
   "reportBudgetAllWithinLimit": "All {count} budgets within limit",
   "@reportBudgetAllWithinLimit": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportBudgetMoreCount": "+{count} more budgets",
   "@reportBudgetMoreCount": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportCategoryChange": "vs. previous period",
   "reportLensFlow": "Flow",
@@ -2266,5 +2266,15 @@
     }
   },
   "insightDismissSuggestion": "Dismiss",
-  "insightNoSuggestionsLeft": "No new scheduled payments spotted for now"
+  "insightNoSuggestionsLeft": "No new scheduled payments spotted for now",
+  "txTodayJump": "Back to today",
+  "txRailDaySemantics": "{date}: net {net}, {count} transactions",
+  "txRailDayEmptySemantics": "{date}: no transactions",
+  "txSearchWidenTitle": "No results in this period",
+  "txSearchWidenBody": "There are {count} matches in your full history.",
+  "txSearchWidenAction": "Search all history",
+  "txRowActions": "Transaction menu",
+  "txDayCollapse": "Collapse day",
+  "txDayExpand": "Expand day",
+  "txRailTitle": "Day strip"
 }

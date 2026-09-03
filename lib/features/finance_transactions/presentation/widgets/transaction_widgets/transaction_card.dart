@@ -27,6 +27,11 @@ import 'package:cunehat/core/extensions/context_extensions.dart';
 /// bir zamanlar "uzun basmanın görsel ipucu yok" diye eklenmişti; o boşluğu
 /// kapatmanın yolu yıkıcı bir eylemi tek jeste bağlamak değil.
 ///
+/// **Görsel ipucu artık var (3 Eyl 2026):** kartın sağındaki kalıcı ⋮
+/// düğmesi aynı eylem sayfasını açar. Uzun bas da çalışmaya devam eder ama
+/// tek keşif yolu olmaktan çıktı — kaydırma kalktığından beri ekranda
+/// düzenle/sil'e giden hiçbir görünür işaret kalmamıştı.
+///
 /// Yan etki: satırlar artık yatay sürüklemeyi yutmuyor, yani `MainContentSwipe`
 /// sayfa jesti liste üzerinde de çalışır.
 class TransactionCard extends StatelessWidget {
@@ -117,99 +122,138 @@ class TransactionCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: () => _openDetail(context),
       onLongPress: () => _showActionSheet(context, accent),
-      child: Row(
-        children: [
-          // Kategori glyph'i (yoksa yön oku fallback)
-          Hero(
-            tag: _heroTag,
-            child: Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: accent.withValues(alpha: 0.25),
-                  width: 1,
+      // Satır yazı ölçeğine duyarlı olmalı: ölçek 2.0'da "−18.500,00 ₺"
+      // 17px yerine 34px çiziliyor ve başlık sütununu 40dp'ye düşürüp satırı
+      // 24px taşırıyordu (ölçüldü). Tutar artık satırın en çok [_amountShare]
+      // kadarını alabilir, fazlası `scaleDown` ile küçülür.
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          children: [
+            // Kategori glyph'i (yoksa yön oku fallback)
+            Hero(
+              tag: _heroTag,
+              child: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  categoryIcon ??
+                      (t.isIncome
+                          ? Icons.arrow_upward_rounded
+                          : Icons.arrow_downward_rounded),
+                  color: accent,
+                  size: 18,
                 ),
               ),
-              child: Icon(
-                categoryIcon ??
-                    (t.isIncome
-                        ? Icons.arrow_upward_rounded
-                        : Icons.arrow_downward_rounded),
-                color: accent,
-                size: 18,
-              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          // Başlık + kategori chip + saat
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        t.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: scheme.onSurface,
+            // Başlık + kategori chip + saat
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          t.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: scheme.onSurface,
+                          ),
                         ),
                       ),
-                    ),
-                    if (t.isSystem) ...[
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.lock_outline_rounded,
-                        size: 12,
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                      ),
+                      if (t.isSystem) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 12,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    if (t.tag.isNotEmpty) _categoryChip(context, accent, t.tag),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppFormatters.time.format(t.date),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                        fontSize: 11,
-                      ),
+                  ),
+                  const SizedBox(height: 5),
+                  // Saat en az değerli veri: gün zaten yapışkan başlıkta yazılı.
+                  // Sütun daraldığında (büyük yazı ölçeği) kategori çipine yer
+                  // açmak için düşer — kırpılmış bir "1…" kimseye bir şey
+                  // söylemez.
+                  LayoutBuilder(
+                    builder: (context, inner) => Row(
+                      children: [
+                        if (t.tag.isNotEmpty)
+                          _categoryChip(context, accent, t.tag),
+                        if (inner.maxWidth >= _timeMinWidth) ...[
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              AppFormatters.time.format(t.date),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant
+                                    .withValues(alpha: 0.7),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Baskın tutar
+            ConstrainedBox(
+              constraints:
+                  BoxConstraints(maxWidth: constraints.maxWidth * _amountShare),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: SignedMoneyText(
+                  amount: t.amount,
+                  isExpense: t.isExpense,
+                  currency: context.activeWalletCurrency,
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                    letterSpacing: -0.5,
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
 
-          const SizedBox(width: 12),
-
-          // Baskın tutar
-          SignedMoneyText(
-            amount: t.amount,
-            isExpense: t.isExpense,
-            currency: context.activeWalletCurrency,
-            style: TextStyle(
-              color: accent,
-              fontWeight: FontWeight.w900,
-              fontSize: 17,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ],
+            // Eylem menüsü: uzun basmanın GÖRÜNÜR karşılığı.
+            _ActionButton(onTap: () => _showActionSheet(context, accent)),
+          ],
+        ),
       ),
     );
   }
+
+  /// Tutarın satırdan alabileceği en büyük pay. Normal ölçekte tutar bunun
+  /// altında kalır (ölçüldü: 328dp'lik kartta "-749,90 ₺" 69dp), yani sınır
+  /// yalnız yazı büyüdüğünde devreye girer.
+  static const double _amountShare = 0.45;
+
+  /// Saatin çizilmesi için başlık sütununda gereken en az genişlik.
+  static const double _timeMinWidth = 110;
 
   Widget _categoryChip(BuildContext context, Color accent, String tag) {
     return Flexible(
@@ -243,6 +287,43 @@ class TransactionCard extends StatelessWidget {
             heroTag: _heroTag,
             categoryIcon: categoryIcon,
             categoryLabel: categoryLabel,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Kartın sağındaki ⋮ — [TransactionActionSheet]'i açar.
+///
+/// Kartın kendi `onTap`'i (detay sayfası) DIŞARIDA bir `GestureDetector`;
+/// buradaki `InkResponse` daha içeride olduğu için dokunma arenasını o
+/// kazanır ve ⋮'ye basmak detayı açmaz.
+class _ActionButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ActionButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: context.l10n.txRowActions,
+      child: Tooltip(
+        message: context.l10n.txRowActions,
+        excludeFromSemantics: true,
+        child: InkResponse(
+          onTap: onTap,
+          radius: 20,
+          child: SizedBox(
+            width: 30,
+            height: 40,
+            child: Icon(
+              Icons.more_vert_rounded,
+              size: 18,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
           ),
         ),
       ),

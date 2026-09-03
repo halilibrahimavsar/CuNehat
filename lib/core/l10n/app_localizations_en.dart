@@ -4160,4 +4160,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get insightNoSuggestionsLeft =>
       'No new scheduled payments spotted for now';
+
+  @override
+  String get txTodayJump => 'Back to today';
+
+  @override
+  String txRailDaySemantics(Object date, Object net, int count) {
+    return '$date: net $net, $count transactions';
+  }
+
+  @override
+  String txRailDayEmptySemantics(Object date) {
+    return '$date: no transactions';
+  }
+
+  @override
+  String get txSearchWidenTitle => 'No results in this period';
+
+  @override
+  String txSearchWidenBody(int count) {
+    return 'There are $count matches in your full history.';
+  }
+
+  @override
+  String get txSearchWidenAction => 'Search all history';
+
+  @override
+  String get txRowActions => 'Transaction menu';
+
+  @override
+  String get txDayCollapse => 'Collapse day';
+
+  @override
+  String get txDayExpand => 'Expand day';
+
+  @override
+  String get txRailTitle => 'Day strip';
 }

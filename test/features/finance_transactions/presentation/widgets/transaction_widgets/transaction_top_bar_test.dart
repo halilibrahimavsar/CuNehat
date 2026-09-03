@@ -45,41 +45,33 @@ void main() {
       ],
       supportedLocales: const [Locale('tr'), Locale('en')],
       locale: const Locale('tr'),
+      // Yatay padding EKLENMEZ: çubuk artık kendi 16dp'sini taşıyor (sliver
+      // delegate'i kaldırıldı). İki kat padding gerçekte olmayan bir 6px
+      // taşma uyduruyordu.
       home: Scaffold(
-        body: Center(
-          child: SizedBox(
-            width: width,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: child,
-            ),
-          ),
-        ),
+        body: Center(child: SizedBox(width: width, child: child)),
       ),
     );
   }
 
   TransactionTopBar bar(
     CombinedFilter filter, {
-    void Function(String)? onSearchChanged,
     void Function(int)? onPeriodStep,
     VoidCallback? onClearCategories,
     VoidCallback? onClearPriceRange,
+    VoidCallback? onClearSearch,
     Map<String, String> labels = const {},
-    bool isCalendarView = false,
   }) {
     return TransactionTopBar(
       filter: filter,
-      isCalendarView: isCalendarView,
       categoryLabels: labels,
-      onViewModeChanged: (_) {},
       onModeChanged: (_) {},
-      onSearchChanged: onSearchChanged ?? (_) {},
       onPeriodStep: onPeriodStep ?? (_) {},
       onPeriodPick: () {},
       onFilterTap: () {},
       onClearCategories: onClearCategories ?? () {},
       onClearPriceRange: onClearPriceRange ?? () {},
+      onClearSearch: onClearSearch ?? () {},
       onClearAllFilters: () {},
     );
   }
@@ -115,7 +107,7 @@ void main() {
       await tester.pumpWidget(wrap(bar(_filter()), width: 320));
       await tester.pump();
 
-      // 320 - 32 (yatay padding) = 288 kullanılabilir.
+      // 320 - 32 (çubuğun kendi yatay padding'i) = 288 kullanılabilir.
       final periodWidth =
           tester.getSize(find.byType(TransactionPeriodBar)).width;
       expect(periodWidth, greaterThan(60),
@@ -134,35 +126,36 @@ void main() {
       );
     });
 
-    test('yalnız arama etkinken çip şeridi açılmaz (arama kendi alanında)', () {
+    test('arama da çip şeridi açar', () {
+      // Arama alanı artık sabit çubukta değil, içerikle kayıp gidiyor.
+      // Kullanıcı listeyi aşağı kaydırdığında "neden yalnız üç satır
+      // görüyorum" sorusunun yanıtı çubukta kalmalı.
       const searchOnly = DataFilter(searchQuery: 'market');
       expect(
-        TransactionTopBar.heightFor(searchOnly),
-        TransactionTopBar.heightFor(const DataFilter()),
+        TransactionTopBar.heightFor(searchOnly) -
+            TransactionTopBar.heightFor(const DataFilter()),
+        ActiveFilterChips.height + 8,
       );
     });
   });
 
-  group('arama', () {
-    testWidgets('yazılan metin onSearchChanged ile iletilir', (tester) async {
-      String? seen;
-      await tester
-          .pumpWidget(wrap(bar(_filter(), onSearchChanged: (v) => seen = v)));
-
-      await tester.enterText(find.byType(TextField), 'market');
-      expect(seen, 'market');
-    });
-
-    testWidgets('dolu alanda temizle düğmesi çıkar ve boş sorgu yollar',
+  group('arama çipi', () {
+    testWidgets('etkin sorgu çip olarak görünür ve × onu kaldırır',
         (tester) async {
-      String? seen;
-      await tester.pumpWidget(wrap(
-          bar(_filter(search: 'market'), onSearchChanged: (v) => seen = v)));
+      var cleared = 0;
+      await tester.pumpWidget(wrap(bar(
+        _filter(search: 'market'),
+        onClearSearch: () => cleared++,
+      )));
       await tester.pump();
 
-      await tester.tap(find.byIcon(Icons.close_rounded).first);
-      await tester.pump();
-      expect(seen, '');
+      expect(find.textContaining('market'), findsOneWidget);
+
+      await tester.tap(find.descendant(
+        of: find.byType(ActiveFilterChips),
+        matching: find.byIcon(Icons.close_rounded),
+      ));
+      expect(cleared, 1);
     });
   });
 

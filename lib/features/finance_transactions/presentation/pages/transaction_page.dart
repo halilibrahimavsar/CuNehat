@@ -11,6 +11,8 @@ import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/daily_spending_summary_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/filtering/transaction_filter_cubit.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
@@ -21,14 +23,31 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/detailed_list_view.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_calendar_view.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_day_rail.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_list_skeleton.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_top_bar.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// İşlemler ekranı — uygulamanın açılış yüzü.
+///
+/// **Tek akış (3 Eyl 2026).** Ekran eskiden Liste ve Takvim diye iki
+/// görünümdü ve varsayılanı takvimdi. Ölçüm (360×800, kabuk düşülmüş 630dp)
+/// şunu gösterdi: takvim kartı 374dp kaplıyor, bir güne dokununca o günün
+/// yalnız 1 işlemi görünüyor, ızgaradaki tek finansal veri 8,5px çiziliyordu.
+/// Liste tarafında da ilk satıra kadar 309/630 dp (%49) chrome'a gidiyordu.
+/// Yani ekran "hangi gün?" sorusunu cevaplıyordu; kullanıcı ise buraya "ne
+/// aldım, param nereye gidiyor" diye bakıyor — üstelik analitiğin ağır işi
+/// zaten bir kaydırma ötede (İçgörü + Rapor alt görünümleri).
+///
+/// Yeni sıra: sabit kontrol çubuğu → arama → dönem özeti → gün şeridi →
+/// yapışkan gün başlıklı defter. Takvim ızgarası dönem SEÇİCİ olarak duruyor
+/// ([AppDateRangePicker], üst çubuktaki tarihe dokununca).
 class TransactionsPage extends StatelessWidget {
   final String userId;
   final WalletEntity wallet;
@@ -74,12 +93,17 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// Gruplama ve filtre anahtarı hep `tag` kalır.
   Map<String, String> _categoryLabels = {};
 
-  /// Liste ↔ Takvim görünüm modu (saf sunum; filtre cubit'ine taşımaya gerek
-  /// yok). Varsayılan Takvim: uygulama açılışta İşlemler (orta) görünümüne
-  /// geldiğinden kullanıcı doğrudan takvimi görür.
-  bool _isCalendarView = true;
-
   StreamSubscription<void>? _categoriesSub;
+
+  final ScrollController _scrollController = ScrollController();
+
+  /// Gün şeridinden listeye giden köprü: başlıkların GlobalKey defteri.
+  final LedgerDayAnchors _anchors = LedgerDayAnchors();
+
+  /// Şeritte vurgulanan gün. Yalnız gezinme durumu — filtreye yazılmaz,
+  /// çünkü bir güne bakmak dönemi daraltmak DEĞİLDİR (eski takvimde bir
+  /// sayfa kaydırmak kullanıcının seçtiği yıllık dönemi tek aya düşürüyordu).
+  DateTime? _selectedDay;
 
   /// Defter önbelleği: sıralama + running balance zinciri PAHALI ve yalnız
   /// işlem listesi değişince gerekir. Filtre/arama her tuş vuruşunda
@@ -88,6 +112,11 @@ class _TransactionsViewState extends State<_TransactionsView> {
   List<TransactionEntity>? _ledgerSource;
   double? _ledgerBalance;
   List<TransactionWithBalance> _ledger = const [];
+
+  /// Gün şeridinin ısı verisi; görünen küme değişmedikçe yeniden kurulmaz.
+  static const _summaryService = DailySpendingSummaryService();
+  List<TransactionWithBalance>? _summarySource;
+  Map<DateTime, DaySummary> _summaries = const {};
 
   @override
   void initState() {
@@ -117,6 +146,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
   @override
   void dispose() {
     _categoriesSub?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -172,6 +202,24 @@ class _TransactionsViewState extends State<_TransactionsView> {
     return true;
   }
 
+  /// Gün özetleri; görünen küme değişmedikçe yeniden hesaplanmaz. Filtre her
+  /// tuş vuruşunda değişip build tetiklediği için bu önemli.
+  Map<DateTime, DaySummary> _summariesFor(
+      List<TransactionWithBalance> visible) {
+    final cached = _summarySource;
+    if (cached != null &&
+        cached.length == visible.length &&
+        (cached.isEmpty ||
+            (identical(cached.first, visible.first) &&
+                identical(cached.last, visible.last)))) {
+      return _summaries;
+    }
+    _summarySource = visible;
+    _summaries = _summaryService
+        .buildDailySummaries(visible.map((e) => e.transaction).toList());
+    return _summaries;
+  }
+
   Future<void> _pickDateRange(BuildContext context) async {
     final cubit = context.read<TransactionFilterCubit>();
 
@@ -196,10 +244,9 @@ class _TransactionsViewState extends State<_TransactionsView> {
           value: cubit,
           child: BlocBuilder<TransactionFilterCubit, CombinedFilter>(
             builder: (builderContext, state) {
-              // Material (renkli Container değil): panel artık InkWell,
-              // Checkbox ve TextButton kullanıyor; opak bir DecoratedBox
-              // araya girerse mürekkep dalgası ARKASINA boyanır ve görünmez
-              // olur (Flutter debug'da da uyarır).
+              // Material (renkli Container değil): panel InkWell, Checkbox ve
+              // TextButton kullanıyor; opak bir DecoratedBox araya girerse
+              // mürekkep dalgası ARKASINA boyanır ve görünmez olur.
               // Klavye açıldığında sheet DARALIR, altına itilmez: panelde iki
               // metin alanı var (tutar + kategori araması) ve sabit yükseklik
               // "N işlemi göster" düğmesini klavyenin ardında bırakıyordu.
@@ -244,6 +291,84 @@ class _TransactionsViewState extends State<_TransactionsView> {
     );
   }
 
+  /// Şeritten seçilen günün başlığını listenin tepesine getirir.
+  ///
+  /// Başlık tembel listede henüz KURULMAMIŞ olabilir; `ensureVisible` o zaman
+  /// çalışmaz. O yüzden önce doğru yönde ekran ekran yaklaşılır (her adım bir
+  /// kare sürer ve yeni satırlar kurulur), hedef kurulunca kesin hizalama
+  /// yapılır. Adım sayısı sınırlı: hedef bir sebeple hiç kurulmazsa döngü
+  /// kilitlenmesin.
+  Future<void> _scrollToDay(
+    DateTime day,
+    List<TransactionWithBalance> visible,
+    FinanceMode mode,
+  ) async {
+    setState(() => _selectedDay = day);
+
+    final groups = groupLedgerByDay(visible, mode);
+    final targetIndex = groups.indexWhere((g) => isSameDayValue(g.day, day));
+    if (targetIndex < 0) return; // O gün hiç işlem yok; şerit vurgusu yeter.
+
+    for (var attempt = 0; attempt < 24; attempt++) {
+      if (!mounted) return;
+      final ctx = _anchors.contextFor(day);
+      if (ctx != null && ctx.mounted) {
+        await Scrollable.ensureVisible(
+          ctx,
+          alignment: 0,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+        );
+        return;
+      }
+      if (!_scrollController.hasClients) return;
+
+      // Yön: kurulmuş başlıkların hangi tarafında kaldık? Defter yeniden
+      // eskiye sıralı, yani daha ESKİ bir gün listede daha AŞAĞIDADIR.
+      var direction = 1;
+      for (var i = 0; i < groups.length; i++) {
+        if (_anchors.contextFor(groups[i].day) != null) {
+          direction = targetIndex > i ? 1 : -1;
+          break;
+        }
+      }
+
+      final position = _scrollController.position;
+      final next = (position.pixels + direction * position.viewportDimension)
+          .clamp(0.0, position.maxScrollExtent);
+      if (next == position.pixels) return;
+      _scrollController.jumpTo(next);
+      await SchedulerBinding.instance.endOfFrame;
+    }
+  }
+
+  /// Aramanın/filtrenin dönem dışında da eşleşme bulup bulmadığı.
+  int _matchesOutsidePeriod(
+      List<TransactionWithBalance> ledger, CombinedFilter filter) {
+    return filterLedger(
+      ledger: ledger,
+      filter: filter,
+      categoryLabels: _categoryLabels,
+      applyDateWindow: false,
+    ).length;
+  }
+
+  /// Dönemi verinin tamamına genişletir ("tüm geçmişte ara").
+  void _widenToAllHistory(
+      TransactionFilterCubit cubit, List<TransactionWithBalance> ledger) {
+    if (ledger.isEmpty) return;
+    final today = dayOf(DateTime.now());
+    // Defter yeniden eskiye sıralı: ilk eleman en yeni, son eleman en eski.
+    var earliest = dayOf(ledger.last.transaction.date);
+    var latest = dayOf(ledger.first.transaction.date);
+    if (today.isBefore(earliest)) earliest = today;
+    if (today.isAfter(latest)) latest = today;
+    cubit.setPeriod(DateTimeRange(
+      start: earliest,
+      end: DateTime(latest.year, latest.month, latest.day, 23, 59, 59),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TransactionFilterCubit, CombinedFilter>(
@@ -269,91 +394,55 @@ class _TransactionsViewState extends State<_TransactionsView> {
             final ledger = _ledgerFor(state.currentTransactions);
             final isLoading = state is TransactionLoading;
             final walletIsEmpty = ledger.isEmpty;
+            final mode = filterState.viewFilter.financeMode;
 
-            // Takvim dönemi kendi çizer (kullanıcı dönem dışına da
-            // gezinebilmeli); liste dönem penceresini uygular.
             final visible = filterLedger(
               ledger: ledger,
               filter: filterState,
               categoryLabels: _categoryLabels,
-              applyDateWindow: !_isCalendarView,
             );
+
+            final period = DateTimeRange(
+              start: filterState.viewFilter.startDate,
+              end: filterState.viewFilter.endDate,
+            );
+            final periodHasToday = isDayInRange(DateTime.now(), period);
 
             return Scaffold(
               backgroundColor: Colors.transparent,
-              body: NestedScrollView(
-                headerSliverBuilder: (context, innerBoxIsScrolled) {
-                  return [
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _TopBarDelegate(
-                        height:
-                            TransactionTopBar.heightFor(filterState.dataFilter),
-                        child: TransactionTopBar(
-                          filter: filterState,
-                          isCalendarView: _isCalendarView,
-                          categoryLabels: _categoryLabels,
-                          onViewModeChanged: (isCalendar) =>
-                              setState(() => _isCalendarView = isCalendar),
-                          onModeChanged: cubit.setFinanceMode,
-                          onSearchChanged: cubit.setSearchQuery,
-                          onPeriodStep: cubit.stepPeriod,
-                          onPeriodPick: () => _pickDateRange(context),
-                          onFilterTap: () => _showFilterSheet(context),
-                          onClearCategories: () =>
-                              cubit.setCategories(const {}),
-                          onClearPriceRange: () => cubit.setPriceRange(null),
-                          onClearAllFilters: cubit.clearDataFilters,
-                        ),
-                      ),
-                    ),
-                    // Salt-veri özet kartı (yalnız liste modunda; takvimin
-                    // kendi dönem özeti var).
-                    if (!_isCalendarView)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          child: TransactionHeader(
-                            allTransactions:
-                                visible.map((e) => e.transaction).toList(),
-                            mode: filterState.viewFilter.financeMode,
-                            currentFilter: filterState,
+              body: Column(
+                children: [
+                  TransactionTopBar(
+                    filter: filterState,
+                    categoryLabels: _categoryLabels,
+                    onModeChanged: cubit.setFinanceMode,
+                    onPeriodStep: cubit.stepPeriod,
+                    onPeriodPick: () => _pickDateRange(context),
+                    onFilterTap: () => _showFilterSheet(context),
+                    onClearCategories: () => cubit.setCategories(const {}),
+                    onClearPriceRange: () => cubit.setPriceRange(null),
+                    onClearSearch: () => cubit.setSearchQuery(null),
+                    onClearAllFilters: cubit.clearDataFilters,
+                  ),
+                  Expanded(
+                    child: isLoading && walletIsEmpty
+                        ? const TransactionListSkeleton()
+                        : CustomScrollView(
+                            controller: _scrollController,
+                            slivers: _buildSlivers(
+                              context: context,
+                              cubit: cubit,
+                              filterState: filterState,
+                              ledger: ledger,
+                              visible: visible,
+                              mode: mode,
+                              period: period,
+                              periodHasToday: periodHasToday,
+                              walletIsEmpty: walletIsEmpty,
+                            ),
                           ),
-                        ),
-                      ),
-                  ];
-                },
-                body: isLoading && walletIsEmpty
-                    ? const TransactionListSkeleton()
-                    // Boş durum HER İKİ görünümde de gösterilir: takvim
-                    // modunda dönem penceresi uygulanmadığı için boş sonuç
-                    // "tüm geçmişte hiçbir şey eşleşmedi" demektir ve ızgarayı
-                    // çizmek kullanıcıya çıkışsız bir boşluk bırakıyordu.
-                    : visible.isEmpty
-                        ? _EmptyState(
-                            mode: filterState.viewFilter.financeMode,
-                            // Cüzdanda hiç kayıt yoksa sorun filtre değildir;
-                            // "filtreleri temizle" önermek kullanıcıyı yanlış
-                            // yere gönderir.
-                            isFiltered: !walletIsEmpty,
-                            query: filterState.dataFilter.searchQuery,
-                            onClearFilters: cubit.clearAll,
-                          )
-                        : _isCalendarView
-                            ? TransactionCalendarView(
-                                transactions: visible,
-                                categoryIcons: _categoryIcons,
-                                categoryLabels: _categoryLabels,
-                                range: cubit.period,
-                                onRangeChanged: cubit.setPeriod,
-                              )
-                            : DetailedListView(
-                                transactions: visible,
-                                mode: filterState.viewFilter.financeMode,
-                                categoryIcons: _categoryIcons,
-                                categoryLabels: _categoryLabels,
-                              ),
+                  ),
+                ],
               ),
             );
           },
@@ -361,62 +450,120 @@ class _TransactionsViewState extends State<_TransactionsView> {
       },
     );
   }
-}
 
-/// Sabit (pinned) kontrol çubuğunu taşıyan delegate.
-///
-/// Yükseklik değişkendir: aktif filtre çipi şeridi yalnız gerektiğinde yer
-/// kaplar, o yüzden [height] delegate'in kimliğinin parçasıdır.
-class _TopBarDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  final double height;
-
-  _TopBarDelegate({required this.child, required this.height});
-
-  @override
-  double get minExtent => height;
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // Material: çubuktaki dönem okları ve filtre düğmesi InkWell/InkResponse
-    // kullanıyor; renkli bir Container mürekkebi yutar.
-    return Material(
-      color: Theme.of(context).colorScheme.surface,
-      child: SizedBox(
-        height: height,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: child,
+  List<Widget> _buildSlivers({
+    required BuildContext context,
+    required TransactionFilterCubit cubit,
+    required CombinedFilter filterState,
+    required List<TransactionWithBalance> ledger,
+    required List<TransactionWithBalance> visible,
+    required FinanceMode mode,
+    required DateTimeRange period,
+    required bool periodHasToday,
+    required bool walletIsEmpty,
+  }) {
+    final searchSliver = SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        child: TransactionSearchField(
+          value: filterState.dataFilter.searchQuery,
+          onChanged: cubit.setSearchQuery,
         ),
       ),
     );
-  }
 
-  @override
-  bool shouldRebuild(covariant _TopBarDelegate oldDelegate) =>
-      oldDelegate.child != child || oldDelegate.height != height;
+    if (visible.isEmpty) {
+      return [
+        searchSliver,
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _EmptyState(
+            mode: mode,
+            // Cüzdanda hiç kayıt yoksa sorun filtre değildir; "filtreleri
+            // temizle" önermek kullanıcıyı yanlış yere gönderir.
+            isFiltered: !walletIsEmpty,
+            query: filterState.dataFilter.searchQuery,
+            // Dönem penceresi artık HER ZAMAN uygulanıyor (eski takvim
+            // görünümü onu yok sayıyordu). Bu yüzden "bu ayda yok ama
+            // geçmişte var" durumunun bir çıkış yolu olmalı.
+            outsidePeriodMatches:
+                walletIsEmpty ? 0 : _matchesOutsidePeriod(ledger, filterState),
+            onWidenPeriod: () => _widenToAllHistory(cubit, ledger),
+            onClearFilters: cubit.clearAll,
+          ),
+        ),
+      ];
+    }
+
+    return [
+      searchSliver,
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: TransactionSummaryStrip(
+            transactions: visible.map((e) => e.transaction).toList(),
+            mode: mode,
+            filter: filterState,
+            periodLabel: periodLabel(period, context.l10n),
+            onToday: periodHasToday
+                ? null
+                : () => cubit.setPeriod(currentPeriodLike(period)),
+          ),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: TransactionDayRail(
+            range: period,
+            summaries: _summariesFor(visible),
+            // Dönem dışına düşen seçim BAYATTIR: kullanıcı bir gün seçip
+            // sonra ayı değiştirdiğinde o vurgu artık hiçbir şeyi
+            // göstermiyor, üstelik şeridin kendini ortalamasını da
+            // engelliyordu.
+            selectedDay:
+                _selectedDay != null && isDayInRange(_selectedDay!, period)
+                    ? _selectedDay
+                    : null,
+            onDaySelected: (day) => _scrollToDay(day, visible, mode),
+          ),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
+        sliver: TransactionLedgerSliver(
+          transactions: visible,
+          mode: mode,
+          categoryIcons: _categoryIcons,
+          categoryLabels: _categoryLabels,
+          anchors: _anchors,
+        ),
+      ),
+    ];
+  }
 }
 
 /// Liste boş kaldığında gösterilen ekran.
 ///
-/// Eskiden tek bir metin vardı ("Henüz işlem yok") ve filtre yüzünden boşalan
-/// liste de aynı şeyi söylüyordu: kullanıcı ne olduğunu anlamıyor, çıkış yolu
-/// da bulamıyordu. Artık iki ayrı durum var ve filtreli durumda tek dokunuşla
-/// temizleme sunuluyor.
+/// Üç ayrı durum: cüzdan hiç kayıt taşımıyor · filtre/arama bu dönemde
+/// eşleşme bırakmadı · bu dönemde yok ama GEÇMİŞTE var. Sonuncusu tek
+/// görünüme geçişle birlikte doğdu: takvim modu tarih penceresini yok
+/// sayıyordu, artık dönem her zaman uygulanıyor, o yüzden "geçen ay almıştım"
+/// diyen kullanıcının çıkış yolu ekranda yazılı olmalı.
 class _EmptyState extends StatelessWidget {
   final FinanceMode mode;
   final bool isFiltered;
   final String? query;
+  final int outsidePeriodMatches;
+  final VoidCallback onWidenPeriod;
   final VoidCallback onClearFilters;
 
   const _EmptyState({
     required this.mode,
     required this.isFiltered,
     required this.query,
+    required this.outsidePeriodMatches,
+    required this.onWidenPeriod,
     required this.onClearFilters,
   });
 
@@ -426,84 +573,90 @@ class _EmptyState extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final accent = mode.primaryColor;
     final hasQuery = query != null && query!.trim().isNotEmpty;
+    final hasElsewhere = isFiltered && outsidePeriodMatches > 0;
 
     final title = !isFiltered
         ? l10n.henuzIslemYok
-        : hasQuery
-            ? l10n.txSearchNoResultTitle(query!.trim())
-            : l10n.txEmptyFilteredTitle;
-    final body = isFiltered ? l10n.txEmptyFilteredBody : l10n.buDonemIcinKayit;
+        : hasElsewhere
+            ? l10n.txSearchWidenTitle
+            : hasQuery
+                ? l10n.txSearchNoResultTitle(query!.trim())
+                : l10n.txEmptyFilteredTitle;
+    final body = !isFiltered
+        ? l10n.buDonemIcinKayit
+        : hasElsewhere
+            ? l10n.txSearchWidenBody(outsidePeriodMatches)
+            : l10n.txEmptyFilteredBody;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          accent.withValues(alpha: 0.18),
-                          accent.withValues(alpha: 0.04),
-                        ],
-                      ),
-                      border: Border.all(
-                          color: accent.withValues(alpha: 0.25), width: 1),
-                    ),
-                    child: Icon(
-                      isFiltered
-                          ? Icons.filter_alt_off_rounded
-                          : Icons.receipt_long_rounded,
-                      size: 42,
-                      color: accent,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    body,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.4,
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  if (isFiltered) ...[
-                    const SizedBox(height: 20),
-                    FilledButton.tonalIcon(
-                      onPressed: onClearFilters,
-                      icon: const Icon(Icons.clear_all_rounded, size: 18),
-                      label: Text(l10n.txEmptyClearFilters),
-                    ),
-                  ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  accent.withValues(alpha: 0.18),
+                  accent.withValues(alpha: 0.04),
                 ],
               ),
+              border:
+                  Border.all(color: accent.withValues(alpha: 0.25), width: 1),
+            ),
+            child: Icon(
+              !isFiltered
+                  ? Icons.receipt_long_rounded
+                  : hasElsewhere
+                      ? Icons.history_rounded
+                      : Icons.filter_alt_off_rounded,
+              size: 42,
+              color: accent,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 20),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+            ),
+          ),
+          if (isFiltered) ...[
+            const SizedBox(height: 20),
+            if (hasElsewhere)
+              FilledButton.tonalIcon(
+                onPressed: onWidenPeriod,
+                icon: const Icon(Icons.search_rounded, size: 18),
+                label: Text(l10n.txSearchWidenAction),
+              ),
+            if (hasElsewhere) const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: onClearFilters,
+              icon: const Icon(Icons.clear_all_rounded, size: 18),
+              label: Text(l10n.txEmptyClearFilters),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

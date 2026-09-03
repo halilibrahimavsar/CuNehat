@@ -140,3 +140,48 @@ bool isDayInRange(DateTime day, DateTimeRange range) {
   final d = dayOf(day);
   return !d.isBefore(dayOf(range.start)) && !d.isAfter(dayOf(range.end));
 }
+
+/// [range] ile AYNI türden ama bugünü içeren dönem.
+///
+/// "Bugüne dön" düğmesi bunu kullanır: haftalık bakan kullanıcı bu haftaya,
+/// aylık bakan bu aya döner. Kullanıcının seçtiği pencere GENİŞLİĞİ bir
+/// gezinme eylemiyle değişmemeli — özel aralık da uzunluğunu korur, yalnız
+/// bugünde biter.
+DateTimeRange currentPeriodLike(DateTimeRange range, {DateTime? now}) {
+  final today = dayOf(now ?? DateTime.now());
+  final endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59);
+
+  switch (periodKindOf(range)) {
+    case PeriodKind.day:
+      return dayRangeOf(today);
+    case PeriodKind.week:
+      return weekRangeOf(today);
+    case PeriodKind.month:
+      return monthRangeOf(today);
+    case PeriodKind.year:
+      return yearRangeOf(today);
+    case PeriodKind.custom:
+      final lengthInDays =
+          dayOf(range.end).difference(dayOf(range.start)).inDays;
+      return DateTimeRange(
+        start: today.subtract(Duration(days: lengthInDays)),
+        end: endOfToday,
+      );
+  }
+}
+
+/// Aralığın kapsadığı günler (uçlar dahil, gün hassasiyetinde).
+///
+/// Gün şeridi bunun üzerinde kurulur. Yaz saati geçişlerinde gün eklemek
+/// `Duration(days: 1)` ile 23 ya da 25 saat sürebildiği için ilerleme
+/// takvim alanı üzerinden yapılır.
+List<DateTime> daysOf(DateTimeRange range) {
+  final end = dayOf(range.end);
+  final days = <DateTime>[];
+  var cursor = dayOf(range.start);
+  while (!cursor.isAfter(end)) {
+    days.add(cursor);
+    cursor = DateTime(cursor.year, cursor.month, cursor.day + 1);
+  }
+  return days;
+}

@@ -123,12 +123,12 @@ void main() {
       ),
     );
 
-    // Wait for entrance animations to finish
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
 
-    // Verify dates are rendered (using day numbers)
-    expect(find.text('13'), findsOneWidget);
-    expect(find.text('12'), findsOneWidget);
+    // Gün başlıkları tam tarihi yazar (eskiden yalnız gün numarası olan
+    // yuvarlak düğüm vardı; timeline girintisi kaldırıldı).
+    expect(find.text('13 Haziran 2026'), findsOneWidget);
+    expect(find.text('12 Haziran 2026'), findsOneWidget);
 
     // Verify transaction titles
     expect(find.text('Market Expense'), findsOneWidget);
@@ -137,10 +137,11 @@ void main() {
     // Verify Gun Sonu balances
     expect(find.text('Gün sonu '), findsNWidgets(2));
     expect(find.text('1.850,00 ₺'), findsOneWidget);
-    // 2.000 iki yerde görünür: günlük özetin gelir rakamı ve gün sonu
-    // bakiyesi. Eskiden ikisi FARKLI biçimlenirdi (özet "₺2.000,00",
-    // bakiye "2.000,00 ₺") — tek formatlayıcıya geçince aynılaştılar.
-    expect(find.text('2.000,00 ₺'), findsNWidgets(2));
+    expect(find.text('2.000,00 ₺'), findsOneWidget);
+    // İşaretli tutar İKİ yerde: kartın kendi tutarı ve gün başlığının net
+    // rozeti. Tek işlemli günde ikisi aynı rakamı söyler.
+    expect(find.text('-150,00 ₺'), findsNWidgets(2));
+    expect(find.text('+2.000,00 ₺'), findsNWidgets(2));
   });
 
   testWidgets('filters transactions correctly in FinanceMode.income',
@@ -165,13 +166,13 @@ void main() {
       ),
     );
 
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
 
-    expect(find.text('12'), findsOneWidget);
+    expect(find.text('12 Haziran 2026'), findsOneWidget);
     expect(find.text('Salary Income'), findsOneWidget);
 
     // Date 13 and Market Expense should be filtered out
-    expect(find.text('13'), findsNothing);
+    expect(find.text('13 Haziran 2026'), findsNothing);
     expect(find.text('Market Expense'), findsNothing);
   });
 
@@ -197,13 +198,13 @@ void main() {
       ),
     );
 
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
 
-    expect(find.text('13'), findsOneWidget);
+    expect(find.text('13 Haziran 2026'), findsOneWidget);
     expect(find.text('Market Expense'), findsOneWidget);
 
     // Date 12 and Salary Income should be filtered out
-    expect(find.text('12'), findsNothing);
+    expect(find.text('12 Haziran 2026'), findsNothing);
     expect(find.text('Salary Income'), findsNothing);
   });
 
@@ -231,22 +232,49 @@ void main() {
       ),
     );
 
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
 
     // Initially expanded
     expect(find.text('Market Expense'), findsOneWidget);
 
     // Tap header to collapse
-    await tester.tap(find.text('13'));
+    await tester.tap(find.text('13 Haziran 2026'));
     await tester.pumpAndSettle();
 
     // Market Expense should be collapsed/removed from tree
     expect(find.text('Market Expense'), findsNothing);
 
     // Tap header again to expand
-    await tester.tap(find.text('13'));
+    await tester.tap(find.text('13 Haziran 2026'));
     await tester.pumpAndSettle();
 
     expect(find.text('Market Expense'), findsOneWidget);
+  });
+
+  group('groupLedgerByDay (saf)', () {
+    test('gün başına toplar, yeniden eskiye sıralar', () {
+      final groups = groupLedgerByDay(transactions, FinanceMode.compare);
+
+      expect(groups.map((g) => g.day),
+          [DateTime(2026, 6, 13), DateTime(2026, 6, 12)]);
+      expect(groups.first.expense, 150.0);
+      expect(groups.first.income, 0.0);
+      expect(groups.first.net, -150.0);
+      expect(groups.last.income, 2000.0);
+      expect(groups.last.net, 2000.0);
+    });
+
+    test('gün sonu bakiyesi günün EN YENİ işleminden sonraki bakiyedir', () {
+      final groups = groupLedgerByDay(transactions, FinanceMode.compare);
+      expect(groups.first.dayEndBalance, 1850.0);
+      expect(groups.last.dayEndBalance, 2000.0);
+    });
+
+    test('tek modda grup toplamı da yalnız o türü sayar', () {
+      final onlyIncome = groupLedgerByDay(transactions, FinanceMode.income);
+      expect(onlyIncome, hasLength(1));
+      expect(onlyIncome.single.day, DateTime(2026, 6, 12));
+      expect(onlyIncome.single.expense, 0.0);
+    });
   });
 }

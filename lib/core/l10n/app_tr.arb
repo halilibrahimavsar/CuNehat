@@ -2115,37 +2115,37 @@
   "reportUnitSelectorLabel": "Çözünürlük",
   "reportUnitTooDense": "{count} sütun sığmaz",
   "@reportUnitTooDense": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportFlowChartSemantics": "Gelir–gider grafiği: {count} dönem, toplam gelir {income}, toplam gider {expense}. Değerler için sütunlara dokunun.",
   "@reportFlowChartSemantics": {
-      "placeholders": {
-          "count": {},
-          "income": {},
-          "expense": {}
-      }
+    "placeholders": {
+      "count": {},
+      "income": {},
+      "expense": {}
+    }
   },
   "reportBalanceChartSemantics": "Bakiye grafiği: dönem başı {start}, dönem sonu {end}. Ara değerler için çizgiye dokunun.",
   "@reportBalanceChartSemantics": {
-      "placeholders": {
-          "start": {},
-          "end": {}
-      }
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
   },
   "reportSystemMovementsTitle": "Transfer ve kuplaj hareketleri",
   "reportSystemMovementsOff": "{count} hareket gelir–giderin dışında",
   "@reportSystemMovementsOff": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportSystemMovementsOn": "{count} hareket gelir–gidere dahil",
   "@reportSystemMovementsOn": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
   "reportShareTooltip": "Raporu paylaş",
@@ -2154,84 +2154,84 @@
   "reportViewBars": "Çubuk görünümü",
   "reportPieSemantics": "{title} kategori dağılımı: {count} kalem, toplam {total}. Kalem başına ayrıntı için aşağıdaki listeye bakın.",
   "@reportPieSemantics": {
-      "placeholders": {
-          "title": {},
-          "count": {},
-          "total": {}
-      }
+    "placeholders": {
+      "title": {},
+      "count": {},
+      "total": {}
+    }
   },
   "reportCompareBarSemantics": "{side} çubuğu: {total}, {count} kalem.",
   "@reportCompareBarSemantics": {
-      "placeholders": {
-          "side": {},
-          "total": {},
-          "count": {}
-      }
+    "placeholders": {
+      "side": {},
+      "total": {},
+      "count": {}
+    }
   },
   "reportTotalLabel": "Toplam",
   "reportSunburstSemantics": "Kategori çemberi: {roots} ana kategori, {children} alt kategori, toplam {total}. İç halka ana kategorileri, dış halka alt kırılımı gösterir.",
   "@reportSunburstSemantics": {
-      "placeholders": {
-          "roots": {},
-          "children": {},
-          "total": {}
-      }
+    "placeholders": {
+      "roots": {},
+      "children": {},
+      "total": {}
+    }
   },
   "reportHierarchyHint": "İç halkaya dokun: odakla · dış halka: alt kırılım",
   "reportBreakdownToggle": "{ad} alt kırılımı",
   "@reportBreakdownToggle": {
-      "placeholders": {
-          "ad": {}
-      }
+    "placeholders": {
+      "ad": {}
+    }
   },
   "reportMonthlyTrendTitle": "Aylık seyir",
   "reportMonthsOption": "{ay} ay",
   "@reportMonthsOption": {
-      "placeholders": {
-          "ay": {}
-      }
+    "placeholders": {
+      "ay": {}
+    }
   },
   "reportAverageShort": "Ort. {tutar}",
   "@reportAverageShort": {
-      "placeholders": {
-          "tutar": {}
-      }
+    "placeholders": {
+      "tutar": {}
+    }
   },
   "reportMonthlyTrendHint": "Bir aya dokun: raporun dönemi o aya geçer",
   "reportMonthlyTrendSemantics": "Aylık seyir: {count} ay, ortalama aylık gider {avg}. Ayrıntı için sütunlara dokunun.",
   "@reportMonthlyTrendSemantics": {
-      "placeholders": {
-          "count": {},
-          "avg": {}
-      }
+    "placeholders": {
+      "count": {},
+      "avg": {}
+    }
   },
   "reportTopPayeesTitle": "En çok harcanan yerler",
   "reportTopPayeesHint": "İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi",
   "reportPayeeCount": "{count} işlem",
   "@reportPayeeCount": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportBudgetSummaryTitle": "Bütçe durumu",
   "reportBudgetExceededCount": "{count} bütçeden {total} tanesi aşıldı",
   "@reportBudgetExceededCount": {
-      "placeholders": {
-          "count": {},
-          "total": {}
-      }
+    "placeholders": {
+      "count": {},
+      "total": {}
+    }
   },
   "reportBudgetAllWithinLimit": "{count} bütçenin hepsi limit içinde",
   "@reportBudgetAllWithinLimit": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportBudgetMoreCount": "+{count} bütçe daha",
   "@reportBudgetMoreCount": {
-      "placeholders": {
-          "count": {}
-      }
+    "placeholders": {
+      "count": {}
+    }
   },
   "reportCategoryChange": "önceki döneme göre",
   "reportLensFlow": "Akış",
@@ -2287,5 +2287,39 @@
     }
   },
   "insightDismissSuggestion": "Yoksay",
-  "insightNoSuggestionsLeft": "Şimdilik yeni bir düzenli ödeme yakalanmadı"
+  "insightNoSuggestionsLeft": "Şimdilik yeni bir düzenli ödeme yakalanmadı",
+  "txTodayJump": "Bugüne dön",
+  "@txTodayJump": {
+    "description": "Dönemi bugünü içeren aynı türden döneme çeken düğme"
+  },
+  "txRailDaySemantics": "{date}: net {net}, {count} işlem",
+  "@txRailDaySemantics": {
+    "placeholders": {
+      "date": {},
+      "net": {},
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "txRailDayEmptySemantics": "{date}: işlem yok",
+  "@txRailDayEmptySemantics": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "txSearchWidenTitle": "Bu dönemde sonuç yok",
+  "txSearchWidenBody": "Tüm geçmişte {count} eşleşme var.",
+  "@txSearchWidenBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "txSearchWidenAction": "Tüm geçmişte ara",
+  "txRowActions": "İşlem menüsü",
+  "txDayCollapse": "Günü gizle",
+  "txDayExpand": "Günü göster",
+  "txRailTitle": "Gün şeridi"
 }

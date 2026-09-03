@@ -19,6 +19,7 @@ class ActiveFilterChips extends StatelessWidget {
 
   final VoidCallback onClearCategories;
   final VoidCallback onClearPriceRange;
+  final VoidCallback onClearSearch;
   final VoidCallback onClearAll;
 
   const ActiveFilterChips({
@@ -27,13 +28,20 @@ class ActiveFilterChips extends StatelessWidget {
     required this.categoryLabels,
     required this.onClearCategories,
     required this.onClearPriceRange,
+    required this.onClearSearch,
     required this.onClearAll,
   });
 
   /// Çubuğun yer ayırması gerekip gerekmediği (yükseklik hesabı için).
+  ///
+  /// Arama da SAYILIR: arama alanı artık sabit çubukta değil, içerikle
+  /// birlikte kayıp gidiyor. Sorgu etkinken kullanıcı listeyi aşağı
+  /// kaydırdığında "neden yalnız üç satır görüyorum" sorusunun yanıtı
+  /// ekranda kalmalı ve tek dokunuşla kaldırılabilmeli.
   static bool hasChips(DataFilter filter) =>
       filter.selectedCategories.isNotEmpty ||
-      (filter.priceRange?.isNotEmpty ?? false);
+      (filter.priceRange?.isNotEmpty ?? false) ||
+      (filter.searchQuery?.trim().isNotEmpty ?? false);
 
   static const double height = 32;
 
@@ -60,6 +68,15 @@ class ActiveFilterChips extends StatelessWidget {
         icon: Icons.straighten_rounded,
         text: priceRange.label(currency: context.activeWalletCurrency),
         onRemove: onClearPriceRange,
+      ));
+    }
+
+    final query = dataFilter.searchQuery?.trim();
+    if (query != null && query.isNotEmpty) {
+      chips.add(_Chip(
+        icon: Icons.search_rounded,
+        text: l10n.txChipSearch(query),
+        onRemove: onClearSearch,
       ));
     }
 

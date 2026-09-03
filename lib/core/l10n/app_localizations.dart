@@ -7342,6 +7342,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Şimdilik yeni bir düzenli ödeme yakalanmadı'**
   String get insightNoSuggestionsLeft;
+
+  /// Dönemi bugünü içeren aynı türden döneme çeken düğme
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugüne dön'**
+  String get txTodayJump;
+
+  /// No description provided for @txRailDaySemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date}: net {net}, {count} işlem'**
+  String txRailDaySemantics(Object date, Object net, int count);
+
+  /// No description provided for @txRailDayEmptySemantics.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date}: işlem yok'**
+  String txRailDayEmptySemantics(Object date);
+
+  /// No description provided for @txSearchWidenTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dönemde sonuç yok'**
+  String get txSearchWidenTitle;
+
+  /// No description provided for @txSearchWidenBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm geçmişte {count} eşleşme var.'**
+  String txSearchWidenBody(int count);
+
+  /// No description provided for @txSearchWidenAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm geçmişte ara'**
+  String get txSearchWidenAction;
+
+  /// No description provided for @txRowActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem menüsü'**
+  String get txRowActions;
+
+  /// No description provided for @txDayCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günü gizle'**
+  String get txDayCollapse;
+
+  /// No description provided for @txDayExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günü göster'**
+  String get txDayExpand;
+
+  /// No description provided for @txRailTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün şeridi'**
+  String get txRailTitle;
 }
 
 class _AppLocalizationsDelegate

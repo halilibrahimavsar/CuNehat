@@ -11,10 +11,14 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/catego
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
+import 'package:cunehat/features/finance_transactions/presentation/pages/single_transaction_detail_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_view.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/active_filter_chips.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_calendar_view.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_action_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_day_rail.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_search_field.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +77,35 @@ void main() {
     date: dayInThisMonth(4),
     type: TransactionTypeModel.expense,
   );
+
+  // Geçmiş aya ait kayıt: dönem penceresi artık HER ZAMAN uygulandığı için
+  // "bu dönemde yok ama geçmişte var" durumunun testi buna dayanıyor.
+  final txOldMarket = TransactionEntity(
+    id: 'tx-old-market',
+    userId: 'u',
+    walletId: 'w1',
+    title: 'Geçen ay marketi',
+    tag: 'cat-market',
+    amount: 700,
+    date: DateTime(now.year, now.month - 2, 15, 12),
+    type: TransactionTypeModel.expense,
+  );
+
+  /// Sayfayı gerçekten kaydırılabilir yapacak kadar kayıt. Kısa listede
+  /// "kaydırdım" diyen bir test aslında hiçbir şey kaydırmaz.
+  List<TransactionEntity> bulk(int count, int day) => [
+        for (var i = 0; i < count; i++)
+          TransactionEntity(
+            id: 'tx-bulk-$i',
+            userId: 'u',
+            walletId: 'w1',
+            title: 'Yığın kaydı $i',
+            tag: 'cat-market',
+            amount: 100 + i.toDouble(),
+            date: dayInThisMonth(day),
+            type: TransactionTypeModel.expense,
+          ),
+      ];
 
   final wallet = WalletEntity(
     id: 'w1',
@@ -167,24 +200,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Liste görünümüne geçer (varsayılan takvim).
-  Future<void> switchToList(WidgetTester tester) async {
-    await tester.tap(find.byIcon(Icons.view_agenda_rounded));
-    await tester.pumpAndSettle();
-  }
-
-  testWidgets('varsayılan görünüm takvim', (tester) async {
+  testWidgets('tek akış: özet + gün şeridi + defter aynı ekranda',
+      (tester) async {
+    // Liste/Takvim ikiliği kaldırıldı; ekran tek kaydırma oldu.
     seed([txMarket, txFatura]);
     await pumpPage(tester);
 
-    expect(find.byType(TransactionCalendarView), findsOneWidget);
+    expect(find.byType(TransactionSummaryStrip), findsOneWidget);
+    expect(find.byType(TransactionDayRail), findsOneWidget);
+    expect(find.byType(TransactionCard), findsWidgets);
+    // Görünüm geçişi düğmesi artık yok.
+    expect(find.byIcon(Icons.view_agenda_rounded), findsNothing);
+    expect(find.byIcon(Icons.calendar_month_rounded), findsNothing);
   });
 
   group('arama', () {
     testWidgets('başlıkta eşleşmeyen satır listeden düşer', (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       expect(find.text('ŞOK 4712'), findsOneWidget);
       expect(find.text('Elektrik faturası'), findsOneWidget);
@@ -200,7 +233,6 @@ void main() {
       // "ŞOK 4712" başlığında "market" geçmiyor; kategori adı eşleşmeli.
       seed([txMarket, txFatura]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       await tester.enterText(find.byType(TransactionSearchField), 'market');
       await tester.pumpAndSettle();
@@ -213,7 +245,6 @@ void main() {
         (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       final field = find.descendant(
         of: find.byType(TransactionSearchField),
@@ -231,7 +262,6 @@ void main() {
     testWidgets('sonuç yoksa sorguyu içeren boş durum çıkar', (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       await tester.enterText(find.byType(TransactionSearchField), 'zzzz');
       await tester.pumpAndSettle();
@@ -240,11 +270,9 @@ void main() {
       expect(find.text('Filtreleri temizle'), findsOneWidget);
     });
 
-    testWidgets('takvim modunda da filtreli boş durum + çıkış yolu var',
-        (tester) async {
-      // Takvimde dönem penceresi uygulanmıyor; boş sonuç "tüm geçmişte hiçbir
-      // şey eşleşmedi" demektir. Boş ızgarayı çizmek kullanıcıyı çıkışsız
-      // bırakıyordu.
+    testWidgets('sonuç yokken özet ve gün şeridi de çekilir', (tester) async {
+      // Özetlenecek bir şey ve çizilecek bir ısı yokken kartı ve şeridi
+      // çizmek boş ekranı gürültüyle doldurur.
       seed([txMarket]);
       await pumpPage(tester);
 
@@ -256,7 +284,8 @@ void main() {
           'zzzz');
       await tester.pumpAndSettle();
 
-      expect(find.byType(TransactionCalendarView), findsNothing);
+      expect(find.byType(TransactionSummaryStrip), findsNothing);
+      expect(find.byType(TransactionDayRail), findsNothing);
       expect(find.text('Filtreleri temizle'), findsOneWidget);
     });
 
@@ -264,7 +293,6 @@ void main() {
         (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       await tester.enterText(find.byType(TransactionSearchField), 'zzzz');
       await tester.pumpAndSettle();
@@ -280,7 +308,6 @@ void main() {
     testWidgets('cüzdan boşken filtre temizleme ÖNERİLMEZ', (tester) async {
       seed(const []);
       await pumpPage(tester);
-      await switchToList(tester);
 
       expect(find.text('Henüz işlem yok'), findsOneWidget);
       expect(find.text('Filtreleri temizle'), findsNothing);
@@ -290,7 +317,6 @@ void main() {
         (tester) async {
       seed([txMarket]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       await tester.enterText(find.byType(TransactionSearchField), 'zzzz');
       await tester.pumpAndSettle();
@@ -305,7 +331,6 @@ void main() {
         (tester) async {
       seed([txMarket, txFatura]);
       await pumpPage(tester);
-      await switchToList(tester);
 
       expect(find.text('ŞOK 4712'), findsOneWidget);
 
@@ -420,7 +445,6 @@ void main() {
         (tester) async {
       seed([txMarket]);
       await pumpPage(tester);
-      await switchToList(tester);
       await tester.enterText(
           find.descendant(
             of: find.byType(TransactionSearchField),
@@ -449,6 +473,256 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(DateFormat.yMMMM('tr').format(now)), findsOneWidget);
+    });
+  });
+  group('bugüne dön', () {
+    testWidgets('dönem bugünü kapsarken düğme YOKTUR', (tester) async {
+      seed([txMarket]);
+      await pumpPage(tester);
+      expect(find.text('Bugüne dön'), findsNothing);
+    });
+
+    testWidgets('geçmiş döneme gidilince çıkar ve TÜRÜ koruyarak döner',
+        (tester) async {
+      seed([txMarket, txOldMarket]);
+      await pumpPage(tester);
+
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bugüne dön'), findsOneWidget);
+
+      await tester.tap(find.text('Bugüne dön'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(DateFormat.yMMMM('tr').format(now)), findsOneWidget);
+      expect(find.text('Bugüne dön'), findsNothing);
+    });
+  });
+
+  group('dönem dışı eşleşme', () {
+    testWidgets('bu dönemde yok ama geçmişte varsa çıkış yolu sunulur',
+        (tester) async {
+      seed([txFatura, txOldMarket]);
+      await pumpPage(tester);
+
+      await tester.enterText(
+          find.descendant(
+            of: find.byType(TransactionSearchField),
+            matching: find.byType(TextField),
+          ),
+          'market');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bu dönemde sonuç yok'), findsOneWidget);
+      expect(find.text('Tüm geçmişte 1 eşleşme var.'), findsOneWidget);
+      expect(find.text('Tüm geçmişte ara'), findsOneWidget);
+    });
+
+    testWidgets('"Tüm geçmişte ara" dönemi veriye genişletir', (tester) async {
+      seed([txFatura, txOldMarket]);
+      await pumpPage(tester);
+
+      await tester.enterText(
+          find.descendant(
+            of: find.byType(TransactionSearchField),
+            matching: find.byType(TextField),
+          ),
+          'market');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tüm geçmişte ara'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Geçen ay marketi'), findsOneWidget);
+    });
+
+    testWidgets('hiçbir yerde eşleşme yoksa genişletme ÖNERİLMEZ',
+        (tester) async {
+      seed([txMarket, txOldMarket]);
+      await pumpPage(tester);
+
+      await tester.enterText(
+          find.descendant(
+            of: find.byType(TransactionSearchField),
+            matching: find.byType(TextField),
+          ),
+          'zzzz');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tüm geçmişte ara'), findsNothing);
+      expect(find.text('Filtreleri temizle'), findsOneWidget);
+    });
+  });
+
+  group('satır eylemleri', () {
+    testWidgets('⋮ eylem sayfasını açar, detay sayfasını AÇMAZ',
+        (tester) async {
+      // Kaydırma eylemleri 29 Ağu'da kaldırıldığından beri düzenle/sil'e
+      // giden tek yol uzun basmaktı ve ekranda hiçbir işareti yoktu.
+      seed([txMarket]);
+      await pumpPage(tester);
+
+      await tester.tap(find.byIcon(Icons.more_vert_rounded).first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SingleTransactionDetailPage), findsNothing);
+      expect(find.byType(TransactionActionSheet), findsOneWidget);
+      expect(find.text('Düzenle'), findsOneWidget);
+      expect(find.text('İşlemi Sil'), findsOneWidget);
+    });
+  });
+
+  group('gün şeridi', () {
+    testWidgets('dönemin TÜM günlerini taşır (yalnız işlem olanları değil)',
+        (tester) async {
+      seed([txMarket]);
+      await pumpPage(tester);
+
+      final rail = find.byType(TransactionDayRail);
+      expect(rail, findsOneWidget);
+      // Ayın ilk günü şeritte olmalı; şerit tembel çizdiği için görünen
+      // hücrelerden en az biri sayılabilsin diye 1'i arıyoruz.
+      expect(
+        find.descendant(of: rail, matching: find.text('1')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('bir güne dokunmak defteri oraya kaydırır, dönemi DEĞİŞTİRMEZ',
+        (tester) async {
+      // Şerit gezinme aracıdır. Eski takvimde sayfa çevirmek kullanıcının
+      // seçtiği dönemi sessizce yeniden yazıyordu (ölçüldü: "Bu yıl" → tek
+      // ay); şerit bunu yapmamalı.
+      //
+      // Hedef günün BAŞTA GÖRÜNMEZ olması şart, yoksa test kaydırmayı değil
+      // yalnız "kart var mı"yı ölçer. Ayın son gününe 14 kayıt yığılıyor;
+      // defter yeniden eskiye sıralı olduğu için ayın 1'indeki tek kayıt
+      // listenin çok altında kalıyor. Kurulum bugünün ayın kaçı olduğundan
+      // BAĞIMSIZ.
+      final lastDay = DateTime(now.year, now.month + 1, 0).day;
+      seed([
+        for (var i = 0; i < 14; i++)
+          TransactionEntity(
+            id: 'tx-bulk-\$i',
+            userId: 'u',
+            walletId: 'w1',
+            title: 'Yığın kaydı \$i',
+            tag: 'cat-market',
+            amount: 100 + i.toDouble(),
+            date: dayInThisMonth(lastDay),
+            type: TransactionTypeModel.expense,
+          ),
+        TransactionEntity(
+          id: 'tx-oldest',
+          userId: 'u',
+          walletId: 'w1',
+          title: 'Ayın ilk kaydı',
+          tag: 'cat-fatura',
+          amount: 999,
+          date: dayInThisMonth(1),
+          type: TransactionTypeModel.expense,
+        ),
+      ]);
+      await pumpPage(tester);
+
+      final label = DateFormat.yMMMM('tr').format(now);
+      expect(find.text('Ayın ilk kaydı'), findsNothing,
+          reason: 'hedef başta görünüyorsa test kaydırmayı ölçmez');
+
+      final cell = find.descendant(
+        of: find.byType(TransactionDayRail),
+        matching: find.text('1'),
+      );
+      await tester.dragUntilVisible(
+        cell,
+        find.byType(TransactionDayRail),
+        const Offset(120, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(cell);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ayın ilk kaydı'), findsOneWidget);
+      // Dönem etiketi değişmedi.
+      expect(find.text(label), findsOneWidget);
+    });
+  });
+
+  group('şerit seçimi dönemle tutarlı', () {
+    testWidgets('ay değişince önceki günün vurgusu düşer', (tester) async {
+      // Seçim dönem dışına düşerse hem yanlış bir gün vurgulanır hem de
+      // şerit kendini ortalayamaz (indexWhere -1 döner).
+      // Geçen ayda da kayıt olmalı: boş dönemde şerit hiç çizilmiyor ve
+      // test "vurgu düştü" yerine "şerit yok" ölçerdi.
+      seed([
+        txMarket,
+        TransactionEntity(
+          id: 'tx-last-month',
+          userId: 'u',
+          walletId: 'w1',
+          title: 'Geçen ay kaydı',
+          tag: 'cat-market',
+          amount: 120,
+          date: DateTime(now.year, now.month - 1, 15, 12),
+          type: TransactionTypeModel.expense,
+        ),
+      ]);
+      await pumpPage(tester);
+
+      await tester.tap(find.descendant(
+        of: find.byType(TransactionDayRail),
+        matching: find.text('3'),
+      ));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TransactionDayRail>(find.byType(TransactionDayRail))
+            .selectedDay,
+        isNotNull,
+      );
+
+      // Geçen aya git: seçim artık dönemde değil.
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TransactionDayRail>(find.byType(TransactionDayRail))
+            .selectedDay,
+        isNull,
+      );
+    });
+  });
+
+  group('arama çipi', () {
+    testWidgets('sorgu etkinken arama alanı kaysa da çip sabit çubukta kalır',
+        (tester) async {
+      // Sayfa gerçekten kaydırılabilmeli.
+      seed(bulk(14, 5));
+      await pumpPage(tester);
+
+      await tester.enterText(
+          find.descendant(
+            of: find.byType(TransactionSearchField),
+            matching: find.byType(TextField),
+          ),
+          'a');
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+          find.byType(CustomScrollView).first, const Offset(0, -400));
+      await tester.pumpAndSettle();
+
+      // Çip metni l10n'deki `txChipSearch` kalıbı: “sorgu”
+      expect(
+        find.descendant(
+          of: find.byType(ActiveFilterChips),
+          matching: find.text('\u201Ca\u201D'),
+        ),
+        findsOneWidget,
+      );
+      // Arama ALANI gerçekten kaymış olmalı; çip onun yerine geçiyor.
+      expect(find.byType(TransactionSearchField), findsNothing);
     });
   });
 }

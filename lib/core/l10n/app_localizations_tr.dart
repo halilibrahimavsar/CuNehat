@@ -4161,4 +4161,40 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get insightNoSuggestionsLeft =>
       'Şimdilik yeni bir düzenli ödeme yakalanmadı';
+
+  @override
+  String get txTodayJump => 'Bugüne dön';
+
+  @override
+  String txRailDaySemantics(Object date, Object net, int count) {
+    return '$date: net $net, $count işlem';
+  }
+
+  @override
+  String txRailDayEmptySemantics(Object date) {
+    return '$date: işlem yok';
+  }
+
+  @override
+  String get txSearchWidenTitle => 'Bu dönemde sonuç yok';
+
+  @override
+  String txSearchWidenBody(int count) {
+    return 'Tüm geçmişte $count eşleşme var.';
+  }
+
+  @override
+  String get txSearchWidenAction => 'Tüm geçmişte ara';
+
+  @override
+  String get txRowActions => 'İşlem menüsü';
+
+  @override
+  String get txDayCollapse => 'Günü gizle';
+
+  @override
+  String get txDayExpand => 'Günü göster';
+
+  @override
+  String get txRailTitle => 'Gün şeridi';
 }
