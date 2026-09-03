@@ -333,19 +333,55 @@ No ads, no subscriptions. Your data stays on your device.
 
 ## Sürüm notları — 1.0.0 (versionCode 3)
 
-Kapalı testin 6. gününde çıkan ilk güncelleme. Kapsam: `edab5a1..bb8fcbb`.
+Kapalı testin 3. gününde çıkan ilk güncelleme. Kapsam: `edab5a1..6c9f534`
+(ekstre gruplama + alt kategori eşleme, kategori seçici, Drive hata ayrımı).
 Hive şeması ve `schemaVersion` **değişmedi (9)** — testerların mevcut verisi ve
 Drive'daki yedekleri olduğu gibi çalışır.
 
-> **Not (3 Eyl 2026):** bu bölümün 1 Eylül'deki ilk hâli yalnız
-> `edab5a1..6c9f534` aralığını (ekstre gruplama, kategori seçici, Drive hata
-> ayrımı) anlatıyordu ve yüklenmeden önce eskidi: aradan Rapor sayfası elden
-> geçirmesi (`d07a593..d06dcde`), İçgörü sayfası turu (`c4ee1eb`, `0fb4194`),
-> erişilebilirlik turu (`826697f`) ve İşlemler ekranının tek akışa inmesi
-> (`bb8fcbb`) geçti. 500 karakterlik sınır her şeyi saymaya yetmediği için
-> notlar **kullanıcının GÖRECEĞİ** değişikliklere göre yazıldı; ekstre ve
-> kategori seçici işleri, ekranın kendisi yeniden tasarlandığı için ayrıca
-> anılmıyor.
+### Türkçe (492 karakter, sınır 500)
+
+```
+Banka ekstresi
+• Benzer hareketler gruplanıyor; grubun tamamına tek seferde kategori atanıyor.
+• Otomatik tahmin artık alt kategorileri de eşleştiriyor.
+• Türkçe harf hataları giderildi: banka adları tanınıyor, aynı hareket ikinci kez eklenemiyor.
+
+Kategori seçimi
+• Seçim işlem formuna taşındı: iki sütunlu, aranabilir, son kullandıkların üstte.
+• İşlem kartında kazara silmeye yol açan kaydırma kaldırıldı.
+
+Google Drive
+• Yedekleme hataları artık gerçek nedeni ve doğru çözümü gösteriyor.
+```
+
+### English (485 karakter, sınır 500)
+
+```
+Bank statement import
+• Similar transactions are grouped; categorize a whole group at once.
+• Auto-detection now matches subcategories too.
+• Fixed Turkish letter casing: bank names are recognized, and the same transaction can no longer be imported twice.
+
+Category picking
+• Moved into the transaction form: two columns, searchable, recently used first.
+• Removed the card swipe that caused accidental deletes.
+
+Google Drive
+• Backup errors now show the real cause and the right fix.
+```
+
+---
+
+## Sürüm notları — 1.0.0 (versionCode 4)
+
+Kapalı testin 8. gününde çıkan ikinci güncelleme. Kapsam: `v1.0.0+3..HEAD`
+(Rapor sayfası elden geçirmesi, İçgörü turu, erişilebilirlik turu, İşlemler
+ekranının tek akışa inmesi). Hive şeması ve `schemaVersion` **değişmedi (9)** —
+testerların mevcut verisi ve Drive'daki yedekleri olduğu gibi çalışır.
+
+> 500 karakterlik sınır bu aralığın tamamını saymaya yetmiyor; notlar
+> testerın EKRANDA göreceği değişikliklere göre yazıldı. Perf ve test
+> işleri (memoize, epoch kova araması, smoke testleri) anılmıyor.
 
 ### Türkçe (471 karakter, sınır 500)
 

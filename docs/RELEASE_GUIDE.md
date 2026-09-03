@@ -8,13 +8,18 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+3` (yüklenmedi)
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+4` (yüklenmedi; `+3` kapalı testte)
 
 > **Sürüm kodları kalıcı tüketilir.** Bir kod herhangi bir kanala bir kez
 > yüklendiyse, o sürüm silinse/atılsa bile geri gelmez. `1` yakıldı (ilk
-> deneme reddedildi), `2` kapalı testte yayında. `3` **repoda hazır ama Play'e
-> yüklenmedi** — yüklenene kadar yeni işler aynı `+3` içinde birikebilir,
-> her commit için artırmaya gerek yok.
+> deneme reddedildi), `2` ve `3` kapalı teste yüklendi. `4` **repoda hazır ama
+> Play'e yüklenmedi** — yüklenene kadar yeni işler aynı `+4` içinde
+> birikebilir, her commit için artırmaya gerek yok.
+>
+> **Hangi kodun yüklendiğini etiketlerden oku, hafızadan değil.** Yüklenen her
+> derlemenin `v<versionName>+<versionCode>` adında açıklamalı bir git etiketi
+> vardır (bkz. 15.6). `git tag -l "v*+*"` yüklenmiş kodların listesidir;
+> pubspec'teki numara etikette YOKSA o kod henüz yakılmamıştır.
 >
 > `versionName` `1.0.0` duruyor. Kapalı test turlarında kullanıcıya görünen
 > adı sabit tutmak normal; kullanıcıya duyurulacak bir davranış değişikliği
@@ -42,9 +47,12 @@ Cloud projesi, Flutter SDK kurulu.
 | 11 | Kapalı test 12 tester × 14 gün | 🟢 **SAYAÇ İŞLİYOR** — 13 tester opt-in oldu (28 Ağu). Panoda ilk iki madde ✔; kalan: "en az 12 kullanıcıyla 14 gün". Production başvurusu en erken **~11 Eyl**, inceleme ≤7 gün → **~18 Eyl** |
 | 12 | Production | ⬜ |
 
-**Kod tarafı sağlık (21 Ağu 2026 ölçümü):** `flutter test` **1804/1804**,
+**Kod tarafı sağlık (3 Eyl 2026 ölçümü):** `flutter test` **2123/2123**,
 `dart analyze` **0 sorun**, `flutter build appbundle --release` **başarılı**
-(88,1 MB). Yayını bloke eden teknik hata yok.
+(88,6 MB, versionCode 4, upload anahtarıyla imzalı). Yayını bloke eden teknik
+hata yok. **Cihaz duman testi hâlâ yapılmadı** ve `+4` uygulamanın açılış
+ekranını baştan yazıyor — yüklemeden önce en az bir kez sideload edip bakılmalı
+(bkz. Adım 10).
 
 **Kritik yol:** mağaza girişi (8c/8d) → kapalı test track'i + 12 tester ×
 14 gün → production ≤7 gün. **En erken yayın ~3 hafta.**
@@ -949,6 +957,34 @@ keytool -printcert -file "$T"/META-INF/*.RSA | grep -E "Owner|Sahibi"; rm -rf "$
    incelemeden geçer; ilk yayından sonraki turlar genelde saatler sürer.
 5. Yayına alma yüzdesini **%100** bırak (kapalı testte kademeli dağıtım,
    güncellemeyi bazı testerlardan gizler ve sayacı izlemeyi zorlaştırır).
+
+### 15.6 Etiketle — hangi kodun yüklendiğinin TEK kaydı
+
+Play Console'da "hangi versionCode hangi commit'ti" diye bir alan yok; bunu
+repo tutmak zorunda. Yükleme onaylandıktan sonra, AAB'nin derlendiği commit'e:
+
+```bash
+git tag -a "v1.0.0+4" -m "ÇuNehat 1.0.0 (versionCode 4) — kapalı test güncellemesi
+...kapsam / şema durumu / doğrulama..."
+git push origin "v1.0.0+4"      # repo'ya push ediyorsan
+```
+
+Kurallar:
+
+- **Ad `v<versionName>+<versionCode>`** — pubspec'teki `version:` satırıyla
+  birebir aynı. Böylece `git tag -l "v*+*"` yakılmış kodların listesi olur.
+- **Açıklamalı (`-a`) olacak**, hafif etiket değil: mesaj kapsamı
+  (`<önceki-etiket>..HEAD`), Hive şeması durumunu ve doğrulamayı
+  (`dart analyze`, `flutter test`, AAB imzası) yazar. Mesaj, "bu sürümde ne
+  vardı" sorusunun cevabıdır; sürüm notları kullanıcı diliyken bu mühendis
+  dilidir.
+- **Etiket AAB'nin derlendiği commit'i gösterir**, bir sonrakini değil.
+  Yükleme reddedilirse etiketi sil, kodu artır, yeniden etiketle.
+
+> Etiket olmadan geriye dönüp "testerdaki sürüm hangi koddu" sorusunu
+> cevaplamanın yolu yok: `pubspec.yaml` her yüklemeden sonra ileri gidiyor ve
+> geçmiş commit'lerdeki numara yalnız "o an ne hazırlanıyordu"yu söylüyor,
+> "ne yüklendi"yi değil.
 
 ### 15.5 Yüklendikten sonra
 
