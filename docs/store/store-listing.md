@@ -333,41 +333,50 @@ No ads, no subscriptions. Your data stays on your device.
 
 ## Sürüm notları — 1.0.0 (versionCode 3)
 
-Kapalı testin 3. gününde çıkan ilk güncelleme. Kapsam: `edab5a1..6c9f534`
-(ekstre gruplama + alt kategori eşleme, kategori seçici, Drive hata ayrımı).
+Kapalı testin 6. gününde çıkan ilk güncelleme. Kapsam: `edab5a1..bb8fcbb`.
 Hive şeması ve `schemaVersion` **değişmedi (9)** — testerların mevcut verisi ve
 Drive'daki yedekleri olduğu gibi çalışır.
 
-### Türkçe (492 karakter, sınır 500)
+> **Not (3 Eyl 2026):** bu bölümün 1 Eylül'deki ilk hâli yalnız
+> `edab5a1..6c9f534` aralığını (ekstre gruplama, kategori seçici, Drive hata
+> ayrımı) anlatıyordu ve yüklenmeden önce eskidi: aradan Rapor sayfası elden
+> geçirmesi (`d07a593..d06dcde`), İçgörü sayfası turu (`c4ee1eb`, `0fb4194`),
+> erişilebilirlik turu (`826697f`) ve İşlemler ekranının tek akışa inmesi
+> (`bb8fcbb`) geçti. 500 karakterlik sınır her şeyi saymaya yetmediği için
+> notlar **kullanıcının GÖRECEĞİ** değişikliklere göre yazıldı; ekstre ve
+> kategori seçici işleri, ekranın kendisi yeniden tasarlandığı için ayrıca
+> anılmıyor.
+
+### Türkçe (471 karakter, sınır 500)
 
 ```
-Banka ekstresi
-• Benzer hareketler gruplanıyor; grubun tamamına tek seferde kategori atanıyor.
-• Otomatik tahmin artık alt kategorileri de eşleştiriyor.
-• Türkçe harf hataları giderildi: banka adları tanınıyor, aynı hareket ikinci kez eklenemiyor.
+İşlemler ekranı yeniden tasarlandı
+• Tek akış: dönem özeti, gün şeridi ve yapışkan gün başlıklı liste bir arada.
+• Bir güne dokun, liste oraya gitsin; dönem değişmesin.
+• Kartta ⋮ menüsü — düzenle ve sil yeniden görünür.
 
-Kategori seçimi
-• Seçim işlem formuna taşındı: iki sütunlu, aranabilir, son kullandıkların üstte.
-• İşlem kartında kazara silmeye yol açan kaydırma kaldırıldı.
+Raporlar ve İçgörüler
+• Zaman ekseni artık gerçek takvim; transfer ve borç ödemesi harcama sayılmıyor.
+• Ana/alt kategori dağılımı, aylık seyir, bütçe özeti.
+• Göz düğmesi tüm sayfaları gizliyor.
 
-Google Drive
-• Yedekleme hataları artık gerçek nedeni ve doğru çözümü gösteriyor.
+Erişilebilirlik: ekran okuyucu desteği geliştirildi.
 ```
 
-### English (485 karakter, sınır 500)
+### English (482 karakter, sınır 500)
 
 ```
-Bank statement import
-• Similar transactions are grouped; categorize a whole group at once.
-• Auto-detection now matches subcategories too.
-• Fixed Turkish letter casing: bank names are recognized, and the same transaction can no longer be imported twice.
+Transactions screen redesigned
+• One flow: period summary, day strip and a list with sticky day headers.
+• Tap a day and the list jumps there, without changing the period.
+• Card ⋮ menu — edit and delete are visible again.
 
-Category picking
-• Moved into the transaction form: two columns, searchable, recently used first.
-• Removed the card swipe that caused accidental deletes.
+Reports and Insights
+• A real calendar time axis; transfers and debt payments no longer count as spending.
+• Category/subcategory breakdown, monthly trend, budget summary.
+• The eye button now hides every page.
 
-Google Drive
-• Backup errors now show the real cause and the right fix.
+Accessibility: improved screen reader support.
 ```
 
 ---
