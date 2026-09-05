@@ -83,10 +83,14 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
 
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
-        final filteredTransactions =
-            dataBuilder.filterByRange(state.currentTransactions);
+        // `universeIn`: dönem + KUPLAJ evreni. Yalnız döneme göre süzmek,
+        // sayfanın kuplaj anahtarını yok sayıp kırılımı farklı bir evrenden
+        // hesaplıyordu — yüzde eşiği kayınca sayfada duran dilim burada
+        // "Diğer"e katlanıyor ve liste boş çıkıyordu
+        // (bkz. [ReportCategoryDataBuilder.includeSystemMovements]).
+        final universe = dataBuilder.universeIn(state.currentTransactions);
         final fullList =
-            dataBuilder.buildFull(filteredTransactions, isExpense: isExpense);
+            dataBuilder.buildFull(universe, isExpense: isExpense);
         final categoryDataList = switch (sliceMode) {
           ReportSliceMode.full => fullList,
           ReportSliceMode.pie => dataBuilder.buildPie(fullList),

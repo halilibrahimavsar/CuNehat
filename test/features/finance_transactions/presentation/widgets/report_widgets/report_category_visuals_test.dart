@@ -49,6 +49,7 @@ void main() {
         ),
         budgets: const [],
         otherCategoryLabel: 'Diğer',
+        includeSystemMovements: false,
       );
 
   List<CategoryData> full(Map<String, double> byTag) => builder().buildFull(

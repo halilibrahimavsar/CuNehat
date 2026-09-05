@@ -622,6 +622,79 @@ void main() {
       expect(find.text('1 hareket gelir–gidere dahil'), findsOneWidget);
     });
 
+    /// 20.000 TL transfer + DÖRT gerçek harcama.
+    ///
+    /// Küçüklerin payı gerçek evrende %3 eşiğinin üstünde (60/1910 = %3,14),
+    /// transfer eklenince altına düşüyor (60/21910 = %0,27). Kuplaj evreni
+    /// karışırsa ikisi birden "Diğer" kovasına katlanır — hatanın çıkması
+    /// için gereken tam koşul.
+    List<TransactionEntity> withTransferAndSmallCategories() {
+      final now = DateTime.now();
+      TransactionEntity tx(String tag, String title, double amount,
+              {bool system = false}) =>
+          TransactionEntity(
+            id: 'tx_$tag',
+            userId: 'user_123',
+            walletId: 'wallet_123',
+            title: title,
+            tag: tag,
+            amount: amount,
+            date: now,
+            type: TransactionTypeModel.expense,
+            isSystem: system,
+          );
+
+      return [
+        tx('Market', 'Market alışverişi', 1000),
+        tx('Kira', 'Ev kirası', 800),
+        tx('Saglik', 'Eczane alışverişi', 60),
+        tx('Eglence', 'Sinema bileti', 50),
+        tx(CashMovementTags.transfer, 'Transfer', 20000, system: true),
+      ];
+    }
+
+    // REGRESYON (bildirildi 2026-09-05): "bu ay seçilince grafik görünüyor ama
+    // gidere tıklayınca işlem görünmüyor; kuplajı aktif edince görünüyor."
+    //
+    // Kök neden: kırılım İKİ yerde hesaplanıyordu ve evrenleri ayrışmıştı —
+    // sayfa kuplaj hareketlerini ayırıyor, `CategoryDetailsBottomSheet` ise
+    // kendi hesabını kuplaj DAHİL yapıyordu. Şişen toplam yüzde eşiğini
+    // kaydırınca sayfada dilim olan kategori alt sayfada "Diğer"e katlanıyor,
+    // `firstWhere` bulamıyor ve liste boş çıkıyordu.
+    testWidgets(
+        'REGRESYON: kuplaj KAPALIYKEN küçük kategorinin işlemleri görünür',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final txs = withTransferAndSmallCategories();
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+
+      await tester.pumpWidget(buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ));
+      await tester.pumpAndSettle();
+
+      // Sayfa onu ayrı bir dilim olarak çiziyor (katlanmış olsaydı bu
+      // beklenti zaten düşerdi).
+      final slice = find.text('Saglik');
+      expect(slice, findsWidgets);
+
+      await tester.tap(slice.first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bu kategoriye ait işlem bulunmuyor.'), findsNothing,
+          reason: 'alt sayfa kırılımı sayfadan FARKLI bir evrenden hesapladı');
+      expect(find.text('Eczane alışverişi'), findsWidgets);
+      expect(find.text('60,00 ₺'), findsWidgets);
+    });
+
     testWidgets('kuplaj hareketi yokken anahtar kartı hiç çizilmez',
         (tester) async {
       final now = DateTime.now();

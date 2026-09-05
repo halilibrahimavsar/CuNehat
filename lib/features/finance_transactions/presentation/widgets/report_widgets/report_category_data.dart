@@ -247,15 +247,46 @@ class ReportCategoryDataBuilder {
   /// boş verilirse her tag kendi dilimidir.
   final Map<String, String> rootIndex;
 
+  /// Kuplaj hareketleri (transfer/borç/yatırım) kırılıma dahil mi —
+  /// rapor sayfasındaki `ReportSystemMovementsToggle`'ın karşılığı.
+  ///
+  /// **Varsayılanı YOK, bilerek:** düzeltilen hata tam olarak buydu. Kırılımı
+  /// yeniden hesaplayan iki yer vardı — sayfa (`_universeOf` ile kuplajı
+  /// AYIRIYORDU) ve `CategoryDetailsBottomSheet` (ayırMIYORdu). Evren
+  /// ayrışınca yüzde eşiği ve ilk-N kesimi kayıyor: sayfada dilim olarak
+  /// duran bir kategori alt sayfada "Diğer"e katlanıyor, `firstWhere`
+  /// bulamıyor ve kullanıcı BOŞ bir liste görüyordu. Dönemde büyük bir
+  /// transfer varken ("bu ay" tipik senaryo) hata her seferinde çıkıyordu;
+  /// anahtarı AÇMAK iki evreni eşitlediği için "kuplajı açınca düzeliyor"
+  /// gibi görünüyordu.
+  final bool includeSystemMovements;
+
   const ReportCategoryDataBuilder({
     required this.range,
     required this.budgets,
     required this.otherCategoryLabel,
+    required this.includeSystemMovements,
     this.rootIndex = const {},
   });
 
   List<TransactionEntity> filterByRange(List<TransactionEntity> transactions) =>
       _service.filterByRange(transactions, range.start, range.end);
+
+  /// Analiz evreni. Dönem filtresi UYGULAMAZ: çağıran hangi pencereyi verirse
+  /// ona uygulanır (önceki dönem, aylık seyir penceresi ...).
+  static List<TransactionEntity> universeOf(
+    List<TransactionEntity> inRange, {
+    required bool includeSystemMovements,
+  }) =>
+      includeSystemMovements
+          ? inRange
+          : _service.splitSystemMovements(inRange).spending;
+
+  /// Dönem + evren tek adımda: kırılımın gördüğü işlemler. Kırılımı kendi
+  /// hesaplayan her yerin giriş kapısı burasıdır.
+  List<TransactionEntity> universeIn(List<TransactionEntity> transactions) =>
+      universeOf(filterByRange(transactions),
+          includeSystemMovements: includeSystemMovements);
 
   List<CategoryData> buildFull(
     List<TransactionEntity> transactions, {

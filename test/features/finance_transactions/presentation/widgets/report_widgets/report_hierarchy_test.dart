@@ -74,6 +74,7 @@ void main() {
         ),
         budgets: const [],
         otherCategoryLabel: 'Diğer',
+        includeSystemMovements: false,
         rootIndex: buildRootIndex(categories),
       );
 

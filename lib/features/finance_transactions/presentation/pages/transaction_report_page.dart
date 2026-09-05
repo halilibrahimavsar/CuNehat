@@ -154,6 +154,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         budgets: _budgets,
         otherCategoryLabel: context.l10n.categoryDiger,
         rootIndex: _categoryRoots,
+        includeSystemMovements: _includeSystemMovements,
       );
 
   @override
@@ -335,6 +336,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       budgets: _budgets,
       otherCategoryLabel: otherLabel,
       rootIndex: _categoryRoots,
+      includeSystemMovements: _includeSystemMovements,
     );
     final filtered = _filterTransactionsByRange(transactions);
 
@@ -422,10 +424,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   /// Analiz evreni: kuplaj hareketleri anahtara göre içeride ya da dışarıda.
   /// Her kartın AYNI evreni kullanması şart, yoksa toplamlar birbirini tutmaz.
+  ///
+  /// Kural TEK yerde ([ReportCategoryDataBuilder.universeOf]): kırılımı ayrıca
+  /// hesaplayan alt sayfa da aynı fonksiyondan geçiyor.
   List<TransactionEntity> _universeOf(List<TransactionEntity> inRange) =>
-      _includeSystemMovements
-          ? inRange
-          : _reportService.splitSystemMovements(inRange).spending;
+      ReportCategoryDataBuilder.universeOf(inRange,
+          includeSystemMovements: _includeSystemMovements);
 
   /// Karşılaştırma penceresi — seçili aralığın BUGÜNE kadar GEÇMİŞ kısmı
   /// kadar, hemen öncesinde. Aralık tamamen gelecekteyse null.
@@ -519,10 +523,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   /// Bütçe satırına dokunmak o kategorinin dönem içi işlemlerini açar.
   void _openBudgetCategory(BudgetStatus status) {
     final builder = _dataBuilder(context);
-    final filtered = _filterTransactionsByRange(
-      context.read<TransactionBloc>().state.currentTransactions,
+    final full = builder.buildFull(
+      builder.universeIn(
+        context.read<TransactionBloc>().state.currentTransactions,
+      ),
+      isExpense: true,
     );
-    final full = builder.buildFull(_universeOf(filtered), isExpense: true);
 
     // Bütçe alt kategoriye de konabiliyor: önce kökler, sonra çocuklar.
     for (final root in full) {
