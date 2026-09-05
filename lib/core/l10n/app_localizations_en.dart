@@ -4196,4 +4196,154 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txRailTitle => 'Day strip';
+
+  @override
+  String get catSeedGroceries => 'Groceries';
+
+  @override
+  String get catSeedGroceriesProduce => 'Produce';
+
+  @override
+  String get catSeedGroceriesButcher => 'Butcher';
+
+  @override
+  String get catSeedGroceriesDrinks => 'Water & Drinks';
+
+  @override
+  String get catSeedDining => 'Dining';
+
+  @override
+  String get catSeedDiningRestaurant => 'Restaurant';
+
+  @override
+  String get catSeedDiningCafe => 'Cafe';
+
+  @override
+  String get catSeedDiningTakeaway => 'Takeaway';
+
+  @override
+  String get catSeedTransport => 'Transport';
+
+  @override
+  String get catSeedTransportFuel => 'Fuel';
+
+  @override
+  String get catSeedTransportPublic => 'Public Transport';
+
+  @override
+  String get catSeedTransportTaxi => 'Taxi';
+
+  @override
+  String get catSeedTransportParking => 'Parking';
+
+  @override
+  String get catSeedBills => 'Bills';
+
+  @override
+  String get catSeedBillsElectricity => 'Electricity';
+
+  @override
+  String get catSeedBillsWater => 'Water';
+
+  @override
+  String get catSeedBillsGas => 'Natural Gas';
+
+  @override
+  String get catSeedBillsInternet => 'Internet';
+
+  @override
+  String get catSeedBillsPhone => 'Phone';
+
+  @override
+  String get catSeedHousing => 'Housing';
+
+  @override
+  String get catSeedHousingRent => 'Rent';
+
+  @override
+  String get catSeedHousingDues => 'Building Dues';
+
+  @override
+  String get catSeedHousingMaintenance => 'Repairs & Maintenance';
+
+  @override
+  String get catSeedShopping => 'Shopping';
+
+  @override
+  String get catSeedShoppingClothing => 'Clothing';
+
+  @override
+  String get catSeedShoppingElectronics => 'Electronics';
+
+  @override
+  String get catSeedShoppingHomeGoods => 'Home Goods';
+
+  @override
+  String get catSeedHealth => 'Health';
+
+  @override
+  String get catSeedHealthPharmacy => 'Pharmacy';
+
+  @override
+  String get catSeedHealthDoctor => 'Doctor';
+
+  @override
+  String get catSeedHealthFitness => 'Fitness';
+
+  @override
+  String get catSeedEducation => 'Education';
+
+  @override
+  String get catSeedEducationSchool => 'School & Courses';
+
+  @override
+  String get catSeedEducationBooks => 'Books';
+
+  @override
+  String get catSeedEntertainment => 'Entertainment';
+
+  @override
+  String get catSeedEntertainmentCinema => 'Cinema & Concerts';
+
+  @override
+  String get catSeedEntertainmentSubscriptions => 'Subscriptions';
+
+  @override
+  String get catSeedEntertainmentGames => 'Games';
+
+  @override
+  String get catSeedPersonal => 'Personal Care';
+
+  @override
+  String get catSeedPersonalHairdresser => 'Hairdresser';
+
+  @override
+  String get catSeedPersonalCosmetics => 'Cosmetics';
+
+  @override
+  String get catSeedInvestment => 'Investment';
+
+  @override
+  String get catSeedOther => 'Other';
+
+  @override
+  String get catSeedSalary => 'Salary';
+
+  @override
+  String get catSeedSideIncome => 'Side Income';
+
+  @override
+  String get catSeedSideIncomeBonus => 'Bonus';
+
+  @override
+  String get catSeedSideIncomeFreelance => 'Freelance';
+
+  @override
+  String get catSeedRentalIncome => 'Rental Income';
+
+  @override
+  String get catSeedInvestmentIncome => 'Investment';
+
+  @override
+  String get catSeedOtherIncome => 'Other Income';
 }

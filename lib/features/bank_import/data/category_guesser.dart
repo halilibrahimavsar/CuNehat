@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/category_seed_names.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -6,34 +7,43 @@ import 'package:injectable/injectable.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
-import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 
-/// Sözlüğün hedeflediği kategori: alt kategori ise [parentName] doludur.
+/// Sözlüğün hedeflediği kategori: alt kategori ise [parentKey] doludur.
 ///
 /// Hedef bir ÇİFT olmak zorunda, çünkü kullanıcının hiyerarşisi bizimkinden
 /// sapabilir: "Elektrik" hem `Fatura` altında hem kökte durabilir, hem de hiç
 /// olmayabilir. Çözüm sırası [CategoryGuesser.resolveTarget] içinde.
-typedef CategoryTarget = ({String name, String? parentName});
+///
+/// Taşınan şey AD değil ANAHTAR'dır (`bills.electricity`): kategori adı
+/// kullanıcı verisidir ve kurulduğu dilde donar, anahtar ise sabittir
+/// (bkz. `category_seed_names.dart`).
+typedef CategoryTarget = ({String key, String? parentKey});
 
-/// Sözlük anahtarlarında ana ve alt kategoriyi ayıran işaret ("Fatura › Su").
+/// Anahtar yolunda ana ve alt kategoriyi ayıran işaret.
+const String kCategoryKeySeparator = '.';
 
-/// `"Fatura › Elektrik"` → `(name: 'Elektrik', parentName: 'Fatura')`.
+/// `"bills.electricity"` → `(key: 'bills.electricity', parentKey: 'bills')`.
 /// Ayraç yoksa kök hedef.
 CategoryTarget parseCategoryTarget(String path) {
-  final parts = path.split(kCategorySeparator);
-  if (parts.length < 2) return (name: path.trim(), parentName: null);
-  return (name: parts.last.trim(), parentName: parts.first.trim());
+  final parts = path.split(kCategoryKeySeparator);
+  if (parts.length < 2) return (key: path, parentKey: null);
+  return (key: path, parentKey: parts.first);
 }
 
 /// Yeni kategori önerisi: [drafts] içinde eşleşen ama kullanıcının GERÇEK
 /// listesinde karşılığı olmayan bir grup. Yalnız kullanıcı onayıyla
 /// [CategoryEntity]'ye dönüşür (bkz. `BankImportCubit.resolveCategorySuggestions`).
 class CategorySuggestion extends Equatable {
+  /// Kurulacak ad — ÖNERİ ÜRETİLDİĞİ ANDAKİ dilde çözülmüş hâli. Kurulduktan
+  /// sonra kullanıcı verisidir; sonradan dil değişse de değişmez.
   final String name;
 
   /// Kurulacaksa altına gireceği ana kategorinin ADI; kök olarak kurulacaksa
   /// `null`. Ana kategori kullanıcıda yoksa o da birlikte kurulur.
   final String? parentName;
+
+  /// Üst kategori kurulursa kullanılacak ikon; [parentName] boşsa `null`.
+  final String? parentIconName;
 
   final bool isIncome;
   final String iconName;
@@ -42,10 +52,12 @@ class CategorySuggestion extends Equatable {
     required this.isIncome,
     required this.iconName,
     this.parentName,
+    this.parentIconName,
   });
 
   @override
-  List<Object?> get props => [name, parentName, isIncome, iconName];
+  List<Object?> get props =>
+      [name, parentName, parentIconName, isIncome, iconName];
 }
 
 /// Banka ekstresi açıklamasından kategori tahmini (best-effort/tahminî).
@@ -62,21 +74,23 @@ class CategorySuggestion extends Equatable {
 /// sunar; onaysız hiçbir kategori yaratılmaz (bkz. kullanıcı talebi 2026-07-21).
 @lazySingleton
 class CategoryGuesser {
-  /// Anahtar: hedef kategori YOLU. Başlangıç paketinde bir alt kategori
-  /// karşılığı olan gruplar `"Ana › Alt"` biçiminde yazılır — ekstre
+  /// Anahtar: hedef kategorinin ANAHTAR YOLU. Başlangıç paketinde bir alt
+  /// kategori karşılığı olan gruplar `"ana.alt"` biçiminde yazılır — ekstre
   /// tahmininin iki seviyeli hiyerarşiyi hiç kullanmaması, kullanıcının
   /// kurduğu 31 alt kategoriyi ölü ağırlığa çeviriyordu ("elektrik faturası"
-  /// `Fatura` köküne düşüyor, `Fatura › Elektrik` boş kalıyordu).
+  /// `bills` köküne düşüyor, `bills.electricity` boş kalıyordu).
   ///
   /// Karşılığı olmayan bir hedef sessizce ana kategoriye düşer
   /// ([resolveTarget]), yani alt kategorisini silen kullanıcı eskisi gibi kök
   /// eşleşmesi almaya devam eder.
   ///
-  /// Adlar başlangıç paketiyle SÖZLEŞMEDİR: buradaki bir ad pakette karşılık
-  /// bulmazsa dokunulmamış bir kurulumda o grubun tahmini hiçbir zaman tutmaz.
-  /// Bağ test edilir (`category_starter_pack_test.dart`).
+  /// Anahtarlar başlangıç paketiyle SÖZLEŞMEDİR: buradaki bir anahtar pakette
+  /// karşılık bulmazsa dokunulmamış bir kurulumda o grubun tahmini hiçbir
+  /// zaman tutmaz. Bağ test edilir (`category_starter_pack_test.dart`).
+  /// Anahtar kullanmanın ikinci kazancı: bir çeviriyi düzeltmek (ya da
+  /// kullanıcının dili değiştirmesi) sözlüğü koparmaz.
   static const Map<String, List<String>> _expenseGroups = {
-    'Yemek › Restoran': [
+    'dining.restaurant': [
       'restoran',
       'restaurant',
       'lokanta',
@@ -86,7 +100,7 @@ class CategoryGuesser {
       'kebap',
       'doner',
     ],
-    'Yemek › Kafe': [
+    'dining.cafe': [
       'starbucks',
       'cafe',
       'kafe',
@@ -94,13 +108,13 @@ class CategoryGuesser {
       'simit saray',
       'gloria jean',
     ],
-    'Yemek › Paket Servis': [
+    'dining.takeaway': [
       'yemeksepeti',
       'trendyol yemek',
       'getir yemek',
       'tikla gelsin',
     ],
-    'Yemek': [
+    'dining': [
       'burger king',
       'mcdonalds',
       'mcdonald',
@@ -108,7 +122,7 @@ class CategoryGuesser {
       'domino',
       'popeyes',
     ],
-    'Ulaşım › Yakıt': [
+    'transport.fuel': [
       'shell',
       'opet',
       'petrol ofisi',
@@ -120,26 +134,26 @@ class CategoryGuesser {
       'motorin',
       ' lpg ',
     ],
-    'Ulaşım › Taksi': [
+    'transport.taxi': [
       'taksi',
       'uber',
       'bitaksi',
       ' bolt ',
       ' marti ',
     ],
-    'Ulaşım › Toplu Taşıma': [
+    'transport.public': [
       ' iett ',
       'istanbulkart',
       'marmaray',
       'metrobus',
       'ego kart',
     ],
-    'Ulaşım › Otopark': ['otopark'],
-    'Ulaşım': ['otoyol', ' hgs ', ' ogs ', 'kgm gecis'],
+    'transport.parking': ['otopark'],
+    'transport': ['otoyol', ' hgs ', ' ogs ', 'kgm gecis'],
     // Market (gıda/temel ihtiyaç) ile Alışveriş (giyim/elektronik/genel)
     // bilerek AYRI: ikisi tek kovada toplanınca aylık gıda harcaması
     // görünmez oluyor ve o kaleme bütçe koymak imkânsızlaşıyordu.
-    'Market': [
+    'groceries': [
       'migros',
       'carrefour',
       'sok market',
@@ -152,29 +166,29 @@ class CategoryGuesser {
       'tarim kredi',
       'metro market',
     ],
-    'Konut › Kira': ['kira odeme', ' kira ', 'kiraci'],
-    'Konut › Aidat': ['aidat', 'site yonetim', 'apartman yonetim'],
-    'Eğitim › Okul & Kurs': [
+    'housing.rent': ['kira odeme', ' kira ', 'kiraci'],
+    'housing.dues': ['aidat', 'site yonetim', 'apartman yonetim'],
+    'education.school': [
       'universite',
       'okul taksit',
       ' dershane ',
       ' kurs ',
     ],
-    'Eğitim › Kitap': ['yayinlari', 'kitabevi', 'kitapyurdu'],
-    'Eğitim': ['egitim'],
-    'Fatura › Elektrik': ['elektrik', 'enerjisa', 'bedas', 'ayedas'],
-    'Fatura › Su': [' iski ', ' aski ', ' asat ', ' izsu ', 'su faturasi'],
-    'Fatura › Doğalgaz': ['dogalgaz', 'igdas', 'izgaz', 'baskentgaz'],
-    'Fatura › İnternet': [
+    'education.books': ['yayinlari', 'kitabevi', 'kitapyurdu'],
+    'education': ['egitim'],
+    'bills.electricity': ['elektrik', 'enerjisa', 'bedas', 'ayedas'],
+    'bills.water': [' iski ', ' aski ', ' asat ', ' izsu ', 'su faturasi'],
+    'bills.gas': ['dogalgaz', 'igdas', 'izgaz', 'baskentgaz'],
+    'bills.internet': [
       'superonline',
       'turknet',
       'tellcom',
       ' ttnet ',
       'internet faturasi',
     ],
-    'Fatura › Telefon': ['turk telekom', 'turkcell', 'vodafone'],
-    'Fatura': ['fatura'],
-    'Eğlence › Abonelikler': [
+    'bills.phone': ['turk telekom', 'turkcell', 'vodafone'],
+    'bills': ['fatura'],
+    'entertainment.subscriptions': [
       'netflix',
       'spotify',
       'youtube',
@@ -183,21 +197,21 @@ class CategoryGuesser {
       ' exxen ',
       'abonelik',
     ],
-    'Eğlence › Oyun': ['playstation', 'steam', 'epic games', ' riot '],
-    'Eğlence › Sinema & Konser': [
+    'entertainment.games': ['playstation', 'steam', 'epic games', ' riot '],
+    'entertainment.cinema': [
       'sinema',
       'cinemaximum',
       'biletix',
       'bilet',
       'konser',
     ],
-    'Sağlık › İlaç': ['eczane'],
-    'Sağlık › Doktor': ['hastane', 'klinik', 'poliklinik', 'laboratuvar'],
-    'Sağlık › Spor': ['spor salonu', 'fitness', 'macfit', 'gym'],
-    'Sağlık': [' saglik '],
-    'Kişisel › Kuaför': ['kuafor', 'berber'],
-    'Kişisel › Kozmetik': ['gratis', 'watsons', 'rossmann'],
-    'Alışveriş › Giyim': [
+    'health.pharmacy': ['eczane'],
+    'health.doctor': ['hastane', 'klinik', 'poliklinik', 'laboratuvar'],
+    'health.fitness': ['spor salonu', 'fitness', 'macfit', 'gym'],
+    'health': [' saglik '],
+    'personal.hairdresser': ['kuafor', 'berber'],
+    'personal.cosmetics': ['gratis', 'watsons', 'rossmann'],
+    'shopping.clothing': [
       'lc waikiki',
       'defacto',
       ' koton ',
@@ -205,9 +219,9 @@ class CategoryGuesser {
       'boyner',
       'decathlon',
     ],
-    'Alışveriş › Elektronik': ['teknosa', 'mediamarkt', 'vatan bilgisayar'],
-    'Alışveriş › Ev Eşyası': [' ikea ', 'bellona', 'istikbal'],
-    'Alışveriş': [
+    'shopping.electronics': ['teknosa', 'mediamarkt', 'vatan bilgisayar'],
+    'shopping.homegoods': [' ikea ', 'bellona', 'istikbal'],
+    'shopping': [
       'trendyol',
       'hepsiburada',
       ' n11 ',
@@ -220,7 +234,7 @@ class CategoryGuesser {
     // Gider tarafındaki `Yatırım`, ekstredeki hisse/fon/altın ALIMIDIR:
     // cüzdandan çıkan paradır. (Uygulama içinden yapılan yatırım hareketleri
     // sistem etiketi taşır, buraya düşmez.)
-    'Yatırım': [
+    'investment': [
       'midas',
       'menkul deger',
       'yatirim',
@@ -230,10 +244,10 @@ class CategoryGuesser {
   };
 
   static const Map<String, List<String>> _incomeGroups = {
-    'Maaş': ['maas', 'salary', 'bordro'],
-    'Ek Gelir › Prim & İkramiye': ['prim odemesi', 'ikramiye'],
-    'Ek Gelir': ['ek gelir'],
-    'Kira Geliri': ['kira geliri'],
+    'salary': ['maas', 'salary', 'bordro'],
+    'sideIncome.bonus': ['prim odemesi', 'ikramiye'],
+    'sideIncome': ['ek gelir'],
+    'rentalIncome': ['kira geliri'],
   };
 
   /// Sözlüğün hedefleri. Başlangıç paketiyle olan sözleşme bunlar üzerinden
@@ -255,20 +269,20 @@ class CategoryGuesser {
 
   /// Pakette karşılığı olmayan bir hedef için son çare ikon.
   static const Map<String, String> _groupIcons = {
-    'Market': 'shopping_cart',
-    'Yemek': 'restaurant',
-    'Ulaşım': 'directions_bus',
-    'Fatura': 'receipt_long',
-    'Konut': 'home',
-    'Alışveriş': 'shopping_bag',
-    'Sağlık': 'medical_services',
-    'Eğitim': 'school',
-    'Eğlence': 'movie',
-    'Kişisel': 'face',
-    'Yatırım': 'trending_up',
-    'Maaş': 'payments',
-    'Ek Gelir': 'savings',
-    'Kira Geliri': 'apartment',
+    'groceries': 'shopping_cart',
+    'dining': 'restaurant',
+    'transport': 'directions_bus',
+    'bills': 'receipt_long',
+    'housing': 'home',
+    'shopping': 'shopping_bag',
+    'health': 'medical_services',
+    'education': 'school',
+    'entertainment': 'movie',
+    'personal': 'face',
+    'investment': 'trending_up',
+    'salary': 'payments',
+    'sideIncome': 'savings',
+    'rentalIncome': 'apartment',
   };
 
   /// [description] içinde bilinen bir anahtar kelime bulunursa VE hedef
@@ -289,12 +303,14 @@ class CategoryGuesser {
   /// gibi etiketler bir harcama TÜRÜ değil bir kanal bildirir, kategoriye
   /// çevrilmeleri yanlış güven verirdi — bilerek listede yok (o satırlar
   /// kategorisiz kalıp inceleme ekranında kullanıcıya sorulur).
+  /// Anahtar bankanın Türkçe etiketi (ekstreden gelir, çevrilmez); değer
+  /// bizim hedef anahtarımız.
   static const Map<String, String> _tagGroups = {
-    'Alışveriş': 'Alışveriş',
-    'Fatura': 'Fatura',
-    'Fatura Ödemesi': 'Fatura',
-    'Yatırım': 'Yatırım',
-    'Maaş': 'Maaş',
+    'Alışveriş': 'shopping',
+    'Fatura': 'bills',
+    'Fatura Ödemesi': 'bills',
+    'Yatırım': 'investment',
+    'Maaş': 'salary',
   };
 
   /// Ekstrenin kendi kategori etiketinden tahmin. Sabit anahtar-kelime
@@ -320,26 +336,31 @@ class CategoryGuesser {
   /// Hedefi kullanıcının GERÇEK kategori listesine bağlar.
   ///
   /// Sıra bilinçli — daha özelden daha genele:
-  /// 1. Doğru yerdeki alt kategori (`Fatura › Elektrik`),
+  /// 1. Doğru yerdeki alt kategori (`bills.electricity`),
   /// 2. adı tutan herhangi bir kategori (kullanıcı "Elektrik"i kökte tutuyor
   ///    ya da başka bir ana kategorinin altına taşımış olabilir),
   /// 3. hedefin ANA kategorisi (alt kategoriyi hiç kurmamış/silmiş kullanıcı
   ///    eskisi gibi kök eşleşmesi alır — davranış geriye dönük bozulmaz),
   /// 4. hiçbiri yoksa `null`.
+  ///
+  /// Eşleşme anahtarın TÜM dillerdeki adlarına bakar ([_namesOf]): kategori
+  /// adı kurulduğu dilde donmuş kullanıcı verisidir, kullanıcı sonradan dil
+  /// değiştirmiş olabilir. Yalnız seçili dile bakılsaydı Türkçe kurulumdan
+  /// İngilizceye geçen kullanıcıda hiçbir hedef çözülmezdi.
   CategoryEntity? resolveTarget(
     CategoryTarget target,
     List<CategoryEntity> candidates,
   ) {
     final byId = {for (final c in candidates) c.id: c};
-    final leaf = normalized(target.name);
-    final parent =
-        target.parentName == null ? null : normalized(target.parentName!);
+    final leaf = _namesOf(target.key);
+    final parentKey = target.parentKey;
+    final parent = parentKey == null ? null : _namesOf(parentKey);
 
     if (parent != null) {
       for (final c in candidates) {
-        if (normalized(c.name) != leaf) continue;
+        if (!leaf.contains(normalized(c.name))) continue;
         final p = c.parentId == null ? null : byId[c.parentId];
-        if (p != null && normalized(p.name) == parent) return c;
+        if (p != null && parent.contains(normalized(p.name))) return c;
       }
     }
 
@@ -349,15 +370,23 @@ class CategoryGuesser {
     return _firstNamed(parent, candidates);
   }
 
+  /// Anahtarın tüm dillerdeki adları, eşleşme için sadeleştirilmiş hâlde.
+  /// Önbellekli: ekstredeki her satır için çağrılıyor.
+  static Set<String> _namesOf(String key) => _normalizedNames[key] ??= {
+        for (final name in categorySeedNameCandidates(key)) normalized(name),
+      };
+
+  static final Map<String, Set<String>> _normalizedNames = {};
+
   /// Adı tutan ilk kategori; eşitlikte ANA kategori tercih edilir (aynı ad iki
   /// seviyede birden bulunabilir, kökteki daha genel/olası hedeftir).
   static CategoryEntity? _firstNamed(
-    String normalizedName,
+    Set<String> normalizedNames,
     List<CategoryEntity> candidates,
   ) {
     CategoryEntity? fallback;
     for (final c in candidates) {
-      if (normalized(c.name) != normalizedName) continue;
+      if (!normalizedNames.contains(normalized(c.name))) continue;
       if (c.isRoot) return c;
       fallback ??= c;
     }
@@ -438,10 +467,13 @@ class CategoryGuesser {
   /// açıklamada anahtar kelime geçmese bile etiketten gelen hedef
   /// çözülemiyorsa o kategori önerilir — aksi halde `guessFromSourceTag`
   /// kurulabilecek bir kategori yok diye sessizce boş dönüyordu.
+  /// [languageCode] önerilen adların hangi dilde KURULACAĞINI belirler;
+  /// eşleşme tarafı dilden bağımsızdır (bkz. [resolveTarget]).
   List<CategorySuggestion> suggestNewCategories({
     required List<ImportDraft> drafts,
     required List<CategoryEntity> expenseCategories,
     required List<CategoryEntity> incomeCategories,
+    required String languageCode,
   }) {
     final wanted = <String, ({CategoryTarget target, bool isIncome})>{};
     void want(String? path, bool isIncome) {
@@ -460,24 +492,31 @@ class CategoryGuesser {
       final existing = entry.isIncome ? incomeCategories : expenseCategories;
       if (resolveTarget(entry.target, existing) != null) continue;
 
-      final name = entry.target.name;
-      // Başlangıç paketinde alt kategori olarak geçen bir ad ("Kira") kökte
-      // ikinci kez kurulmamalı; üst kategorisiyle birlikte önerilir. Sözlük
-      // hedefi zaten yol taşıyorsa o kullanılır.
-      final parentName = entry.target.parentName ??
-          CategoryStarterPack.parentNameOf(name, isExpense: !entry.isIncome);
+      final isExpense = !entry.isIncome;
+      final key = entry.target.key;
+      // Anahtar YOLU hiyerarşiyi kendi taşır: `housing.rent` kökte ikinci bir
+      // "Kira" olarak değil, üst kategorisiyle birlikte önerilir. (Ada dayalı
+      // eski sürümde bu bağ ayrı bir tabloda aranmak zorundaydı.)
+      final parentKey = entry.target.parentKey;
       result.add(CategorySuggestion(
-        name: name,
-        parentName: parentName,
+        name: categorySeedName(key, languageCode),
+        parentName: parentKey == null
+            ? null
+            : categorySeedName(parentKey, languageCode),
+        parentIconName:
+            parentKey == null ? null : _iconFor(parentKey, isExpense),
         isIncome: entry.isIncome,
-        iconName:
-            CategoryStarterPack.iconNameOf(name, isExpense: !entry.isIncome) ??
-                _groupIcons[name] ??
-                'category',
+        iconName: _iconFor(key, isExpense),
       ));
     }
     return result;
   }
+
+  /// Anahtarın ikonu: önce başlangıç paketi, sonra son çare grup ikonu.
+  static String _iconFor(String key, bool isExpense) =>
+      CategoryStarterPack.iconNameOf(key, isExpense: isExpense) ??
+      _groupIcons[key] ??
+      'category';
 
   /// Geçmiş eşleşmesinde gürültü yaratan, marka-özgü OLMAYAN jenerik banka
   /// token'ları (yön belirtmez, çoğu işlemde geçer). Dışlanır ki "pos ödeme"

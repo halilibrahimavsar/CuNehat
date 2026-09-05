@@ -12,8 +12,8 @@ void main() {
   late InstallStarterPackUseCase usecase;
 
   final fatura =
-      CategoryStarterPack.expense.firstWhere((g) => g.name == 'Fatura');
-  final maas = CategoryStarterPack.income.firstWhere((g) => g.name == 'Maaş');
+      CategoryStarterPack.expense.firstWhere((g) => g.key == 'bills');
+  final maas = CategoryStarterPack.income.firstWhere((g) => g.key == 'salary');
 
   List<CategoryEntity> captureWritten() =>
       (verify(() => repository.addAll(captureAny())).captured.single
@@ -31,7 +31,7 @@ void main() {
   });
 
   test('grubu ana kategori + çocukları olarak kurar', () async {
-    final created = await usecase([(group: fatura, isExpense: true)]);
+    final created = await usecase([(group: fatura, isExpense: true)], languageCode: 'tr');
 
     expect(created, 1 + fatura.children.length);
 
@@ -44,7 +44,7 @@ void main() {
   });
 
   test('kimlikler benzersiz ve addan bağımsızdır', () async {
-    await usecase([(group: fatura, isExpense: true)]);
+    await usecase([(group: fatura, isExpense: true)], languageCode: 'tr');
     final written = captureWritten();
 
     expect(written.map((c) => c.id).toSet().length, written.length);
@@ -55,7 +55,7 @@ void main() {
     await usecase([
       (group: fatura, isExpense: true),
       (group: maas, isExpense: false),
-    ]);
+    ], languageCode: 'tr');
     final written = captureWritten();
 
     // İki kök de kendi türünün ilk sırasında.
@@ -82,7 +82,7 @@ void main() {
             ),
           ]);
 
-      final created = await usecase([(group: fatura, isExpense: true)]);
+      final created = await usecase([(group: fatura, isExpense: true)], languageCode: 'tr');
 
       expect(created, fatura.children.length, reason: 'kök yeniden kurulmaz');
       final written = captureWritten();
@@ -107,7 +107,7 @@ void main() {
             ),
           ]);
 
-      await usecase([(group: fatura, isExpense: true)]);
+      await usecase([(group: fatura, isExpense: true)], languageCode: 'tr');
 
       final written = captureWritten();
       expect(written.map((c) => c.name), isNot(contains('Elektrik')));
@@ -120,7 +120,7 @@ void main() {
                 id: 'r', name: 'Maaş', iconName: 'payments', isExpense: false),
           ]);
 
-      final created = await usecase([(group: maas, isExpense: false)]);
+      final created = await usecase([(group: maas, isExpense: false)], languageCode: 'tr');
 
       expect(created, 0);
       verifyNever(() => repository.addAll(any()));
@@ -137,14 +137,54 @@ void main() {
             ),
           ]);
 
-      await usecase([(group: fatura, isExpense: true)]);
+      await usecase([(group: fatura, isExpense: true)], languageCode: 'tr');
 
       expect(captureWritten().first.sortOrder, 10);
     });
   });
 
+  group('dil', () {
+    // Bildirilen hata (3 Eylül 2026): "kategoriler İngilizce olmuyor".
+    // Paket adları sabit Türkçeydi; İngilizce arayüzde bile "Fatura /
+    // Elektrik" kuruluyordu. Kurulan ad artık seçili dilden gelir.
+    test('İngilizce kurulumda İngilizce adlar yazılır', () async {
+      await usecase([(group: fatura, isExpense: true)], languageCode: 'en');
+
+      final written = captureWritten();
+      expect(written.first.name, 'Bills');
+      expect(written.map((c) => c.name), contains('Electricity'));
+    });
+
+    test('desteklenmeyen dil Türkçeye düşer', () async {
+      await usecase([(group: fatura, isExpense: true)], languageCode: 'de');
+
+      expect(captureWritten().first.name, 'Fatura');
+    });
+
+    test('ikizlenme kontrolü SEÇİLİ dilin adıyla yapılır', () async {
+      // Türkçe kurup İngilizceye geçen kullanıcı paketi yeniden çalıştırırsa
+      // "Bills" onun listesinde yoktur: ikinci bir kök kurulur. Bilinçli —
+      // kimlik addır, ve kullanıcının kendi "Fatura"sını arkasından yeniden
+      // adlandırmak veri sahipliğini ihlal ederdi.
+      when(() => repository.getAllCategories()).thenAnswer((_) async => [
+            const CategoryEntity(
+              id: 'mevcut-fatura',
+              name: 'Fatura',
+              iconName: 'receipt_long',
+              isExpense: true,
+            ),
+          ]);
+
+      await usecase([(group: fatura, isExpense: true)], languageCode: 'en');
+
+      final written = captureWritten();
+      expect(written.first.name, 'Bills');
+      expect(written.first.parentId, isNull);
+    });
+  });
+
   test('seçim boşsa hiç yazım yapılmaz', () async {
-    expect(await usecase(const []), 0);
+    expect(await usecase(const [], languageCode: 'tr'), 0);
     verifyNever(() => repository.addAll(any()));
   });
 }

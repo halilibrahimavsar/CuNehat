@@ -1,5 +1,6 @@
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/l10n/category_seed_names.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/tr_case.dart';
@@ -50,8 +51,18 @@ class _CategoryStarterPackSheetState extends State<CategoryStarterPackSheet> {
     _selectAll();
   }
 
+  /// Seçim anahtarı tür + paket anahtarı: paket anahtarı zaten tür içinde
+  /// tekil, ama gider ve gelir ayrı ad uzayları (`investment` /
+  /// `investmentIncome` gibi ayrı anahtarlar olsa da bileşik anahtar niyeti
+  /// açık bırakıyor).
   String _keyOf(StarterPackGroup g, bool isExpense) =>
-      '${isExpense ? 'gider' : 'gelir'}|${g.name}';
+      '${isExpense ? 'gider' : 'gelir'}|${g.key}';
+
+  /// Paket anahtarının seçili dildeki adı — kurulacak ad da BUDUR
+  /// (bkz. `InstallStarterPackUseCase`), yani listede gördüğü şey kullanıcının
+  /// kategorisi olarak birebir kaydedilir.
+  String _nameOf(String key) =>
+      categorySeedName(key, Localizations.localeOf(context).languageCode);
 
   void _selectAll() {
     _selected
@@ -216,13 +227,13 @@ class _CategoryStarterPackSheetState extends State<CategoryStarterPackSheet> {
       controlAffinity: ListTileControlAffinity.trailing,
       secondary: Icon(AppIcons.getIconData(group.iconName), color: accent),
       title: Text(
-        group.name,
+        _nameOf(group.key),
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: group.children.isEmpty
           ? null
           : Text(
-              group.children.map((c) => c.name).join(' · '),
+              group.children.map((c) => _nameOf(c.key)).join(' · '),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12),
@@ -271,8 +282,10 @@ class _CategoryStarterPackSheetState extends State<CategoryStarterPackSheet> {
   Future<void> _install() async {
     setState(() => _isSaving = true);
     try {
-      final created =
-          await getIt<InstallStarterPackUseCase>()(_selection.toList());
+      final created = await getIt<InstallStarterPackUseCase>()(
+        _selection.toList(),
+        languageCode: Localizations.localeOf(context).languageCode,
+      );
       if (!mounted) return;
       final message = context.l10n.starterPackCreated(created);
       Navigator.pop(context, created);

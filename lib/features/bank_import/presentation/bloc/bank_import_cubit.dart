@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cunehat/core/constants/prefs_keys.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
@@ -29,7 +30,6 @@ import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/domain/statement_format.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
-import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
@@ -366,6 +366,16 @@ class BankImportCubit extends Cubit<BankImportState> {
     }
   }
 
+  /// Seçili arayüz dili; okunamazsa Türkçe.
+  Future<String> _languageCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(PrefsKeys.language) ?? 'tr';
+    } catch (_) {
+      return 'tr';
+    }
+  }
+
   static const _mappingPrefsKey = 'bank_import_last_mapping';
 
   /// Onaylanan eşlemeyi sütun sayısıyla birlikte saklar (best-effort).
@@ -435,6 +445,10 @@ class BankImportCubit extends Cubit<BankImportState> {
       drafts: raw,
       expenseCategories: _expenseCats,
       incomeCategories: _incomeCats,
+      // Öneriden kurulan kategori kullanıcı verisidir: seçili dilde
+      // yazılmalı. Dil tercihi burada prefs'ten okunur — cubit'in widget
+      // ağacı yok (aynı gerekçe: `NotificationLocalizer`).
+      languageCode: await _languageCode(),
     );
     if (suggestions.isEmpty) {
       await _toReview(raw, skipped);
@@ -510,9 +524,9 @@ class BankImportCubit extends Cubit<BankImportState> {
 
     final created = await _categoryRepo.addCategory(
       name: parentName,
-      iconName:
-          CategoryStarterPack.iconNameOf(parentName, isExpense: isExpense) ??
-              'category',
+      // İkon önerinin kendisinden gelir: ada bakan eski arama, ad artık
+      // dile göre değiştiği için hedefi ıskalardı.
+      iconName: suggestion.parentIconName ?? 'category',
       isExpense: isExpense,
     );
     _remember(created);

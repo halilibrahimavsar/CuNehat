@@ -7402,6 +7402,306 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gün şeridi'**
   String get txRailTitle;
+
+  /// No description provided for @catSeedGroceries.
+  ///
+  /// In tr, this message translates to:
+  /// **'Market'**
+  String get catSeedGroceries;
+
+  /// No description provided for @catSeedGroceriesProduce.
+  ///
+  /// In tr, this message translates to:
+  /// **'Manav'**
+  String get catSeedGroceriesProduce;
+
+  /// No description provided for @catSeedGroceriesButcher.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kasap'**
+  String get catSeedGroceriesButcher;
+
+  /// No description provided for @catSeedGroceriesDrinks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Su & İçecek'**
+  String get catSeedGroceriesDrinks;
+
+  /// No description provided for @catSeedDining.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yemek'**
+  String get catSeedDining;
+
+  /// No description provided for @catSeedDiningRestaurant.
+  ///
+  /// In tr, this message translates to:
+  /// **'Restoran'**
+  String get catSeedDiningRestaurant;
+
+  /// No description provided for @catSeedDiningCafe.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kafe'**
+  String get catSeedDiningCafe;
+
+  /// No description provided for @catSeedDiningTakeaway.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paket Servis'**
+  String get catSeedDiningTakeaway;
+
+  /// No description provided for @catSeedTransport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ulaşım'**
+  String get catSeedTransport;
+
+  /// No description provided for @catSeedTransportFuel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yakıt'**
+  String get catSeedTransportFuel;
+
+  /// No description provided for @catSeedTransportPublic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplu Taşıma'**
+  String get catSeedTransportPublic;
+
+  /// No description provided for @catSeedTransportTaxi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksi'**
+  String get catSeedTransportTaxi;
+
+  /// No description provided for @catSeedTransportParking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otopark'**
+  String get catSeedTransportParking;
+
+  /// No description provided for @catSeedBills.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura'**
+  String get catSeedBills;
+
+  /// No description provided for @catSeedBillsElectricity.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elektrik'**
+  String get catSeedBillsElectricity;
+
+  /// No description provided for @catSeedBillsWater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Su'**
+  String get catSeedBillsWater;
+
+  /// No description provided for @catSeedBillsGas.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğalgaz'**
+  String get catSeedBillsGas;
+
+  /// No description provided for @catSeedBillsInternet.
+  ///
+  /// In tr, this message translates to:
+  /// **'İnternet'**
+  String get catSeedBillsInternet;
+
+  /// No description provided for @catSeedBillsPhone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon'**
+  String get catSeedBillsPhone;
+
+  /// No description provided for @catSeedHousing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konut'**
+  String get catSeedHousing;
+
+  /// No description provided for @catSeedHousingRent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kira'**
+  String get catSeedHousingRent;
+
+  /// No description provided for @catSeedHousingDues.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aidat'**
+  String get catSeedHousingDues;
+
+  /// No description provided for @catSeedHousingMaintenance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakım & Onarım'**
+  String get catSeedHousingMaintenance;
+
+  /// No description provided for @catSeedShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş'**
+  String get catSeedShopping;
+
+  /// No description provided for @catSeedShoppingClothing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giyim'**
+  String get catSeedShoppingClothing;
+
+  /// No description provided for @catSeedShoppingElectronics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elektronik'**
+  String get catSeedShoppingElectronics;
+
+  /// No description provided for @catSeedShoppingHomeGoods.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev Eşyası'**
+  String get catSeedShoppingHomeGoods;
+
+  /// No description provided for @catSeedHealth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağlık'**
+  String get catSeedHealth;
+
+  /// No description provided for @catSeedHealthPharmacy.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlaç'**
+  String get catSeedHealthPharmacy;
+
+  /// No description provided for @catSeedHealthDoctor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doktor'**
+  String get catSeedHealthDoctor;
+
+  /// No description provided for @catSeedHealthFitness.
+  ///
+  /// In tr, this message translates to:
+  /// **'Spor'**
+  String get catSeedHealthFitness;
+
+  /// No description provided for @catSeedEducation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğitim'**
+  String get catSeedEducation;
+
+  /// No description provided for @catSeedEducationSchool.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okul & Kurs'**
+  String get catSeedEducationSchool;
+
+  /// No description provided for @catSeedEducationBooks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kitap'**
+  String get catSeedEducationBooks;
+
+  /// No description provided for @catSeedEntertainment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğlence'**
+  String get catSeedEntertainment;
+
+  /// No description provided for @catSeedEntertainmentCinema.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sinema & Konser'**
+  String get catSeedEntertainmentCinema;
+
+  /// No description provided for @catSeedEntertainmentSubscriptions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Abonelikler'**
+  String get catSeedEntertainmentSubscriptions;
+
+  /// No description provided for @catSeedEntertainmentGames.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oyun'**
+  String get catSeedEntertainmentGames;
+
+  /// No description provided for @catSeedPersonal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel'**
+  String get catSeedPersonal;
+
+  /// No description provided for @catSeedPersonalHairdresser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kuaför'**
+  String get catSeedPersonalHairdresser;
+
+  /// No description provided for @catSeedPersonalCosmetics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kozmetik'**
+  String get catSeedPersonalCosmetics;
+
+  /// No description provided for @catSeedInvestment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım'**
+  String get catSeedInvestment;
+
+  /// No description provided for @catSeedOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get catSeedOther;
+
+  /// No description provided for @catSeedSalary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maaş'**
+  String get catSeedSalary;
+
+  /// No description provided for @catSeedSideIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek Gelir'**
+  String get catSeedSideIncome;
+
+  /// No description provided for @catSeedSideIncomeBonus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Prim & İkramiye'**
+  String get catSeedSideIncomeBonus;
+
+  /// No description provided for @catSeedSideIncomeFreelance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Serbest Çalışma'**
+  String get catSeedSideIncomeFreelance;
+
+  /// No description provided for @catSeedRentalIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kira Geliri'**
+  String get catSeedRentalIncome;
+
+  /// No description provided for @catSeedInvestmentIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatırım'**
+  String get catSeedInvestmentIncome;
+
+  /// No description provided for @catSeedOtherIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer Gelir'**
+  String get catSeedOtherIncome;
 }
 
 class _AppLocalizationsDelegate

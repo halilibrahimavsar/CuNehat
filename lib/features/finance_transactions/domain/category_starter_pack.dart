@@ -5,17 +5,18 @@
 /// hiçbir bayrak taşımaz. Kullanıcı seti atlayabilir; kategori yöneticisinin
 /// boş durumundan geri dönebilir.
 ///
-/// **Grup adları [CategoryGuesser] sözlüğünün grup adlarıyla hizalıdır.**
-/// Banka ekstresi tahmini kullanıcının kategorilerini ADA göre eşler; buradaki
-/// bir adı değiştirmek o eşleşmeyi sessizce koparır. Bağ
-/// `category_starter_pack_guesser_test.dart` ile kilitlidir.
+/// **Burada AD yok, ANAHTAR var.** Kurulacak ad seçili dile göre çözülür
+/// (bkz. `categorySeedName`) ve kurulduğu anda kullanıcı verisine dönüşür.
+/// Anahtar sabittir: [CategoryGuesser] sözlüğü de aynı anahtarları hedefler,
+/// yani bir çeviriyi değiştirmek ekstre tahminini koparmaz. Bağ
+/// `category_starter_pack_test.dart` ile kilitlidir.
 library;
 
 /// Bir ana kategori ve önerilen alt kategorileri.
 typedef StarterPackGroup = ({
-  String name,
+  String key,
   String iconName,
-  List<({String name, String iconName})> children,
+  List<({String key, String iconName})> children,
 });
 
 class CategoryStarterPack {
@@ -23,147 +24,161 @@ class CategoryStarterPack {
 
   static const List<StarterPackGroup> expense = [
     (
-      name: 'Market',
+      key: 'groceries',
       iconName: 'shopping_cart',
       children: [
-        (name: 'Manav', iconName: 'restaurant'),
-        (name: 'Kasap', iconName: 'restaurant'),
-        (name: 'Su & İçecek', iconName: 'local_cafe'),
+        (key: 'groceries.produce', iconName: 'restaurant'),
+        (key: 'groceries.butcher', iconName: 'restaurant'),
+        (key: 'groceries.drinks', iconName: 'local_cafe'),
       ],
     ),
     (
-      name: 'Yemek',
+      key: 'dining',
       iconName: 'restaurant',
       children: [
-        (name: 'Restoran', iconName: 'restaurant'),
-        (name: 'Kafe', iconName: 'local_cafe'),
-        (name: 'Paket Servis', iconName: 'two_wheeler'),
+        (key: 'dining.restaurant', iconName: 'restaurant'),
+        (key: 'dining.cafe', iconName: 'local_cafe'),
+        (key: 'dining.takeaway', iconName: 'two_wheeler'),
       ],
     ),
     (
-      name: 'Ulaşım',
+      key: 'transport',
       iconName: 'directions_bus',
       children: [
-        (name: 'Yakıt', iconName: 'local_gas_station'),
-        (name: 'Toplu Taşıma', iconName: 'directions_bus'),
-        (name: 'Taksi', iconName: 'local_taxi'),
-        (name: 'Otopark', iconName: 'directions_car'),
+        (key: 'transport.fuel', iconName: 'local_gas_station'),
+        (key: 'transport.public', iconName: 'directions_bus'),
+        (key: 'transport.taxi', iconName: 'local_taxi'),
+        (key: 'transport.parking', iconName: 'directions_car'),
       ],
     ),
     (
-      name: 'Fatura',
+      key: 'bills',
       iconName: 'receipt_long',
       children: [
-        (name: 'Elektrik', iconName: 'lightbulb'),
-        (name: 'Su', iconName: 'water_drop'),
-        (name: 'Doğalgaz', iconName: 'emergency'),
-        (name: 'İnternet', iconName: 'language'),
-        (name: 'Telefon', iconName: 'phone_android'),
+        (key: 'bills.electricity', iconName: 'lightbulb'),
+        (key: 'bills.water', iconName: 'water_drop'),
+        (key: 'bills.gas', iconName: 'emergency'),
+        (key: 'bills.internet', iconName: 'language'),
+        (key: 'bills.phone', iconName: 'phone_android'),
       ],
     ),
     (
-      name: 'Konut',
+      key: 'housing',
       iconName: 'home',
       children: [
-        // 'Kira' CategoryGuesser'ın grup adı — alt kategori olarak da ada göre
+        // 'housing.rent' CategoryGuesser'ın da hedefi — alt kategori olarak
         // eşleşir, sözlük bozulmaz.
-        (name: 'Kira', iconName: 'home'),
-        (name: 'Aidat', iconName: 'apartment'),
-        (name: 'Bakım & Onarım', iconName: 'construction'),
+        (key: 'housing.rent', iconName: 'home'),
+        (key: 'housing.dues', iconName: 'apartment'),
+        (key: 'housing.maintenance', iconName: 'construction'),
       ],
     ),
     (
-      name: 'Alışveriş',
+      key: 'shopping',
       iconName: 'shopping_bag',
       children: [
-        (name: 'Giyim', iconName: 'checkroom'),
-        (name: 'Elektronik', iconName: 'devices'),
-        (name: 'Ev Eşyası', iconName: 'chair'),
+        (key: 'shopping.clothing', iconName: 'checkroom'),
+        (key: 'shopping.electronics', iconName: 'devices'),
+        (key: 'shopping.homegoods', iconName: 'chair'),
       ],
     ),
     (
-      name: 'Sağlık',
+      key: 'health',
       iconName: 'medical_services',
       children: [
-        (name: 'İlaç', iconName: 'health_and_safety'),
-        (name: 'Doktor', iconName: 'medical_services'),
-        (name: 'Spor', iconName: 'fitness_center'),
+        (key: 'health.pharmacy', iconName: 'health_and_safety'),
+        (key: 'health.doctor', iconName: 'medical_services'),
+        (key: 'health.fitness', iconName: 'fitness_center'),
       ],
     ),
     (
-      name: 'Eğitim',
+      key: 'education',
       iconName: 'school',
       children: [
-        (name: 'Okul & Kurs', iconName: 'school'),
-        (name: 'Kitap', iconName: 'menu_book'),
+        (key: 'education.school', iconName: 'school'),
+        (key: 'education.books', iconName: 'menu_book'),
       ],
     ),
     (
-      name: 'Eğlence',
+      key: 'entertainment',
       iconName: 'movie',
       children: [
-        (name: 'Sinema & Konser', iconName: 'movie'),
-        (name: 'Abonelikler', iconName: 'tv'),
-        (name: 'Oyun', iconName: 'sports_esports'),
+        (key: 'entertainment.cinema', iconName: 'movie'),
+        (key: 'entertainment.subscriptions', iconName: 'tv'),
+        (key: 'entertainment.games', iconName: 'sports_esports'),
       ],
     ),
     (
-      name: 'Kişisel',
+      key: 'personal',
       iconName: 'face',
       children: [
-        (name: 'Kuaför', iconName: 'content_cut'),
-        (name: 'Kozmetik', iconName: 'face'),
+        (key: 'personal.hairdresser', iconName: 'content_cut'),
+        (key: 'personal.cosmetics', iconName: 'face'),
       ],
     ),
     // Gider tarafında da bir "Yatırım" kalemi var: ekstredeki hisse/fon/altın
     // ALIMI cüzdandan çıkan paradır. (Uygulama içinden yapılan yatırım
     // hareketleri sistem etiketi taşır, bu kategoriye düşmez —
     // bkz. CashMovementTags.investmentBuy.)
-    (name: 'Yatırım', iconName: 'trending_up', children: []),
-    (name: 'Diğer', iconName: 'category', children: []),
+    (key: 'investment', iconName: 'trending_up', children: []),
+    (key: 'other', iconName: 'category', children: []),
   ];
 
   static const List<StarterPackGroup> income = [
-    (name: 'Maaş', iconName: 'payments', children: []),
+    (key: 'salary', iconName: 'payments', children: []),
     (
-      name: 'Ek Gelir',
+      key: 'sideIncome',
       iconName: 'savings',
       children: [
-        (name: 'Prim & İkramiye', iconName: 'savings'),
-        (name: 'Serbest Çalışma', iconName: 'work'),
+        (key: 'sideIncome.bonus', iconName: 'savings'),
+        (key: 'sideIncome.freelance', iconName: 'work'),
       ],
     ),
-    (name: 'Kira Geliri', iconName: 'apartment', children: []),
-    (name: 'Yatırım', iconName: 'trending_up', children: []),
-    (name: 'Diğer Gelir', iconName: 'category', children: []),
+    (key: 'rentalIncome', iconName: 'apartment', children: []),
+    // Gelir tarafının "Yatırım"ı gider tarafındakiyle AYNI adı taşır ama ayrı
+    // bir anahtardır: ikisi ayrı ad uzaylarında (gelir/gider) yaşayan iki ayrı
+    // kategoridir. Adları eşit olduğu için ada bakan eşleşme yine de doğru
+    // havuzda doğru kaydı bulur.
+    (key: 'investmentIncome', iconName: 'trending_up', children: []),
+    (key: 'otherIncome', iconName: 'category', children: []),
   ];
 
   /// Bir grubun kuracağı kayıt sayısı (kendisi + çocukları).
   static int sizeOf(StarterPackGroup group) => 1 + group.children.length;
 
-  /// Önerilen bir ad pakette bir ALT kategoriyse üst kategorisinin adı, değilse
-  /// `null`.
+  /// Önerilen bir anahtar pakette bir ALT kategoriyse üst kategorisinin
+  /// anahtarı, değilse `null`.
   ///
-  /// Banka ekstresi eksik bir kategoriyi kurmayı önerdiğinde ("Kira") onu
-  /// paketteki doğru yere ("Konut › Kira") yerleştirmek için kullanılır;
+  /// Banka ekstresi eksik bir kategoriyi kurmayı önerdiğinde (`housing.rent`)
+  /// onu paketteki doğru yere ("Konut › Kira") yerleştirmek için kullanılır;
   /// aksi hâlde ekstre kökte ikinci bir "Kira" üretirdi.
-  static String? parentNameOf(String childName, {required bool isExpense}) {
+  static String? parentKeyOf(String childKey, {required bool isExpense}) {
     for (final group in isExpense ? expense : income) {
       for (final child in group.children) {
-        if (child.name == childName) return group.name;
+        if (child.key == childKey) return group.key;
       }
     }
     return null;
   }
 
-  /// Pakette geçen bir adın önerilen ikonu (ana ya da alt kategori).
-  static String? iconNameOf(String name, {required bool isExpense}) {
+  /// Pakette geçen bir anahtarın önerilen ikonu (ana ya da alt kategori).
+  static String? iconNameOf(String key, {required bool isExpense}) {
     for (final group in isExpense ? expense : income) {
-      if (group.name == name) return group.iconName;
+      if (group.key == key) return group.iconName;
       for (final child in group.children) {
-        if (child.name == name) return child.iconName;
+        if (child.key == key) return child.iconName;
       }
     }
     return null;
+  }
+
+  /// Paketteki TÜM anahtarlar (ana + alt), tür fark etmeksizin.
+  static Iterable<String> get allKeys sync* {
+    for (final group in [...expense, ...income]) {
+      yield group.key;
+      for (final child in group.children) {
+        yield child.key;
+      }
+    }
   }
 }

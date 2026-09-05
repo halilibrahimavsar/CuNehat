@@ -1,3 +1,5 @@
+import 'package:cunehat/core/l10n/app_localizations.dart';
+import 'package:cunehat/core/l10n/category_seed_names.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
@@ -6,48 +8,78 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final expenseNames = <String>[
-    for (final g in CategoryStarterPack.expense) ...[
-      g.name,
-      ...g.children.map((c) => c.name),
-    ],
-  ];
-  final incomeNames = <String>[
-    for (final g in CategoryStarterPack.income) ...[
-      g.name,
-      ...g.children.map((c) => c.name),
-    ],
+  final languages =
+      AppLocalizations.supportedLocales.map((l) => l.languageCode).toList();
+
+  final allGroups = [
+    ...CategoryStarterPack.expense,
+    ...CategoryStarterPack.income,
   ];
 
   group('başlangıç paketi tutarlılığı', () {
-    test('kök adları tür içinde tekil', () {
+    test('anahtarlar paket genelinde tekil', () {
+      // Anahtar artık KİMLİK: iki kayıt aynı anahtarı taşırsa sözlük hedefi
+      // hangisini kastettiğini söyleyemez.
+      final keys = CategoryStarterPack.allKeys.toList();
+      expect(keys.toSet().length, keys.length);
+    });
+
+    test('alt kategori anahtarı ana kategorisinin YOLUNU taşır', () {
+      // `resolveTarget` üst kategoriyi anahtar yolundan okuyor; kayan bir
+      // ön ek, alt kategoriyi yanlış kökün altına düşürür.
+      for (final g in allGroups) {
+        for (final c in g.children) {
+          expect(c.key, startsWith('${g.key}$kCategoryKeySeparator'),
+              reason: '${c.key}, ${g.key} altında değil');
+        }
+      }
+    });
+
+    test('her anahtarın DESTEKLENEN HER DİLDE bir çevirisi var', () {
+      // Çeviri unutulursa `categorySeedName` anahtarın kendisini döner; o ad
+      // kullanıcının kategori listesine `bills.electricity` diye yazılırdı.
+      for (final key in CategoryStarterPack.allKeys) {
+        for (final language in languages) {
+          expect(categorySeedName(key, language), isNot(key),
+              reason: '$key için $language çevirisi yok');
+        }
+      }
+    });
+
+    test('kök adları HER DİLDE tür içinde tekil', () {
+      // Tekillik yalnız Türkçede sağlanırsa İngilizce kurulum iki "Other"
+      // üretir ve `taken` ikincisini sessizce yutar.
       for (final groups in [
         CategoryStarterPack.expense,
         CategoryStarterPack.income
       ]) {
-        final names = groups.map((g) => normalizeCategoryName(g.name)).toList();
-        expect(names.toSet().length, names.length);
+        for (final language in languages) {
+          final names = groups
+              .map((g) => categorySeedName(g.key, language))
+              .map(normalizeCategoryName)
+              .toList();
+          expect(names.toSet().length, names.length, reason: language);
+        }
       }
     });
 
-    test('bir grubun çocuk adları kendi içinde tekil', () {
-      for (final g in [
-        ...CategoryStarterPack.expense,
-        ...CategoryStarterPack.income
-      ]) {
-        final names =
-            g.children.map((c) => normalizeCategoryName(c.name)).toList();
-        expect(names.toSet().length, names.length, reason: g.name);
+    test('bir grubun çocuk adları HER DİLDE kendi içinde tekil', () {
+      for (final g in allGroups) {
+        for (final language in languages) {
+          final names = g.children
+              .map((c) => categorySeedName(c.key, language))
+              .map(normalizeCategoryName)
+              .toList();
+          expect(names.toSet().length, names.length,
+              reason: '${g.key} / $language');
+        }
       }
     });
 
     test('her ikon adı AppIcons kataloğunda gerçekten var', () {
       // getIconData bilinmeyen adı sessizce `account_balance`'a düşürür;
       // yazım hatası ancak böyle yakalanır.
-      for (final g in [
-        ...CategoryStarterPack.expense,
-        ...CategoryStarterPack.income
-      ]) {
+      for (final g in allGroups) {
         for (final name in [g.iconName, ...g.children.map((c) => c.iconName)]) {
           expect(
             AppIcons.getIconData(name),
@@ -59,59 +91,48 @@ void main() {
     });
 
     test('sizeOf kendisi + çocuklarını sayar', () {
-      final fatura =
-          CategoryStarterPack.expense.firstWhere((g) => g.name == 'Fatura');
-      expect(CategoryStarterPack.sizeOf(fatura), 1 + fatura.children.length);
-    });
-
-    test('parentNameOf alt kategoriyi ana kategorisine bağlar', () {
-      expect(
-          CategoryStarterPack.parentNameOf('Kira', isExpense: true), 'Konut');
-      expect(
-          CategoryStarterPack.parentNameOf('Fatura', isExpense: true), isNull);
-      expect(CategoryStarterPack.parentNameOf('yok', isExpense: true), isNull);
+      final bills =
+          CategoryStarterPack.expense.firstWhere((g) => g.key == 'bills');
+      expect(CategoryStarterPack.sizeOf(bills), 1 + bills.children.length);
     });
 
     test('iconNameOf hem kök hem çocuk için çalışır', () {
+      expect(CategoryStarterPack.iconNameOf('bills', isExpense: true),
+          'receipt_long');
       expect(
-          CategoryStarterPack.iconNameOf('Fatura', isExpense: true), isNotNull);
-      expect(CategoryStarterPack.iconNameOf('Elektrik', isExpense: true),
-          isNotNull);
+        CategoryStarterPack.iconNameOf('bills.electricity', isExpense: true),
+        'lightbulb',
+      );
+      expect(CategoryStarterPack.iconNameOf('yok', isExpense: true), isNull);
+      // Anahtarlar tür içinde aranır: gider anahtarı gelir tarafında yok.
+      expect(CategoryStarterPack.iconNameOf('bills', isExpense: false), isNull);
     });
   });
 
   group('CategoryGuesser sözleşmesi', () {
-    // Ekstre tahmini kullanıcının kategorilerini ADA göre eşler. Pakette
-    // karşılığı olmayan bir hedef, dokunulmamış bir kurulumda hiçbir zaman
-    // tutmaz — bağlantı sessizce kopar.
+    // Ekstre tahmini kullanıcının kategorilerini ADA göre eşler, ama sözlük
+    // ANAHTAR hedefler. Pakette karşılığı olmayan bir anahtar, dokunulmamış
+    // bir kurulumda hiçbir zaman tutmaz — bağlantı sessizce kopar.
     void expectResolvable(
       Iterable<CategoryTarget> targets,
       List<StarterPackGroup> pack,
     ) {
-      final roots = {
-        for (final g in pack) normalizeCategoryName(g.name): g,
-      };
+      final roots = {for (final g in pack) g.key: g};
       for (final target in targets) {
-        final parentName = target.parentName;
-        if (parentName == null) {
-          expect(
-            roots.containsKey(normalizeCategoryName(target.name)),
-            isTrue,
-            reason: '"${target.name}" pakette kök olarak yok',
-          );
+        final parentKey = target.parentKey;
+        if (parentKey == null) {
+          expect(roots.containsKey(target.key), isTrue,
+              reason: '"${target.key}" pakette kök olarak yok');
           continue;
         }
         // Alt kategori hedefi: ana kategori pakette VAR olmalı (son çare
-        // düşüşü oraya) ve alt kategori gerçekten onun ALTINDA durmalı —
-        // pakette başka bir ananın çocuğuysa düşüş yolu yanlış yere gider.
-        final root = roots[normalizeCategoryName(parentName)];
-        expect(root, isNotNull, reason: '"$parentName" pakette kök olarak yok');
+        // düşüşü oraya) ve alt kategori gerçekten onun ALTINDA durmalı.
+        final root = roots[parentKey];
+        expect(root, isNotNull, reason: '"$parentKey" pakette kök olarak yok');
         expect(
-          root!.children.any((c) =>
-              normalizeCategoryName(c.name) ==
-              normalizeCategoryName(target.name)),
+          root!.children.any((c) => c.key == target.key),
           isTrue,
-          reason: '"${target.name}", "$parentName" altında yok',
+          reason: '"${target.key}", "$parentKey" altında yok',
         );
       }
     }
@@ -127,15 +148,11 @@ void main() {
     });
 
     test('banka etiketi eşlemesinin hedefleri de pakette var', () {
-      final available =
-          {...expenseNames, ...incomeNames}.map(normalizeCategoryName).toSet();
+      final available = CategoryStarterPack.allKeys.toSet();
 
-      for (final group in CategoryGuesser.tagGroupTargets) {
-        expect(
-          available.contains(normalizeCategoryName(group)),
-          isTrue,
-          reason: '"$group" başlangıç paketinde yok',
-        );
+      for (final key in CategoryGuesser.tagGroupTargets) {
+        expect(available.contains(key), isTrue,
+            reason: '"$key" başlangıç paketinde yok');
       }
     });
 

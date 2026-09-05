@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/category_seed_names.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
@@ -15,6 +16,13 @@ CategoryEntity _cat(String name, {bool isExpense = true, String? parent}) =>
       isExpense: isExpense,
       parentId: parent == null ? null : 'id-$parent',
     );
+
+/// Paket anahtarının Türkçe adı. Testin beklentileri okunur kalsın diye:
+/// kullanıcının kategorisi ADI taşır, anahtarı değil.
+String _tr(String key) => categorySeedName(key, 'tr');
+
+/// Aynısının İngilizcesi — dil değişiminin eşleşmeyi koparmadığını ölçer.
+String _en(String key) => categorySeedName(key, 'en');
 
 ImportDraft _draft(String desc, {bool income = false, String? sourceTag}) =>
     ImportDraft(
@@ -37,15 +45,15 @@ void main() {
   // ölçemez.
   final defaultExpenseCats = <CategoryEntity>[
     for (final g in CategoryStarterPack.expense) ...[
-      _cat(g.name),
-      for (final c in g.children) _cat(c.name, parent: g.name),
+      _cat(_tr(g.key)),
+      for (final c in g.children) _cat(_tr(c.key), parent: _tr(g.key)),
     ],
   ];
   final defaultIncomeCats = <CategoryEntity>[
     for (final g in CategoryStarterPack.income) ...[
-      _cat(g.name, isExpense: false),
+      _cat(_tr(g.key), isExpense: false),
       for (final c in g.children)
-        _cat(c.name, isExpense: false, parent: g.name),
+        _cat(_tr(c.key), isExpense: false, parent: _tr(g.key)),
     ],
   ];
 
@@ -191,7 +199,7 @@ void main() {
       // Alt kategorilerini silmiş/hiç kurmamış kullanıcı, eskiden olduğu gibi
       // kök eşleşmesi almalı — davranış geriye dönük bozulmamalı.
       final rootsOnly = [
-        for (final g in CategoryStarterPack.expense) _cat(g.name),
+        for (final g in CategoryStarterPack.expense) _cat(_tr(g.key)),
       ];
       final result = guesser.guess(
         description: 'ENERJISA ELEKTRIK FATURA ODEMESI',
@@ -352,6 +360,54 @@ void main() {
     expect(result, 'id-İlaç');
   });
 
+  group('dil değişimi', () {
+    // Bildirilen hata (3 Eylül 2026) düzeltilirken açılan risk: kategori ADI
+    // kullanıcı verisidir ve kurulduğu dilde DONAR. Sözlük hedefleri artık
+    // anahtar taşıyor; eşleşme yalnız seçili dile bakarsa Türkçe kurup
+    // İngilizceye geçen kullanıcıda ekstre tahmini tamamen ölür.
+    final englishCats = <CategoryEntity>[
+      for (final g in CategoryStarterPack.expense) ...[
+        _cat(_en(g.key)),
+        for (final c in g.children) _cat(_en(c.key), parent: _en(g.key)),
+      ],
+    ];
+
+    test('İngilizce kurulmuş kategoriler de eşleşir', () {
+      expect(
+        guesser.guess(
+          description: 'ENERJISA ELEKTRIK FATURA ODEMESI',
+          isIncome: false,
+          candidates: englishCats,
+        ),
+        'id-${_en('bills.electricity')}',
+      );
+    });
+
+    test('Türkçe kurulmuş kategoriler İngilizce arayüzde de eşleşir', () {
+      // Aynı sözlük, aynı hedef; yalnız kullanıcının listesi Türkçe.
+      expect(
+        guesser.guess(
+          description: 'MIGROS ALISVERIS',
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        'id-${_tr('groceries')}',
+      );
+    });
+
+    test('öneri SEÇİLİ dilde ad üretir', () {
+      final suggestions = guesser.suggestNewCategories(
+        drafts: [_draft('ENERJISA ELEKTRIK FATURA')],
+        expenseCategories: const [],
+        incomeCategories: const [],
+        languageCode: 'en',
+      );
+      expect(suggestions.single.name, 'Electricity');
+      expect(suggestions.single.parentName, 'Bills');
+      expect(suggestions.single.parentIconName, 'receipt_long');
+    });
+  });
+
   group('suggestNewCategories', () {
     test('yalnız kullanıcının listesinde OLMAYAN gruplar önerilir', () {
       final drafts = [
@@ -365,6 +421,7 @@ void main() {
         expenseCategories:
             defaultExpenseCats.where((c) => c.name != 'Yatırım').toList(),
         incomeCategories: defaultIncomeCats,
+        languageCode: 'tr',
       );
       expect(suggestions.map((s) => s.name), ['Yatırım']);
       expect(suggestions.single.isIncome, isFalse);
@@ -376,6 +433,7 @@ void main() {
         drafts: drafts,
         expenseCategories: defaultExpenseCats,
         incomeCategories: defaultIncomeCats,
+        languageCode: 'tr',
       );
       expect(suggestions, isEmpty);
     });
@@ -394,6 +452,7 @@ void main() {
         expenseCategories:
             defaultExpenseCats.where((c) => c.name != 'Yatırım').toList(),
         incomeCategories: defaultIncomeCats,
+        languageCode: 'tr',
       );
       expect(suggestions.length, 1);
       expect(suggestions.single.name, 'Yatırım');
@@ -407,6 +466,7 @@ void main() {
         drafts: [_draft('TEMMUZ MAAS ODEMESI', income: true)],
         expenseCategories: defaultExpenseCats,
         incomeCategories: const [],
+        languageCode: 'tr',
       );
       expect(suggestions.single.name, 'Maaş');
       expect(suggestions.single.isIncome, isTrue);
@@ -420,6 +480,7 @@ void main() {
         drafts: [_draft('ENERJISA ELEKTRIK FATURA')],
         expenseCategories: [_cat('Fatura')],
         incomeCategories: const [],
+        languageCode: 'tr',
       );
       expect(suggestions, isEmpty);
     });
@@ -430,6 +491,7 @@ void main() {
         drafts: [_draft('ENERJISA ELEKTRIK FATURA')],
         expenseCategories: const [],
         incomeCategories: const [],
+        languageCode: 'tr',
       );
       expect(suggestions.single.name, 'Elektrik');
       expect(suggestions.single.parentName, 'Fatura');
@@ -442,6 +504,7 @@ void main() {
         drafts: [_draft('ACIKLAMA YOK', sourceTag: 'Fatura Ödemesi')],
         expenseCategories: const [],
         incomeCategories: const [],
+        languageCode: 'tr',
       );
       expect(suggestions.single.name, 'Fatura');
     });

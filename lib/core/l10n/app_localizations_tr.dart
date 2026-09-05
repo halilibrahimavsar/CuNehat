@@ -4197,4 +4197,154 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get txRailTitle => 'Gün şeridi';
+
+  @override
+  String get catSeedGroceries => 'Market';
+
+  @override
+  String get catSeedGroceriesProduce => 'Manav';
+
+  @override
+  String get catSeedGroceriesButcher => 'Kasap';
+
+  @override
+  String get catSeedGroceriesDrinks => 'Su & İçecek';
+
+  @override
+  String get catSeedDining => 'Yemek';
+
+  @override
+  String get catSeedDiningRestaurant => 'Restoran';
+
+  @override
+  String get catSeedDiningCafe => 'Kafe';
+
+  @override
+  String get catSeedDiningTakeaway => 'Paket Servis';
+
+  @override
+  String get catSeedTransport => 'Ulaşım';
+
+  @override
+  String get catSeedTransportFuel => 'Yakıt';
+
+  @override
+  String get catSeedTransportPublic => 'Toplu Taşıma';
+
+  @override
+  String get catSeedTransportTaxi => 'Taksi';
+
+  @override
+  String get catSeedTransportParking => 'Otopark';
+
+  @override
+  String get catSeedBills => 'Fatura';
+
+  @override
+  String get catSeedBillsElectricity => 'Elektrik';
+
+  @override
+  String get catSeedBillsWater => 'Su';
+
+  @override
+  String get catSeedBillsGas => 'Doğalgaz';
+
+  @override
+  String get catSeedBillsInternet => 'İnternet';
+
+  @override
+  String get catSeedBillsPhone => 'Telefon';
+
+  @override
+  String get catSeedHousing => 'Konut';
+
+  @override
+  String get catSeedHousingRent => 'Kira';
+
+  @override
+  String get catSeedHousingDues => 'Aidat';
+
+  @override
+  String get catSeedHousingMaintenance => 'Bakım & Onarım';
+
+  @override
+  String get catSeedShopping => 'Alışveriş';
+
+  @override
+  String get catSeedShoppingClothing => 'Giyim';
+
+  @override
+  String get catSeedShoppingElectronics => 'Elektronik';
+
+  @override
+  String get catSeedShoppingHomeGoods => 'Ev Eşyası';
+
+  @override
+  String get catSeedHealth => 'Sağlık';
+
+  @override
+  String get catSeedHealthPharmacy => 'İlaç';
+
+  @override
+  String get catSeedHealthDoctor => 'Doktor';
+
+  @override
+  String get catSeedHealthFitness => 'Spor';
+
+  @override
+  String get catSeedEducation => 'Eğitim';
+
+  @override
+  String get catSeedEducationSchool => 'Okul & Kurs';
+
+  @override
+  String get catSeedEducationBooks => 'Kitap';
+
+  @override
+  String get catSeedEntertainment => 'Eğlence';
+
+  @override
+  String get catSeedEntertainmentCinema => 'Sinema & Konser';
+
+  @override
+  String get catSeedEntertainmentSubscriptions => 'Abonelikler';
+
+  @override
+  String get catSeedEntertainmentGames => 'Oyun';
+
+  @override
+  String get catSeedPersonal => 'Kişisel';
+
+  @override
+  String get catSeedPersonalHairdresser => 'Kuaför';
+
+  @override
+  String get catSeedPersonalCosmetics => 'Kozmetik';
+
+  @override
+  String get catSeedInvestment => 'Yatırım';
+
+  @override
+  String get catSeedOther => 'Diğer';
+
+  @override
+  String get catSeedSalary => 'Maaş';
+
+  @override
+  String get catSeedSideIncome => 'Ek Gelir';
+
+  @override
+  String get catSeedSideIncomeBonus => 'Prim & İkramiye';
+
+  @override
+  String get catSeedSideIncomeFreelance => 'Serbest Çalışma';
+
+  @override
+  String get catSeedRentalIncome => 'Kira Geliri';
+
+  @override
+  String get catSeedInvestmentIncome => 'Yatırım';
+
+  @override
+  String get catSeedOtherIncome => 'Diğer Gelir';
 }

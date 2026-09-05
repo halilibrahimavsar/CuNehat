@@ -1,4 +1,5 @@
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/l10n/category_seed_names.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_starter_pack.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -21,11 +22,18 @@ class InstallStarterPackUseCase {
 
   /// EKSİK olanları kurar; kurulan kategori sayısını (ana + alt) döner.
   ///
+  /// [languageCode] paketteki anahtarların hangi dilde ADA çevrileceğini
+  /// belirler. Kurulan ad kullanıcı verisidir: sonradan dil değişse de
+  /// değişmez — kullanıcının kendi yazdığı bir ad neyse o.
+  ///
   /// Zaten var olan adlar atlanır — paket yarı dolu bir kurulumdan yeniden
   /// çalıştırılabilmeli. Tek bir çakışma tüm partiyi düşürseydi ("Maaş" duran
   /// bir cüzdanda öneri setine dönmek) hiçbir şey kurulmazdı, çünkü
   /// `addAll` partiyi bütün olarak doğrular.
-  Future<int> call(Iterable<StarterPackSelection> selections) async {
+  Future<int> call(
+    Iterable<StarterPackSelection> selections, {
+    required String languageCode,
+  }) async {
     final existing = await repository.getAllCategories();
     final entities = <CategoryEntity>[];
 
@@ -54,12 +62,12 @@ class InstallStarterPackUseCase {
 
       // Kök zaten varsa çocuklar ONUN altına eklenir; yeni bir ikiz kök
       // yaratmak "Fatura" adlı iki ana kategori demek olurdu.
+      final groupName = categorySeedName(group.key, languageCode);
       final existingRoot = existing
           .where((c) =>
               c.isRoot &&
               c.isExpense == isExpense &&
-              normalizeCategoryName(c.name) ==
-                  normalizeCategoryName(group.name))
+              normalizeCategoryName(c.name) == normalizeCategoryName(groupName))
           .firstOrNull;
 
       final String rootId;
@@ -69,7 +77,7 @@ class InstallStarterPackUseCase {
         rootId = UidGenerator.generateV7();
         entities.add(CategoryEntity(
           id: rootId,
-          name: group.name,
+          name: groupName,
           iconName: group.iconName,
           isExpense: isExpense,
           sortOrder: rootOrder[isExpense] = rootOrder[isExpense]! + 1,
@@ -79,10 +87,11 @@ class InstallStarterPackUseCase {
       var childOrder = 0;
       for (final child in group.children) {
         childOrder++;
-        if (taken(child.name, isExpense: isExpense, parentId: rootId)) continue;
+        final childName = categorySeedName(child.key, languageCode);
+        if (taken(childName, isExpense: isExpense, parentId: rootId)) continue;
         entities.add(CategoryEntity(
           id: UidGenerator.generateV7(),
-          name: child.name,
+          name: childName,
           iconName: child.iconName,
           isExpense: isExpense,
           parentId: rootId,
