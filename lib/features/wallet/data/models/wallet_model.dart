@@ -17,6 +17,10 @@ class WalletModel {
   final double openingBalance;
   final String currency;
 
+  /// Bu cüzdanda görünür kategoriler; `null` = kürasyon yok, hepsi görünür.
+  /// Bkz. [WalletEntity.categoryIds] — anlam ve değişmez orada.
+  final List<String>? categoryIds;
+
   const WalletModel({
     required this.id,
     required this.userId,
@@ -32,6 +36,7 @@ class WalletModel {
     this.sortOrder = 0,
     required this.openingBalance,
     this.currency = 'TRY',
+    this.categoryIds,
   });
 
   /// Creates Wallet from JSON Map
@@ -51,6 +56,9 @@ class WalletModel {
       sortOrder: json['sortOrder'] as int,
       openingBalance: (json['openingBalance'] as num).toDouble(),
       currency: json['currency'] as String,
+      // v10'da eklendi. YOKLUĞU anlamlıdır ("kürasyon yok"), bu yüzden sıkı
+      // cast tercihinin istisnası değil kuralın kendisi: nullable okunur.
+      categoryIds: (json['categoryIds'] as List?)?.cast<String>(),
     );
   }
 
@@ -70,6 +78,7 @@ class WalletModel {
       sortOrder: entity.sortOrder,
       openingBalance: entity.openingBalance,
       currency: entity.currency,
+      categoryIds: entity.categoryIds,
     );
   }
 
@@ -89,6 +98,7 @@ class WalletModel {
       sortOrder: sortOrder,
       openingBalance: openingBalance,
       currency: currency,
+      categoryIds: categoryIds,
     );
   }
 
@@ -109,6 +119,7 @@ class WalletModel {
       'sortOrder': sortOrder,
       'openingBalance': openingBalance,
       'currency': currency,
+      'categoryIds': categoryIds,
     };
   }
 
@@ -128,6 +139,7 @@ class WalletModel {
     int? sortOrder,
     double? openingBalance,
     String? currency,
+    List<String>? categoryIds,
   }) {
     return WalletModel(
       id: id ?? this.id,
@@ -144,6 +156,7 @@ class WalletModel {
       sortOrder: sortOrder ?? this.sortOrder,
       openingBalance: openingBalance ?? this.openingBalance,
       currency: currency ?? this.currency,
+      categoryIds: categoryIds ?? this.categoryIds,
     );
   }
 
@@ -179,13 +192,17 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       sortOrder: fields[11] as int,
       openingBalance: (fields[12] as num).toDouble(),
       currency: fields[13] as String,
+      // Alan 14 v10'da eklendi: eski kayıtta `numOfFields` 14 olduğu için
+      // haritada hiç yoktur → null → "kürasyon yok". Hive'dan `List<dynamic>`
+      // döner, cast şart.
+      categoryIds: (fields[14] as List?)?.cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletModel obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -213,6 +230,8 @@ class WalletModelAdapter extends TypeAdapter<WalletModel> {
       ..writeByte(12)
       ..write(obj.openingBalance)
       ..writeByte(13)
-      ..write(obj.currency);
+      ..write(obj.currency)
+      ..writeByte(14)
+      ..write(obj.categoryIds);
   }
 }

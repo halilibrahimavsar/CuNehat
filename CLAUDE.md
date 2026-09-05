@@ -22,21 +22,28 @@ verisi geçersiz sayılır; çözüm veri silme/yeniden kurulumdur, migrasyon de
   dahil — enum değerleri yalnız **sona** eklenir).
 - `typeId` silinmez, adapter kaydı kaldırılmaz.
 - Sıradaki serbest numaralar için ilgili hafıza notlarına bak; tahmin etme.
+  (5 Eyl 2026 itibarıyla: `WalletModel` typeId 0 → sıradaki alan **15**;
+  `CategoryModel` typeId 15 → sıradaki alan **6**; sıradaki typeId **17**.)
 
 ### Yedek şeması — `DataSerializationService.schemaVersion`
 
-- Şu an **sıkı eşitlik**: `data_serialization_service.dart:509`, farklı sürüm
-  `BackupVersionMismatch` ile reddediliyor. Mevcut sürüm **9**.
-- ⛔ **Migrasyon yolu yazılmadan `schemaVersion` ARTIRILMAZ.** Bugün testerların
-  Drive'ında duran v9 yedekleri, sürüm artıp migrasyon yazılmazsa geri
-  yüklenemez hale gelir — yani "yedeğim vardı" diyen kullanıcı verisini
-  kurtaramaz.
-- Migrasyon, ayrıştırmadan **önce** ham JSON map üzerinde çalışan bir vN → vN+1
-  zinciri olmalı; `_parseBackup` sürüm kapısının hemen ardında. Modellerin
-  `fromJson`'ları tek (güncel) biçimi tanımaya devam etsin.
-- Bu iş bilerek ertelendi: bugün sahada yalnız v9 yedekleri var, yani
-  yazılacak dönüşümün test edilebilir tek bir vakası bile yok. Şema değişikliği
-  gerektiren ilk işle **birlikte** yazılacak, öncesinde değil.
+- Mevcut sürüm **10**. Kapı artık sıkı eşitlik DEĞİL: `migrateBackup`
+  (`lib/core/services/backup_migrations.dart`) desteklenen aralıktaki eski
+  yedeği güncel biçime yükseltir, aralık dışındakini `BackupVersionMismatch`
+  ile reddeder. Desteklenen en eski sürüm **9**
+  (`oldestSupportedBackupVersion`).
+- ⛔ **`schemaVersion` artıran, aynı commit'te vN → vN+1 adımını da yazar.**
+  Adım eksikse o sürümden eski TÜM yedekler sessizce reddedilmeye başlar —
+  "yedeğim vardı" diyen kullanıcı verisini kurtaramaz.
+  `backup_migrations_test.dart`'taki "zincir bütünlüğü" testi boşluğu yakalar,
+  ama testi kırmadan geçmenin yolu adımı yazmaktır.
+- Adımlar ayrıştırmadan **önce** ham JSON map üzerinde çalışır
+  (`_parseBackup`'ta sürüm kapısının yerinde), saftır (girdiyi değiştirmez) ve
+  tam bir sürüm atlar. Modellerin `fromJson`'ları tek (güncel) biçimi tanımaya
+  devam eder.
+- Her adımın kendi testi olmalı; ayrıca o sürümün gerçek bir dosyasının uçtan
+  uca geri yüklendiği bir test (`data_serialization_service_test.dart` →
+  "eski sürüm yedeği (v9) migrasyonla geri yüklenir").
 
 ### Genel
 

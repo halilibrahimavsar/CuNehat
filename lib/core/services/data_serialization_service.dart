@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cunehat/core/notifications/notification_service.dart';
+import 'package:cunehat/core/services/backup_migrations.dart';
 import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
@@ -132,7 +133,20 @@ class DataSerializationService {
   ///   KALDIRILDI; yerine `goalId` (16) geldi.
   /// - Böylece gram altın + çeyrek altın + hisse TEK hedefin altında
   ///   toplanabiliyor; ilerleme üyelerin güncel değerlerinden hesaplanır.
-  static const int schemaVersion = 9;
+  ///
+  /// v10 (2026-09-05): cüzdanlara `categoryIds` (nullable) — o cüzdanda
+  /// GÖRÜNÜR kategorilerin kimlikleri.
+  /// - Kategori kayıtları küresel kalır (aynı kategori her cüzdanda AYNI
+  ///   kimliktir), cüzdan yalnız hangilerini kullandığını söyler. Böylece
+  ///   işlem `tag`'i, bütçe anahtarı ve CSV'deki okunaklı ad cüzdandan
+  ///   bağımsız kalır; defterde tek satır bile taşınmaz.
+  /// - `null` = kürasyon yapılmamış → hepsi görünür. v9 yedeğinden dönen
+  ///   cüzdanların değeri budur, yani davranış değişmez.
+  ///
+  /// **Sürüm kapısı artık sıkı eşitlik DEĞİL:** desteklenen aralıktaki eski
+  /// yedekler `migrateBackup` zinciriyle yükseltilip geri yüklenir
+  /// (bkz. `backup_migrations.dart`).
+  static const int schemaVersion = 10;
 
   final HiveInterface _hive;
   final ReceiptStorageService _receiptStorage;
@@ -502,62 +516,63 @@ class DataSerializationService {
       throw const FormatException('Backup root must be a JSON object');
     }
 
-    // Sürüm kapısı: farklı şema sessizce yanlış yorumlanmasın, açıkça reddet.
-    // Tipli istisna: `FormatException` ile aynı sepete düşerse çağıran
-    // "bozuk dosya" der ve kullanıcıya yalan söyler.
-    final version = decoded['version'];
-    if (version != schemaVersion) {
-      throw BackupVersionMismatch(version, schemaVersion);
-    }
+    // Sürüm kapısı + yükseltme: desteklenen aralıktaki eski yedek buradan
+    // GÜNCEL biçime taşınır, aralık dışındaki açıkça reddedilir. Tipli
+    // istisna: `FormatException` ile aynı sepete düşerse çağıran "bozuk
+    // dosya" der ve kullanıcıya yalan söyler.
+    //
+    // Zincir ayrıştırmadan ÖNCE çalışır; bu satırın altındaki her şey tek
+    // (güncel) biçimi tanır, modellerin `fromJson`'ları dahil.
+    final migrated = migrateBackup(decoded, targetVersion: schemaVersion);
 
     final users = <String, Map>{};
-    final usersMap = decoded['users'] as Map<String, dynamic>? ?? {};
+    final usersMap = migrated['users'] as Map<String, dynamic>? ?? {};
     for (final entry in usersMap.entries) {
       users[entry.key] = Map<dynamic, dynamic>.from(entry.value as Map);
     }
 
     // v7'den itibaren kategoriler gerçek bir liste; öncesinde ham prefs
-    // string'lerinin haritasıydı. Sürüm kapısı eski yedeği zaten reddettiği
-    // için burada tek biçim tanınır.
-    final categories = _list(decoded, 'categories')
+    // string'lerinin haritasıydı. Zincir v9'dan öncesini kabul etmediği için
+    // burada tek biçim tanınır.
+    final categories = _list(migrated, 'categories')
         .map((c) => CategoryModel.fromJson(Map<String, dynamic>.from(c as Map)))
         .toList();
 
-    final goals = _list(decoded, 'goals')
+    final goals = _list(migrated, 'goals')
         .map((g) => GoalModel.fromJson(Map<String, dynamic>.from(g as Map)))
         .toList();
 
     return _ParsedBackup(
-      wallets: _list(decoded, 'wallets').map((w) {
+      wallets: _list(migrated, 'wallets').map((w) {
         final data = Map<String, dynamic>.from(w as Map);
         return WalletModel.fromJson(data['id'] as String, data);
       }).toList(),
-      transactions: _list(decoded, 'transactions').map((t) {
+      transactions: _list(migrated, 'transactions').map((t) {
         final data = Map<String, dynamic>.from(t as Map);
         return TransactionModel.fromJson(data['id'] as String, data);
       }).toList(),
-      investments: _list(decoded, 'investments').map((i) {
+      investments: _list(migrated, 'investments').map((i) {
         final data = Map<String, dynamic>.from(i as Map);
         return InvestmentModel.fromJson(data['id'] as String, data);
       }).toList(),
-      debts: _list(decoded, 'debts')
+      debts: _list(migrated, 'debts')
           .map((d) => DebtModel.fromJson(Map<String, dynamic>.from(d as Map)))
           .toList(),
-      receivables: _list(decoded, 'receivables')
+      receivables: _list(migrated, 'receivables')
           .map((r) =>
               ReceivableModel.fromJson(Map<String, dynamic>.from(r as Map)))
           .toList(),
-      budgets: _list(decoded, 'budgets')
+      budgets: _list(migrated, 'budgets')
           .map((b) => BudgetModel.fromJson(Map<String, dynamic>.from(b as Map)))
           .toList(),
-      recurringTransactions: _list(decoded, 'recurringTransactions')
+      recurringTransactions: _list(migrated, 'recurringTransactions')
           .map((r) => RecurringTransactionModel.fromJson(
               Map<String, dynamic>.from(r as Map)))
           .toList(),
       users: users,
       categories: categories,
       goals: goals,
-      timestamp: DateTime.tryParse(decoded['timestamp'] as String? ?? ''),
+      timestamp: DateTime.tryParse(migrated['timestamp'] as String? ?? ''),
     );
   }
 

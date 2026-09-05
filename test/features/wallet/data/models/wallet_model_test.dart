@@ -38,6 +38,8 @@ void main() {
       'sortOrder': 1,
       'openingBalance': 800.0,
       'currency': 'TRY',
+      // v10: kürasyon yapılmamış cüzdan. `null` = hepsi görünür.
+      'categoryIds': null,
     };
 
     test('fromEntity and toEntity should match correctly', () {
@@ -151,8 +153,8 @@ void main() {
 
       adapter.write(writer, model);
 
-      // Alan sayısı: 14 (0-13, 13 = currency)
-      verify(() => writer.writeByte(14)).called(1);
+      // Alan sayısı: 15 (0-14, 14 = categoryIds)
+      verify(() => writer.writeByte(15)).called(1);
 
       // Verify that write was called for each generic type
       verify(() => writer.write<String?>(any(),
@@ -171,14 +173,21 @@ void main() {
       verify(() =>
               writer.write<int>(any(), writeTypeId: any(named: 'writeTypeId')))
           .called(1);
+      // categoryIds (v10) — null da olsa YAZILIR: alan sayısı sabit kalmalı.
+      verify(() => writer.write<List<String>?>(any(),
+          writeTypeId: any(named: 'writeTypeId'))).called(1);
 
       // Verify all writeBytes are called sequentially
-      for (int i = 0; i <= 13; i++) {
+      for (int i = 0; i <= 14; i++) {
         verify(() => writer.writeByte(i)).called(1);
       }
     });
 
-    test('read parses currency field (14 alanlı yeni kayıt)', () {
+    /// GERİYE UYUMLULUK: v10 öncesi kayıtlar 14 alanlı yazıldı. Alan 14
+    /// haritada hiç yok → `categoryIds` null → "kürasyon yok, hepsi görünür".
+    /// Bu test kapalı testteki 13 kullanıcının cihazındaki kayıtları temsil
+    /// eder; kırılırsa güncelleme onların cüzdanlarını okuyamaz.
+    test('read parses currency field (14 alanlı ESKİ kayıt)', () {
       final adapter = WalletModelAdapter();
       final reader = MockBinaryReader();
 
@@ -207,6 +216,56 @@ void main() {
 
       expect(result.currency, 'USD');
       expect(result.balance, 1000.0);
+      expect(result.categoryIds, isNull);
+    });
+
+    test('read parses categoryIds (15 alanlı v10 kaydı)', () {
+      final adapter = WalletModelAdapter();
+      final reader = MockBinaryReader();
+
+      final byteAnswers = [
+        15,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ];
+      when(() => reader.readByte()).thenAnswer((_) => byteAnswers.removeAt(0));
+
+      final readAnswers = <dynamic>[
+        'wallet_1',
+        'user_1',
+        'İş',
+        1000.0,
+        0.0,
+        0.0,
+        0.0,
+        '0xFF4CAF50',
+        'money',
+        createdDate,
+        true,
+        1,
+        800.0,
+        'TRY',
+        // Hive listeyi `List<dynamic>` olarak geri verir; cast şart.
+        <dynamic>['cat-a', 'cat-b'],
+      ];
+      when(() => reader.read()).thenAnswer((_) => readAnswers.removeAt(0));
+
+      final result = adapter.read(reader);
+
+      expect(result.categoryIds, ['cat-a', 'cat-b']);
     });
   });
 }

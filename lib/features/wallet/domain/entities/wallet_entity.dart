@@ -23,6 +23,23 @@ class WalletEntity extends Equatable {
   /// değiştirilemez (geçmiş tutarların anlamı bozulur).
   final String currency;
 
+  /// Bu cüzdanda GÖRÜNÜR kategorilerin kimlikleri.
+  ///
+  /// Kategoriler küresel kayıtlardır (bkz. [CategoryEntity]); cüzdan onlara
+  /// sahip olmaz, yalnız hangilerini kullandığını söyler. Böylece aynı
+  /// kategori iki cüzdanda AYNI kimliği taşır — işlem `tag`'i, bütçe anahtarı
+  /// ve CSV'deki okunaklı ad cüzdandan bağımsız kalır.
+  ///
+  /// **`null` = kürasyon yapılmamış → hepsi görünür.** Bu, alanı olmayan eski
+  /// kayıtların (Hive'da alan 14 yok, v9 yedeğinde anahtar yok) anlamıdır ve
+  /// mevcut kurulumlarda davranışı hiç değiştirmez. Yeni cüzdanlar BOŞ küme
+  /// (`const []`) ile doğar: "henüz hiçbir kategori seçilmedi", bu yüzden
+  /// başlangıç paketi onlara yeniden önerilir.
+  ///
+  /// Değişmez: bir alt kategori kümedeyse ana kategorisi de kümededir
+  /// (bkz. `wallet_category_scope.dart`).
+  final List<String>? categoryIds;
+
   const WalletEntity({
     required this.id,
     required this.userId,
@@ -38,6 +55,7 @@ class WalletEntity extends Equatable {
     this.sortOrder = 0,
     required this.openingBalance,
     this.currency = 'TRY',
+    this.categoryIds,
   });
 
   WalletEntity copyWith({
@@ -55,6 +73,7 @@ class WalletEntity extends Equatable {
     int? sortOrder,
     double? openingBalance,
     String? currency,
+    List<String>? categoryIds,
   }) {
     return WalletEntity(
       id: id ?? this.id,
@@ -71,6 +90,10 @@ class WalletEntity extends Equatable {
       sortOrder: sortOrder ?? this.sortOrder,
       openingBalance: openingBalance ?? this.openingBalance,
       currency: currency ?? this.currency,
+      // `null` = KORU (alışıldık copyWith kuralı). Kürasyonu geri almak
+      // (küme → null) kullanıcıya sunulan bir eylem değil, bu yüzden
+      // `clearCategoryIds` bayrağı bilerek yok.
+      categoryIds: categoryIds ?? this.categoryIds,
     );
   }
 
@@ -90,5 +113,6 @@ class WalletEntity extends Equatable {
         sortOrder,
         openingBalance,
         currency,
+        categoryIds,
       ];
 }

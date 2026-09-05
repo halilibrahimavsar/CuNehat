@@ -228,6 +228,58 @@ void main() {
     expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
   });
 
+  group('eski sürüm yedeği (v9) migrasyonla geri yüklenir', () {
+    /// Sahadaki gerçek biçim: v9 cüzdanlarında `categoryIds` alanı YOKTUR.
+    ///
+    /// Kapalı testteki 13 kullanıcının Drive'ında duran yedekler bunlar.
+    /// Sürüm kapısı sıkı eşitlikken bu dosya `versionMismatch` ile
+    /// reddediliyordu; zincir eklenmeden `schemaVersion`'ı artırmak onları
+    /// geri yüklenemez hale getirirdi.
+    String v9Backup() {
+      final wallet = _wallet().toJson()..remove('categoryIds');
+      return jsonEncode({
+        'version': 9,
+        'timestamp': '2026-09-01T10:00:00.000',
+        'wallets': [wallet],
+        'transactions': [_transaction().toJson()],
+        'investments': [],
+        'debts': [],
+        'receivables': [],
+        'budgets': [],
+        'recurringTransactions': [],
+        'users': {
+          'u1': {'activeWalletId': 'w1'}
+        },
+        'categories': [_category().toJson()],
+      });
+    }
+
+    test('geri yükleme BAŞARILI olur', () async {
+      final result = await service.importDataFromJson(v9Backup());
+
+      expect(result.status, DataRestoreStatus.success);
+      expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
+      expect(Hive.box<TransactionModel>('transactions').values, hasLength(1));
+    });
+
+    test('cüzdan KÜRASYONSUZ döner: tüm kategoriler görünür kalır', () async {
+      await service.importDataFromJson(v9Backup());
+
+      expect(
+        Hive.box<WalletModel>('wallets').get('w1')?.categoryIds,
+        isNull,
+        reason: 'null = kürasyon yok; başka bir değer kategorileri gizlerdi',
+      );
+    });
+
+    test('önizleme de v9 dosyasını okunabilir sayar', () async {
+      final inspection = service.inspectBackup(v9Backup());
+
+      expect(inspection.status, BackupInspectionStatus.ok);
+      expect(inspection.summary?.walletCount, 1);
+    });
+  });
+
   test('bozuk JSON sürüm uyuşmazlığından ayrı raporlanır', () async {
     await Hive.box<WalletModel>('wallets').put('w1', _wallet());
 
