@@ -33,6 +33,7 @@ import 'package:cunehat/core/services/receipt_ocr_service.dart' as _i51;
 import 'package:cunehat/core/services/receipt_storage_service.dart' as _i40;
 import 'package:cunehat/core/services/recent_categories_service.dart' as _i1010;
 import 'package:cunehat/core/services/reminder_sync_service.dart' as _i534;
+import 'package:cunehat/core/services/system_activity_guard.dart' as _i187;
 import 'package:cunehat/core/services/transactions_changed_notifier.dart'
     as _i777;
 import 'package:cunehat/core/services/transfer_service.dart' as _i625;
@@ -205,19 +206,19 @@ extension GetItInjectableX on _i174.GetIt {
       () => appModule.prefs,
       preResolve: true,
     );
+    gh.singleton<_i1071.CategoryLocalDataSource>(
+        () => _i1071.CategoryLocalDataSource.create());
     gh.singleton<_i934.TransactionHiveDataSource>(
         () => _i934.TransactionHiveDataSource.create());
     gh.singleton<_i648.InvestmentLocalDatasource>(
         () => _i648.InvestmentLocalDatasource());
+    gh.singleton<_i1036.GoalLocalDataSource>(
+        () => _i1036.GoalLocalDataSource.create());
     gh.singleton<_i366.ReceivableLocalDatasource>(
         () => _i366.ReceivableLocalDatasource());
     gh.singleton<_i19.DebtLocalDatasource>(() => _i19.DebtLocalDatasource());
     gh.singleton<_i175.WalletLocalDataSource>(
         () => _i175.WalletLocalDataSource());
-    gh.singleton<_i1071.CategoryLocalDataSource>(
-        () => _i1071.CategoryLocalDataSource.create());
-    gh.singleton<_i1036.GoalLocalDataSource>(
-        () => _i1036.GoalLocalDataSource.create());
     gh.lazySingleton<_i777.TransactionsChangedNotifier>(
       () => _i777.TransactionsChangedNotifier(),
       dispose: (i) => i.dispose(),
@@ -229,9 +230,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i520.CategoriesChangedNotifier(),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_i977.BudgetsChangedNotifier>(
+      () => _i977.BudgetsChangedNotifier(),
+      dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i187.SystemActivityGuard>(
+        () => _i187.SystemActivityGuard());
     gh.lazySingleton<_i1065.RawTableReader>(() => _i1065.RawTableReader());
     gh.lazySingleton<_i373.PdfRasterizer>(() => _i373.PdfRasterizer());
-    gh.lazySingleton<_i884.CategoryGuesser>(() => _i884.CategoryGuesser());
     gh.lazySingleton<_i512.PdfStatementParser>(
         () => _i512.PdfStatementParser());
     gh.lazySingleton<_i344.StatementOcrService>(
@@ -239,15 +245,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i125.ColumnMapper>(() => _i125.ColumnMapper());
     gh.lazySingleton<_i295.SharedStatementChannel>(
         () => _i295.SharedStatementChannel());
+    gh.lazySingleton<_i884.CategoryGuesser>(() => _i884.CategoryGuesser());
     gh.lazySingleton<_i698.AmountVisibilityCubit>(
         () => appModule.amountVisibilityCubit);
     gh.lazySingleton<_i519.Client>(() => appModule.httpClient);
     gh.lazySingleton<_i163.FlutterLocalNotificationsPlugin>(
         () => appModule.flutterLocalNotificationsPlugin);
-    gh.lazySingleton<_i977.BudgetsChangedNotifier>(
-      () => _i977.BudgetsChangedNotifier(),
-      dispose: (i) => i.dispose(),
-    );
     gh.lazySingleton<_i698.LocalAuthRepository>(
         () => appModule.localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i198.DebtRepository>(() => _i354.DebtRepositoryImpl(
@@ -258,14 +261,14 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i855.GetDebtsUseCase(gh<_i198.DebtRepository>()));
     gh.lazySingleton<_i721.NotificationSettingsService>(
         () => _i721.NotificationSettingsService(gh<_i460.SharedPreferences>()));
+    gh.lazySingleton<_i1010.RecentCategoriesService>(
+        () => _i1010.RecentCategoriesService(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i931.NotificationLocalizer>(
         () => _i931.NotificationLocalizer(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i477.NotificationPermissionChannel>(() =>
         _i477.NotificationPermissionChannel(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i371.OnboardingCoordinator>(
         () => _i371.OnboardingCoordinator(gh<_i460.SharedPreferences>()));
-    gh.lazySingleton<_i1010.RecentCategoriesService>(
-        () => _i1010.RecentCategoriesService(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i500.ExchangeRateService>(() => _i500.ExchangeRateService(
           client: gh<_i519.Client>(),
           prefs: gh<_i460.SharedPreferences>(),
@@ -292,6 +295,11 @@ extension GetItInjectableX on _i174.GetIt {
               client: gh<_i519.Client>(),
               exchangeRateService: gh<_i500.ExchangeRateService>(),
             ));
+    gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
+          gh<_i698.LocalAuthRepository>(),
+          gh<_i460.SharedPreferences>(),
+          gh<_i187.SystemActivityGuard>(),
+        ));
     gh.lazySingleton<_i543.TransactionsRepository>(
         () => _i510.TransactionRepositoryImpl(
               localDatasource: gh<_i934.TransactionHiveDataSource>(),
@@ -299,12 +307,12 @@ extension GetItInjectableX on _i174.GetIt {
             ));
     gh.lazySingleton<_i94.BudgetRepository>(
         () => _i626.BudgetRepositoryImpl(gh<_i828.BudgetLocalDataSource>()));
+    gh.lazySingleton<_i530.CsvService>(() => _i530.CsvService(
+          gh<_i896.CategoryRepository>(),
+          gh<_i187.SystemActivityGuard>(),
+        ));
     gh.lazySingleton<_i851.GoalRepository>(() => _i260.GoalRepositoryImpl(
         localDataSource: gh<_i1036.GoalLocalDataSource>()));
-    gh.lazySingleton<_i256.AppAuthBloc>(() => appModule.appAuthBloc(
-          gh<_i698.LocalAuthRepository>(),
-          gh<_i460.SharedPreferences>(),
-        ));
     gh.factory<_i21.GetBudgetsUsecase>(() => _i21.GetBudgetsUsecase(
           gh<_i94.BudgetRepository>(),
           gh<_i543.TransactionsRepository>(),
@@ -342,8 +350,6 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i530.CsvService>(
-        () => _i530.CsvService(gh<_i896.CategoryRepository>()));
     gh.factory<_i162.GetPendingRecurringTransactionsUsecase>(() =>
         _i162.GetPendingRecurringTransactionsUsecase(
             gh<_i788.RecurringTransactionRepository>()));
@@ -450,6 +456,19 @@ extension GetItInjectableX on _i174.GetIt {
           transactionsRepository: gh<_i543.TransactionsRepository>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
+    gh.factory<_i21.BankImportCubit>(() => _i21.BankImportCubit(
+          gh<_i1065.RawTableReader>(),
+          gh<_i125.ColumnMapper>(),
+          gh<_i512.PdfStatementParser>(),
+          gh<_i373.PdfRasterizer>(),
+          gh<_i344.StatementOcrService>(),
+          gh<_i884.CategoryGuesser>(),
+          gh<_i896.CategoryRepository>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i239.WalletMetricsService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+          gh<_i187.SystemActivityGuard>(),
+        ));
     gh.factory<_i817.DeleteRecurringTransactionUsecase>(
         () => _i817.DeleteRecurringTransactionUsecase(
               gh<_i788.RecurringTransactionRepository>(),
@@ -526,18 +545,6 @@ extension GetItInjectableX on _i174.GetIt {
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
-    gh.factory<_i21.BankImportCubit>(() => _i21.BankImportCubit(
-          gh<_i1065.RawTableReader>(),
-          gh<_i125.ColumnMapper>(),
-          gh<_i512.PdfStatementParser>(),
-          gh<_i373.PdfRasterizer>(),
-          gh<_i344.StatementOcrService>(),
-          gh<_i884.CategoryGuesser>(),
-          gh<_i896.CategoryRepository>(),
-          gh<_i543.TransactionsRepository>(),
-          gh<_i239.WalletMetricsService>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-        ));
     gh.factory<_i344.TransactionBloc>(() => _i344.TransactionBloc(
           getTransactionsGroupedUseCase:
               gh<_i257.GetTransactionsGroupedUseCase>(),
@@ -578,6 +585,24 @@ extension GetItInjectableX on _i174.GetIt {
               gh<_i534.ReminderSyncService>(),
               gh<_i931.NotificationLocalizer>(),
             ));
+    gh.lazySingleton<_i186.GoogleDriveBackupService>(
+      () => _i186.GoogleDriveBackupService(
+        gh<_i348.DataSerializationService>(),
+        gh<_i187.SystemActivityGuard>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i266.LocalBackupService>(() => _i266.LocalBackupService(
+          gh<_i348.DataSerializationService>(),
+          gh<_i187.SystemActivityGuard>(),
+        ));
+    gh.factory<_i125.BackupPreviewCubit>(() => _i125.BackupPreviewCubit(
+          gh<_i186.GoogleDriveBackupService>(),
+          gh<_i348.DataSerializationService>(),
+          gh<_i266.LocalBackupService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
+          gh<_i520.CategoriesChangedNotifier>(),
+        ));
     gh.factory<_i494.PendingRecurringBloc>(() => _i494.PendingRecurringBloc(
           gh<_i162.GetPendingRecurringTransactionsUsecase>(),
           gh<_i854.ApproveRecurringTransactionUsecase>(),
@@ -586,13 +611,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i239.WalletMetricsService>(),
           gh<_i777.TransactionsChangedNotifier>(),
         ));
-    gh.lazySingleton<_i266.LocalBackupService>(
-        () => _i266.LocalBackupService(gh<_i348.DataSerializationService>()));
-    gh.lazySingleton<_i186.GoogleDriveBackupService>(
-      () =>
-          _i186.GoogleDriveBackupService(gh<_i348.DataSerializationService>()),
-      dispose: (i) => i.dispose(),
-    );
     gh.lazySingleton<_i530.AutoBackupService>(
       () => _i530.AutoBackupService(
         gh<_i186.GoogleDriveBackupService>(),
@@ -608,13 +626,6 @@ extension GetItInjectableX on _i174.GetIt {
           walletMetricsService: gh<_i239.WalletMetricsService>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
           categoriesChangedNotifier: gh<_i520.CategoriesChangedNotifier>(),
-        ));
-    gh.factory<_i125.BackupPreviewCubit>(() => _i125.BackupPreviewCubit(
-          gh<_i186.GoogleDriveBackupService>(),
-          gh<_i348.DataSerializationService>(),
-          gh<_i266.LocalBackupService>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-          gh<_i520.CategoriesChangedNotifier>(),
         ));
     return this;
   }

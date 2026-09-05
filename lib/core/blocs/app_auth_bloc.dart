@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
 import '../models/local_user.dart';
+import '../services/system_activity_guard.dart';
 import 'app_auth_event.dart';
 import 'app_auth_state.dart';
 
@@ -18,16 +19,29 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
     with WidgetsBindingObserver {
   final LocalAuthRepository _localAuthRepository;
   final SharedPreferences _prefs;
+  final SystemActivityGuard _systemActivity;
+
+  /// Şimdiki zaman. Enjekte edilebilir: kilit kararı zamana bağlı olduğundan
+  /// testin 30 saniye beklemesi gerekmesin.
+  final DateTime Function() _now;
+
   DateTime? _lastUnlockTime;
   DateTime? _lastPausedTime;
-  static const int _backgroundLockTimeoutSeconds = 30;
+
+  /// Arka planda bu süreden uzun kalan oturum kilitlenir.
+  static const Duration backgroundLockTimeout = Duration(seconds: 30);
+
   static const String _displayNameKey = 'local_user_display_name';
 
   AppAuthBloc({
     required LocalAuthRepository localAuthRepository,
     required SharedPreferences sharedPreferences,
+    required SystemActivityGuard systemActivityGuard,
+    DateTime Function()? now,
   })  : _localAuthRepository = localAuthRepository,
         _prefs = sharedPreferences,
+        _systemActivity = systemActivityGuard,
+        _now = now ?? DateTime.now,
         super(const AppAuthInitial()) {
     on<AppAuthInitializeRequested>(_onInitialize);
     on<AppAuthUnlockRequested>(_onUnlockRequested);
@@ -58,13 +72,21 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      _lastPausedTime = DateTime.now();
+      _lastPausedTime = _now();
     }
 
     if (state == AppLifecycleState.resumed) {
+      // Duraklamayı uygulamanın KENDİ açtığı sistem seçicisi yarattıysa
+      // kullanıcı uygulamadan ayrılmış sayılmaz: dosya seçicide klasör
+      // gezerken geçen süre kilit sayacına yazılmaz. Gerekçesi ve kabul
+      // edilen bedeli [SystemActivityGuard] içinde.
+      if (_systemActivity.shouldForgivePause()) {
+        _lastPausedTime = null;
+        return;
+      }
+
       if (_lastPausedTime != null &&
-          DateTime.now().difference(_lastPausedTime!).inSeconds >
-              _backgroundLockTimeoutSeconds) {
+          _now().difference(_lastPausedTime!) > backgroundLockTimeout) {
         add(const AppAuthAppResumed());
       }
     }
@@ -94,7 +116,7 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
     AppAuthUnlockRequested event,
     Emitter<AppAuthState> emit,
   ) async {
-    _lastUnlockTime = DateTime.now();
+    _lastUnlockTime = _now();
     emit(AppAuthenticated(event.user));
   }
 
@@ -111,7 +133,7 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
   ) async {
     if (state is AppAuthenticated) {
       if (_lastUnlockTime != null &&
-          DateTime.now().difference(_lastUnlockTime!).inSeconds < 2) {
+          _now().difference(_lastUnlockTime!).inSeconds < 2) {
         return;
       }
 

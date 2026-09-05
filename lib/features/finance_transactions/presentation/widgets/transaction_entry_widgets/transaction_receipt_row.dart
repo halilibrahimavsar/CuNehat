@@ -7,6 +7,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/receipt_ocr_service.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/receipt_viewer_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_form_controller.dart';
@@ -83,10 +84,15 @@ class ReceiptRow extends StatelessWidget {
     );
     if (source == null) return;
 
-    final XFile? file = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1600,
-      imageQuality: 70,
+    // Kamera/galeri de sistem etkinliğidir: sarmalanmazsa PIN açık kullanıcı
+    // fişi çekip döndüğünde kilit ekranı açılıyor, form (ve çekilen fiş)
+    // yığından siliniyordu (bkz. [SystemActivityGuard]).
+    final XFile? file = await getIt<SystemActivityGuard>().run(
+      () => ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1600,
+        imageQuality: 70,
+      ),
     );
     if (file == null) return;
 

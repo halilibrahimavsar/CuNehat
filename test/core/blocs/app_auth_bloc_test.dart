@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/core/models/local_user.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,11 +15,13 @@ class MockLocalAuthRepository extends Mock implements LocalAuthRepository {}
 void main() {
   late MockLocalAuthRepository mockAuthRepo;
   late SharedPreferences prefs;
+  late SystemActivityGuard guard;
 
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     mockAuthRepo = MockLocalAuthRepository();
+    guard = SystemActivityGuard();
   });
 
   group('AppAuthBloc initialization', () {
@@ -33,6 +39,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       expect: () => [
         const AppAuthLoading(),
@@ -50,6 +57,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       expect: () => [
         const AppAuthLoading(),
@@ -67,6 +75,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       expect: () => [
         const AppAuthLoading(),
@@ -83,6 +92,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       expect: () => [
         const AppAuthLoading(),
@@ -106,6 +116,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       act: (bloc) async {
         await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -131,6 +142,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       seed: () => AppAuthenticated(LocalUser.guest()),
       act: (bloc) async {
@@ -164,6 +176,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       seed: () => AppAuthenticated(LocalUser.guest()),
       act: (bloc) async {
@@ -190,6 +203,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       seed: () => AppAuthenticated(LocalUser.guest()),
       act: (bloc) async {
@@ -212,6 +226,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       seed: () => AppAuthLocked(LocalUser.guest()),
       act: (bloc) async {
@@ -220,6 +235,121 @@ void main() {
       },
       expect: () => [
         const AppAuthLoading(),
+        isA<AppAuthLocked>(),
+      ],
+    );
+  });
+
+  group('AppAuthBloc lifecycle lock', () {
+    // Bildirilen hata (3 Eylül 2026): PIN açıkken banka ekstresi için dosya
+    // seçici açılıyor, kullanıcı klasörlerde 30 saniyeden fazla dolaşıyor ve
+    // dönüşte kilit ekranı açılıyordu. Router kilitte tüm yığını `/lock`'a
+    // yönlendirdiğinden içe aktarma sayfası siliniyor, seçilen dosya hiç
+    // ayrıştırılmıyordu.
+    late DateTime clock;
+
+    setUp(() async {
+      prefs = await SharedPreferences.getInstance();
+      clock = DateTime(2026, 9, 3, 12);
+      // Muhafız ve bloc AYNI saati okumalı; farklı saatler af penceresini
+      // anlamsız kılar.
+      guard = SystemActivityGuard.withClock(() => clock);
+
+      // Yapıcı kendi init olayını ekler ve `seed`'i ezer: bloc act anında
+      // Authenticated olmalı ki `_onAppResumed` erken dönmesin. Kardeş
+      // testlerdeki çağrı-sayacı kalıbı — ilk okuma (init) PIN'i kapalı
+      // görür, dönüşteki okuma açık.
+      var pinReads = 0;
+      when(() => mockAuthRepo.isBiometricEnabled())
+          .thenAnswer((_) async => false);
+      when(() => mockAuthRepo.isPinSet()).thenAnswer((_) async {
+        pinReads++;
+        return pinReads > 1;
+      });
+    });
+
+    AppAuthBloc build() => AppAuthBloc(
+          localAuthRepository: mockAuthRepo,
+          sharedPreferences: prefs,
+          systemActivityGuard: guard,
+          now: () => clock,
+        );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'uzun arka plandan dönüş kilitler',
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        bloc.didChangeAppLifecycleState(AppLifecycleState.paused);
+        clock = clock.add(const Duration(minutes: 3));
+        bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      },
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+        isA<AppAuthLocked>(),
+      ],
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'AÇIK dosya seçicisinden dönüş kilitlemez',
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        final picked = Completer<String>();
+        final picking = guard.run(() => picked.future);
+
+        bloc.didChangeAppLifecycleState(AppLifecycleState.paused);
+        clock = clock.add(const Duration(minutes: 3));
+        bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+
+        picked.complete('/tmp/ekstre.pdf');
+        await picking;
+      },
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+      ],
+      verify: (bloc) => expect(bloc.state, isA<AppAuthenticated>()),
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'seçici sonucu resumed bildiriminden önce gelirse de kilitlemez',
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        bloc.didChangeAppLifecycleState(AppLifecycleState.paused);
+        clock = clock.add(const Duration(minutes: 3));
+
+        // onActivityResult → Dart future, resumed bildiriminden ÖNCE.
+        await guard.run(() async => '/tmp/ekstre.pdf');
+        bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      },
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+      ],
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'seçici turu bittikten SONRAKİ arka plan turu yine kilitler',
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await guard.run(() async => '/tmp/ekstre.pdf');
+
+        // Af yalnız o tura verilir: sonraki gerçek arka plan çıkışı kilitler.
+        bloc.didChangeAppLifecycleState(AppLifecycleState.paused);
+        clock = clock.add(const Duration(minutes: 3));
+        bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      },
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
         isA<AppAuthLocked>(),
       ],
     );
@@ -239,6 +369,7 @@ void main() {
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
+        systemActivityGuard: guard,
       ),
       act: (bloc) async {
         await bloc.updateDisplayName('New Name');

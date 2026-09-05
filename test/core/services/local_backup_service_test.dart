@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/services/local_backup_service.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -22,7 +23,7 @@ void main() {
 
   setUp(() {
     dataSerializationService = MockDataSerializationService();
-    service = LocalBackupService(dataSerializationService);
+    service = LocalBackupService(dataSerializationService, SystemActivityGuard());
     filePickerLog.clear();
     filePickerResponse = null;
 

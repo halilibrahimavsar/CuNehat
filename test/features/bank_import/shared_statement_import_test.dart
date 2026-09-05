@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
@@ -86,6 +87,7 @@ void main() {
         _MockTxRepo(),
         _MockMetrics(),
         _MockNotifier(),
+        SystemActivityGuard(),
       );
 
   File writeShared(String name, String content) {

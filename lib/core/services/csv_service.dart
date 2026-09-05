@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
@@ -31,8 +32,9 @@ class CsvImportResult {
 @lazySingleton
 class CsvService {
   final CategoryRepository _categories;
+  final SystemActivityGuard _systemActivity;
 
-  CsvService(this._categories);
+  CsvService(this._categories, this._systemActivity);
 
   final _uuid = const Uuid();
 
@@ -121,9 +123,13 @@ class CsvService {
   }
 
   Future<CsvImportResult?> importTransactionsFromCSV(String userId) async {
-    FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv'],
+    // Sarmalama sebebi [SystemActivityGuard]'da: seçici uygulamayı duraklatır,
+    // PIN açıkken dönüşte kilit ekranı akışı yarıda kesiyordu.
+    FilePickerResult? result = await _systemActivity.run(
+      () => FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      ),
     );
 
     if (result != null && result.files.single.path != null) {

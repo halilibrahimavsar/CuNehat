@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cunehat/core/services/csv_service.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:flutter/services.dart';
@@ -49,7 +50,7 @@ void main() {
               iconName: 'category',
               isExpense: true),
         ]);
-    csvService = CsvService(categoryRepo);
+    csvService = CsvService(categoryRepo, SystemActivityGuard());
     shareLog.clear();
     filePickerLog.clear();
     filePickerResponse = null;

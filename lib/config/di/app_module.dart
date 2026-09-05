@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 
 @module
 abstract class AppModule {
@@ -41,10 +42,12 @@ abstract class AppModule {
   AppAuthBloc appAuthBloc(
     LocalAuthRepository localAuthRepository,
     SharedPreferences prefs,
+    SystemActivityGuard systemActivityGuard,
   ) {
     return AppAuthBloc(
       localAuthRepository: localAuthRepository,
       sharedPreferences: prefs,
+      systemActivityGuard: systemActivityGuard,
     );
   }
 

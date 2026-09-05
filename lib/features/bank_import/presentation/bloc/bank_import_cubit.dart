@@ -9,6 +9,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
@@ -52,6 +53,7 @@ class BankImportCubit extends Cubit<BankImportState> {
   final TransactionsRepository _txRepo;
   final WalletMetricsService _metrics;
   final TransactionsChangedNotifier _notifier;
+  final SystemActivityGuard _systemActivity;
 
   BankImportCubit(
     this._reader,
@@ -64,6 +66,7 @@ class BankImportCubit extends Cubit<BankImportState> {
     this._txRepo,
     this._metrics,
     this._notifier,
+    this._systemActivity,
   ) : super(const BankImportInitial());
 
   String _userId = '';
@@ -132,7 +135,12 @@ class BankImportCubit extends Cubit<BankImportState> {
     // `application/octet-stream` olarak kayıtlı → uzantı doğru olmasına rağmen
     // dosya seçicide GRİ görünüyordu. Her şeyi seçilebilir yapıp biçimi
     // içerik imzasından kendimiz belirliyoruz (bkz. [detectStatementFormat]).
-    final picked = await FilePicker.pickFiles(type: FileType.any);
+    // Seçici sistem etkinliğidir: uygulamayı duraklatır. Sarmalanmazsa PIN
+    // açık kullanıcıda dönüşte kilit ekranı açılıyor, router bu sayfayı
+    // yığından siliyor ve seçilen dosya hiç ayrıştırılmıyordu
+    // (bkz. [SystemActivityGuard]).
+    final picked = await _systemActivity
+        .run(() => FilePicker.pickFiles(type: FileType.any));
     final path = picked?.files.single.path;
     if (path == null) {
       emit(const BankImportInitial());

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/drive_backup_result.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -62,9 +63,10 @@ class GoogleDriveBackupService {
   final GoogleSignIn _googleSignIn;
   final http.Client _httpClient;
   final DataSerializationService _dataSerializationService;
+  final SystemActivityGuard _systemActivity;
 
   @factoryMethod
-  GoogleDriveBackupService(this._dataSerializationService)
+  GoogleDriveBackupService(this._dataSerializationService, this._systemActivity)
       : _googleSignIn = GoogleSignIn(scopes: scopes),
         _httpClient = http.Client(),
         _shortTimeout = defaultShortTimeout,
@@ -77,11 +79,14 @@ class GoogleDriveBackupService {
     required DataSerializationService dataSerializationService,
     Duration shortTimeout = defaultShortTimeout,
     Duration transferTimeout = defaultTransferTimeout,
+    SystemActivityGuard? systemActivityGuard,
   })  : _googleSignIn = googleSignIn,
         _httpClient = httpClient,
         _dataSerializationService = dataSerializationService,
         _shortTimeout = shortTimeout,
-        _transferTimeout = transferTimeout;
+        _transferTimeout = transferTimeout,
+        // Kilit bayrağı testlerde anlamsız: gerçek bir kilit ekranı yok.
+        _systemActivity = systemActivityGuard ?? SystemActivityGuard();
 
   GoogleSignInAccount? _currentUser;
   GoogleSignInAccount? get currentUser => _currentUser;
@@ -121,7 +126,10 @@ class GoogleDriveBackupService {
   Future<DriveResult<GoogleSignInAccount>> signIn() {
     return _guard(() async {
       debugPrint('GoogleDriveBackupService signIn -> başladı');
-      final account = await _googleSignIn.signIn();
+      // Hesap seçici de sistem etkinliğidir: PIN açıkken seçicide geçen süre
+      // kilit sayacına yazılırsa kullanıcı Drive'a bağlanmayı bitirdiği anda
+      // kilit ekranına düşer (bkz. [SystemActivityGuard]).
+      final account = await _systemActivity.run(() => _googleSignIn.signIn());
       _currentUser = account;
       // Bkz. [silentSignIn]: bu satır olmadan "hesap seçici açılıp kapandı,
       // sonra hiçbir şey" durumu teşhis edilemiyor — Future'ın hiç

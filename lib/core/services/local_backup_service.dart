@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cunehat/core/services/data_serialization_service.dart';
+import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
@@ -61,19 +62,24 @@ class LocalBackupPick {
 @lazySingleton
 class LocalBackupService {
   final DataSerializationService _dataSerializationService;
+  final SystemActivityGuard _systemActivity;
 
-  LocalBackupService(this._dataSerializationService);
+  LocalBackupService(this._dataSerializationService, this._systemActivity);
 
   Future<LocalBackupResult> exportToDevice() async {
     try {
       final backupJson = await _dataSerializationService.exportDataToJson();
       final bytes = Uint8List.fromList(utf8.encode(backupJson));
-      final path = await FilePicker.saveFile(
-        dialogTitle: 'ÇuNehat yedeğini kaydet',
-        fileName: _backupFileName(),
-        type: FileType.custom,
-        allowedExtensions: const ['json'],
-        bytes: bytes,
+      // Sarmalama sebebi [SystemActivityGuard]'da: seçici uygulamayı duraklatır,
+      // PIN açıkken dönüşte kilit ekranı akışı yarıda kesiyordu.
+      final path = await _systemActivity.run(
+        () => FilePicker.saveFile(
+          dialogTitle: 'ÇuNehat yedeğini kaydet',
+          fileName: _backupFileName(),
+          type: FileType.custom,
+          allowedExtensions: const ['json'],
+          bytes: bytes,
+        ),
       );
 
       if (path == null) {
@@ -90,9 +96,11 @@ class LocalBackupService {
   /// Hem önizleme hem geri yükleme bu tek yoldan geçer.
   Future<LocalBackupPick> pickBackupJson() async {
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['json'],
+      final result = await _systemActivity.run(
+        () => FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['json'],
+        ),
       );
 
       final path = result?.files.single.path;
