@@ -11,6 +11,7 @@ import 'package:cunehat/features/bank_import/presentation/pages/bank_import_revi
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -23,6 +24,8 @@ class MockBankImportCubit extends MockCubit<BankImportState>
     implements BankImportCubit {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class MockWalletCategoryService extends Mock implements WalletCategoryService {}
 
 class FakeCategoryEntity extends Fake implements CategoryEntity {}
 
@@ -81,6 +84,8 @@ void main() {
 
     cubit = MockBankImportCubit();
     fullscreenToggles = 0;
+    // Kategori seçicileri kapsamlarını cubit'in hedef cüzdanından alır.
+    when(() => cubit.walletId).thenReturn('w1');
     when(() => cubit.setAllSelected(any())).thenReturn(null);
     when(() => cubit.toggleDraft(any())).thenReturn(null);
     when(() => cubit.setDraftCategory(any(), any())).thenReturn(null);
@@ -109,6 +114,22 @@ void main() {
             ))
         .thenAnswer((invocation) async =>
             _cat(invocation.namedArguments[#name] as String));
+
+    // Kapsam servisi "kürasyon yok" davranışını taklit eder: bu dosyanın
+    // konusu inceleme ekranı, cüzdan görünürlüğü değil.
+    final walletCategories = MockWalletCategoryService();
+    getIt.registerSingleton<WalletCategoryService>(walletCategories);
+    when(() => walletCategories.categoriesFor(
+              walletId: any(named: 'walletId'),
+              isExpense: any(named: 'isExpense'),
+              alwaysInclude: any(named: 'alwaysInclude'),
+            ))
+        .thenAnswer((invocation) => categoryRepo
+            .getCategories(invocation.namedArguments[#isExpense] as bool));
+    when(() => walletCategories.include(
+          walletId: any(named: 'walletId'),
+          categoryIds: any(named: 'categoryIds'),
+        )).thenAnswer((_) async => 0);
   });
 
   tearDown(() => getIt.reset());

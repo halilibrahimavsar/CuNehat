@@ -2387,12 +2387,6 @@ abstract class AppLocalizations {
   /// **'Kategoriler'**
   String get kategorilerBaslik;
 
-  /// No description provided for @kategoriSayisiOzeti.
-  ///
-  /// In tr, this message translates to:
-  /// **'{rootCount} ana, {childCount} alt kategori'**
-  String kategoriSayisiOzeti(Object rootCount, Object childCount);
-
   /// No description provided for @altKategoriEkle.
   ///
   /// In tr, this message translates to:
@@ -7702,6 +7696,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğer Gelir'**
   String get catSeedOtherIncome;
+
+  /// No description provided for @starterPackAddedToWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kategori bu cüzdana eklendi'**
+  String starterPackAddedToWallet(Object count);
+
+  /// No description provided for @drawerCategoriesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler'**
+  String get drawerCategoriesTitle;
+
+  /// No description provided for @drawerCategoriesSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelir ve gider kalemlerini düzenle'**
+  String get drawerCategoriesSubtitle;
+
+  /// No description provided for @kategoriCuzdanKapsamiAciklama.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız {wallet} cüzdanında hangilerinin görüneceğini belirler; kategori silinmez.'**
+  String kategoriCuzdanKapsamiAciklama(Object wallet);
+
+  /// No description provided for @kategoriBuCuzdandaGoster.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdanda göster'**
+  String get kategoriBuCuzdandaGoster;
+
+  /// No description provided for @kategoriBuCuzdandaGizle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdanda gizle'**
+  String get kategoriBuCuzdandaGizle;
+
+  /// No description provided for @kategoriGorunurSayisi.
+  ///
+  /// In tr, this message translates to:
+  /// **'{visible}/{total} kategori bu cüzdanda görünür'**
+  String kategoriGorunurSayisi(Object visible, Object total);
+
+  /// No description provided for @kategoriBuCuzdandaHicYok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cüzdanda henüz kategori seçilmedi. Hazır setten kur ya da aşağıdan tek tek aç.'**
+  String get kategoriBuCuzdandaHicYok;
+
+  /// No description provided for @kategoriCuzdanKapsamiAciklamaBu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez.'**
+  String get kategoriCuzdanKapsamiAciklamaBu;
 }
 
 class _AppLocalizationsDelegate

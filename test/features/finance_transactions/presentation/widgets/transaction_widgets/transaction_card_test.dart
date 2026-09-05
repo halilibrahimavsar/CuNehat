@@ -26,6 +26,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../support/wallet_category_stub.dart';
+
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
 
@@ -79,6 +81,7 @@ void main() {
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    registerUncuratedWalletCategories(mockCategoryRepository);
     // Detay sayfası kategori indeksini kendi yükler ve kategori
     // değişimlerinde tazeler.
     getIt.registerSingleton<CategoriesChangedNotifier>(

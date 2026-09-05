@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../../support/wallet_category_stub.dart';
+
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 void main() {
@@ -52,6 +54,7 @@ void main() {
   setUp(() async {
     repository = MockCategoryRepository();
     getIt.registerSingleton<CategoryRepository>(repository);
+    registerUncuratedWalletCategories(repository);
     when(() => repository.getCategories(any())).thenAnswer((_) async => all);
 
     SharedPreferences.setMockInitialValues({});
@@ -76,6 +79,7 @@ void main() {
             builder: (context) => ElevatedButton(
               onPressed: () async => onPicked(
                 await showCategoryPickerSheet(
+                  walletId: 'w1',
                   context: context,
                   isExpense: true,
                   currentId: currentId,

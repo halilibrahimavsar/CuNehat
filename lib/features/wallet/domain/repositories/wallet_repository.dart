@@ -5,6 +5,11 @@ import 'package:dartz/dartz.dart';
 abstract class WalletRepository {
   Future<Either<Failure, String>> createWallet(WalletEntity wallet);
   Future<Either<Failure, List<WalletEntity>>> getWallets(String userId);
+
+  /// Kullanıcı süzgeci OLMADAN tüm cüzdanlar — veri bütünlüğü işleri için
+  /// (bkz. `WalletCategoryService.onCategoriesDeleted`). Görüntüleme
+  /// akışları [getWallets] kullanır.
+  Future<Either<Failure, List<WalletEntity>>> getAllWallets();
   Stream<Either<Failure, List<WalletEntity>>> watchWallets(String userId);
   Future<Either<Failure, void>> updateWallet(WalletEntity wallet);
   Future<Either<Failure, void>> deleteWallet(String walletId);

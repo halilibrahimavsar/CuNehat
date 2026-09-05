@@ -4,6 +4,7 @@ import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.d
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/usecases/delete_category_usecase.dart';
 import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:dartz/dartz.dart';
@@ -21,12 +22,15 @@ class MockRecurringRepository extends Mock
 class MockDeleteBudgetsForCategory extends Mock
     implements DeleteBudgetsForCategoryUsecase {}
 
+class MockWalletCategoryService extends Mock implements WalletCategoryService {}
+
 void main() {
   late MockCategoryRepository categories;
   late MockTransactionsRepository transactions;
   late MockRecurringRepository recurring;
   late MockDeleteBudgetsForCategory deleteBudgets;
   late TransactionsChangedNotifier notifier;
+  late MockWalletCategoryService walletCategories;
   late DeleteCategoryUseCase usecase;
 
   CategoryEntity cat(String id, String name, {String? parentId}) =>
@@ -52,6 +56,11 @@ void main() {
     recurring = MockRecurringRepository();
     deleteBudgets = MockDeleteBudgetsForCategory();
     notifier = TransactionsChangedNotifier();
+    walletCategories = MockWalletCategoryService();
+    when(() => walletCategories.onCategoriesDeleted(
+          removedIds: any(named: 'removedIds'),
+          replacementId: any(named: 'replacementId'),
+        )).thenAnswer((_) async {});
 
     usecase = DeleteCategoryUseCase(
       categories,
@@ -59,6 +68,7 @@ void main() {
       recurring,
       deleteBudgets,
       notifier,
+      walletCategories,
     );
 
     when(() => categories.getAllCategories()).thenAnswer((_) async => tree);
@@ -177,5 +187,37 @@ void main() {
 
     expect(result.isLeft(), isTrue);
     verifyNever(() => categories.deleteCategories(any()));
+  });
+
+  group('cüzdan görünürlüğü onarımı', () {
+    test('silinen ALT AĞAÇ ve taşıma hedefi servise iletilir', () async {
+      when(() => transactions.countByTags(any()))
+          .thenAnswer((_) async => const Right(3));
+      when(() => transactions.retagTransactions(any(), any()))
+          .thenAnswer((_) async => const Right(3));
+
+      await usecase(categoryId: 'f', reassignToId: 'm');
+
+      final captured = verify(() => walletCategories.onCategoriesDeleted(
+            removedIds: captureAny(named: 'removedIds'),
+            replacementId: captureAny(named: 'replacementId'),
+          )).captured;
+      expect(captured[0], {'f', 'f-e', 'f-d'});
+      expect(captured[1], 'm');
+    });
+
+    test('onarım HATASI silmeyi geri aldırmaz', () async {
+      // Kategoriler kutudan düştü, işlemler taşındı, bütçeler temizlendi —
+      // hepsi kalıcı. `Left` dönmek kullanıcıya "silinemedi" demek olurdu.
+      when(() => walletCategories.onCategoriesDeleted(
+            removedIds: any(named: 'removedIds'),
+            replacementId: any(named: 'replacementId'),
+          )).thenThrow(Exception('cüzdan yazılamadı'));
+
+      final result = await usecase(categoryId: 'm');
+
+      expect(result.isRight(), isTrue);
+      verify(() => categories.deleteCategories(any())).called(1);
+    });
   });
 }

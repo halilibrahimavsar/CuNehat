@@ -774,6 +774,8 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         // Defter değişmezinin çapası: balance = opening + Σtx (henüz işlem yok).
         openingBalance: balance,
         currency: _selectedCurrency,
+        // `categoryIds` BİLEREK verilmiyor: "yeni cüzdan küratörlü doğar"
+        // kuralı `WalletCreateUseCase`'te, tek yerde.
       );
       context.read<WalletBloc>().add(CreateWalletEvent(wallet));
     }

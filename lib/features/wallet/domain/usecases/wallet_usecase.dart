@@ -11,10 +11,26 @@ class WalletCreateUseCase {
   final WalletRepository repository;
   WalletCreateUseCase(this.repository);
 
+  /// Yeni cüzdan **küratörlü** doğar: `categoryIds` verilmemişse boş kümeye
+  /// (`const []`) düşer.
+  ///
+  /// Kural burada, formda değil: "henüz kategori seçilmedi" bir domain
+  /// gerçeği. `null` bırakılsaydı "kürasyon yok → hepsi görünür" anlamına
+  /// gelir ve ikinci cüzdan yine ilk cüzdanın tüm kalemlerini devralırdı —
+  /// düzeltilen davranışın ta kendisi. Boş küme aynı zamanda hızlı
+  /// başlangıcın başlangıç paketini önermesini tetikler.
+  ///
+  /// CSV içe aktarımıyla doğan cüzdan bu use case'ten GEÇMEZ (depoyu
+  /// doğrudan çağırır) ve bilerek kürasyonsuz kalır: satırların kategorileri
+  /// ada göre küresel listeden çözülüyor, hangi kimliklerin gerekeceği orada
+  /// bilinmiyor.
   Future<Either<Failure, String>> call(WalletEntity wallet) async {
-    final walletWithId = wallet.id == null || wallet.id!.isEmpty
-        ? wallet.copyWith(id: UidGenerator.generateV7())
+    final withDefaults = wallet.categoryIds == null
+        ? wallet.copyWith(categoryIds: const [])
         : wallet;
+    final walletWithId = withDefaults.id == null || withDefaults.id!.isEmpty
+        ? withDefaults.copyWith(id: UidGenerator.generateV7())
+        : withDefaults;
     return await repository.createWallet(walletWithId);
   }
 }

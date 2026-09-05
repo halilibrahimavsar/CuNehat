@@ -20,6 +20,7 @@ import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 
@@ -78,7 +79,7 @@ class BudgetsPage extends StatelessWidget {
             const _BudgetsBody(),
           ],
         ),
-        floatingActionButton: _AddBudgetButton(),
+        floatingActionButton: _AddBudgetButton(walletId: walletId),
       ),
     );
   }
@@ -119,6 +120,10 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
   /// görünüyordu.
   Future<void> _loadLabels() async {
     // Bütçeler yalnız gider kategorilerine kurulur.
+    //
+    // Bu harita KÜRESEL kalır (cüzdana daraltılmaz): bir bütçe, kategorisi bu
+    // cüzdanda sonradan gizlense de listede durur ve adının çözülmesi gerekir.
+    // Daraltılsaydı o satır ham UUID gösterirdi.
     final cats = await getIt<CategoryRepository>().getCategories(true);
     if (!mounted) return;
     setState(() => _labels = buildCategoryLabelMap(cats));
@@ -459,6 +464,10 @@ class _BudgetListItem extends StatelessWidget {
 }
 
 class _AddBudgetButton extends StatelessWidget {
+  final String walletId;
+
+  const _AddBudgetButton({required this.walletId});
+
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
@@ -469,6 +478,7 @@ class _AddBudgetButton extends StatelessWidget {
           context: context,
           builder: (ctx) => _AddBudgetDialog(
             bloc: bloc,
+            walletId: walletId,
             existingBudgets: state is BudgetsLoaded ? state.budgets : const [],
           ),
         );
@@ -480,8 +490,16 @@ class _AddBudgetButton extends StatelessWidget {
 
 class _AddBudgetDialog extends StatefulWidget {
   final BudgetsBloc bloc;
+
+  /// Bütçe zaten cüzdan bazlı (`walletId::categoryId`); kategori seçeneği de
+  /// o cüzdanda görünür kalemlerle sınırlanır.
+  final String walletId;
   final List<BudgetEntity> existingBudgets;
-  const _AddBudgetDialog({required this.bloc, required this.existingBudgets});
+  const _AddBudgetDialog({
+    required this.bloc,
+    required this.walletId,
+    required this.existingBudgets,
+  });
 
   @override
   State<_AddBudgetDialog> createState() => _AddBudgetDialogState();
@@ -505,7 +523,10 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   Future<void> _loadCategories() async {
     // Serbest metin yerine gerçek gider kategorileri: bütçenin categoryId'si
     // işlem tag'iyle birebir eşleşmezse harcama hiç birikmez.
-    final categories = await getIt<CategoryRepository>().getCategories(true);
+    final categories = await getIt<WalletCategoryService>().categoriesFor(
+      walletId: widget.walletId,
+      isExpense: true,
+    );
     if (!mounted) return;
     setState(() => _categories = categories);
   }

@@ -35,6 +35,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 
 /// Banka ekstresi içe aktarma akışının durum makinesi.
@@ -50,6 +51,10 @@ class BankImportCubit extends Cubit<BankImportState> {
   final StatementOcrService _ocr;
   final CategoryGuesser _guesser;
   final CategoryRepository _categoryRepo;
+
+  /// Kategori kapsamı cüzdana bağlı: hem tahmin havuzu hem de onaylanan
+  /// önerilerin görünürlüğü buradan geçer.
+  final WalletCategoryService _walletCategories;
   final TransactionsRepository _txRepo;
   final WalletMetricsService _metrics;
   final TransactionsChangedNotifier _notifier;
@@ -63,6 +68,7 @@ class BankImportCubit extends Cubit<BankImportState> {
     this._ocr,
     this._guesser,
     this._categoryRepo,
+    this._walletCategories,
     this._txRepo,
     this._metrics,
     this._notifier,
@@ -71,6 +77,10 @@ class BankImportCubit extends Cubit<BankImportState> {
 
   String _userId = '';
   String _walletId = '';
+
+  /// İçe aktarımın hedef cüzdanı — inceleme ekranındaki kategori seçicileri
+  /// kapsamlarını buradan alır (kategoriler cüzdana göre görünür).
+  String get walletId => _walletId;
   List<CategoryEntity> _expenseCats = const [];
   List<CategoryEntity> _incomeCats = const [];
 
@@ -179,8 +189,16 @@ class BankImportCubit extends Cubit<BankImportState> {
 
     emit(const BankImportParsing());
     try {
-      _expenseCats = await _categoryRepo.getCategories(true);
-      _incomeCats = await _categoryRepo.getCategories(false);
+      // Tahmin havuzu da cüzdana bağlı: iş cüzdanına aktarılan bir ekstre,
+      // o cüzdanda kapalı olan "Eğlence"yi önermemeli.
+      _expenseCats = await _walletCategories.categoriesFor(
+        walletId: walletId,
+        isExpense: true,
+      );
+      _incomeCats = await _walletCategories.categoriesFor(
+        walletId: walletId,
+        isExpense: false,
+      );
 
       // PDF'te kolon yapısı güvenilir değil → satır-sezgisel doğrudan taslak,
       // eşleme adımı atlanır, direkt incelemeye gider.
@@ -476,13 +494,34 @@ class BankImportCubit extends Cubit<BankImportState> {
     final s = state;
     if (s is! BankImportCategorySuggestion) return;
 
+    // Öneriler bu CÜZDANIN havuzuna göre üretilir; aynı adlı kategori BAŞKA
+    // bir cüzdanda zaten var olabilir. O durumda ikinci bir kayıt yaratmak
+    // hem kardeş-ad tekilliğine takılırdı (`duplicateSiblingName` → sessizce
+    // atlanır, satır kategorisiz kalırdı) hem de raporu aynı ada sahip iki
+    // kimliğe bölerdi. Var olan bağlanır, yenisi yaratılmaz.
+    final globalExpense = await _categoryRepo.getCategories(true);
+    final globalIncome = await _categoryRepo.getCategories(false);
+
     for (final suggestion in s.suggestions) {
       if (!approved.contains(suggestion)) continue;
       final isExpense = !suggestion.isIncome;
+      final global = isExpense ? globalExpense : globalIncome;
       try {
         // Öneri pakette bir alt kategoriyse ("Konut › Kira") önce üst
         // kategorinin var olması gerekir; yoksa o da kurulur.
-        final parentId = await _ensureParent(suggestion, isExpense: isExpense);
+        final parentId = await _ensureParent(suggestion,
+            isExpense: isExpense, global: global);
+
+        final existing = _findCategory(
+          global,
+          isExpense: isExpense,
+          name: suggestion.name,
+          parentId: parentId,
+        );
+        if (existing != null) {
+          await _remember(existing);
+          continue;
+        }
 
         final category = await _categoryRepo.addCategory(
           name: suggestion.name,
@@ -490,7 +529,7 @@ class BankImportCubit extends Cubit<BankImportState> {
           isExpense: isExpense,
           parentId: parentId,
         );
-        _remember(category);
+        await _remember(category);
       } catch (_) {
         // Oluşturulamadıysa (ör. adı bu arada başka yerden eklendi) sessizce
         // atla; ilgili taslaklar kategorisiz kalır, akış durmaz.
@@ -512,15 +551,17 @@ class BankImportCubit extends Cubit<BankImportState> {
   Future<String?> _ensureParent(
     CategorySuggestion suggestion, {
     required bool isExpense,
+    required List<CategoryEntity> global,
   }) async {
     final parentName = suggestion.parentName;
     if (parentName == null) return null;
 
-    final pool = isExpense ? _expenseCats : _incomeCats;
-    final existing = pool
-        .where((c) => c.isRoot && _sameName(c.name, parentName))
-        .firstOrNull;
-    if (existing != null) return existing.id;
+    final existing =
+        _findCategory(global, isExpense: isExpense, name: parentName);
+    if (existing != null) {
+      await _remember(existing);
+      return existing.id;
+    }
 
     final created = await _categoryRepo.addCategory(
       name: parentName,
@@ -529,18 +570,48 @@ class BankImportCubit extends Cubit<BankImportState> {
       iconName: suggestion.parentIconName ?? 'category',
       isExpense: isExpense,
     );
-    _remember(created);
+    await _remember(created);
     return created.id;
   }
 
-  /// Yeni kategoriyi yerel havuza ekler ki aynı içe aktarım turunda yapılan
-  /// sonraki tahminler onu görebilsin.
-  void _remember(CategoryEntity category) {
+  /// Adı ve üst kategorisi eşleşen kaydı önce BU TURUN havuzunda, sonra
+  /// küresel listede arar.
+  ///
+  /// Havuz önce gelir çünkü aynı turda yaratılanlar henüz [global] listesinde
+  /// yok: aynı üst kategoriyi paylaşan iki öneri, ikincisinde ikiz kök
+  /// yaratırdı.
+  CategoryEntity? _findCategory(
+    List<CategoryEntity> global, {
+    required bool isExpense,
+    required String name,
+    String? parentId,
+  }) {
+    bool matches(CategoryEntity c) =>
+        c.parentId == parentId && _sameName(c.name, name);
+    final pool = isExpense ? _expenseCats : _incomeCats;
+    return pool.where(matches).firstOrNull ?? global.where(matches).firstOrNull;
+  }
+
+  /// Kategoriyi bu turun havuzuna ekler (sonraki tahminler onu görsün) ve
+  /// hedef cüzdanda görünür yapar.
+  ///
+  /// Görünürlük şart: kategori başka bir cüzdanda var olduğu için yeniden
+  /// yaratılmadıysa, bu cüzdanın kümesine katılmadan seçilemez — kullanıcı
+  /// onayladığı öneriyi listede bulamazdı.
+  Future<void> _remember(CategoryEntity category) async {
     if (category.isExpense) {
-      _expenseCats = [..._expenseCats, category];
+      if (!_expenseCats.any((c) => c.id == category.id)) {
+        _expenseCats = [..._expenseCats, category];
+      }
     } else {
-      _incomeCats = [..._incomeCats, category];
+      if (!_incomeCats.any((c) => c.id == category.id)) {
+        _incomeCats = [..._incomeCats, category];
+      }
     }
+    await _walletCategories.include(
+      walletId: walletId,
+      categoryIds: [category.id],
+    );
   }
 
   static bool _sameName(String a, String b) =>

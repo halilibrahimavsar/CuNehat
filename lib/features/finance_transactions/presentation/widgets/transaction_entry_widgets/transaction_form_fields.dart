@@ -58,7 +58,10 @@ class _TransactionFormSheetState extends State<TransactionFormSheet> {
   @override
   void initState() {
     super.initState();
-    _c = TransactionFormController(isExpense: widget.isExpense);
+    _c = TransactionFormController(
+      isExpense: widget.isExpense,
+      walletId: widget.walletId,
+    );
     if (_isEdit) _c.initialize(widget.initialTransaction!);
 
     // Açılış animasyonu bitince işle: ne kategori yüklemesi ne de klavye

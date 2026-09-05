@@ -44,7 +44,11 @@ class _CategoryPickerState extends State<CategoryPicker> {
   String? _expandedRootId;
 
   Future<void> _openManager() async {
-    await showCategoryManager(context: context, isExpense: widget.isExpense);
+    await showCategoryManager(
+      context: context,
+      walletId: widget.controller.walletId,
+      isExpense: widget.isExpense,
+    );
     await widget.controller.loadCategories();
   }
 

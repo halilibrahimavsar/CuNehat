@@ -268,6 +268,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
                     height: height,
                     child: FilterView(
                       filter: state,
+                      walletId: widget.wallet.id ?? '',
                       // Panel canlı; düğme kaç işlemin kalacağını ÖNCEDEN
                       // söyler.
                       resultCount: filterLedger(

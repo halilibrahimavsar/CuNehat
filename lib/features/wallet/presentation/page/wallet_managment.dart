@@ -7,6 +7,7 @@ import 'package:cunehat/core/onboarding/onboarding_keys.dart';
 import 'package:cunehat/core/onboarding/onboarding_tour.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/wallet_category_scope.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_starter_pack_sheet.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/error_view.dart';
@@ -18,6 +19,7 @@ import 'package:cunehat/features/finance_transactions/presentation/bloc/transact
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_entry_widgets/transaction_entry_sheet.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/features/wallet/presentation/page/wallet_form_dialog.dart';
 import 'package:cunehat/features/wallet/presentation/widgets/no_wallet_view.dart';
@@ -487,12 +489,37 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
   Future<void> _offerQuickStart(BuildContext context, String walletName) async {
     // Kategori kurulumu hızlı başlangıçtan ÖNCE gelir: hızlı başlangıcın iki
     // aksiyonu da (ekstre içe aktar / işlem ekle) kategori olmadan yürümez,
-    // kategori zorunlu bir alandır. Yalnız hiç kategori yoksa gösterilir.
-    final categories = await getIt<CategoryRepository>().getAllCategories();
+    // kategori zorunlu bir alandır.
+    //
+    // Kapı artık CÜZDAN BAZLI. Eskiden küresel `categories.isEmpty` idi:
+    // ikinci cüzdanını kuran kullanıcıya paket hiç sorulmuyor, birincinin
+    // tüm kalemleri sessizce devrediyordu. Yeni cüzdan boş kümeyle doğduğu
+    // için paket ona yeniden önerilir; eski (kürasyonsuz) cüzdanlarda
+    // davranış aynen korunur — onlar zaten hepsini görüyor.
+    //
+    // Cüzdan bloc state'inden DEĞİL depodan okunuyor: `onSuccess` cüzdan
+    // yaratıldıktan hemen sonra tetikleniyor ve state'in yeni cüzdanı
+    // içermesi garanti değil. `CreateWalletEvent` aktif cüzdanı yazmayı
+    // bekliyor, dolayısıyla kutu güncel.
+    final walletResult =
+        await getIt<WalletRepository>().getActiveWallet(widget.userId);
+    final wallet = walletResult.fold((_) => null, (w) => w);
     if (!context.mounted) return;
-    if (categories.isEmpty) {
-      await showCategoryStarterPack(context);
+
+    if (wallet?.id != null) {
+      final visible = wallet!.categoryIds;
+      // Küresel liste yalnız kürasyonsuz cüzdanlar için gerekiyor; küratörlü
+      // cüzdanda kararı kümenin kendisi veriyor (bkz. `needsCategorySetup`).
+      final anyCategoryExists = visible != null ||
+          (await getIt<CategoryRepository>().getAllCategories()).isNotEmpty;
       if (!context.mounted) return;
+      if (needsCategorySetup(
+        visibleIds: visible,
+        anyCategoryExists: anyCategoryExists,
+      )) {
+        await showCategoryStarterPack(context, walletId: wallet.id!);
+        if (!context.mounted) return;
+      }
     }
 
     final action =

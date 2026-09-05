@@ -570,13 +570,6 @@
   "categoryErrorSelfParent": "Kategori kendi üst kategorisi olamaz",
   "categoryErrorParentHasChildren": "Alt kategorisi olan bir kategori taşınamaz",
   "kategorilerBaslik": "Kategoriler",
-  "kategoriSayisiOzeti": "{rootCount} ana, {childCount} alt kategori",
-  "@kategoriSayisiOzeti": {
-    "placeholders": {
-      "rootCount": {},
-      "childCount": {}
-    }
-  },
   "altKategoriEkle": "Alt kategori ekle",
   "ustKategori": "Üst kategori",
   "ustKategoriYok": "Ana kategori (üst yok)",
@@ -2374,5 +2367,30 @@
   "catSeedSideIncomeFreelance": "Serbest Çalışma",
   "catSeedRentalIncome": "Kira Geliri",
   "catSeedInvestmentIncome": "Yatırım",
-  "catSeedOtherIncome": "Diğer Gelir"
+  "catSeedOtherIncome": "Diğer Gelir",
+  "starterPackAddedToWallet": "{count} kategori bu cüzdana eklendi",
+  "@starterPackAddedToWallet": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "drawerCategoriesTitle": "Kategoriler",
+  "drawerCategoriesSubtitle": "Gelir ve gider kalemlerini düzenle",
+  "kategoriCuzdanKapsamiAciklama": "Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız {wallet} cüzdanında hangilerinin görüneceğini belirler; kategori silinmez.",
+  "@kategoriCuzdanKapsamiAciklama": {
+    "placeholders": {
+      "wallet": {}
+    }
+  },
+  "kategoriBuCuzdandaGoster": "Bu cüzdanda göster",
+  "kategoriBuCuzdandaGizle": "Bu cüzdanda gizle",
+  "kategoriGorunurSayisi": "{visible}/{total} kategori bu cüzdanda görünür",
+  "@kategoriGorunurSayisi": {
+    "placeholders": {
+      "visible": {},
+      "total": {}
+    }
+  },
+  "kategoriBuCuzdandaHicYok": "Bu cüzdanda henüz kategori seçilmedi. Hazır setten kur ya da aşağıdan tek tek aç.",
+  "kategoriCuzdanKapsamiAciklamaBu": "Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez."
 }

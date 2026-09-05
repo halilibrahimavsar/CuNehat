@@ -121,6 +121,12 @@ class DataExportImportCubit extends Cubit<DataExportImportState> {
         iconName: "account_balance_wallet",
         createdAt: DateTime.now(),
         openingBalance: 0,
+        // CSV'den doğan cüzdan kürasyonsuz açılır: içe aktarılan satırların
+        // kategorileri ADA göre küresel listeden çözülüyor
+        // (`CsvService.importTransactionsFromCSV`), yani hangi kimliklerin
+        // gerekeceği burada bilinmiyor. `null` = hepsi görünür — kullanıcı
+        // isterse kategoriler sayfasından daraltır.
+        categoryIds: null,
       );
 
       final walletResult = await walletRepository.createWallet(newWallet);

@@ -3,6 +3,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_error_text.dart';
 import 'package:flutter/material.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
@@ -14,9 +15,14 @@ import 'package:cunehat/core/messaging/app_messenger.dart';
 ///
 /// [parentId] verilirse form alt kategori kipinde açılır (üst kategori önceden
 /// seçili gelir); kullanıcı yine de değiştirebilir.
+///
+/// [walletId] YENİ kategorinin görünür yapılacağı cüzdandır: kullanıcının az
+/// önce yarattığı kategori, yarattığı yerin seçicisinde çıkmazsa özellik kırık
+/// görünür. Düzenlemede görünürlüğe dokunulmaz.
 Future<CategoryEntity?> showCategoryForm({
   required BuildContext context,
   required bool isExpense,
+  required String walletId,
   CategoryEntity? category,
   String? parentId,
 }) async {
@@ -26,6 +32,7 @@ Future<CategoryEntity?> showCategoryForm({
     backgroundColor: Colors.transparent,
     builder: (context) => CategoryFormSheet(
       isExpense: isExpense,
+      walletId: walletId,
       category: category,
       parentId: parentId,
     ),
@@ -34,12 +41,14 @@ Future<CategoryEntity?> showCategoryForm({
 
 class CategoryFormSheet extends StatefulWidget {
   final bool isExpense;
+  final String walletId;
   final CategoryEntity? category;
   final String? parentId;
 
   const CategoryFormSheet({
     super.key,
     required this.isExpense,
+    required this.walletId,
     this.category,
     this.parentId,
   });
@@ -52,6 +61,8 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final CategoryRepository _categoryRepository = getIt<CategoryRepository>();
+  final WalletCategoryService _walletCategories =
+      getIt<WalletCategoryService>();
 
   String _selectedIcon = 'category';
   bool _isLoading = false;
@@ -387,6 +398,13 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
           iconName: _selectedIcon,
           isExpense: widget.isExpense,
           parentId: _parentId,
+        );
+        // Yeni kategori, yaratıldığı cüzdanda görünür olur. Alt kategoriyse
+        // kökü de kümeye katılır (ağaç kuralı); gizli bir kökün altına
+        // çocuk eklemek o kökü geri açar — kullanıcı zaten onu istedi.
+        await _walletCategories.include(
+          walletId: widget.walletId,
+          categoryIds: [saved.id],
         );
       }
 

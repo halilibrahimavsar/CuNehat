@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../support/wallet_category_stub.dart';
+
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 void main() {
@@ -24,6 +26,7 @@ void main() {
   setUp(() {
     mockCategoryRepository = MockCategoryRepository();
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    registerUncuratedWalletCategories(mockCategoryRepository);
   });
 
   tearDown(() {

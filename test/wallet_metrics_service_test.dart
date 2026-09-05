@@ -48,6 +48,10 @@ class FakeWalletRepository implements WalletRepository {
   }
 
   @override
+  Future<Either<Failure, List<WalletEntity>>> getAllWallets() async =>
+      Right(store.values.toList());
+
+  @override
   Future<Either<Failure, List<WalletEntity>>> getWallets(String userId) async =>
       Right(store.values.where((w) => w.userId == userId).toList());
 

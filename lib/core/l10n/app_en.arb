@@ -570,13 +570,6 @@
   "categoryErrorSelfParent": "A category cannot be its own parent",
   "categoryErrorParentHasChildren": "A category that has subcategories cannot be moved",
   "kategorilerBaslik": "Categories",
-  "kategoriSayisiOzeti": "{rootCount} main, {childCount} sub",
-  "@kategoriSayisiOzeti": {
-    "placeholders": {
-      "rootCount": {},
-      "childCount": {}
-    }
-  },
   "altKategoriEkle": "Add subcategory",
   "ustKategori": "Parent category",
   "ustKategoriYok": "Main category (no parent)",
@@ -2329,5 +2322,14 @@
   "catSeedSideIncomeFreelance": "Freelance",
   "catSeedRentalIncome": "Rental Income",
   "catSeedInvestmentIncome": "Investment",
-  "catSeedOtherIncome": "Other Income"
+  "catSeedOtherIncome": "Other Income",
+  "starterPackAddedToWallet": "{count} categories added to this wallet",
+  "drawerCategoriesTitle": "Categories",
+  "drawerCategoriesSubtitle": "Organize your income and expense items",
+  "kategoriCuzdanKapsamiAciklama": "Categories are shared across all wallets. This switch only decides which ones show up in {wallet}; it never deletes a category.",
+  "kategoriBuCuzdandaGoster": "Show in this wallet",
+  "kategoriBuCuzdandaGizle": "Hide in this wallet",
+  "kategoriGorunurSayisi": "{visible} of {total} categories visible in this wallet",
+  "kategoriBuCuzdandaHicYok": "No categories picked for this wallet yet. Install the starter set, or switch them on below.",
+  "kategoriCuzdanKapsamiAciklamaBu": "Categories are shared across all wallets. This switch only decides which ones show up in this wallet; it never deletes a category."
 }

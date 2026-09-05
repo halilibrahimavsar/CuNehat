@@ -1280,11 +1280,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kategorilerBaslik => 'Categories';
 
   @override
-  String kategoriSayisiOzeti(Object rootCount, Object childCount) {
-    return '$rootCount main, $childCount sub';
-  }
-
-  @override
   String get altKategoriEkle => 'Add subcategory';
 
   @override
@@ -4346,4 +4341,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catSeedOtherIncome => 'Other Income';
+
+  @override
+  String starterPackAddedToWallet(Object count) {
+    return '$count categories added to this wallet';
+  }
+
+  @override
+  String get drawerCategoriesTitle => 'Categories';
+
+  @override
+  String get drawerCategoriesSubtitle =>
+      'Organize your income and expense items';
+
+  @override
+  String kategoriCuzdanKapsamiAciklama(Object wallet) {
+    return 'Categories are shared across all wallets. This switch only decides which ones show up in $wallet; it never deletes a category.';
+  }
+
+  @override
+  String get kategoriBuCuzdandaGoster => 'Show in this wallet';
+
+  @override
+  String get kategoriBuCuzdandaGizle => 'Hide in this wallet';
+
+  @override
+  String kategoriGorunurSayisi(Object visible, Object total) {
+    return '$visible of $total categories visible in this wallet';
+  }
+
+  @override
+  String get kategoriBuCuzdandaHicYok =>
+      'No categories picked for this wallet yet. Install the starter set, or switch them on below.';
+
+  @override
+  String get kategoriCuzdanKapsamiAciklamaBu =>
+      'Categories are shared across all wallets. This switch only decides which ones show up in this wallet; it never deletes a category.';
 }

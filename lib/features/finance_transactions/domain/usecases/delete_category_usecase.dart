@@ -4,8 +4,10 @@ import 'package:cunehat/features/budgets/domain/usecases/delete_budget_usecase.d
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 /// Kategori silmenin TEK doğru yolu.
@@ -21,6 +23,12 @@ import 'package:injectable/injectable.dart';
 /// görünüyordu. Bütçe temizliği ise UI'da, üstelik yalnız `isExpense` dalında
 /// duruyordu — kategori yöneticisi dışından silinen her kategori hayalet bütçe
 /// bırakıyordu.
+///
+/// **Dördüncü kutu: cüzdanlar.** Cüzdanlar kategori görünürlük kümesi tutuyor
+/// (`WalletEntity.categoryIds`). Bu onarım kısa süre UI'da durdu ve yalnız
+/// AKTİF cüzdanı düzeltiyordu; oysa retag TÜM cüzdanlarda oluyor, yani başka
+/// cüzdanlardaki taşınmış işlemler orada görünmeyen bir kategoriye düşüyordu.
+/// Kural, retag kapsamını bilen tek yerde: burada.
 @injectable
 class DeleteCategoryUseCase {
   final CategoryRepository categoryRepository;
@@ -29,12 +37,17 @@ class DeleteCategoryUseCase {
   final DeleteBudgetsForCategoryUsecase deleteBudgetsForCategory;
   final TransactionsChangedNotifier transactionsChangedNotifier;
 
+  /// Silinen kimlikleri cüzdanların görünürlük kümelerinden düşürür ve taşıma
+  /// hedefini o cüzdanlara katar.
+  final WalletCategoryService walletCategories;
+
   DeleteCategoryUseCase(
     this.categoryRepository,
     this.transactionsRepository,
     this.recurringRepository,
     this.deleteBudgetsForCategory,
     this.transactionsChangedNotifier,
+    this.walletCategories,
   );
 
   /// [categoryId] ve (ana kategoriyse) alt kategorilerini siler.
@@ -92,6 +105,23 @@ class DeleteCategoryUseCase {
     }
 
     await categoryRepository.deleteCategories(subtree);
+
+    // Görünürlük onarımı silmeden SONRA: hedefin kökünü katabilmek için
+    // güncel (silinmiş kayıtlar düşmüş) listeye ihtiyaç var.
+    //
+    // Hata silmeyi GERİ ALDIRMAZ: kategoriler kutudan düştü, işlemler taşındı,
+    // bütçeler temizlendi — hepsi kalıcı. Burada `Left` dönmek kullanıcıya
+    // "silinemedi" demek olurdu, oysa silindi. Onarımın bedeli kozmetik
+    // (bir cüzdanın seçicisinde hedef gizli kalır) ve kullanıcı anahtarla
+    // düzeltebilir.
+    try {
+      await walletCategories.onCategoriesDeleted(
+        removedIds: subtree,
+        replacementId: reassignToId,
+      );
+    } catch (e) {
+      debugPrint('Kategori görünürlüğü onarılamadı: $e');
+    }
 
     // Kategori değişimini `CategoryRepository` yayar; defter değişimini burada
     // yaymak gerekir, yoksa açık işlem/rapor/bütçe sayfaları taşınmış

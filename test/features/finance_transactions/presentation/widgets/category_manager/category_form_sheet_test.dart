@@ -10,6 +10,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../support/wallet_category_stub.dart';
+
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class FakeCategoryEntity extends Fake implements CategoryEntity {}
@@ -39,6 +41,7 @@ void main() {
   setUp(() {
     repository = MockCategoryRepository();
     getIt.registerSingleton<CategoryRepository>(repository);
+    registerUncuratedWalletCategories(repository);
 
     when(() => repository.getCategories(any()))
         .thenAnswer((_) async => <CategoryEntity>[]);
@@ -74,7 +77,7 @@ void main() {
     testWidgets('kimliği repository üretir; çağıran ad göndermekle yetinir',
         (tester) async {
       await tester.pumpWidget(
-        host(const CategoryFormSheet(isExpense: true)),
+        host(const CategoryFormSheet(isExpense: true, walletId: 'w1')),
       );
       await tester.pumpAndSettle();
 
@@ -96,7 +99,8 @@ void main() {
           .thenAnswer((_) async => [cat('f', 'Fatura')]);
 
       await tester.pumpWidget(
-        host(const CategoryFormSheet(isExpense: true, parentId: 'f')),
+        host(const CategoryFormSheet(
+            isExpense: true, walletId: 'w1', parentId: 'f')),
       );
       await tester.pumpAndSettle();
 
@@ -119,7 +123,8 @@ void main() {
             cat('f-e', 'Elektrik', parentId: 'f'),
           ]);
 
-      await tester.pumpWidget(host(const CategoryFormSheet(isExpense: true)));
+      await tester.pumpWidget(
+          host(const CategoryFormSheet(isExpense: true, walletId: 'w1')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(DropdownButtonFormField<String?>));
@@ -131,7 +136,8 @@ void main() {
     });
 
     testWidgets('boş ad reddedilir ve depoya gidilmez', (tester) async {
-      await tester.pumpWidget(host(const CategoryFormSheet(isExpense: true)));
+      await tester.pumpWidget(
+          host(const CategoryFormSheet(isExpense: true, walletId: 'w1')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Ekle'));
@@ -149,7 +155,8 @@ void main() {
     testWidgets('sistem etiketiyle aynı ad artık serbest', (tester) async {
       // Kimlik UUID olduğundan `tag == 'Transfer'` eşleşmesine giremez;
       // eski rezerve-ad kapısı kaldırıldı.
-      await tester.pumpWidget(host(const CategoryFormSheet(isExpense: true)));
+      await tester.pumpWidget(
+          host(const CategoryFormSheet(isExpense: true, walletId: 'w1')));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).first, 'Transfer');
@@ -172,7 +179,8 @@ void main() {
           .thenAnswer((_) async => [existing]);
 
       await tester.pumpWidget(
-        host(CategoryFormSheet(isExpense: true, category: existing)),
+        host(CategoryFormSheet(
+            isExpense: true, walletId: 'w1', category: existing)),
       );
       await tester.pumpAndSettle();
 
@@ -196,7 +204,8 @@ void main() {
           .thenAnswer((_) async => [cat('f', 'Fatura'), child]);
 
       await tester.pumpWidget(
-        host(CategoryFormSheet(isExpense: true, category: child)),
+        host(CategoryFormSheet(
+            isExpense: true, walletId: 'w1', category: child)),
       );
       await tester.pumpAndSettle();
 

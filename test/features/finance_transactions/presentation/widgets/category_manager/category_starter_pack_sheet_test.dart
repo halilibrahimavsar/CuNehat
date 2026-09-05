@@ -27,7 +27,8 @@ void main() {
   // düşüyordu. Kullanıcı tarafındaki karşılığı: "dokunuyorum, hiçbir şey
   // olmuyor." Testler debug'da koştuğu için assert burada gerçek bir ölçüm.
   testWidgets('sheet çizilirken Flutter assert düşmez', (tester) async {
-    await tester.pumpWidget(host(const CategoryStarterPackSheet()));
+    await tester
+        .pumpWidget(host(const CategoryStarterPackSheet(walletId: 'w1')));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -40,7 +41,8 @@ void main() {
   // verildiğinde içeride `DecoratedBox` kurar, o yüzden ikisini birden yakalar.)
   testWidgets('tile ile en yakın Material arasında renkli kutu yok',
       (tester) async {
-    await tester.pumpWidget(host(const CategoryStarterPackSheet()));
+    await tester
+        .pumpWidget(host(const CategoryStarterPackSheet(walletId: 'w1')));
     await tester.pumpAndSettle();
 
     final tile = tester.element(find.byType(CheckboxListTile).first);

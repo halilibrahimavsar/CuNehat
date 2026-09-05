@@ -423,6 +423,7 @@ class _SimilarGroupSheetState extends State<SimilarGroupSheet> {
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: !group.isIncome,
+      walletId: _cubit.walletId,
       onCreated: _cubit.registerCreatedCategory,
     );
     if (picked == null || !mounted) return;

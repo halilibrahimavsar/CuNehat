@@ -30,6 +30,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 
+import '../../../../support/wallet_category_stub.dart';
+
 class _MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
 
@@ -145,6 +147,7 @@ void main() {
 
     getIt.registerSingleton<TransactionBloc>(bloc);
     getIt.registerSingleton<CategoryRepository>(categories);
+    registerUncuratedWalletCategories(categories);
     getIt.registerSingleton<CategoriesChangedNotifier>(
         CategoriesChangedNotifier());
     getIt.registerSingleton<OnboardingCoordinator>(coordinator);

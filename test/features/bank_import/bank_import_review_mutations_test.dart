@@ -13,6 +13,7 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -31,6 +32,26 @@ class _MockRasterizer extends Mock implements PdfRasterizer {}
 class _MockOcr extends Mock implements StatementOcrService {}
 
 class _MockCategoryRepo extends Mock implements CategoryRepository {}
+
+class _MockWalletCategories extends Mock implements WalletCategoryService {}
+
+/// Kategori kapsamı bu testlerin konusu değil: servis hep "kürasyon yok"
+/// davranışını taklit eder (küresel liste = cüzdanın listesi).
+_MockWalletCategories _walletCategoriesStub(CategoryRepository repo) {
+  final stub = _MockWalletCategories();
+  when(() => stub.categoriesFor(
+            walletId: any(named: 'walletId'),
+            isExpense: any(named: 'isExpense'),
+            alwaysInclude: any(named: 'alwaysInclude'),
+          ))
+      .thenAnswer((invocation) =>
+          repo.getCategories(invocation.namedArguments[#isExpense] as bool));
+  when(() => stub.include(
+        walletId: any(named: 'walletId'),
+        categoryIds: any(named: 'categoryIds'),
+      )).thenAnswer((_) async => 0);
+  return stub;
+}
 
 class _MockTxRepo extends Mock implements TransactionsRepository {}
 
@@ -70,6 +91,7 @@ BankImportCubit _build() => BankImportCubit(
       _MockOcr(),
       CategoryGuesser(),
       _MockCategoryRepo(),
+      _walletCategoriesStub(_MockCategoryRepo()),
       _MockTxRepo(),
       _MockMetrics(),
       _MockNotifier(),
@@ -171,6 +193,9 @@ void main() {
       // "Yatırım" hem gider hem gelir tarafında bir hedef; onay kimliği ada
       // bakarken birini işaretlemek diğerini de kuruyordu.
       final repo = _MockCategoryRepo();
+      // Öneri çözümü artık önce KÜRESEL listeye bakıyor (aynı adlı kategori
+      // başka bir cüzdanda olabilir); burada kullanıcının hiç kategorisi yok.
+      when(() => repo.getCategories(any())).thenAnswer((_) async => []);
       final created = <({String name, bool isExpense})>[];
       when(() => repo.addCategory(
             name: any(named: 'name'),
@@ -208,6 +233,7 @@ void main() {
         _MockOcr(),
         CategoryGuesser(),
         repo,
+        _walletCategoriesStub(repo),
         txRepo,
         metrics,
         _MockNotifier(),
@@ -233,6 +259,76 @@ void main() {
       await cubit.resolveCategorySuggestions({expenseSuggestion});
 
       expect(created, [(name: 'Yatırım', isExpense: true)]);
+    });
+
+    test('KÜRESEL var ama bu cüzdanda gizli: yaratılmaz, BAĞLANIR', () async {
+      // Havuz cüzdana daraltıldığı için öneri yine üretiliyor. Yeniden
+      // yaratmaya kalkışmak kardeş-ad tekilliğine takılır, `catch (_)` içinde
+      // sessizce yutulur ve satır kategorisiz kalırdı; kaydedilseydi de aynı
+      // ad iki kimliğe bölünüp raporu ikiye ayırırdı.
+      final repo = _MockCategoryRepo();
+      final existing = _cat('Yatırım');
+      when(() => repo.getCategories(true)).thenAnswer((_) async => [existing]);
+      when(() => repo.getCategories(false))
+          .thenAnswer((_) async => <CategoryEntity>[]);
+
+      final walletCategories = _walletCategoriesStub(repo);
+      // Bu cüzdanın kapsamı BOŞ: kategori küresel listede var ama burada yok.
+      when(() => walletCategories.categoriesFor(
+            walletId: any(named: 'walletId'),
+            isExpense: any(named: 'isExpense'),
+            alwaysInclude: any(named: 'alwaysInclude'),
+          )).thenAnswer((_) async => <CategoryEntity>[]);
+
+      final txRepo = _MockTxRepo();
+      when(() => txRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+          )).thenAnswer((_) async => const Right(<TransactionEntity>[]));
+      final metrics = _MockMetrics();
+      final walletRepo = _MockWalletRepo();
+      when(() => metrics.walletRepository).thenReturn(walletRepo);
+      when(() => walletRepo.getWalletById(any()))
+          .thenAnswer((_) async => const Right(null));
+
+      final cubit = BankImportCubit(
+        _MockReader(),
+        _MockMapper(),
+        _MockPdf(),
+        _MockRasterizer(),
+        _MockOcr(),
+        CategoryGuesser(),
+        repo,
+        walletCategories,
+        txRepo,
+        metrics,
+        _MockNotifier(),
+        SystemActivityGuard(),
+      );
+
+      const suggestion = CategorySuggestion(
+        name: 'Yatırım',
+        isIncome: false,
+        iconName: 'trending_up',
+      );
+      cubit.debugSeedSuggestions(
+        userId: 'u1',
+        walletId: 'w1',
+        suggestions: const [suggestion],
+      );
+
+      await cubit.resolveCategorySuggestions({suggestion});
+
+      verifyNever(() => repo.addCategory(
+            name: any(named: 'name'),
+            iconName: any(named: 'iconName'),
+            isExpense: any(named: 'isExpense'),
+            parentId: any(named: 'parentId'),
+          ));
+      verify(() => walletCategories.include(
+            walletId: 'w1',
+            categoryIds: [existing.id],
+          )).called(1);
     });
   });
 }

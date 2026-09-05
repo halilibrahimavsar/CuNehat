@@ -1284,11 +1284,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get kategorilerBaslik => 'Kategoriler';
 
   @override
-  String kategoriSayisiOzeti(Object rootCount, Object childCount) {
-    return '$rootCount ana, $childCount alt kategori';
-  }
-
-  @override
   String get altKategoriEkle => 'Alt kategori ekle';
 
   @override
@@ -4347,4 +4342,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get catSeedOtherIncome => 'Diğer Gelir';
+
+  @override
+  String starterPackAddedToWallet(Object count) {
+    return '$count kategori bu cüzdana eklendi';
+  }
+
+  @override
+  String get drawerCategoriesTitle => 'Kategoriler';
+
+  @override
+  String get drawerCategoriesSubtitle => 'Gelir ve gider kalemlerini düzenle';
+
+  @override
+  String kategoriCuzdanKapsamiAciklama(Object wallet) {
+    return 'Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız $wallet cüzdanında hangilerinin görüneceğini belirler; kategori silinmez.';
+  }
+
+  @override
+  String get kategoriBuCuzdandaGoster => 'Bu cüzdanda göster';
+
+  @override
+  String get kategoriBuCuzdandaGizle => 'Bu cüzdanda gizle';
+
+  @override
+  String kategoriGorunurSayisi(Object visible, Object total) {
+    return '$visible/$total kategori bu cüzdanda görünür';
+  }
+
+  @override
+  String get kategoriBuCuzdandaHicYok =>
+      'Bu cüzdanda henüz kategori seçilmedi. Hazır setten kur ya da aşağıdan tek tek aç.';
+
+  @override
+  String get kategoriCuzdanKapsamiAciklamaBu =>
+      'Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez.';
 }

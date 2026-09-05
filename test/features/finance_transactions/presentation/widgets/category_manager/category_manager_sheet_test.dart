@@ -16,6 +16,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../support/wallet_category_stub.dart';
+
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class MockTransactionsRepository extends Mock
@@ -33,6 +35,7 @@ void main() {
   late MockTransactionsRepository transactions;
   late MockDeleteCategoryUseCase deleteCategory;
   late MockRecurringRepository recurring;
+  late MockWalletCategoryService walletCategories;
 
   CategoryEntity cat(
     String id,
@@ -69,6 +72,7 @@ void main() {
     recurring = MockRecurringRepository();
 
     getIt.registerSingleton<CategoryRepository>(repository);
+    walletCategories = registerUncuratedWalletCategories(repository);
     getIt.registerSingleton<TransactionsRepository>(transactions);
     getIt.registerSingleton<DeleteCategoryUseCase>(deleteCategory);
     getIt.registerSingleton<RecurringTransactionRepository>(recurring);
@@ -98,7 +102,8 @@ void main() {
       ],
       supportedLocales: const [Locale('tr'), Locale('en')],
       locale: const Locale('tr'),
-      home: Scaffold(body: CategoryManagerSheet(isExpense: isExpense)),
+      home: Scaffold(
+          body: CategoryManagerSheet(walletId: 'w1', isExpense: isExpense)),
     ));
     await tester.pumpAndSettle();
   }
@@ -117,16 +122,53 @@ void main() {
     expect(tester.getTopLeft(find.text('Elektrik')).dx, greaterThan(rootX));
   });
 
-  testWidgets('başlık ana/alt sayısını özetler', (tester) async {
-    // Sayılar ASİMETRİK seçildi: 2/2 ile argüman sırası ölçülemez, ters
+  testWidgets('başlık BU CÜZDANDA görünen kategori sayısını özetler',
+      (tester) async {
+    // Sayılar ASİMETRİK seçildi: 5/5 ile argüman sırası ölçülemez, ters
     // verilse de test geçerdi.
     when(() => repository.getCategories(any())).thenAnswer((_) async => [
           ...tree,
           cat('m-x', 'Manav', parentId: 'm', sortOrder: 1),
         ]);
+    when(() => walletCategories.visibleIds(any()))
+        .thenAnswer((_) async => ['f', 'f-e', 'm']);
 
     await pump(tester);
-    expect(find.text('2 ana, 3 alt kategori'), findsOneWidget);
+    expect(find.text('3/5 kategori bu cüzdanda görünür'), findsOneWidget);
+  });
+
+  group('cüzdan görünürlüğü', () {
+    testWidgets('liste GİZLİ kategorileri de gösterir (geri açmanın tek yolu)',
+        (tester) async {
+      when(() => walletCategories.visibleIds(any()))
+          .thenAnswer((_) async => ['f']);
+
+      await pump(tester);
+
+      // 'Market' bu cüzdanda kapalı ama satırı duruyor.
+      expect(find.text('Market'), findsOneWidget);
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches.map((s) => s.value), [true, false, false, false]);
+    });
+
+    testWidgets('anahtarı kapatmak kategoriyi SİLMEZ, cüzdandan gizler',
+        (tester) async {
+      await pump(tester);
+
+      // İlk satır 'Fatura' (kök).
+      await tester.tap(find.byType(Switch).first);
+      await tester.pumpAndSettle();
+
+      verify(() => walletCategories.setVisibility(
+            walletId: 'w1',
+            categoryId: 'f',
+            visible: false,
+          )).called(1);
+      verifyNever(() => deleteCategory(
+            categoryId: any(named: 'categoryId'),
+            reassignToId: any(named: 'reassignToId'),
+          ));
+    });
   });
 
   testWidgets('"Özel / Varsayılan" sekmeleri artık YOK', (tester) async {

@@ -2,7 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
-import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/category_filter_tree.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/filter_widgets/price_range_filter_section.dart';
@@ -39,9 +39,14 @@ class FilterView extends StatefulWidget {
 
   final VoidCallback onClose;
 
+  /// Kategori çiplerinin kapsamı: yalnız bu cüzdanda görünür kalemler
+  /// listelenir — defterin kendisi zaten cüzdana ait.
+  final String walletId;
+
   const FilterView({
     super.key,
     required this.filter,
+    required this.walletId,
     required this.resultCount,
     required this.onFilterChanged,
     required this.onDateTap,
@@ -55,7 +60,7 @@ class FilterView extends StatefulWidget {
 }
 
 class _FilterViewState extends State<FilterView> {
-  final CategoryRepository _categoryService = getIt<CategoryRepository>();
+  final WalletCategoryService _categoryService = getIt<WalletCategoryService>();
 
   List<CategoryEntity> _incomeCategories = [];
   List<CategoryEntity> _expenseCategories = [];
@@ -81,19 +86,25 @@ class _FilterViewState extends State<FilterView> {
     try {
       final mode = widget.filter.viewFilter.financeMode;
       if (mode == FinanceMode.compare) {
-        _incomeCategories = await _categoryService.getCategories(false);
-        _expenseCategories = await _categoryService.getCategories(true);
+        _incomeCategories = await _forWallet(isExpense: false);
+        _expenseCategories = await _forWallet(isExpense: true);
       } else if (mode == FinanceMode.expense) {
-        _expenseCategories = await _categoryService.getCategories(true);
+        _expenseCategories = await _forWallet(isExpense: true);
         _incomeCategories = [];
       } else {
-        _incomeCategories = await _categoryService.getCategories(false);
+        _incomeCategories = await _forWallet(isExpense: false);
         _expenseCategories = [];
       }
     } finally {
       if (mounted) setState(() => _isLoadingCategories = false);
     }
   }
+
+  Future<List<CategoryEntity>> _forWallet({required bool isExpense}) =>
+      _categoryService.categoriesFor(
+        walletId: widget.walletId,
+        isExpense: isExpense,
+      );
 
   void _setCategories(Set<String> categories) {
     widget.onFilterChanged(

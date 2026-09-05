@@ -100,6 +100,8 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/catego
     as _i896;
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart'
     as _i543;
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart'
+    as _i247;
 import 'package:cunehat/features/finance_transactions/domain/usecases/delete_category_usecase.dart'
     as _i86;
 import 'package:cunehat/features/finance_transactions/domain/usecases/install_starter_pack_usecase.dart'
@@ -300,6 +302,11 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i460.SharedPreferences>(),
           gh<_i187.SystemActivityGuard>(),
         ));
+    gh.lazySingleton<_i247.WalletCategoryService>(
+        () => _i247.WalletCategoryService(
+              gh<_i896.CategoryRepository>(),
+              gh<_i504.WalletRepository>(),
+            ));
     gh.lazySingleton<_i543.TransactionsRepository>(
         () => _i510.TransactionRepositoryImpl(
               localDatasource: gh<_i934.TransactionHiveDataSource>(),
@@ -390,6 +397,11 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
+    gh.factory<_i832.InstallStarterPackUseCase>(
+        () => _i832.InstallStarterPackUseCase(
+              gh<_i896.CategoryRepository>(),
+              gh<_i247.WalletCategoryService>(),
+            ));
     gh.factory<_i257.AddTransactionUseCase>(
         () => _i257.AddTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.DeleteTransactionUseCase>(() =>
@@ -403,8 +415,6 @@ extension GetItInjectableX on _i174.GetIt {
         _i257.UpdateTransactionUseCase(gh<_i543.TransactionsRepository>()));
     gh.factory<_i257.GetTransactionByIdUseCase>(() =>
         _i257.GetTransactionByIdUseCase(gh<_i543.TransactionsRepository>()));
-    gh.factory<_i832.InstallStarterPackUseCase>(
-        () => _i832.InstallStarterPackUseCase(gh<_i896.CategoryRepository>()));
     gh.factory<_i613.SaveBudgetUsecase>(() => _i613.SaveBudgetUsecase(
           gh<_i94.BudgetRepository>(),
           gh<_i977.BudgetsChangedNotifier>(),
@@ -456,18 +466,13 @@ extension GetItInjectableX on _i174.GetIt {
           transactionsRepository: gh<_i543.TransactionsRepository>(),
           transactionsChangedNotifier: gh<_i777.TransactionsChangedNotifier>(),
         ));
-    gh.factory<_i21.BankImportCubit>(() => _i21.BankImportCubit(
-          gh<_i1065.RawTableReader>(),
-          gh<_i125.ColumnMapper>(),
-          gh<_i512.PdfStatementParser>(),
-          gh<_i373.PdfRasterizer>(),
-          gh<_i344.StatementOcrService>(),
-          gh<_i884.CategoryGuesser>(),
+    gh.factory<_i86.DeleteCategoryUseCase>(() => _i86.DeleteCategoryUseCase(
           gh<_i896.CategoryRepository>(),
           gh<_i543.TransactionsRepository>(),
-          gh<_i239.WalletMetricsService>(),
+          gh<_i788.RecurringTransactionRepository>(),
+          gh<_i691.DeleteBudgetsForCategoryUsecase>(),
           gh<_i777.TransactionsChangedNotifier>(),
-          gh<_i187.SystemActivityGuard>(),
+          gh<_i247.WalletCategoryService>(),
         ));
     gh.factory<_i817.DeleteRecurringTransactionUsecase>(
         () => _i817.DeleteRecurringTransactionUsecase(
@@ -517,13 +522,6 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i570.LanguageBloc>(
         () => _i570.LanguageBloc(gh<_i534.ReminderSyncService>()));
-    gh.factory<_i86.DeleteCategoryUseCase>(() => _i86.DeleteCategoryUseCase(
-          gh<_i896.CategoryRepository>(),
-          gh<_i543.TransactionsRepository>(),
-          gh<_i788.RecurringTransactionRepository>(),
-          gh<_i691.DeleteBudgetsForCategoryUsecase>(),
-          gh<_i777.TransactionsChangedNotifier>(),
-        ));
     gh.factory<_i645.BudgetsBloc>(() => _i645.BudgetsBloc(
           gh<_i21.GetBudgetsUsecase>(),
           gh<_i613.SaveBudgetUsecase>(),
@@ -594,6 +592,20 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i266.LocalBackupService>(() => _i266.LocalBackupService(
           gh<_i348.DataSerializationService>(),
+          gh<_i187.SystemActivityGuard>(),
+        ));
+    gh.factory<_i21.BankImportCubit>(() => _i21.BankImportCubit(
+          gh<_i1065.RawTableReader>(),
+          gh<_i125.ColumnMapper>(),
+          gh<_i512.PdfStatementParser>(),
+          gh<_i373.PdfRasterizer>(),
+          gh<_i344.StatementOcrService>(),
+          gh<_i884.CategoryGuesser>(),
+          gh<_i896.CategoryRepository>(),
+          gh<_i247.WalletCategoryService>(),
+          gh<_i543.TransactionsRepository>(),
+          gh<_i239.WalletMetricsService>(),
+          gh<_i777.TransactionsChangedNotifier>(),
           gh<_i187.SystemActivityGuard>(),
         ));
     gh.factory<_i125.BackupPreviewCubit>(() => _i125.BackupPreviewCubit(

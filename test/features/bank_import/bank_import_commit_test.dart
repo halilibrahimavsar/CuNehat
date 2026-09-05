@@ -13,6 +13,7 @@ import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/domain/repositories/wallet_repository.dart';
@@ -33,6 +34,26 @@ class _MockOcr extends Mock implements StatementOcrService {}
 class _MockGuesser extends Mock implements CategoryGuesser {}
 
 class _MockCategoryRepo extends Mock implements CategoryRepository {}
+
+class _MockWalletCategories extends Mock implements WalletCategoryService {}
+
+/// Kategori kapsamı bu testlerin konusu değil: servis hep "kürasyon yok"
+/// davranışını taklit eder (küresel liste = cüzdanın listesi).
+_MockWalletCategories _walletCategoriesStub(CategoryRepository repo) {
+  final stub = _MockWalletCategories();
+  when(() => stub.categoriesFor(
+            walletId: any(named: 'walletId'),
+            isExpense: any(named: 'isExpense'),
+            alwaysInclude: any(named: 'alwaysInclude'),
+          ))
+      .thenAnswer((invocation) =>
+          repo.getCategories(invocation.namedArguments[#isExpense] as bool));
+  when(() => stub.include(
+        walletId: any(named: 'walletId'),
+        categoryIds: any(named: 'categoryIds'),
+      )).thenAnswer((_) async => 0);
+  return stub;
+}
 
 class _MockTxRepo extends Mock implements TransactionsRepository {}
 
@@ -110,6 +131,7 @@ void main() {
       _MockGuesser(),
       // CategoryRepository commit yolunda kullanılmaz.
       _MockCategoryRepo(),
+      _walletCategoriesStub(_MockCategoryRepo()),
       txRepo,
       metrics,
       notifier,

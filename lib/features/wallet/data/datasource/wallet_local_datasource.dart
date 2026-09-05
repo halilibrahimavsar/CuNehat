@@ -63,6 +63,17 @@ class WalletLocalDataSource {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
+  /// Kullanıcı süzgeci OLMADAN tüm cüzdanlar.
+  ///
+  /// Veri bütünlüğü işleri için: kategori silme, etiketi TÜM cüzdanlarda
+  /// değiştirdiği (`retagTransactions`) için görünürlük onarımını da tüm
+  /// cüzdanlarda yapmak zorunda ve elinde `userId` yok. `isActive` burada
+  /// hesaplanmaz — bu okumanın konusu aktiflik değil.
+  Future<List<WalletModel>> getAllWallets() async {
+    final box = await _getWalletBox();
+    return box.values.toList();
+  }
+
   Future<void> setActiveWallet({
     required String userId,
     required String newActiveWalletId,

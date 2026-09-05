@@ -34,6 +34,8 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../support/wallet_category_stub.dart';
+
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
     implements TransactionBloc {}
 
@@ -100,6 +102,7 @@ void main() {
 
     getIt.registerSingleton<TransactionBloc>(mockTransactionBloc);
     getIt.registerSingleton<CategoryRepository>(mockCategoryRepository);
+    registerUncuratedWalletCategories(mockCategoryRepository);
     // Sayfa kategori görüntüleme indeksini kendi yükler ve kategori
     // değişimlerinde tazeler (donmuş etiket düzenlemede yanlışa dönüyordu).
     getIt.registerSingleton<CategoriesChangedNotifier>(

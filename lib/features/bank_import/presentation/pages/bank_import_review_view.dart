@@ -666,6 +666,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
     final picked = await showCategoryPickerSheet(
       context: context,
       isExpense: initialIsExpense,
+      walletId: _cubit.walletId,
       currentId: currentId,
       allowTypeSwitch: allowTypeSwitch,
       onCreated: _cubit.registerCreatedCategory,

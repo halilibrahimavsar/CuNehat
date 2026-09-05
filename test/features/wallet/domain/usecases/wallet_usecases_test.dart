@@ -66,16 +66,49 @@ void main() {
   );
 
   group('WalletCreateUseCase', () {
+    /// Yeni cüzdan BOŞ kümeyle doğar (bkz. [WalletCreateUseCase.call]), bu
+    /// yüzden depoya giden kayıt girdinin birebir aynısı değil.
+    final curatedWallet = testWallet.copyWith(categoryIds: const []);
+
     test('should return Right(id) when wallet has an ID and creation succeeds',
         () async {
-      when(() => mockRepository.createWallet(testWallet))
+      when(() => mockRepository.createWallet(curatedWallet))
           .thenAnswer((_) async => const Right('wallet_123'));
 
       final result = await createUseCase(testWallet);
 
       expect(result, const Right<Failure, String>('wallet_123'));
-      verify(() => mockRepository.createWallet(testWallet)).called(1);
+      verify(() => mockRepository.createWallet(curatedWallet)).called(1);
       verifyNoMoreInteractions(mockRepository);
+    });
+
+    test('yeni cüzdan KÜRATÖRLÜ doğar: categoryIds boş küme', () async {
+      // Bu tek satır, "ikinci cüzdanda başlangıç paketi yeniden önerilsin"
+      // isteğinin tamamını taşıyor. `null` kalsaydı "kürasyon yok → hepsi
+      // görünür" anlamına gelir ve yeni cüzdan yine ilk cüzdanın tüm
+      // kalemlerini devralırdı; hızlı başlangıç da paketi hiç sormazdı.
+      when(() => mockRepository.createWallet(any()))
+          .thenAnswer((_) async => const Right('w1'));
+
+      await createUseCase(testWallet);
+
+      final written = verify(() => mockRepository.createWallet(captureAny()))
+          .captured
+          .single as WalletEntity;
+      expect(written.categoryIds, isEmpty);
+      expect(written.categoryIds, isNotNull);
+    });
+
+    test('çağıran küme VERDİYSE ezilmez', () async {
+      when(() => mockRepository.createWallet(any()))
+          .thenAnswer((_) async => const Right('w1'));
+
+      await createUseCase(testWallet.copyWith(categoryIds: ['c1']));
+
+      final written = verify(() => mockRepository.createWallet(captureAny()))
+          .captured
+          .single as WalletEntity;
+      expect(written.categoryIds, ['c1']);
     });
 
     test('should generate V7 ID and return Right(id) when wallet ID is null',
@@ -113,13 +146,13 @@ void main() {
 
     test('should return Left(Failure) when creation fails', () async {
       const failure = ServerFailure('Database error');
-      when(() => mockRepository.createWallet(testWallet))
+      when(() => mockRepository.createWallet(curatedWallet))
           .thenAnswer((_) async => const Left(failure));
 
       final result = await createUseCase(testWallet);
 
       expect(result, const Left<Failure, String>(failure));
-      verify(() => mockRepository.createWallet(testWallet)).called(1);
+      verify(() => mockRepository.createWallet(curatedWallet)).called(1);
       verifyNoMoreInteractions(mockRepository);
     });
   });

@@ -9,14 +9,21 @@ import 'package:cunehat/features/finance_transactions/domain/usecases/install_st
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_error_text.dart';
 import 'package:flutter/material.dart';
 
-/// Başlangıç paketini gösterir; kurulan kategori sayısını döner (atlandıysa
-/// `null`).
+/// Başlangıç paketini gösterir; [walletId] cüzdanında kullanıma hazır hale
+/// gelen kategori sayısını döner (atlandıysa `null`).
 ///
 /// Kategori zorunlu bir alan olduğundan sıfır kategoriyle açılan uygulama
 /// hiçbir işlem kaydedemez. Bu sayfa o boşluğu "varsayılan kategori" kavramı
 /// olmadan doldurur: seçilen her şey normal, silinebilir kullanıcı
 /// kategorisidir.
-Future<int?> showCategoryStarterPack(BuildContext context) {
+///
+/// **Cüzdana bağlıdır:** ikinci cüzdanını kuran kullanıcı burada var olan
+/// kategorileri yeniden YARATMAZ, o cüzdanda görünür yapar (bkz.
+/// [InstallStarterPackUseCase]).
+Future<int?> showCategoryStarterPack(
+  BuildContext context, {
+  required String walletId,
+}) {
   return showModalBottomSheet<int>(
     context: context,
     isScrollControlled: true,
@@ -25,12 +32,15 @@ Future<int?> showCategoryStarterPack(BuildContext context) {
     // (`isDismissible: false` yalnız dışa dokunuşu engelliyor, sürükleme ve
     // geri jestini engellemiyordu — bayrak olduğundan güçlü görünüyordu.)
     backgroundColor: Colors.transparent,
-    builder: (_) => const CategoryStarterPackSheet(),
+    builder: (_) => CategoryStarterPackSheet(walletId: walletId),
   );
 }
 
 class CategoryStarterPackSheet extends StatefulWidget {
-  const CategoryStarterPackSheet({super.key});
+  /// Seçimin bağlanacağı cüzdan.
+  final String walletId;
+
+  const CategoryStarterPackSheet({super.key, required this.walletId});
 
   @override
   State<CategoryStarterPackSheet> createState() =>
@@ -282,13 +292,20 @@ class _CategoryStarterPackSheetState extends State<CategoryStarterPackSheet> {
   Future<void> _install() async {
     setState(() => _isSaving = true);
     try {
-      final created = await getIt<InstallStarterPackUseCase>()(
+      final result = await getIt<InstallStarterPackUseCase>()(
         _selection.toList(),
         languageCode: Localizations.localeOf(context).languageCode,
+        walletId: widget.walletId,
       );
       if (!mounted) return;
-      final message = context.l10n.starterPackCreated(created);
-      Navigator.pop(context, created);
+      // Yeni kayıt yazıldıysa "oluşturuldu", yalnız bağlandıysa "eklendi":
+      // ikinci cüzdanda hiçbir şey yaratılmaz ama 41 kategori kullanıma
+      // girer, "0 kategori oluşturuldu" demek kullanıcıya yalan söylerdi.
+      final touched = result.created > 0 ? result.created : result.attached;
+      final message = result.created > 0
+          ? context.l10n.starterPackCreated(result.created)
+          : context.l10n.starterPackAddedToWallet(result.attached);
+      Navigator.pop(context, touched);
       Future.microtask(() => AppMessenger.success('✅ $message'));
     } catch (e) {
       if (mounted) {

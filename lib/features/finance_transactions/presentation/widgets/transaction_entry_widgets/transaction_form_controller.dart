@@ -1,6 +1,6 @@
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/config/di/injection.dart';
-import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
@@ -14,10 +14,15 @@ import 'package:image_picker/image_picker.dart';
 /// kategori seçilirken tarih satırı yeniden çizilmez. Metin alanları kendi
 /// [TextEditingController]'larıyla yönetilir (rebuild gerektirmez).
 class TransactionFormController {
-  TransactionFormController({required this.isExpense});
+  TransactionFormController({required this.isExpense, required this.walletId});
 
   final bool isExpense;
-  final CategoryRepository _categoryService = getIt<CategoryRepository>();
+
+  /// Kategori listesinin kapsamı: yalnız bu cüzdanda görünür kalemler
+  /// listelenir (bkz. `wallet_category_scope.dart`).
+  final String walletId;
+
+  final WalletCategoryService _categoryService = getIt<WalletCategoryService>();
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
@@ -59,7 +64,14 @@ class TransactionFormController {
   Future<void> loadCategories() async {
     categoriesLoading.value = true;
     try {
-      final list = await _categoryService.getCategories(isExpense);
+      // Düzenlenen işlemin mevcut kategorisi, bu cüzdanda gizlenmiş olsa bile
+      // listede kalır — yoksa aşağıdaki "artık yok" temizliği onu düşürür ve
+      // kullanıcı sadece tutarı değiştirmek isterken kategorisini kaybeder.
+      final list = await _categoryService.categoriesFor(
+        walletId: walletId,
+        isExpense: isExpense,
+        alwaysInclude: categoryId.value,
+      );
       if (_disposed) return;
       categories.value = list;
 

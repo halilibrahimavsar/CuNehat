@@ -43,6 +43,16 @@ class WalletRepositoryImpl implements WalletRepository {
   }
 
   @override
+  Future<Either<Failure, List<WalletEntity>>> getAllWallets() async {
+    try {
+      final walletModels = await dataSource.getAllWallets();
+      return Right(walletModels.map((model) => model.toEntity()).toList());
+    } catch (e) {
+      return Left(CacheFailure('Cüzdanlar getirilemedi: ${e.toString()}'));
+    }
+  }
+
+  @override
   Stream<Either<Failure, List<WalletEntity>>> watchWallets(
       String userId) async* {
     try {

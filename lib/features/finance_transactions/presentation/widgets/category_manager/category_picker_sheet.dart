@@ -5,7 +5,7 @@ import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/core/utils/text_search.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
-import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_form_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -33,9 +33,15 @@ import 'package:flutter/material.dart';
 /// [allowTypeSwitch] gelir/gider arasında geçişe izin verir (ekstre incelemesi
 /// satırın türünü de değiştirebiliyor). [onCreated] yeni kategori oluşturulduğu
 /// anda çağrılır — çağıranın önbelleğini tazelemesi için.
+///
+/// [walletId] seçenekleri o cüzdanda GÖRÜNÜR kategorilerle sınırlar; ekstre
+/// hangi cüzdana aktarılıyorsa onun kalemleri listelenir. [currentId] kümede
+/// olmasa bile listede kalır — aksi halde gizli bir kategorideki satırı açmak
+/// seçimi sessizce düşürürdü.
 Future<CategoryEntity?> showCategoryPickerSheet({
   required BuildContext context,
   required bool isExpense,
+  required String walletId,
   String? currentId,
   bool allowTypeSwitch = false,
   ValueChanged<CategoryEntity>? onCreated,
@@ -46,6 +52,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
     backgroundColor: Colors.transparent,
     builder: (_) => CategoryPickerSheet(
       isExpense: isExpense,
+      walletId: walletId,
       currentId: currentId,
       allowTypeSwitch: allowTypeSwitch,
       onCreated: onCreated,
@@ -55,6 +62,7 @@ Future<CategoryEntity?> showCategoryPickerSheet({
 
 class CategoryPickerSheet extends StatefulWidget {
   final bool isExpense;
+  final String walletId;
   final String? currentId;
   final bool allowTypeSwitch;
   final ValueChanged<CategoryEntity>? onCreated;
@@ -62,6 +70,7 @@ class CategoryPickerSheet extends StatefulWidget {
   const CategoryPickerSheet({
     super.key,
     required this.isExpense,
+    required this.walletId,
     this.currentId,
     this.allowTypeSwitch = false,
     this.onCreated,
@@ -75,7 +84,8 @@ class CategoryPickerSheet extends StatefulWidget {
 typedef _PickerRow = ({CategoryEntity category, String? caption});
 
 class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
-  final CategoryRepository _repository = getIt<CategoryRepository>();
+  final WalletCategoryService _walletCategories =
+      getIt<WalletCategoryService>();
   final RecentCategoriesService _recents = getIt<RecentCategoriesService>();
   final TextEditingController _searchController = TextEditingController();
 
@@ -102,7 +112,11 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final categories = await _repository.getCategories(_isExpense);
+    final categories = await _walletCategories.categoriesFor(
+      walletId: widget.walletId,
+      isExpense: _isExpense,
+      alwaysInclude: widget.currentId,
+    );
     if (!mounted) return;
     final tree = buildCategoryTree(categories);
 
@@ -480,6 +494,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
     final created = await showCategoryForm(
       context: context,
       isExpense: _isExpense,
+      walletId: widget.walletId,
     );
     if (created == null || !mounted) return;
     widget.onCreated?.call(created);

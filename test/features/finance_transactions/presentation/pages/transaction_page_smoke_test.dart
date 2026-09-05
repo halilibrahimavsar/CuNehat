@@ -28,6 +28,8 @@ import 'package:unified_flutter_features/unified_flutter_features.dart';
 
 import '../../../../support/real_font.dart';
 
+import '../../../../support/wallet_category_stub.dart';
+
 /// İşlemler ekranının düzen smoke testi: GERÇEK fontla, gerçek telefon
 /// genişliklerinde ve gerçek yazı ölçeklerinde.
 ///
@@ -139,6 +141,7 @@ void main() {
 
     getIt.registerSingleton<TransactionBloc>(bloc);
     getIt.registerSingleton<CategoryRepository>(categories);
+    registerUncuratedWalletCategories(categories);
     getIt.registerSingleton<CategoriesChangedNotifier>(
         CategoriesChangedNotifier());
     getIt.registerSingleton<OnboardingCoordinator>(coordinator);
@@ -315,15 +318,12 @@ void main() {
 
       final viewportTop =
           page.top + tester.getSize(find.byType(TransactionTopBar)).height;
-      final headerBoxes = headerTexts.evaluate().map((e) => tester.getRect(
-          find
-              .ancestor(
-                  of: find.byWidget(e.widget), matching: find.byType(InkWell))
-              .first));
+      final headerBoxes = headerTexts.evaluate().map((e) => tester.getRect(find
+          .ancestor(of: find.byWidget(e.widget), matching: find.byType(InkWell))
+          .first));
 
-      final pinned = headerBoxes
-          .where((r) => (r.top - viewportTop).abs() < 1.0)
-          .length;
+      final pinned =
+          headerBoxes.where((r) => (r.top - viewportTop).abs() < 1.0).length;
       expect(pinned, 1,
           reason: 'tam olarak BİR gün başlığı gövdenin tepesine yapışmalı '
               '(0 = yapışmıyor, >1 = yığılıyor)');
