@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
 import 'package:cunehat/features/budgets/presentation/pages/budgets_page.dart';
+import 'package:cunehat/features/finance_transactions/presentation/pages/categories_page.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/pages/recurring_templates_page.dart';
 
 GoRouter createAppRouter(AppAuthBloc authBloc) {
@@ -65,6 +66,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           return MaterialPage(
             key: state.pageKey,
             child: const BudgetsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.categories,
+        pageBuilder: (context, state) {
+          return MaterialPage(
+            key: state.pageKey,
+            child: const CategoriesPage(),
           );
         },
       ),

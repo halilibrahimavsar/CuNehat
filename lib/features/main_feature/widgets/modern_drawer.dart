@@ -171,6 +171,23 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                       _buildAnimatedMenuItem(
                         index: 2,
+                        icon: Icons.category_rounded,
+                        title: context.l10n.drawerCategoriesTitle,
+                        subtitle: context.l10n.drawerCategoriesSubtitle,
+                        gradientColors: const [
+                          Color(0xFFEE0979),
+                          Color(0xFFFF6A00),
+                        ],
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(AppRoutes.categories);
+                        },
+                        delay: 150,
+                        isDark: isDark,
+                        theme: theme,
+                      ),
+                      _buildAnimatedMenuItem(
+                        index: 3,
                         icon: Icons.document_scanner_rounded,
                         // `bankStatementSectionHeader` DEĞİL: o metin ayarlar
                         // sayfasındaki bölüm başlığı için yazıldı ve büyük
@@ -186,7 +203,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                           Navigator.pop(context);
                           context.push(AppRoutes.bankStatementImport);
                         },
-                        delay: 150,
+                        delay: 200,
                         isDark: isDark,
                         theme: theme,
                       ),
@@ -201,7 +218,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                       ),
                       const SizedBox(height: 6),
                       _buildAnimatedMenuItem(
-                        index: 3,
+                        index: 4,
                         icon: Icons.tune_rounded,
                         title: context.l10n.settings,
                         subtitle: context.l10n.drawerSettingsSubtitle,
@@ -213,12 +230,12 @@ class _ModernDrawerState extends State<ModernDrawer>
                           Navigator.pop(context);
                           context.push(AppRoutes.settings);
                         },
-                        delay: 200,
+                        delay: 250,
                         isDark: isDark,
                         theme: theme,
                       ),
                       _buildAnimatedMenuItem(
-                        index: 4,
+                        index: 5,
                         icon: Icons.shield_outlined,
                         title: context.l10n.drawerSecurityTitle,
                         subtitle: context.l10n.drawerSecuritySubtitle,
@@ -230,7 +247,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                           Navigator.pop(context);
                           context.push(AppRoutes.localAuthSettings);
                         },
-                        delay: 250,
+                        delay: 300,
                         isDark: isDark,
                         theme: theme,
                       ),
