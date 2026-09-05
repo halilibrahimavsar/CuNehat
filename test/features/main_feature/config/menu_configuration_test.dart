@@ -1,3 +1,4 @@
+import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/main_feature/config/menu_configuration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,8 +27,8 @@ void main() {
 
       // Verify submenus
       expect(config.subMenus.length, 1);
-      expect(config.subMenus[0].label, 'Detay');
-      expect(config.subMenus[0].icon, Icons.pie_chart);
+      expect(config.subMenus[0].label, 'Geçmiş');
+      expect(config.subMenus[0].icon, Icons.history);
       expect(config.subMenus[0].viewIndex, 1);
     });
 
@@ -75,6 +76,56 @@ void main() {
       expect(config.subMenus[0].label, 'Geçmiş');
       expect(config.subMenus[0].icon, Icons.history);
       expect(config.subMenus[0].viewIndex, 1);
+    });
+  });
+
+  group('alt menü etiketi', () {
+    // REGRESYON (bildirildi 2026-09-05): "birikimin altında içgörü yazıyor
+    // ama geçmiş olmalı". `label` GÖSTERİM metni değil ANAHTAR; birikim ile
+    // işlemler aynı 'Detay' anahtarını paylaşıyordu ve `menuDetails` işlemler
+    // sayfası için "İçgörü"ye dönüştürülünce birikim düğmesi de değişti —
+    // oysa açtığı sayfa `InvestmentDetailPage`, yani yatırım GEÇMİŞİ.
+    //
+    // Config'i tek başına ölçmek yetmiyordu: eski test 'Detay' anahtarını
+    // doğruluyor ve YEŞİL kalıyordu. Ölçülmesi gereken anahtarın ÇÖZÜLDÜĞÜ
+    // metin.
+    final tr = lookupAppLocalizations(const Locale('tr'));
+    final en = lookupAppLocalizations(const Locale('en'));
+
+    String labelOf(SliderState state, {int index = 0}) => localizedSubMenuLabel(
+          MenuConfigs.configs[state]!.subMenus[index].label,
+          tr,
+        );
+
+    test('birikim alt menüsü "Geçmiş" yazar', () {
+      expect(labelOf(SliderState.savedMoney), 'Geçmiş');
+    });
+
+    test('işlemler alt menüleri "İçgörü" ve "Rapor" yazar', () {
+      expect(labelOf(SliderState.transactions), 'İçgörü');
+      expect(labelOf(SliderState.transactions, index: 1), 'Rapor');
+    });
+
+    test('borç alt menüsü "Geçmiş" yazar', () {
+      expect(labelOf(SliderState.debt), 'Geçmiş');
+    });
+
+    test('birikim ile işlemler AYNI metni göstermez', () {
+      // İkisi farklı sayfa açıyor; aynı anahtarı paylaşmaları hatanın
+      // kendisiydi.
+      expect(labelOf(SliderState.savedMoney),
+          isNot(labelOf(SliderState.transactions)));
+    });
+
+    test('her alt menü anahtarı gerçekten ÇEVRİLİR', () {
+      // Bilinmeyen anahtar sessizce kendisini döner; İngilizce arayüzde
+      // ekranda Türkçe bir anahtar görünürdü.
+      for (final config in MenuConfigs.configs.values) {
+        for (final sub in config.subMenus) {
+          expect(localizedSubMenuLabel(sub.label, en), isNot(sub.label),
+              reason: '${sub.label} için çeviri yok');
+        }
+      }
     });
   });
 }

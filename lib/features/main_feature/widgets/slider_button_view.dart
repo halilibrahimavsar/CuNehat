@@ -181,23 +181,9 @@ class _SliderButtonViewState extends State<SliderButtonView> {
   ) {
     return SubMenuItem(
       icon: config.icon,
-      label: _getLocalizedSubMenuLabel(context, config.label),
+      label: localizedSubMenuLabel(config.label, context.l10n),
       onTap: () => _handleSubMenuTap(config.viewIndex, sliderState),
     );
-  }
-
-  String _getLocalizedSubMenuLabel(BuildContext context, String rawLabel) {
-    switch (rawLabel.toLowerCase()) {
-      case 'detay':
-        return context.l10n.menuDetails;
-      case 'rapor':
-        return context.l10n.menuReport;
-      case 'geçmiş':
-      case 'gecmis':
-        return context.l10n.menuHistory;
-      default:
-        return rawLabel;
-    }
   }
 
   /// Handle submenu tap - navigate to view in vertical stack

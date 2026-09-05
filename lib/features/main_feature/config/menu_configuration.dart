@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:unified_flutter_features/features/slider_2d_navigation/models/slider_models.dart';
 
+import 'package:cunehat/core/l10n/app_localizations.dart';
+
 /// Configuration for menu items
 ///
 /// SubMenuConfig now uses viewIndex instead of HomeSubView enum
@@ -73,8 +75,14 @@ class MenuConfigs {
       ],
       subMenus: [
         SubMenuConfig(
-          label: 'Detay',
-          icon: Icons.pie_chart,
+          // Buradaki `label` GÖSTERİM metni değil ANAHTAR (bkz. aşağıdaki
+          // 'Detay' notu). Anahtar 'Detay' idi ve `menuDetails` işlemler
+          // sayfası için "İçgörü"ye dönüştürülünce birikim tarafındaki bu
+          // düğme de "İçgörü" demeye başladı — oysa açtığı sayfa
+          // `InvestmentDetailPage`, yani yatırım GEÇMİŞİ. Borç tarafı zaten
+          // aynı anahtarı ('Geçmiş') kullanıyor.
+          label: 'Geçmiş',
+          icon: Icons.history,
           viewIndex: 1, // First subview
         ),
       ],
@@ -138,4 +146,27 @@ class MenuConfigs {
       Map.unmodifiable(_configs);
 
   static Map<SliderState, MenuConfiguration> get configs => allConfigs;
+}
+
+/// [SubMenuConfig.label] anahtarını ekrana yazılacak metne çevirir.
+///
+/// Widget'ın içinde private bir metottu; buraya taşındı çünkü asıl hata
+/// anahtar ile metin arasındaki bu eşlemedeydi: `menuDetails` işlemler sayfası
+/// için "İçgörü"ye dönüştürülünce, aynı anahtarı ('Detay') paylaşan birikim
+/// düğmesi de "İçgörü" demeye başladı — oysa o düğme yatırım GEÇMİŞİNİ açıyor.
+/// Anahtar → metin eşlemesi ancak burada, config'in yanında ölçülebiliyor.
+///
+/// Bilinmeyen anahtar olduğu gibi döner.
+String localizedSubMenuLabel(String rawLabel, AppLocalizations l10n) {
+  switch (rawLabel.toLowerCase()) {
+    case 'detay':
+      return l10n.menuDetails;
+    case 'rapor':
+      return l10n.menuReport;
+    case 'geçmiş':
+    case 'gecmis':
+      return l10n.menuHistory;
+    default:
+      return rawLabel;
+  }
 }
