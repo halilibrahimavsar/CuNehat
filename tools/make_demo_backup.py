@@ -146,6 +146,19 @@ PLAN = {
 }
 
 
+# Bütçesi kurulacak kökler ve hedef doluluk oranları. Oranlar ekran görüntüsü
+# için seçildi: biri aşılmış, biri sınırda, gerisi rahat. Limit uydurulursa
+# çubuklar rastgele görünür; burada limit GERÇEK harcamadan türetilir.
+BUDGET_TARGETS = {"Yemek": 1.12, "Market": 0.86, "Fatura": 0.71,
+                  "Ulaşım": 0.58, "Eğlence": 0.44, "Alışveriş": 0.27}
+
+# Kök -> alt kategori adları (PLAN'da karşılığı olanlar). Ayrı bir liste değil,
+# paketin kendisinden türetiliyor: pakete alt kategori eklenince burası da
+# kendiliğinden büyür.
+PACK_CHILDREN = {root: [c for c, _ in children if c in PLAN]
+                 for root, _, children in EXPENSE_PACK}
+
+
 def uid() -> str:
     return str(uuid.uuid4())
 
@@ -274,6 +287,36 @@ def build():
                                     and RNG.random() < 0.6) else w_main
                 add(wallet, RNG.choice(titles), cat[(True, name)],
                     money(lo, hi), day_in(ms))
+
+    # --- Bütçesi olan hiçbir kök boş kalmasın -------------------------------
+    # İçinde bulunulan ay gün oranıyla kırpılıyor (yukarıdaki `n` hesabı), yani
+    # ayın başında `per_month <= 1` olan kalemler (elektrik, giyim…) HİÇ
+    # üretilmiyor. Sonuç: bütçe ekranında "Harcanan 0,00 · %0" satırları.
+    # Erken ayda bu gerçekçi ama mağaza karesinde "veri yok" gibi okunuyor —
+    # bütçesi olan her kök en az bir kalem görsün.
+    month_key = f"{TODAY.year}-{TODAY.month:02d}"
+
+    def month_spent_ids(ids):
+        return sum(t["amount"] for t in txs
+                   if t["type"] == "expense" and t["tag"] in ids
+                   and t["date"][:7] == month_key)
+
+    for root_name in BUDGET_TARGETS:
+        root_id = cat[(True, root_name)]
+        child_names = PACK_CHILDREN.get(root_name, [])
+        ids = {root_id, *(cat[(True, c)] for c in child_names)}
+        if month_spent_ids(ids) > 0:
+            continue
+        # TEK kalem yeter: limit harcamadan TÜRETİLİYOR (limit = harcama/oran),
+        # yani oran kaç kalem eklendiğinden bağımsız tutuyor. İki kalem eklemek
+        # yalnız limiti şişiriyordu — "Alışveriş limiti 26.900 ₺" gibi Türkiye
+        # için inandırıcı olmayan rakamlar çıkıyordu. Paketin İLK çocuğu
+        # seçiliyor: kökü en iyi temsil eden kalem odur (Fatura→Elektrik,
+        # Alışveriş→Giyim), en ucuzu değil.
+        for child in (child_names or [root_name])[:1]:
+            titles, (lo, hi), _ = PLAN[child]
+            add(w_main, RNG.choice(titles), cat[(True, child)],
+                money(lo, hi), day_in(months[-1]))
 
     # --- Nakit çekme (ana hesaptan nakde geçiş hissi) ----------------------
     for ms in months:
@@ -500,10 +543,8 @@ def build():
             and t["tag"] in ids
             and t["date"][:7] == f"{TODAY.year}-{TODAY.month:02d}"), 2)
 
-    targets = {"Yemek": 1.12, "Market": 0.86, "Fatura": 0.71,
-               "Ulaşım": 0.58, "Eğlence": 0.44, "Alışveriş": 0.27}
     budgets = []
-    for name, ratio in targets.items():
+    for name, ratio in BUDGET_TARGETS.items():
         root = cat[(True, name)]
         spent = spent_this_month(w_main, root)
         limit = max(500.0, round((spent / ratio) / 50) * 50) if spent else 2000.0
@@ -544,12 +585,15 @@ def build():
             "colorHex": color, "iconName": icon, "createdAt": created,
             "isActive": True, "sortOrder": order,
             "openingBalance": opening, "currency": currency,
+            # v10: cüzdanda görünür kategori kümesi. None = "kürasyon yapılmadı,
+            # hepsi görünür" — demo verisi bilerek küratörsüz, kareler dolu görünsün.
+            "categoryIds": None,
         })
 
     txs.sort(key=lambda t: t["date"])
 
     return {
-        "version": 9,
+        "version": 10,
         "timestamp": datetime.now().isoformat(),
         "wallets": wallets,
         "transactions": txs,

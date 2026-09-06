@@ -111,11 +111,15 @@ class Shot:
 #   7 düzenli   otomasyon
 #   8 gizlilik  kapanış güvencesi
 SHOTS = [
-    Shot(1, "01_liste.png",
+    Shot(1, "01_defter.png",
          "Gelir ve giderin\n*tek defterde*",
-         "Aylık net durum, günlük döküm ve tek dokunuşla kayıt.",
+         "Aylık net durum, gün gün döküm ve gün sonu bakiyesi.",
          slug="islem-defteri",
-         chips=("Takvim görünümü", "Arama ve filtre", "Çoklu cüzdan")),
+         # ESKİ ÇİP: "Takvim görünümü". O görünüm ARTIK YOK — tek akış turunda
+         # (`bb8fcbb`) takvim silinip yerine gün şeridi geldi. Olmayan bir
+         # özelliği çipe yazmak Play politikasında yanıltıcı beyandır; bu
+         # yüzden çip karenin gerçekten gösterdiği şeyi adlandırıyor.
+         chips=("Gün gün döküm", "Arama ve filtre", "Çoklu cüzdan")),
 
     Shot(2, "02_ekstre.png",
          "Ekstreni at,\n*satırlar hazır* gelsin",
@@ -123,45 +127,43 @@ SHOTS = [
          slug="banka-ekstresi",
          chips=("PDF ve Excel", "Fotoğraftan OCR", "Aritmetik doğrulama")),
 
-    Shot(3, "03_hedefler.png",
+    Shot(3, "03_rapor.png",
+         "Paran *nereye*\ngitti?",
+         "Ana ve alt kategori tek çemberde; dönemi kendin seçersin.",
+         slug="rapor",
+         # YENİ KARE. Rapor sayfası iki turda baştan yazıldı (11 commit) ve
+         # setin hiçbir yerinde temsil edilmiyordu; yerini portföy karesine
+         # aldı — birikim tarafını 3. kare zaten anlatıyor.
+         chips=("Kategori çemberi", "Dönem karşılaştırma", "Aylık seyir")),
+
+    Shot(4, "04_hedefler.png",
          "Hedefini kur,\n*varlıklarını* bağla",
          "Altın ve hisseni hedefe bağla, ilerlemeyi tek bakışta gör.",
          slug="birikim-hedefleri",
          chips=("Altın, hisse ve fon", "Canlı fiyat", "Kâr/zarar takibi")),
 
-    Shot(4, "07_portfoy.png",
-         "Portföyün *ne kadar*\nkazandırdı?",
-         "Toplam değer, maliyet ve kâr/zarar; dağılımı halkada gör.",
-         slug="portfoy",
-         chips=("Maliyet muhasebesi", "Kısmi satış", "Çoklu para birimi")),
-
-    Shot(5, "04_butce.png",
-         # ESKİ ŞERİT: "Limitini aşmadan *önce* uyarır". Kare bunu YALANLIYOR:
-         # özet kartında "1 bütçe aşıldı" rozeti ve kırmızı çubuk duruyor.
-         # Uygulamada kartın "limite yaklaşıyor" görsel durumu YOK (yalnız
-         # tam %100'de turuncu); %80 uyarısı bildirim olarak çıkıyor — o
-         # yüzden söz alt satıra, karenin kanıtlayabildiği iddia şeride.
+    Shot(5, "05_butce.png",
+         # Kare "1 bütçe aşıldı" rozetini ve kırmızı çubuğu GÖSTERİYOR; şerit
+         # yalnız bunu iddia ediyor. %80 uyarısı bildirim olarak çıktığı için
+         # alt satırda duruyor (bkz. 4. tur notu).
          "Bütçeni *aşınca*\nhemen gör",
          "Her kategoriye aylık limit; %80'ini geçince bildirim gelir.",
          slug="butce",
-         chips=("Kategori limitleri", "Aşım uyarısı", "Gelir–gider raporu")),
+         chips=("Kategori limitleri", "Aşım uyarısı", "Cüzdan bazlı bütçe")),
 
-    Shot(6, "05_borc.png",
+    Shot(6, "06_borc.png",
          "Borcunu ve alacağını\n*unutma*",
          "Taksit, vade ve kalan tutar; ödedikçe ilerlemeyi gör.",
          slug="borc-takibi",
-         # Çipler karenin KENDİ kategorisinden olmalı: "Düzenli işlemler"
-         # buradaydı, borç ekranıyla ilgisi yoktu ve 7. karenin konusunu
-         # çalıyordu.
          chips=("Taksit ve vade", "Kısmi ödeme", "Gecikme faizi")),
 
-    Shot(7, "08_duzenli.png",
+    Shot(7, "07_duzenli.png",
          "Kira, maaş, abonelik —\n*kendiliğinden* gelsin",
          "Bir kez tanımla; zamanı gelince onayınla deftere işlensin.",
          slug="duzenli-islemler",
          chips=("Aylık şablonlar", "Onay bekleyenler", "Bildirim hatırlatması")),
 
-    Shot(8, "06_yedek.png",
+    Shot(8, "08_yedek.png",
          "Verilerin\n*sende* kalır",
          "Sunucumuz yok. Yedek senin Google Drive hesabına gider.",
          slug="gizlilik",

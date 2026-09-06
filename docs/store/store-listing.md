@@ -449,14 +449,30 @@ beyanla birebir uyuşmalı.
 
 | # | Ekran | Şerit | Çipler |
 |---|---|---|---|
-| 1 | İşlem defteri | *Gelir ve giderin **tek defterde*** | Takvim görünümü · Arama ve filtre · Çoklu cüzdan |
+| 1 | İşlem defteri | *Gelir ve giderin **tek defterde*** | Gün gün döküm · Arama ve filtre · Çoklu cüzdan |
 | 2 | Banka ekstresi inceleme | *Ekstreni at, **satırlar hazır** gelsin* | PDF ve Excel · Fotoğraftan OCR · Aritmetik doğrulama |
-| 3 | Birikim hedefleri | *Hedefini kur, **varlıklarını** bağla* | Altın, hisse ve fon · Canlı fiyat · Kâr/zarar takibi |
-| 4 | Portföy | *Portföyün **ne kadar** kazandırdı?* | Maliyet muhasebesi · Kısmi satış · Çoklu para birimi |
-| 5 | Bütçe | *Bütçeni **aşınca** hemen gör* | Kategori limitleri · Aşım uyarısı · Gelir–gider raporu |
+| 3 | Rapor | *Paran **nereye** gitti?* | Kategori çemberi · Dönem karşılaştırma · Aylık seyir |
+| 4 | Birikim hedefleri | *Hedefini kur, **varlıklarını** bağla* | Altın, hisse ve fon · Canlı fiyat · Kâr/zarar takibi |
+| 5 | Bütçe | *Bütçeni **aşınca** hemen gör* | Kategori limitleri · Aşım uyarısı · Cüzdan bazlı bütçe |
 | 6 | Borç/alacak | *Borcunu ve alacağını **unutma*** | Taksit ve vade · Kısmi ödeme · Gecikme faizi |
 | 7 | Düzenli işlemler | *Kira, maaş, abonelik — **kendiliğinden** gelsin* | Aylık şablonlar · Onay bekleyenler · Bildirim hatırlatması |
 | 8 | Gizlilik / yedek | *Verilerin **sende** kalır* | Google Drive yedeği · CSV dışa aktarım · Reklam yok |
+
+> **Set 6 Eylül 2026'da tamamen yeniden çekildi.** İki sebep vardı ve ikincisi
+> ilkinden ağır:
+>
+> 1. **1. karenin çipi yalan söylüyordu.** "Takvim görünümü" yazıyordu; o
+>    görünüm `bb8fcbb` (işlemler tek akışa indi) ile **silindi**
+>    (`transaction_calendar_view.dart` artık yok), yerine gün şeridi geldi.
+>    Vitrinde olmayan bir özelliği adlandırmak Play'de yanıltıcı beyandır.
+> 2. **Ham kaynak çekimler kaybolmuştu** (`~/Masaüstü/cunehat emulator shots`
+>    silinmiş) — betik tek bir kareyi bile yeniden üretemiyordu. Yani "yalnız
+>    bozuk kareyi düzelt" seçeneği pratikte yoktu.
+>
+> Aynı turda **portföy karesi yerini rapora bıraktı.** Rapor sayfası iki turda
+> baştan yazıldı (iki halkalı kategori çemberi, dönem karşılaştırma, aylık
+> seyir) ve sette hiç temsil edilmiyordu; birikim tarafını 4. kare zaten
+> anlatıyor, portföyün üç iddiası oradaki çiplerde duruyor.
 
 > **1. kare neden defter, ekstre değil?** Önceki sürümde bu dokümanda "farkı en
 > başa koy" yazıyordu ve ekstre 1. sıradaydı. Arama sonucundaki ilk karenin işi
