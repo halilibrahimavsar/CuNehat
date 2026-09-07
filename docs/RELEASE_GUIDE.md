@@ -8,13 +8,14 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+4` (yüklenmedi; `+3` kapalı testte)
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+4` (**3 Eyl'de kapalı teste yüklendi**;
+sıradaki kod `5`, henüz derlenmedi)
 
 > **Sürüm kodları kalıcı tüketilir.** Bir kod herhangi bir kanala bir kez
 > yüklendiyse, o sürüm silinse/atılsa bile geri gelmez. `1` yakıldı (ilk
-> deneme reddedildi), `2` ve `3` kapalı teste yüklendi. `4` **repoda hazır ama
-> Play'e yüklenmedi** — yüklenene kadar yeni işler aynı `+4` içinde
-> birikebilir, her commit için artırmaya gerek yok.
+> deneme reddedildi), `2`, `3` ve `4` kapalı teste yüklendi (sonuncusu
+> 3 Eyl 2026). `5` **henüz yakılmadı** — yüklenene kadar yeni işler aynı `+5`
+> içinde birikebilir, her commit için artırmaya gerek yok.
 >
 > **Hangi kodun yüklendiğini etiketlerden oku, hafızadan değil.** Yüklenen her
 > derlemenin `v<versionName>+<versionCode>` adında açıklamalı bir git etiketi
@@ -27,7 +28,7 @@ Cloud projesi, Flutter SDK kurulu.
 
 ---
 
-## 📍 Durum panosu — son ölçüm 21 Ağustos 2026
+## 📍 Durum panosu — son ölçüm 6 Eylül 2026
 
 | Adım | Ne | Durum |
 |---|---|---|
@@ -42,17 +43,24 @@ Cloud projesi, Flutter SDK kurulu.
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
 | 8c | **Mağaza girişi (metin + ikon + görseller)** | ✅ tr-TR + en-US girildi. Mağaza adı **`CuNehat`** olarak KALACAK — bilinçli karar (30 Ağu). Uygulama içi/görsel taraf `ÇuNehat`; fark biliniyor ve kabul edildi, bkz. aşağıdaki not |
 | 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
-| — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 14 maddenin hiçbiri işaretli değil |
+| — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 16 maddenin hiçbiri işaretli değil |
 | 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
 | 11 | Kapalı test 12 tester × 14 gün | 🟢 **SAYAÇ İŞLİYOR** — 13 tester opt-in oldu (28 Ağu). Panoda ilk iki madde ✔; kalan: "en az 12 kullanıcıyla 14 gün". Production başvurusu en erken **~11 Eyl**, inceleme ≤7 gün → **~18 Eyl** |
+| — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
 | 12 | Production | ⬜ |
 
-**Kod tarafı sağlık (3 Eyl 2026 ölçümü):** `flutter test` **2123/2123**,
-`dart analyze` **0 sorun**, `flutter build appbundle --release` **başarılı**
-(88,6 MB, versionCode 4, upload anahtarıyla imzalı). Yayını bloke eden teknik
-hata yok. **Cihaz duman testi hâlâ yapılmadı** ve `+4` uygulamanın açılış
-ekranını baştan yazıyor — yüklemeden önce en az bir kez sideload edip bakılmalı
-(bkz. Adım 10).
+**Kod tarafı sağlık (6 Eyl 2026 ölçümü):** `flutter test` **2235/2235**,
+`dart analyze` **0 sorun**. Yayını bloke eden teknik hata yok.
+
+**`+4` sonrası yüklenmemiş iş:** `fix/lock-picker-and-category-l10n` dalında
+**7 commit** — yedek şeması **v10** (migrasyon zinciri), cüzdana göre kategori
+görünürlüğü, kategorilerin kendi sayfası, kategori adlarının anahtarla
+yerelleşmesi, sistem seçicisi × PIN kilidi düzeltmesi. Bunlar `+5` ile gider.
+
+**Cihaz duman testi hâlâ yapılmadı** (Adım 10'daki 16 madde). 6 Eyl'de
+emülatörde (`Medium_Phone_API_35`, Android 15) demo veriyle uçtan uca
+gezildi ve vitrin kareleri çekildi; bu duman testinin yerine geçmez ama
+"açılıyor mu, veri yükleniyor mu" sorusunu yanıtladı.
 
 **Kritik yol:** mağaza girişi (8c/8d) → kapalı test track'i + 12 tester ×
 14 gün → production ≤7 gün. **En erken yayın ~3 hafta.**
@@ -874,11 +882,15 @@ kur = tüm veri gider. Hata ekranına **"Drive yedeğinden geri yükle"** eklenm
 
 - **Yerel Hive AES-256 şifrelemesi** — eklenince Data Safety'de "beklemede
   şifreli = Evet" yapılır. DI'ı elle düzenle (build_runner `injection.config.dart`'ı bozuyor).
-- **Para kazanma** — karar verildi, bkz. `cunehat-monetizasyon-plani.md`:
-  reklam ve abonelik **yok**; tek kalem, işlev açmayan bir bağış kutusu ve o da
-  `kDonationEnabled` bayrağı `false` başlayacak. Kod henüz yazılmadı ve v1.0'ı
-  **bloke etmiyor.** Açılması müşavirin faaliyet kodu cevabına bağlı.
-  Data Safety formu bağış kutusundan **etkilenmez** (ödeme Play'de gerçekleşir).
+- **Para kazanma** — karar verildi; plan **repo dışında**:
+  `../CuNehat-ozel/monetizasyon-plani.md` (7 Eyl 2026 revizyonu, kişisel
+  mevzuat notları içerdiği için public repoya girmiyor — bkz. Adım 8 uyarısı).
+  Özeti: **v1.0 ücretsiz ve reklamsız çıkar**, monetizasyon
+  kodu sıfır satır — IAP yok, paywall yok, bağış kutusu yok. Reklam ve abonelik
+  **hiç olmayacak**. Pro 2. aşamada gelir ve **yalnız v1.0'da bulunmayan**
+  özelliklerden kurulur; v1.0'da ücretsiz çıkan hiçbir şey sonradan kilitlenmez
+  (planın §1.1'indeki "ücretsiz zemin" listesi `v1.0.0` etiketiyle donuyor).
+  Data Safety formu bundan **etkilenmez** (ödeme Play'de gerçekleşir).
 - **ML Kit unbundled varyantı** — `play-services-mlkit-text-recognition`'a
   geçmek indirme boyutunu ABI başına ~11 MB düşürür. 2026-08-08'de ölçüldü:
   `libmlkit_google_ocr_pipeline.so` arm64'te 11,1 MB (sıkıştırılmamış) ve
