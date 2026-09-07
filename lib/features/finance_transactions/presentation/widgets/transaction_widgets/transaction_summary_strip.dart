@@ -5,6 +5,7 @@ import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/core/utils/tr_case.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:flutter/material.dart';
@@ -52,15 +53,19 @@ class TransactionSummaryStrip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final currency = context.activeWalletCurrency;
 
-    double income = 0, expense = 0;
-    for (final t in transactions) {
-      if (t.isIncome) {
-        income += t.amount;
-      } else if (t.isExpense) {
-        expense += t.amount;
-      }
-    }
-    final net = income - expense;
+    // Kuplaj hareketleri toplamların DIŞINDA — kural rapor sayfasında vardı,
+    // burada YOKTU. Ölçüldü: nakitten bankaya 20.000 ₺ taşımak bu kartta
+    // "Gider 20.000 ₺" yazdırıyor, bir kaydırma ötedeki rapor aynı dönem için
+    // 0 diyordu; yan yana duran iki sayfanın farklı rakam söylemesi tek
+    // başına bir hata. Ayrım yalnız "ne harcadım" sorusu içindir: LİSTE bu
+    // satırları göstermeye devam eder, çünkü bakiye zinciri onlara dayanır.
+    const service = TransactionReportService();
+    final split = service.splitSystemMovements(transactions);
+    final totals = service.calculateTotals(split.spending);
+    final income = totals.totalIncome;
+    final expense = totals.totalExpense;
+    final net = totals.net;
+    final systemCount = split.system.length;
 
     final hasActiveFilters = filter.dataFilter.hasActiveFilters;
     // Tek modda (yalnız gelir / yalnız gider) "net" kavramı yanıltıcı olur:
@@ -117,8 +122,44 @@ class TransactionSummaryStrip extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           _footerRow(context, income, expense, currency),
+          // Sessizce atmak yerine söylenir: 20.000 ₺'lik bir transferin
+          // toplamdan düşmesi açıklanmazsa kullanıcı "giderim nereye gitti"
+          // diye sorar. Rapor bunu bir anahtarla, içgörü bir dipnotla
+          // söylüyordu; ana ekran hiç söylemiyordu.
+          if (systemCount > 0) ...[
+            const SizedBox(height: 4),
+            _systemNote(context, systemCount),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Dönemde toplamların dışında bırakılan kuplaj hareketi sayısı.
+  ///
+  /// l10n anahtarı içgörü sayfasıyla ORTAK: metin ("N kuplaj hareketi
+  /// (transfer, borç, yatırım) sayılmadı") sayfaya değil kurala ait ve iki
+  /// yerde ayrı cümle kurmak, aynı kuralın iki farklı adı olması demekti.
+  Widget _systemNote(BuildContext context, int count) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(Icons.swap_horiz_rounded,
+            size: 12, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+        const SizedBox(width: 5),
+        Expanded(
+          child: Text(
+            context.l10n.insightSystemMovementsNote(count),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10.5,
+              height: 1.2,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

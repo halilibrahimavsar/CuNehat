@@ -15,6 +15,14 @@ import 'package:flutter/material.dart';
 /// Gruplama sunumdan ayrı tutuluyor: hem sayfa (sliver defter) hem rapor
 /// sayfaları (kutu defter) aynı listeyi kurar, ve gruplama widget kurmadan
 /// test edilebilir.
+///
+/// **Evren: DEFTERİN TAMAMI — kuplaj hareketleri dahil.** Dönem özeti
+/// (`TransactionSummaryStrip`) ve gün şeridi bunları bilerek dışarıda
+/// bırakır (bkz. `isSpendingMovement`), buradaki gün başlığı rozeti ise
+/// bırakMAZ: rozetin hemen altında o satırlar listeleniyor ve toplamı
+/// süzmek, kullanıcının gözüyle sayamadığı bir rakam üretirdi. Ayrım
+/// bilinçli — rozet "bu gün defterde ne oldu"yu, şerit "bu gün ne
+/// harcandı"yı söyler.
 class LedgerDayGroup {
   final DateTime day;
   final List<TransactionWithBalance> items;

@@ -41,6 +41,21 @@ class CategoryBreakdown {
   });
 }
 
+/// "Ne harcadım" evreninin **TEK** tanımı.
+///
+/// Kuplaj hareketleri (transfer, borç ödemesi, yatırım alımı) gerçek işlem
+/// olarak deftere yazılır — `isSystem: true`, tek üreteci
+/// `WalletMetricsService._writeCashMovements` — ama HARCAMA değildir: para
+/// harcanmadı, yer değiştirdi. Bakiye bunları her zaman içerir; "ne harcadım"
+/// sorusu içermez.
+///
+/// Kural tek satır olduğu için kopyalanması kolaydı ve kopyalandı: rapor
+/// sayfası ayırıyor, ana ekranın özeti ve gün şeridi AYIRMIYORDU — nakitten
+/// bankaya 20.000 ₺ taşımak ana ekranda 20.000 ₺ "gider" yazdırıyor, bir
+/// kaydırma ötedeki rapor aynı dönem için 0 diyordu. Yeni bir çağıran bu
+/// fonksiyonu kullanmalı, `!t.isSystem` yazmamalıdır.
+bool isSpendingMovement(TransactionEntity t) => !t.isSystem;
+
 /// Saf-Dart işlem raporu servisi: rapor sayfasının ihtiyaç duyduğu
 /// agregasyonları (aralık filtresi, gelir/gider toplamı, kategori dağılımı)
 /// tek yerde toplar.
@@ -87,7 +102,7 @@ class TransactionReportService {
     final spending = <TransactionEntity>[];
     final system = <TransactionEntity>[];
     for (final t in transactions) {
-      (t.isSystem ? system : spending).add(t);
+      (isSpendingMovement(t) ? spending : system).add(t);
     }
     return (spending: spending, system: system);
   }

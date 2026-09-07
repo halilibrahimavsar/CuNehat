@@ -9,8 +9,9 @@ void main() {
   TransactionEntity tx(
     DateTime date,
     double amount,
-    TransactionTypeModel type,
-  ) =>
+    TransactionTypeModel type, {
+    bool isSystem = false,
+  }) =>
       TransactionEntity(
         id: null,
         userId: 'u',
@@ -20,6 +21,7 @@ void main() {
         amount: amount,
         date: date,
         type: type,
+        isSystem: isSystem,
       );
 
   group('DailySpendingSummaryService.buildDailySummaries', () {
@@ -75,6 +77,46 @@ void main() {
       expect(result, hasLength(2));
       expect(result[DateTime(2026, 6, 25)]!.expense, 10);
       expect(result[DateTime(2026, 6, 26)]!.income, 20);
+    });
+  });
+
+  group('kuplaj evreni', () {
+    test('sistem hareketi TUTARA girmez ama SAYILIR', () {
+      // Gün şeridinin çubuğu "o gün ne harcandı"yı ölçer; nakitten bankaya
+      // para taşımak harcama değildir. Süzülmediğinde transfer günü şeridin
+      // en koyu günü oluyor ve `maxExpense` normalizasyonu gerçek günleri
+      // onun yanında düzleştiriyordu.
+      //
+      // Sayı ise süzülMEZ: şeridin altındaki liste o satırı gösteriyor,
+      // "işlem yok" demek listeyle çelişirdi.
+      final result = service.buildDailySummaries([
+        tx(DateTime(2026, 9, 4, 9), 150, TransactionTypeModel.expense),
+        tx(DateTime(2026, 9, 4, 10), 20000, TransactionTypeModel.expense,
+            isSystem: true),
+      ]);
+
+      final s = result[DateTime(2026, 9, 4)]!;
+      expect(s.expense, 150, reason: 'transfer gidere sayıldı');
+      expect(s.net, -150);
+      expect(s.count, 2, reason: 'defter satırı sayılmadı');
+      expect(s.systemCount, 1);
+      expect(s.isEmpty, isFalse);
+    });
+
+    test('yalnız sistem hareketi olan gün: tutar 0 ama gün BOŞ değil', () {
+      final result = service.buildDailySummaries([
+        tx(DateTime(2026, 9, 5), 20000, TransactionTypeModel.income,
+            isSystem: true),
+      ]);
+
+      final s = result[DateTime(2026, 9, 5)]!;
+      expect(s.income, 0);
+      expect(s.expense, 0);
+      expect(s.hasExpense, isFalse);
+      expect(s.count, 1);
+      expect(s.systemCount, 1);
+      // Ekran okuyucu bu günü atlamamalı: listede bir satır var.
+      expect(s.isEmpty, isFalse);
     });
   });
 }

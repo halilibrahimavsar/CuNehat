@@ -355,8 +355,10 @@ class _InsightsViewState extends State<_InsightsView> {
     final endDay = DateTime(_range.end.year, _range.end.month, _range.end.day);
     final members = [
       for (final t in all)
+        // Evren kuralı ORTAK fonksiyondan gelir; `!t.isSystem` yazmak kuralın
+        // dördüncü kopyasıydı (bkz. [isSpendingMovement]).
         if (t.isExpense &&
-            !t.isSystem &&
+            isSpendingMovement(t) &&
             rootIdOf(t.tag, _categoryRoots) == rootTag &&
             !DateTime(t.date.year, t.date.month, t.date.day)
                 .isBefore(startDay) &&
@@ -375,15 +377,14 @@ class _InsightsViewState extends State<_InsightsView> {
   }
 
   /// Dönemin giderlerini büyükten küçüğe listeler.
-  void _openLargestExpenses(
-      BuildContext context, List<TransactionEntity> all) {
+  void _openLargestExpenses(BuildContext context, List<TransactionEntity> all) {
     final startDay =
         DateTime(_range.start.year, _range.start.month, _range.start.day);
     final endDay = DateTime(_range.end.year, _range.end.month, _range.end.day);
     final members = [
       for (final t in all)
         if (t.isExpense &&
-            !t.isSystem &&
+            isSpendingMovement(t) &&
             !DateTime(t.date.year, t.date.month, t.date.day)
                 .isBefore(startDay) &&
             !DateTime(t.date.year, t.date.month, t.date.day).isAfter(endDay))
@@ -597,7 +598,8 @@ class _InsightsViewState extends State<_InsightsView> {
         InsightStatCard(
           icon: Icons.category_rounded,
           label: context.l10n.enCokHarcananKategori,
-          value: '${topCategory.trim().isEmpty ? context.l10n.kategorisiz : context.categoryLabelForTag(topCategory, labels: _categoryLabels)} · '
+          value:
+              '${topCategory.trim().isEmpty ? context.l10n.kategorisiz : context.categoryLabelForTag(topCategory, labels: _categoryLabels)} · '
               '${money(insights.topExpenseCategoryAmount)}',
           hint: context.l10n.insightTapForTransactions,
           onTap: () => _openCategoryTransactions(context, topCategory, all),
@@ -659,8 +661,7 @@ class _InsightsViewState extends State<_InsightsView> {
             context.l10n.insightSystemMovementsNote(count),
             style: theme.textTheme.bodySmall?.copyWith(
               fontSize: 11,
-              color:
-                  theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ),
