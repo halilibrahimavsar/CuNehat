@@ -181,7 +181,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _maybeAdjustInitialRange(
-        context.read<TransactionBloc>().state.currentTransactions,
+        _forWallet(context.read<TransactionBloc>().state.currentTransactions),
       );
     });
   }
@@ -255,7 +255,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
 
   Future<void> _shareReport() async {
     final state = context.read<TransactionBloc>().state;
-    final filtered = _filterTransactionsByRange(state.currentTransactions);
+    // Paylaşılan CSV de bu cüzdanın defteridir: süzülmediğinde başka
+    // cüzdanların satırları dışarı gidiyordu.
+    final filtered =
+        _filterTransactionsByRange(_forWallet(state.currentTransactions));
     if (filtered.isEmpty) return;
     final rangeLabel = '${DateFormat('dd MMM yyyy').format(_range.start)} - '
         '${DateFormat('dd MMM yyyy').format(_range.end)}';
@@ -268,6 +271,27 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   List<TransactionEntity> _filterTransactionsByRange(
       List<TransactionEntity> transactions) {
     return _reportService.filterByRange(transactions, _range.start, _range.end);
+  }
+
+  /// Bloc state'i cüzdan geçişinde kısa süre ESKİ cüzdanın listesini taşır
+  /// (`TransactionLoading.previousTransactions`). İşlemler sayfası bunu
+  /// bilerek süzüyordu, rapor süzmüyordu: yabancı cüzdanın toplamları YENİ
+  /// cüzdanın para birimi sembolüyle çiziliyor, üstelik
+  /// [_maybeAdjustInitialRange] yabancı listenin son tarihine göre dönemi
+  /// kaydırabiliyordu.
+  ///
+  /// Kaynak listenin KİMLİĞİNE göre önbelleklenir: her build'de yeni liste
+  /// üretmek [_derive]'in kimlik tabanlı önbelleğini geçersiz kılar ve
+  /// türetme her karede baştan çalışırdı.
+  List<TransactionEntity>? _walletSource;
+  List<TransactionEntity> _walletTransactions = const [];
+
+  List<TransactionEntity> _forWallet(List<TransactionEntity> all) {
+    if (identical(_walletSource, all)) return _walletTransactions;
+    _walletSource = all;
+    _walletTransactions =
+        all.where((t) => t.walletId == widget.walletId).toList();
+    return _walletTransactions;
   }
 
   /// Varsayılan aralık ("bu ay") boşsa ama geçmiş veri varsa, aralığı son
@@ -531,7 +555,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final builder = _dataBuilder(context);
     final full = builder.buildFull(
       builder.universeIn(
-        context.read<TransactionBloc>().state.currentTransactions,
+        _forWallet(context.read<TransactionBloc>().state.currentTransactions),
       ),
       isExpense: true,
     );
@@ -604,9 +628,9 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
         listenWhen: (prev, curr) =>
             prev.currentTransactions != curr.currentTransactions,
         listener: (context, state) =>
-            _maybeAdjustInitialRange(state.currentTransactions),
+            _maybeAdjustInitialRange(_forWallet(state.currentTransactions)),
         builder: (context, state) {
-          final transactions = state.currentTransactions;
+          final transactions = _forWallet(state.currentTransactions);
           if (state is TransactionLoading && transactions.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }

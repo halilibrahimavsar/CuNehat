@@ -121,8 +121,23 @@ class InvestmentRemoteDataSourceImpl implements InvestmentRemoteDataSource {
     final data = json.decode(response.body);
     final meta = data['chart']['result'][0]['meta'];
     final price = (meta['regularMarketPrice'] as num).toDouble();
-    final currency = (meta['currency'] as String?)?.toUpperCase() ?? 'TRY';
-    return (price, currency);
+
+    // Para birimi EKSİKSE TAHMİN EDİLMEZ.
+    //
+    // Eskiden `?? 'TRY'` vardı ve sessizce yanlış yorumluyordu: alanı
+    // gelmeyen bir USD hissesi TRY sayılıyor, [_convert] "kaynak = hedef"
+    // diye kısa devre yapıyor ve ÇEVRİLMEMİŞ fiyat `currentValue`'ya KALICI
+    // olarak yazılıyordu — TL cüzdanda ~40 kat düşük bir portföy değeri,
+    // hiçbir uyarı olmadan. Gürültülü hata sessiz yanlış yorumdan iyidir;
+    // [_convert] desteklenmeyen birim için aynı kuralı zaten uyguluyor.
+    final rawCurrency = meta['currency'];
+    if (rawCurrency is! String || rawCurrency.trim().isEmpty) {
+      throw ServerException(
+        'Fiyat servisi $symbol için para birimi bildirmedi; '
+        'karışık birim yazmamak için değer güncellenmedi.',
+      );
+    }
+    return (price, rawCurrency.toUpperCase());
   }
 
   Future<double> _fetchGoldPrice(String goldType) async {

@@ -158,7 +158,7 @@ class _InsightsViewState extends State<_InsightsView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _maybeAdjustInitialRange(
-        context.read<TransactionBloc>().state.currentTransactions,
+        _forWallet(context.read<TransactionBloc>().state.currentTransactions),
       );
     });
   }
@@ -185,15 +185,44 @@ class _InsightsViewState extends State<_InsightsView> {
     super.dispose();
   }
 
+  /// Düzenli şablonlar — YALNIZ bu cüzdanınkiler.
+  ///
+  /// `GetAllRecurringTemplatesUsecase` adı gibi davranır: cüzdan filtresi
+  /// yoktur. Süzülmediğinde iki şey birden bozuluyordu:
+  ///  * "Günde ne kadar harcayabilirim" hedefinden düşülen yükümlülükler
+  ///    TÜM cüzdanların şablonlarını topluyordu — üstelik para birimine de
+  ///    bakmadan: USD cüzdanındaki 500 $ kira, TRY cüzdanının netinden
+  ///    500 ₺ olarak düşülüyordu (tutarlar cüzdanın biriminde saklanır).
+  ///  * Öneri motoru başka cüzdanın şablonunu "zaten var" sayıp bu cüzdanda
+  ///    gerçek bir düzenli ödemeyi önermiyordu.
   Future<void> _loadTemplates() async {
     final res = await getIt<GetAllRecurringTemplatesUsecase>()();
     if (!mounted) return;
     setState(() {
       _templates = res.fold(
         (_) => <RecurringTransactionEntity>[],
-        (list) => list,
+        (list) => list.where((t) => t.walletId == widget.walletId).toList(),
       );
     });
+  }
+
+  /// Bloc state'i cüzdan geçişinde kısa süre ESKİ cüzdanın listesini taşır
+  /// (`TransactionLoading.previousTransactions`). İşlemler sayfası bunu
+  /// bilerek süzüyordu, bu sayfa süzmüyordu: yabancı cüzdanın rakamları
+  /// YENİ cüzdanın para birimi sembolüyle gösteriliyordu.
+  ///
+  /// Kaynak listenin KİMLİĞİNE göre önbelleklenir — her build'de yeni bir
+  /// liste üretmek `_derive`'in kimlik tabanlı önbelleğini geçersiz kılar ve
+  /// türetme (ölçülmüştü: 32,9 ms) her karede baştan çalışırdı.
+  List<TransactionEntity>? _walletSource;
+  List<TransactionEntity> _walletTransactions = const [];
+
+  List<TransactionEntity> _forWallet(List<TransactionEntity> all) {
+    if (identical(_walletSource, all)) return _walletTransactions;
+    _walletSource = all;
+    _walletTransactions =
+        all.where((t) => t.walletId == widget.walletId).toList();
+    return _walletTransactions;
   }
 
   /// Açılış dönemi boşsa, verinin GERÇEKTEN olduğu aya kayar.
@@ -414,9 +443,9 @@ class _InsightsViewState extends State<_InsightsView> {
         listenWhen: (prev, curr) =>
             prev.currentTransactions != curr.currentTransactions,
         listener: (context, state) =>
-            _maybeAdjustInitialRange(state.currentTransactions),
+            _maybeAdjustInitialRange(_forWallet(state.currentTransactions)),
         builder: (context, state) {
-          final all = state.currentTransactions;
+          final all = _forWallet(state.currentTransactions);
 
           if (state is TransactionLoading && all.isEmpty) {
             return const Center(child: CircularProgressIndicator());

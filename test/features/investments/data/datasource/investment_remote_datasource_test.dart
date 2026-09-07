@@ -78,8 +78,9 @@ void main() {
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'Gram Altın', type: InvestmentType.gold,
-              targetCurrency: 'TRY');
+          symbol: 'Gram Altın',
+          type: InvestmentType.gold,
+          targetCurrency: 'TRY');
 
       expect(quote.price, 2550.75);
       expect(quote.currency, 'TRY');
@@ -95,8 +96,9 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'Çeyrek Altın', type: InvestmentType.gold,
-                targetCurrency: 'TRY'),
+            symbol: 'Çeyrek Altın',
+            type: InvestmentType.gold,
+            targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -108,8 +110,9 @@ void main() {
               (_) async => http.Response(json.encode(yahooResponseTry), 200));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'THYAO.IS', type: InvestmentType.stock,
-              targetCurrency: 'TRY');
+          symbol: 'THYAO.IS',
+          type: InvestmentType.stock,
+          targetCurrency: 'TRY');
 
       expect(quote.price, 100.0);
       expect(quote.currency, 'TRY');
@@ -130,8 +133,7 @@ void main() {
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'AAPL', type: InvestmentType.stock,
-              targetCurrency: 'TRY');
+          symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY');
 
       expect(quote.price, 150.0);
       expect(quote.currency, 'USD');
@@ -159,11 +161,63 @@ void main() {
               (_) async => http.Response(json.encode(yahooResponseGbp), 200));
 
       expect(
-        () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
-    targetCurrency: 'TRY'),
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
+    });
+
+    test('para birimi ALANI YOKSA hata verir — sessizce TRY sayılmaz',
+        () async {
+      // Eskiden `?? 'TRY'` vardı. Alanı gelmeyen bir USD hissesi TRY
+      // sayılıyor, `_convert` "kaynak = hedef" diye kısa devre yapıyor ve
+      // ÇEVRİLMEMİŞ fiyat `currentValue`'ya KALICI yazılıyordu: TL cüzdanda
+      // ~40 kat düşük portföy değeri, hiçbir uyarı olmadan.
+      final noCurrency = {
+        'chart': {
+          'result': [
+            {
+              'meta': {'regularMarketPrice': 150.0}
+            }
+          ]
+        }
+      };
+
+      when(() => mockClient.get(Uri.parse(
+              'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+          .thenAnswer((_) async => http.Response(json.encode(noCurrency), 200));
+
+      expect(
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY'),
+        throwsA(isA<ServerException>()),
+      );
+    });
+
+    test('para birimi null/boş ise de hata verir', () async {
+      for (final bad in [null, '', '   ']) {
+        final resp = {
+          'chart': {
+            'result': [
+              {
+                'meta': {'regularMarketPrice': 150.0, 'currency': bad}
+              }
+            ]
+          }
+        };
+        when(() => mockClient.get(Uri.parse(
+                'https://query1.finance.yahoo.com/v8/finance/chart/AAPL')))
+            .thenAnswer((_) async => http.Response(json.encode(resp), 200));
+
+        expect(
+          () => dataSource.getLiveQuote(
+              symbol: 'AAPL',
+              type: InvestmentType.stock,
+              targetCurrency: 'TRY'),
+          throwsA(isA<ServerException>()),
+          reason: 'currency=$bad kabul edildi',
+        );
+      }
     });
 
     test('getFxRateToTry throws ServerException when rate is invalid/missing',
@@ -183,9 +237,8 @@ void main() {
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       expect(
-        () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
-    targetCurrency: 'TRY'),
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -196,9 +249,8 @@ void main() {
           .thenAnswer((_) async => http.Response('Error', 500));
 
       expect(
-        () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
-    targetCurrency: 'TRY'),
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -212,8 +264,9 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'Gram Altın', type: InvestmentType.gold,
-                targetCurrency: 'TRY'),
+            symbol: 'Gram Altın',
+            type: InvestmentType.gold,
+            targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -232,8 +285,9 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'Gram Altın', type: InvestmentType.gold,
-                targetCurrency: 'TRY'),
+            symbol: 'Gram Altın',
+            type: InvestmentType.gold,
+            targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -246,9 +300,8 @@ void main() {
           .thenThrow(Exception('Socket Exception or generic error'));
 
       expect(
-        () =>
-            dataSource.getLiveQuote(symbol: 'AAPL', type: InvestmentType.stock,
-    targetCurrency: 'TRY'),
+        () => dataSource.getLiveQuote(
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'TRY'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -267,8 +320,9 @@ void main() {
       unawaited(() async {
         try {
           await dataSource.getLiveQuote(
-              symbol: 'AAPL', type: InvestmentType.stock,
-                  targetCurrency: 'TRY');
+              symbol: 'AAPL',
+              type: InvestmentType.stock,
+              targetCurrency: 'TRY');
         } catch (e) {
           thrown = e;
         }
@@ -315,15 +369,14 @@ void main() {
               (_) async => http.Response(json.encode(yahooResponseUsd), 200));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'AAPL', type: InvestmentType.stock,
-              targetCurrency: 'USD');
+          symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'USD');
 
       expect(quote.price, 150.0);
       expect(quote.convertedPrice, 150.0);
       expect(quote.isSameCurrency, isTrue);
       // Kur köprüsüne hiç ihtiyaç yok → çevrimdışı da çalışır.
-      verifyNever(() => mockClient
-          .get(Uri.parse('https://finans.truncgil.com/today.json')));
+      verifyNever(() =>
+          mockClient.get(Uri.parse('https://finans.truncgil.com/today.json')));
     });
 
     test('USD hisse EUR cüzdanda TRY köprüsüyle çevrilir', () async {
@@ -342,8 +395,7 @@ void main() {
               headers: {'content-type': 'application/json; charset=utf-8'}));
 
       final quote = await dataSource.getLiveQuote(
-          symbol: 'AAPL', type: InvestmentType.stock,
-              targetCurrency: 'EUR');
+          symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'EUR');
 
       // 150 $ × (40 ₺/$ ÷ 50 ₺/€) = 120 €
       expect(quote.price, 150.0);
@@ -370,8 +422,7 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'AAPL', type: InvestmentType.stock,
-                targetCurrency: 'EUR'),
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'EUR'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -384,8 +435,7 @@ void main() {
 
       expect(
         () => dataSource.getLiveQuote(
-            symbol: 'AAPL', type: InvestmentType.stock,
-                targetCurrency: 'GBP'),
+            symbol: 'AAPL', type: InvestmentType.stock, targetCurrency: 'GBP'),
         throwsA(isA<ServerException>()),
       );
     });

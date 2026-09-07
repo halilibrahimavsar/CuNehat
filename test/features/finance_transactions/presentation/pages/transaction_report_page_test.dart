@@ -844,4 +844,65 @@ void main() {
       expect(progressOf(), closeTo(0.5, 0.001));
     });
   });
+
+  group('cüzdan kapsamı', () {
+    testWidgets('BAŞKA cüzdanın işlemleri rapora girmez',
+        (WidgetTester tester) async {
+      // Bloc state'i cüzdan geçişinde kısa süre ESKİ cüzdanın listesini taşır
+      // (`TransactionLoading.previousTransactions`). İşlemler sayfası bunu
+      // bilerek süzüyordu, rapor süzmüyordu: yabancı cüzdanın toplamları
+      // YENİ cüzdanın para birimi sembolüyle çiziliyordu.
+      final now = DateTime.now();
+      final transactions = [
+        TransactionEntity(
+          id: 'tx_1',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: 'Lunch',
+          tag: 'Food',
+          amount: 50.0,
+          date: now,
+          type: TransactionTypeModel.expense,
+        ),
+        TransactionEntity(
+          id: 'tx_foreign',
+          userId: 'user_123',
+          walletId: 'baska_cuzdan',
+          title: 'Yabancı',
+          tag: 'Food',
+          amount: 90000.0,
+          date: now,
+          type: TransactionTypeModel.expense,
+        ),
+      ];
+
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(
+          groupedTransactions: {now: transactions},
+          allTransactions: transactions,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          const TransactionReportPage(
+            userId: 'user_123',
+            walletId: 'wallet_123',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final texts = [
+        for (final e in find.byType(Text).evaluate())
+          (e.widget as Text).data ?? '',
+      ].join(' | ');
+
+      expect(texts.contains('50,00'), isTrue,
+          reason: 'bu cüzdanın gideri görünmüyor');
+      expect(texts.contains('90.000'), isFalse,
+          reason: 'yabancı cüzdanın gideri rapora girdi');
+      expect(texts.contains('90.050'), isFalse);
+    });
+  });
 }

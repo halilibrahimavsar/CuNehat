@@ -18,6 +18,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/insig
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
+import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_frequency_enum.dart';
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_suggestion_dismiss_store.dart';
 import 'package:cunehat/features/recurring_transactions/domain/usecases/get_all_recurring_templates_usecase.dart';
 import 'package:dartz/dartz.dart';
@@ -118,11 +119,12 @@ void main() {
     String title = 'islem',
     TransactionTypeModel type = TransactionTypeModel.expense,
     bool isSystem = false,
+    String walletId = 'w',
   }) =>
       TransactionEntity(
         id: id,
         userId: 'u',
-        walletId: 'w',
+        walletId: walletId,
         title: title,
         tag: tag,
         amount: amount,
@@ -401,5 +403,71 @@ void main() {
         reason: '"$value" kutusuna sığmıyor → kesiliyor',
       );
     }
+  });
+
+  group('cüzdan kapsamı', () {
+    testWidgets('BAŞKA cüzdanın işlemleri toplamlara girmez', (tester) async {
+      // Bloc state'i cüzdan geçişinde kısa süre ESKİ cüzdanın listesini
+      // taşır (`TransactionLoading.previousTransactions`). İşlemler sayfası
+      // bunu bilerek süzüyordu, bu sayfa süzmüyordu: yabancı cüzdanın
+      // rakamları YENİ cüzdanın para birimi sembolüyle çiziliyordu.
+      seed([
+        tx(id: 'e1', date: dayThisMonth(1), amount: 2000),
+        tx(
+            id: 'x1',
+            date: dayThisMonth(1),
+            amount: 50000,
+            walletId: 'baska-cuzdan'),
+      ]);
+      await pumpPage(tester);
+
+      final texts = allTexts(tester).join(' | ');
+      expect(texts.contains(formatMoney(2000, currency: 'TRY')), isTrue,
+          reason: 'bu cüzdanın gideri yok');
+      expect(texts.contains('52.000'), isFalse,
+          reason: 'yabancı cüzdanın gideri toplama girdi');
+      expect(texts.contains('50.000'), isFalse);
+    });
+
+    testWidgets('BAŞKA cüzdanın düzenli şablonu yükümlülükten düşülmez',
+        (tester) async {
+      // `GetAllRecurringTemplatesUsecase` adı gibi davranır: cüzdan filtresi
+      // yoktur. Süzülmediğinde USD cüzdanındaki 500 $ kira, TRY cüzdanının
+      // netinden 500 ₺ olarak düşülüyordu (tutarlar cüzdanın biriminde
+      // saklanır, dönüşüm YOK).
+      final today = DateTime(now.year, now.month, now.day, 12);
+      when(() => templates()).thenAnswer(
+        (_) async => Right<Failure, List<RecurringTransactionEntity>>([
+          RecurringTransactionEntity(
+            id: 'r1',
+            userId: 'u',
+            walletId: 'baska-cuzdan',
+            title: 'Yabancı kira',
+            tag: 'Fatura',
+            amount: 9999999,
+            type: TransactionTypeModel.expense,
+            frequency: RecurringFrequency.monthly,
+            nextExecutionDate: today,
+            anchorDay: today.day,
+          ),
+        ]),
+      );
+
+      seed([
+        tx(
+            id: 'i1',
+            date: dayThisMonth(1),
+            amount: 10000,
+            tag: 'Maaş',
+            type: TransactionTypeModel.income),
+        tx(id: 'e1', date: dayThisMonth(1), amount: 2000),
+      ]);
+      await pumpPage(tester);
+
+      // Süzülmeseydi harcanabilir tutar eksiye düşer ve kart "açıktasınız"
+      // uyarısına dönerdi.
+      expect(find.byType(DailySafeToSpendCard), findsOneWidget);
+      expect(find.byType(InsightOverspentCard), findsNothing);
+    });
   });
 }
