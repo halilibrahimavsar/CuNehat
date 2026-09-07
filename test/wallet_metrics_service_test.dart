@@ -563,6 +563,49 @@ void main() {
     });
   });
 
+  group('bildirim SIRASI', () {
+    test('dinleyici, bakiye SENKRONLANDIKTAN sonra haber alır', () async {
+      // Eskiden `_writeCashMovements` önce `notify()` çağırıyor, sonra
+      // bakiyeyi türetiyordu: bildirimi alan her dinleyici (işlem/borç/
+      // alacak/yatırım blocları, bütçe yükleyici, bütçe uyarı monitörü)
+      // cüzdanı senkron ÖNCESİ bakiyesiyle okuyordu. Diğer tüm yazım yolları
+      // zaten "önce senkron, sonra bildir" sırasındaydı; yalnız burası ters
+      // duruyordu.
+      final notifier = TransactionsChangedNotifier();
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
+        transactionsRepository: txs,
+        transactionsChangedNotifier: notifier,
+      );
+      wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
+
+      double? balanceSeenByListener;
+      final sub = notifier.stream.listen((_) {
+        balanceSeenByListener = wallets.store['w']!.balance;
+      });
+
+      await svc.recordCashMovement(
+        walletId: 'w',
+        userId: 'u',
+        amount: 50,
+        isIncome: true,
+        title: 't',
+        tag: 'g',
+      );
+      // Yayın asenkron: dinleyicinin çalışması için bir tur bekle.
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+      notifier.dispose();
+
+      expect(balanceSeenByListener, 150,
+          reason: 'dinleyici senkron ÖNCESİ bakiyeyi gördü');
+    });
+  });
+
   group('removeCashMovements', () {
     // Kuplajla yazılan her satır `isSystem: true`'dur ve UI'dan silinemez
     // (bilerek — defterle desync olmasın). Bedeli: arkasında düzenlenebilir

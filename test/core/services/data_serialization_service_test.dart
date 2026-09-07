@@ -228,6 +228,64 @@ void main() {
     expect(Hive.box<WalletModel>('wallets').get('w1')?.name, 'Main');
   });
 
+  group('geri yüklemede bakiye defterden YENİDEN TÜRETİLİR', () {
+    // Yedekteki `balance`/`openingBalance` çifti normalde tutarlıdır, ama bu
+    // varsayım KAYNAĞIN sağlığına bağlı: başarısız bir `syncBalance` ya da
+    // yarıda kalmış bir yazım, yedeğe tutarsız bir üçlü kopyalayabilir.
+    // Geri yükleme, defterin tamamının elde olduğu tek andır.
+    //
+    // Ayrıca `WalletBloc` yalnız AKTİF cüzdanı senkronlar ve
+    // `WatchWalletsEvent` bilerek hiç senkronlamaz; tutarsız dönen PASİF bir
+    // cüzdan aktif yapılana kadar yanlış kalırdı.
+    String inconsistentBackup() => jsonEncode({
+          'version': DataSerializationService.schemaVersion,
+          'timestamp': '2026-09-01T10:00:00.000',
+          // balance 100, opening 100 — ama defterde +1000 gelir var.
+          'wallets': [_wallet().toJson()],
+          'transactions': [_transaction().toJson()],
+          'investments': [],
+          'debts': [],
+          'receivables': [],
+          'budgets': [],
+          'recurringTransactions': [],
+          'users': {
+            'u1': {'activeWalletId': 'w1'}
+          },
+          'categories': [_category().toJson()],
+        });
+
+    test('tutarsız bakiye onarılır (opening + Σişlem)', () async {
+      final result = await service.importDataFromJson(inconsistentBackup());
+
+      expect(result.status, DataRestoreStatus.success);
+      final wallet = Hive.box<WalletModel>('wallets').get('w1')!;
+      expect(wallet.balance, 1100, reason: '100 + 1000 = 1100');
+      // Açılış bakiyesi DEĞİŞMEZ: değişmezin çapası odur.
+      expect(wallet.openingBalance, 100);
+    });
+
+    test('tutarlı bakiyeye dokunulmaz', () async {
+      final consistent = jsonEncode({
+        'version': DataSerializationService.schemaVersion,
+        'timestamp': '2026-09-01T10:00:00.000',
+        'wallets': [_wallet().toJson()],
+        'transactions': [],
+        'investments': [],
+        'debts': [],
+        'receivables': [],
+        'budgets': [],
+        'recurringTransactions': [],
+        'users': {},
+        'categories': [_category().toJson()],
+      });
+
+      await service.importDataFromJson(consistent);
+
+      final wallet = Hive.box<WalletModel>('wallets').get('w1')!;
+      expect(wallet.balance, 100);
+    });
+  });
+
   group('eski sürüm yedeği (v9) migrasyonla geri yüklenir', () {
     /// Sahadaki gerçek biçim: v9 cüzdanlarında `categoryIds` alanı YOKTUR.
     ///

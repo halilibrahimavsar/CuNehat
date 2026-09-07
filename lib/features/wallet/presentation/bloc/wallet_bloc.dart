@@ -161,9 +161,17 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           openingBalance:
               roundToCents(liveOpening + (event.wallet.balance - baseline)),
         );
-      } else if (baseline != null) {
-        // Bakiye alanına dokunulmadı: türetilmiş bakiye/opening çiftini
-        // olduğu gibi koru, yalnız görsel alanlar (ad/renk/ikon/birim) yazılsın.
+      } else {
+        // Bakiye alanına dokunulmadı YA DA çağıran baseline vermedi: her iki
+        // durumda da türetilmiş bakiye/opening çiftine DOKUNULMAZ, yalnız
+        // görsel alanlar (ad/renk/ikon/birim) yazılır.
+        //
+        // Baseline'sız dal eskiden hiçbir şey yapmıyordu: formdaki ham
+        // `balance` ESKİ `openingBalance` ile birlikte yazılıyor, defter
+        // değişmezi (`balance = opening + Σtx`) kırılıyor ve bir sonraki
+        // `syncBalance` kullanıcının girdiği sayıyı sessizce geri alıyordu.
+        // Bugün her iki gerçek çağıran baseline geçiyor, ama olay yapısı
+        // gereği bu dal erişilebilir.
         final currentWallet = _findById(event.wallet.id);
         if (currentWallet != null) {
           toWrite = event.wallet.copyWith(
@@ -182,15 +190,19 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
     // ========== CÜZDAN SİL ==========
     on<DeleteWalletEvent>((event, emit) async {
-      final current = state;
-      if (current is WalletLoadedSt) {
-        for (final w in current.wallets) {
-          if (w.id == event.walletId) {
-            await walletMetricsService.purgeWalletData(
-                event.walletId, w.userId);
-            break;
-          }
-        }
+      // Temizlik artık BLOC STATE'İNE bağlı DEĞİL. Eskiden yalnız state
+      // `WalletLoadedSt` iken ve cüzdan o listede bulunabiliyorsa
+      // çalışıyordu; aksi halde cüzdan yine siliniyor, işlemleri/borçları/
+      // alacakları/yatırımları/hedefleri ise sonsuza dek kutularda kalıyordu
+      // (üstelik tüm-cüzdan taramalarına girmeye devam ederek).
+      final purged = await walletMetricsService.purgeWalletData(
+        event.walletId,
+      );
+      if (!purged) {
+        // Yarım temizlik + silinmiş cüzdan = geri dönüşü olmayan yetim veri.
+        // Cüzdan yerinde bırakılır ki kullanıcı tekrar deneyebilsin.
+        _emitError(emit, 'Cüzdan verileri temizlenemedi, silme iptal edildi');
+        return;
       }
       // Cüzdanın bütçeleri ve düzenli işlem şablonları da gitsin;
       // başarısızlık silmeyi bloklamaz.

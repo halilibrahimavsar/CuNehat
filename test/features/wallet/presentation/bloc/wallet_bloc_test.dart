@@ -479,9 +479,9 @@ void main() {
         baselineBalance: 300,
       )),
       verify: (_) {
-        final captured =
-            verify(() => mockUpdateUseCase(captureAny())).captured.single
-                as WalletEntity;
+        final captured = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .single as WalletEntity;
         expect(captured.name, 'Yeni Ad');
         // Opening kaydırılmadı ve bakiye canlı defterden korundu.
         expect(captured.openingBalance, testInactiveWallet.openingBalance);
@@ -507,9 +507,9 @@ void main() {
         baselineBalance: 300,
       )),
       verify: (_) {
-        final captured =
-            verify(() => mockUpdateUseCase(captureAny())).captured.single
-                as WalletEntity;
+        final captured = verify(() => mockUpdateUseCase(captureAny()))
+            .captured
+            .single as WalletEntity;
         expect(captured.balance, 350);
         // Bayat 300 değil, canlı 320 + 50.
         expect(captured.openingBalance, 370);
@@ -521,8 +521,8 @@ void main() {
     blocTest<WalletBloc, WalletState>(
       'purges wallet metrics first, then deletes wallet, emitting success messageType',
       build: () {
-        when(() => mockMetricsService.purgeWalletData(
-            'wallet_inactive', 'user_123')).thenAnswer((_) async {});
+        when(() => mockMetricsService.purgeWalletData(any(), any()))
+            .thenAnswer((_) async => true);
         when(() => mockDeleteUseCase('wallet_inactive'))
             .thenAnswer((_) async => const Right(null));
         return walletBloc;
@@ -537,8 +537,9 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(() => mockMetricsService.purgeWalletData(
-            'wallet_inactive', 'user_123')).called(1);
+        verify(() =>
+                mockMetricsService.purgeWalletData('wallet_inactive', null))
+            .called(1);
         verify(() => mockDeleteBudgetsForWallet('wallet_inactive')).called(1);
         verify(() => mockDeleteRecurringTemplatesForWallet('wallet_inactive'))
             .called(1);
@@ -547,10 +548,50 @@ void main() {
     );
 
     blocTest<WalletBloc, WalletState>(
+      'state YÜKLÜ DEĞİLKEN de temizlik yapılır (yetim veri kalmaz)',
+      build: () {
+        // Eskiden temizlik `state is WalletLoadedSt` koşuluna bağlıydı:
+        // yükleme/hata durumunda ya da liste bayatken cüzdan yine siliniyor,
+        // işlemleri/borçları/alacakları/yatırımları/hedefleri ise sonsuza dek
+        // kutularda kalıyordu — üstelik tüm-cüzdan taramalarına girmeye
+        // devam ederek.
+        when(() => mockMetricsService.purgeWalletData(any(), any()))
+            .thenAnswer((_) async => true);
+        when(() => mockDeleteUseCase('wallet_inactive'))
+            .thenAnswer((_) async => const Right(null));
+        return walletBloc;
+      },
+      // Hiç seed yok: state `WalletInitialSt`.
+      act: (bloc) => bloc.add(const DeleteWalletEvent('wallet_inactive')),
+      verify: (_) {
+        verify(() =>
+                mockMetricsService.purgeWalletData('wallet_inactive', null))
+            .called(1);
+        verify(() => mockDeleteUseCase('wallet_inactive')).called(1);
+      },
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'temizlik başarısızsa cüzdan SİLİNMEZ',
+      build: () {
+        // Yarım temizlik + silinmiş cüzdan = geri dönüşü olmayan yetim veri.
+        when(() => mockMetricsService.purgeWalletData(any(), any()))
+            .thenAnswer((_) async => false);
+        return walletBloc;
+      },
+      seed: () => WalletLoadedSt([testInactiveWallet], testInactiveWallet),
+      act: (bloc) => bloc.add(const DeleteWalletEvent('wallet_inactive')),
+      verify: (_) {
+        verifyNever(() => mockDeleteUseCase(any()));
+        verifyNever(() => mockDeleteBudgetsForWallet(any()));
+      },
+    );
+
+    blocTest<WalletBloc, WalletState>(
       'emits loaded state with error when deletion fails',
       build: () {
         when(() => mockMetricsService.purgeWalletData(any(), any()))
-            .thenAnswer((_) async {});
+            .thenAnswer((_) async => true);
         when(() => mockDeleteUseCase('wallet_active')).thenAnswer(
             (_) async => const Left(ServerFailure('Delete failed')));
         return walletBloc;
@@ -638,6 +679,12 @@ void main() {
     blocTest<WalletBloc, WalletState>(
       'DeleteWalletEvent when state is not WalletLoadedSt',
       build: () {
+        // ESKİ SÖZLEŞME BUYDU ve hatanın ta kendisiydi: temizlik
+        // `state is WalletLoadedSt` koşuluna bağlıydı, yani yükleme/hata
+        // durumunda cüzdan siliniyor ama verisi yetim kalıyordu. Artık
+        // temizlik state'ten bağımsız çalışır.
+        when(() => mockMetricsService.purgeWalletData(any(), any()))
+            .thenAnswer((_) async => true);
         when(() => mockDeleteUseCase('wallet_inactive'))
             .thenAnswer((_) async => const Right(null));
         return walletBloc;
@@ -646,7 +693,9 @@ void main() {
       act: (bloc) => bloc.add(const DeleteWalletEvent('wallet_inactive')),
       expect: () => const [],
       verify: (_) {
-        verifyNoMoreInteractions(mockMetricsService);
+        verify(() =>
+                mockMetricsService.purgeWalletData('wallet_inactive', null))
+            .called(1);
         verify(() => mockDeleteUseCase('wallet_inactive')).called(1);
       },
     );
@@ -654,6 +703,10 @@ void main() {
     blocTest<WalletBloc, WalletState>(
       'DeleteWalletEvent when wallet is not in loaded wallets list',
       build: () {
+        // Bayat liste de temizliği atlatamamalı: `userId` artık çağıranın
+        // elindeki listeden değil, cüzdanın KENDİSİNDEN okunur.
+        when(() => mockMetricsService.purgeWalletData(any(), any()))
+            .thenAnswer((_) async => true);
         when(() => mockDeleteUseCase('wallet_unknown'))
             .thenAnswer((_) async => const Right(null));
         return walletBloc;
@@ -668,7 +721,8 @@ void main() {
         ),
       ],
       verify: (_) {
-        verifyNoMoreInteractions(mockMetricsService);
+        verify(() => mockMetricsService.purgeWalletData('wallet_unknown', null))
+            .called(1);
         verify(() => mockDeleteUseCase('wallet_unknown')).called(1);
       },
     );

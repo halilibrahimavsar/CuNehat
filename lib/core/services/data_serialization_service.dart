@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:cunehat/core/notifications/notification_service.dart';
 import 'package:cunehat/core/services/backup_migrations.dart';
+import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/services/backup_summary.dart';
 import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/features/budgets/data/models/budget_model.dart';
@@ -344,6 +346,39 @@ class DataSerializationService {
       await goalBox.clear();
       for (final model in parsedBackup.goals) {
         await goalBox.put(model.id, model);
+      }
+
+      // Bakiye defterden YENİDEN TÜRETİLİR.
+      //
+      // Yedekteki `balance` ile `openingBalance` normalde tutarlıdır, ama bu
+      // varsayım kaynağın sağlığına bağlı: başarısız bir `syncBalance` ya da
+      // yarıda kalmış bir yazım, yedeğe tutarsız bir üçlü
+      // (`balance`, `openingBalance`, Σişlem) kopyalayabilir. Geri yükleme,
+      // defterin tamamının elde olduğu TEK andır — onarım için doğru yer
+      // burasıdır.
+      //
+      // Ayrıca `WalletBloc` yalnız AKTİF cüzdanı senkronlar ve
+      // `WatchWalletsEvent` bilerek hiç senkronlamaz (sonsuz döngü);
+      // yani tutarsız dönen PASİF bir cüzdan, aktif yapılana kadar yanlış
+      // kalırdı.
+      final restoredTxs = transactionBox.values.toList();
+      for (final wallet in walletBox.values.toList()) {
+        final id = wallet.id;
+        if (id == null) continue;
+        final balance = deriveWalletBalance(
+          openingBalance: wallet.openingBalance,
+          movements: [
+            for (final t in restoredTxs)
+              if (t.walletId == id)
+                (
+                  isIncome: t.type == TransactionTypeModel.income,
+                  amount: t.amount
+                ),
+          ],
+        );
+        if (!moneyEquals(wallet.balance, balance)) {
+          await walletBox.put(id, wallet.copyWith(balance: balance));
+        }
       }
 
       // Yalnız başarıda yörünge temizliği: geri yüklenen veri fiş binary'si

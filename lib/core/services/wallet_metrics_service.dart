@@ -45,6 +45,26 @@ class CashMovementTags {
   }
 }
 
+/// Defter değişmezi — cüzdan bakiyesini hesaplayan **TEK** formül:
+/// `balance = openingBalance + Σ signed(işlemler)`.
+///
+/// İki aşamalı kuruş yuvarlaması bilinçlidir: önce toplam, sonra sonuç.
+/// Aşamalardan biri atlanırsa aynı defter iki farklı kuruş verebilir.
+///
+/// [WalletMetricsService.syncBalance] ve yedekten geri yükleme (defteri
+/// kutulara doğrudan yazdığı için servise uğramaz) aynı formülü paylaşsın
+/// diye serbest fonksiyon.
+double deriveWalletBalance({
+  required double openingBalance,
+  required Iterable<({bool isIncome, double amount})> movements,
+}) {
+  final sum = roundToCents(movements.fold<double>(
+    0.0,
+    (total, m) => total + (m.isIncome ? m.amount : -m.amount),
+  ));
+  return roundToCents(openingBalance + sum);
+}
+
 /// Deftere yazılacak tek bir nakit hareketi.
 ///
 /// [date] geçmişteki bir kaydı TERSİNE ÇEVİRİRKEN kritik: ters kayıt, iptal
@@ -248,8 +268,15 @@ class WalletMetricsService {
 
       // Kuplajla yazılan sistem işlemi de defteri değiştirir; işlem sayfası
       // ve diğer dinleyiciler canlı yenilensin.
-      transactionsChangedNotifier.notify();
+      //
+      // SIRA ÖNEMLİ: önce bakiye türetilir, SONRA haber verilir. Ters sırada
+      // (eski davranış) bildirimi alan her dinleyici — işlem/borç/alacak/
+      // yatırım blocları, bütçe yükleyici, bütçe uyarı monitörü — cüzdanı
+      // senkron ÖNCESİ bakiyesiyle okuyordu. Diğer tüm yazım yolları
+      // (transaction_bloc, bank_import_cubit, pending_recurring_bloc) zaten
+      // bu sıradaydı; yalnız burası ters duruyordu.
       final synced = await _syncBalanceImpl(walletId);
+      transactionsChangedNotifier.notify();
       return CashWriteResult(
         ok: allWritten && synced,
         // Yazım başarısızsa id vermek yanıltıcı olurdu: geri alma var olmayan
@@ -331,12 +358,12 @@ class WalletMetricsService {
             return false;
           },
           (txs) async {
-            final txSum = roundToCents(txs.fold<double>(
-              0.0,
-              (sum, t) => sum + (t.isIncome ? t.amount : -t.amount),
-            ));
-
-            final newBalance = roundToCents(wallet.openingBalance + txSum);
+            final newBalance = deriveWalletBalance(
+              openingBalance: wallet.openingBalance,
+              movements: [
+                for (final t in txs) (isIncome: t.isIncome, amount: t.amount),
+              ],
+            );
 
             // Tutarlıysa hiç yazma (yaygın durum; gereksiz emit/yazma döngüsünü önler).
             if (moneyEquals(wallet.balance, newBalance)) {
@@ -479,18 +506,44 @@ class WalletMetricsService {
     );
   }
 
-  /// Cüzdan silinirken o cüzdana bağlı tüm kayıtları (işlem/borç/alacak/yatırım)
-  /// temizler; yetim veri kalmasını önler.
-  Future<void> purgeWalletData(String walletId, String userId) =>
+  /// Cüzdan silinirken o cüzdana bağlı tüm kayıtları (işlem/borç/alacak/
+  /// yatırım/hedef) temizler; yetim veri kalmasını önler.
+  ///
+  /// [userId] VERİLMEZSE cüzdanın kendisinden okunur. Çağıranın elindeki
+  /// listeye güvenmek, o liste yoksa (bloc state'i `WalletLoadedSt` değilken)
+  /// ya da bayatken temizliğin sessizce ATLANMASINA yol açıyordu: cüzdan yine
+  /// siliniyor, işlemleri/borçları/alacakları/yatırımları/hedefleri ise
+  /// sonsuza dek kutularda kalıyordu — üstelik tüm-cüzdan taramalarına
+  /// (`countByTags`, `retagTransactions`) girmeye devam ederek.
+  ///
+  /// Her şey silinebildiyse `true`. Çağıran, `false` iken cüzdanı silmemeli:
+  /// yarım temizlik + silinmiş cüzdan = geri dönüşü olmayan yetim veri.
+  Future<bool> purgeWalletData(String walletId, [String? userId]) =>
       _serialized(walletId, () => _purgeWalletDataImpl(walletId, userId));
 
-  Future<void> _purgeWalletDataImpl(String walletId, String userId) async {
+  Future<bool> _purgeWalletDataImpl(
+      String walletId, String? givenUserId) async {
+    var ok = true;
+
+    var userId = givenUserId;
+    if (userId == null) {
+      final walletResult = await walletRepository.getWalletById(walletId);
+      userId = walletResult.fold((_) => null, (w) => w?.userId);
+    }
+    if (userId == null) {
+      debugPrint('purgeWalletData: cüzdan okunamadı, temizlik yapılmadı');
+      return false;
+    }
+
     final txsResult = await transactionsRepository.getTransactions(
       userId: userId,
       walletId: walletId,
     );
     await txsResult.fold(
-      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async {
+        debugPrint('WalletMetricsService: ${failure.message}');
+        ok = false;
+      },
       (txs) async {
         for (final t in txs) {
           if (t.id != null) {
@@ -502,7 +555,10 @@ class WalletMetricsService {
 
     final debtsResult = await debtRepository.getDebtsByWalletId(walletId);
     await debtsResult.fold(
-      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async {
+        debugPrint('WalletMetricsService: ${failure.message}');
+        ok = false;
+      },
       (debts) async {
         for (final d in debts) {
           if (d.id != null) await debtRepository.deleteDebt(d.id!);
@@ -513,7 +569,10 @@ class WalletMetricsService {
     final receivablesResult =
         await receivableRepository.getReceivablesByWalletId(walletId);
     await receivablesResult.fold(
-      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async {
+        debugPrint('WalletMetricsService: ${failure.message}');
+        ok = false;
+      },
       (receivables) async {
         for (final r in receivables) {
           if (r.id != null) await receivableRepository.deleteReceivable(r.id!);
@@ -526,7 +585,10 @@ class WalletMetricsService {
       walletId: walletId,
     );
     await invResult.fold(
-      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async {
+        debugPrint('WalletMetricsService: ${failure.message}');
+        ok = false;
+      },
       (investments) async {
         for (final inv in investments) {
           if (inv.id != null) {
@@ -543,12 +605,17 @@ class WalletMetricsService {
       walletId: walletId,
     );
     await goalsResult.fold(
-      (failure) async => debugPrint('WalletMetricsService: ${failure.message}'),
+      (failure) async {
+        debugPrint('WalletMetricsService: ${failure.message}');
+        ok = false;
+      },
       (goals) async {
         for (final goal in goals) {
           await goalRepository.deleteGoal(goal.id);
         }
       },
     );
+
+    return ok;
   }
 }
