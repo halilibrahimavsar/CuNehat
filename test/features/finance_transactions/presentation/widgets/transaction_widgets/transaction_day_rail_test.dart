@@ -49,6 +49,11 @@ void main() {
       summaries: summaries,
       selectedDay: selected,
       onDaySelected: onTap ?? (_) {},
+      // Saat ENJEKTE edilir: şerit açılışta bugüne ortalanır ve tembel çizer,
+      // yani "hangi gün ağaçta" sorusunun cevabı duvar saatine bağlıdır.
+      // Ölçüldü: aynı kod 3 Eyl'de yeşil, 7 Eyl'de kırmızıydı — çapa 0'dan
+      // 93 piksele kayınca 1. gün hücresi hiç kurulmadı.
+      now: DateTime(2026, 9, 1),
     );
   }
 
@@ -196,6 +201,46 @@ void main() {
 
     await tester.tap(find.text('3'));
     expect(tapped, DateTime(2026, 9, 3));
+  });
+
+  testWidgets('çapa BUGÜNü izler — şerit açılışta oraya ortalanır',
+      (tester) async {
+    // Bu testin kendisi, dört testi kıran hatanın kilididir. Şerit tembel
+    // çizer ve açılışta `focusDayFor` ile bugüne ortalanır; yani "hangi gün
+    // ağaçta" sorusunun cevabı SAATE bağlıdır. Enjekte edilebilir saat
+    // olmadan, ayın 1'ini arayan bir iddia takvim ilerledikçe kendiliğinden
+    // kırılır (ölçüldü: çapa 3 Eyl'de 0 px, 7 Eyl'de 93 px — 1. gün hücresi
+    // hiç kurulmadı). Burada iki yön de ölçülür ki dikiş kaybolmasın.
+    // TUZAK — çapa `initState`'te (ve yalnız `range`/`selectedDay` değişince)
+    // hesaplanır; `now`u değiştirip yeniden pump etmek şeridi YENİDEN
+    // ortalamaz. Bu yüzden iki yön ayrı `Key` ile, yani ayrı `State` ile
+    // ölçülür. (Ölçüldü: anahtarsız ikinci pump 28'e çapalı kalıyor.)
+    await tester.pumpWidget(wrap(TransactionDayRail(
+      key: const ValueKey('ay-sonu'),
+      range: month,
+      summaries: const {},
+      onDaySelected: (_) {},
+      now: DateTime(2026, 9, 28),
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.text('28'), findsOneWidget, reason: 'çapa günü ağaçta değil');
+    expect(find.text('1'), findsNothing,
+        reason: 'ay sonuna ortalanmışken 1. gün hâlâ çiziliyor: '
+            'çapa `now`u izlemiyor');
+
+    // Aynı şerit, ayın başına çapalandığında 1. günü taşır.
+    await tester.pumpWidget(wrap(TransactionDayRail(
+      key: const ValueKey('ay-basi'),
+      range: month,
+      summaries: const {},
+      onDaySelected: (_) {},
+      now: DateTime(2026, 9, 1),
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsOneWidget);
+    expect(find.text('28'), findsNothing);
   });
 
   testWidgets('yıllık dönemde 365 hücre kurar (tembel)', (tester) async {

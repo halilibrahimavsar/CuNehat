@@ -584,8 +584,17 @@ void main() {
 
       final rail = find.byType(TransactionDayRail);
       expect(rail, findsOneWidget);
-      // Ayın ilk günü şeritte olmalı; şerit tembel çizdiği için görünen
-      // hücrelerden en az biri sayılabilsin diye 1'i arıyoruz.
+
+      // Şerit tembel çizer VE açılışta bugüne ortalanır, yani hangi hücrenin
+      // ağaçta olduğu duvar saatine bağlıdır: ayın 1'ini doğrudan aramak
+      // takvim ilerledikçe kendiliğinden kırılan bir iddiaydı (ölçüldü —
+      // 3 Eyl'de çapa 0, 7 Eyl'de 93 px; 1. gün hiç kurulmadı). Şeridi BAŞA
+      // kaydırıp aramak hem saatten bağımsızdır hem de asıl iddiayı ("şerit
+      // yalnız işlem olan günleri değil, dönemin tamamını kapsar") daha
+      // sadık ölçer: işlem olmayan 1. gün ancak kapsam gerçekse oradadır.
+      await tester.drag(rail, const Offset(3000, 0));
+      await tester.pumpAndSettle();
+
       expect(
         find.descendant(of: rail, matching: find.text('1')),
         findsOneWidget,

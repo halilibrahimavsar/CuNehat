@@ -37,12 +37,24 @@ class TransactionDayRail extends StatefulWidget {
 
   final ValueChanged<DateTime> onDaySelected;
 
+  /// "Bugün" kabul edilen an; verilmezse [DateTime.now].
+  ///
+  /// Şerit açılışta bugüne ORTALANIR ve tembel çizer, yani ayın ilk günleri
+  /// duvar saatine göre ağaçtan düşer. Bu yüzden bir günün varlığını ölçen
+  /// test, enjekte edilmiş bir saat olmadan takvim ilerledikçe kendiliğinden
+  /// kırılır (ölçüldü: aynı kod 3 Eyl'de yeşil, 7 Eyl'de kırmızı — çapa 0'dan
+  /// 93 piksele kaydı ve 1. gün hücresi hiç kurulmadı).
+  /// Aynı kalıp: `focusDayFor(..., now:)`, `TransactionAnalyticsService
+  /// .currentDateOverride`.
+  final DateTime? now;
+
   const TransactionDayRail({
     super.key,
     required this.range,
     required this.summaries,
     required this.onDaySelected,
     this.selectedDay,
+    this.now,
   });
 
   /// Şeridin kapladığı yükseklik.
@@ -120,7 +132,7 @@ class _TransactionDayRailState extends State<TransactionDayRail> {
       final selected = widget.selectedDay;
       final anchor = (selected != null && isDayInRange(selected, widget.range))
           ? selected
-          : focusDayFor(widget.range);
+          : focusDayFor(widget.range, now: widget.now);
       final index = _days.indexWhere((d) => isSameDayValue(d, anchor));
       if (index < 0) return;
       final viewport = _controller.position.viewportDimension;
@@ -157,7 +169,8 @@ class _TransactionDayRailState extends State<TransactionDayRail> {
             maxExpense: maxExpense,
             isSelected: widget.selectedDay != null &&
                 isSameDayValue(_days[index], widget.selectedDay!),
-            isToday: isSameDayValue(_days[index], dayOf(DateTime.now())),
+            isToday: isSameDayValue(
+                _days[index], dayOf(widget.now ?? DateTime.now())),
             onTap: () => widget.onDaySelected(_days[index]),
           ),
         ),

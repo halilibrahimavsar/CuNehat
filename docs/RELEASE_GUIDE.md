@@ -49,13 +49,25 @@ sıradaki kod `5`, henüz derlenmedi)
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
 | 12 | Production | ⬜ |
 
-**Kod tarafı sağlık (6 Eyl 2026 ölçümü):** `flutter test` **2235/2235**,
-`dart analyze` **0 sorun**. Yayını bloke eden teknik hata yok.
+**Kod tarafı sağlık (7 Eyl 2026 ölçümü):** `flutter test` **2236/2236**,
+`dart analyze` **0 sorun**.
+
+> **6 Eyl'deki "2235/2235" ölçümü bir gün sonra kendiliğinden kırıldı.** 7 Eyl'de
+> aynı kodda 4 test kırmızıydı (2231/4 — toplam aynı, yani test eklenip
+> silinmedi, yalnız SONUÇ değişti). Sebep koda değil **duvar saatine**
+> bağlıydı: `TransactionDayRail` açılışta bugüne ortalanıyor ve tembel
+> çiziyor, testlerin dönemi ise içinde bulunulan aydı; çapa 3 Eyl'de 0 px,
+> 7 Eyl'de 93 px olunca ayın 1. günü hücresi hiç kurulmadı. Şerit artık
+> enjekte edilebilir bir `now` alıyor ve çapanın `now`u izlediği ayrı bir
+> testle kilitli. **Ders: yeşil bir suite tarih damgasız güvenilir değildir**
+> — bu pano her ölçümde yeniden çalıştırılarak tazelenmeli.
 
 **`+4` sonrası yüklenmemiş iş:** `fix/lock-picker-and-category-l10n` dalında
 **7 commit** — yedek şeması **v10** (migrasyon zinciri), cüzdana göre kategori
 görünürlüğü, kategorilerin kendi sayfası, kategori adlarının anahtarla
 yerelleşmesi, sistem seçicisi × PIN kilidi düzeltmesi. Bunlar `+5` ile gider.
+Üzerine 7 Eyl'de başlayan **para doğruluğu denetimi** turu ekleniyor (gün
+şeridi testlerinin zaman bağımlılığı ile başladı).
 
 **Cihaz duman testi hâlâ yapılmadı** (Adım 10'daki 16 madde). 6 Eyl'de
 emülatörde (`Medium_Phone_API_35`, Android 15) demo veriyle uçtan uca
