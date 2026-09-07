@@ -184,6 +184,8 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
           // "zaten bende" kısmı cüzdandan hiç çıkmadı.
           prevAmount: investment.bookedCost,
           newAmount: updated.bookedCost,
+          // KATKI: para bugün cüzdandan çıkıyor.
+          bookingDate: DateTime.now(),
         ));
       },
     );
@@ -257,6 +259,10 @@ class _InvestmentMoneyPageState extends State<InvestmentMoneyPage> {
             walletId: _walletId,
             prevAmount: item.bookedCost,
             newAmount: updatedInvestment.bookedCost,
+            // DÜZENLEME: yeni bir para hareketi yok, kaydın özgün maliyeti
+            // düzeltiliyor → düzeltme kaydın kendi tarihine yazılır. Böylece
+            // silme düzeltmesiyle (o da `dateAdded`'a yazar) simetrik kalır.
+            bookingDate: item.dateAdded,
           ));
     }
 

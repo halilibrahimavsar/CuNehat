@@ -188,7 +188,9 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
           // gerçekleşmemiş kâr/zarar olduğundan nakdi etkilemez.)
           final costDiff = event.newAmount - event.prevAmount;
           var cashOk = true;
-          if (costDiff != 0) {
+          // Fark PARA olarak ölçülür: ham `!= 0` bir IEEE-754 artığında
+          // deftere 0,00 tutarlı, UI'dan silinemez bir sistem satırı yazardı.
+          if (!moneyEquals(costDiff, 0)) {
             cashOk = await walletMetricsService.recordCashMovement(
               walletId: event.walletId,
               userId: event.userId,
@@ -196,6 +198,12 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
               isIncome: costDiff < 0,
               title: 'Yatırım güncellendi: ${event.investment.name}',
               tag: CashMovementTags.investmentBuy,
+              // Tarihi ÇAĞIRAN söyler: katkıda para bugün çıkar, düzenlemede
+              // kaydın özgün maliyeti düzeltilir (bkz. `bookingDate`).
+              // Alan yokken ikisi de "şimdi"ye düşüyordu ve silme düzeltmesi
+              // aynı tutarı `dateAdded`'a ters çevirdiği için iki ayrı ayın
+              // raporu birden bozuluyordu.
+              date: event.bookingDate,
             );
           }
           await _safeSyncInvestment(event.walletId);
@@ -372,9 +380,17 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
             //
             // Ters kayıt kaydın AÇILIŞ tarihine yazılır, bugüne değil: hatalı
             // girilip silinen kayıt (baskın durum) böylece kendi ayında
-            // sıfırlanır. Katkılar tek tek tarihlenmediğinden (entity yalnız
-            // kümülatif `amount` tutar), çok katkılı bir birikimde tersleme
-            // açılış ayında toplanır — bu bilinçli bir yaklaşıklıktır.
+            // sıfırlanır. Maliyet DÜZENLEMELERİ de aynı tarihe yazıldığından
+            // (bkz. `UpdateInvestmentEvent.bookingDate`) o bacak simetriktir.
+            //
+            // KALAN YAKLAŞIKLIK — katkılar: `ContributeSheet` parayı gerçekten
+            // çıktığı gün (bugün) deftere yazar, tersleme ise kümülatif
+            // `bookedCost`'u tek kalemde açılış tarihine yazar. Yani Ocak'ta
+            // açılıp Haziran'da katkı yapılan bir kayıt Temmuz'da silinirse
+            // Haziran'ın gideri tersi alınmamış, Ocak'a fazladan gelir yazılmış
+            // olur (bakiye yine doğrudur). Düzeltmek için katkıların tek tek
+            // TARİHLENMESİ gerekir; entity yalnız kümülatif `amount` tuttuğu
+            // için bu bir ŞEMA değişikliğidir ve bilerek ertelenmiştir.
             cashResult = await walletMetricsService.recordCashMovements(
               walletId: event.walletId,
               entries: [

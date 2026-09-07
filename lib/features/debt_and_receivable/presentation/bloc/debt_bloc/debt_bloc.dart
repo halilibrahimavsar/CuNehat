@@ -167,7 +167,10 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         final entries = <CashMovement>[];
         if (_isSameDay(event.prevDate, event.newDate)) {
           final diff = event.newAmount - event.prevAmount;
-          if (diff != 0) {
+          // Fark PARA olarak ölçülür: ham `!= 0` bir IEEE-754 artığında
+          // (1e-13) deftere 0,00 tutarlı ve UI'dan SİLİNEMEZ bir sistem
+          // satırı yazardı — sistem işlemleri yalnız kaydından yönetilir.
+          if (!moneyEquals(diff, 0)) {
             entries.add(CashMovement(
               userId: debt.userId,
               amount: diff.abs(),
@@ -180,7 +183,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         } else {
           // Tarih taşındı: eskisini KENDİ döneminde iade et, yenisini yeni
           // döneme yaz. Aksi hâlde iki dönemin gider toplamı birden bozulur.
-          if (event.prevAmount != 0) {
+          if (moneyIsPositive(event.prevAmount)) {
             entries.add(CashMovement(
               userId: debt.userId,
               amount: event.prevAmount,
@@ -190,7 +193,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
               date: event.prevDate,
             ));
           }
-          if (event.newAmount != 0) {
+          if (moneyIsPositive(event.newAmount)) {
             entries.add(CashMovement(
               userId: debt.userId,
               amount: event.newAmount,
@@ -274,7 +277,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
             // Tarih yerinde: yalnız farkı yaz, defteri karşılıklı kayıtlarla
             // şişirme.
             final diff = event.debt.principalAmount - event.prevPrincipal;
-            if (diff != 0) {
+            if (!moneyEquals(diff, 0)) {
               entries.add(CashMovement(
                 userId: event.debt.userId,
                 amount: diff.abs(),
@@ -288,7 +291,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
             // Başlangıç tarihi taşındı: eski kayıt eski dönemde bırakılırsa
             // silmedeki ters kayıt YENİ tarihe düşer, iki dönem birden bozulur.
             // Eskisini kendi tarihinde geri al, yenisini yeni tarihe yaz.
-            if (event.prevPrincipal != 0) {
+            if (moneyIsPositive(event.prevPrincipal)) {
               entries.add(CashMovement(
                 userId: event.debt.userId,
                 amount: event.prevPrincipal,
@@ -298,7 +301,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
                 date: event.prevStartDate,
               ));
             }
-            if (event.debt.principalAmount != 0) {
+            if (moneyIsPositive(event.debt.principalAmount)) {
               entries.add(CashMovement(
                 userId: event.debt.userId,
                 amount: event.debt.principalAmount,
@@ -349,7 +352,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
         // beliriyordu. Bunun yerine her hareket iptal ettiği kaydın kendi
         // tarihine yazılır → her dönem kendi içinde sıfırlanır.
         final reversals = <CashMovement>[
-          if (event.principalToWallet && event.principalAmount != 0)
+          if (event.principalToWallet && moneyIsPositive(event.principalAmount))
             CashMovement(
               userId: event.userId,
               amount: event.principalAmount,
@@ -359,7 +362,7 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
               date: event.startDate,
             ),
           for (final p in event.payments)
-            if (p.amount != 0)
+            if (moneyIsPositive(p.amount))
               CashMovement(
                 userId: event.userId,
                 amount: p.amount,

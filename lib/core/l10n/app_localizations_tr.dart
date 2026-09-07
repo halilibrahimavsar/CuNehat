@@ -1966,6 +1966,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transferBasarisiz => 'Transfer başarısız oldu';
 
   @override
+  String get transferIadeBasarisiz =>
+      'Transfer tamamlanamadı ve iade de yazılamadı. Lütfen cüzdan defterinizi kontrol edin.';
+
+  @override
+  String get transferGeriAlindi => 'Transfer geri alındı';
+
+  @override
+  String get transferGeriAlinamadi => 'Transfer geri alınamadı';
+
+  @override
+  String get transferTarih => 'Transfer tarihi';
+
+  @override
   String get transferIcinIkiCuzdanGerekli =>
       'Transfer için en az iki cüzdan gerekli';
 

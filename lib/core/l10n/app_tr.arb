@@ -901,6 +901,10 @@
   "transferKurYok": "Kur bilgisi alınamadı — internete bağlanınca tekrar deneyin",
   "transferBasarili": "Transfer tamamlandı",
   "transferBasarisiz": "Transfer başarısız oldu",
+  "transferIadeBasarisiz": "Transfer tamamlanamadı ve iade de yazılamadı. Lütfen cüzdan defterinizi kontrol edin.",
+  "transferGeriAlindi": "Transfer geri alındı",
+  "transferGeriAlinamadi": "Transfer geri alınamadı",
+  "transferTarih": "Transfer tarihi",
   "transferIcinIkiCuzdanGerekli": "Transfer için en az iki cüzdan gerekli",
   "transferBakiyeAsimiMesaj": "Tutar, cüzdan bakiyesinden ({bakiye}) fazla. Devam ederseniz bakiye eksiye düşer. Devam edilsin mi?",
   "@transferBakiyeAsimiMesaj": {

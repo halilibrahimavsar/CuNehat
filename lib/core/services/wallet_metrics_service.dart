@@ -264,6 +264,46 @@ class WalletMetricsService {
     }
   }
 
+  /// Yazılmış nakit hareketlerini kimlikleriyle GERİ ALIR ve etkilenen
+  /// cüzdanların bakiyesini defterden yeniden türetir.
+  ///
+  /// **Neden gerekli:** kuplajla yazılan her satır `isSystem: true`'dur ve
+  /// UI'dan silinemez (bilerek — defterle desync olmasın). Bunun bedeli,
+  /// arkasında düzenlenebilir bir KAYIT olmayan hareketlerin — transferin iki
+  /// bacağı gibi — hiçbir şekilde düzeltilememesiydi: yanlış tutar girilen
+  /// bir transfer kullanıcıda kalıcı olarak yanlış bakiye bırakıyordu.
+  ///
+  /// Silme kuyruk DIŞINDA yapılır, senkron ise cüzdan başına kuyruğa girer;
+  /// böylece eşzamanlı bir yazım bayat okumayla ezilmez.
+  ///
+  /// Herhangi bir silme ya da senkron başarısızsa `false` döner; silinebilenler
+  /// geri yazılmaz — bakiye zaten defterden türediği için tutarlı kalır.
+  Future<bool> removeCashMovements({
+    required List<String> transactionIds,
+    required Set<String> walletIds,
+  }) async {
+    if (transactionIds.isEmpty) return true;
+
+    var ok = true;
+    for (final id in transactionIds) {
+      final result = await transactionsRepository.deleteTransaction(id);
+      ok = result.fold(
+        (failure) {
+          debugPrint(
+              'removeCashMovements: kayıt silinemedi: ${failure.message}');
+          return false;
+        },
+        (_) => ok,
+      );
+    }
+
+    transactionsChangedNotifier.notify();
+    for (final walletId in walletIds) {
+      ok = await syncBalance(walletId) && ok;
+    }
+    return ok;
+  }
+
   /// Bakiyeyi işlemlerden yeniden hesaplar; cüzdan bakiyesinin TEK yazım yolu.
   /// `balance = openingBalance + Σ signed(tüm işlemler)`.
   /// Başarı ya da no-op'ta `true`, herhangi bir hata bacağında `false` döner.

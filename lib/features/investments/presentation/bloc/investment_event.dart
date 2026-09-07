@@ -65,15 +65,32 @@ final class UpdateInvestmentEvent extends InvestmentEvent {
   final double prevAmount;
   final double newAmount;
 
+  /// Maliyet farkının deftere yazılacağı TARİH. Varsayılanı YOKTUR: çağıran
+  /// ne demek istediğini söylemek zorundadır.
+  ///
+  /// İki çağıran iki farklı şey demek istiyor ve bloc bunu tarihten
+  /// türetemez:
+  ///  * **Katkı** (ContributeSheet) — para BUGÜN çıkıyor → `DateTime.now()`.
+  ///  * **Düzenleme** (edit sheet) — kaydın özgün maliyeti düzeltiliyor,
+  ///    yeni bir para hareketi YOK → `investment.dateAdded`.
+  ///
+  /// Alan yokken her ikisi de "şimdi"ye yazılıyordu. Ocak'ta açılıp Temmuz'da
+  /// maliyeti düzeltilen bir kayıtta düzeltme Temmuz'a düşüyor, silme
+  /// düzeltmesi ise kümülatif maliyeti Ocak'a ters çeviriyordu: bakiye
+  /// doğru çıkıyor ama Ocak'a hayali gelir, Temmuz'a tersi alınmamış gider
+  /// kalıyordu.
+  final DateTime bookingDate;
+
   const UpdateInvestmentEvent({
     required this.investment,
     required this.userId,
     required this.walletId,
     required this.prevAmount,
     required this.newAmount,
+    required this.bookingDate,
   });
   @override
-  List<Object> get props => [investment, userId, walletId];
+  List<Object> get props => [investment, userId, walletId, bookingDate];
 }
 
 /// Canlı fiyatlardan güncel değer yenileme. [investmentId] verilirse tek

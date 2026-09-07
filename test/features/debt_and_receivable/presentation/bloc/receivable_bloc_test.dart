@@ -291,6 +291,108 @@ void main() {
     );
 
     blocTest<ReceivableBloc, ReceivableState>(
+      'yarım kuruşun altındaki fark deftere HİÇ satır yazmaz',
+      build: () {
+        // Ham `!= 0` kapısı, 1e-13'lük bir IEEE-754 artığında bile deftere
+        // 0,00 tutarlı bir sistem satırı yazıyordu — ve sistem satırları
+        // UI'dan silinemediği için kullanıcı onu temizleyemezdi.
+        final nudged = ReceivableEntity(
+          id: 'receivable_123',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          debtorName: 'Alice',
+          amount: 1000.0 + 1e-13,
+          dueDate: DateTime(2026, 6, 20),
+          isPaid: false,
+          createdAt: DateTime(2026, 1, 1),
+        );
+        when(() => mockUpdateUseCase(nudged))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.syncCredit('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([nudged]));
+        return receivableBloc;
+      },
+      act: (bloc) => bloc.add(UpdateReceivableEvent(
+        receivable: ReceivableEntity(
+          id: 'receivable_123',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          debtorName: 'Alice',
+          amount: 1000.0 + 1e-13,
+          dueDate: DateTime(2026, 6, 20),
+          isPaid: false,
+          createdAt: DateTime(2026, 1, 1),
+        ),
+        prevAmount: 1000.0,
+      )),
+      verify: (_) {
+        verifyNever(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            ));
+      },
+    );
+
+    blocTest<ReceivableBloc, ReceivableState>(
+      'collectedAt YOKSA düzeltme bacağı bugüne değil createdAt e düşer',
+      build: () {
+        // `collectedAt` v4'te (29 Tem 2026) eklendi; ondan önce "tahsil
+        // edildi" işaretlenmiş kayıtlarda ve eski yedekten dönenlerde boştur.
+        // Null geçilince `recordCashMovements` "şimdi"ye düşüyordu — yani
+        // alanın ENGELLEMEK için eklendiği hatanın ta kendisi: alacak bacağı
+        // Ocak'a, tahsilat bacağı bugüne düşüp İKİ ayrı dönemi bozuyordu.
+        final legacyPaid = ReceivableEntity(
+          id: 'receivable_123',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          debtorName: 'Alice',
+          amount: 1200.0,
+          dueDate: DateTime(2026, 6, 20),
+          isPaid: true,
+          createdAt: DateTime(2026, 1, 1),
+        );
+        when(() => mockUpdateUseCase(legacyPaid))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovements(
+              walletId: any(named: 'walletId'),
+              entries: any(named: 'entries'),
+            )).thenAnswer((_) async => const CashWriteResult(ok: true));
+        when(() => mockMetricsService.syncCredit('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([legacyPaid]));
+        return receivableBloc;
+      },
+      act: (bloc) => bloc.add(UpdateReceivableEvent(
+        receivable: ReceivableEntity(
+          id: 'receivable_123',
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          debtorName: 'Alice',
+          amount: 1200.0,
+          dueDate: DateTime(2026, 6, 20),
+          isPaid: true,
+          createdAt: DateTime(2026, 1, 1),
+        ),
+        prevAmount: 1000.0,
+      )),
+      verify: (_) {
+        final entries = verify(() => mockMetricsService.recordCashMovements(
+              walletId: 'wallet_123',
+              entries: captureAny(named: 'entries'),
+            )).captured.single as List<CashMovement>;
+        expect(entries, hasLength(2));
+        expect(entries[1].tag, CashMovementTags.receivableCollection);
+        // İki bacak da AYNI döneme düşer → düzeltme hiçbir ayın raporunda
+        // iz bırakmaz.
+        expect(entries[1].date, DateTime(2026, 1, 1));
+        expect(entries[0].date, DateTime(2026, 1, 1));
+      },
+    );
+
+    blocTest<ReceivableBloc, ReceivableState>(
       'tahsil edilmiş alacakta tutar değişimi İKİ bacağı da düzeltir',
       build: () {
         // Eskiden isPaid'de kuplaj TAMAMEN atlanıyordu → defter 1.000'de

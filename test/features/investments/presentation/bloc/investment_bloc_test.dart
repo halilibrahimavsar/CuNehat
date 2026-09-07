@@ -341,6 +341,59 @@ void main() {
 
   group('UpdateInvestmentEvent', () {
     blocTest<InvestmentBloc, InvestmentState>(
+      'maliyet farkı ÇAĞIRANIN verdiği tarihe yazılır (bugüne değil)',
+      build: () {
+        // Tarih alanı yokken fark her zaman "şimdi"ye düşüyordu. Ocak'ta
+        // açılıp Temmuz'da maliyeti düzeltilen bir kayıtta düzeltme Temmuz'a,
+        // silme düzeltmesi ise kümülatif maliyeti Ocak'a yazıyordu: bakiye
+        // doğru ama Ocak'ta hayali gelir, Temmuz'da tersi alınmamış gider.
+        //
+        // Katkı ile düzenleme farklı şeyler demek istediği için tarihi bloc
+        // türetemez; çağıran söyler (bkz. `UpdateInvestmentEvent.bookingDate`).
+        final updated = testInvestment.copyWith(amount: 1500.0);
+        when(() => mockUpdateUseCase(updated))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncInvestment('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetInvestmentsUseCase(
+              userId: 'user_123',
+              walletId: 'wallet_123',
+            )).thenAnswer((_) async => Right([updated]));
+        return investmentBloc;
+      },
+      act: (bloc) => bloc.add(UpdateInvestmentEvent(
+        investment: testInvestment.copyWith(amount: 1500.0),
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        prevAmount: 1000.0,
+        newAmount: 1500.0,
+        // Düzenleme niyeti: kaydın KENDİ tarihi.
+        bookingDate: DateTime(2026, 1, 15),
+      )),
+      verify: (_) {
+        final captured = verify(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: captureAny(named: 'date'),
+            )).captured.single as DateTime?;
+        expect(captured, DateTime(2026, 1, 15));
+      },
+    );
+
+    blocTest<InvestmentBloc, InvestmentState>(
       'emits [InvestmentLoading, InvestmentActionSuccess] and triggers cash movement when cost increases',
       build: () {
         final updated = testInvestment.copyWith(amount: 1500.0);
@@ -370,6 +423,7 @@ void main() {
         walletId: 'wallet_123',
         prevAmount: 1000.0,
         newAmount: 1500.0,
+        bookingDate: testInvestment.dateAdded,
       )),
       expect: () => [
         InvestmentLoading(),
@@ -410,6 +464,7 @@ void main() {
         walletId: 'wallet_123',
         prevAmount: 1000.0,
         newAmount: 800.0,
+        bookingDate: testInvestment.dateAdded,
       )),
       expect: () => [
         InvestmentLoading(),
@@ -439,6 +494,7 @@ void main() {
         walletId: 'wallet_123',
         prevAmount: 1000.0,
         newAmount: 1000.0,
+        bookingDate: testInvestment.dateAdded,
       )),
       expect: () => [
         InvestmentLoading(),
@@ -755,6 +811,7 @@ void main() {
       walletId: 'wallet_123',
       prevAmount: 1000.0,
       newAmount: 1500.0,
+      bookingDate: testInvestment.dateAdded,
     )),
     expect: () => [
       InvestmentLoading(),
@@ -785,6 +842,7 @@ void main() {
         walletId: 'wallet_123',
         prevAmount: 1000.0,
         newAmount: 1000.0,
+        bookingDate: testInvestment.dateAdded,
       ));
     },
     expect: () => [

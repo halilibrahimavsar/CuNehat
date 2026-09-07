@@ -1964,6 +1964,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transferBasarisiz => 'Transfer failed';
 
   @override
+  String get transferIadeBasarisiz =>
+      'The transfer could not be completed and the refund could not be recorded. Please check your wallet ledger.';
+
+  @override
+  String get transferGeriAlindi => 'Transfer undone';
+
+  @override
+  String get transferGeriAlinamadi => 'Transfer could not be undone';
+
+  @override
+  String get transferTarih => 'Transfer date';
+
+  @override
   String get transferIcinIkiCuzdanGerekli =>
       'You need at least two wallets to transfer';
 

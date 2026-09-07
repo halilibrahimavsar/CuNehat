@@ -12,6 +12,8 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 
 /// Cüzdanlar arası transfer sheet'i.
@@ -56,6 +58,12 @@ class _TransferSheetState extends State<TransferSheet> {
   double? _srcRate;
   double? _dstRate;
   bool _submitting = false;
+
+  /// Transferin deftere yazılacağı gün. Varsayılan bugün; geçmişte yapılmış
+  /// bir para taşımasını kaydeden kullanıcıda iki bacak da bugüne düşüyor ve
+  /// her iki cüzdanın DÖNEM defteri yanlış aya yazılıyordu (bakiye doğru
+  /// çıktığı için hata sessizdi).
+  DateTime _date = DateTime.now();
 
   /// Kur isteği sürüyor. Bu ayrım olmadan sheet açılır açılmaz "kur alınamadı"
   /// yazıyordu: `_rateReady` başlangıçta da false olduğu için yükleniyor ile
@@ -143,21 +151,74 @@ class _TransferSheetState extends State<TransferSheet> {
     if (!confirmed || !mounted) return;
 
     setState(() => _submitting = true);
-    final result = await getIt<TransferService>().transfer(
+    final service = getIt<TransferService>();
+    final outcome = await service.transfer(
       from: _from,
       to: _to,
       amount: amount,
+      date: _date,
     );
 
     if (!mounted) return;
+    // Metinler sheet KAPANMADAN okunur: mesajın ömrü bu widget'a bağlı değil
+    // (bkz. AppMessenger), ama `context.l10n` bağlı.
+    final l = context.l10n;
     Navigator.pop(context);
-    switch (result) {
+    switch (outcome.result) {
       case TransferResult.success:
-        AppMessenger.success(context.l10n.transferBasarili);
+        _showSuccess(service, outcome, l);
       case TransferResult.rateUnavailable:
-        AppMessenger.error(context.l10n.transferKurYok);
+        AppMessenger.error(l.transferKurYok);
       case TransferResult.failed:
-        AppMessenger.error(context.l10n.transferBasarisiz);
+        AppMessenger.error(l.transferBasarisiz);
+      case TransferResult.refundFailed:
+        // Kaynak cüzdan KALICI olarak eksik ve defterde iz yok: bu, düz bir
+        // "başarısız" mesajından daha sert bir uyarı gerektirir.
+        AppMessenger.error(l.transferIadeBasarisiz);
+    }
+  }
+
+  /// Başarı mesajı — geri alınabiliyorsa "Geri al" eylemiyle.
+  ///
+  /// Transferin iki bacağı da sistem işlemidir ve UI'dan silinemez; arkasında
+  /// düzenlenebilir bir kayıt da yok. Bu eylem olmadan yanlış girilen bir
+  /// transferi düzeltmenin HİÇBİR yolu yoktu.
+  void _showSuccess(
+    TransferService service,
+    TransferOutcome outcome,
+    AppLocalizations l,
+  ) {
+    if (!outcome.canUndo) {
+      AppMessenger.success(l.transferBasarili);
+      return;
+    }
+    AppMessenger.success(
+      l.transferBasarili,
+      action: AppMessageAction(
+        label: l.geriAl,
+        onPressed: () async {
+          final ok = await service.undoTransfer(outcome);
+          if (ok) {
+            AppMessenger.success(l.transferGeriAlindi);
+          } else {
+            AppMessenger.error(l.transferGeriAlinamadi);
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      // İleri tarihli transfer deftere yaşanmamış bir hareket yazar.
+      lastDate: DateTime.now(),
+      helpText: context.l10n.tarihSec,
+    );
+    if (picked != null && mounted) {
+      setState(() => _date = picked);
     }
   }
 
@@ -346,6 +407,21 @@ class _TransferSheetState extends State<TransferSheet> {
                       ),
                     ),
                     validator: (v) => validateAmountInput(v ?? ''),
+                  ),
+                  const SizedBox(height: 14),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: _submitting ? null : _pickDate,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: context.l10n.transferTarih,
+                        prefixIcon: const Icon(Icons.event_rounded),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(AppFormatters.dateLong.format(_date)),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   // Önizleme / kur durumu (yalnız çapraz birimde anlamlı)

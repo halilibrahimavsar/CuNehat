@@ -563,6 +563,71 @@ void main() {
     });
   });
 
+  group('removeCashMovements', () {
+    // Kuplajla yazılan her satır `isSystem: true`'dur ve UI'dan silinemez
+    // (bilerek — defterle desync olmasın). Bedeli: arkasında düzenlenebilir
+    // bir KAYIT olmayan hareketler — transferin iki bacağı gibi — hiçbir
+    // şekilde düzeltilemiyordu.
+    test('kimlikleri siler ve İKİ cüzdanı da yeniden türetir', () async {
+      wallets.store['a'] = _wallet(id: 'a', balance: 900, openingBalance: 1000);
+      wallets.store['b'] =
+          _wallet(id: 'b', balance: 1100, openingBalance: 1000);
+      txs.store.add(_income('a', 100)
+          .copyWith(id: 'out-1', type: TransactionTypeModel.expense));
+      txs.store.add(_income('b', 100).copyWith(id: 'in-1'));
+
+      final ok = await service.removeCashMovements(
+        transactionIds: const ['out-1', 'in-1'],
+        walletIds: const {'a', 'b'},
+      );
+
+      expect(ok, true);
+      expect(txs.store.where((t) => t.id == 'out-1'), isEmpty);
+      expect(txs.store.where((t) => t.id == 'in-1'), isEmpty);
+      // Bakiyeler defterden yeniden türer → transfer öncesine döner.
+      expect(wallets.store['a']!.balance, 1000);
+      expect(wallets.store['b']!.balance, 1000);
+    });
+
+    test('boş liste hiçbir şey yapmaz ve true döner', () async {
+      wallets.store['a'] = _wallet(id: 'a', balance: 900, openingBalance: 1000);
+
+      final ok = await service.removeCashMovements(
+        transactionIds: const [],
+        walletIds: const {'a'},
+      );
+
+      expect(ok, true);
+      // Senkron bile çalışmaz: sapan bakiye olduğu gibi kalır.
+      expect(wallets.store['a']!.balance, 900);
+    });
+
+    test('silme başarısızsa false döner ama bakiye yine türetilir', () async {
+      final failing = FailingDeleteTransactionsRepository();
+      failing.store.add(_income('a', 100)
+          .copyWith(id: 'out-1', type: TransactionTypeModel.expense));
+      final svc = WalletMetricsService(
+        walletRepository: wallets,
+        debtRepository: debts,
+        receivableRepository: FakeReceivableRepository(),
+        investmentRepository: FakeInvestmentRepository(),
+        goalRepository: FakeGoalRepository(),
+        transactionsRepository: failing,
+        transactionsChangedNotifier: TransactionsChangedNotifier(),
+      );
+      wallets.store['a'] = _wallet(id: 'a', balance: 999, openingBalance: 1000);
+
+      final ok = await svc.removeCashMovements(
+        transactionIds: const ['out-1'],
+        walletIds: const {'a'},
+      );
+
+      expect(ok, false);
+      // Bakiye defterden türediği için tutarlı kalır (1000 − 100).
+      expect(wallets.store['a']!.balance, 900);
+    });
+  });
+
   group('syncBalance', () {
     test('sapan bakiyeyi onarır', () async {
       wallets.store['w'] = _wallet(id: 'w', balance: 999, openingBalance: 100);
@@ -1271,4 +1336,14 @@ void main() {
       expect(wallets.store['w']!.investment, 7700);
     });
   });
+}
+
+/// `deleteTransaction` her zaman başarısız olan depo.
+class FailingDeleteTransactionsRepository extends FakeTransactionsRepository {
+  @override
+  Future<Either<Failure, void>> deleteTransaction(
+    String id, {
+    bool keepReceiptFile = false,
+  }) async =>
+      Left(CacheFailure('silinemedi'));
 }

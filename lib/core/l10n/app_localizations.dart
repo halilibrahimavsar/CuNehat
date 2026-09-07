@@ -3635,6 +3635,30 @@ abstract class AppLocalizations {
   /// **'Transfer başarısız oldu'**
   String get transferBasarisiz;
 
+  /// No description provided for @transferIadeBasarisiz.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer tamamlanamadı ve iade de yazılamadı. Lütfen cüzdan defterinizi kontrol edin.'**
+  String get transferIadeBasarisiz;
+
+  /// No description provided for @transferGeriAlindi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer geri alındı'**
+  String get transferGeriAlindi;
+
+  /// No description provided for @transferGeriAlinamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer geri alınamadı'**
+  String get transferGeriAlinamadi;
+
+  /// No description provided for @transferTarih.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer tarihi'**
+  String get transferTarih;
+
   /// No description provided for @transferIcinIkiCuzdanGerekli.
   ///
   /// In tr, this message translates to:

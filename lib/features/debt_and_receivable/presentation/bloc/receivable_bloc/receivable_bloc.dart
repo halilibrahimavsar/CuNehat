@@ -9,6 +9,7 @@ import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/usecases/receivable_usecases.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:injectable/injectable.dart';
 import 'package:cunehat/core/services/deletion_undo_service.dart';
 import 'package:dartz/dartz.dart';
@@ -117,7 +118,9 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         // sıfırdır → iki bacak da yazılır ve defter kalemle tutarlı kalır.
         var cashOk = true;
         final diff = event.receivable.amount - event.prevAmount;
-        if (diff != 0) {
+        // Fark PARA olarak ölçülür: ham `!= 0` bir IEEE-754 artığında
+        // deftere 0,00 tutarlı, UI'dan silinemez bir sistem satırı yazardı.
+        if (!moneyEquals(diff, 0)) {
           final cashResult = await walletMetricsService.recordCashMovements(
             walletId: event.receivable.walletId,
             entries: [
@@ -141,7 +144,21 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
                   isIncome: diff > 0,
                   title: 'Tahsilat düzeltmesi: ${event.receivable.debtorName}',
                   tag: CashMovementTags.receivableCollection,
-                  date: event.receivable.collectedAt,
+                  // `collectedAt` NULL OLABİLİR: alan v4'te (29 Tem 2026)
+                  // eklendi, ondan önce "tahsil edildi" işaretlenmiş kayıtlar
+                  // ve eski yedekten dönenler onu taşımaz. Null geçilince
+                  // `recordCashMovements` "şimdi"ye düşüyordu — yani alanın
+                  // ENGELLEMEK İÇİN eklendiği hatanın ta kendisi: alacak
+                  // bacağı `createdAt`'e, tahsilat bacağı bugüne düşüyor,
+                  // net etki sıfır olmasına rağmen iki AYRI dönem bozuluyordu.
+                  //
+                  // Bilinmiyorsa `createdAt`'e düşülür: tahsilat tarihi kadar
+                  // doğru değil ama iki bacağı AYNI döneme koyar, yani
+                  // düzeltme hiçbir ayın raporunda iz bırakmaz. `dueDate`
+                  // seçilmedi — gelecekte olabilir ve deftere ileri tarihli
+                  // satır yazardı.
+                  date: event.receivable.collectedAt ??
+                      event.receivable.createdAt,
                 ),
             ],
           );
@@ -174,7 +191,7 @@ class ReceivableBloc extends Bloc<ReceivableEvent, ReceivableState>
         // bakiye doğru çıksa bile o ayın gider toplamı şişik kalırdı.
         // Tahsil edilmişte defter zaten -tutar/+tutar ile sıfırlanmıştır.
         var cashResult = const CashWriteResult(ok: true);
-        if (!event.isPaid && event.amount != 0) {
+        if (!event.isPaid && moneyIsPositive(event.amount)) {
           cashResult = await walletMetricsService.recordCashMovements(
             walletId: event.walletId,
             entries: [

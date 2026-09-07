@@ -36,26 +36,36 @@ void main() {
         TransferService(walletMetricsService: metrics, exchangeRateService: fx);
   });
 
-  void stubMovement({bool income = true, bool expense = true}) {
-    when(() => metrics.recordCashMovement(
-          walletId: any(named: 'walletId'),
-          userId: any(named: 'userId'),
-          amount: any(named: 'amount'),
-          isIncome: false,
-          title: any(named: 'title'),
-          tag: any(named: 'tag'),
-          date: any(named: 'date'),
-        )).thenAnswer((_) async => expense);
-    when(() => metrics.recordCashMovement(
-          walletId: any(named: 'walletId'),
-          userId: any(named: 'userId'),
-          amount: any(named: 'amount'),
-          isIncome: true,
-          title: any(named: 'title'),
-          tag: any(named: 'tag'),
-          date: any(named: 'date'),
-        )).thenAnswer((_) async => income);
+  /// Bacakları CÜZDANA göre stub'lar: transfer artık çoğul yolu kullanıyor
+  /// (geri alma bacakları kimlikle bulmak zorunda; tekil çağrı yalnız bool
+  /// döner).
+  void stubLegs({
+    bool source = true,
+    bool destination = true,
+    List<String> sourceIds = const ['out-1'],
+    List<String> destinationIds = const ['in-1'],
+  }) {
+    when(() => metrics.recordCashMovements(
+          walletId: 'a',
+          entries: any(named: 'entries'),
+        )).thenAnswer((_) async => CashWriteResult(
+          ok: source,
+          transactionIds: source ? sourceIds : const [],
+        ));
+    when(() => metrics.recordCashMovements(
+          walletId: 'b',
+          entries: any(named: 'entries'),
+        )).thenAnswer((_) async => CashWriteResult(
+          ok: destination,
+          transactionIds: destination ? destinationIds : const [],
+        ));
   }
+
+  List<CashMovement> capturedFor(String walletId) =>
+      verify(() => metrics.recordCashMovements(
+            walletId: walletId,
+            entries: captureAny(named: 'entries'),
+          )).captured.cast<List<CashMovement>>().expand((e) => e).toList();
 
   group('convertForTransfer', () {
     test('TL köprüsüyle çevirir ve kuruşa yuvarlar', () {
@@ -77,152 +87,192 @@ void main() {
   group('transfer', () {
     test('aynı birimde kur sorgusu yapılmaz, iki bacak aynı tutarla yazılır',
         () async {
-      stubMovement();
+      stubLegs();
 
-      final result = await service.transfer(
+      final outcome = await service.transfer(
         from: wallet('a'),
         to: wallet('b'),
         amount: 250,
       );
 
-      expect(result, TransferResult.success);
+      expect(outcome.result, TransferResult.success);
+      expect(outcome.isSuccess, isTrue);
       verifyNever(() => fx.rateToTry(any()));
-      verify(() => metrics.recordCashMovement(
-            walletId: 'a',
-            userId: 'u',
-            amount: 250,
-            isIncome: false,
-            title: any(named: 'title'),
-            tag: CashMovementTags.transfer,
-            date: any(named: 'date'),
-          )).called(1);
-      verify(() => metrics.recordCashMovement(
-            walletId: 'b',
-            userId: 'u',
-            amount: 250,
-            isIncome: true,
-            title: any(named: 'title'),
-            tag: CashMovementTags.transfer,
-            date: any(named: 'date'),
-          )).called(1);
+
+      final out = capturedFor('a').single;
+      expect(out.amount, 250);
+      expect(out.isIncome, isFalse);
+      expect(out.tag, CashMovementTags.transfer);
+
+      final incoming = capturedFor('b').single;
+      expect(incoming.amount, 250);
+      expect(incoming.isIncome, isTrue);
     });
 
     test('çapraz birimde hedef bacak çevrilmiş (yuvarlı) tutarla yazılır',
         () async {
-      stubMovement();
+      stubLegs();
       when(() => fx.rateToTry('TRY')).thenAnswer((_) async => 1.0);
       when(() => fx.rateToTry('USD')).thenAnswer((_) async => 40.0);
 
-      final result = await service.transfer(
+      final outcome = await service.transfer(
         from: wallet('a'), // TRY
         to: wallet('b', currency: 'USD'),
         amount: 4100, // → 102.5 USD
       );
 
-      expect(result, TransferResult.success);
-      verify(() => metrics.recordCashMovement(
-            walletId: 'b',
-            userId: 'u',
-            amount: 102.5,
-            isIncome: true,
-            title: any(named: 'title'),
-            tag: CashMovementTags.transfer,
-            date: any(named: 'date'),
-          )).called(1);
+      expect(outcome.result, TransferResult.success);
+      expect(capturedFor('b').single.amount, 102.5);
     });
 
     test('kur yoksa hiçbir bacak yazılmaz, rateUnavailable döner', () async {
       when(() => fx.rateToTry('TRY')).thenAnswer((_) async => 1.0);
       when(() => fx.rateToTry('USD')).thenAnswer((_) async => null);
 
-      final result = await service.transfer(
+      final outcome = await service.transfer(
         from: wallet('a'),
         to: wallet('b', currency: 'USD'),
         amount: 100,
       );
 
-      expect(result, TransferResult.rateUnavailable);
+      expect(outcome.result, TransferResult.rateUnavailable);
+      expect(outcome.canUndo, isFalse);
       verifyZeroInteractions(metrics);
     });
 
     test('ilk bacak başarısızsa ikinci bacak hiç denenmez', () async {
-      stubMovement(expense: false);
+      stubLegs(source: false);
 
-      final result = await service.transfer(
+      final outcome = await service.transfer(
         from: wallet('a'),
         to: wallet('b'),
         amount: 100,
       );
 
-      expect(result, TransferResult.failed);
-      verifyNever(() => metrics.recordCashMovement(
+      expect(outcome.result, TransferResult.failed);
+      verifyNever(() => metrics.recordCashMovements(
             walletId: 'b',
-            userId: any(named: 'userId'),
-            amount: any(named: 'amount'),
-            isIncome: true,
-            title: any(named: 'title'),
-            tag: any(named: 'tag'),
-            date: any(named: 'date'),
+            entries: any(named: 'entries'),
           ));
     });
 
     test('ikinci bacak başarısızsa kaynağa telafi iadesi yazılır', () async {
-      // Gider bacağı OK; gelir bacağı hedefte başarısız, kaynakta (iade) OK.
-      when(() => metrics.recordCashMovement(
-            walletId: any(named: 'walletId'),
-            userId: any(named: 'userId'),
-            amount: any(named: 'amount'),
-            isIncome: false,
-            title: any(named: 'title'),
-            tag: any(named: 'tag'),
-            date: any(named: 'date'),
-          )).thenAnswer((_) async => true);
-      when(() => metrics.recordCashMovement(
-            walletId: 'b',
-            userId: any(named: 'userId'),
-            amount: any(named: 'amount'),
-            isIncome: true,
-            title: any(named: 'title'),
-            tag: any(named: 'tag'),
-            date: any(named: 'date'),
-          )).thenAnswer((_) async => false);
-      when(() => metrics.recordCashMovement(
-            walletId: 'a',
-            userId: any(named: 'userId'),
-            amount: any(named: 'amount'),
-            isIncome: true,
-            title: any(named: 'title'),
-            tag: any(named: 'tag'),
-            date: any(named: 'date'),
-          )).thenAnswer((_) async => true);
+      stubLegs(destination: false);
 
-      final result = await service.transfer(
+      final outcome = await service.transfer(
         from: wallet('a'),
         to: wallet('b'),
         amount: 100,
       );
 
-      expect(result, TransferResult.failed);
+      expect(outcome.result, TransferResult.failed);
       // Telafi: kaynağa gelir olarak aynı tutar geri yazıldı.
-      verify(() => metrics.recordCashMovement(
+      final sourceLegs = capturedFor('a');
+      expect(sourceLegs, hasLength(2));
+      expect(sourceLegs[1].amount, 100);
+      expect(sourceLegs[1].isIncome, isTrue);
+      expect(sourceLegs[1].tag, CashMovementTags.transfer);
+      // Yarım transfer geri ALINAMAZ: tek bacağı silmek defteri daha da bozar.
+      expect(outcome.canUndo, isFalse);
+    });
+
+    test('telafi iadesi de yazılamazsa refundFailed döner', () async {
+      // Kaynak bacağı: ilk çağrı OK, iade çağrısı BAŞARISIZ.
+      var sourceCalls = 0;
+      when(() => metrics.recordCashMovements(
             walletId: 'a',
-            userId: 'u',
-            amount: 100,
-            isIncome: true,
-            title: any(named: 'title'),
-            tag: CashMovementTags.transfer,
-            date: any(named: 'date'),
-          )).called(1);
+            entries: any(named: 'entries'),
+          )).thenAnswer((_) async {
+        sourceCalls++;
+        return sourceCalls == 1
+            ? const CashWriteResult(ok: true, transactionIds: ['out-1'])
+            : const CashWriteResult(ok: false);
+      });
+      when(() => metrics.recordCashMovements(
+            walletId: 'b',
+            entries: any(named: 'entries'),
+          )).thenAnswer((_) async => const CashWriteResult(ok: false));
+
+      final outcome = await service.transfer(
+        from: wallet('a'),
+        to: wallet('b'),
+        amount: 100,
+      );
+
+      // Kaynak cüzdan KALICI olarak eksik ve defterde iz yok; düz bir
+      // "başarısız" mesajı bunu kullanıcıya söylemiyordu.
+      expect(outcome.result, TransferResult.refundFailed);
     });
 
     test('aynı cüzdana transfer reddedilir', () async {
-      final result = await service.transfer(
+      final outcome = await service.transfer(
         from: wallet('a'),
         to: wallet('a'),
         amount: 100,
       );
-      expect(result, TransferResult.failed);
+      expect(outcome.result, TransferResult.failed);
       verifyZeroInteractions(metrics);
+    });
+
+    test('TARİH verilirse iki bacak da o güne yazılır', () async {
+      // Geçmişte yapılmış bir para taşımasında iki bacak da bugüne düşüyordu:
+      // bakiye doğru çıkar ama her iki cüzdanın DÖNEM defteri yanlış aya
+      // yazılır ve hata sessiz kalırdı.
+      stubLegs();
+      final when_ = DateTime(2026, 3, 5);
+
+      await service.transfer(
+        from: wallet('a'),
+        to: wallet('b'),
+        amount: 250,
+        date: when_,
+      );
+
+      expect(capturedFor('a').single.date, when_);
+      expect(capturedFor('b').single.date, when_);
+    });
+
+    test('tarih verilmezse null taşınır (defter "şimdi"ye yazar)', () async {
+      stubLegs();
+      await service.transfer(from: wallet('a'), to: wallet('b'), amount: 250);
+      expect(capturedFor('a').single.date, isNull);
+    });
+  });
+
+  group('undoTransfer', () {
+    test('iki bacağı da siler ve İKİ cüzdanı senkronlar', () async {
+      // Transferin iki bacağı da sistem işlemi olduğu için UI'dan silinemez
+      // ve arkasında düzenlenebilir bir kayıt yok: bu eylem olmadan yanlış
+      // girilen bir transferi düzeltmenin hiçbir yolu yoktu.
+      stubLegs();
+      when(() => metrics.removeCashMovements(
+            transactionIds: any(named: 'transactionIds'),
+            walletIds: any(named: 'walletIds'),
+          )).thenAnswer((_) async => true);
+
+      final outcome = await service.transfer(
+        from: wallet('a'),
+        to: wallet('b'),
+        amount: 250,
+      );
+      expect(outcome.canUndo, isTrue);
+
+      final ok = await service.undoTransfer(outcome);
+
+      expect(ok, isTrue);
+      verify(() => metrics.removeCashMovements(
+            transactionIds: ['out-1', 'in-1'],
+            walletIds: {'a', 'b'},
+          )).called(1);
+    });
+
+    test('geri alınamaz sonuçta deftere DOKUNMAZ', () async {
+      const outcome = TransferOutcome.failure(TransferResult.failed);
+      expect(await service.undoTransfer(outcome), isFalse);
+      verifyNever(() => metrics.removeCashMovements(
+            transactionIds: any(named: 'transactionIds'),
+            walletIds: any(named: 'walletIds'),
+          ));
     });
   });
 }

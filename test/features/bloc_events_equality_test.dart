@@ -338,12 +338,14 @@ void main() {
     });
 
     test('UpdateInvestmentEvent props', () {
+      final booking = DateTime(2026, 1, 15);
       final e1 = UpdateInvestmentEvent(
         investment: investment,
         userId: 'u1',
         walletId: 'w1',
         prevAmount: 5000,
         newAmount: 5500,
+        bookingDate: booking,
       );
       final e2 = UpdateInvestmentEvent(
         investment: investment,
@@ -351,9 +353,26 @@ void main() {
         walletId: 'w1',
         prevAmount: 5000,
         newAmount: 5500,
+        bookingDate: booking,
       );
       expect(e1, e2);
-      expect(e1.props, [investment, 'u1', 'w1']);
+      expect(e1.props, [investment, 'u1', 'w1', booking]);
+
+      // Tarih props'ta OLMAK ZORUNDA: aynı tutarı iki farklı döneme yazan
+      // iki olay eşit sayılırsa, bloc'un olay ayıklaması (ve testlerin
+      // `expect`i) ikisini birbirinden ayıramaz.
+      expect(
+        e1 ==
+            UpdateInvestmentEvent(
+              investment: investment,
+              userId: 'u1',
+              walletId: 'w1',
+              prevAmount: 5000,
+              newAmount: 5500,
+              bookingDate: DateTime(2026, 7, 20),
+            ),
+        isFalse,
+      );
     });
 
     test('RefreshPricesEvent props', () {
