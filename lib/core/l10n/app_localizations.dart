@@ -7217,6 +7217,12 @@ abstract class AppLocalizations {
   /// **'Bütçe durumu'**
   String get reportBudgetSummaryTitle;
 
+  /// No description provided for @reportBudgetMonthlyOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçeler aylıktır — bütçe durumu için tek bir ayı kapsayan dönem seçin'**
+  String get reportBudgetMonthlyOnly;
+
   /// No description provided for @reportBudgetExceededCount.
   ///
   /// In tr, this message translates to:

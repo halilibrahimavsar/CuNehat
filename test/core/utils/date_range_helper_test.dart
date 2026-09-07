@@ -92,4 +92,92 @@ void main() {
       );
     });
   });
+
+  group('isSingleCalendarMonth', () {
+    // Bütçe limitleri AYLIKTIR. Bir aralığın harcamasını aylık limite bölmek
+    // yalnız aralık bir ay olduğunda anlamlı: "Bu Yıl" seçiliyken rapor
+    // 12 aylık harcamayı 1 aylık limite bölüp "%340 aşıldı" derken Bütçeler
+    // sayfası aynı anda "%28" diyordu.
+    test('ayın 1inden son gününe → true', () {
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 9, 1),
+          end: DateTime(2026, 9, 30),
+        )),
+        isTrue,
+      );
+    });
+
+    test('şubat (28 gün) ve artık şubat (29 gün) → true', () {
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 2, 1),
+          end: DateTime(2026, 2, 28),
+        )),
+        isTrue,
+      );
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2028, 2, 1),
+          end: DateTime(2028, 2, 29),
+        )),
+        isTrue,
+      );
+    });
+
+    test('GEÇMİŞ bir ay da kabul edilir — kıyas hâlâ aylık', () {
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 8, 1),
+          end: DateTime(2026, 8, 31),
+        )),
+        isTrue,
+      );
+    });
+
+    test('yıl aralığı → false', () {
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 1, 1),
+          end: DateTime(2026, 12, 31),
+        )),
+        isFalse,
+      );
+    });
+
+    test('ayın ortasında başlayan/biten aralıklar → false', () {
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 9, 2),
+          end: DateTime(2026, 9, 30),
+        )),
+        isFalse,
+      );
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 9, 1),
+          end: DateTime(2026, 9, 29),
+        )),
+        isFalse,
+      );
+      // İki ayı kapsayan 30 günlük pencere de ay DEĞİLDİR.
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 8, 15),
+          end: DateTime(2026, 9, 14),
+        )),
+        isFalse,
+      );
+    });
+
+    test('uçlardaki saat bilgisi kararı bozmaz', () {
+      expect(
+        DateRangeHelper.isSingleCalendarMonth(DateTimeRange(
+          start: DateTime(2026, 9, 1, 8, 30),
+          end: DateTime(2026, 9, 30, 23, 59, 59),
+        )),
+        isTrue,
+      );
+    });
+  });
 }

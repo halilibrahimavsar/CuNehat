@@ -4081,6 +4081,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportBudgetSummaryTitle => 'Bütçe durumu';
 
   @override
+  String get reportBudgetMonthlyOnly =>
+      'Bütçeler aylıktır — bütçe durumu için tek bir ayı kapsayan dönem seçin';
+
+  @override
   String reportBudgetExceededCount(Object count, Object total) {
     return '$count bütçeden $total tanesi aşıldı';
   }

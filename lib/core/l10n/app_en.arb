@@ -2186,6 +2186,7 @@
     }
   },
   "reportBudgetSummaryTitle": "Budget status",
+  "reportBudgetMonthlyOnly": "Budgets are monthly — pick a period covering a single month to see budget status",
   "reportBudgetExceededCount": "{total} of {count} budgets exceeded",
   "@reportBudgetExceededCount": {
     "placeholders": {

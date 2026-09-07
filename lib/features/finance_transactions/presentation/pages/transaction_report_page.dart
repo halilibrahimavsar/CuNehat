@@ -465,6 +465,12 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     List<CategoryData> expenseFull,
   ) {
     if (_budgets.isEmpty) return const [];
+    // Limit AYLIK. Aralık bir takvim ayı değilse harcama/limit oranı
+    // boyutsal olarak yanlıştır: "Bu Yıl"da 12 aylık harcama 1 aylık limite
+    // bölünüyor ve rapor "%340 aşıldı" derken Bütçeler sayfası aynı anda
+    // "%28" diyordu. Kıyas yapılamıyorsa RAKAM üretilmez; kart bunun yerine
+    // sebebini söyler (bkz. `ReportBudgetSummaryCard.monthScoped`).
+    if (!DateRangeHelper.isSingleCalendarMonth(_range)) return const [];
 
     final spentByTag = <String, double>{};
     for (final root in expenseFull) {
@@ -767,13 +773,19 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                         // dağılımı 1507dp'de, iki ekran aşağıdaydı. Sıra artık
                         // kullanıcının sorduğu sırayla: ne oldu → nereye gitti →
                         // bütçeyi aştım mı → eğilim ne → tam olarak nereye.
-                        if (derived.budgetStatuses.isNotEmpty) ...[
+                        // Koşul BÜTÇE VARLIĞINA bakar, durum listesine değil:
+                        // aralık bir ay olmadığında liste boş döner ama bölüm
+                        // kaybolmamalı — kullanıcı bütçelerini silinmiş sanır.
+                        // Kart o durumda sebebini yazar.
+                        if (_budgets.isNotEmpty) ...[
                           const SizedBox(height: 24),
                           ReportSectionHeader(
                               title: context.l10n.reportBudgetSummaryTitle),
                           const SizedBox(height: 12),
                           ReportBudgetSummaryCard(
                             statuses: derived.budgetStatuses,
+                            monthScoped:
+                                DateRangeHelper.isSingleCalendarMonth(_range),
                             onTap: _openBudgetCategory,
                           ),
                         ],

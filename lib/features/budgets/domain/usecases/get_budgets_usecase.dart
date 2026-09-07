@@ -8,6 +8,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/category_e
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/transaction_repository.dart';
+import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
@@ -66,8 +67,17 @@ class GetBudgetsUsecase {
               // girer (bkz. BudgetEntity.isFilled, BudgetAlertService) — bu
               // yüzden ham fold artığı burada kuruşa yuvarlanarak kesilir.
               final subtree = subtreeIds(budget.categoryId, categories);
+              // Evren kuralı BURADA da geçerli: kuplaj hareketleri (transfer,
+              // borç ödemesi, yatırım alımı) harcama değildir. Bugün bunlar
+              // yalnız `tag`leri Türkçe sabit, kategori kimlikleri ise UUID
+              // olduğu için eşleşmiyor — yani koruma bir AD ÇAKIŞMASI
+              // guard'ına (`CashMovementTags.isReserved`) yaslanıyordu, evren
+              // kuralına değil. Bütçe anahtarı bir gün ada dönerse (eski
+              // kayıtlarda `categoryId` adın kendisiydi) o çakışma harcamayı
+              // sessizce şişirirdi.
               final spent = roundToCents(transactions
-                  .where((t) => subtree.contains(t.tag))
+                  .where(
+                      (t) => isSpendingMovement(t) && subtree.contains(t.tag))
                   .fold(0.0, (sum, t) => sum + t.amount));
 
               return budget.copyWith(spentAmount: spent);

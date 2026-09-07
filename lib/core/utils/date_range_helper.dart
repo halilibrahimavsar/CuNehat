@@ -89,6 +89,22 @@ class DateRangeHelper {
             _isSameDay(range.end, endOfYear));
   }
 
+  /// [range] TAM olarak bir takvim ayını mı kaplıyor (ayın 1'i → ayın son
+  /// günü)? [isBudgetPeriod]'dan farkı: o "içinde bulunulan dönem mi" diye
+  /// sorar ve "Bu Yıl"ı da kabul eder; bu ise "bir AY mı" diye sorar ve
+  /// "Geçen Ay"ı da kabul eder.
+  ///
+  /// Bütçe limitleri AYLIKTIR (bkz. `BudgetEntity.limitAmount`). Bir aralığın
+  /// harcamasını aylık limite bölmek yalnız aralık bir ay olduğunda anlamlı:
+  /// "Bu Yıl" seçiliyken rapor 12 aylık harcamayı 1 aylık limite bölüp
+  /// "%340 aşıldı" diyordu — aynı anda Bütçeler sayfası "%28" diyordu.
+  static bool isSingleCalendarMonth(DateTimeRange range) {
+    final start = range.start;
+    if (start.day != 1) return false;
+    final lastDay = DateTime(start.year, start.month + 1, 0);
+    return _isSameDay(range.end, lastDay);
+  }
+
   /// Aralık uçları seçiciden saat bilgisiyle gelebilir; karşılaştırma gün
   /// bazındadır.
   static bool _isSameDay(DateTime a, DateTime b) =>

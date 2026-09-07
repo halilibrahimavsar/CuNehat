@@ -1,3 +1,4 @@
+import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -284,6 +285,54 @@ void main() {
 
       expect(slices.last.isOther, isTrue);
       expect(slices.last.transactions, contains(tx));
+    });
+  });
+
+  group('budgetProgressFor — aylık limit, aylık pencere', () {
+    // Limit AYLIKTIR. Aralık bir takvim ayı değilken "dönem harcaması /
+    // aylık limit" boyutsal olarak yanlış: "Bu Yıl"da 12 ayın harcaması
+    // 1 aylık limite bölünüyor ve rapor "%340 aşıldı" derken Bütçeler
+    // sayfası aynı anda "%28" diyordu. Kıyas yapılamıyorsa çubuk hiç
+    // çizilmez — yanlış bir çubuk, çubuğun yokluğundan kötüdür.
+    ReportCategoryDataBuilder builderFor(DateTimeRange range) =>
+        ReportCategoryDataBuilder(
+          range: range,
+          budgets: const [
+            BudgetEntity(walletId: 'w', categoryId: 'm', limitAmount: 1000),
+          ],
+          otherCategoryLabel: 'Diğer',
+          includeSystemMovements: false,
+        );
+
+    test('aralık bir takvim ayıyken oran ÜRETİLİR', () {
+      final progress = builderFor(DateTimeRange(
+        start: DateTime(2026, 9, 1),
+        end: DateTime(2026, 9, 30),
+      )).budgetProgressFor('m', 500);
+
+      expect(progress, isNotNull);
+      expect(progress!.progress, 0.5);
+      expect(progress.limit, 1000);
+      expect(progress.isExceeded, isFalse);
+    });
+
+    test('yıl aralığında oran ÜRETİLMEZ (null)', () {
+      final progress = builderFor(DateTimeRange(
+        start: DateTime(2026, 1, 1),
+        end: DateTime(2026, 12, 31),
+      )).budgetProgressFor('m', 12000);
+
+      expect(progress, isNull,
+          reason: '12 aylık harcama 1 aylık limite bölündü');
+    });
+
+    test('ay olmayan kısa pencerede de üretilmez', () {
+      final progress = builderFor(DateTimeRange(
+        start: DateTime(2026, 9, 1),
+        end: DateTime(2026, 9, 7),
+      )).budgetProgressFor('m', 300);
+
+      expect(progress, isNull);
     });
   });
 }

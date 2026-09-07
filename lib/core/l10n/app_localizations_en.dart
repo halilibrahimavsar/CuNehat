@@ -4080,6 +4080,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportBudgetSummaryTitle => 'Budget status';
 
   @override
+  String get reportBudgetMonthlyOnly =>
+      'Budgets are monthly — pick a period covering a single month to see budget status';
+
+  @override
   String reportBudgetExceededCount(Object count, Object total) {
     return '$total of $count budgets exceeded';
   }

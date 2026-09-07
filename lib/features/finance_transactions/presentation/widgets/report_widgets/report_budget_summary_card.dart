@@ -22,10 +22,19 @@ class ReportBudgetSummaryCard extends StatelessWidget {
 
   final void Function(BudgetStatus status) onTap;
 
+  /// Seçili aralık tam bir takvim ayı mı?
+  ///
+  /// Bütçe limitleri aylıktır; aralık bir ay değilken oran üretmek boyutsal
+  /// olarak yanlıştır. `false` iken kart RAKAM göstermez, sebebini söyler —
+  /// bölümü tamamen gizlemek kullanıcıya bütçelerini kaybettirmiş gibi
+  /// görünüyordu.
+  final bool monthScoped;
+
   const ReportBudgetSummaryCard({
     super.key,
     required this.statuses,
     required this.onTap,
+    this.monthScoped = true,
   });
 
   /// En fazla kaç satır listelenir. Tamamı zaten Bütçeler sayfasında.
@@ -33,10 +42,12 @@ class ReportBudgetSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (statuses.isEmpty) return const SizedBox.shrink();
-
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+
+    if (!monthScoped) return _monthlyOnlyNote(context, theme, scheme);
+    if (statuses.isEmpty) return const SizedBox.shrink();
+
     final money = MoneyWriter.of(context);
 
     final exceeded = statuses.where((s) => s.isExceeded).length;
@@ -113,6 +124,32 @@ class ReportBudgetSummaryCard extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  /// Aralık bir takvim ayı değil: oran yerine SEBEP.
+  Widget _monthlyOnlyNote(
+      BuildContext context, ThemeData theme, ColorScheme scheme) {
+    return AppCard(
+      section: AppSection.transactions,
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.calendar_month_rounded,
+              size: 18, color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.reportBudgetMonthlyOnly,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.3,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -2207,6 +2207,7 @@
     }
   },
   "reportBudgetSummaryTitle": "Bütçe durumu",
+  "reportBudgetMonthlyOnly": "Bütçeler aylıktır — bütçe durumu için tek bir ayı kapsayan dönem seçin",
   "reportBudgetExceededCount": "{count} bütçeden {total} tanesi aşıldı",
   "@reportBudgetExceededCount": {
     "placeholders": {

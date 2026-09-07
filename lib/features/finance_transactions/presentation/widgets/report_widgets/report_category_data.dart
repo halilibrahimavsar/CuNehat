@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/date_range_helper.dart';
 import 'package:cunehat/features/budgets/domain/entities/budget_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
@@ -555,6 +556,11 @@ class ReportCategoryDataBuilder {
     String tag,
     double spentInRange,
   ) {
+    // Limit AYLIK; aralık bir ay değilse "dönem harcaması / aylık limit"
+    // boyutsal olarak yanlıştır ("Bu Yıl"da 12 ayın harcaması 1 aylık limite
+    // bölünüyordu). Kıyas yapılamıyorsa çubuk hiç çizilmez — yanlış bir
+    // çubuk, çubuğun yokluğundan kötüdür.
+    if (!DateRangeHelper.isSingleCalendarMonth(range)) return null;
     for (final b in budgets) {
       if (b.categoryId == tag) {
         if (b.limitAmount <= 0) return null;

@@ -249,6 +249,58 @@ void main() {
           )).called(1);
     });
 
+    test('kuplaj hareketi bütçe harcamasına SAYILMAZ', () async {
+      // Bugün bu koruma bir AD ÇAKIŞMASI guard'ına yaslanıyordu: sistem
+      // etiketleri Türkçe sabit ("Transfer"), kategori kimlikleri ise UUID
+      // olduğu için eşleşmiyorlardı. Bütçe anahtarı bir gün ada dönerse
+      // (eski kayıtlarda `categoryId` adın kendisiydi) transferin tutarı
+      // sessizce bütçeyi doldururdu. Kural artık evrenden geliyor.
+      final now = DateTime.now();
+
+      TransactionEntity expense(String id, String tag, double amount,
+              {bool isSystem = false}) =>
+          TransactionEntity(
+            id: id,
+            userId: 'user_123',
+            walletId: 'wallet_123',
+            title: id,
+            tag: tag,
+            amount: amount,
+            date: now,
+            type: TransactionTypeModel.expense,
+            isSystem: isSystem,
+          );
+
+      when(() => mockCategoryRepo.getAllCategories()).thenAnswer((_) async => [
+            const CategoryEntity(
+                id: 'm', name: 'Market', iconName: 'x', isExpense: true),
+          ]);
+      when(() => mockBudgetRepo.getBudgets('wallet_123')).thenAnswer(
+        (_) async => const Right([
+          BudgetEntity(
+              walletId: 'wallet_123', categoryId: 'm', limitAmount: 500),
+        ]),
+      );
+      when(() => mockTransactionsRepo.getTransactions(
+            userId: any(named: 'userId'),
+            walletId: any(named: 'walletId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => Right([
+            expense('t1', 'm', 400),
+            // Etiketi kategoriyle ÇAKIŞAN bir kuplaj hareketi.
+            expense('t2', 'm', 20000, isSystem: true),
+          ]));
+
+      final result = await getUseCase('user_123', 'wallet_123');
+      final budgets = result.getOrElse(() => []);
+
+      expect(budgets.single.spentAmount, 400,
+          reason: 'kuplaj hareketi bütçeyi doldurdu');
+      expect(budgets.single.isExceeded, isFalse);
+    });
+
     test('should return Left(Failure) when getBudgets fails', () async {
       const failure = ServerFailure('DB error');
       when(() => mockBudgetRepo.getBudgets('wallet_123'))
