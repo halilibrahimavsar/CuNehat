@@ -8,8 +8,9 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+4` (**3 Eyl'de kapalı teste yüklendi**;
-sıradaki kod `5`, henüz derlenmedi)
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+5` (**hazırlanıyor, henüz
+yüklenmedi**). Testerların elindeki sürüm hâlâ `1.0.0+4` — 3 Eyl'de yüklendi,
+etiketi `v1.0.0+4`.
 
 > **Sürüm kodları kalıcı tüketilir.** Bir kod herhangi bir kanala bir kez
 > yüklendiyse, o sürüm silinse/atılsa bile geri gelmez. `1` yakıldı (ilk
@@ -28,7 +29,7 @@ sıradaki kod `5`, henüz derlenmedi)
 
 ---
 
-## 📍 Durum panosu — son ölçüm 6 Eylül 2026
+## 📍 Durum panosu — son ölçüm 8 Eylül 2026
 
 | Adım | Ne | Durum |
 |---|---|---|
@@ -49,8 +50,17 @@ sıradaki kod `5`, henüz derlenmedi)
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
 | 12 | Production | ⬜ |
 
-**Kod tarafı sağlık (8 Eyl 2026 ölçümü):** `flutter test` **2342/2342**,
-`dart analyze` **0 sorun**.
+**Kod tarafı sağlık (8 Eyl 2026, `+5` hazırlığı sonrası ölçüm):**
+`flutter test` **2413/2413**, `dart analyze` **0 sorun**.
+
+> `+5` turunda eklenen 11 test, "geriye uyumluluk gerçekten çalışıyor mu"
+> sorusunu ölçüyor: `legacy_box_upgrade_test.dart` eski biçimli kaydı GERÇEK
+> diske yazıp güncel kayıtla `openBox` ediyor (önceki testler `read()`i sahte
+> bir `BinaryReader` ile çağırıyordu, kutu açma yolundan geçmiyordu);
+> `adapter_registration_test.dart` ise kayıt sırasını ve kayıt TİPİNİ
+> kilitliyor. İkincisi hemen işe yaradı: adapter'ları düz bir
+> `List<TypeAdapter<dynamic>>`'e taşıyan bir refactor `T`'yi silip Hive'ın
+> bütün yazma isteklerini tek adaptere yönlendiriyordu; test yakaladı.
 
 > **6 Eyl'deki "2235/2235" ölçümü bir gün sonra kendiliğinden kırıldı.** 7 Eyl'de
 > aynı kodda 4 test kırmızıydı (2231/4 — toplam aynı, yani test eklenip
@@ -63,10 +73,12 @@ sıradaki kod `5`, henüz derlenmedi)
 > — bu pano her ölçümde yeniden çalıştırılarak tazelenmeli.
 
 **`+4` sonrası yüklenmemiş iş:** `fix/lock-picker-and-category-l10n` dalında
-**7 commit** — yedek şeması **v10** (migrasyon zinciri), cüzdana göre kategori
-görünürlüğü, kategorilerin kendi sayfası, kategori adlarının anahtarla
-yerelleşmesi, sistem seçicisi × PIN kilidi düzeltmesi. Bunlar `+5` ile gider.
-Üzerine **para doğruluğu denetimi** turu eklendi (7–8 Eyl, 9 commit).
+**17 commit / 222 dosya / +15.685 satır**, hepsi `+5` ile gidiyor:
+yedek şeması **v10** (migrasyon zinciri), cüzdana göre kategori görünürlüğü,
+kategorilerin kendi sayfası, kategori adlarının anahtarla yerelleşmesi,
+sistem seçicisi × PIN kilidi düzeltmesi; üzerine **para doğruluğu denetimi**
+turu (7–8 Eyl, 9 commit), **PIN kurtarma + çift biyometrik** (`8c3b081`),
+**edge-to-edge yerleşim** (`96a0848`) ve birikim arayüzü turu.
 Bulunan ve düzeltilenlerin özeti:
 
 | # | Ne | Kullanıcıya etkisi |

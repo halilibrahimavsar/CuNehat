@@ -417,6 +417,60 @@ Accessibility: improved screen reader support.
 
 ---
 
+## Sürüm notları — 1.0.0 (versionCode 5)
+
+Kapalı testin 12. gününde çıkan üçüncü güncelleme. Kapsam: `v1.0.0+4..HEAD`
+(17 commit) — cüzdana göre kategori görünürlüğü, kategorilerin kendi sayfası,
+kategori adlarının anahtarla yerelleşmesi, PIN kurtarma + çift biyometrik
+düzeltmesi, edge-to-edge yerleşim ve 11 maddelik para doğruluğu turu.
+
+> ⚠️ **Bu turda şema DEĞİŞTİ:** yedek `schemaVersion` **9 → 10**
+> (`WalletModel` alan 14 = `categoryIds`). Sürüm kapısı sıkı eşitlikten
+> **migrasyon zincirine** döndü: testerların `+4` ile aldığı v9 yedekleri
+> `migrateBackup` ile v10'a yükseltilip geri yükleniyor
+> (`oldestSupportedBackupVersion = 9`). Hive tarafında eski kayıtlar alan 14'ü
+> taşımaz → `null` = "kürasyon yok, hepsi görünür", yani mevcut cüzdanlarda
+> davranış değişmiyor. Kullanıcıya duyurulacak bir şey olmadığı için sürüm
+> notlarında yer almıyor.
+
+> Kapsamın tamamı 500 karaktere sığmıyor; notlar testerın EKRANDA göreceği
+> değişikliklere göre yazıldı. Sertleştirme ve test işleri (eski-kayıt
+> adapter'ları, kayıt sırası kilidi) anılmıyor.
+
+### Türkçe (469 karakter, sınır 500)
+
+```
+Kategoriler artık senin
+• Yan menüde kendi sayfası var; her cüzdan yalnız kendi kategorilerini gösteriyor.
+• Kategori adları uygulamanın diline göre kuruluyor.
+
+Şifreni unutursan
+• PIN kurtarma eklendi: cihaz kilidinle aç ya da 24 saat gecikmeli sıfırlama iste.
+• Biyometrik artık iki kez sormuyor; dosya seçerken kilit ekranı çıkmıyor.
+
+Rakamlar
+• Transferler gider sayılmıyor; rapor, bütçe ve içgörü aynı sonucu veriyor.
+• Çoklu cüzdan ve döviz toplamları düzeltildi.
+```
+
+### English (485 karakter, sınır 500)
+
+```
+Categories are yours now
+• Their own page in the side menu; each wallet shows only its own set.
+• Category names are created in your app language.
+
+If you forget your PIN
+• PIN recovery added: unlock with your device lock, or request a 24-hour delayed reset.
+• Biometrics no longer asks twice; the lock screen no longer appears while picking a file.
+
+Numbers
+• Transfers no longer count as spending — report, budget and insights agree.
+• Multi-wallet and foreign-currency totals fixed.
+```
+
+---
+
 ## Ekran görüntüleri — ✅ ÜRETİLDİ (26 Ağu 2026)
 
 **8 görsel hazır:** `docs/store/screenshots/` (`01_…` – `08_…`). Ham cihaz
