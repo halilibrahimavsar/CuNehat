@@ -49,7 +49,7 @@ sıradaki kod `5`, henüz derlenmedi)
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
 | 12 | Production | ⬜ |
 
-**Kod tarafı sağlık (7 Eyl 2026 ölçümü):** `flutter test` **2236/2236**,
+**Kod tarafı sağlık (8 Eyl 2026 ölçümü):** `flutter test` **2342/2342**,
 `dart analyze` **0 sorun**.
 
 > **6 Eyl'deki "2235/2235" ölçümü bir gün sonra kendiliğinden kırıldı.** 7 Eyl'de
@@ -66,8 +66,27 @@ sıradaki kod `5`, henüz derlenmedi)
 **7 commit** — yedek şeması **v10** (migrasyon zinciri), cüzdana göre kategori
 görünürlüğü, kategorilerin kendi sayfası, kategori adlarının anahtarla
 yerelleşmesi, sistem seçicisi × PIN kilidi düzeltmesi. Bunlar `+5` ile gider.
-Üzerine 7 Eyl'de başlayan **para doğruluğu denetimi** turu ekleniyor (gün
-şeridi testlerinin zaman bağımlılığı ile başladı).
+Üzerine **para doğruluğu denetimi** turu eklendi (7–8 Eyl, 9 commit).
+Bulunan ve düzeltilenlerin özeti:
+
+| # | Ne | Kullanıcıya etkisi |
+|---|---|---|
+| 1 | Gün şeridi testleri duvar saatine bağlıydı | Suite kendiliğinden kırmızıya döndü (2231/4) |
+| 2 | Ana ekran özeti + gün şeridi kuplajı gider sayıyordu | 20.000 ₺ transfer "gider" yazıyor, rapor 0 diyordu |
+| 3 | Rapor aylık bütçe limitini dönem harcamasıyla kıyaslıyordu | "Bu Yıl"da %340 aşıldı ↔ Bütçeler sayfası %28 |
+| 4 | Rapor/İçgörü yabancı cüzdanı sayıyordu | Cüzdan geçişinde yanlış rakam, yanlış sembol |
+| 5 | Yükümlülükler tüm cüzdanları/birimleri topluyordu | USD kira, TRY netinden ₺ olarak düşülüyordu |
+| 6 | Canlı fiyatta `currency` yoksa sessizce TRY | Portföy değeri ~40 kat düşük, kalıcı |
+| 7 | Kuplaj ters kayıt tarihleri asimetrikti | Bakiye doğru ama dönem raporu bozuk |
+| 8 | Transferde tarih yok, geri alma yok, sessiz kayıp | Yanlış transfer DÜZELTİLEMİYORDU |
+| 9 | Cüzdan silme temizliği bloc state'ine bağlıydı | Yetim işlem/borç/yatırım/hedef |
+| 10 | Geri yükleme bakiyeyi yeniden türetmiyordu | Pasif cüzdan yanlış bakiyede kalıyordu |
+| 11 | Eski Hive kaydı 5 modelde TypeError fırlatıyordu | Kutu açılamaz → uygulama açılmaz |
+
+**Kalan bilinen yaklaşıklık (bilerek ertelendi):** yatırım KATKILARI tek tek
+tarihlenmiyor (entity yalnız kümülatif `amount` tutar), bu yüzden çok
+katkılı bir kaydın silinmesi katkı ayında tersi alınmamış bir gider bırakır.
+Düzeltmek şema değişikliği ister; gerekçe `investment_bloc.dart`'ta yazılı.
 
 **Cihaz duman testi hâlâ yapılmadı** (Adım 10'daki 16 madde). 6 Eyl'de
 emülatörde (`Medium_Phone_API_35`, Android 15) demo veriyle uçtan uca
