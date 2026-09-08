@@ -29,7 +29,7 @@ etiketi `v1.0.0+4`.
 
 ---
 
-## 📍 Durum panosu — son ölçüm 8 Eylül 2026
+## 📍 Durum panosu — son ölçüm 9 Eylül 2026
 
 | Adım | Ne | Durum |
 |---|---|---|
@@ -42,7 +42,7 @@ etiketi `v1.0.0+4`.
 | 7 | Data Safety formu | ✅ Dolduruldu |
 | 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
-| 8c | **Mağaza girişi (metin + ikon + görseller)** | ✅ tr-TR + en-US girildi. Mağaza adı **`CuNehat`** olarak KALACAK — bilinçli karar (30 Ağu). Uygulama içi/görsel taraf `ÇuNehat`; fark biliniyor ve kabul edildi, bkz. aşağıdaki not |
+| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi, ama **8 ekran görüntüsünün TAMAMI 9 Eyl'de yeniden çekildi** (`docs/store/screenshots/`) — `+5` ile birlikte Console'a yeniden yüklenmeli, bkz. `store-listing.md` → *Set 9 Eylül 2026'da yeniden çekildi*. Mağaza adı **`CuNehat`** olarak KALACAK — bilinçli karar (30 Ağu). Uygulama içi/görsel taraf `ÇuNehat`; fark biliniyor ve kabul edildi, bkz. aşağıdaki not |
 | 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
 | — | **Cihaz duman testi** | 🟡 **KISMEN (8 Eyl)** — emülatörde (API 36, 3 tuşlu gezinme) 8 madde ✔, ayrıca **`+4` → `+5` yerinde yükseltme provası geçti** (10 kutu açıldı, veri yerinde, v9 yedek migrasyonla yüklendi, `+5` v10 yazıyor). Kalan 8 madde imzaya/donanıma bağlı → yüklemeden sonra telefonda. Bkz. Adım 10 |
 | 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
@@ -50,8 +50,16 @@ etiketi `v1.0.0+4`.
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
 | 12 | Production | ⬜ |
 
-**Kod tarafı sağlık (8 Eyl 2026, `+5` hazırlığı sonrası ölçüm):**
+**Kod tarafı sağlık (9 Eyl 2026, yükleme öncesi ölçüm):**
 `flutter test` **2413/2413**, `dart analyze` **0 sorun**.
+
+> **Suite bir gün sonra yine kendiliğinden kırılmıştı (2412/1).** 8 Eyl'de yeşil olan
+> `transaction_page_test.dart` → "ay değişince önceki günün vurgusu düşer" 9 Eyl'de
+> `Found 0 widgets with text "3"` ile düştü: gün şeridi açılışta BUGÜNE ortalanıyor ve
+> tembel çiziyor, ayın 3'ü çapa 9'a kayınca ağaçtan düştü. Aynı sınıfın 7 Eyl'deki
+> vakasında (bkz. aşağıdaki not) şeridin KENDİ testleri düzeltilmişti; bu test sayfanın
+> testiydi ve gözden kaçmıştı. Düzeltme aynı kalıp: şeridi önce BAŞA kaydır, sonra ara.
+> **Ders tekrar ediyor: bu panodaki test sayısı, o gün çalıştırılmadıysa bir iddia değildir.**
 
 > `+5` turunda eklenen 11 test, "geriye uyumluluk gerçekten çalışıyor mu"
 > sorusunu ölçüyor: `legacy_box_upgrade_test.dart` eski biçimli kaydı GERÇEK
@@ -720,6 +728,31 @@ yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 > ile açıldı (migrasyon zinciri), `+5`'in ürettiği yedek **v10** ve cüzdanda
 > `categoryIds` anahtarı var.
 
+> **✅ İKİNCİ EMÜLATÖR TURU — 9 Eyl 2026, TEMİZ KURULUM.** Yukarıdaki tur
+> "eski kurulumun üzerine yükseltme"yi ölçüyordu; bu tur **sıfırdan kurulan
+> kullanıcıyı** ölçtü: `pm clear` → release APK (aynı `+5` kodu, HEAD'den
+> derlendi) → gizlilik onamı → bildirim izni → cüzdansız drawer → Ayarlar →
+> "Tam Yedeği Cihazdan Geri Yükle" → v10 demo yedeği. Sonuç: 3 cüzdan,
+> 20+58 işlem, 3 hedef, 2 borç, 6 bütçe, 7 şablon eksiksiz yüklendi;
+> bakiye `105.201,30 ₺` üreteçle birebir. Ardından **sekiz ekranın tamamı
+> elle gezildi** (defter, rapor, birikim, borç, bütçe, düzenli işlemler,
+> banka ekstresi, ayarlar) ve vitrin kareleri bu turda çekildi.
+>
+> Bu turda ayrıca ölçülenler:
+> * **Ekstre içe aktarma uçtan uca çalışıyor** (yalnız "dosya seçici" yolu):
+>   157 satırlık CSV okundu, sütunlar otomatik eşleşti, **157/157 kategorili**,
+>   "Aritmetik olarak doğrulandı · Bakiye zinciri 156/156" yeşil. Ekleme
+>   YAPILMADI (defter kirlenmesin diye geri çıkıldı).
+> * **Ana ekran ↔ rapor mutabakatı ikinci veriyle de tuttu:** Ağustos için ikisi
+>   de gider `59.375,53 ₺`, net `40.374,47 ₺`.
+> * **Edge-to-edge** düzeltmesi görünür durumda: düzenli işlemler listesinin son
+>   kartı artık gezinme çubuğunun üstünde bitiyor.
+> * Ayarlar'da **"Bildirim duman testi (yalnız debug)" kartı yok** — release
+>   derlemesinin doğru davranışı.
+>
+> ⚠️ Bu tur da **yandan yüklenmiş** imzayla koştu; Play imzasına bağlı maddeler
+> ([ ] kalanlar) hâlâ telefonda tekrarlanacak.
+
 - [x] Açılış, splash, ikon ana ekranda doğru görünüyor
 - [x] **Edge-to-edge:** ölçülen üç yüzey temiz — güvenlik ekranının son kartı
       ("PIN'imi unutursam") çubuğun üstünde bitiyor, kategoriler listesinin son
@@ -749,7 +782,9 @@ yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 - [ ] Drive yedekle → geri yükle turu: veri kaybı / yanlış bakiye yok *(aynı sebep)*
 - [ ] Ayarlar → Yedekleme → Yedeği Sil çalışıyor
 - [ ] Ayarlar → Gizlilik & Veri → Tüm Veriyi Sil → onay → sıfır durum
-- [ ] Banka ekstresi içe aktarma: dosya seçiciden **ve** paylaş menüsünden
+- [~] Banka ekstresi içe aktarma: **dosya seçici yolu 9 Eyl'de emülatörde ölçüldü**
+      (157/157 kategorili, bakiye zinciri 156/156); **paylaş menüsü yolu** hâlâ
+      ölçülmedi
 - [ ] Fiş fotoğrafı ekleme + OCR ön-doldurma *(emülatörde kamera yok)*
 - [ ] Uçak modunda: canlı fiyat ve kur ekranları **kilitlenmeden** hata veriyor
 - [ ] Cihazı yeniden başlat → planlı hatırlatmalar hâlâ geliyor

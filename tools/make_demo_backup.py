@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mağaza ekran görüntüleri için SAHTE veri yedeği üretir (şema v9).
+"""Mağaza ekran görüntüleri için SAHTE veri yedeği üretir (şema v10).
 
 Neden: Play listelemesinde gerçek kişisel finans verisi gösterilmemeli, ama
 3 işlemlik boş bir liste de "kimse kullanmıyor" izlenimi verir. Bu betik
@@ -414,7 +414,10 @@ def build():
         {"id": g_araba, "userId": USER, "walletId": w_main, "name": "Yeni Araba",
          "targetAmount": 60000.0, "category": "araba", "color": 0xFF3F51B5,
          "createdAt": iso(months[1] + timedelta(days=2), 10)},
-        {"id": g_acil, "userId": USER, "walletId": w_main, "name": "Acil Fon",
+        # Ad kategoriyle AYNI olmamalı: kart artık kategori adını da yazıyor
+        # (`GoalCategory.displayLabel`, `5270587`), "Acil Fon / Acil Fon"
+        # vitrin karesinde kopyala-yapıştır izlenimi veriyordu.
+        {"id": g_acil, "userId": USER, "walletId": w_main, "name": "Yastık Altı",
          "targetAmount": 12000.0, "category": "acil_fon", "color": 0xFF4CAF50,
          "createdAt": iso(months[2] + timedelta(days=1), 10)},
     ]

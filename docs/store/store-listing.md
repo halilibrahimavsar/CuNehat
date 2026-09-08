@@ -471,7 +471,7 @@ Numbers
 
 ---
 
-## Ekran görüntüleri — ✅ ÜRETİLDİ (26 Ağu 2026)
+## Ekran görüntüleri — ✅ ÜRETİLDİ (son çekim 9 Eyl 2026)
 
 **8 görsel hazır:** `docs/store/screenshots/` (`01_…` – `08_…`). Ham cihaz
 çekimleri `tools/store_screenshots.py` ile 1080×1920 (tam 9:16) tuvale, marka
@@ -511,6 +511,46 @@ beyanla birebir uyuşmalı.
 | 6 | Borç/alacak | *Borcunu ve alacağını **unutma*** | Taksit ve vade · Kısmi ödeme · Gecikme faizi |
 | 7 | Düzenli işlemler | *Kira, maaş, abonelik — **kendiliğinden** gelsin* | Aylık şablonlar · Onay bekleyenler · Bildirim hatırlatması |
 | 8 | Gizlilik / yedek | *Verilerin **sende** kalır* | Google Drive yedeği · CSV dışa aktarım · Reklam yok |
+
+> **Set 9 Eylül 2026'da (`+5` yüklemesinden hemen önce) YENİDEN çekildi.**
+> Kural şu: kare/çip denetimi kod değişince değil **her yayın öncesi** yapılır.
+> Bu turda denetimin karşılığı çıktı — üç kare uygulamanın güncel hâlini
+> göstermiyordu:
+>
+> 1. **1. kare artık ÜRETİLEMEYEN rakamlar gösteriyordu.** 6 Eylül karesinde
+>    ana ekran özeti "↑103.750,00 ↓77.995,53 · net 25.754,47" diyordu; aynı
+>    veriyle bugünkü sürüm "↑99.750,00 ↓59.375,53 · net 40.374,47" ve altında
+>    "4 kuplaj hareketi (transfer, borç, yatırım) sayılmadı" satırı var
+>    (`59c9d63`). Yani vitrindeki rakam yalnız eski değil, **düzeltilmiş bir
+>    hatanın çıktısıydı**: transferler gider sayılıyordu. Ölçüm bunu kanıtlıyor
+>    — eski karedeki 59.375,53 rakamı zaten 3. karenin (rapor) gider toplamıydı;
+>    rapor doğruydu, defter değildi.
+> 2. **4. karedeki hedef kartları değişti** (`5270587`): kart artık kategori
+>    adını da yazıyor ("Ev / Ev Peşinatı"), yatırım kartı alım tarihi ve
+>    maliyeti taşıyor. Eski kare bu satırların hiçbirini göstermiyordu.
+> 3. **Geri kalan 5 kare de yeniden çekildi**, çünkü set içi tutarlılık
+>    kırılırdı: demo veri tarihe göreli üretiliyor ve üst çubuktaki bakiye
+>    6 Eylül'de 98.651,64 ₺, 9 Eylül'de 105.201,30 ₺. Karışık set, carousel'de
+>    yan yana iki farklı bakiye demek olurdu.
+>
+> Kompozisyon iyileştirmeleri: 4. kare artık "Hedeflerim" başlığıyla başlıyor
+> (eskisi kartın ortasından başlıyordu), 5. karede AppBar daraltılıp "1 bütçe
+> aşıldı" rozeti kadrajın en üstüne alındı, 8. karede bölüm başlığı yerine
+> doğrudan Drive kartı görünüyor.
+>
+> **Demo veride tek düzeltme:** hedef adı "Acil Fon" iken kategori adı da
+> "Acil Fon" olduğu için kart bunu iki kez yazıyordu → ad "Yastık Altı" oldu
+> (`tools/make_demo_backup.py`). Üreteç tohumlu (`Random(20260821)`), yani
+> yeniden üretmek aynı tarihte aynı rakamları veriyor — bu düzeltme başka
+> hiçbir kareyi etkilemedi.
+>
+> **Denetimin ikinci yarısı — 24 çipin tamamı koda karşı kontrol edildi;
+> hepsi karşılığını buluyor.** `+4`'ten beri hiçbir özellik silinmedi
+> (silinen tek dosya `local_auth_settings_page.dart`, yerine güvenlik ekranı
+> uygulama tarafına yeniden yazıldı). `+5` ile GELEN üç özellik — cüzdana göre
+> kategori görünürlüğü ve kategorilerin kendi sayfası, PIN kurtarma, kategori
+> adlarının dile göre kurulması — 8 karelik yuvada yer bulamadı; uzun
+> açıklamada da yoklar. Bkz. aşağıdaki "Uzun açıklamada eksik kalanlar".
 
 > **Set 6 Eylül 2026'da tamamen yeniden çekildi.** İki sebep vardı ve ikincisi
 > ilkinden ağır:
@@ -575,6 +615,36 @@ yerleşimde hiç gösterilmez. 30 saniyelik bir ekran kaydı bile
 `play-feature-graphic-1024x500.png` varlığını çalışır hale getirir.
 Grafiğin yazı bloğu `tools/make_feature_graphic.py` ile yeniden üretilebilir
 (işaret ve zemin korunur, yalnız kelime işareti yeniden çizilir).
+
+---
+
+## Uzun açıklamada eksik kalanlar (9 Eyl 2026 denetimi)
+
+Aşağıdaki üç madde uygulamada **var** ama yayımlanmış uzun açıklamada **yok**.
+Hiçbiri yanlış beyan değil (eksik anlatım yanıltıcı beyan sayılmaz), o yüzden
+`+5` yüklemesini bloke etmez — ama listelemeyi Console'da bir dahaki
+düzenlemende bu üç cümle girmeli. Metni buraya yazıyorum ki "neydi o" diye
+aranmasın; **girildiğinde bu bölüm silinip cümleler yukarıdaki bloğa taşınacak.**
+
+| Nerede | Eklenecek |
+|---|---|
+| `GELİR, GİDER VE KATEGORİLER` sonuna | *Kategorilerin yan menüde kendi sayfası var; her cüzdan yalnız kendi kategori kümesini gösterir.* |
+| `GÜVENLİK` sonuna | *PIN'ini unutursan veri gitmez: cihaz kilidinle açabilir ya da 24 saat gecikmeli sıfırlama isteyebilirsin.* |
+| `TÜRKÇE VE İNGİLİZCE` sonuna | *Hazır kategori adları uygulamanın diline göre kurulur.* |
+
+İngilizcesi:
+
+| Where | Add |
+|---|---|
+| end of `INCOME, EXPENSES AND CATEGORIES` | *Categories have their own page in the side menu, and each wallet shows only its own set.* |
+| end of `SECURITY` | *Forgetting your PIN no longer costs your data: unlock with your device lock, or request a 24-hour delayed reset.* |
+| end of `TURKISH AND ENGLISH` | *Built-in category names are created in your app language.* |
+
+**Neden karelere girmedi:** 8 telefon yuvasının tamamı dolu ve mevcut sekiz
+tema (defter, ekstre, rapor, birikim, bütçe, borç, düzenli, gizlilik) bu üç
+özellikten daha yüksek dönüşüm taşıyor. PIN kurtarma güven tarafına ait ve 8.
+karenin çipleri zaten dolu; tablet görselleri eklenirken (aşağıdaki liste)
+9./10. bir kare açılırsa ilk aday **güvenlik ekranı** olur.
 
 ---
 
