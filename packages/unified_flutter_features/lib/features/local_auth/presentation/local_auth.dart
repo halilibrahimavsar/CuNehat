@@ -4,6 +4,7 @@ export 'bloc/local_auth_status.dart';
 export 'bloc/login/local_auth_login_bloc.dart';
 export 'bloc/login/local_auth_login_event.dart';
 export 'bloc/login/local_auth_login_state.dart';
+export 'bloc/settings/local_auth_notice.dart';
 export 'bloc/settings/local_auth_settings_bloc.dart';
 export 'bloc/settings/local_auth_settings_event.dart';
 export 'bloc/settings/local_auth_settings_state.dart';

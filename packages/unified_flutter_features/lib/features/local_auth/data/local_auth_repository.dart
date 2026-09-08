@@ -111,4 +111,38 @@ abstract class LocalAuthRepository {
 
   /// Clears all lockout state after successful authentication.
   Future<void> clearLockoutState();
+
+  /// Number of consecutive failed PIN attempts, persisted across restarts.
+  ///
+  /// Keeping the counter in memory only let anyone restart the app every two
+  /// attempts and never hit the lockout.
+  Future<int> getFailedAttempts();
+
+  /// Stores the consecutive failed PIN attempt count.
+  Future<void> setFailedAttempts(int attempts);
+
+  /// Whether the device itself can authenticate the user (screen lock or
+  /// biometrics). This is the gate for PIN recovery: it must NOT require
+  /// enrolled biometrics, only a secure device.
+  Future<bool> isDeviceCredentialAvailable();
+
+  /// Authenticates with the device's own credential (PIN/pattern/password),
+  /// accepting biometrics too.
+  ///
+  /// Used only by the "forgot PIN" recovery flow. The regular unlock stays
+  /// biometric-only so the device credential is not a permanent side door.
+  Future<bool> authenticateWithDeviceCredential({
+    String? reason,
+    String? signInTitle,
+    String? cancelButton,
+  });
+
+  /// When the pending delayed PIN reset was requested, or null if none.
+  Future<int?> getPinResetRequestedAt();
+
+  /// Starts a delayed PIN reset request at [timestampMillis].
+  Future<void> setPinResetRequestedAt(int timestampMillis);
+
+  /// Cancels any pending delayed PIN reset.
+  Future<void> clearPinResetRequest();
 }

@@ -18,7 +18,17 @@ class AppAuthUnlockRequested extends AppAuthEvent {
 }
 
 class AppAuthAppResumed extends AppAuthEvent {
-  const AppAuthAppResumed();
+  /// Uygulamanın arka planda kaldığı süre.
+  ///
+  /// `null` ise süre kapısı uygulanmaz (olay doğrudan gönderilmiştir); ölçüm
+  /// yaşam döngüsü gözlemcisinde yapılır, karar ise burada — süre artık
+  /// kullanıcının ayarından okunduğu ve okuma asenkron olduğu için.
+  final Duration? pausedDuration;
+
+  const AppAuthAppResumed({this.pausedDuration});
+
+  @override
+  List<Object?> get props => [pausedDuration];
 }
 
 class AppAuthLockRequested extends AppAuthEvent {

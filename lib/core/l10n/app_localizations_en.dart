@@ -4399,4 +4399,178 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kategoriCuzdanKapsamiAciklamaBu =>
       'Categories are shared across all wallets. This switch only decides which ones show up in this wallet; it never deletes a category.';
+
+  @override
+  String get securityTitle => 'Security';
+
+  @override
+  String get securityLockSection => 'Lock';
+
+  @override
+  String get securityPrivacySection => 'Privacy';
+
+  @override
+  String get securityRecoverySection => 'Recovery';
+
+  @override
+  String get securityStatusOnTitle => 'App lock is on';
+
+  @override
+  String get securityStatusOffTitle => 'App lock is off';
+
+  @override
+  String get securityStatusOnSubtitle =>
+      'Authentication is required when the app opens.';
+
+  @override
+  String get securityStatusOffSubtitle =>
+      'Create a PIN to protect your records.';
+
+  @override
+  String get pinCardTitle => 'PIN code';
+
+  @override
+  String get pinCardOnSubtitle => 'A 6-digit PIN is set';
+
+  @override
+  String get pinCardOffSubtitle => 'Not set';
+
+  @override
+  String get biometricCardSubtitleUnavailable => 'Not available on this device';
+
+  @override
+  String get privacyGuardCardTitle => 'Privacy screen';
+
+  @override
+  String get privacyGuardCardSubtitle => 'Blurs content in the app switcher';
+
+  @override
+  String get backgroundLockCardSubtitle =>
+      'Locks again after this long away from the app';
+
+  @override
+  String durationSecondsShort(Object seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String durationMinutesShort(Object minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get pinEntryNewTitle => 'New PIN';
+
+  @override
+  String get pinEntryNewSubtitle => 'Choose a 6-digit PIN';
+
+  @override
+  String get pinEntryRepeatTitle => 'Repeat PIN';
+
+  @override
+  String get pinEntryRepeatSubtitle => 'Enter the same PIN once more';
+
+  @override
+  String get pinEntryCurrentTitle => 'Current PIN';
+
+  @override
+  String get pinEntryCurrentSubtitle => 'Enter your current PIN to continue';
+
+  @override
+  String get pinEntryMismatch => 'PINs did not match, try again';
+
+  @override
+  String get msgPrivacyGuardEnabled => 'Privacy screen enabled';
+
+  @override
+  String get msgPrivacyGuardDisabled => 'Privacy screen disabled';
+
+  @override
+  String get msgBackgroundLockUpdated => 'Background lock updated';
+
+  @override
+  String get msgBackgroundLockDisabled => 'Background lock disabled';
+
+  @override
+  String get forgotPinAction => 'Forgot PIN';
+
+  @override
+  String get pinRecoveryTitle => 'PIN recovery';
+
+  @override
+  String get pinRecoveryIntro =>
+      'If you do not remember your PIN, you can set a new one with either option below. Nothing is deleted.';
+
+  @override
+  String get recoveryCardTitle => 'If I forget my PIN';
+
+  @override
+  String get recoveryCardSubtitle =>
+      'Verify with your phone lock, or start a delayed reset';
+
+  @override
+  String get recoveryDeviceTitle => 'Verify with phone lock';
+
+  @override
+  String get recoveryDeviceBody =>
+      'Verify with your phone\'s own PIN/pattern/password and set a new PIN right away.';
+
+  @override
+  String get recoveryDeviceAction => 'Verify';
+
+  @override
+  String get recoveryDeviceReason => 'Verify your identity to reset your PIN';
+
+  @override
+  String get recoveryDeviceUnavailable =>
+      'Unavailable because your phone has no screen lock set.';
+
+  @override
+  String get recoveryDeviceFailed => 'Verification was not completed';
+
+  @override
+  String get recoveryTimedTitle => 'Delayed reset';
+
+  @override
+  String recoveryTimedBody(Object hours) {
+    return 'No secret required. $hours hours after you start the request you can set a new PIN; your data stays put.';
+  }
+
+  @override
+  String get recoveryTimedStart => 'Start reset request';
+
+  @override
+  String recoveryTimedPending(Object remaining) {
+    return 'Time left: $remaining';
+  }
+
+  @override
+  String get recoveryTimedCancel => 'Cancel request';
+
+  @override
+  String get recoveryTimedReady => 'The wait is over, you can set a new PIN.';
+
+  @override
+  String get recoveryTimedStarted => 'Reset request started';
+
+  @override
+  String get recoveryTimedCancelled => 'Reset request cancelled';
+
+  @override
+  String get recoveryTimedWarning =>
+      'Cancel this request if you did not start it: once the wait is over, whoever holds the phone can change the PIN.';
+
+  @override
+  String get recoveryResetAction => 'Set new PIN';
+
+  @override
+  String get recoveryResetDone => 'PIN has been reset';
+
+  @override
+  String get recoveryUnexpectedError => 'Could not complete the action';
+
+  @override
+  String remainingHoursMinutes(Object hours, Object minutes) {
+    return '$hours h $minutes m';
+  }
 }

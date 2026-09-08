@@ -28,10 +28,18 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
   DateTime? _lastUnlockTime;
   DateTime? _lastPausedTime;
 
-  /// Arka planda bu süreden uzun kalan oturum kilitlenir.
-  static const Duration backgroundLockTimeout = Duration(seconds: 30);
+  /// Arka plan kilidi süresi hiç seçilmemişse kullanılan varsayılan.
+  ///
+  /// Gerçek süre kullanıcının güvenlik ayarlarından gelir
+  /// ([LocalAuthRepository.getBackgroundLockTimeoutSeconds]); bu sabit yalnız
+  /// [_seedBackgroundLockDefault] ile bir kez tohumlanır.
+  static const Duration defaultBackgroundLockTimeout = Duration(seconds: 30);
 
   static const String _displayNameKey = 'local_user_display_name';
+
+  /// Arka plan kilidi varsayılanının bu kuruluma yazıldığını işaretler.
+  static const String _backgroundLockSeededKey =
+      'app_auth_background_lock_seeded';
 
   AppAuthBloc({
     required LocalAuthRepository localAuthRepository,
@@ -85,11 +93,41 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
         return;
       }
 
-      if (_lastPausedTime != null &&
-          _now().difference(_lastPausedTime!) > backgroundLockTimeout) {
-        add(const AppAuthAppResumed());
-      }
+      // Damga TÜKETİLİR. Bırakılırsa `paused` görmeyen bir dönüş (bildirim
+      // panelini açıp kapatmak `inactive` → `resumed` verir) çoktan geçmiş
+      // bir arka plan turunun süresini yeniden ölçer ve durduk yere kilitler.
+      final pausedAt = _lastPausedTime;
+      _lastPausedTime = null;
+      if (pausedAt == null) return;
+
+      add(AppAuthAppResumed(pausedDuration: _now().difference(pausedAt)));
     }
+  }
+
+  /// Kullanıcının seçtiği arka plan kilidi süresi. 0 = kapalı.
+  Future<Duration> _backgroundLockTimeout() async {
+    final seconds =
+        await _localAuthRepository.getBackgroundLockTimeoutSeconds();
+    return Duration(seconds: seconds);
+  }
+
+  /// Süre artık TEK yetkili olarak ayardan okunuyor; ama paket deposunun
+  /// varsayılanı 0 (= kapalı) ve uygulama bugüne dek ayardan bağımsız
+  /// [defaultBackgroundLockTimeout] uyguluyordu. Ayara hiç dokunmamış
+  /// kurulumlara bu değer bir kez yazılır, yoksa yayındaki kurulumların arka
+  /// plan kilidi sessizce kapanırdı — ayar ekranı da bugün "Kapalı" derken
+  /// kilitlendiği için artık gerçeği gösteriyor.
+  Future<void> _seedBackgroundLockDefault() async {
+    if (_prefs.getBool(_backgroundLockSeededKey) ?? false) return;
+
+    final configured =
+        await _localAuthRepository.getBackgroundLockTimeoutSeconds();
+    if (configured <= 0) {
+      await _localAuthRepository.setBackgroundLockTimeoutSeconds(
+        defaultBackgroundLockTimeout.inSeconds,
+      );
+    }
+    await _prefs.setBool(_backgroundLockSeededKey, true);
   }
 
   Future<void> _onInitialize(
@@ -98,6 +136,7 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
   ) async {
     emit(const AppAuthLoading());
     try {
+      await _seedBackgroundLockDefault();
       final isBioEnabled = await _localAuthRepository.isBiometricEnabled();
       final isPinSet = await _localAuthRepository.isPinSet();
       final user = _getLocalUser();
@@ -136,6 +175,12 @@ class AppAuthBloc extends Bloc<AppAuthEvent, AppAuthState>
           _now().difference(_lastUnlockTime!).inSeconds < 2) {
         return;
       }
+
+      final timeout = await _backgroundLockTimeout();
+      if (timeout <= Duration.zero) return;
+
+      final pausedFor = event.pausedDuration;
+      if (pausedFor != null && pausedFor <= timeout) return;
 
       final isBioEnabled = await _localAuthRepository.isBiometricEnabled();
       final isPinSet = await _localAuthRepository.isPinSet();

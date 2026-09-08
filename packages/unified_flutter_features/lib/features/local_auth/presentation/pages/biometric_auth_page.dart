@@ -18,12 +18,20 @@ class BiometricAuthPage extends StatefulWidget {
   final bool showLogoutButton;
   final LocalAuthTexts texts;
 
+  /// "PIN'imi unuttum" girişi. Verilmezse bağlantı hiç çizilmez.
+  ///
+  /// PIN tek yönlü saklandığı için hatırlanmayan PIN'in tek çıkışı
+  /// kurtarmadır; bu bağlantı olmadan kullanıcının elinde uygulamayı silmek
+  /// kalıyor ve o da tüm veriyi götürüyor.
+  final VoidCallback? onForgotPin;
+
   const BiometricAuthPage({
     super.key,
     required this.onSuccess,
     this.onLogout,
     this.showLogoutButton = true,
     this.texts = const LocalAuthTexts(),
+    this.onForgotPin,
   });
 
   @override
@@ -170,95 +178,119 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
                   ]
                 : null,
           ),
+          // Tuş takımı SABİT 360dp (3×75 + 3×20 + 75); üstteki kart, noktalar ve
+          // kurtarma bağlantısıyla birlikte içerik 656dp. 411×603dp'lik bir
+          // telefonda bu 53dp TAŞMA demek (ölçüldü) — düğme eklenmeden önce de
+          // 25dp taşıyordu. Uzun ekranda Spacer'lar dağılsın, kısa ekranda
+          // KAYSIN diye min-yükseklikli kaydırıcı:
           body: SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: IboGlassSurface(
-                    padding: const EdgeInsets.all(20),
-                    style: IboGlassStyle(
-                      borderRadius: BorderRadius.circular(28),
-                      backgroundColor: theme.colorScheme.surface,
-                      backgroundOpacity: 0.9,
-                    ),
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
                     child: Column(
                       children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.22),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.lock_outline_rounded,
-                            size: 36,
-                            color: theme.primaryColor,
-                          ),
-                        ),
                         const SizedBox(height: 16),
-                        Text(
-                          widget.texts.welcomeTitle,
-                          style: theme.textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: Text(
-                            statusText,
-                            key: ValueKey(statusText),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: (isLockedOut ||
-                                      (state.authStatus == AuthStatus.failure &&
-                                          _enteredPin.isEmpty))
-                                  ? theme.colorScheme.error
-                                  : theme.textTheme.bodyMedium?.color
-                                      ?.withValues(alpha: 0.7),
-                              fontWeight: isLockedOut
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: IboGlassSurface(
+                            padding: const EdgeInsets.all(20),
+                            style: IboGlassStyle(
+                              borderRadius: BorderRadius.circular(28),
+                              backgroundColor: theme.colorScheme.surface,
+                              backgroundOpacity: 0.9,
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(22),
+                                    border: Border.all(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.22),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.lock_outline_rounded,
+                                    size: 36,
+                                    color: theme.primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  widget.texts.welcomeTitle,
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 10),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  child: Text(
+                                    statusText,
+                                    key: ValueKey(statusText),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: (isLockedOut ||
+                                              (state.authStatus ==
+                                                      AuthStatus.failure &&
+                                                  _enteredPin.isEmpty))
+                                          ? theme.colorScheme.error
+                                          : theme.textTheme.bodyMedium?.color
+                                              ?.withValues(alpha: 0.7),
+                                      fontWeight: isLockedOut
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                        const Spacer(),
+                        LocalAuthPinDots(
+                          length: LocalAuthConstants.pinLength,
+                          filled: _enteredPin.length,
+                          isError: _isPinError(state),
+                          shake: _shakeController,
+                          activeColor: theme.primaryColor,
+                          inactiveColor: Colors.grey.withValues(alpha: 0.2),
+                          errorColor: theme.colorScheme.error,
+                        ),
+                        const Spacer(),
+                        LocalAuthNumpad(
+                          isLockedOut: isLockedOut,
+                          showBiometric: isBiometricReady,
+                          onDigit: (digit) =>
+                              _handleKeyPress(digit, isLockedOut),
+                          onBackspace: () => _handleDelete(isLockedOut),
+                          onBiometric: () => context
+                              .read<LocalAuthLoginBloc>()
+                              .add(BiometricAuthLoginEvent(
+                                reason: widget.texts.biometricReason,
+                                signInTitle: widget.texts.biometricLoginTitle,
+                                cancelButton: widget.texts.cancelLabel,
+                              )),
+                        ),
+                        if (widget.onForgotPin != null) ...[
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: widget.onForgotPin,
+                            child: Text(widget.texts.forgotPinLabel),
+                          ),
+                          const SizedBox(height: 12),
+                        ] else
+                          const SizedBox(height: 40),
                       ],
                     ),
                   ),
                 ),
-                const Spacer(),
-                LocalAuthPinDots(
-                  length: LocalAuthConstants.pinLength,
-                  filled: _enteredPin.length,
-                  isError: _isPinError(state),
-                  shake: _shakeController,
-                  activeColor: theme.primaryColor,
-                  inactiveColor: Colors.grey.withValues(alpha: 0.2),
-                  errorColor: theme.colorScheme.error,
-                ),
-                const Spacer(),
-                LocalAuthNumpad(
-                  isLockedOut: isLockedOut,
-                  showBiometric: isBiometricReady,
-                  onDigit: (digit) => _handleKeyPress(digit, isLockedOut),
-                  onBackspace: () => _handleDelete(isLockedOut),
-                  onBiometric: () => context
-                      .read<LocalAuthLoginBloc>()
-                      .add(BiometricAuthLoginEvent(
-                        reason: widget.texts.biometricReason,
-                        signInTitle: widget.texts.biometricLoginTitle,
-                        cancelButton: widget.texts.cancelLabel,
-                      )),
-                ),
-                const SizedBox(height: 40),
-              ],
+              ),
             ),
           ),
         );

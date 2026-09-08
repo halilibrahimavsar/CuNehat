@@ -1,4 +1,5 @@
 import '../local_auth_status.dart';
+import 'local_auth_notice.dart';
 
 class LocalAuthSettingsState {
   final SettingsStatus status;
@@ -7,6 +8,11 @@ class LocalAuthSettingsState {
   final bool isPinSet;
   final bool isPrivacyGuardEnabled;
   final int backgroundLockTimeoutSeconds;
+
+  /// Son işlemin sonucu. Tek atımlıktır: bir sonraki emit'te düşer.
+  final LocalAuthNotice? notice;
+
+  /// Yalnız [LocalAuthNotice.unexpectedError] için ham hata ayrıntısı.
   final String? message;
 
   const LocalAuthSettingsState({
@@ -16,6 +22,7 @@ class LocalAuthSettingsState {
     this.isPinSet = false,
     this.isPrivacyGuardEnabled = true,
     this.backgroundLockTimeoutSeconds = 0,
+    this.notice,
     this.message,
   });
 
@@ -26,6 +33,7 @@ class LocalAuthSettingsState {
     bool? isPinSet,
     bool? isPrivacyGuardEnabled,
     int? backgroundLockTimeoutSeconds,
+    LocalAuthNotice? notice,
     String? message,
   }) {
     return LocalAuthSettingsState(
@@ -37,6 +45,7 @@ class LocalAuthSettingsState {
           isPrivacyGuardEnabled ?? this.isPrivacyGuardEnabled,
       backgroundLockTimeoutSeconds:
           backgroundLockTimeoutSeconds ?? this.backgroundLockTimeoutSeconds,
+      notice: notice,
       message: message,
     );
   }
@@ -52,6 +61,7 @@ class LocalAuthSettingsState {
           isPinSet == other.isPinSet &&
           isPrivacyGuardEnabled == other.isPrivacyGuardEnabled &&
           backgroundLockTimeoutSeconds == other.backgroundLockTimeoutSeconds &&
+          notice == other.notice &&
           message == other.message;
 
   @override
@@ -62,5 +72,6 @@ class LocalAuthSettingsState {
       isPinSet.hashCode ^
       isPrivacyGuardEnabled.hashCode ^
       backgroundLockTimeoutSeconds.hashCode ^
+      notice.hashCode ^
       message.hashCode;
 }

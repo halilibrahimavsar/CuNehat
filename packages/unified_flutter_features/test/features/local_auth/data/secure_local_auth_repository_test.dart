@@ -219,6 +219,105 @@ void main() {
     });
   });
 
+  group('kurtarma: cihaz kilidi', () {
+    test('normal biyometrik giriş biometricOnly: true ile çağrılır', () async {
+      when(() => auth.canCheckBiometrics).thenAnswer((_) async => true);
+      when(() => auth.isDeviceSupported()).thenAnswer((_) async => true);
+      when(() => auth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          authMessages: any(named: 'authMessages'),
+          options: any(named: 'options'))).thenAnswer((_) async => true);
+
+      await repository.authenticateWithBiometrics();
+
+      final captured = verify(() => auth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          authMessages: any(named: 'authMessages'),
+          options: captureAny(named: 'options'))).captured.single;
+      // Cihaz şifresi normal girişte KAPALI kalmalı: açık olsaydı telefon
+      // şifresini bilen herkes uygulama PIN'ini baypas ederdi.
+      expect((captured as AuthenticationOptions).biometricOnly, isTrue);
+    });
+
+    test('kurtarma biometricOnly: false ile çağrılır (cihaz şifresi kabul)',
+        () async {
+      when(() => auth.isDeviceSupported()).thenAnswer((_) async => true);
+      when(() => auth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          authMessages: any(named: 'authMessages'),
+          options: any(named: 'options'))).thenAnswer((_) async => true);
+
+      final result = await repository.authenticateWithDeviceCredential();
+      expect(result, isTrue);
+
+      final captured = verify(() => auth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          authMessages: any(named: 'authMessages'),
+          options: captureAny(named: 'options'))).captured.single;
+      expect((captured as AuthenticationOptions).biometricOnly, isFalse);
+    });
+
+    test('ekran kilidi yoksa kurtarma denenmez', () async {
+      when(() => auth.isDeviceSupported()).thenAnswer((_) async => false);
+
+      expect(await repository.isDeviceCredentialAvailable(), isFalse);
+      expect(await repository.authenticateWithDeviceCredential(), isFalse);
+      verifyNever(() => auth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          authMessages: any(named: 'authMessages'),
+          options: any(named: 'options')));
+    });
+
+    test('kurtarma uygunluğu parmak izi ENROLLMENT’ına bakmaz', () async {
+      // Cihazda kayıtlı biyometrik yok ama ekran kilidi var.
+      when(() => auth.canCheckBiometrics).thenAnswer((_) async => false);
+      when(() => auth.isDeviceSupported()).thenAnswer((_) async => true);
+
+      expect(await repository.isBiometricAvailable(), isFalse);
+      expect(await repository.isDeviceCredentialAvailable(), isTrue);
+    });
+  });
+
+  group('gecikmeli PIN sıfırlama isteği', () {
+    test('istek yoksa null', () async {
+      when(() => secureStorage.read(
+              key: LocalAuthConstants.pinResetRequestedAtKey))
+          .thenAnswer((_) async => null);
+      expect(await repository.getPinResetRequestedAt(), isNull);
+    });
+
+    test('istek yazılır ve okunur', () async {
+      when(() => secureStorage.write(
+          key: LocalAuthConstants.pinResetRequestedAtKey,
+          value: '1757000000000')).thenAnswer((_) async {});
+      await repository.setPinResetRequestedAt(1757000000000);
+      verify(() => secureStorage.write(
+          key: LocalAuthConstants.pinResetRequestedAtKey,
+          value: '1757000000000')).called(1);
+
+      when(() => secureStorage.read(
+              key: LocalAuthConstants.pinResetRequestedAtKey))
+          .thenAnswer((_) async => '1757000000000');
+      expect(await repository.getPinResetRequestedAt(), 1757000000000);
+    });
+
+    test('bozuk değer null sayılır (sayaç sonsuza kilitlenmesin)', () async {
+      when(() => secureStorage.read(
+              key: LocalAuthConstants.pinResetRequestedAtKey))
+          .thenAnswer((_) async => 'bozuk');
+      expect(await repository.getPinResetRequestedAt(), isNull);
+    });
+
+    test('istek temizlenir', () async {
+      when(() => secureStorage.delete(
+              key: LocalAuthConstants.pinResetRequestedAtKey))
+          .thenAnswer((_) async {});
+      await repository.clearPinResetRequest();
+      verify(() => secureStorage.delete(
+          key: LocalAuthConstants.pinResetRequestedAtKey)).called(1);
+    });
+  });
+
   group('privacy guard', () {
     test('isPrivacyGuardEnabled defaults to true', () async {
       when(() => prefs.getBool(LocalAuthConstants.privacyGuardEnabledKey))
@@ -307,16 +406,40 @@ void main() {
           .called(1);
     });
 
-    test('clearLockoutState removes both keys', () async {
+    test('clearLockoutState kilit durumunu VE deneme sayacını siler', () async {
       when(() => prefs.remove(LocalAuthConstants.lockoutLevelKey))
           .thenAnswer((_) async => true);
       when(() => prefs.remove(LocalAuthConstants.lockoutEndKey))
+          .thenAnswer((_) async => true);
+      when(() => prefs.remove(LocalAuthConstants.failedAttemptsKey))
           .thenAnswer((_) async => true);
 
       await repository.clearLockoutState();
 
       verify(() => prefs.remove(LocalAuthConstants.lockoutLevelKey)).called(1);
       verify(() => prefs.remove(LocalAuthConstants.lockoutEndKey)).called(1);
+      // Başarılı giriş sayacı da sıfırlamalı; yoksa doğru PIN'den sonra
+      // kalan sayaç bir sonraki turda erken kilitlenme yaratır.
+      verify(() => prefs.remove(LocalAuthConstants.failedAttemptsKey))
+          .called(1);
+    });
+
+    test('deneme sayacı kalıcı: oku/yaz', () async {
+      when(() => prefs.getInt(LocalAuthConstants.failedAttemptsKey))
+          .thenReturn(2);
+      expect(await repository.getFailedAttempts(), 2);
+
+      when(() => prefs.setInt(LocalAuthConstants.failedAttemptsKey, 3))
+          .thenAnswer((_) async => true);
+      await repository.setFailedAttempts(3);
+      verify(() => prefs.setInt(LocalAuthConstants.failedAttemptsKey, 3))
+          .called(1);
+    });
+
+    test('sayaç hiç yazılmamışsa 0', () async {
+      when(() => prefs.getInt(LocalAuthConstants.failedAttemptsKey))
+          .thenReturn(null);
+      expect(await repository.getFailedAttempts(), 0);
     });
   });
 

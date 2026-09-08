@@ -22,6 +22,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     mockAuthRepo = MockLocalAuthRepository();
     guard = SystemActivityGuard();
+
+    // Arka plan kilidi süresi artık kullanıcının ayarından okunuyor.
+    when(() => mockAuthRepo.getBackgroundLockTimeoutSeconds())
+        .thenAnswer((_) async => 30);
+    when(() => mockAuthRepo.setBackgroundLockTimeoutSeconds(any()))
+        .thenAnswer((_) async {});
   });
 
   group('AppAuthBloc initialization', () {
@@ -353,6 +359,133 @@ void main() {
         isA<AppAuthLocked>(),
       ],
     );
+  });
+
+  group('AppAuthBloc arka plan kilidi süresi', () {
+    // Bildirilen hata (8 Eylül 2026): tek kilit açma turunda biyometrik İKİ
+    // KEZ soruluyordu. Paketin kendi arka plan kilidi ile uygulamanın kendi
+    // kilidi aynı anda açıktı; süre artık TEK yerden, kullanıcının
+    // ayarından okunuyor.
+    late DateTime clock;
+
+    setUp(() async {
+      prefs = await SharedPreferences.getInstance();
+      clock = DateTime(2026, 9, 8, 12);
+      guard = SystemActivityGuard.withClock(() => clock);
+
+      var pinReads = 0;
+      when(() => mockAuthRepo.isBiometricEnabled())
+          .thenAnswer((_) async => false);
+      when(() => mockAuthRepo.isPinSet()).thenAnswer((_) async {
+        pinReads++;
+        return pinReads > 1;
+      });
+    });
+
+    AppAuthBloc build() => AppAuthBloc(
+          localAuthRepository: mockAuthRepo,
+          sharedPreferences: prefs,
+          systemActivityGuard: guard,
+          now: () => clock,
+        );
+
+    Future<void> background(AppAuthBloc bloc, Duration away) async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.didChangeAppLifecycleState(AppLifecycleState.paused);
+      clock = clock.add(away);
+      bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+    }
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'ayar "Kapalı" ise uzun arka plandan dönüş kilitlemez',
+      setUp: () {
+        when(() => mockAuthRepo.getBackgroundLockTimeoutSeconds())
+            .thenAnswer((_) async => 0);
+      },
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) => background(bloc, const Duration(minutes: 10)),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+      ],
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'seçilen süre dolmadan dönüş kilitlemez',
+      setUp: () {
+        when(() => mockAuthRepo.getBackgroundLockTimeoutSeconds())
+            .thenAnswer((_) async => 60);
+      },
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) => background(bloc, const Duration(seconds: 45)),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+      ],
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'seçilen süre dolduktan sonra dönüş kilitler',
+      setUp: () {
+        when(() => mockAuthRepo.getBackgroundLockTimeoutSeconds())
+            .thenAnswer((_) async => 60);
+      },
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) => background(bloc, const Duration(seconds: 90)),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+        isA<AppAuthLocked>(),
+      ],
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'paused görmeden gelen resumed eski turu yeniden ölçmez',
+      build: build,
+      seed: () => AppAuthenticated(LocalUser.guest()),
+      act: (bloc) async {
+        await background(bloc, const Duration(minutes: 10));
+        // İlk tur kilitledi; bildirim panelini açıp kapatmak `paused`
+        // üretmeden ikinci bir `resumed` verir.
+        bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      },
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+        isA<AppAuthLocked>(),
+      ],
+    );
+
+    test('ayara hiç dokunulmamış kurulumda varsayılan süre bir kez yazılır',
+        () async {
+      when(() => mockAuthRepo.getBackgroundLockTimeoutSeconds())
+          .thenAnswer((_) async => 0);
+
+      final bloc = build();
+      await bloc.stream.firstWhere((s) => s is! AppAuthLoading);
+      verify(() => mockAuthRepo.setBackgroundLockTimeoutSeconds(30)).called(1);
+      await bloc.close();
+
+      // İkinci açılış tohumu tekrar yazmaz: kullanıcı "Kapalı" seçtiyse
+      // seçimi geri gelmemeli.
+      final second = build();
+      await second.stream.firstWhere((s) => s is! AppAuthLoading);
+      verifyNever(() => mockAuthRepo.setBackgroundLockTimeoutSeconds(any()));
+      await second.close();
+    });
+
+    test('kullanıcının seçtiği süre tohumla ezilmez', () async {
+      when(() => mockAuthRepo.getBackgroundLockTimeoutSeconds())
+          .thenAnswer((_) async => 5);
+
+      final bloc = build();
+      await bloc.stream.firstWhere((s) => s is! AppAuthLoading);
+      verifyNever(() => mockAuthRepo.setBackgroundLockTimeoutSeconds(any()));
+      await bloc.close();
+    });
   });
 
   group('AppAuthBloc updateDisplayName', () {

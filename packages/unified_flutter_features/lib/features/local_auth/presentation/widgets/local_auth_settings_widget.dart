@@ -5,9 +5,9 @@ import '../../../../shared_features/dialog/ibo_dialog.dart';
 import '../../../../shared_features/snackbar/ibo_snackbar.dart';
 import '../../data/local_auth_repository.dart';
 import '../bloc/local_auth_status.dart';
-import '../constants/local_auth_constants.dart';
 import '../bloc/settings/local_auth_settings_bloc.dart';
 import '../bloc/settings/local_auth_settings_event.dart';
+import '../bloc/settings/local_auth_notice.dart';
 import '../bloc/settings/local_auth_settings_state.dart';
 import 'local_auth_settings_sections.dart';
 import 'local_auth_settings_style.dart';
@@ -75,10 +75,7 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
   @override
   void initState() {
     super.initState();
-    _bloc = LocalAuthSettingsBloc(
-      repository: widget.repository,
-      texts: widget.texts,
-    );
+    _bloc = LocalAuthSettingsBloc(repository: widget.repository);
     _bloc.add(LoadSettingsEvent());
   }
 
@@ -166,67 +163,75 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
     );
   }
 
-  String? _localizeMessage(String? msg) {
-    if (msg == null) return null;
-    if (msg == 'Create a PIN first') {
-      return widget.texts.msgCreateAPinFirst;
+  /// Bloc'un tipli sonucunu bu katmanın diline çevirir. Eskiden burada
+  /// İngilizce dize eşleştirmesi vardı; eşleşmeyen mesaj (ör. gizlilik
+  /// perdesi) kullanıcıya İngilizce çıkıyordu.
+  String? _noticeText(LocalAuthSettingsState state) {
+    final texts = widget.texts;
+    switch (state.notice) {
+      case null:
+        return null;
+      case LocalAuthNotice.pinCreated:
+        return texts.msgPINSavedSuccessfully;
+      case LocalAuthNotice.pinUpdated:
+        return texts.msgPINUpdatedSuccessfully;
+      case LocalAuthNotice.pinRemoved:
+        return texts.msgPINRemoved;
+      case LocalAuthNotice.pinAlreadyExists:
+        return texts.msgPINAlreadyExistsUse;
+      case LocalAuthNotice.pinsDoNotMatch:
+        return texts.msgPINsDoNotMatch;
+      case LocalAuthNotice.newPinsDoNotMatch:
+        return texts.msgNewPinValuesDo;
+      case LocalAuthNotice.currentPinIncorrect:
+        return texts.msgCurrentPinIsIncorrect;
+      case LocalAuthNotice.createPinFirst:
+        return texts.msgCreateAPinFirst;
+      case LocalAuthNotice.biometricNotSupported:
+        return texts.msgBiometricAuthenticationIsNot;
+      case LocalAuthNotice.biometricFailed:
+        return texts.msgBiometricAuthenticationFailed;
+      case LocalAuthNotice.biometricEnabled:
+        return texts.msgBiometricLoginEnabled;
+      case LocalAuthNotice.biometricDisabled:
+        return texts.msgBiometricLoginDisabled;
+      case LocalAuthNotice.privacyGuardEnabled:
+        return '${texts.privacyGuardTitle} ${texts.stateOnLabel}';
+      case LocalAuthNotice.privacyGuardDisabled:
+        return '${texts.privacyGuardTitle} ${texts.stateOffLabel}';
+      case LocalAuthNotice.backgroundLockNeedsAuth:
+        return texts.msgPINOrBiometricLogin;
+      case LocalAuthNotice.backgroundLockWithPrivacyGuard:
+        return texts.msgBackgroundLockAndPrivacy;
+      case LocalAuthNotice.backgroundLockUpdated:
+        return '${texts.backgroundLockTitle} ${texts.stateOnLabel}';
+      case LocalAuthNotice.backgroundLockDisabled:
+        return '${texts.backgroundLockTitle} ${texts.stateOffLabel}';
+      case LocalAuthNotice.unexpectedError:
+        return state.message;
     }
-    if (msg == 'Biometric authentication is not supported') {
-      return widget.texts.msgBiometricAuthenticationIsNot;
-    }
-    if (msg == 'Biometric authentication failed') {
-      return widget.texts.msgBiometricAuthenticationFailed;
-    }
-    if (msg == 'Biometric login enabled') {
-      return widget.texts.msgBiometricLoginEnabled;
-    }
-    if (msg == 'Biometric login disabled') {
-      return widget.texts.msgBiometricLoginDisabled;
-    }
-    if (msg == 'PIN already exists, use change PIN instead') {
-      return widget.texts.msgPINAlreadyExistsUse;
-    }
-    if (msg == 'PINs do not match') {
-      return widget.texts.msgPINsDoNotMatch;
-    }
-    if (msg == 'PIN saved successfully') {
-      return widget.texts.msgPINSavedSuccessfully;
-    }
-    if (msg == 'New PIN values do not match') {
-      return widget.texts.msgNewPinValuesDo;
-    }
-    if (msg == 'Current PIN is incorrect') {
-      return widget.texts.msgCurrentPinIsIncorrect;
-    }
-    if (msg == 'PIN updated successfully') {
-      return widget.texts.msgPINUpdatedSuccessfully;
-    }
-    if (msg == 'PIN removed') {
-      return widget.texts.msgPINRemoved;
-    }
-    if (msg == 'Background lock and Privacy Guard enabled') {
-      return widget.texts.msgBackgroundLockAndPrivacy;
-    }
-    return msg;
   }
 
   void _handleStateChanges(BuildContext context, LocalAuthSettingsState state) {
-    if (state.message != null) {
-      final localizedMsg = _localizeMessage(state.message);
+    final noticeText = _noticeText(state);
+    if (noticeText != null) {
       if (state.status == SettingsStatus.error) {
-        IboSnackbar.showError(context, localizedMsg ?? state.message!);
+        IboSnackbar.showError(context, noticeText);
       } else if (state.status == SettingsStatus.success) {
-        IboSnackbar.showSuccess(context, localizedMsg ?? state.message!);
+        IboSnackbar.showSuccess(context, noticeText);
       }
     }
 
     if (state.status == SettingsStatus.success) {
       final previous = _previousState;
+      const pinNotices = {
+        LocalAuthNotice.pinCreated,
+        LocalAuthNotice.pinUpdated,
+        LocalAuthNotice.pinRemoved,
+      };
       if (previous != null &&
           (previous.isPinSet != state.isPinSet ||
-              (previous.isPinSet &&
-                  state.isPinSet &&
-                  state.message?.toLowerCase().contains('pin') == true))) {
+              pinNotices.contains(state.notice))) {
         widget.onPinChanged?.call();
       }
       if (previous != null &&
@@ -252,9 +257,14 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
     final pins = await PinInputDialog.show(
       context: currentContext,
       title: widget.texts.createPinTitle,
-      fieldLabels: const ['PIN (6 digits)', 'Confirm PIN'],
+      fieldLabels: [
+        widget.texts.pinFieldLabel,
+        widget.texts.confirmPinFieldLabel,
+      ],
       confirmLabel: widget.texts.saveLabel,
       cancelLabel: widget.texts.cancelLabel,
+      validationMessage: widget.texts.pinValidationMessage,
+      mismatchMessage: widget.texts.pinMismatchMessage,
     );
 
     if (pins != null && pins.length == 2) {
@@ -270,9 +280,15 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
     final pins = await PinInputDialog.show(
       context: currentContext,
       title: widget.texts.changePinTitle,
-      fieldLabels: const ['Current PIN', 'New PIN', 'Confirm New PIN'],
+      fieldLabels: [
+        widget.texts.currentPinFieldLabel,
+        widget.texts.newPinFieldLabel,
+        widget.texts.confirmNewPinFieldLabel,
+      ],
       confirmLabel: widget.texts.changeLabel,
       cancelLabel: widget.texts.cancelLabel,
+      validationMessage: widget.texts.pinValidationMessage,
+      mismatchMessage: widget.texts.pinMismatchMessage,
     );
 
     if (pins != null && pins.length == 3) {
@@ -299,9 +315,11 @@ class _LocalAuthSettingsWidgetState extends State<LocalAuthSettingsWidget> {
       final pins = await PinInputDialog.show(
         context: context,
         title: widget.texts.verifyPinTitle,
-        fieldLabels: const ['Current PIN'],
-        confirmLabel: LocalAuthConstants.verifyButtonText,
+        fieldLabels: [widget.texts.currentPinFieldLabel],
+        confirmLabel: widget.texts.verifyLabel,
         cancelLabel: widget.texts.cancelLabel,
+        validationMessage: widget.texts.pinValidationMessage,
+        mismatchMessage: widget.texts.pinMismatchMessage,
       );
       if (!mounted) return;
 

@@ -2403,5 +2403,83 @@
     }
   },
   "kategoriBuCuzdandaHicYok": "Bu cüzdanda henüz kategori seçilmedi. Hazır setten kur ya da aşağıdan tek tek aç.",
-  "kategoriCuzdanKapsamiAciklamaBu": "Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez."
+  "kategoriCuzdanKapsamiAciklamaBu": "Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez.",
+  "securityTitle": "Güvenlik",
+  "securityLockSection": "Kilit",
+  "securityPrivacySection": "Gizlilik",
+  "securityRecoverySection": "Kurtarma",
+  "securityStatusOnTitle": "Uygulama kilidi açık",
+  "securityStatusOffTitle": "Uygulama kilidi kapalı",
+  "securityStatusOnSubtitle": "Uygulama açıldığında kimlik doğrulaması istenir.",
+  "securityStatusOffSubtitle": "Kayıtlarını korumak için bir PIN oluştur.",
+  "pinCardTitle": "PIN kodu",
+  "pinCardOnSubtitle": "6 haneli PIN tanımlı",
+  "pinCardOffSubtitle": "Tanımlı değil",
+  "biometricCardSubtitleUnavailable": "Bu cihazda kullanılamıyor",
+  "privacyGuardCardTitle": "Gizlilik perdesi",
+  "privacyGuardCardSubtitle": "Uygulama değiştiricide içerik bulanıklaşır",
+  "backgroundLockCardSubtitle": "Uygulamadan bu kadar uzak kalınca yeniden kilitlenir",
+  "durationSecondsShort": "{seconds} sn",
+  "@durationSecondsShort": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "durationMinutesShort": "{minutes} dk",
+  "@durationMinutesShort": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "pinEntryNewTitle": "Yeni PIN",
+  "pinEntryNewSubtitle": "6 haneli bir PIN belirle",
+  "pinEntryRepeatTitle": "PIN'i tekrar gir",
+  "pinEntryRepeatSubtitle": "Aynı PIN'i bir kez daha gir",
+  "pinEntryCurrentTitle": "Mevcut PIN",
+  "pinEntryCurrentSubtitle": "Devam etmek için mevcut PIN'ini gir",
+  "pinEntryMismatch": "PIN'ler eşleşmedi, tekrar dene",
+  "msgPrivacyGuardEnabled": "Gizlilik perdesi açıldı",
+  "msgPrivacyGuardDisabled": "Gizlilik perdesi kapatıldı",
+  "msgBackgroundLockUpdated": "Arka plan kilidi güncellendi",
+  "msgBackgroundLockDisabled": "Arka plan kilidi kapatıldı",
+  "forgotPinAction": "PIN'imi unuttum",
+  "pinRecoveryTitle": "PIN kurtarma",
+  "pinRecoveryIntro": "PIN'ini hatırlamıyorsan aşağıdaki yollardan biriyle yeni bir PIN belirleyebilirsin. Hiçbir veri silinmez.",
+  "recoveryCardTitle": "PIN'imi unutursam",
+  "recoveryCardSubtitle": "Telefon kilidinle doğrula ya da gecikmeli sıfırlama başlat",
+  "recoveryDeviceTitle": "Telefon kilidiyle doğrula",
+  "recoveryDeviceBody": "Telefonunun kendi PIN/desen/parolasıyla doğrula, hemen yeni bir PIN belirle.",
+  "recoveryDeviceAction": "Doğrula",
+  "recoveryDeviceReason": "PIN'ini sıfırlamak için kimliğini doğrula",
+  "recoveryDeviceUnavailable": "Telefonunda ekran kilidi tanımlı olmadığı için bu yöntem kullanılamıyor.",
+  "recoveryDeviceFailed": "Doğrulama tamamlanmadı",
+  "recoveryTimedTitle": "Gecikmeli sıfırlama",
+  "recoveryTimedBody": "Hiçbir şifre istemez. İsteği başlattıktan {hours} saat sonra yeni PIN belirleyebilirsin; verilerin yerinde kalır.",
+  "@recoveryTimedBody": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "recoveryTimedStart": "Sıfırlama isteği başlat",
+  "recoveryTimedPending": "Kalan süre: {remaining}",
+  "@recoveryTimedPending": {
+    "placeholders": {
+      "remaining": {}
+    }
+  },
+  "recoveryTimedCancel": "İsteği iptal et",
+  "recoveryTimedReady": "Bekleme tamamlandı, yeni PIN belirleyebilirsin.",
+  "recoveryTimedStarted": "Sıfırlama isteği başlatıldı",
+  "recoveryTimedCancelled": "Sıfırlama isteği iptal edildi",
+  "recoveryTimedWarning": "Bu isteği sen başlatmadıysan iptal et: bekleme dolduğunda telefonu eline geçiren biri PIN'i değiştirebilir.",
+  "recoveryResetAction": "Yeni PIN belirle",
+  "recoveryResetDone": "PIN sıfırlandı",
+  "recoveryUnexpectedError": "İşlem tamamlanamadı",
+  "remainingHoursMinutes": "{hours} sa {minutes} dk",
+  "@remainingHoursMinutes": {
+    "placeholders": {
+      "hours": {},
+      "minutes": {}
+    }
+  }
 }

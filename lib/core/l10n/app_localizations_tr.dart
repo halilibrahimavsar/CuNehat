@@ -4399,4 +4399,181 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get kategoriCuzdanKapsamiAciklamaBu =>
       'Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez.';
+
+  @override
+  String get securityTitle => 'Güvenlik';
+
+  @override
+  String get securityLockSection => 'Kilit';
+
+  @override
+  String get securityPrivacySection => 'Gizlilik';
+
+  @override
+  String get securityRecoverySection => 'Kurtarma';
+
+  @override
+  String get securityStatusOnTitle => 'Uygulama kilidi açık';
+
+  @override
+  String get securityStatusOffTitle => 'Uygulama kilidi kapalı';
+
+  @override
+  String get securityStatusOnSubtitle =>
+      'Uygulama açıldığında kimlik doğrulaması istenir.';
+
+  @override
+  String get securityStatusOffSubtitle =>
+      'Kayıtlarını korumak için bir PIN oluştur.';
+
+  @override
+  String get pinCardTitle => 'PIN kodu';
+
+  @override
+  String get pinCardOnSubtitle => '6 haneli PIN tanımlı';
+
+  @override
+  String get pinCardOffSubtitle => 'Tanımlı değil';
+
+  @override
+  String get biometricCardSubtitleUnavailable => 'Bu cihazda kullanılamıyor';
+
+  @override
+  String get privacyGuardCardTitle => 'Gizlilik perdesi';
+
+  @override
+  String get privacyGuardCardSubtitle =>
+      'Uygulama değiştiricide içerik bulanıklaşır';
+
+  @override
+  String get backgroundLockCardSubtitle =>
+      'Uygulamadan bu kadar uzak kalınca yeniden kilitlenir';
+
+  @override
+  String durationSecondsShort(Object seconds) {
+    return '$seconds sn';
+  }
+
+  @override
+  String durationMinutesShort(Object minutes) {
+    return '$minutes dk';
+  }
+
+  @override
+  String get pinEntryNewTitle => 'Yeni PIN';
+
+  @override
+  String get pinEntryNewSubtitle => '6 haneli bir PIN belirle';
+
+  @override
+  String get pinEntryRepeatTitle => 'PIN\'i tekrar gir';
+
+  @override
+  String get pinEntryRepeatSubtitle => 'Aynı PIN\'i bir kez daha gir';
+
+  @override
+  String get pinEntryCurrentTitle => 'Mevcut PIN';
+
+  @override
+  String get pinEntryCurrentSubtitle => 'Devam etmek için mevcut PIN\'ini gir';
+
+  @override
+  String get pinEntryMismatch => 'PIN\'ler eşleşmedi, tekrar dene';
+
+  @override
+  String get msgPrivacyGuardEnabled => 'Gizlilik perdesi açıldı';
+
+  @override
+  String get msgPrivacyGuardDisabled => 'Gizlilik perdesi kapatıldı';
+
+  @override
+  String get msgBackgroundLockUpdated => 'Arka plan kilidi güncellendi';
+
+  @override
+  String get msgBackgroundLockDisabled => 'Arka plan kilidi kapatıldı';
+
+  @override
+  String get forgotPinAction => 'PIN\'imi unuttum';
+
+  @override
+  String get pinRecoveryTitle => 'PIN kurtarma';
+
+  @override
+  String get pinRecoveryIntro =>
+      'PIN\'ini hatırlamıyorsan aşağıdaki yollardan biriyle yeni bir PIN belirleyebilirsin. Hiçbir veri silinmez.';
+
+  @override
+  String get recoveryCardTitle => 'PIN\'imi unutursam';
+
+  @override
+  String get recoveryCardSubtitle =>
+      'Telefon kilidinle doğrula ya da gecikmeli sıfırlama başlat';
+
+  @override
+  String get recoveryDeviceTitle => 'Telefon kilidiyle doğrula';
+
+  @override
+  String get recoveryDeviceBody =>
+      'Telefonunun kendi PIN/desen/parolasıyla doğrula, hemen yeni bir PIN belirle.';
+
+  @override
+  String get recoveryDeviceAction => 'Doğrula';
+
+  @override
+  String get recoveryDeviceReason =>
+      'PIN\'ini sıfırlamak için kimliğini doğrula';
+
+  @override
+  String get recoveryDeviceUnavailable =>
+      'Telefonunda ekran kilidi tanımlı olmadığı için bu yöntem kullanılamıyor.';
+
+  @override
+  String get recoveryDeviceFailed => 'Doğrulama tamamlanmadı';
+
+  @override
+  String get recoveryTimedTitle => 'Gecikmeli sıfırlama';
+
+  @override
+  String recoveryTimedBody(Object hours) {
+    return 'Hiçbir şifre istemez. İsteği başlattıktan $hours saat sonra yeni PIN belirleyebilirsin; verilerin yerinde kalır.';
+  }
+
+  @override
+  String get recoveryTimedStart => 'Sıfırlama isteği başlat';
+
+  @override
+  String recoveryTimedPending(Object remaining) {
+    return 'Kalan süre: $remaining';
+  }
+
+  @override
+  String get recoveryTimedCancel => 'İsteği iptal et';
+
+  @override
+  String get recoveryTimedReady =>
+      'Bekleme tamamlandı, yeni PIN belirleyebilirsin.';
+
+  @override
+  String get recoveryTimedStarted => 'Sıfırlama isteği başlatıldı';
+
+  @override
+  String get recoveryTimedCancelled => 'Sıfırlama isteği iptal edildi';
+
+  @override
+  String get recoveryTimedWarning =>
+      'Bu isteği sen başlatmadıysan iptal et: bekleme dolduğunda telefonu eline geçiren biri PIN\'i değiştirebilir.';
+
+  @override
+  String get recoveryResetAction => 'Yeni PIN belirle';
+
+  @override
+  String get recoveryResetDone => 'PIN sıfırlandı';
+
+  @override
+  String get recoveryUnexpectedError => 'İşlem tamamlanamadı';
+
+  @override
+  String remainingHoursMinutes(Object hours, Object minutes) {
+    return '$hours sa $minutes dk';
+  }
 }

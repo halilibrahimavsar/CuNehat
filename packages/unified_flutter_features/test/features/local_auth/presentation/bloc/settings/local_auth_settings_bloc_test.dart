@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
+import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_notice.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_event.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_state.dart';
@@ -30,6 +31,7 @@ void main() {
       expect(bloc.state.isPinSet, false);
       expect(bloc.state.isPrivacyGuardEnabled, true);
       expect(bloc.state.backgroundLockTimeoutSeconds, 0);
+      expect(bloc.state.notice, isNull);
       expect(bloc.state.message, isNull);
     });
   });
@@ -75,6 +77,7 @@ void main() {
         const LocalAuthSettingsState(status: SettingsStatus.loading),
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
           message: 'Exception: load error',
         ),
       ],
@@ -101,7 +104,7 @@ void main() {
         const LocalAuthSettingsState(
           isBiometricEnabled: true,
           status: SettingsStatus.success,
-          message: 'Biometric login enabled',
+          notice: LocalAuthNotice.biometricEnabled,
         ),
       ],
     );
@@ -120,7 +123,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'Create a PIN first',
+          notice: LocalAuthNotice.createPinFirst,
         ),
       ],
     );
@@ -139,7 +142,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'Biometric authentication is not supported',
+          notice: LocalAuthNotice.biometricNotSupported,
         ),
       ],
     );
@@ -160,7 +163,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'Biometric authentication failed',
+          notice: LocalAuthNotice.biometricFailed,
         ),
       ],
     );
@@ -177,7 +180,7 @@ void main() {
         const LocalAuthSettingsState(
           isBiometricEnabled: false,
           status: SettingsStatus.success,
-          message: 'Biometric login disabled',
+          notice: LocalAuthNotice.biometricDisabled,
         ),
       ],
     );
@@ -203,6 +206,7 @@ void main() {
       expect: () => [
         predicate<LocalAuthSettingsState>((s) =>
             s.status == SettingsStatus.error &&
+            s.notice == LocalAuthNotice.unexpectedError &&
             s.message == 'Exception: toggle error'),
       ],
     );
@@ -222,7 +226,7 @@ void main() {
         const LocalAuthSettingsState(
           isPinSet: true,
           status: SettingsStatus.success,
-          message: 'PIN saved successfully',
+          notice: LocalAuthNotice.pinCreated,
         ),
       ],
     );
@@ -238,7 +242,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'PIN already exists, use change PIN instead',
+          notice: LocalAuthNotice.pinAlreadyExists,
         ),
       ],
     );
@@ -254,7 +258,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'PINs do not match',
+          notice: LocalAuthNotice.pinsDoNotMatch,
         ),
       ],
     );
@@ -272,6 +276,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
           message: 'Exception: save error',
         ),
       ],
@@ -293,7 +298,7 @@ void main() {
         const LocalAuthSettingsState(
           isPinSet: true,
           status: SettingsStatus.success,
-          message: 'PIN updated successfully',
+          notice: LocalAuthNotice.pinUpdated,
         ),
       ],
     );
@@ -308,7 +313,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'New PIN values do not match',
+          notice: LocalAuthNotice.newPinsDoNotMatch,
         ),
       ],
     );
@@ -325,7 +330,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'Current PIN is incorrect',
+          notice: LocalAuthNotice.currentPinIncorrect,
         ),
       ],
     );
@@ -347,7 +352,7 @@ void main() {
           isPinSet: false,
           isBiometricEnabled: false,
           status: SettingsStatus.success,
-          message: 'PIN removed',
+          notice: LocalAuthNotice.pinRemoved,
         ),
       ],
     );
@@ -363,7 +368,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'Current PIN is incorrect',
+          notice: LocalAuthNotice.currentPinIncorrect,
         ),
       ],
     );
@@ -382,7 +387,7 @@ void main() {
         const LocalAuthSettingsState(
           isPrivacyGuardEnabled: true,
           status: SettingsStatus.success,
-          message: 'Privacy Guard enabled',
+          notice: LocalAuthNotice.privacyGuardEnabled,
         ),
       ],
     );
@@ -399,7 +404,7 @@ void main() {
         const LocalAuthSettingsState(
           isPrivacyGuardEnabled: false,
           status: SettingsStatus.success,
-          message: 'Privacy Guard disabled',
+          notice: LocalAuthNotice.privacyGuardDisabled,
         ),
       ],
     );
@@ -415,6 +420,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
           message: 'Exception: privacy error',
         ),
       ],
@@ -438,7 +444,7 @@ void main() {
         const LocalAuthSettingsState(
           backgroundLockTimeoutSeconds: 30,
           status: SettingsStatus.success,
-          message: 'Background lock timeout updated',
+          notice: LocalAuthNotice.backgroundLockUpdated,
         ),
       ],
     );
@@ -458,7 +464,7 @@ void main() {
         const LocalAuthSettingsState(
           backgroundLockTimeoutSeconds: 0,
           status: SettingsStatus.success,
-          message: 'Background lock disabled',
+          notice: LocalAuthNotice.backgroundLockDisabled,
         ),
       ],
     );
@@ -476,7 +482,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
-          message: 'PIN or biometric login is required for background lock',
+          notice: LocalAuthNotice.backgroundLockNeedsAuth,
         ),
       ],
     );
@@ -503,7 +509,7 @@ void main() {
           isPrivacyGuardEnabled: true,
           backgroundLockTimeoutSeconds: 30,
           status: SettingsStatus.success,
-          message: 'Background lock and Privacy Guard enabled',
+          notice: LocalAuthNotice.backgroundLockWithPrivacyGuard,
         ),
       ],
     );
@@ -523,6 +529,7 @@ void main() {
       expect: () => [
         const LocalAuthSettingsState(
           status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
           message: 'Exception: timeout error',
         ),
       ],
@@ -543,7 +550,7 @@ void main() {
         const LocalAuthSettingsState(
           backgroundLockTimeoutSeconds: 0,
           status: SettingsStatus.success,
-          message: 'Background lock disabled',
+          notice: LocalAuthNotice.backgroundLockDisabled,
         ),
       ],
     );

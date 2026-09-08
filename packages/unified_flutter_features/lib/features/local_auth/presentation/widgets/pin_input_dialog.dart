@@ -11,12 +11,20 @@ class PinInputDialog extends StatefulWidget {
   final String confirmLabel;
   final String cancelLabel;
 
+  /// 6 hane girilmediğinde gösterilen metin.
+  final String validationMessage;
+
+  /// Son alan bir önceki alanla eşleşmediğinde gösterilen metin.
+  final String mismatchMessage;
+
   const PinInputDialog({
     super.key,
     required this.title,
     required this.fieldLabels,
     this.confirmLabel = LocalAuthConstants.saveButtonText,
     this.cancelLabel = LocalAuthConstants.cancelButtonText2,
+    this.validationMessage = LocalAuthConstants.pinValidationError,
+    this.mismatchMessage = LocalAuthConstants.pinMatchError,
   });
 
   @override
@@ -29,6 +37,8 @@ class PinInputDialog extends StatefulWidget {
     required List<String> fieldLabels,
     String? confirmLabel,
     String? cancelLabel,
+    String? validationMessage,
+    String? mismatchMessage,
   }) async {
     return showDialog<List<String>>(
       context: context,
@@ -37,6 +47,9 @@ class PinInputDialog extends StatefulWidget {
         fieldLabels: fieldLabels,
         confirmLabel: confirmLabel ?? LocalAuthConstants.saveButtonText,
         cancelLabel: cancelLabel ?? LocalAuthConstants.cancelButtonText2,
+        validationMessage:
+            validationMessage ?? LocalAuthConstants.pinValidationError,
+        mismatchMessage: mismatchMessage ?? LocalAuthConstants.pinMatchError,
       ),
     );
   }
@@ -169,13 +182,13 @@ class _PinInputDialogState extends State<PinInputDialog> {
                   ),
                   validator: (value) {
                     if (value == null || value.length != 6) {
-                      return LocalAuthConstants.pinValidationError;
+                      return widget.validationMessage;
                     }
                     // Only compare the last field with the previous one (for change PIN: new vs confirm)
                     if (i > 0 &&
                         i == widget.fieldLabels.length - 1 &&
                         value != _controllers[i - 1].text) {
-                      return LocalAuthConstants.pinMatchError;
+                      return widget.mismatchMessage;
                     }
                     return null;
                   },

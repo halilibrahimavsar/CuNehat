@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
+import 'local_auth_notice.dart';
 import 'local_auth_settings_event.dart';
 import 'local_auth_settings_state.dart';
 import '../local_auth_status.dart';
@@ -11,15 +11,11 @@ class LocalAuthSettingsBloc
     extends Bloc<LocalAuthSettingsEvent, LocalAuthSettingsState> {
   final LocalAuthRepository _repository;
 
-  /// Lokalize edilmiş UI metinleri. Widget katmanından inject edilir;
-  /// varsayılan değerleri İngilizce'dir (package standalone kullanımı için).
-  final LocalAuthTexts _texts;
-
+  /// Bloc METİN yaymaz, [LocalAuthNotice] yayar; yerelleştirme tüketicinin
+  /// işidir. Bu yüzden burada bir metin sözlüğü yoktur.
   LocalAuthSettingsBloc({
     required LocalAuthRepository repository,
-    LocalAuthTexts texts = const LocalAuthTexts(),
   })  : _repository = repository,
-        _texts = texts,
         super(const LocalAuthSettingsState()) {
     on<LoadSettingsEvent>(_onLoadSettings);
     on<ToggleBiometricEvent>(_onToggleBiometric);
@@ -53,7 +49,10 @@ class LocalAuthSettingsBloc
         backgroundLockTimeoutSeconds: backgroundLockTimeoutSeconds,
       ));
     } catch (e) {
-      emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
+      emit(state.copyWith(
+          status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
+          message: e.toString()));
     }
   }
 
@@ -70,7 +69,7 @@ class LocalAuthSettingsBloc
           if (!isPinSet) {
             emit(state.copyWith(
                 status: SettingsStatus.error,
-                message: _texts.msgCreateAPinFirst));
+                notice: LocalAuthNotice.createPinFirst));
             return;
           }
 
@@ -78,7 +77,7 @@ class LocalAuthSettingsBloc
           if (!isAvailable) {
             emit(state.copyWith(
                 status: SettingsStatus.error,
-                message: _texts.msgBiometricAuthenticationIsNot));
+                notice: LocalAuthNotice.biometricNotSupported));
             return;
           }
         }
@@ -91,23 +90,26 @@ class LocalAuthSettingsBloc
         if (!authenticated) {
           emit(state.copyWith(
               status: SettingsStatus.error,
-              message: _texts.msgBiometricAuthenticationFailed));
+              notice: LocalAuthNotice.biometricFailed));
           return;
         }
         await _repository.setBiometricEnabled(true);
         emit(state.copyWith(
             isBiometricEnabled: true,
             status: SettingsStatus.success,
-            message: _texts.msgBiometricLoginEnabled));
+            notice: LocalAuthNotice.biometricEnabled));
       } else {
         await _repository.setBiometricEnabled(false);
         emit(state.copyWith(
             isBiometricEnabled: false,
             status: SettingsStatus.success,
-            message: _texts.msgBiometricLoginDisabled));
+            notice: LocalAuthNotice.biometricDisabled));
       }
     } catch (e) {
-      emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
+      emit(state.copyWith(
+          status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
+          message: e.toString()));
     }
   }
 
@@ -120,21 +122,25 @@ class LocalAuthSettingsBloc
       if (alreadySet) {
         emit(state.copyWith(
             status: SettingsStatus.error,
-            message: _texts.msgPINAlreadyExistsUse));
+            notice: LocalAuthNotice.pinAlreadyExists));
         return;
       }
       if (event.pin != event.confirmPin) {
         emit(state.copyWith(
-            status: SettingsStatus.error, message: _texts.msgPINsDoNotMatch));
+            status: SettingsStatus.error,
+            notice: LocalAuthNotice.pinsDoNotMatch));
         return;
       }
       await _repository.savePin(event.pin);
       emit(state.copyWith(
           isPinSet: true,
           status: SettingsStatus.success,
-          message: _texts.msgPINSavedSuccessfully));
+          notice: LocalAuthNotice.pinCreated));
     } catch (e) {
-      emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
+      emit(state.copyWith(
+          status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
+          message: e.toString()));
     }
   }
 
@@ -145,7 +151,8 @@ class LocalAuthSettingsBloc
     try {
       if (event.newPin != event.confirmPin) {
         emit(state.copyWith(
-            status: SettingsStatus.error, message: _texts.msgNewPinValuesDo));
+            status: SettingsStatus.error,
+            notice: LocalAuthNotice.newPinsDoNotMatch));
         return;
       }
 
@@ -153,7 +160,7 @@ class LocalAuthSettingsBloc
       if (!isValid) {
         emit(state.copyWith(
             status: SettingsStatus.error,
-            message: _texts.msgCurrentPinIsIncorrect));
+            notice: LocalAuthNotice.currentPinIncorrect));
         return;
       }
 
@@ -161,9 +168,12 @@ class LocalAuthSettingsBloc
       emit(state.copyWith(
           isPinSet: true,
           status: SettingsStatus.success,
-          message: _texts.msgPINUpdatedSuccessfully));
+          notice: LocalAuthNotice.pinUpdated));
     } catch (e) {
-      emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
+      emit(state.copyWith(
+          status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
+          message: e.toString()));
     }
   }
 
@@ -176,7 +186,7 @@ class LocalAuthSettingsBloc
       if (!isValid) {
         emit(state.copyWith(
             status: SettingsStatus.error,
-            message: _texts.msgCurrentPinIsIncorrect2));
+            notice: LocalAuthNotice.currentPinIncorrect));
         return;
       }
       await _repository.deletePin();
@@ -185,9 +195,12 @@ class LocalAuthSettingsBloc
           isPinSet: false,
           isBiometricEnabled: false,
           status: SettingsStatus.success,
-          message: _texts.msgPINRemoved));
+          notice: LocalAuthNotice.pinRemoved));
     } catch (e) {
-      emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
+      emit(state.copyWith(
+          status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
+          message: e.toString()));
     }
   }
 
@@ -200,11 +213,15 @@ class LocalAuthSettingsBloc
       emit(state.copyWith(
         isPrivacyGuardEnabled: event.enable,
         status: SettingsStatus.success,
-        message:
-            event.enable ? "Privacy Guard enabled" : "Privacy Guard disabled",
+        notice: event.enable
+            ? LocalAuthNotice.privacyGuardEnabled
+            : LocalAuthNotice.privacyGuardDisabled,
       ));
     } catch (e) {
-      emit(state.copyWith(status: SettingsStatus.error, message: e.toString()));
+      emit(state.copyWith(
+          status: SettingsStatus.error,
+          notice: LocalAuthNotice.unexpectedError,
+          message: e.toString()));
     }
   }
 
@@ -227,7 +244,7 @@ class LocalAuthSettingsBloc
           emit(state.copyWith(
               status: SettingsStatus.error,
               backgroundLockTimeoutSeconds: currentTimeout,
-              message: _texts.msgPINOrBiometricLogin));
+              notice: LocalAuthNotice.backgroundLockNeedsAuth));
           return;
         }
 
@@ -239,7 +256,7 @@ class LocalAuthSettingsBloc
               isPrivacyGuardEnabled: true,
               backgroundLockTimeoutSeconds: seconds,
               status: SettingsStatus.success,
-              message: _texts.msgBackgroundLockAndPrivacy));
+              notice: LocalAuthNotice.backgroundLockWithPrivacyGuard));
           return;
         }
       }
@@ -251,13 +268,14 @@ class LocalAuthSettingsBloc
       emit(state.copyWith(
           backgroundLockTimeoutSeconds: seconds,
           status: SettingsStatus.success,
-          message: seconds > 0
-              ? "Background lock timeout updated"
-              : "Background lock disabled"));
+          notice: seconds > 0
+              ? LocalAuthNotice.backgroundLockUpdated
+              : LocalAuthNotice.backgroundLockDisabled));
     } catch (e) {
       emit(state.copyWith(
           status: SettingsStatus.error,
           backgroundLockTimeoutSeconds: state.backgroundLockTimeoutSeconds,
+          notice: LocalAuthNotice.unexpectedError,
           message: e.toString()));
     }
   }

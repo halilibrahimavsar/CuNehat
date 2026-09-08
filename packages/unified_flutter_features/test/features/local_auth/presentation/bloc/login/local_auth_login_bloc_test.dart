@@ -14,6 +14,9 @@ void main() {
 
   setUp(() {
     repository = _MockRepository();
+    // Kalıcı deneme sayacı: her testin varsayılanı "temiz".
+    when(() => repository.getFailedAttempts()).thenAnswer((_) async => 0);
+    when(() => repository.setFailedAttempts(any())).thenAnswer((_) async {});
   });
 
   group('initial state', () {
@@ -51,6 +54,36 @@ void main() {
             s.loadStatus == LoginLoadStatus.success &&
             s.isBiometricEnabled == true &&
             s.isBiometricAvailable == true),
+      ],
+    );
+
+    blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
+      'politika yüklemesi önceki turun authenticated durumunu sıfırlar',
+      // Bu bloc, host tarafından uygulama ömrü boyunca yaşayan tek bir
+      // provider'dan verilebiliyor. Önceki kilit açma turundan kalan
+      // `authenticated`, kilit ekranı yeniden kurulduğunda ilk yayında
+      // "başarı" sayılıp kilidi hiç doğrulamadan açıyordu.
+      build: () {
+        when(() => repository.isPinSet()).thenAnswer((_) async => true);
+        when(() => repository.isBiometricEnabled())
+            .thenAnswer((_) async => true);
+        when(() => repository.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => repository.getLockoutEndTime())
+            .thenAnswer((_) async => null);
+        return LocalAuthLoginBloc(repository: repository);
+      },
+      seed: () => const LocalAuthLoginState(
+        loadStatus: LoginLoadStatus.success,
+        authStatus: AuthStatus.authenticated,
+      ),
+      act: (bloc) => bloc.add(LoadLoginPolicyEvent()),
+      expect: () => [
+        predicate<LocalAuthLoginState>(
+            (s) => s.authStatus == AuthStatus.initial),
+        predicate<LocalAuthLoginState>((s) =>
+            s.loadStatus == LoginLoadStatus.success &&
+            s.authStatus == AuthStatus.initial),
       ],
     );
 
@@ -246,6 +279,62 @@ void main() {
       ),
       act: (bloc) => bloc.add(const BiometricAuthLoginEvent()),
       expect: () => const <LocalAuthLoginState>[],
+    );
+  });
+
+  group('kalıcı deneme sayacı', () {
+    // Sayaç yalnız bellekteyken uygulamayı iki denemede bir öldüren biri
+    // kilitlenmeyi hiç görmüyordu.
+    blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
+      'yeniden başlatmada kaldığı yerden devam eder',
+      build: () {
+        when(() => repository.isPinSet()).thenAnswer((_) async => true);
+        when(() => repository.isBiometricEnabled())
+            .thenAnswer((_) async => false);
+        when(() => repository.isBiometricAvailable())
+            .thenAnswer((_) async => false);
+        when(() => repository.getLockoutEndTime())
+            .thenAnswer((_) async => null);
+        // Önceki oturumdan kalan iki başarısız deneme.
+        when(() => repository.getFailedAttempts()).thenAnswer((_) async => 2);
+        when(() => repository.verifyPin(any())).thenAnswer((_) async => false);
+        when(() => repository.getLockoutLevel()).thenAnswer((_) async => 0);
+        when(() => repository.saveLockoutState(any(), any()))
+            .thenAnswer((_) async {});
+        return LocalAuthLoginBloc(repository: repository);
+      },
+      act: (bloc) async {
+        bloc.add(LoadLoginPolicyEvent());
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        bloc.add(const VerifyPinLoginEvent(pin: '000000'));
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      },
+      verify: (_) {
+        // Üçüncü yanlış: kilitlenme ŞİMDİ tetiklenmeli.
+        verify(() => repository.saveLockoutState(1, any())).called(1);
+      },
+    );
+
+    blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
+      'yanlış deneme kalıcı olarak yazılır',
+      build: () {
+        when(() => repository.isPinSet()).thenAnswer((_) async => true);
+        when(() => repository.isBiometricEnabled())
+            .thenAnswer((_) async => false);
+        when(() => repository.isBiometricAvailable())
+            .thenAnswer((_) async => false);
+        when(() => repository.getLockoutEndTime())
+            .thenAnswer((_) async => null);
+        when(() => repository.verifyPin(any())).thenAnswer((_) async => false);
+        return LocalAuthLoginBloc(repository: repository);
+      },
+      act: (bloc) async {
+        bloc.add(const VerifyPinLoginEvent(pin: '000000'));
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      },
+      verify: (_) {
+        verify(() => repository.setFailedAttempts(1)).called(1);
+      },
     );
   });
 

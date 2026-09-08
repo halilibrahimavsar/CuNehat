@@ -52,6 +52,7 @@ class CuNehatApp extends StatelessWidget {
             final localAuthTexts = l10n != null
                 ? LocalAuthTexts(
                     logoutLabel: l10n.logoutLabel,
+                    forgotPinLabel: l10n.forgotPinAction,
                     welcomeTitle: l10n.welcomeTitle,
                     enterPinPrompt: l10n.enterPinPrompt,
                     lockedOutPromptPrefix: l10n.lockedOutPromptPrefix,
@@ -142,6 +143,15 @@ class CuNehatApp extends StatelessWidget {
             return LocalAuthSecurityLayer(
               repository: getIt<LocalAuthRepository>(),
               texts: localAuthTexts,
+              // Kilidin TEK sahibi [AppAuthBloc] + `/lock` rotasıdır. Paketin
+              // kendi arka plan kilidi de açık kalınca tek bir kilit açma
+              // turunda biyometrik İKİ KEZ soruluyordu: iki katman ayrı ayrı
+              // birer `BiometricAuthPage` kuruyor. Üstelik paket katmanı
+              // router'ın TAMAMINI ağaçtan çıkarıyor (Navigator yığını ve
+              // sayfa cubit'leri yok oluyor) ve [SystemActivityGuard]'ın
+              // seçici affından habersiz. Gizlilik perdesi (PrivacyGuard)
+              // burada kalmaya devam eder.
+              enableBackgroundLock: false,
               child: child!,
             );
           },

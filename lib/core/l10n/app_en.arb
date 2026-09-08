@@ -2342,5 +2342,83 @@
   "kategoriBuCuzdandaGizle": "Hide in this wallet",
   "kategoriGorunurSayisi": "{visible} of {total} categories visible in this wallet",
   "kategoriBuCuzdandaHicYok": "No categories picked for this wallet yet. Install the starter set, or switch them on below.",
-  "kategoriCuzdanKapsamiAciklamaBu": "Categories are shared across all wallets. This switch only decides which ones show up in this wallet; it never deletes a category."
+  "kategoriCuzdanKapsamiAciklamaBu": "Categories are shared across all wallets. This switch only decides which ones show up in this wallet; it never deletes a category.",
+  "securityTitle": "Security",
+  "securityLockSection": "Lock",
+  "securityPrivacySection": "Privacy",
+  "securityRecoverySection": "Recovery",
+  "securityStatusOnTitle": "App lock is on",
+  "securityStatusOffTitle": "App lock is off",
+  "securityStatusOnSubtitle": "Authentication is required when the app opens.",
+  "securityStatusOffSubtitle": "Create a PIN to protect your records.",
+  "pinCardTitle": "PIN code",
+  "pinCardOnSubtitle": "A 6-digit PIN is set",
+  "pinCardOffSubtitle": "Not set",
+  "biometricCardSubtitleUnavailable": "Not available on this device",
+  "privacyGuardCardTitle": "Privacy screen",
+  "privacyGuardCardSubtitle": "Blurs content in the app switcher",
+  "backgroundLockCardSubtitle": "Locks again after this long away from the app",
+  "durationSecondsShort": "{seconds} s",
+  "@durationSecondsShort": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "durationMinutesShort": "{minutes} min",
+  "@durationMinutesShort": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "pinEntryNewTitle": "New PIN",
+  "pinEntryNewSubtitle": "Choose a 6-digit PIN",
+  "pinEntryRepeatTitle": "Repeat PIN",
+  "pinEntryRepeatSubtitle": "Enter the same PIN once more",
+  "pinEntryCurrentTitle": "Current PIN",
+  "pinEntryCurrentSubtitle": "Enter your current PIN to continue",
+  "pinEntryMismatch": "PINs did not match, try again",
+  "msgPrivacyGuardEnabled": "Privacy screen enabled",
+  "msgPrivacyGuardDisabled": "Privacy screen disabled",
+  "msgBackgroundLockUpdated": "Background lock updated",
+  "msgBackgroundLockDisabled": "Background lock disabled",
+  "forgotPinAction": "Forgot PIN",
+  "pinRecoveryTitle": "PIN recovery",
+  "pinRecoveryIntro": "If you do not remember your PIN, you can set a new one with either option below. Nothing is deleted.",
+  "recoveryCardTitle": "If I forget my PIN",
+  "recoveryCardSubtitle": "Verify with your phone lock, or start a delayed reset",
+  "recoveryDeviceTitle": "Verify with phone lock",
+  "recoveryDeviceBody": "Verify with your phone's own PIN/pattern/password and set a new PIN right away.",
+  "recoveryDeviceAction": "Verify",
+  "recoveryDeviceReason": "Verify your identity to reset your PIN",
+  "recoveryDeviceUnavailable": "Unavailable because your phone has no screen lock set.",
+  "recoveryDeviceFailed": "Verification was not completed",
+  "recoveryTimedTitle": "Delayed reset",
+  "recoveryTimedBody": "No secret required. {hours} hours after you start the request you can set a new PIN; your data stays put.",
+  "@recoveryTimedBody": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "recoveryTimedStart": "Start reset request",
+  "recoveryTimedPending": "Time left: {remaining}",
+  "@recoveryTimedPending": {
+    "placeholders": {
+      "remaining": {}
+    }
+  },
+  "recoveryTimedCancel": "Cancel request",
+  "recoveryTimedReady": "The wait is over, you can set a new PIN.",
+  "recoveryTimedStarted": "Reset request started",
+  "recoveryTimedCancelled": "Reset request cancelled",
+  "recoveryTimedWarning": "Cancel this request if you did not start it: once the wait is over, whoever holds the phone can change the PIN.",
+  "recoveryResetAction": "Set new PIN",
+  "recoveryResetDone": "PIN has been reset",
+  "recoveryUnexpectedError": "Could not complete the action",
+  "remainingHoursMinutes": "{hours} h {minutes} m",
+  "@remainingHoursMinutes": {
+    "placeholders": {
+      "hours": {},
+      "minutes": {}
+    }
+  }
 }

@@ -14,6 +14,7 @@ extension LocalizationX on BuildContext {
     final l = l10n;
     return LocalAuthTexts(
       logoutLabel: l.logoutLabel,
+      forgotPinLabel: l.forgotPinAction,
       welcomeTitle: l.welcomeTitle,
       enterPinPrompt: l.enterPinPrompt,
       lockedOutPromptPrefix: l.lockedOutPromptPrefix,

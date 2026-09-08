@@ -3,13 +3,17 @@ import 'dart:async';
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/features/main_feature/pages/home_page.dart';
 import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
-import 'package:cunehat/features/settings/presentation/page/local_auth_settings_page.dart';
+import 'package:cunehat/features/settings/presentation/page/pin_recovery_page.dart';
+import 'package:cunehat/features/settings/presentation/page/security_settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_page.dart';
 import 'package:cunehat/features/settings/presentation/page/backup_preview_page.dart';
+import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/onboarding/onboarding_route_observer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
@@ -97,15 +101,34 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
 
           return NoTransitionPage(
             key: state.pageKey,
-            child: BiometricAuthPage(
-              onSuccess: () {
-                if (user != null) {
-                  authBloc.add(AppAuthUnlockRequested(user));
-                }
-              },
-              onLogout: () {
-                // Local only auth: no remote sign out.
-              },
+            // Kilit ekranının bloc'u SAYFAYLA yaşar. Uygulama ömrü boyunca
+            // yaşayan ortak bir bloc, önceki kilit açma turundan kalan
+            // `authenticated` durumunu taşıyor ve ikinci kilitte sayfa daha
+            // ilk yayında "başarı" görüp kilidi hiç sormadan açıyordu.
+            child: BlocProvider<LocalAuthLoginBloc>(
+              create: (_) => getIt<LocalAuthLoginBloc>(),
+              child: Builder(
+                builder: (pageContext) => BiometricAuthPage(
+                  onSuccess: () {
+                    if (user != null) {
+                      authBloc.add(AppAuthUnlockRequested(user));
+                    }
+                  },
+                  // Eskiden burada "Çıkış Yap" düğmesi vardı ve gövdesi BOŞTU:
+                  // PIN'ini unutan kullanıcı ona basıyor, hiçbir şey olmuyordu.
+                  showLogoutButton: false,
+                  texts: pageContext.localAuthTexts,
+                  onForgotPin: () async {
+                    final reset = await PinRecoveryPage.show(pageContext);
+                    if (reset != true || !pageContext.mounted) return;
+                    // Kurtarma kilitlenmeyi de temizler; ekran bunu ancak
+                    // politikayı yeniden yükleyince görür.
+                    pageContext
+                        .read<LocalAuthLoginBloc>()
+                        .add(LoadLoginPolicyEvent());
+                  },
+                ),
+              ),
             ),
           );
         },
@@ -115,7 +138,7 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
         pageBuilder: (context, state) {
           return MaterialPage(
             key: state.pageKey,
-            child: const LocalAuthSettingsPage(),
+            child: const SecuritySettingsPage(),
           );
         },
       ),

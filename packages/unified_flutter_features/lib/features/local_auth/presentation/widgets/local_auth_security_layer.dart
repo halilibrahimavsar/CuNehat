@@ -70,6 +70,13 @@ class LocalAuthSecurityLayer extends StatefulWidget {
   /// Localization texts.
   final LocalAuthTexts texts;
 
+  /// Whether this layer also owns the background lock screen.
+  ///
+  /// Set to `false` when the host app already re-authenticates on resume
+  /// through its own routing. Two owners means two biometric prompts for a
+  /// single unlock, because each one mounts its own `BiometricAuthPage`.
+  final bool enableBackgroundLock;
+
   const LocalAuthSecurityLayer({
     super.key,
     required this.repository,
@@ -84,6 +91,7 @@ class LocalAuthSecurityLayer extends StatefulWidget {
     this.privacyGuardAnimationDuration = const Duration(milliseconds: 180),
     this.privacyGuardAnimationCurve = Curves.easeOut,
     this.privacyGuardOverlayBuilder,
+    this.enableBackgroundLock = true,
   });
 
   @override
@@ -157,11 +165,13 @@ class _LocalAuthSecurityLayerState extends State<LocalAuthSecurityLayer> {
       animationDuration: widget.privacyGuardAnimationDuration,
       animationCurve: widget.privacyGuardAnimationCurve,
       overlayBuilder: widget.privacyGuardOverlayBuilder,
-      child: LocalAuthBackgroundLock(
-        repository: widget.repository,
-        texts: widget.texts,
-        child: widget.child,
-      ),
+      child: widget.enableBackgroundLock
+          ? LocalAuthBackgroundLock(
+              repository: widget.repository,
+              texts: widget.texts,
+              child: widget.child,
+            )
+          : widget.child,
     );
   }
 }

@@ -61,9 +61,11 @@ class AppProviders extends StatelessWidget {
             create: (_) => getIt<NotificationSettingsBloc>()
               ..add(const LoadNotificationSettings())),
 
-        // Local Auth BLoCs
-        BlocProvider(create: (_) => getIt<LocalAuthSettingsBloc>()),
-        BlocProvider(create: (_) => getIt<LocalAuthLoginBloc>()),
+        // Local auth bloc'ları BİLEREK burada değil: ikisi de SAYFAYLA
+        // yaşamalı (bkz. `createAppRouter` /lock rotası ve
+        // `SecuritySettingsPage`). Uygulama ömürlü ortak kilit bloc'u, bir
+        // önceki turdan kalan `authenticated` durumuyla ikinci kilidi
+        // doğrulamasız açıyordu.
       ],
       // Bloc'ların ALTINDA: bildirim dokunuşunu PendingRecurringBloc'a,
       // paylaşılan ekstreyi de AppAuthBloc'un kilit durumuna bağlayabilmek

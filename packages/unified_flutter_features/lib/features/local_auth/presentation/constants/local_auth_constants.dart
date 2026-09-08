@@ -26,6 +26,14 @@ class LocalAuthConstants {
   static const String lockoutEndKey = 'local_auth_lockout_end';
   static const String lockoutLevelKey = 'local_auth_lockout_level';
 
+  /// Başarısız deneme sayacı. KALICI: yalnız bellekte tutulunca uygulamayı
+  /// iki denemede bir öldüren biri kilitlenmeyi hiç görmüyordu.
+  static const String failedAttemptsKey = 'local_auth_failed_attempts';
+
+  /// Gecikmeli PIN sıfırlama isteğinin başlangıç anı (güvenli depoda).
+  static const String pinResetRequestedAtKey =
+      'local_auth_pin_reset_requested_at';
+
   static const String defaultBiometricReason = 'Authenticate to continue';
   static const String enableBiometricReason = 'Enable biometric login';
   static const String pinLabelText = 'PIN';

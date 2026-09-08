@@ -7,7 +7,7 @@ import 'package:injectable/injectable.dart';
 /// **Düzeltilen hata (bildirildi 3 Eylül 2026):** PIN açıkken banka ekstresi
 /// içe aktarmak için dosya seçici açıldığında Android bizim activity'mizi
 /// duraklatıyor. Kullanıcı klasörlerde
-/// [AppAuthBloc.backgroundLockTimeout]'tan uzun dolaşırsa dönüşte
+/// arka plan kilidi süresinden uzun dolaşırsa dönüşte
 /// `AppAuthLocked` yayılıyor; router kilitte TÜM yığını `/lock`'a
 /// yönlendirdiğinden (bkz. `createAppRouter`) içe aktarma sayfası ve onunla
 /// birlikte `BankImportCubit` yok oluyor. Sonuç: kullanıcı PIN'ini giriyor,

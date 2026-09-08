@@ -181,6 +181,80 @@ class SecureLocalAuthRepository implements LocalAuthRepository {
   Future<void> clearLockoutState() async {
     await _prefs.remove(LocalAuthConstants.lockoutLevelKey);
     await _prefs.remove(LocalAuthConstants.lockoutEndKey);
+    await _prefs.remove(LocalAuthConstants.failedAttemptsKey);
+  }
+
+  @override
+  Future<int> getFailedAttempts() async {
+    return _prefs.getInt(LocalAuthConstants.failedAttemptsKey) ?? 0;
+  }
+
+  @override
+  Future<void> setFailedAttempts(int attempts) async {
+    await _prefs.setInt(LocalAuthConstants.failedAttemptsKey, attempts);
+  }
+
+  @override
+  Future<bool> isDeviceCredentialAvailable() async {
+    // BİLEREK `canCheckBiometrics` YOK: kurtarmanın koşulu parmak izi değil,
+    // cihazın kilitli olması. `isDeviceSupported` ekran kilidi VARSA da true
+    // döner (plugin: isDeviceSecure() || canAuthenticateWithBiometrics()).
+    return _auth.isDeviceSupported();
+  }
+
+  @override
+  Future<bool> authenticateWithDeviceCredential({
+    String? reason,
+    String? signInTitle,
+    String? cancelButton,
+  }) async {
+    final supported = await _auth.isDeviceSupported();
+    if (!supported) return false;
+    return _auth.authenticate(
+      localizedReason: reason ?? LocalAuthConstants.defaultBiometricReason,
+      authMessages: [
+        AndroidAuthMessages(
+          signInTitle: signInTitle,
+          cancelButton: cancelButton,
+        ),
+        IOSAuthMessages(
+          cancelButton: cancelButton,
+        ),
+      ],
+      options: const AuthenticationOptions(
+        // `false` olduğunda plugin prompt'a DEVICE_CREDENTIAL ekliyor
+        // (LocalAuthPlugin.java: allowCredentials = !biometricOnly && ...).
+        biometricOnly: false,
+        stickyAuth: true,
+        useErrorDialogs: true,
+      ),
+    );
+  }
+
+  @override
+  Future<int?> getPinResetRequestedAt() async {
+    final raw = await _secureStorage.read(
+      key: LocalAuthConstants.pinResetRequestedAtKey,
+    );
+    if (raw == null) return null;
+    return int.tryParse(raw);
+  }
+
+  @override
+  Future<void> setPinResetRequestedAt(int timestampMillis) async {
+    await _secureStorage.write(
+      key: LocalAuthConstants.pinResetRequestedAtKey,
+      value: '$timestampMillis',
+    );
+    _settingsChangeController.add(null);
+  }
+
+  @override
+  Future<void> clearPinResetRequest() async {
+    await _secureStorage.delete(
+      key: LocalAuthConstants.pinResetRequestedAtKey,
+    );
+    _settingsChangeController.add(null);
   }
 
   String _generateSalt() {

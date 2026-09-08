@@ -22,6 +22,17 @@ class LocalAuthTexts {
   final String pinMismatchMessage;
   final String pinValidationMessage;
 
+  // PIN giriş alanlarının etiketleri (önceden koda gömülü İngilizceydi)
+  final String pinFieldLabel;
+  final String confirmPinFieldLabel;
+  final String currentPinFieldLabel;
+  final String newPinFieldLabel;
+  final String confirmNewPinFieldLabel;
+  final String verifyLabel;
+
+  /// Kilit ekranındaki kurtarma girişi.
+  final String forgotPinLabel;
+
   // New fields for settings pages & bloc messages
   final String msgCreateAPinFirst;
   final String msgBiometricAuthenticationIsNot;
@@ -111,6 +122,13 @@ class LocalAuthTexts {
     this.cancelLabel = 'Cancel',
     this.pinMismatchMessage = 'PINs do not match',
     this.pinValidationMessage = 'Enter a 6-digit PIN',
+    this.pinFieldLabel = 'PIN (6 digits)',
+    this.confirmPinFieldLabel = 'Confirm PIN',
+    this.currentPinFieldLabel = 'Current PIN',
+    this.newPinFieldLabel = 'New PIN',
+    this.confirmNewPinFieldLabel = 'Confirm New PIN',
+    this.verifyLabel = 'Verify',
+    this.forgotPinLabel = 'Forgot PIN',
 
     // Default English translations for new fields
     this.msgCreateAPinFirst = 'Create a PIN first',
@@ -199,6 +217,13 @@ class LocalAuthTexts {
     String? cancelLabel,
     String? pinMismatchMessage,
     String? pinValidationMessage,
+    String? pinFieldLabel,
+    String? confirmPinFieldLabel,
+    String? currentPinFieldLabel,
+    String? newPinFieldLabel,
+    String? confirmNewPinFieldLabel,
+    String? verifyLabel,
+    String? forgotPinLabel,
     String? msgCreateAPinFirst,
     String? msgBiometricAuthenticationIsNot,
     String? msgBiometricAuthenticationFailed,
@@ -269,6 +294,14 @@ class LocalAuthTexts {
       cancelLabel: cancelLabel ?? this.cancelLabel,
       pinMismatchMessage: pinMismatchMessage ?? this.pinMismatchMessage,
       pinValidationMessage: pinValidationMessage ?? this.pinValidationMessage,
+      pinFieldLabel: pinFieldLabel ?? this.pinFieldLabel,
+      confirmPinFieldLabel: confirmPinFieldLabel ?? this.confirmPinFieldLabel,
+      currentPinFieldLabel: currentPinFieldLabel ?? this.currentPinFieldLabel,
+      newPinFieldLabel: newPinFieldLabel ?? this.newPinFieldLabel,
+      confirmNewPinFieldLabel:
+          confirmNewPinFieldLabel ?? this.confirmNewPinFieldLabel,
+      verifyLabel: verifyLabel ?? this.verifyLabel,
+      forgotPinLabel: forgotPinLabel ?? this.forgotPinLabel,
       msgCreateAPinFirst: msgCreateAPinFirst ?? this.msgCreateAPinFirst,
       msgBiometricAuthenticationIsNot: msgBiometricAuthenticationIsNot ??
           this.msgBiometricAuthenticationIsNot,

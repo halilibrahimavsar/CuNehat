@@ -7786,6 +7786,318 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kategoriler tüm cüzdanlarda ortaktır. Buradaki anahtar yalnız bu cüzdanda hangilerinin görüneceğini belirler; kategori silinmez.'**
   String get kategoriCuzdanKapsamiAciklamaBu;
+
+  /// No description provided for @securityTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenlik'**
+  String get securityTitle;
+
+  /// No description provided for @securityLockSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilit'**
+  String get securityLockSection;
+
+  /// No description provided for @securityPrivacySection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik'**
+  String get securityPrivacySection;
+
+  /// No description provided for @securityRecoverySection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurtarma'**
+  String get securityRecoverySection;
+
+  /// No description provided for @securityStatusOnTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama kilidi açık'**
+  String get securityStatusOnTitle;
+
+  /// No description provided for @securityStatusOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama kilidi kapalı'**
+  String get securityStatusOffTitle;
+
+  /// No description provided for @securityStatusOnSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama açıldığında kimlik doğrulaması istenir.'**
+  String get securityStatusOnSubtitle;
+
+  /// No description provided for @securityStatusOffSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlarını korumak için bir PIN oluştur.'**
+  String get securityStatusOffSubtitle;
+
+  /// No description provided for @pinCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN kodu'**
+  String get pinCardTitle;
+
+  /// No description provided for @pinCardOnSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'6 haneli PIN tanımlı'**
+  String get pinCardOnSubtitle;
+
+  /// No description provided for @pinCardOffSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tanımlı değil'**
+  String get pinCardOffSubtitle;
+
+  /// No description provided for @biometricCardSubtitleUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda kullanılamıyor'**
+  String get biometricCardSubtitleUnavailable;
+
+  /// No description provided for @privacyGuardCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik perdesi'**
+  String get privacyGuardCardTitle;
+
+  /// No description provided for @privacyGuardCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama değiştiricide içerik bulanıklaşır'**
+  String get privacyGuardCardSubtitle;
+
+  /// No description provided for @backgroundLockCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamadan bu kadar uzak kalınca yeniden kilitlenir'**
+  String get backgroundLockCardSubtitle;
+
+  /// No description provided for @durationSecondsShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'{seconds} sn'**
+  String durationSecondsShort(Object seconds);
+
+  /// No description provided for @durationMinutesShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'{minutes} dk'**
+  String durationMinutesShort(Object minutes);
+
+  /// No description provided for @pinEntryNewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni PIN'**
+  String get pinEntryNewTitle;
+
+  /// No description provided for @pinEntryNewSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'6 haneli bir PIN belirle'**
+  String get pinEntryNewSubtitle;
+
+  /// No description provided for @pinEntryRepeatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'i tekrar gir'**
+  String get pinEntryRepeatTitle;
+
+  /// No description provided for @pinEntryRepeatSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynı PIN\'i bir kez daha gir'**
+  String get pinEntryRepeatSubtitle;
+
+  /// No description provided for @pinEntryCurrentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mevcut PIN'**
+  String get pinEntryCurrentTitle;
+
+  /// No description provided for @pinEntryCurrentSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam etmek için mevcut PIN\'ini gir'**
+  String get pinEntryCurrentSubtitle;
+
+  /// No description provided for @pinEntryMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'ler eşleşmedi, tekrar dene'**
+  String get pinEntryMismatch;
+
+  /// No description provided for @msgPrivacyGuardEnabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik perdesi açıldı'**
+  String get msgPrivacyGuardEnabled;
+
+  /// No description provided for @msgPrivacyGuardDisabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik perdesi kapatıldı'**
+  String get msgPrivacyGuardDisabled;
+
+  /// No description provided for @msgBackgroundLockUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arka plan kilidi güncellendi'**
+  String get msgBackgroundLockUpdated;
+
+  /// No description provided for @msgBackgroundLockDisabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arka plan kilidi kapatıldı'**
+  String get msgBackgroundLockDisabled;
+
+  /// No description provided for @forgotPinAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'imi unuttum'**
+  String get forgotPinAction;
+
+  /// No description provided for @pinRecoveryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN kurtarma'**
+  String get pinRecoveryTitle;
+
+  /// No description provided for @pinRecoveryIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'ini hatırlamıyorsan aşağıdaki yollardan biriyle yeni bir PIN belirleyebilirsin. Hiçbir veri silinmez.'**
+  String get pinRecoveryIntro;
+
+  /// No description provided for @recoveryCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'imi unutursam'**
+  String get recoveryCardTitle;
+
+  /// No description provided for @recoveryCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon kilidinle doğrula ya da gecikmeli sıfırlama başlat'**
+  String get recoveryCardSubtitle;
+
+  /// No description provided for @recoveryDeviceTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon kilidiyle doğrula'**
+  String get recoveryDeviceTitle;
+
+  /// No description provided for @recoveryDeviceBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonunun kendi PIN/desen/parolasıyla doğrula, hemen yeni bir PIN belirle.'**
+  String get recoveryDeviceBody;
+
+  /// No description provided for @recoveryDeviceAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrula'**
+  String get recoveryDeviceAction;
+
+  /// No description provided for @recoveryDeviceReason.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'ini sıfırlamak için kimliğini doğrula'**
+  String get recoveryDeviceReason;
+
+  /// No description provided for @recoveryDeviceUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonunda ekran kilidi tanımlı olmadığı için bu yöntem kullanılamıyor.'**
+  String get recoveryDeviceUnavailable;
+
+  /// No description provided for @recoveryDeviceFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulama tamamlanmadı'**
+  String get recoveryDeviceFailed;
+
+  /// No description provided for @recoveryTimedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikmeli sıfırlama'**
+  String get recoveryTimedTitle;
+
+  /// No description provided for @recoveryTimedBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hiçbir şifre istemez. İsteği başlattıktan {hours} saat sonra yeni PIN belirleyebilirsin; verilerin yerinde kalır.'**
+  String recoveryTimedBody(Object hours);
+
+  /// No description provided for @recoveryTimedStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırlama isteği başlat'**
+  String get recoveryTimedStart;
+
+  /// No description provided for @recoveryTimedPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan süre: {remaining}'**
+  String recoveryTimedPending(Object remaining);
+
+  /// No description provided for @recoveryTimedCancel.
+  ///
+  /// In tr, this message translates to:
+  /// **'İsteği iptal et'**
+  String get recoveryTimedCancel;
+
+  /// No description provided for @recoveryTimedReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekleme tamamlandı, yeni PIN belirleyebilirsin.'**
+  String get recoveryTimedReady;
+
+  /// No description provided for @recoveryTimedStarted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırlama isteği başlatıldı'**
+  String get recoveryTimedStarted;
+
+  /// No description provided for @recoveryTimedCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırlama isteği iptal edildi'**
+  String get recoveryTimedCancelled;
+
+  /// No description provided for @recoveryTimedWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu isteği sen başlatmadıysan iptal et: bekleme dolduğunda telefonu eline geçiren biri PIN\'i değiştirebilir.'**
+  String get recoveryTimedWarning;
+
+  /// No description provided for @recoveryResetAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni PIN belirle'**
+  String get recoveryResetAction;
+
+  /// No description provided for @recoveryResetDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN sıfırlandı'**
+  String get recoveryResetDone;
+
+  /// No description provided for @recoveryUnexpectedError.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem tamamlanamadı'**
+  String get recoveryUnexpectedError;
+
+  /// No description provided for @remainingHoursMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{hours} sa {minutes} dk'**
+  String remainingHoursMinutes(Object hours, Object minutes);
 }
 
 class _AppLocalizationsDelegate

@@ -50,11 +50,22 @@ class LocalAuthLoginBloc
     LoadLoginPolicyEvent event,
     Emitter<LocalAuthLoginState> emit,
   ) async {
-    emit(state.copyWith(loadStatus: LoginLoadStatus.loading));
+    // Kilit ekranı DAİMA doğrulanmamış açılmalı. Bu bloc uygulama ömrü boyunca
+    // yaşayabiliyor (host onu tek bir provider'dan veriyor olabilir); önceki
+    // turdan kalan `authenticated`, sayfanın dinleyicisinde anında "başarı"
+    // sayılıp kilidi hiç sormadan açıyordu.
+    emit(state.copyWith(
+      loadStatus: LoginLoadStatus.loading,
+      authStatus: AuthStatus.initial,
+      message: null,
+    ));
     try {
       await LocalAuthUtils.ensureBiometricConsistency(_repository);
       final isBioEnabled = await _repository.isBiometricEnabled();
       final isAvailable = await _repository.isBiometricAvailable();
+      // Sayaç KALICI: uygulamayı iki denemede bir öldüren biri eskiden
+      // kilitlenmeyi hiç görmüyordu.
+      final failedAttempts = await _repository.getFailedAttempts();
 
       // Also check lockout status on load
       add(CheckLockoutEvent());
@@ -63,6 +74,7 @@ class LocalAuthLoginBloc
         loadStatus: LoginLoadStatus.success,
         isBiometricEnabled: isBioEnabled,
         isBiometricAvailable: isAvailable,
+        failedAttempts: failedAttempts,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -109,6 +121,7 @@ class LocalAuthLoginBloc
       final isCorrect = await _repository.verifyPin(event.pin);
 
       if (isCorrect) {
+        // clearLockoutState sayacı da sıfırlar.
         await _repository.clearLockoutState();
         emit(state.copyWith(
           authStatus: AuthStatus.authenticated,
@@ -126,6 +139,7 @@ class LocalAuthLoginBloc
               DateTime.now().millisecondsSinceEpoch + (duration * 1000);
 
           await _repository.saveLockoutState(level + 1, endTime);
+          await _repository.setFailedAttempts(0);
           emit(state.copyWith(
             authStatus: AuthStatus.lockedOut,
             lockoutEndTime: endTime,
@@ -133,6 +147,7 @@ class LocalAuthLoginBloc
             message: null,
           ));
         } else {
+          await _repository.setFailedAttempts(newAttempts);
           emit(state.copyWith(
             authStatus: AuthStatus.failure,
             failedAttempts: newAttempts,
