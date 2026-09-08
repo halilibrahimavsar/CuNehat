@@ -30,6 +30,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_summary_strip.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_top_bar.dart';
 import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -134,7 +135,20 @@ class _TransactionsViewState extends State<_TransactionsView> {
   /// dururken yapılan bir yeniden adlandırma ancak sayfa yeniden kurulduğunda
   /// görünüyordu.
   Future<void> _loadCategoryIcons() async {
-    final categories = await fetchAllCategories(getIt<CategoryRepository>());
+    // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır (CacheException) —
+    // bkz. `GetBudgetsUsecase`'teki aynı not. Yakalanmazsa bu, yakalanmamış
+    // bir asenkron hataya dönüyor ve indeks BOŞ kalıyordu: `rootIdOf` her
+    // tag'i kendi kökü sayar, yani kırılım YAPRAK seviyeye düşer ("%3 → Diğer"
+    // kovası ve ilk-N kesimi değişir) ve etiketler ham UUID olarak yazılır.
+    // Hata hâlinde ÖNCEKİ indeks korunur: yenileme sırasındaki geçici bir
+    // okuma hatası, çalışan bir haritayı silmemeli.
+    final List<CategoryEntity> categories;
+    try {
+      categories = await fetchAllCategories(getIt<CategoryRepository>());
+    } catch (e) {
+      debugPrint('Kategori indeksi yuklenemedi, onceki korunuyor: $e');
+      return;
+    }
     if (!mounted) return;
     final index = buildCategoryDisplayIndex(categories);
     setState(() {

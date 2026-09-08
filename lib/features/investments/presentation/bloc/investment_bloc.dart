@@ -139,40 +139,47 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
 
     // Yatırım Ekle
     on<CreateInvestmentEvent>((event, emit) async {
-      emit(InvestmentLoading());
-      final result = await addInvestmentUseCase.call(event.investment);
+      // Tek ekleme sheet'i açık olabilir; sabit anahtar yeterli.
+      if (!_inFlight.add('create-investment')) return;
+      try {
+        emit(InvestmentLoading());
+        final result = await addInvestmentUseCase.call(event.investment);
 
-      await result.fold(
-        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
-        (_) async {
-          // Nakit kuplajı: yatırım alımı → maliyet kadar gider.
-          //
-          // İki incelik:
-          // - Yalnız DEFTERE İŞLENECEK kısım yazılır. "Bu varlık zaten bende"
-          //   denen tutar (unbookedCost) cüzdandan hiç çıkmadı; bugünün
-          //   defterine sahte gider yazmak bakiyeyi olduğundan düşük gösterir.
-          // - Gider kaydın TARİHİNE yazılır (bugüne değil): geçmişte alınmış
-          //   bir varlık kendi ayında görünür. Yeni kayıtta tarih zaten bugün.
-          final bookedCost = event.investment.bookedCost;
-          var cashOk = true;
-          if (bookedCost > 0) {
-            cashOk = await walletMetricsService.recordCashMovement(
-              walletId: event.walletId,
-              userId: event.userId,
-              amount: bookedCost,
-              isIncome: false,
-              title: event.investment.name,
-              tag: CashMovementTags.investmentBuy,
-              date: event.investment.dateAdded,
-            );
-          }
-          await _safeSyncInvestment(event.walletId);
-          emit(InvestmentActionSuccess(const InvestmentAddedNotice(),
-              cashOk: cashOk));
-          add(GetInvestmentsEvent(
-              userId: event.userId, walletId: event.walletId));
-        },
-      );
+        await result.fold(
+          (failure) async =>
+              _emitError(emit, RawFailureNotice(failure.message)),
+          (_) async {
+            // Nakit kuplajı: yatırım alımı → maliyet kadar gider.
+            //
+            // İki incelik:
+            // - Yalnız DEFTERE İŞLENECEK kısım yazılır. "Bu varlık zaten bende"
+            //   denen tutar (unbookedCost) cüzdandan hiç çıkmadı; bugünün
+            //   defterine sahte gider yazmak bakiyeyi olduğundan düşük gösterir.
+            // - Gider kaydın TARİHİNE yazılır (bugüne değil): geçmişte alınmış
+            //   bir varlık kendi ayında görünür. Yeni kayıtta tarih zaten bugün.
+            final bookedCost = event.investment.bookedCost;
+            var cashOk = true;
+            if (bookedCost > 0) {
+              cashOk = await walletMetricsService.recordCashMovement(
+                walletId: event.walletId,
+                userId: event.userId,
+                amount: bookedCost,
+                isIncome: false,
+                title: event.investment.name,
+                tag: CashMovementTags.investmentBuy,
+                date: event.investment.dateAdded,
+              );
+            }
+            await _safeSyncInvestment(event.walletId);
+            emit(InvestmentActionSuccess(const InvestmentAddedNotice(),
+                cashOk: cashOk));
+            add(GetInvestmentsEvent(
+                userId: event.userId, walletId: event.walletId));
+          },
+        );
+      } finally {
+        _inFlight.remove('create-investment');
+      }
     });
 
     // Yatırım Güncelle
@@ -294,46 +301,53 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
 
     // Kısmi Satış: kayıt kalır, elden çıkan kadarı cüzdana gelir olur.
     on<PartialSellInvestmentEvent>((event, emit) async {
-      emit(InvestmentLoading());
-      final result = await updateInvestmentUseCase.call(event.remaining);
+      final key = 'sell:${event.remaining.id}';
+      if (!_inFlight.add(key)) return;
+      try {
+        emit(InvestmentLoading());
+        final result = await updateInvestmentUseCase.call(event.remaining);
 
-      await result.fold(
-        (failure) async => _emitError(emit, RawFailureNotice(failure.message)),
-        (_) async {
-          // Bedelsiz devir (proceeds = 0) defterde 0 tutarlı bir hareket
-          // bırakmasın; bkz. CreateInvestmentEvent'teki aynı koruma.
-          var cashResult = const CashWriteResult(ok: true);
-          if (event.proceeds > 0) {
-            cashResult = await walletMetricsService.recordCashMovements(
-              walletId: event.walletId,
-              entries: [
-                CashMovement(
-                  userId: event.userId,
-                  amount: event.proceeds,
-                  isIncome: true,
-                  title: 'Yatırım Satışı',
-                  tag: CashMovementTags.investmentSell,
-                ),
-              ],
-            );
-          }
-          await _safeSyncInvestment(event.walletId);
-          emit(InvestmentActionSuccess(
-            const InvestmentPartiallySoldNotice(),
-            cashOk: cashResult.ok,
-            // Geri alma kaydı ESKİ hâliyle geri yazar (aynı kimlik → üzerine
-            // yazar) ve satış gelirini defterden siler.
-            undo: InvestmentDeletionUndo(
-              investment: event.previous,
-              userId: event.userId,
-              walletId: event.walletId,
-              reversalTransactionIds: cashResult.transactionIds,
-            ),
-          ));
-          add(GetInvestmentsEvent(
-              userId: event.userId, walletId: event.walletId));
-        },
-      );
+        await result.fold(
+          (failure) async =>
+              _emitError(emit, RawFailureNotice(failure.message)),
+          (_) async {
+            // Bedelsiz devir (proceeds = 0) defterde 0 tutarlı bir hareket
+            // bırakmasın; bkz. CreateInvestmentEvent'teki aynı koruma.
+            var cashResult = const CashWriteResult(ok: true);
+            if (event.proceeds > 0) {
+              cashResult = await walletMetricsService.recordCashMovements(
+                walletId: event.walletId,
+                entries: [
+                  CashMovement(
+                    userId: event.userId,
+                    amount: event.proceeds,
+                    isIncome: true,
+                    title: 'Yatırım Satışı',
+                    tag: CashMovementTags.investmentSell,
+                  ),
+                ],
+              );
+            }
+            await _safeSyncInvestment(event.walletId);
+            emit(InvestmentActionSuccess(
+              const InvestmentPartiallySoldNotice(),
+              cashOk: cashResult.ok,
+              // Geri alma kaydı ESKİ hâliyle geri yazar (aynı kimlik → üzerine
+              // yazar) ve satış gelirini defterden siler.
+              undo: InvestmentDeletionUndo(
+                investment: event.previous,
+                userId: event.userId,
+                walletId: event.walletId,
+                reversalTransactionIds: cashResult.transactionIds,
+              ),
+            ));
+            add(GetInvestmentsEvent(
+                userId: event.userId, walletId: event.walletId));
+          },
+        );
+      } finally {
+        _inFlight.remove(key);
+      }
     });
 
     // Yatırım Sil
@@ -433,6 +447,16 @@ class InvestmentBloc extends Bloc<InvestmentEvent, InvestmentState>
     _changedSubscription?.cancel();
     return super.close();
   }
+
+  /// İşlenmekte olan para yazımlarının anahtarları.
+  ///
+  /// bloc'un varsayılan olay dönüştürücüsü EŞZAMANLIDIR: aynı olay iki kez
+  /// gelirse iki handler paralel çalışır ve deftere İKİ kayıt yazılır.
+  /// Ölçülmüş emsal `PendingRecurringBloc`: onay listesi ekranda kaldığı için
+  /// çift dokunma gerçekten iki işlem üretiyordu. Buradaki yollar hemen
+  /// kapanan sheet'ten tetiklendiği için risk daha düşük — ama "para iki kez
+  /// yazıldı" hatasının bedeli, korumanın maliyetinden büyük.
+  final Set<String> _inFlight = <String>{};
 
   /// Hatayı yayınlar ve ardından son bilinen listeyi geri koyar: mesaj
   /// (snackbar) görülür ama ekran boşalmaz. Liste hiç yüklenmemişse yalnız

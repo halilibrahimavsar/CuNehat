@@ -35,6 +35,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -143,6 +144,7 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     Brightness brightness,
     double walletOpening,
     int trendMonths,
+    DateTime today,
   })? _derivedKey;
   _ReportDerived? _derivedCache;
 
@@ -199,7 +201,20 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
   }
 
   Future<void> _loadCategoryIcons() async {
-    final categories = await fetchAllCategories(widget.categoryRepository);
+    // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır (CacheException) —
+    // bkz. `GetBudgetsUsecase`'teki aynı not. Yakalanmazsa bu, yakalanmamış
+    // bir asenkron hataya dönüyor ve indeks BOŞ kalıyordu: `rootIdOf` her
+    // tag'i kendi kökü sayar, yani kırılım YAPRAK seviyeye düşer ("%3 → Diğer"
+    // kovası ve ilk-N kesimi değişir) ve etiketler ham UUID olarak yazılır.
+    // Hata hâlinde ÖNCEKİ indeks korunur: yenileme sırasındaki geçici bir
+    // okuma hatası, çalışan bir haritayı silmemeli.
+    final List<CategoryEntity> categories;
+    try {
+      categories = await fetchAllCategories(widget.categoryRepository);
+    } catch (e) {
+      debugPrint('Kategori indeksi yuklenemedi, onceki korunuyor: $e');
+      return;
+    }
     if (!mounted) return;
     final index = buildCategoryDisplayIndex(categories);
     setState(() {
@@ -327,6 +342,13 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     });
   }
 
+  /// Türetmeyi etkileyen "bugün". Gün hassasiyetinde: saat başına önbellek
+  /// atmanın anlamı yok.
+  DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
   /// Bir build turunun türetilmiş rapor verisi — hepsi tek yerde, tek kez.
   _ReportDerived _derive(
     BuildContext context,
@@ -351,6 +373,11 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
       brightness: brightness,
       walletOpening: walletOpening,
       trendMonths: _trendMonths,
+      // BUGÜN de bir girdi: `_previousPeriodWindow` "yaşanmış" pencereyi
+      // `DateTime.now()`tan türetiyor ve bütçe kartı içinde bulunulan aya
+      // bakıyor. Anahtarda olmayınca gece yarısını geçen bir oturum, dünün
+      // kıyas penceresini ve dünün ayını göstermeye devam ediyordu.
+      today: _today(),
     );
     final cached = _derivedCache;
     if (cached != null && _derivedKey == key) return cached;

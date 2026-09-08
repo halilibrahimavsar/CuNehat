@@ -88,7 +88,11 @@ class ReportTransactionListSheet extends StatelessWidget {
         if (snapshot.id == null)
           snapshot
         else if (byId[snapshot.id!] case final live?)
-          live,
+          // Sayfa açıkken TÜRÜ değişen üye listeden düşer. Aksi hâlde
+          // gelire çevrilen bir kalem gider listesinde kalıyor ve toplam
+          // iki işareti harmanlıyordu (fold tür süzmüyor): "Market: 1.250 ₺"
+          // aslında 1.500 gider − 250 gelir olabiliyordu.
+          if (live.isExpense == isExpense) live,
     ];
   }
 

@@ -1,3 +1,4 @@
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 
@@ -52,7 +53,14 @@ class GoalProgress {
 
   double get percentage => ratio * 100;
 
-  bool get isReached => goal.targetAmount > 0 && saved >= goal.targetAmount;
+  /// Hedefe ULAŞILDI mı — yarım kuruş toleransıyla.
+  ///
+  /// [saved] üyelerin güncel değerlerinin HAM toplamıdır (yuvarlanmaz); ham
+  /// `>=` bu yüzden IEEE-754 artığına takılır: tam olarak hedefe eşit bir
+  /// portföy 9999.999999999998 çıkıp "ulaşılmadı" sayılabilir — konfeti de
+  /// bu bayrağa bağlı.
+  bool get isReached =>
+      goal.targetAmount > 0 && moneyGte(saved, goal.targetAmount);
 
   /// Hedefe kalan tutar; ulaşıldıysa 0.
   double get remaining {

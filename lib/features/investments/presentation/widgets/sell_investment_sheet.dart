@@ -2,6 +2,7 @@ import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
+import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/contribution_calculator.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
@@ -104,7 +105,16 @@ class _SellInvestmentSheetState extends State<SellInvestmentSheet> {
     return sold >= _total - _epsilon;
   }
 
-  static const _epsilon = 1e-9;
+  /// Miktar kipinin toleransı: gram/adet ondalıkları çok hassas olabilir.
+  static const _quantityEpsilon = 1e-9;
+
+  /// Karşılaştırma toleransı MODA bağlıdır.
+  ///
+  /// Tutar kipinde ([_total] = `currentValue`) yapılan şey bir PARA
+  /// karşılaştırmasıdır ve oradaki anlamlı eşik yarım kuruştur; 1e-9 ile
+  /// ölçmek, kuruş-temiz olmayan bir değerlemede "tam satış"ı kaçırıp
+  /// kayıtta kullanıcının anlamadığı bir artık bırakır.
+  double get _epsilon => _tracksQuantity ? _quantityEpsilon : kMoneyEpsilon;
 
   @override
   void initState() {

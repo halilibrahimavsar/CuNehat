@@ -223,6 +223,46 @@ void main() {
     final payDate = DateTime(2026, 7, 10);
 
     blocTest<DebtBloc, DebtState>(
+      'ÇİFT DOKUNMA tek ödeme yazar',
+      build: () {
+        // bloc'un varsayılan olay dönüştürücüsü EŞZAMANLI: koruma olmadan
+        // iki handler paralel çalışır ve deftere İKİ ödeme düşer — borcun
+        // kalanı iki katı azalır, cüzdan da iki kez eksilir.
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        when(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: any(named: 'amount'),
+              isIncome: any(named: 'isIncome'),
+              title: any(named: 'title'),
+              tag: any(named: 'tag'),
+              date: any(named: 'date'),
+            )).thenAnswer((_) async => true);
+        when(() => mockMetricsService.syncDebt('wallet_123'))
+            .thenAnswer((_) async => true);
+        when(() => mockGetUseCase('wallet_123'))
+            .thenAnswer((_) async => Right([testDebt]));
+        return debtBloc;
+      },
+      act: (bloc) {
+        bloc.add(PayDebtEvent(testDebt, 250.0, paymentDate: payDate));
+        bloc.add(PayDebtEvent(testDebt, 250.0, paymentDate: payDate));
+      },
+      verify: (_) {
+        verify(() => mockMetricsService.recordCashMovement(
+              walletId: any(named: 'walletId'),
+              userId: any(named: 'userId'),
+              amount: 250.0,
+              isIncome: false,
+              title: any(named: 'title'),
+              tag: CashMovementTags.debtPayment,
+              date: payDate,
+            )).called(1);
+      },
+    );
+
+    blocTest<DebtBloc, DebtState>(
       'emits loading, updates debt, records cash payment (expense), syncs debt and reloads',
       build: () {
         when(() => mockUpdateUseCase(testDebt))

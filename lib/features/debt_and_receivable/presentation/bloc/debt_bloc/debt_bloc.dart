@@ -63,6 +63,17 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
     return super.close();
   }
 
+  /// İşlenmekte olan para yazımlarının anahtarları.
+  ///
+  /// bloc'un varsayılan olay dönüştürücüsü EŞZAMANLIDIR: aynı olay iki kez
+  /// gelirse iki handler paralel çalışır ve deftere İKİ kayıt yazılır.
+  /// Ölçülmüş emsal `PendingRecurringBloc`: onay listesi ekranda kaldığı
+  /// için çift dokunma gerçekten iki işlem üretiyordu ve oraya aynı kalıp
+  /// eklendi. Buradaki yollar hemen kapanan diyalog/sheet'ten tetiklendiği
+  /// için risk daha düşük — ama "para iki kez yazıldı" hatasının bedeli,
+  /// korumanın maliyetinden büyük.
+  final Set<String> _inFlight = <String>{};
+
   Future<void> _onGetDebts(GetDebtsEvent event, Emitter<DebtState> emit) async {
     _lastWalletId = event.walletId;
     emit(DebtLoading());
@@ -74,6 +85,16 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
   }
 
   Future<void> _onAddDebt(AddDebtEvent event, Emitter<DebtState> emit) async {
+    // Tek sheet açık olabilir; sabit anahtar yeterli.
+    if (!_inFlight.add('add-debt')) return;
+    try {
+      await _addDebt(event, emit);
+    } finally {
+      _inFlight.remove('add-debt');
+    }
+  }
+
+  Future<void> _addDebt(AddDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
     final result = await addDebtUseCase(event.debt);
 
@@ -125,6 +146,16 @@ class DebtBloc extends Bloc<DebtEvent, DebtState> with CashCouplingMixin {
   }
 
   Future<void> _onPayDebt(PayDebtEvent event, Emitter<DebtState> emit) async {
+    final key = 'pay:${event.debt.id}';
+    if (!_inFlight.add(key)) return;
+    try {
+      await _payDebt(event, emit);
+    } finally {
+      _inFlight.remove(key);
+    }
+  }
+
+  Future<void> _payDebt(PayDebtEvent event, Emitter<DebtState> emit) async {
     emit(DebtLoading());
     final result = await updateDebtUseCase(_normalize(event.debt));
 

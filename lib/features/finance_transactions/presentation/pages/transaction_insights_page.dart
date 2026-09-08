@@ -35,6 +35,7 @@ import 'package:cunehat/features/recurring_transactions/presentation/bloc/pendin
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
 import 'package:cunehat/features/finance_transactions/domain/repositories/category_repository.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -138,6 +139,7 @@ class _InsightsViewState extends State<_InsightsView> {
     Map<String, String> roots,
     List<RecurringTransactionEntity> templates,
     String currency,
+    DateTime today,
   })? _derivedKey;
   _InsightsDerived? _derivedCache;
 
@@ -169,7 +171,20 @@ class _InsightsViewState extends State<_InsightsView> {
   /// dururken yapılan bir yeniden adlandırma ancak sayfa yeniden kurulduğunda
   /// görünüyordu.
   Future<void> _loadCategoryLabels() async {
-    final categories = await fetchAllCategories(getIt<CategoryRepository>());
+    // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır (CacheException) —
+    // bkz. `GetBudgetsUsecase`'teki aynı not. Yakalanmazsa bu, yakalanmamış
+    // bir asenkron hataya dönüyor ve indeks BOŞ kalıyordu: `rootIdOf` her
+    // tag'i kendi kökü sayar, yani kırılım YAPRAK seviyeye düşer ("%3 → Diğer"
+    // kovası ve ilk-N kesimi değişir) ve etiketler ham UUID olarak yazılır.
+    // Hata hâlinde ÖNCEKİ indeks korunur: yenileme sırasındaki geçici bir
+    // okuma hatası, çalışan bir haritayı silmemeli.
+    final List<CategoryEntity> categories;
+    try {
+      categories = await fetchAllCategories(getIt<CategoryRepository>());
+    } catch (e) {
+      debugPrint('Kategori indeksi yuklenemedi, onceki korunuyor: $e');
+      return;
+    }
     if (!mounted) return;
     final index = buildCategoryDisplayIndex(categories);
     setState(() {
@@ -289,6 +304,12 @@ class _InsightsViewState extends State<_InsightsView> {
       roots: _categoryRoots,
       templates: templates,
       currency: currency,
+      // BUGÜN de bir girdi: yaşanmış gün sayısı, kalan gün sayısı ve kıyas
+      // penceresi `DateTime.now()`tan türüyor. Anahtarda olmayınca gece
+      // yarısını geçen bir oturum dünün rakamlarını göstermeye devam
+      // ediyordu — "günde ne kadar harcayabilirim" dahil.
+      today: DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day),
     );
     final cached = _derivedCache;
     if (cached != null && _derivedKey == key) return cached;
