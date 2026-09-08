@@ -151,7 +151,10 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
             return const _EmptyBudgets();
           }
           return SliverPadding(
-            padding: const EdgeInsets.all(16.0).plusSystemBottom(context),
+            // FAB (56dp) listenin son kartının üstüne biniyordu.
+            padding: const EdgeInsets.all(16.0)
+                .plusSystemBottom(context)
+                .plusFabClearance(),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _BudgetSummaryCard(budgets: state.budgets),

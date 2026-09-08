@@ -3869,6 +3869,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hedefKategoriDiger => 'Diğer';
 
   @override
+  String get hedefKategoriOzel => 'Özel';
+
+  @override
+  String get hedefKategoriOzelHint => 'Kendi kategorin (ör. Tekne)';
+
+  @override
+  String get hedefKategoriOzelBos => 'Özel kategori adı boş olamaz';
+
+  @override
+  String kartMaliyet(Object amount) {
+    return 'Maliyet $amount';
+  }
+
+  @override
   String get maliyetVeyaDegerSifirdanBuyuk =>
       'Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı';
 

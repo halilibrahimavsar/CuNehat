@@ -20,6 +20,41 @@ void main() {
       expect(GoalCategory.byKey(null), isNull);
       expect(GoalCategory.byKey('unknown_key'), isNull);
     });
+
+    testWidgets('özel kategori: ad ham gösterilir, ikon bayrağa düşer',
+        (tester) async {
+      // Kullanıcının yazdığı ad VERİDİR — çevrilmez, "Diğer"e katlanmaz.
+      // Katlansaydı özel kategori yazmanın hiçbir görünür karşılığı olmazdı.
+      late BuildContext ctx;
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('tr'), Locale('en')],
+        locale: const Locale('tr'),
+        home: Builder(builder: (c) {
+          ctx = c;
+          return const SizedBox();
+        }),
+      ));
+
+      expect(GoalCategory.displayLabel(ctx, 'Tekne'), 'Tekne');
+      expect(GoalCategory.iconFor('Tekne'), Icons.flag_rounded);
+      expect(GoalCategory.isCustom('Tekne'), isTrue);
+
+      // Hazır anahtarlar hâlâ çevriliyor.
+      expect(GoalCategory.displayLabel(ctx, 'dugun'), 'Düğün');
+      expect(GoalCategory.iconFor('dugun'), Icons.favorite_rounded);
+      expect(GoalCategory.isCustom('dugun'), isFalse);
+
+      // Boş/eksik değer özel SAYILMAZ, "Diğer" olarak okunur.
+      expect(GoalCategory.displayLabel(ctx, '  '), 'Diğer');
+      expect(GoalCategory.isCustom(''), isFalse);
+      expect(GoalCategory.isCustom(null), isFalse);
+    });
   });
 
   group('GoalCategorySelector Widget Tests', () {
@@ -48,6 +83,7 @@ void main() {
           GoalCategorySelector(
             selectedKey: null,
             onChanged: (_) {},
+            onCustomSelected: () {},
             accentColor: Colors.teal,
           ),
         ),
@@ -61,8 +97,57 @@ void main() {
       expect(find.text('Eğitim'), findsOneWidget);
       expect(find.text('Diğer'), findsOneWidget);
 
-      // Verify chips are present as ChoiceChips
-      expect(find.byType(ChoiceChip), findsNWidgets(6));
+      // 6 hazır + "Özel" = 7.
+      expect(find.text('Özel'), findsOneWidget);
+      expect(find.byType(ChoiceChip), findsNWidgets(7));
+    });
+
+    testWidgets('"Özel" chip\'i onChanged DEĞİL onCustomSelected tetikler',
+        (tester) async {
+      var customTapped = false;
+      String? changedKey;
+
+      await tester.pumpWidget(
+        buildTestableWidget(
+          GoalCategorySelector(
+            selectedKey: 'ev',
+            onChanged: (key) => changedKey = key,
+            onCustomSelected: () => customTapped = true,
+            accentColor: Colors.teal,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Özel'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(customTapped, isTrue);
+      // Hazır anahtar yolu KİRLENMEMELİ: özel kip formun kendi bayrağıyla
+      // yönetiliyor, `_category` olduğu gibi kalıyor.
+      expect(changedKey, isNull);
+    });
+
+    testWidgets('özel kip açıkken hazır chip seçili görünmez', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          GoalCategorySelector(
+            selectedKey: 'ev',
+            customSelected: true,
+            onChanged: (_) {},
+            onCustomSelected: () {},
+            accentColor: Colors.teal,
+          ),
+        ),
+      );
+
+      final chips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
+      expect(chips.where((c) => c.selected).length, 1,
+          reason: 'yalnız "Özel" seçili olmalı');
+      final ev = tester.widget<ChoiceChip>(find.ancestor(
+        of: find.text('Ev'),
+        matching: find.byType(ChoiceChip),
+      ));
+      expect(ev.selected, isFalse);
     });
 
     testWidgets('calls onChanged with category key when chip is selected',
@@ -78,6 +163,7 @@ void main() {
               changedKey = key;
               called = true;
             },
+            onCustomSelected: () {},
             accentColor: Colors.teal,
           ),
         ),
@@ -104,6 +190,7 @@ void main() {
               changedKey = key;
               called = true;
             },
+            onCustomSelected: () {},
             accentColor: Colors.teal,
           ),
         ),

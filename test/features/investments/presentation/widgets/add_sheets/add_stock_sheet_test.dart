@@ -491,4 +491,90 @@ void main() {
             'Not (İsteğe bağlı) · örn. Uzun vade alım');
     expect(tester.widget<TextField>(nameFinder).controller?.text, 'Apple Inc');
   });
+
+  /// Altın sheet'iyle SİMETRİK: sembol ve lot, mevcut değeri belirleyen iki
+  /// girdi ve artık onun üstünde duruyorlar. İki form aynı akışı izlemeli —
+  /// kullanıcı birini öğrenince ötekini de bilmeli.
+  testWidgets('sembol ve lot, mevcut değer kartının ÜSTÜNDE çizilir',
+      (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddStockSheet(
+          walletId: 'w',
+          userId: 'u',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    double topOf(Finder f) => tester.getTopLeft(f).dy;
+
+    final symbol = topOf(find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Sembol (Örn: AAPL, THYAO.IS)'));
+    final lot = topOf(find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == 'lot'));
+    final currentValue = topOf(find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0'));
+    final cost = topOf(find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'));
+
+    expect(symbol, lessThan(currentValue));
+    expect(lot, lessThan(currentValue));
+    expect(currentValue, lessThan(cost));
+  });
+
+  /// Çekilen fiyat O SEMBOLE ait; sembol değişince mesaj bayatlıyordu.
+  testWidgets('sembol değişince çekilen fiyat mesajı silinir', (tester) async {
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'THYAO.IS',
+        type: InvestmentType.stock,
+        targetCurrency: 'TRY')).thenAnswer(
+      (_) async => const Right(LivePriceQuote(
+          price: 300.0,
+          currency: 'TRY',
+          convertedPrice: 300.0,
+          targetCurrency: 'TRY')),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddStockSheet(
+          walletId: 'w',
+          userId: 'u',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final symbolField = find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Sembol (Örn: AAPL, THYAO.IS)');
+    await tester.enterText(symbolField, 'THYAO.IS');
+    await tester.enterText(
+        find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.hintText == 'lot'),
+        '10');
+    final fetch = find.text('Hesapla');
+    await tester.ensureVisible(fetch);
+    await tester.tap(fetch);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('300,00 ₺'), findsWidgets);
+
+    await tester.enterText(symbolField, 'AAPL');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Güncel Fiyat'), findsNothing,
+        reason: 'THYAO fiyatı AAPL yazıldıktan sonra da duruyor');
+
+    // Sembol alanı her tuşta arama isteği açıyor ve isteğin 8 sn'lik
+    // timeout'u test bitene kadar askıda kalıyor; boşaltılmazsa
+    // "pending timer" hatası verir.
+    await tester.pump(const Duration(seconds: 9));
+  });
 }

@@ -1,3 +1,5 @@
+import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
@@ -43,18 +45,19 @@ class InvestmentCard extends StatelessWidget {
 
   /// Kartın "kaç gramım var" satırı: miktar + birim, yanında birim fiyat.
   /// Miktar takibi olmayan kayıtta (özel varlık) satır hiç çizilmez.
-  String? _quantityLine(BuildContext context) {
+  String? _quantityLine(BuildContext context, MoneyWriter money) {
     final quantity = investment.quantity;
     if (quantity == null || quantity <= 0) return null;
     final unit = investmentUnitLabel(context, investment);
     if (unit == null) return null;
-    // Adet hassas kalır (0,125 gr); paradan farklı olarak 4 hane.
+    // Adet hassas kalır (0,125 gr); paradan farklı olarak 4 hane. MİKTAR para
+    // değildir, gizle/göster anahtarından etkilenmez — gizlenen tek şey birim
+    // FİYATI.
     final qtyText = formatAmountForInput(quantity, decimalDigits: 4);
     final line = context.l10n.kartMiktarBirim(qtyText, unit);
     final unitValue = investment.unitValue;
     if (unitValue == null) return line;
-    return '$line · '
-        '${context.l10n.kartBirimFiyat(formatMoney(unitValue, currency: currency))}';
+    return '$line · ${context.l10n.kartBirimFiyat(money(unitValue))}';
   }
 
   @override
@@ -62,7 +65,13 @@ class InvestmentCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final accent = investment.color;
     final profitColor = investment.isProfitable ? Colors.green : Colors.red;
-    final quantityLine = _quantityLine(context);
+    // Kart tutarlarının TAMAMI göz düğmesine bağlı. Birim açık parametreyle
+    // geliyor; `MoneyWriter.of(context)` KULLANILMAZ — o aktif cüzdanın
+    // birimini okur, oysa kart hedef grubunun içinde başka bir cüzdanın
+    // kaydını da çizebilir.
+    final money =
+        MoneyWriter(currency: currency, visible: context.amountsVisible);
+    final quantityLine = _quantityLine(context, money);
     // Altında ham anahtar ("gram-altin") değil adı; hissede sembolün kendisi
     // zaten okunur (AAPL).
     final badgeLabel = investment.symbol == null
@@ -145,7 +154,14 @@ class InvestmentCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _getInvestmentTypeText(context, investment.type),
+                  // Alım tarihi kartta HİÇ yoktu: kullanıcı bir varlığı ne
+                  // zaman aldığını yalnız "Düzenle"yi açarak görebiliyordu.
+                  // Kısa biçim (`dd.MM.yy`) desen tabanlı — uzun biçim
+                  // `initializeDateFormatting` ister ve dar kartta taşar.
+                  '${_getInvestmentTypeText(context, investment.type)} · '
+                  '${AppFormatters.dateShort.format(investment.dateAdded)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
                     color: scheme.onSurfaceVariant,
@@ -189,12 +205,27 @@ class InvestmentCard extends StatelessWidget {
                             fit: BoxFit.scaleDown,
                             alignment: AlignmentDirectional.centerStart,
                             child: Text(
-                              formatMoney(investment.currentValue,
-                                  currency: currency),
+                              money(investment.currentValue),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: scheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          // Maliyet, kâr/zararın KARŞILAŞTIRMA TABANI; o
+                          // olmadan "+1.000 ₺" bağlamsız bir sayı. Sol sütun
+                          // 2, sağ sütun 3 satırdı — bu satır boşta duran
+                          // yeri dolduruyor, kart yükselmiyor.
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              context.l10n
+                                  .kartMaliyet(money(investment.amount)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: scheme.onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -219,8 +250,7 @@ class InvestmentCard extends StatelessWidget {
                             fit: BoxFit.scaleDown,
                             alignment: AlignmentDirectional.centerEnd,
                             child: Text(
-                              formatMoney(investment.profit,
-                                  currency: currency),
+                              money(investment.profit),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

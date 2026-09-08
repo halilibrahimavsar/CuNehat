@@ -2045,6 +2045,15 @@
   "hedefKategoriAcilFon": "Acil Fon",
   "hedefKategoriEgitim": "Eğitim",
   "hedefKategoriDiger": "Diğer",
+  "hedefKategoriOzel": "Özel",
+  "hedefKategoriOzelHint": "Kendi kategorin (ör. Tekne)",
+  "hedefKategoriOzelBos": "Özel kategori adı boş olamaz",
+  "kartMaliyet": "Maliyet {amount}",
+  "@kartMaliyet": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
   "maliyetVeyaDegerSifirdanBuyuk": "Maliyet ya da mevcut değerden en az biri sıfırdan büyük olmalı",
   "hedeflerim": "Hedeflerim",
   "bagsizVarliklar": "Bağsız varlıklar",

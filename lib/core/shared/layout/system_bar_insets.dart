@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show kFloatingActionButtonMargin;
 import 'package:flutter/widgets.dart';
 
 /// Sistem çubuklarının (durum çubuğu / gezinme çubuğu) kapladığı payları
@@ -37,4 +38,23 @@ extension SystemBarInsets on EdgeInsets {
     final inset = MediaQuery.paddingOf(context).top;
     return inset == 0 ? this : copyWith(top: top + inset);
   }
+}
+
+/// Alta serbestçe duran `FloatingActionButton`'ın kapladığı yükseklik.
+///
+/// **Neden gerekli.** Scaffold FAB'ı sistem payının ÜSTÜNE koyar
+/// (`FabFloatOffsetY.getOffsetY`:
+/// `safeMargin = max(16, minViewPadding.bottom - bottomContentHeight + 16)`),
+/// ama listeye bunu SÖYLEMEZ: gövdenin `MediaQuery`'si FAB'dan habersizdir.
+/// Ölçüldü — 411×914dp yüzeyde 48dp gezinme çubuğuyla `safeMargin` 64 oluyor,
+/// FAB y **794–850** arasına düşüyor; alt dolgusu `16 + 48 = 64` olan liste ise
+/// tam **850**'de bitiyor. Yani son kartın sağ alt köşesi birebir FAB'ın
+/// altında kalıyor.
+///
+/// [plusSystemBottom] ile birlikte kullanılır; sırası önemsizdir çünkü ikisi de
+/// yalnız `bottom`'a ekler.
+extension FabClearance on EdgeInsets {
+  /// [fabHeight]: normal FAB 56, `FloatingActionButton.extended` **48**.
+  EdgeInsets plusFabClearance({double fabHeight = 56}) =>
+      copyWith(bottom: bottom + fabHeight + kFloatingActionButtonMargin);
 }

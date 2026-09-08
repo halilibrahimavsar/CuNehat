@@ -4,7 +4,10 @@ import 'package:cunehat/features/investments/presentation/widgets/investment_car
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unified_flutter_features/features/amount_visibility/amount_visibility_cubit.dart';
 
 void main() {
   // Para metni Intl.defaultLocale'e bakar; testte boş bırakılırsa intl onu
@@ -53,7 +56,8 @@ void main() {
 
     // Verify Name & Type text
     expect(find.text('Yastık Altı Altın'), findsOneWidget);
-    expect(find.text('Altın'), findsOneWidget);
+    // Tür satırı artık alım tarihini de taşıyor.
+    expect(find.text('Altın · 01.01.26'), findsOneWidget);
 
     // Verify Icons
     expect(find.byIcon(Icons.monetization_on), findsOneWidget); // Gold icon
@@ -91,7 +95,7 @@ void main() {
 
     // Verify Name, Type, and Symbol
     expect(find.text('Apple Inc.'), findsOneWidget);
-    expect(find.text('Hisse Senedi'), findsOneWidget);
+    expect(find.text('Hisse Senedi · 01.01.26'), findsOneWidget);
     expect(find.text('AAPL'), findsOneWidget);
 
     // Verify Stock Icon
@@ -127,7 +131,7 @@ void main() {
     );
 
     expect(find.text('Dolar Portföyü'), findsOneWidget);
-    expect(find.text('Özel'), findsOneWidget);
+    expect(find.text('Özel · 01.01.26'), findsOneWidget);
     expect(find.byIcon(Icons.account_balance_wallet), findsOneWidget);
 
     // Hedef bilgisi karttan kalktı: ilerleme birden çok varlığın toplamı
@@ -223,5 +227,72 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull);
+  });
+
+  /// Kartta maliyet YOKTU: kâr/zarar gösteriliyor ama karşılaştırma tabanı
+  /// olan "ne ödedim" hiçbir yerde yazmıyordu — ne kartta, ne eylem
+  /// sheet'inde, ne de detay sayfasında. Kullanıcı bunu ancak "Düzenle"yi
+  /// açarak görebiliyordu.
+  testWidgets('kart ödenen maliyeti yazar', (tester) async {
+    await tester.pumpWidget(buildTestableWidget(InvestmentCard(
+      investment: InvestmentEntity(
+        id: 'i',
+        userId: 'u',
+        walletId: 'w',
+        name: 'Yastık Altı Altın',
+        amount: 5000.0,
+        currentValue: 6000.0,
+        type: InvestmentType.gold,
+        color: Colors.amber,
+        dateAdded: DateTime(2026, 1, 1),
+      ),
+      currency: 'TRY',
+    )));
+
+    expect(find.text('Maliyet 5.000,00 ₺'), findsOneWidget);
+    // Kâr hâlâ görünür; maliyet onun yerini almaz, bağlamını verir.
+    expect(find.text('1.000,00 ₺'), findsOneWidget);
+  });
+
+  /// Üst çubuktaki göz düğmesi uygulama geneli bir cubit ama birikim ekranı
+  /// ham `formatMoney` kullandığı için HİÇBİR ŞEYİ gizlemiyordu. Aynı hata
+  /// rapor ve içgörü sayfalarında da çıkmıştı.
+  testWidgets('tutarlar gizliyken kart hiçbir rakamı sızdırmaz',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({'amount_visibility': false});
+    final visibility = AmountVisibilityCubit();
+    addTearDown(visibility.close);
+
+    await tester.pumpWidget(BlocProvider.value(
+      value: visibility,
+      child: buildTestableWidget(InvestmentCard(
+        investment: InvestmentEntity(
+          id: 'i',
+          userId: 'u',
+          walletId: 'w',
+          name: 'Yastık Altı Altın',
+          amount: 5000.0,
+          currentValue: 6000.0,
+          type: InvestmentType.gold,
+          color: Colors.amber,
+          dateAdded: DateTime(2026, 1, 1),
+          symbol: 'gram-altin',
+          quantity: 2,
+        ),
+        currency: 'TRY',
+      )),
+    ));
+    await tester.pumpAndSettle();
+
+    for (final leak in ['5.000,00 ₺', '6.000,00 ₺', '1.000,00 ₺']) {
+      expect(find.textContaining(leak), findsNothing,
+          reason: '"$leak" gizli modda ekranda kaldı');
+    }
+    // Birim FİYATI da gizlenir; MİKTAR (2 Gram Altın) para değildir, kalır.
+    expect(find.text('Maliyet **** ₺'), findsOneWidget);
+    expect(find.textContaining('2 Gram Altın'), findsOneWidget);
+    expect(find.textContaining('Birim 3.000,00 ₺'), findsNothing);
+    // Yüzde BİLEREK açık: oran mutlak tutarı ele vermez.
+    expect(find.text('+%20,00'), findsOneWidget);
   });
 }

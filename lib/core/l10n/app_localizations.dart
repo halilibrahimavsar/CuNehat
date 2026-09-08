@@ -6881,6 +6881,30 @@ abstract class AppLocalizations {
   /// **'Diğer'**
   String get hedefKategoriDiger;
 
+  /// No description provided for @hedefKategoriOzel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel'**
+  String get hedefKategoriOzel;
+
+  /// No description provided for @hedefKategoriOzelHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi kategorin (ör. Tekne)'**
+  String get hedefKategoriOzelHint;
+
+  /// No description provided for @hedefKategoriOzelBos.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel kategori adı boş olamaz'**
+  String get hedefKategoriOzelBos;
+
+  /// No description provided for @kartMaliyet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maliyet {amount}'**
+  String kartMaliyet(Object amount);
+
   /// No description provided for @maliyetVeyaDegerSifirdanBuyuk.
   ///
   /// In tr, this message translates to:

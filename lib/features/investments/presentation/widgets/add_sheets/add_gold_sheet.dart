@@ -277,11 +277,15 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     );
   }
 
-  /// Mevcut değer → toplam maliyet → miktar/otomatik fiyat.
+  /// Tür & miktar → mevcut değer → toplam maliyet.
+  ///
+  /// Tur sırası ağaç sırasından DEĞİL bu listeden okunur
+  /// (`OnboardingCoordinator.startShowCase`), yani yerleşim değişince burası
+  /// da elle güncellenmeli — yoksa tur ekranda aşağı-yukarı zıplar.
   static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.investmentAddQuantity,
     OnboardingKeys.investmentAddForm,
     OnboardingKeys.investmentAddCost,
-    OnboardingKeys.investmentAddQuantity,
   ];
 
   Widget _buildContent(
@@ -318,6 +322,36 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Türü ve miktarı mevcut değerin ÜSTÜNDE soruyoruz:
+                      // değeri belirleyen ikisi. Eskiden sıra tersti, yani
+                      // kullanıcı önce "mevcut değer" kutusuna bakıp sonra
+                      // 60 satır aşağıdaki "Hesapla"yı bulmak zorundaydı.
+                      // Akış artık: ne aldın → ne kadar → değeri hesapla →
+                      // ne ödedin → ne zaman.
+                      InvestmentSectionLabel(
+                          context.l10n.altinTuruVeOtomatikFiyat),
+                      const SizedBox(height: 10),
+                      _buildGoldTypeSelector(),
+                      ...?_typeChangeWarningSlot(),
+                      const SizedBox(height: 14),
+                      Showcase(
+                        key: OnboardingKeys.investmentAddQuantity,
+                        title:
+                            context.l10n.onboardingInvestmentAddQuantityTitle,
+                        description:
+                            context.l10n.onboardingInvestmentAddQuantityDesc,
+                        child: InvestmentQuantityAndFetch(
+                          accent: _accent,
+                          unitLabel: goldTypeLabel(context, _selectedGoldType),
+                          quantityController: _quantityController,
+                          onQuantityChanged: _clearError,
+                          isLoading: _isLoading,
+                          fetchedMessage: _fetchedPriceMessage,
+                          fetchedColor: _fetchedPriceColor,
+                          onFetch: _fetchLivePrice,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       Showcase(
                         key: OnboardingKeys.investmentAddForm,
                         title: context.l10n.onboardingInvestmentAddTitle,
@@ -351,30 +385,6 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       ...?_purchaseRowSlot(),
-                      const SizedBox(height: 20),
-                      InvestmentSectionLabel(
-                          context.l10n.altinTuruVeOtomatikFiyat),
-                      const SizedBox(height: 10),
-                      _buildGoldTypeSelector(cs),
-                      ...?_typeChangeWarningSlot(),
-                      const SizedBox(height: 14),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddQuantity,
-                        title:
-                            context.l10n.onboardingInvestmentAddQuantityTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddQuantityDesc,
-                        child: InvestmentQuantityAndFetch(
-                          accent: _accent,
-                          unitLabel: goldTypeLabel(context, _selectedGoldType),
-                          quantityController: _quantityController,
-                          onQuantityChanged: _clearError,
-                          isLoading: _isLoading,
-                          fetchedMessage: _fetchedPriceMessage,
-                          fetchedColor: _fetchedPriceColor,
-                          onFetch: _fetchLivePrice,
-                        ),
-                      ),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.yatirimDetaylari),
                       const SizedBox(height: 10),
@@ -453,10 +463,17 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     ];
   }
 
-  Widget _buildGoldTypeSelector(ColorScheme cs) {
+  Widget _buildGoldTypeSelector() {
     return GoldTypeDropdown(
       value: _selectedGoldType,
-      onChanged: (val) => setState(() => _selectedGoldType = val),
+      onChanged: (val) => setState(() {
+        _selectedGoldType = val;
+        // Çekilen fiyat SEÇİLİ TÜRE ait. Tür değişince mesaj temizlenmezse
+        // "Gram Altın" için alınan fiyat, kullanıcı "Çeyrek Altın"a geçtikten
+        // sonra da yeşil renkte doğruymuş gibi durmaya devam ediyordu.
+        _fetchedPriceMessage = null;
+        _fetchedPriceColor = Colors.orange;
+      }),
     );
   }
 

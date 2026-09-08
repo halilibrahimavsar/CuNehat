@@ -307,11 +307,15 @@ class _AddStockSheetState extends State<AddStockSheet> {
     );
   }
 
-  /// Mevcut değer → toplam maliyet → miktar/otomatik fiyat.
+  /// Sembol & lot → mevcut değer → toplam maliyet.
+  ///
+  /// Tur sırası ağaç sırasından DEĞİL bu listeden okunur
+  /// (`OnboardingCoordinator.startShowCase`); yerleşim değişince burası da
+  /// elle güncellenmeli.
   static final List<GlobalKey> _tourKeys = [
+    OnboardingKeys.investmentAddQuantity,
     OnboardingKeys.investmentAddForm,
     OnboardingKeys.investmentAddCost,
-    OnboardingKeys.investmentAddQuantity,
   ];
 
   Widget _buildContent(
@@ -348,6 +352,32 @@ class _AddStockSheetState extends State<AddStockSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Sembol ve lotu mevcut değerin ÜSTÜNDE soruyoruz:
+                      // değeri belirleyen ikisi. Altın sheet'iyle simetrik
+                      // kalması bilinçli — kullanıcı bir formu öğrenince
+                      // ötekini de biliyor.
+                      InvestmentSectionLabel(context.l10n.hisseSenediBul),
+                      const SizedBox(height: 10),
+                      _buildSymbolSearch(cs),
+                      const SizedBox(height: 14),
+                      Showcase(
+                        key: OnboardingKeys.investmentAddQuantity,
+                        title:
+                            context.l10n.onboardingInvestmentAddQuantityTitle,
+                        description:
+                            context.l10n.onboardingInvestmentAddQuantityDesc,
+                        child: InvestmentQuantityAndFetch(
+                          accent: _accent,
+                          unitLabel: context.l10n.lot,
+                          quantityController: _quantityController,
+                          onQuantityChanged: _clearError,
+                          isLoading: _isLoading,
+                          fetchedMessage: _fetchedPriceMessage,
+                          fetchedColor: _fetchedPriceColor,
+                          onFetch: _fetchLivePrice,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       Showcase(
                         key: OnboardingKeys.investmentAddForm,
                         title: context.l10n.onboardingInvestmentAddTitle,
@@ -382,28 +412,6 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       ),
                       InvestmentHintCaption(context.l10n.toplamMaliyetAciklama),
                       ...?_purchaseRowSlot(),
-                      const SizedBox(height: 20),
-                      InvestmentSectionLabel(context.l10n.hisseSenediBul),
-                      const SizedBox(height: 10),
-                      _buildSymbolSearch(cs),
-                      const SizedBox(height: 14),
-                      Showcase(
-                        key: OnboardingKeys.investmentAddQuantity,
-                        title:
-                            context.l10n.onboardingInvestmentAddQuantityTitle,
-                        description:
-                            context.l10n.onboardingInvestmentAddQuantityDesc,
-                        child: InvestmentQuantityAndFetch(
-                          accent: _accent,
-                          unitLabel: context.l10n.lot,
-                          quantityController: _quantityController,
-                          onQuantityChanged: _clearError,
-                          isLoading: _isLoading,
-                          fetchedMessage: _fetchedPriceMessage,
-                          fetchedColor: _fetchedPriceColor,
-                          onFetch: _fetchLivePrice,
-                        ),
-                      ),
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.yatirimDetaylari),
                       const SizedBox(height: 10),
@@ -458,6 +466,12 @@ class _AddStockSheetState extends State<AddStockSheet> {
     );
   }
 
+  /// Bayat fiyat mesajını siler (sembol değişti → önceki kotasyon geçersiz).
+  void _clearFetchedPrice() {
+    if (_fetchedPriceMessage == null) return;
+    setState(() => _fetchedPriceMessage = null);
+  }
+
   Widget _buildSymbolSearch(ColorScheme cs) {
     return RawAutocomplete<String>(
       textEditingController: _symbolController,
@@ -466,6 +480,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         return _searchStockSymbols(textEditingValue.text);
       },
       onSelected: (String selection) {
+        _clearFetchedPrice();
         _symbolController.text = selection;
         _nameController.text = selection.split(' - ').length > 1
             ? selection.split(' - ')[1]
@@ -499,6 +514,10 @@ class _AddStockSheetState extends State<AddStockSheet> {
               borderSide: const BorderSide(color: Colors.blue, width: 1.6),
             ),
           ),
+          // Çekilen fiyat O SEMBOLE ait: sembol değişince mesaj
+          // temizlenmezse AAPL için alınan fiyat, kullanıcı THYAO yazdıktan
+          // sonra da yeşil renkte doğruymuş gibi duruyordu.
+          onChanged: (_) => _clearFetchedPrice(),
           onSubmitted: (String value) {
             onFieldSubmitted();
           },

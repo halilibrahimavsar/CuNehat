@@ -7,6 +7,7 @@ import 'package:cunehat/features/investments/domain/entities/goal_entity.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/features/investments/presentation/widgets/goal_category.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Birikim hedefi ekleme/düzenleme.
 ///
@@ -61,7 +62,19 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
   final _nameController = TextEditingController();
   final _targetController = TextEditingController();
 
+  /// Kullanıcı kendi kategorisini yazdığında kaydedilecek metin.
+  ///
+  /// Ayrı bir controller: hazır chip'lere geri dönüp tekrar "Özel"e basan
+  /// kullanıcı yazdığını kaybetmesin.
+  final _customCategoryController = TextEditingController();
+
+  /// Hazır seçenek seçildiğinde saklanacak anahtar. Özel kipte KULLANILMAZ —
+  /// o zaman kayda [_customCategoryController]'ın metni gider.
   String _category = 'diger';
+
+  /// Özel kategori kipi. Düzenlemede, kaydın kategorisi hazır anahtarlardan
+  /// biri değilse açık başlar.
+  bool _isCustomCategory = false;
   Color _color = Colors.teal;
   String? _error;
 
@@ -85,7 +98,12 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
     if (goal != null) {
       _nameController.text = goal.name;
       _targetController.text = formatAmountForInput(goal.targetAmount);
-      _category = goal.category;
+      if (GoalCategory.isCustom(goal.category)) {
+        _isCustomCategory = true;
+        _customCategoryController.text = goal.category;
+      } else {
+        _category = goal.category;
+      }
       _color = goal.color;
     }
   }
@@ -94,6 +112,7 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
   void dispose() {
     _nameController.dispose();
     _targetController.dispose();
+    _customCategoryController.dispose();
     super.dispose();
   }
 
@@ -112,6 +131,13 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
       setState(() => _error = context.l10n.gecerliHedefTutarGirin);
       return;
     }
+    // Özel kip açıkken boş metin kaydedilirse kategori sessizce kaybolur ve
+    // kart bayrak ikonuna düşerdi; kullanıcı bunu hiç anlamazdı.
+    final customCategory = _customCategoryController.text.trim();
+    if (_isCustomCategory && customCategory.isEmpty) {
+      setState(() => _error = context.l10n.hedefKategoriOzelBos);
+      return;
+    }
     FocusScope.of(context).unfocus();
 
     final existing = widget.goalToEdit;
@@ -122,7 +148,7 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
         walletId: widget.walletId,
         name: name,
         targetAmount: target,
-        category: _category,
+        category: _isCustomCategory ? customCategory : _category,
         color: _color,
         createdAt: existing?.createdAt ?? DateTime.now(),
       ),
@@ -191,10 +217,34 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
                       const SizedBox(height: 10),
                       GoalCategorySelector(
                         selectedKey: _category,
-                        onChanged: (key) =>
-                            setState(() => _category = key ?? 'diger'),
+                        customSelected: _isCustomCategory,
+                        onChanged: (key) => setState(() {
+                          _isCustomCategory = false;
+                          _category = key ?? 'diger';
+                        }),
+                        onCustomSelected: () => setState(() {
+                          _isCustomCategory = true;
+                          _clearError();
+                        }),
                         accentColor: _color,
                       ),
+                      if (_isCustomCategory) ...[
+                        const SizedBox(height: 10),
+                        InvestmentFilledField(
+                          controller: _customCategoryController,
+                          hint: context.l10n.hedefKategoriOzelHint,
+                          icon: Icons.edit_rounded,
+                          accent: _accent,
+                          onChanged: _clearError,
+                          // Kategori adı hedef kartının başlığının üstünde
+                          // tek satırda çiziliyor; sınırsız metin orayı
+                          // kırpardı. Sayaç göstermeyen sınır (maxLength
+                          // alanın altına "12/30" ekler) için formatter.
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(30),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       InvestmentSectionLabel(context.l10n.renkSecimi),
                       const SizedBox(height: 10),

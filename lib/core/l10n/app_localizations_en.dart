@@ -3869,6 +3869,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hedefKategoriDiger => 'Other';
 
   @override
+  String get hedefKategoriOzel => 'Custom';
+
+  @override
+  String get hedefKategoriOzelHint => 'Your own category (e.g. Boat)';
+
+  @override
+  String get hedefKategoriOzelBos => 'Custom category name can\'t be empty';
+
+  @override
+  String kartMaliyet(Object amount) {
+    return 'Cost $amount';
+  }
+
+  @override
   String get maliyetVeyaDegerSifirdanBuyuk =>
       'At least one of cost or current value must be greater than zero';
 

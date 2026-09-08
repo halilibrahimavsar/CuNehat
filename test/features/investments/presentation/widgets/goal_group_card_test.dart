@@ -159,4 +159,48 @@ void main() {
     await tester.pump();
     expect(addTapped, isTrue);
   });
+
+  group('kategori etiketi', () {
+    /// Kategori uzun süre SADECE ikonu belirliyordu; adı hiçbir yerde
+    /// görünmüyordu. Kullanıcı "Düğün" seçiyor, kartta bir kalp ikonu
+    /// görüyordu — özel kategori yazma özelliği de bu yüzden görünmez
+    /// kalırdı.
+    testWidgets('hazır kategori çevrilmiş adıyla yazılır', (tester) async {
+      await tester.pumpWidget(buildTestableWidget(card()));
+      expect(find.text('Düğün'), findsOneWidget);
+      expect(
+        tester.widget<Icon>(find.byIcon(Icons.favorite_rounded)).icon,
+        Icons.favorite_rounded,
+      );
+    });
+
+    testWidgets('özel kategori ham metniyle yazılır, ikon bayrağa düşer',
+        (tester) async {
+      final custom = GoalEntity(
+        id: 'g',
+        userId: 'u',
+        walletId: 'w',
+        name: 'Tekne',
+        targetAmount: 1250000,
+        category: 'Yelkenli',
+        color: Colors.teal,
+        createdAt: DateTime(2026, 1, 1),
+      );
+      await tester.pumpWidget(buildTestableWidget(GoalGroupCard(
+        progress: GoalProgress.from(custom, const []),
+        currency: 'TRY',
+        expanded: false,
+        onToggle: () {},
+        onEdit: () {},
+        onDelete: () {},
+        onMemberTap: (_) {},
+        onAddAsset: () {},
+      )));
+
+      // Ham metin: çeviriye tabi değil, "Diğer"e KATLANMAZ.
+      expect(find.text('Yelkenli'), findsOneWidget);
+      expect(find.text('Diğer'), findsNothing);
+      expect(find.byIcon(Icons.flag_rounded), findsOneWidget);
+    });
+  });
 }

@@ -2024,6 +2024,15 @@
   "hedefKategoriAcilFon": "Emergency fund",
   "hedefKategoriEgitim": "Education",
   "hedefKategoriDiger": "Other",
+  "hedefKategoriOzel": "Custom",
+  "hedefKategoriOzelHint": "Your own category (e.g. Boat)",
+  "hedefKategoriOzelBos": "Custom category name can't be empty",
+  "kartMaliyet": "Cost {amount}",
+  "@kartMaliyet": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
   "maliyetVeyaDegerSifirdanBuyuk": "At least one of cost or current value must be greater than zero",
   "hedeflerim": "My goals",
   "bagsizVarliklar": "Unassigned assets",

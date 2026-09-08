@@ -1,5 +1,6 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/investments/domain/entities/investment_entity.dart';
 import 'package:cunehat/features/investments/domain/goal_progress.dart';
@@ -39,8 +40,11 @@ class GoalGroupCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final goal = progress.goal;
     final accent = goal.color;
-    final category = GoalCategory.byKey(goal.category);
     final reached = progress.isReached;
+    // Hedef başlığı ve kalan tutar da göz düğmesine bağlı; yüzde ve ilerleme
+    // çubuğu BİLEREK açık kalır — oran mutlak tutarı ele vermez.
+    final money =
+        MoneyWriter(currency: currency, visible: context.amountsVisible);
 
     return AppCard(
       accent: accent,
@@ -66,7 +70,7 @@ class GoalGroupCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
-                          category?.icon ?? Icons.flag_rounded,
+                          GoalCategory.iconFor(goal.category),
                           color: accent,
                           size: 22,
                         ),
@@ -76,6 +80,21 @@ class GoalGroupCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Kategori adı buraya gelene kadar HİÇBİR yerde
+                            // görünmüyordu: kart yalnız ikonu çiziyordu, yani
+                            // "Düğün" ile "Eğitim"i ayırt etmenin tek yolu
+                            // ikonu tanımaktı. Kullanıcının kendi yazdığı
+                            // kategori de görünmez kalırdı.
+                            Text(
+                              GoalCategory.displayLabel(context, goal.category),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
                             Text(
                               goal.name,
                               maxLines: 1,
@@ -96,10 +115,8 @@ class GoalGroupCard extends StatelessWidget {
                               alignment: AlignmentDirectional.centerStart,
                               child: Text(
                                 context.l10n.hedefIlerlemeSatiri(
-                                  formatMoney(progress.saved,
-                                      currency: currency),
-                                  formatMoney(goal.targetAmount,
-                                      currency: currency),
+                                  money(progress.saved),
+                                  money(goal.targetAmount),
                                 ),
                                 style: TextStyle(
                                   fontSize: 12.5,
@@ -148,10 +165,8 @@ class GoalGroupCard extends StatelessWidget {
                           child: Text(
                             reached
                                 ? context.l10n.hedefeUlasildi
-                                : context.l10n.hedefKalanTutar(
-                                    formatMoney(progress.remaining,
-                                        currency: currency),
-                                  ),
+                                : context.l10n
+                                    .hedefKalanTutar(money(progress.remaining)),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,

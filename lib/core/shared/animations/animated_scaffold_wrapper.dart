@@ -152,6 +152,12 @@ class AnimatedScaffoldWrapperState extends State<AnimatedScaffoldWrapper>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      // Tam sürüklendiğinde sheet ekranın %95'ini kaplıyor: 914dp'lik bir
+      // telefonda tepesi 46dp'ye çıkıyor, durum çubuğu ise 48dp — tutamak ve
+      // başlık saatin altına giriyordu. `useSafeArea` yalnız ÜST payı ekler
+      // (`SafeArea(bottom: false)`), yani içerideki `SafeArea(top: false)`
+      // ile çakışmaz: biri tepeyi, öteki dibi alır.
+      useSafeArea: true,
       builder: (context) {
         return DraggableScrollableSheet(
           initialChildSize: 0.6, // Start at 70% of screen

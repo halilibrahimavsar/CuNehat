@@ -30,6 +30,14 @@ void main() {
   // makineye göre kayar. Uygulamanın varsayılanına sabitliyoruz.
   setUpAll(() => Intl.defaultLocale = 'tr');
 
+  /// Alanları HINT'ine göre bulur, ekrandaki SIRASINA göre değil.
+  ///
+  /// İki test eskiden `find.byType(TextField).at(0)/.at(1)` kullanıyordu;
+  /// bölümler yeniden sıralanınca `at(0)` mevcut değer değil MİKTAR alanı
+  /// oldu. Dosyanın geri kalanı zaten hint tabanlı bulucu kullanıyor.
+  Finder fieldByHint(String hint) => find.byWidgetPredicate(
+      (w) => w is TextField && w.decoration?.hintText == hint);
+
   late MockGetLiveQuoteUseCase mockGetLiveQuoteUseCase;
 
   setUpAll(() {
@@ -338,9 +346,9 @@ void main() {
     );
 
     // Mevcut değer ve maliyet.
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), '5.000');
-    await tester.enterText(fields.at(1), '4.000');
+    await tester.enterText(fieldByHint('0'), '5.000');
+    await tester.enterText(
+        fieldByHint('Maliyet (Yatırılan Ana Para)'), '4.000');
     await tester.pumpAndSettle();
 
     // Varsayılan: tamamı cüzdandan düşülür.
@@ -450,9 +458,8 @@ void main() {
       ),
     );
 
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), '0');
-    await tester.enterText(fields.at(1), '0');
+    await tester.enterText(fieldByHint('0'), '0');
+    await tester.enterText(fieldByHint('Maliyet (Yatırılan Ana Para)'), '0');
     await tester.pumpAndSettle();
 
     final saveButton = find.text('Kaydet');
@@ -574,5 +581,90 @@ void main() {
       tester.widget<TextField>(currentValueField).controller?.text,
       '5.000',
     );
+  });
+
+  /// **Yerleşim sırası.** Altın türü ve miktar, MEVCUT DEĞERİ belirleyen iki
+  /// girdi; eskiden ikisi de değerin ~60 satır ALTINDAYDI. Kullanıcı önce
+  /// "mevcut değer" kutusuyla karşılaşıp sonra onu dolduracak "Hesapla"yı
+  /// aşağıda aramak zorundaydı.
+  testWidgets('tür ve miktar, mevcut değer kartının ÜSTÜNDE çizilir',
+      (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          userId: 'u',
+          walletId: 'w',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    double topOf(Finder f) => tester.getTopLeft(f).dy;
+
+    final typeSelector = topOf(find.byType(DropdownButton<String>));
+    final quantity = topOf(find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == 'Gram Altın'));
+    final currentValue = topOf(find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0'));
+    final cost = topOf(find.byWidgetPredicate((w) =>
+        w is TextField &&
+        w.decoration?.hintText == 'Maliyet (Yatırılan Ana Para)'));
+
+    expect(typeSelector, lessThan(currentValue),
+        reason: 'altın türü değeri belirliyor, altında duramaz');
+    expect(quantity, lessThan(currentValue),
+        reason: 'miktar da değeri belirliyor');
+    expect(currentValue, lessThan(cost),
+        reason: 'değer → maliyet sırası korunmalı');
+  });
+
+  /// Çekilen fiyat SEÇİLİ TÜRE ait; tür değişince mesaj bayatlıyordu.
+  testWidgets('altın türü değişince çekilen fiyat mesajı silinir',
+      (tester) async {
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
+      (_) async => const Right(LivePriceQuote(
+          price: 1500.0,
+          currency: 'TRY',
+          convertedPrice: 1500.0,
+          targetCurrency: 'TRY')),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          userId: 'u',
+          walletId: 'w',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+        find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.hintText == 'Gram Altın'),
+        '2');
+    final fetch = find.text('Hesapla');
+    await tester.ensureVisible(fetch);
+    await tester.tap(fetch);
+    await tester.pumpAndSettle();
+    expect(find.text('Güncel Fiyat: 1.500,00 ₺'), findsOneWidget);
+
+    // Çeyrek Altın'a geç: gram fiyatı ekranda kalmamalı.
+    final dropdown = find.byType(DropdownButton<String>);
+    await tester.ensureVisible(dropdown);
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Çeyrek Altın').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Güncel Fiyat: 1.500,00 ₺'), findsNothing,
+        reason: 'gram için alınan fiyat çeyrek seçildikten sonra da duruyor');
   });
 }

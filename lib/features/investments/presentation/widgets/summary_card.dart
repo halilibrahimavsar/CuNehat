@@ -1,6 +1,7 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:flutter/material.dart';
 
@@ -30,6 +31,11 @@ class SummaryCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isProfit = totalProfit >= 0;
     final profitColor = isProfit ? Colors.green : Colors.red;
+    // Portföyün toplam değeri 48px puntoyla ekranın en görünür rakamı;
+    // göz düğmesine bağlanmadığı sürece "tutarları gizle" bu ekranda hiçbir
+    // işe yaramıyordu. Birim açık parametreyle geliyor (bkz. `currency`).
+    final money =
+        MoneyWriter(currency: currency, visible: context.amountsVisible);
 
     return AppCard(
       section: AppSection.savings,
@@ -78,7 +84,7 @@ class SummaryCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              formatMoney(totalCurrentValue, currency: currency),
+              money(totalCurrentValue),
               style: theme.textTheme.displayMedium?.copyWith(
                 fontWeight: FontWeight.w900,
                 fontSize: 48,
@@ -108,7 +114,7 @@ class SummaryCard extends StatelessWidget {
               letterSpacing: 1.0,
             ),
             value: Text(
-              formatMoney(totalInvestment, currency: currency),
+              money(totalInvestment),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: scheme.onSurface,
@@ -152,7 +158,7 @@ class SummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  formatMoney(totalProfit, currency: currency),
+                  money(totalProfit),
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: profitColor,

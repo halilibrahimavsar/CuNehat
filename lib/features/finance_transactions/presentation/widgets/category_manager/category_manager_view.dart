@@ -169,7 +169,11 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
     return RefreshIndicator(
       onRefresh: load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16).plusSystemBottom(context),
+        // Sayfanın `FloatingActionButton.extended`'i (48dp) son kategoriyi
+        // örtüyordu.
+        padding: const EdgeInsets.all(16)
+            .plusSystemBottom(context)
+            .plusFabClearance(fabHeight: 48),
         // +1: en üstteki kapsam açıklaması. Liste öğesi olarak duruyor ki
         // sabit yükseklik yemesin — 0,85 ekranlık alt sayfada her dp sayılı.
         itemCount: _tree.length + 1,

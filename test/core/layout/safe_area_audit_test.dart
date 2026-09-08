@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/receipt_viewer_page.dart';
 import 'package:cunehat/features/settings/presentation/page/pin_recovery_page.dart';
@@ -105,6 +106,78 @@ void main() {
     final hits = await audit(tester, const PinRecoveryPage(),
         scrollable: find.byType(ListView));
     expect(hits, isEmpty, reason: reportHits('PinRecoveryPage', hits));
+  });
+
+  /// FAB'lı sayfalarda listenin son kartı FAB'ın ALTINDA kalıyordu.
+  ///
+  /// Scaffold FAB'ı sistem payının üstüne koyar ama gövdeye bunu bildirmez;
+  /// dolayısıyla `plusSystemBottom` tek başına yetmez. Burada ölçülen şey
+  /// `plusFabClearance`'ın aritmetiği DEĞİL, Flutter'ın FAB'ı gerçekten
+  /// nereye koyduğu — o değişirse (SDK yükseltmesi) bu test kırılmalı.
+  group('FAB payı', () {
+    Future<({Rect fab, Rect lastItem})> layout(
+      WidgetTester tester, {
+      required Widget fab,
+      required double fabHeight,
+    }) async {
+      final lastKey = GlobalKey();
+      await useDevice(tester, size: screen);
+      await tester.pumpWidget(host(Scaffold(
+        floatingActionButton: fab,
+        body: Builder(
+          builder: (context) => ListView(
+            padding: const EdgeInsets.all(16)
+                .plusSystemBottom(context)
+                .plusFabClearance(fabHeight: fabHeight),
+            children: [
+              for (var i = 0; i < 20; i++) const SizedBox(height: 80),
+              SizedBox(key: lastKey, height: 80),
+            ],
+          ),
+        ),
+      )));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -4000));
+      await tester.pumpAndSettle();
+
+      Rect rectOf(Finder f) {
+        final ro = tester.renderObject(f) as RenderBox;
+        return ro.localToGlobal(Offset.zero) & ro.size;
+      }
+
+      return (
+        fab: rectOf(find.byType(FloatingActionButton)),
+        lastItem: rectOf(find.byKey(lastKey))
+      );
+    }
+
+    testWidgets('normal FAB (56dp) son öğeyi örtmez', (tester) async {
+      final r = await layout(
+        tester,
+        fab: FloatingActionButton(
+            onPressed: () {}, child: const Icon(Icons.add)),
+        fabHeight: 56,
+      );
+      expect(r.lastItem.bottom, lessThanOrEqualTo(r.fab.top),
+          reason: 'son öğe ${r.lastItem.bottom}dp\'de bitiyor, '
+              'FAB ${r.fab.top}dp\'de başlıyor');
+      // FAB'ın kendisi de gezinme çubuğunun üstünde kalmalı.
+      expect(r.fab.bottom, lessThanOrEqualTo(safeBottom));
+    });
+
+    testWidgets('extended FAB (48dp) son öğeyi örtmez', (tester) async {
+      final r = await layout(
+        tester,
+        fab: FloatingActionButton.extended(
+          onPressed: () {},
+          icon: const Icon(Icons.add),
+          label: const Text('Ekle'),
+        ),
+        fabHeight: 48,
+      );
+      expect(r.lastItem.bottom, lessThanOrEqualTo(r.fab.top),
+          reason: 'son öğe ${r.lastItem.bottom}dp, FAB ${r.fab.top}dp');
+    });
   });
 
   testWidgets('fiş görüntüleyici: tam ekran görsel kenarlara taşabilir',
