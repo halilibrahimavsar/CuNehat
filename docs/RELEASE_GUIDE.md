@@ -44,7 +44,7 @@ etiketi `v1.0.0+4`.
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
 | 8c | **Mağaza girişi (metin + ikon + görseller)** | ✅ tr-TR + en-US girildi. Mağaza adı **`CuNehat`** olarak KALACAK — bilinçli karar (30 Ağu). Uygulama içi/görsel taraf `ÇuNehat`; fark biliniyor ve kabul edildi, bkz. aşağıdaki not |
 | 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
-| — | **Cihaz duman testi** | ⬜ **KALAN** — Adım 10'daki 16 maddenin hiçbiri işaretli değil |
+| — | **Cihaz duman testi** | 🟡 **KISMEN (8 Eyl)** — emülatörde (API 36, 3 tuşlu gezinme) 8 madde ✔, ayrıca **`+4` → `+5` yerinde yükseltme provası geçti** (10 kutu açıldı, veri yerinde, v9 yedek migrasyonla yüklendi, `+5` v10 yazıyor). Kalan 8 madde imzaya/donanıma bağlı → yüklemeden sonra telefonda. Bkz. Adım 10 |
 | 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
 | 11 | Kapalı test 12 tester × 14 gün | 🟢 **SAYAÇ İŞLİYOR** — 13 tester opt-in oldu (28 Ağu). Panoda ilk iki madde ✔; kalan: "en az 12 kullanıcıyla 14 gün". Production başvurusu en erken **~11 Eyl**, inceleme ≤7 gün → **~18 Eyl** |
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
@@ -702,22 +702,56 @@ Değişikliğin yayılması birkaç dakika sürebilir.
 Dahili test bağlantısından **kendi telefonuna Play üzerinden kur** (yandan
 yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 
-- [ ] Açılış, splash, ikon ana ekranda doğru görünüyor
-- [ ] **Edge-to-edge:** hiçbir ekranda içerik durum çubuğunun / gezinme
-      çubuğunun altına girmiyor, hiçbir düğme çubuğun arkasında kalmıyor ⚠️
-- [ ] İlk açılışta gizlilik onam diyaloğu bir kez çıkıyor
-- [ ] Bildirim izni istemi çıkıyor, izin verince test bildirimi geliyor
-- [ ] Biyometrik / PIN kilidi çalışıyor
-- [ ] Cüzdan oluştur → işlem ekle/sil → bakiye doğru
-- [ ] Raporlar doğru toplamı gösteriyor
-- [ ] **Google ile giriş çalışıyor** ve izin ekranında **yalnız `drive.appdata`** görünüyor ⚠️
-- [ ] Drive yedekle → geri yükle turu: veri kaybı / yanlış bakiye yok
+> **✅ `+5` ÖNCESİ EMÜLATÖR TURU — 8 Eyl 2026.** Android 16 / API 36
+> (`google_apis_playstore`, x86_64, 411×731dp), **3 tuşlu gezinme** (48dp —
+> ölçülen en kötü durum; jest tutamağı ~24dp olduğu için bilerek değiştirildi).
+> Aşağıda `[x]` olanlar bu turda ölçüldü. **İmzaya/donanıma bağlı olanlar
+> ([ ] kalanlar) yüklemeden SONRA telefonda tekrarlanacak.**
+>
+> **Ayrıca yapılan ve bu listede olmayan asıl sınav — `+4` → `+5` yerinde
+> yükseltme provası:** `v1.0.0+4` etiketinden derlenen APK kuruldu, v9 biçimli
+> demo yedek (3 cüzdan / 228 işlem / 5 yatırım / 2 borç / 2 alacak / 6 bütçe /
+> 7 şablon / 50 kategori / 3 hedef) geri yüklendi, sonra `adb install -r` ile
+> `+5` **kaldırmadan** üzerine kuruldu. Sonuç: 10 kutunun tamamı açıldı,
+> logcat'te tek `TypeError`/`HiveError` yok, bakiye `107.183,72 ₺` ve tüm
+> ekranlardaki veri aynen yerinde. Migre edilen cüzdanda `categoryIds` `null`
+> kaldığı için Kategoriler sayfasında **bütün kategoriler açık** geldi —
+> tasarlanan davranış. v9 yedek `+5`'te de "Tam yedek başarıyla geri yüklendi"
+> ile açıldı (migrasyon zinciri), `+5`'in ürettiği yedek **v10** ve cüzdanda
+> `categoryIds` anahtarı var.
+
+- [x] Açılış, splash, ikon ana ekranda doğru görünüyor
+- [x] **Edge-to-edge:** ölçülen üç yüzey temiz — güvenlik ekranının son kartı
+      ("PIN'imi unutursam") çubuğun üstünde bitiyor, kategoriler listesinin son
+      öğesi hem FAB'ın hem çubuğun üstünde, drawer artık tam boy ve sürüm
+      satırı çubuğa girmiyor. `+4` ile yan yana bakıldı: aynı ayarlar
+      ekranında `+4`'te "Kritik Bildirimler" çubuğun altındaydı ⚠️
+- [x] İlk açılışta gizlilik onam diyaloğu bir kez çıkıyor
+- [x] Bildirim izni istemi çıkıyor (sistem izni verildi; **test bildiriminin
+      teslimi ölçülmedi**)
+- [x] **PIN kilidi çalışıyor** — 6 haneli PIN kuruldu, gerçek arka plandan
+      (HOME + 40 sn) dönüşte kilit ekranı çıktı, PIN ile açıldı. **Biyometrik
+      emülatörde kayıtlı değil** ("Bu cihazda kullanılamıyor" diye doğru
+      şekilde pasifleşiyor); çift-biyometrik sorusu telefonda ölçülmeli ⚠️
+- [x] **Sistem seçicisi × kilit** (`87b36f2`): PIN açıkken dosya seçicide
+      **45 sn** beklendi (30 sn eşiğinin ötesi) → dönüşte kilit ekranı YOK,
+      sayfa dispose olmadı, dosya sonucu kayboldu. Muhafazanın kilidi topyekûn
+      kapatmadığı yukarıdaki gerçek-arka-plan testiyle ayrıca doğrulandı
+- [x] Raporlar doğru toplamı gösteriyor — **ana ekran ile rapor artık aynı
+      rakamı veriyor** (`+4`: ana ekran gider 15.371,19 ₺ / rapor 11.871,19 ₺;
+      `+5`: ikisi de 11.871,19 ₺ + "1 kuplaj hareketi sayılmadı" satırı).
+      Bütçeler sayfası da doğru: "1 bütçe aşıldı", Yemek %112
+- [x] R8/obfuscation altında çökme yok — tüm tur **release** derlemesiyle
+      (`isMinifyEnabled = true`) koşuldu, Hive ve bildirimler dahil
+- [ ] Cüzdan oluştur → işlem ekle/sil → bakiye doğru *(yedekten gelen veriyle
+      çalışıldı; elle ekleme/silme turu telefonda)*
+- [ ] **Google ile giriş çalışıyor** ve izin ekranında **yalnız `drive.appdata`** görünüyor ⚠️ *(Play imzası + gerçek hesap ister)*
+- [ ] Drive yedekle → geri yükle turu: veri kaybı / yanlış bakiye yok *(aynı sebep)*
 - [ ] Ayarlar → Yedekleme → Yedeği Sil çalışıyor
 - [ ] Ayarlar → Gizlilik & Veri → Tüm Veriyi Sil → onay → sıfır durum
 - [ ] Banka ekstresi içe aktarma: dosya seçiciden **ve** paylaş menüsünden
-- [ ] Fiş fotoğrafı ekleme + OCR ön-doldurma
+- [ ] Fiş fotoğrafı ekleme + OCR ön-doldurma *(emülatörde kamera yok)*
 - [ ] Uçak modunda: canlı fiyat ve kur ekranları **kilitlenmeden** hata veriyor
-- [ ] R8/obfuscation altında çökme yok (özellikle Hive ve bildirimler)
 - [ ] Cihazı yeniden başlat → planlı hatırlatmalar hâlâ geliyor
 
 > ⚠️ **Google ile giriş** başarısızsa: `google_sign_in` 6.x, Google'ın deprecate
