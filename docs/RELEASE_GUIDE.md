@@ -73,7 +73,7 @@ etiketi `v1.0.0+4`.
 > — bu pano her ölçümde yeniden çalıştırılarak tazelenmeli.
 
 **`+4` sonrası yüklenmemiş iş:** `fix/lock-picker-and-category-l10n` dalında
-**17 commit / 222 dosya / +15.685 satır**, hepsi `+5` ile gidiyor:
+**23 commit / 222 dosya / +15.685 satır**, hepsi `+5` ile gidiyor:
 yedek şeması **v10** (migrasyon zinciri), cüzdana göre kategori görünürlüğü,
 kategorilerin kendi sayfası, kategori adlarının anahtarla yerelleşmesi,
 sistem seçicisi × PIN kilidi düzeltmesi; üzerine **para doğruluğu denetimi**

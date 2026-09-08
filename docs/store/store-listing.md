@@ -420,7 +420,7 @@ Accessibility: improved screen reader support.
 ## Sürüm notları — 1.0.0 (versionCode 5)
 
 Kapalı testin 12. gününde çıkan üçüncü güncelleme. Kapsam: `v1.0.0+4..HEAD`
-(17 commit) — cüzdana göre kategori görünürlüğü, kategorilerin kendi sayfası,
+(23 commit) — cüzdana göre kategori görünürlüğü, kategorilerin kendi sayfası,
 kategori adlarının anahtarla yerelleşmesi, PIN kurtarma + çift biyometrik
 düzeltmesi, edge-to-edge yerleşim ve 11 maddelik para doğruluğu turu.
 
