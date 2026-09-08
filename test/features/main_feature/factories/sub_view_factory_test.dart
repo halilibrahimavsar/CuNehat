@@ -1,7 +1,7 @@
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_history_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_insights_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
-import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
+import 'package:cunehat/features/investments/presentation/pages/investment_history_page.dart';
 import 'package:cunehat/features/main_feature/factories/sub_view_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,16 +18,16 @@ void main() {
     );
 
     test(
-        'createSubViewsForState returns InvestmentDetailPage for savedMoney state',
+        'createSubViewsForState returns InvestmentHistoryPage for savedMoney state',
         () {
       final views = factory.createSubViewsForState('savedMoney');
       expect(views.length, 1);
-      expect(views[0], isA<InvestmentDetailPage>());
+      expect(views[0], isA<InvestmentHistoryPage>());
 
-      final page = views[0] as InvestmentDetailPage;
+      final page = views[0] as InvestmentHistoryPage;
       expect(page.userId, userId);
       expect(page.walletId, walletId);
-      expect(page.key, const ValueKey('invDetail-wallet_456'));
+      expect(page.key, const ValueKey('invHistory-wallet_456'));
     });
 
     test(

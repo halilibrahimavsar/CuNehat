@@ -90,6 +90,10 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
   String? _fetchedPriceMessage;
   Color _fetchedPriceColor = Colors.orange;
 
+  /// Hata banner'ı eklenince kaydet düğmesi ekran dışına itiliyor;
+  /// geri getirebilmek için konumu bilinmeli (bkz. revealSaveButton).
+  final _saveButtonKey = GlobalKey();
+
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _quantityController = TextEditingController();
@@ -194,7 +198,9 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
       }),
       (quote) {
         final qty = _parsedQuantity ?? 0.0;
-        if (qty > 0) {
+        // Miktar yoksa TOPLAM hesaplanamaz — yalnız birim fiyat bilinir.
+        final computed = qty > 0;
+        if (computed) {
           final total = quote.convertedPrice * qty;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
@@ -204,7 +210,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
         setState(() {
           // Altın TL fiyatlı; TL dışı cüzdanda çevrilmiş fiyatın yanında
           // kaynak fiyat da gösterilir.
-          _fetchedPriceMessage = quote.isSameCurrency
+          final priceText = quote.isSameCurrency
               ? context.l10n.guncelFiyatFormat(
                   formatMoney(quote.price, currency: quote.currency))
               : context.l10n.guncelFiyatFormatCevrimli(
@@ -212,7 +218,15 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                   formatMoney(quote.convertedPrice,
                       currency: quote.targetCurrency),
                 );
-          _fetchedPriceColor = Colors.green;
+          // Miktar boşken de mesaj YEŞİL "Güncel Fiyat: …" diyordu; düğmenin
+          // adı "Hesapla" olduğu için kullanıcı işin bittiğini sanıp boş
+          // kalan mevcut değer kutusunu fark etmiyordu. Fiyat yine
+          // gösterilir (bilgi değerli), ama başarı RENGİ ve mesajı yalan
+          // söylemez.
+          _fetchedPriceMessage = computed
+              ? priceText
+              : '$priceText · ${context.l10n.miktarGirinDegerHesaplanmadi}';
+          _fetchedPriceColor = computed ? Colors.green : Colors.orange;
           _isLoading = false;
         });
       },
@@ -229,6 +243,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
     final err = _validate();
     if (err != null) {
       setState(() => _error = err);
+      revealSaveButton(_saveButtonKey);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -423,6 +438,7 @@ class _AddGoldSheetState extends State<AddGoldSheet> {
                       ],
                       const SizedBox(height: 22),
                       InvestmentSaveButton(
+                        key: _saveButtonKey,
                         accent: _accent,
                         radius: surface.radius,
                         isEditing: _isEditing,

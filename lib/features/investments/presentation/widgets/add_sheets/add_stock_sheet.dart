@@ -89,6 +89,10 @@ class _AddStockSheetState extends State<AddStockSheet> {
   String? _fetchedCurrency;
   String? _goalId;
 
+  /// Hata banner'ı eklenince kaydet düğmesi ekran dışına itiliyor;
+  /// geri getirebilmek için konumu bilinmeli (bkz. revealSaveButton).
+  final _saveButtonKey = GlobalKey();
+
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _quantityController = TextEditingController();
@@ -223,7 +227,9 @@ class _AddStockSheetState extends State<AddStockSheet> {
       }),
       (quote) {
         final qty = _parsedQuantity ?? 0.0;
-        if (qty > 0) {
+        // Lot yoksa TOPLAM hesaplanamaz — yalnız birim fiyat bilinir.
+        final computed = qty > 0;
+        if (computed) {
           final total = quote.convertedPrice * qty;
           _currentValueController.text = _fmt(total);
           if (_amountController.text.isEmpty) {
@@ -232,7 +238,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
         }
         setState(() {
           _fetchedCurrency = quote.currency;
-          _fetchedPriceMessage = quote.isSameCurrency
+          final priceText = quote.isSameCurrency
               ? context.l10n.guncelFiyatFormat(
                   formatMoney(quote.price, currency: quote.currency))
               : context.l10n.guncelFiyatFormatCevrimli(
@@ -240,7 +246,13 @@ class _AddStockSheetState extends State<AddStockSheet> {
                   formatMoney(quote.convertedPrice,
                       currency: quote.targetCurrency),
                 );
-          _fetchedPriceColor = Colors.green;
+          // Lot boşken de mesaj YEŞİL "Güncel Fiyat: …" diyordu; düğmenin adı
+          // "Hesapla" olduğu için kullanıcı işin bittiğini sanıp boş kalan
+          // mevcut değer kutusunu fark etmiyordu.
+          _fetchedPriceMessage = computed
+              ? priceText
+              : '$priceText · ${context.l10n.miktarGirinDegerHesaplanmadi}';
+          _fetchedPriceColor = computed ? Colors.green : Colors.orange;
           _isLoading = false;
         });
       },
@@ -257,6 +269,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
     final err = _validate();
     if (err != null) {
       setState(() => _error = err);
+      revealSaveButton(_saveButtonKey);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -450,6 +463,7 @@ class _AddStockSheetState extends State<AddStockSheet> {
                       ],
                       const SizedBox(height: 22),
                       InvestmentSaveButton(
+                        key: _saveButtonKey,
                         accent: _accent,
                         radius: surface.radius,
                         isEditing: _isEditing,

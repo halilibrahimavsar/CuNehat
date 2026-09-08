@@ -1,7 +1,7 @@
 import 'package:cunehat/features/debt_and_receivable/presentation/pages/debt_history_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_insights_page.dart';
 import 'package:cunehat/features/finance_transactions/presentation/pages/transaction_report_page.dart';
-import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
+import 'package:cunehat/features/investments/presentation/pages/investment_history_page.dart';
 import 'package:flutter/material.dart';
 
 /// Factory for creating sub views
@@ -31,8 +31,8 @@ class SubViewFactory {
   List<Widget> createSubViewsForState(String stateType) {
     return switch (stateType) {
       'savedMoney' => [
-          InvestmentDetailPage(
-              key: ValueKey('invDetail-$walletId'),
+          InvestmentHistoryPage(
+              key: ValueKey('invHistory-$walletId'),
               userId: userId,
               walletId: walletId),
         ],

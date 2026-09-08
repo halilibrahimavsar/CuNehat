@@ -5,6 +5,7 @@ import 'package:cunehat/features/investments/domain/entities/investment_entity.d
 import 'package:cunehat/features/investments/domain/entities/live_price_quote.dart';
 import 'package:cunehat/features/investments/domain/usecases/get_live_quote_usecase.dart';
 import 'package:cunehat/features/investments/presentation/widgets/add_sheets/add_gold_sheet.dart';
+import 'package:cunehat/features/investments/presentation/widgets/add_sheets/shared/investment_sheet_widgets.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -666,5 +667,92 @@ void main() {
 
     expect(find.text('Güncel Fiyat: 1.500,00 ₺'), findsNothing,
         reason: 'gram için alınan fiyat çeyrek seçildikten sonra da duruyor');
+  });
+
+  /// **Sessiz başarı.** Miktar boşken "Hesapla" fiyatı çekiyor, YEŞİL
+  /// "Güncel Fiyat: …" yazıyor ama mevcut değeri hiç doldurmuyordu. Düğmenin
+  /// adı "Hesapla" olduğu için kullanıcı işin bittiğini sanıp boş kalan
+  /// kutuyu fark etmiyordu.
+  testWidgets('miktar boşken "Hesapla" başarı gibi görünmez', (tester) async {
+    when(() => mockGetLiveQuoteUseCase(
+        symbol: 'gram-altin',
+        type: InvestmentType.gold,
+        targetCurrency: 'TRY')).thenAnswer(
+      (_) async => const Right(LivePriceQuote(
+          price: 1500.0,
+          currency: 'TRY',
+          convertedPrice: 1500.0,
+          targetCurrency: 'TRY')),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'w',
+          userId: 'u',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Miktar BİLEREK boş bırakılıyor.
+    final fetch = find.text('Hesapla');
+    await tester.ensureVisible(fetch);
+    await tester.tap(fetch);
+    await tester.pumpAndSettle();
+
+    // Fiyat bilgisi yine gösterilir — ama neden hesaplanmadığı da yazar.
+    expect(find.textContaining('1.500,00 ₺'), findsOneWidget);
+    expect(
+        find.textContaining('miktar girin, değer hesaplansın'), findsOneWidget);
+
+    // Mevcut değer kutusu boş KALDI; mesaj bunu gizlememeli.
+    final currentValue = tester.widget<TextField>(find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == '0'));
+    expect(currentValue.controller?.text, isEmpty);
+
+    // Ve renk yeşil (başarı) DEĞİL.
+    final message = tester
+        .widget<Text>(find.textContaining('miktar girin, değer hesaplansın'));
+    expect(message.style?.color, isNot(Colors.green));
+  });
+
+  /// **Kaybolan Kaydet.** Hata banner'ı görünür (o sorun değil) ama eklendiği
+  /// anda düğmeyi aşağı itiyor. Ölçüldü: 411×914dp'de "Kaydet" 877,5'ten
+  /// 955,5'e kayıyordu — ekranın 41,5dp DIŞINA. Kullanıcı hatayı okuyup alanı
+  /// düzeltiyor, sonra bastığı düğmeyi bulamıyordu.
+  testWidgets('hata çıkınca "Kaydet" ekranda kalır', (tester) async {
+    tester.view.physicalSize = const Size(411, 914);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        AddGoldSheet(
+          walletId: 'w',
+          userId: 'u',
+          walletCurrency: 'TRY',
+          onSave: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final save = find.text('Kaydet');
+    await tester.ensureVisible(save);
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(InvestmentErrorBanner), findsOneWidget);
+
+    final banner = tester.getRect(find.byType(InvestmentErrorBanner));
+    final button = tester.getRect(save);
+    expect(button.bottom, lessThanOrEqualTo(914.0),
+        reason: 'Kaydet ${button.bottom}dp\'de — ekranın dışında kaldı');
+    expect(banner.top, greaterThanOrEqualTo(0.0),
+        reason: 'hata banner\'ı yukarı taştı');
+    expect(banner.bottom, lessThanOrEqualTo(914.0));
   });
 }

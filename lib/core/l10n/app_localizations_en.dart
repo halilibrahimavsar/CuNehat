@@ -181,9 +181,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tekrarEtme => 'Do Not Repeat';
 
   @override
-  String get birikimDetayi => 'Savings Detail';
-
-  @override
   String get vazgec => 'Cancel';
 
   @override
@@ -3870,6 +3867,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hedefKategoriOzel => 'Custom';
+
+  @override
+  String get miktarGirinDegerHesaplanmadi =>
+      'enter a quantity to calculate the value';
 
   @override
   String get hedefKategoriOzelHint => 'Your own category (e.g. Boat)';

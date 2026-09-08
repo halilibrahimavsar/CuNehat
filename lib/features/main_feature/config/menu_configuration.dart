@@ -79,7 +79,7 @@ class MenuConfigs {
           // 'Detay' notu). Anahtar 'Detay' idi ve `menuDetails` işlemler
           // sayfası için "İçgörü"ye dönüştürülünce birikim tarafındaki bu
           // düğme de "İçgörü" demeye başladı — oysa açtığı sayfa
-          // `InvestmentDetailPage`, yani yatırım GEÇMİŞİ. Borç tarafı zaten
+          // `InvestmentHistoryPage`, yani yatırım GEÇMİŞİ. Borç tarafı zaten
           // aynı anahtarı ('Geçmiş') kullanıyor.
           label: 'Geçmiş',
           icon: Icons.history,

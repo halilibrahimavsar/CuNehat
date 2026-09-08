@@ -182,9 +182,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tekrarEtme => 'Tekrar Etme';
 
   @override
-  String get birikimDetayi => 'Birikim Detayı';
-
-  @override
   String get vazgec => 'Vazgeç';
 
   @override
@@ -3870,6 +3867,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hedefKategoriOzel => 'Özel';
+
+  @override
+  String get miktarGirinDegerHesaplanmadi => 'miktar girin, değer hesaplansın';
 
   @override
   String get hedefKategoriOzelHint => 'Kendi kategorin (ör. Tekne)';

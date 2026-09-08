@@ -84,7 +84,7 @@ void main() {
     // ama geçmiş olmalı". `label` GÖSTERİM metni değil ANAHTAR; birikim ile
     // işlemler aynı 'Detay' anahtarını paylaşıyordu ve `menuDetails` işlemler
     // sayfası için "İçgörü"ye dönüştürülünce birikim düğmesi de değişti —
-    // oysa açtığı sayfa `InvestmentDetailPage`, yani yatırım GEÇMİŞİ.
+    // oysa açtığı sayfa `InvestmentHistoryPage`, yani yatırım GEÇMİŞİ.
     //
     // Config'i tek başına ölçmek yetmiyordu: eski test 'Detay' anahtarını
     // doğruluyor ve YEŞİL kalıyordu. Ölçülmesi gereken anahtarın ÇÖZÜLDÜĞÜ

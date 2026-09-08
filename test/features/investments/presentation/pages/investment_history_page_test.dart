@@ -7,7 +7,7 @@ import 'package:cunehat/features/finance_transactions/domain/entities/transactio
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
-import 'package:cunehat/features/investments/presentation/pages/investment_detail_page.dart';
+import 'package:cunehat/features/investments/presentation/pages/investment_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
@@ -101,7 +101,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        const InvestmentDetailPage(
+        const InvestmentHistoryPage(
           userId: 'user_123',
           walletId: 'wallet_123',
         ),
@@ -126,7 +126,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        const InvestmentDetailPage(
+        const InvestmentHistoryPage(
           userId: 'user_123',
           walletId: 'wallet_123',
         ),
@@ -156,7 +156,7 @@ void main() {
 
     await tester.pumpWidget(
       buildTestableWidget(
-        const InvestmentDetailPage(
+        const InvestmentHistoryPage(
           userId: 'user_123',
           walletId: 'wallet_123',
           showAppBar: true,
@@ -166,11 +166,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify AppBar title is present
-    expect(find.text('Birikim Detayı'), findsOneWidget);
-
-    // Verify header exists
-    expect(find.text('Geçmiş'), findsOneWidget);
+    // Sayfa ÜÇ farklı ad taşıyordu: alt menü "Geçmiş", sayfa başlığı
+    // "Geçmiş", AppBar ise "Birikim Detayı". Sayfa tek bir yatırımın detayı
+    // değil, cüzdanın yatırım HAREKETLERİ geçmişi — ad da onu söylemeli.
+    expect(find.text('Birikim Detayı'), findsNothing);
+    // AppBar başlığı + sayfa başlığı: aynı ad, iki yerde.
+    expect(find.text('Geçmiş'), findsNWidgets(2));
 
     // Verify the investment transaction is shown
     expect(find.text('Altın Alındı'), findsWidgets);

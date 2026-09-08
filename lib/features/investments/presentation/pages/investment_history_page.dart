@@ -11,12 +11,24 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class InvestmentDetailPage extends StatelessWidget {
+/// Aktif cüzdanın **yatırım hareketleri geçmişi** — tek bir yatırımın detayı
+/// DEĞİL.
+///
+/// Adı uzun süre `InvestmentDetailPage` idi ve yanlış bir beklenti kuruyordu:
+/// sayfa hiç `InvestmentEntity` almıyor, defterden yalnız sistem kaynaklı
+/// yatırım hareketlerini (alış/satış/düzeltme) süzüp listeliyor. Tek bir
+/// yatırımın maliyeti/tarihi kartın kendisinde, eylemleri
+/// `InvestmentActionSheet`'te.
+///
+/// Kullanıcı tarafındaki iki etiket zaten "Geçmiş" diyordu
+/// (`localizedSubMenuLabel` ve sayfanın kendi başlığı); yanlış olan yalnız
+/// koddaki isimdi.
+class InvestmentHistoryPage extends StatelessWidget {
   final String userId;
   final String walletId;
   final bool showAppBar;
 
-  const InvestmentDetailPage({
+  const InvestmentHistoryPage({
     super.key,
     required this.userId,
     required this.walletId,
@@ -28,22 +40,24 @@ class InvestmentDetailPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<TransactionBloc>()
         ..add(GetTransactionsEvent(userId: userId, walletId: walletId)),
-      child: _InvestmentDetailView(showAppBar: showAppBar),
+      child: _InvestmentHistoryView(showAppBar: showAppBar),
     );
   }
 }
 
-class _InvestmentDetailView extends StatelessWidget {
+class _InvestmentHistoryView extends StatelessWidget {
   final bool showAppBar;
 
-  const _InvestmentDetailView({required this.showAppBar});
+  const _InvestmentHistoryView({required this.showAppBar});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
-              title: Text(context.l10n.birikimDetayi),
+              // Sayfanın kendi başlığı ve alt menüsü "Geçmiş" diyor;
+              // AppBar'ın "Birikim Detayı" demesi üçüncü bir ad üretiyordu.
+              title: Text(context.l10n.gecmis),
               centerTitle: true,
             )
           : null,

@@ -59,6 +59,10 @@ class GoalFormSheet extends StatefulWidget {
 class _GoalFormSheetState extends State<GoalFormSheet> {
   static const _accent = Colors.teal;
 
+  /// Hata banner'ı eklenince kaydet düğmesi ekran dışına itiliyor;
+  /// geri getirebilmek için konumu bilinmeli (bkz. revealSaveButton).
+  final _saveButtonKey = GlobalKey();
+
   final _nameController = TextEditingController();
   final _targetController = TextEditingController();
 
@@ -124,11 +128,13 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       setState(() => _error = context.l10n.hedefAdiGirin);
+      revealSaveButton(_saveButtonKey);
       return;
     }
     final target = parseMoneyInput(_targetController.text);
     if (target == null || target <= 0) {
       setState(() => _error = context.l10n.gecerliHedefTutarGirin);
+      revealSaveButton(_saveButtonKey);
       return;
     }
     // Özel kip açıkken boş metin kaydedilirse kategori sessizce kaybolur ve
@@ -136,6 +142,7 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
     final customCategory = _customCategoryController.text.trim();
     if (_isCustomCategory && customCategory.isEmpty) {
       setState(() => _error = context.l10n.hedefKategoriOzelBos);
+      revealSaveButton(_saveButtonKey);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -259,6 +266,7 @@ class _GoalFormSheetState extends State<GoalFormSheet> {
                       ],
                       const SizedBox(height: 22),
                       InvestmentSaveButton(
+                        key: _saveButtonKey,
                         accent: _accent,
                         radius: surface.radius,
                         isEditing: _isEditing,

@@ -422,12 +422,6 @@ abstract class AppLocalizations {
   /// **'Tekrar Etme'**
   String get tekrarEtme;
 
-  /// No description provided for @birikimDetayi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Birikim Detayı'**
-  String get birikimDetayi;
-
   /// No description provided for @vazgec.
   ///
   /// In tr, this message translates to:
@@ -6886,6 +6880,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Özel'**
   String get hedefKategoriOzel;
+
+  /// No description provided for @miktarGirinDegerHesaplanmadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'miktar girin, değer hesaplansın'**
+  String get miktarGirinDegerHesaplanmadi;
 
   /// No description provided for @hedefKategoriOzelHint.
   ///

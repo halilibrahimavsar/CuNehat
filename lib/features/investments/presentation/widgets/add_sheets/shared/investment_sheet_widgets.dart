@@ -404,6 +404,34 @@ class InvestmentHintCaption extends StatelessWidget {
 }
 
 /// Hata şeridi. Türden bağımsız.
+/// Hata gösterildikten sonra "Kaydet" düğmesini yeniden görünür kılar.
+///
+/// **Neden gerekli.** [InvestmentErrorBanner] formun DİBİNDE, kaydet
+/// düğmesinin hemen üstünde duruyor. Banner görünür — o sorun değil — ama
+/// eklendiği anda düğmeyi aşağı itiyor. Ölçüldü (gerçek altın sheet'i,
+/// 411×914dp): "Kaydet" 854,5→877,5 iken hata sonrası 932,5→955,5'e kayıyor,
+/// yani **ekranın 41,5dp dışına**. Kullanıcı hatayı okuyor ama az önce bastığı
+/// düğmeyi kaybediyor ve hiçbir ipucu olmadan elle aşağı kaydırmak zorunda
+/// kalıyor.
+///
+/// `alignment: 1.0` düğmeyi görünür alanın ALTINA hizalar; banner hemen
+/// üstünde olduğu için ikisi birlikte ekrana gelir. Düğme zaten görünüyorsa
+/// çağrı etkisizdir, yani her hata yolunda koşulsuz çağrılabilir.
+void revealSaveButton(GlobalKey saveButtonKey) {
+  // Banner ancak setState'ten SONRAKİ karede ağaca giriyor; ondan önce
+  // ölçmek eski (kaymamış) konumu verir.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final ctx = saveButtonKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      alignment: 1.0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  });
+}
+
 class InvestmentErrorBanner extends StatelessWidget {
   final String error;
 

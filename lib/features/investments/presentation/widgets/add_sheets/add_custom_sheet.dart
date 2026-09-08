@@ -77,6 +77,10 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
   bool _isEditing = false;
   String? _error;
 
+  /// Hata banner'ı eklenince kaydet düğmesi ekran dışına itiliyor;
+  /// geri getirebilmek için konumu bilinmeli (bkz. revealSaveButton).
+  final _saveButtonKey = GlobalKey();
+
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   final _currentValueController = TextEditingController();
@@ -147,6 +151,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
     final err = _validate();
     if (err != null) {
       setState(() => _error = err);
+      revealSaveButton(_saveButtonKey);
       return;
     }
     FocusScope.of(context).unfocus();
@@ -302,6 +307,7 @@ class _AddCustomSheetState extends State<AddCustomSheet> {
                       ],
                       const SizedBox(height: 22),
                       InvestmentSaveButton(
+                        key: _saveButtonKey,
                         accent: _accent,
                         radius: surface.radius,
                         isEditing: _isEditing,
