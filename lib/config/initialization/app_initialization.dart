@@ -112,7 +112,7 @@ class AppInitialization {
 
   static Future<void> _initializeHive() async {
     await Hive.initFlutter();
-    _registerTypeAdapters();
+    registerTypeAdapters();
 
     // Açılışta oluşabilecek race condition ve deadlock'ları önlemek için
     // Hive kutularını en baştan açıyoruz.
@@ -134,37 +134,52 @@ class AppInitialization {
     await initializeDateFormatting('tr_TR');
   }
 
-  static void _registerTypeAdapters() {
-    // İkinci kayıt HiveError fırlatır; retry (init hata ekranı) güvenli
-    // olsun diye kayıtlıysa atla.
-    void register<T>(TypeAdapter<T> adapter) {
-      if (!Hive.isAdapterRegistered(adapter.typeId)) {
-        Hive.registerAdapter(adapter);
-      }
+  /// Kayıt SIRASI davranışın parçasıdır, kozmetik değil.
+  ///
+  /// [registerTypeAdapters] bir typeId zaten kayıtlıysa ATLAR (ikinci kayıt
+  /// `HiveError` fırlatır ve init hata ekranındaki "Tekrar Dene" güvenli
+  /// kalmalı). Dolayısıyla bir typeId için listede İLK gelen adapter kazanır:
+  /// aşağıdaki `Safe*` varyantlarından önce ham (üretilen) adapter listeye
+  /// girerse koruma sessizce devre dışı kalır. `adapter_registration_test.dart`
+  /// bunu kilitliyor.
+  ///
+  /// Liste ayrı bir üye olarak duruyor ki test kendi `HiveImpl`'ine aynı
+  /// kümeyi kaydedebilsin — bkz. `legacy_box_upgrade_test.dart`.
+  @visibleForTesting
+  static List<AdapterRegistration> get adapterRegistrations =>
+      <AdapterRegistration>[
+        AdapterRegistration.of(WalletModelAdapter()),
+        AdapterRegistration.of(TransactionModelAdapter()),
+        AdapterRegistration.of(TransactionTypeModelAdapter()),
+        AdapterRegistration.of(GoalModelAdapter()),
+        AdapterRegistration.of(InvestmentTypeAdapter()),
+        AdapterRegistration.of(DebtTypeAdapter()),
+        AdapterRegistration.of(DebtCalcModeAdapter()),
+        AdapterRegistration.of(BudgetModelAdapter()),
+        AdapterRegistration.of(RecurringFrequencyAdapter()),
+        AdapterRegistration.of(CategoryModelAdapter()),
+        AdapterRegistration.of(ColorAdapter()),
+
+        // Geç eklenmiş non-null alanları olan modeller: üretilen adapter eski
+        // kayıtta `null as double` yapıp TypeError fırlatıyor ve TEK bir eski
+        // kayıt kutunun TAMAMINI açılamaz hâle getiriyor. Bunlar üretilen
+        // adapter'dan türeyip yalnız `read`i ezer; yazma yolu tek kaynakta
+        // (üretilen kodda) kalır. Bkz. `core/models/legacy_safe_adapters.dart`.
+        AdapterRegistration.of(SafeInvestmentModelAdapter()),
+        AdapterRegistration.of(SafeDebtModelAdapter()),
+        AdapterRegistration.of(SafeReceivableModelAdapter()),
+        AdapterRegistration.of(SafePaymentModelAdapter()),
+        AdapterRegistration.of(SafeRecurringTransactionModelAdapter()),
+      ];
+
+  /// [registry] verilmezse uygulamanın küresel `Hive`'ı kullanılır; testler
+  /// yalıtım için kendi `HiveImpl`'ini geçirir.
+  @visibleForTesting
+  static void registerTypeAdapters([TypeRegistry? registry]) {
+    final target = registry ?? Hive;
+    for (final registration in adapterRegistrations) {
+      registration.registerOn(target);
     }
-
-    register(WalletModelAdapter());
-    register(TransactionModelAdapter());
-    register(TransactionTypeModelAdapter());
-    register(GoalModelAdapter());
-    register(InvestmentTypeAdapter());
-    register(DebtTypeAdapter());
-    register(DebtCalcModeAdapter());
-    register(BudgetModelAdapter());
-    register(RecurringFrequencyAdapter());
-    register(CategoryModelAdapter());
-    register(ColorAdapter());
-
-    // Geç eklenmiş non-null alanları olan modeller: üretilen adapter eski
-    // kayıtta `null as double` yapıp TypeError fırlatıyor ve TEK bir eski
-    // kayıt kutunun TAMAMINI açılamaz hâle getiriyor. Bunlar üretilen
-    // adapter'dan türeyip yalnız `read`i ezer; yazma yolu tek kaynakta
-    // (üretilen kodda) kalır. Bkz. `core/models/legacy_safe_adapters.dart`.
-    register(SafeInvestmentModelAdapter());
-    register(SafeDebtModelAdapter());
-    register(SafeReceivableModelAdapter());
-    register(SafePaymentModelAdapter());
-    register(SafeRecurringTransactionModelAdapter());
   }
 }
 
@@ -176,4 +191,36 @@ class AppInitializationResult {
     required this.authBloc,
     required this.router,
   });
+}
+
+/// Bir adapter'ı **statik tipini kaybetmeden** taşıyan kayıt kaydı.
+///
+/// Neden gerekli: `Hive.registerAdapter<T>` `T`'yi çalışma zamanında saklar ve
+/// yazarken `findAdapterForValue` bununla eşleşir. Adapter'lar düz bir
+/// `List<TypeAdapter<dynamic>>`'e konursa `T` **dynamic**'e düşer; Hive o
+/// adapter'ı HER değere uyan sayar ve listedeki ilk adapter bütün yazma
+/// isteklerini üstlenir (ölçüldü: cüzdan adapter'ı alacak kaydını yazmaya
+/// çalışıp `type 'ReceivableModel' is not a subtype of type 'WalletModel'`
+/// fırlattı). Bu yüzden gerçek kayıt, `T`'yi yakalayan bir kapanışta tutuluyor.
+class AdapterRegistration {
+  final TypeAdapter<dynamic> adapter;
+  final void Function(TypeRegistry) _register;
+
+  const AdapterRegistration._(this.adapter, this._register);
+
+  /// `T`, [adapter]'dan çıkarılır — dönüş tipi jenerik OLMADIĞI için çağrı
+  /// yerindeki bağlam `T`'yi `dynamic`'e zorlayamaz.
+  static AdapterRegistration of<T>(TypeAdapter<T> adapter) =>
+      AdapterRegistration._(
+        adapter,
+        (registry) => registry.registerAdapter<T>(adapter),
+      );
+
+  int get typeId => adapter.typeId;
+
+  /// İkinci kayıt `HiveError` fırlatır; retry (init hata ekranı) güvenli
+  /// olsun diye kayıtlıysa atlanır.
+  void registerOn(TypeRegistry registry) {
+    if (!registry.isAdapterRegistered(typeId)) _register(registry);
+  }
 }

@@ -5,8 +5,10 @@ part 'category_model.g.dart';
 
 /// Kategori kaydı. Bkz. [CategoryEntity] — kimlik/hiyerarşi kuralları orada.
 ///
-/// typeId 15: 0-2, 4-7 ve 9-14 kullanımda; 3 ve 8 geçmişte kullanılmış
-/// olabileceği için atlandı.
+/// typeId 15. Hangi typeId'lerin dolu, hangi `HiveField` numarasının sıradaki
+/// olduğu **`CLAUDE.md`'de tek yerde** tutulur — buraya anlık görüntü yazmak
+/// (eskiden olduğu gibi) sessizce eskir ve yeniden kullanılmış bir numaraya yol
+/// açar. Kullanımdaki alanlar aşağıda; sıradaki numara için CLAUDE.md'ye bak.
 /// `HiveObject`'ten TÜREMEZ (bkz. `TransactionModel` — aynı tercih): bir
 /// HiveObject örneği iki farklı anahtarla saklanamaz, güncellemede her seferinde
 /// taze örnek üretmek zorunda kalmak sessiz bir tuzak olurdu.

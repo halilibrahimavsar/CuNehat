@@ -7,8 +7,9 @@ part 'goal_model.g.dart';
 
 /// Birikim hedefi kaydı. Kurallar [GoalEntity]'de.
 ///
-/// typeId 16: 0-2, 4-7, 9-15 kullanımda (3 ve 8 geçmişte kullanılmış
-/// olabileceği için atlandı), 200 renk adapteri.
+/// typeId 16; renk `ColorAdapter` (200) ile yazılır. Dolu typeId'lerin ve
+/// sıradaki `HiveField` numarasının tek kaydı **`CLAUDE.md`** — bkz.
+/// [CategoryModel] üzerindeki aynı not.
 /// `HiveObject`'ten TÜREMEZ (bkz. [CategoryModel] — aynı tercih).
 @HiveType(typeId: 16)
 class GoalModel {
