@@ -4086,6 +4086,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi';
 
   @override
+  String reportTopPayeesCoverage(Object yuzde) {
+    return 'Bu liste dönem giderinin %$yuzde\'ini kapsar';
+  }
+
+  @override
   String reportPayeeCount(Object count) {
     return '$count işlem';
   }

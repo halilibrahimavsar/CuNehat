@@ -4085,6 +4085,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Grouped by transaction title; branch and code suffixes merged';
 
   @override
+  String reportTopPayeesCoverage(Object yuzde) {
+    return 'This list covers $yuzde% of period expenses';
+  }
+
+  @override
   String reportPayeeCount(Object count) {
     return '$count transactions';
   }

@@ -7229,6 +7229,12 @@ abstract class AppLocalizations {
   /// **'İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi'**
   String get reportTopPayeesHint;
 
+  /// No description provided for @reportTopPayeesCoverage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu liste dönem giderinin %{yuzde}\'ini kapsar'**
+  String reportTopPayeesCoverage(Object yuzde);
+
   /// No description provided for @reportPayeeCount.
   ///
   /// In tr, this message translates to:

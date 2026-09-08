@@ -2183,6 +2183,12 @@
   },
   "reportTopPayeesTitle": "Top places",
   "reportTopPayeesHint": "Grouped by transaction title; branch and code suffixes merged",
+  "reportTopPayeesCoverage": "This list covers {yuzde}% of period expenses",
+  "@reportTopPayeesCoverage": {
+    "placeholders": {
+      "yuzde": {}
+    }
+  },
   "reportPayeeCount": "{count} transactions",
   "@reportPayeeCount": {
     "placeholders": {

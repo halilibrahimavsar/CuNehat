@@ -2204,6 +2204,12 @@
   },
   "reportTopPayeesTitle": "En çok harcanan yerler",
   "reportTopPayeesHint": "İşlem başlıklarına göre gruplandı; şube/kod ekleri birleştirildi",
+  "reportTopPayeesCoverage": "Bu liste dönem giderinin %{yuzde}'ini kapsar",
+  "@reportTopPayeesCoverage": {
+    "placeholders": {
+      "yuzde": {}
+    }
+  },
   "reportPayeeCount": "{count} işlem",
   "@reportPayeeCount": {
     "placeholders": {

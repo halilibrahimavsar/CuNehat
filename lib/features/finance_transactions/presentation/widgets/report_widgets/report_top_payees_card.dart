@@ -35,10 +35,21 @@ class ReportTopPayeesCard extends StatelessWidget {
   final void Function(String label, List<TransactionEntity> transactions)
       onGroupTap;
 
+  /// Dönemin TOPLAM gideri (harcama evreninde).
+  ///
+  /// Kart gerçek bir ALT KÜMEDİR ve bunu söylemiyordu: iki ayrı süzgeç para
+  /// düşürüyor — tek seferlik alıcılar hiç grup oluşturmaz ([kMinGroupSize])
+  /// ve [maxRows] gerisini keser. Üstelik çubuk oranı EN BÜYÜK GRUBA göre
+  /// çizildiği için kartın içindeki uzunluklar dönem giderine karşı
+  /// okunamıyordu. Kapsama oranı, listenin ne kadarını anlattığını tek
+  /// satırda söyler.
+  final double periodExpenseTotal;
+
   const ReportTopPayeesCard({
     super.key,
     required this.groups,
     required this.onGroupTap,
+    this.periodExpenseTotal = 0,
   });
 
   /// Kaç kalem gösterilir. Sekizden sonrası kaydırma gerektiriyor ve "en çok"
@@ -87,6 +98,13 @@ class ReportTopPayeesCard extends StatelessWidget {
     final money = MoneyWriter.of(context);
     final maxTotal = groups.first.total;
 
+    // Listelenen grupların dönem giderine oranı. Toplam bilinmiyorsa (0)
+    // satır hiç çizilmez — uydurma bir yüzde, yüzdesizlikten kötüdür.
+    final listed = groups.fold<double>(0, (sum, g) => sum + g.total);
+    final coveragePercent = periodExpenseTotal > 0
+        ? (listed / periodExpenseTotal * 100).clamp(0, 100).round()
+        : null;
+
     return AppCard(
       section: AppSection.transactions,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
@@ -100,6 +118,17 @@ class ReportTopPayeesCard extends StatelessWidget {
               color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
             ),
           ),
+          if (coveragePercent != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              context.l10n.reportTopPayeesCoverage('$coveragePercent'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           for (final group in groups)
             _PayeeRow(

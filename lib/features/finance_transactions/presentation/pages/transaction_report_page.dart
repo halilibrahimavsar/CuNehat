@@ -899,8 +899,10 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
                               title: context.l10n.reportTopPayeesTitle),
                           const SizedBox(height: 12),
                           ReportTopPayeesCard(
-                              groups: derived.payeeGroups,
-                              onGroupTap: _openPayeeGroup),
+                            groups: derived.payeeGroups,
+                            onGroupTap: _openPayeeGroup,
+                            periodExpenseTotal: derived.totals.totalExpense,
+                          ),
                         ],
                       ],
                     ],
