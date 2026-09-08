@@ -682,8 +682,17 @@ void main() {
       ]);
       await pumpPage(tester);
 
+      // Şerit tembel çizer ve açılışta bugüne ortalanır: sabit bir gün
+      // numarasını doğrudan aramak, çapa ilerledikçe kendiliğinden kırılan
+      // bir iddiadır (ölçüldü — aynı kod 8 Eyl'de yeşil, 9 Eyl'de "0 widget
+      // with text '3'"). Aynı kalıp bu dosyadaki "dönemin TÜM günleri"
+      // testinde de var: önce başa kaydır, sonra ara.
+      final rail = find.byType(TransactionDayRail);
+      await tester.drag(rail, const Offset(3000, 0));
+      await tester.pumpAndSettle();
+
       await tester.tap(find.descendant(
-        of: find.byType(TransactionDayRail),
+        of: rail,
         matching: find.text('3'),
       ));
       await tester.pumpAndSettle();
