@@ -7,6 +7,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/models/legacy_safe_adapters.dart';
 import 'package:cunehat/core/services/auto_backup_service.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
 import 'package:cunehat/core/notifications/notification_service.dart';
@@ -145,19 +146,25 @@ class AppInitialization {
     register(WalletModelAdapter());
     register(TransactionModelAdapter());
     register(TransactionTypeModelAdapter());
-    register(InvestmentModelAdapter());
     register(GoalModelAdapter());
     register(InvestmentTypeAdapter());
-    register(DebtModelAdapter());
-    register(ReceivableModelAdapter());
-    register(PaymentModelAdapter());
     register(DebtTypeAdapter());
     register(DebtCalcModeAdapter());
     register(BudgetModelAdapter());
-    register(RecurringTransactionModelAdapter());
     register(RecurringFrequencyAdapter());
     register(CategoryModelAdapter());
     register(ColorAdapter());
+
+    // Geç eklenmiş non-null alanları olan modeller: üretilen adapter eski
+    // kayıtta `null as double` yapıp TypeError fırlatıyor ve TEK bir eski
+    // kayıt kutunun TAMAMINI açılamaz hâle getiriyor. Bunlar üretilen
+    // adapter'dan türeyip yalnız `read`i ezer; yazma yolu tek kaynakta
+    // (üretilen kodda) kalır. Bkz. `core/models/legacy_safe_adapters.dart`.
+    register(SafeInvestmentModelAdapter());
+    register(SafeDebtModelAdapter());
+    register(SafeReceivableModelAdapter());
+    register(SafePaymentModelAdapter());
+    register(SafeRecurringTransactionModelAdapter());
   }
 }
 
