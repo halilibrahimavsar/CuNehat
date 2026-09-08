@@ -8,6 +8,7 @@ import 'package:cunehat/features/settings/presentation/widgets/security/pin_entr
 import 'package:cunehat/features/settings/presentation/widgets/security/security_notice_text.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security/security_tiles.dart';
 import 'package:cunehat/features/settings/presentation/widgets/settings_header.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
@@ -90,7 +91,8 @@ class _SecuritySettingsView extends StatelessWidget {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32)
+                    .plusSystemBottom(context),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     _StatusHeader(state: state),

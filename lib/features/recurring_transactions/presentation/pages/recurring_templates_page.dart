@@ -12,6 +12,7 @@ import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import '../../domain/entities/recurring_transaction_entity.dart';
 import '../../domain/services/recurring_occurrences.dart';
 import '../../domain/usecases/get_all_recurring_templates_usecase.dart';
@@ -251,7 +252,8 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
         return RefreshIndicator(
           onRefresh: _loadTemplates,
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32)
+                .plusSystemBottom(context),
             itemCount: pending.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) => PendingRecurringRow(
@@ -271,7 +273,8 @@ class _RecurringTemplatesPageState extends State<RecurringTemplatesPage>
     return RefreshIndicator(
       onRefresh: _loadTemplates,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+        padding:
+            const EdgeInsets.fromLTRB(16, 4, 16, 32).plusSystemBottom(context),
         children: [
           if (upcoming.isNotEmpty) ...[
             _SectionHeader(

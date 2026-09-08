@@ -17,6 +17,7 @@ import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/settings/presentation/blocs/backup_preview/backup_preview_cubit.dart';
 import 'package:cunehat/features/settings/presentation/blocs/backup_preview/backup_preview_state.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 
 /// Yedeklerin içine BAKMA ekranı (Ayarlar → Google Drive → Yedekleri Görüntüle).
 ///
@@ -155,7 +156,7 @@ class _ListView extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16).plusSystemBottom(context),
       children: [
         Text(
           context.l10n.backupPreviewDriveSection,
@@ -263,7 +264,7 @@ class _DetailView extends StatelessWidget {
     final summary = inspection.summary;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16).plusSystemBottom(context),
       children: [
         _SourceCard(source: state.source),
         const SizedBox(height: 12),

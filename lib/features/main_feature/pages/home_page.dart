@@ -223,20 +223,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return CubeBackHandler(
       controller: _navController,
-      child: SafeArea(
-        top: false,
-        child: AnimatedScaffoldWrapper(
-          key: _scaffoldKey,
-          drawer: const ModernDrawer(),
-          // Drawer/cüzdan sheet'i açıkken kabuk içeriği ölçeklenip
-          // kaydığından hedeflerin ekran konumu geçersizdir; dönüşüm bitince
-          // bekleyen turlar yeniden değerlendirilir.
-          onTransformChanged: _pumpOnboarding,
-          // AppBar'a denetleyici DOĞRUDAN veriliyor: kare başına yalnız zemin
-          // gradyanı yeniden kurulur, başlık ağacı durum değişince.
-          appBar: ModernAppbar(
-            sliderAnimation: _navController.horizontalController,
-          ),
+      // SafeArea BİLEREK kabuğun İÇİNDE: dışarıda olduğunda Scaffold da,
+      // drawer da, drawer'ın karartma perdesi de ekranın 48dp yukarısında
+      // bitiyor ve altta hiçbir Flutter katmanının boyamadığı bir şerit
+      // kalıyordu (ölçüldü: kabuk 0→866, ekran 914). Edge-to-edge zorunlu
+      // olduğu için (targetSdk 36) zemin ekranın DİBİNE kadar inmeli;
+      // paydan kaçması gereken yalnız İÇERİK.
+      child: AnimatedScaffoldWrapper(
+        key: _scaffoldKey,
+        drawer: const ModernDrawer(),
+        // Drawer/cüzdan sheet'i açıkken kabuk içeriği ölçeklenip
+        // kaydığından hedeflerin ekran konumu geçersizdir; dönüşüm bitince
+        // bekleyen turlar yeniden değerlendirilir.
+        onTransformChanged: _pumpOnboarding,
+        // AppBar'a denetleyici DOĞRUDAN veriliyor: kare başına yalnız zemin
+        // gradyanı yeniden kurulur, başlık ağacı durum değişince.
+        appBar: ModernAppbar(
+          sliderAnimation: _navController.horizontalController,
+        ),
+        // top: false — durum çubuğu payını ModernAppbar zaten kendisi
+        // uyguluyor (içindeki Material AppBar `primary`).
+        child: SafeArea(
+          top: false,
           child: MultiBlocListener(
             listeners: [
               BlocListener<WalletBloc, WalletState>(

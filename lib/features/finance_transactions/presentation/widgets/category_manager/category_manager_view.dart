@@ -18,6 +18,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/categ
 import 'package:cunehat/features/finance_transactions/presentation/widgets/category_manager/category_starter_pack_sheet.dart';
 import 'package:cunehat/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
 
 /// Tek türün (gelir **ya da** gider) kategori yönetim gövdesi.
@@ -168,7 +169,7 @@ class CategoryManagerViewState extends State<CategoryManagerView> {
     return RefreshIndicator(
       onRefresh: load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16).plusSystemBottom(context),
         // +1: en üstteki kapsam açıklaması. Liste öğesi olarak duruyor ki
         // sabit yükseklik yemesin — 0,85 ekranlık alt sayfada her dp sayılı.
         itemCount: _tree.length + 1,

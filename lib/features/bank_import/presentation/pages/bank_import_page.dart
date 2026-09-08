@@ -21,6 +21,7 @@ import 'package:cunehat/features/wallet/domain/entities/wallet_entity.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 
 /// Banka ekstresi içe aktarma akışı (Ayarlar → Banka ekstresi içe aktar).
 class BankImportPage extends StatefulWidget {
@@ -194,7 +195,7 @@ class _SetupStepState extends State<_SetupStep> {
     final sharedPath = context.read<BankImportCubit>().sharedFilePath;
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20).plusSystemBottom(context),
       children: [
         Text(
           sharedPath == null
@@ -488,7 +489,7 @@ class _Done extends StatelessWidget {
     final wallet = _findWallet(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32).plusSystemBottom(context),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -773,7 +774,7 @@ class _BlockedView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32).plusSystemBottom(context),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

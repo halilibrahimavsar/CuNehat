@@ -23,6 +23,7 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/catego
 import 'package:cunehat/features/finance_transactions/domain/services/wallet_category_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/category_label.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 
 class BudgetsPage extends StatelessWidget {
   const BudgetsPage({super.key});
@@ -150,7 +151,7 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
             return const _EmptyBudgets();
           }
           return SliverPadding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0).plusSystemBottom(context),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _BudgetSummaryCard(budgets: state.budgets),

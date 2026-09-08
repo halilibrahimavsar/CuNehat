@@ -8,6 +8,7 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/calcu
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_card.dart';
 import 'package:cunehat/features/wallet/presentation/wallet_currency_context.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
 
 /// Bir günün işlemleri ve o güne ait toplamlar.
@@ -234,7 +235,12 @@ class DetailedListView extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          // Bu sarmalayıcının İKİ çağıranı da ekranın DİBİNE oturan modal
+          // sheet (rapor detayı / kategori detayı): `showModalBottomSheet`
+          // yalnız ÜST payı düşürdüğü için alt payı listenin kendisi almalı,
+          // yoksa son işlem satırı gezinme çubuğunun altında kalıyor.
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24)
+              .plusSystemBottom(context),
           sliver: TransactionLedgerSliver(
             transactions: transactions,
             mode: mode,

@@ -7,6 +7,7 @@ import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/settings/presentation/bloc/pin_recovery/pin_recovery_cubit.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security/pin_entry_page.dart';
 import 'package:cunehat/features/settings/presentation/widgets/security/security_notice_text.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
@@ -95,7 +96,8 @@ class _PinRecoveryViewState extends State<_PinRecoveryView> {
           }
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32)
+                .plusSystemBottom(context),
             children: [
               Text(
                 l10n.pinRecoveryIntro,

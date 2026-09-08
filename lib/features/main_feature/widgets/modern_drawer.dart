@@ -12,6 +12,7 @@ import 'package:cunehat/features/main_feature/utils/app_constants.dart'
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_bloc.dart';
 import 'package:cunehat/features/recurring_transactions/presentation/bloc/pending_recurring_state.dart';
 import 'package:cunehat/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -287,8 +288,13 @@ class _ModernDrawerState extends State<ModernDrawer>
   /// göster ki cüzdan metrikleri üste yapışmasın.
   Widget _buildAnimatedHeader(LocalUser? user, bool isDark, ThemeData theme) {
     final driveUser = getIt<GoogleDriveBackupService>().currentUser;
+    // Drawer ekranın tepesinden başlar (zemin gradyanının durum çubuğunun
+    // altına akması İSTENEN görünüm); okunacak içerik o payın altına iner.
+    // Pay sabit 50dp yazılıydı: 24dp durum çubuğunda 26dp fazla boşluk,
+    // kesikli ekranda ise eksik kalıyordu.
+    final statusBar = MediaQuery.paddingOf(context).top;
     if (driveUser == null) {
-      return const SizedBox(height: 50);
+      return SizedBox(height: statusBar + 2);
     }
     final primary = theme.colorScheme.primary;
     return SlideTransition(
@@ -297,7 +303,7 @@ class _ModernDrawerState extends State<ModernDrawer>
         opacity: _fadeAnimation,
         child: Container(
           height: constants.AppSizes.headerHeight,
-          padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
+          padding: EdgeInsets.only(top: statusBar + 2, left: 20, right: 20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -848,7 +854,10 @@ class _ModernDrawerState extends State<ModernDrawer>
 
   Widget _buildDrawerFooter(bool isDark, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      // Sürüm satırı drawer'ın DİBİNE çivili; drawer artık ekranın altına
+      // kadar indiği için gezinme çubuğu payını kendisi almalı.
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14)
+          .plusSystemBottom(context),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(

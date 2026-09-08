@@ -14,6 +14,7 @@ import 'package:cunehat/features/bank_import/presentation/widgets/bank_import_ca
 import 'package:cunehat/features/settings/presentation/widgets/onboarding_help_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/notification_debug_card.dart';
 import 'package:cunehat/features/settings/presentation/widgets/notification_settings_card.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 
 /// Main settings page, styled with premium, theme-aware AppCards.
 class SettingsPage extends StatelessWidget {
@@ -61,7 +62,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0).plusSystemBottom(context),
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [

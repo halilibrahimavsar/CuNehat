@@ -1,5 +1,6 @@
 import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/layout/system_bar_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,7 +31,8 @@ class PrivacyPolicyPage extends StatelessWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        padding:
+            const EdgeInsets.fromLTRB(20, 16, 20, 32).plusSystemBottom(context),
         children: [
           Text(
             l10n.privacyIntro,
