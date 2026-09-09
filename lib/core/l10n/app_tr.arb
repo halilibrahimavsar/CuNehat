@@ -51,7 +51,6 @@
   "hintOdemeIleIlgiliNotlar": "Ödeme ile ilgili notlar...",
   "islemDetayi": "İşlem Detayı",
   "islemRaporu": "İşlem Raporu",
-  "tooltipTarihAraligi": "Tarih Aralığı",
   "oncekiDonemeGorePercent": "%{percent} önceki döneme göre",
   "@oncekiDonemeGorePercent": {
     "placeholders": {
@@ -2140,20 +2139,24 @@
       "end": {}
     }
   },
-  "reportSystemMovementsTitle": "Transfer ve kuplaj hareketleri",
+  "reportSystemMovementsTitle": "Para taşıma hareketleri",
   "reportSystemMovementsOff": "{count} hareket gelir–giderin dışında",
   "@reportSystemMovementsOff": {
     "placeholders": {
-      "count": {}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportSystemMovementsOn": "{count} hareket gelir–gidere dahil",
   "@reportSystemMovementsOn": {
     "placeholders": {
-      "count": {}
+      "count": {
+        "type": "int"
+      }
     }
   },
-  "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
+  "reportSystemMovementsHint": "Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.",
   "reportShareTooltip": "Raporu paylaş",
   "reportNoIncomeForRate": "Bu dönemde gelir yok",
   "reportViewPie": "Pasta görünümü",
@@ -2188,27 +2191,6 @@
   "@reportBreakdownToggle": {
     "placeholders": {
       "ad": {}
-    }
-  },
-  "reportMonthlyTrendTitle": "Aylık seyir",
-  "reportMonthsOption": "{ay} ay",
-  "@reportMonthsOption": {
-    "placeholders": {
-      "ay": {}
-    }
-  },
-  "reportAverageShort": "Ort. {tutar}",
-  "@reportAverageShort": {
-    "placeholders": {
-      "tutar": {}
-    }
-  },
-  "reportMonthlyTrendHint": "Bir aya dokun: raporun dönemi o aya geçer",
-  "reportMonthlyTrendSemantics": "Aylık seyir: {count} ay, ortalama aylık gider {avg}. Ayrıntı için sütunlara dokunun.",
-  "@reportMonthlyTrendSemantics": {
-    "placeholders": {
-      "count": {},
-      "avg": {}
     }
   },
   "reportTopPayeesTitle": "En çok harcanan yerler",
@@ -2247,9 +2229,14 @@
     }
   },
   "reportCategoryChange": "önceki döneme göre",
-  "reportLensFlow": "Akış",
   "reportLensBalance": "Bakiye",
-  "reportPeriodSectionTitle": "Dönem içi seyir",
+  "reportFlowClippedBar": "Ölçek küçük kalemlere göre; en yüksek çubuk ({tutar}) kırpıldı",
+  "@reportFlowClippedBar": {
+    "placeholders": {
+      "tutar": {}
+    }
+  },
+  "reportOtherSmallItems": "Küçük kalemler",
   "insightSectionStatus": "Durum",
   "insightSectionPeriod": "Dönem özeti",
   "insightSectionHabits": "Harcama alışkanlığı",
@@ -2291,7 +2278,7 @@
   },
   "insightTapForTransactions": "İşlemleri görmek için dokunun",
   "insightTopExpensesTitle": "En büyük harcamalar",
-  "insightSystemMovementsNote": "{sayi} kuplaj hareketi (transfer, borç, yatırım) sayılmadı",
+  "insightSystemMovementsNote": "{sayi} para taşıma hareketi (transfer, borç, yatırım) sayılmadı",
   "@insightSystemMovementsNote": {
     "placeholders": {
       "sayi": {

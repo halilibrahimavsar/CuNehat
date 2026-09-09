@@ -134,7 +134,18 @@ SHOTS = [
          # YENİ KARE. Rapor sayfası iki turda baştan yazıldı (11 commit) ve
          # setin hiçbir yerinde temsil edilmiyordu; yerini portföy karesine
          # aldı — birikim tarafını 3. kare zaten anlatıyor.
-         chips=("Kategori çemberi", "Dönem karşılaştırma", "Aylık seyir")),
+         #
+         # ESKİ ÇİP: "Aylık seyir". O kart SİLİNDİ (dönem çubuğu + akış turu):
+         # seçili dönemden bağımsız olduğu için neyi gösterdiği belirsizdi ve
+         # akış grafiğinin ay çözünürlüğüyle aynı şeydi. 1. karedeki "Takvim
+         # görünümü" hatasının aynısı — olmayan özelliği çipe yazmak Play'de
+         # yanıltıcı beyandır.
+         #
+         # ⚠️ KAYNAK KARE DE BAYAT: `03_rapor.png` sayfa başlığını ve eski
+         # tarih bloğunu ("01 Ağu 2026 - 31 Ağu 2026" + çip satırı) gösteriyor;
+         # o blok tek satırlık ay çubuğuna indi. Yükleme öncesi yeniden
+         # çekilmeli.
+         chips=("Kategori çemberi", "Dönem karşılaştırma", "Gelir–gider akışı")),
 
     Shot(4, "04_hedefler.png",
          "Hedefini kur,\n*varlıklarını* bağla",

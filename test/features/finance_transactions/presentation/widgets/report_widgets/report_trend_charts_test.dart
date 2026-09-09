@@ -46,7 +46,7 @@ void main() {
   }
 
   /// [days] gün boyunca her güne bir gelir + bir gider.
-  List<TransactionEntity> series(int days) => [
+  List<TransactionEntity> seriesFixture(int days) => [
         for (var i = 0; i < days; i++) ...[
           tx(date: DateTime(2026, 6, 1 + i), amount: 100, isIncome: true),
           tx(date: DateTime(2026, 6, 1 + i), amount: 40, isIncome: false),
@@ -131,7 +131,7 @@ void main() {
 
     testWidgets('gelir/gider açıklaması (legend) gösterilir', (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        series: seriesOf(series(3)),
+        series: seriesOf(seriesFixture(3)),
       )));
       await tester.pumpAndSettle();
 
@@ -141,7 +141,7 @@ void main() {
 
     testWidgets('az günde her güne tarih etiketi basılır', (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        series: seriesOf(series(4)),
+        series: seriesOf(seriesFixture(4)),
       )));
       await tester.pumpAndSettle();
 
@@ -151,7 +151,7 @@ void main() {
     testWidgets('çok günde tarih etiketleri seyreltilir (üst üste binmez)',
         (tester) async {
       await tester.pumpWidget(host(ReportDailyNetFlowChart(
-        series: seriesOf(series(30)),
+        series: seriesOf(seriesFixture(30)),
       )));
       await tester.pumpAndSettle();
 
@@ -189,6 +189,94 @@ void main() {
             .every((g) => g.barRods.every((r) => r.toY == 0)),
         isTrue,
       );
+    });
+
+    testWidgets('kovalar dilim ORTASINA oturur (bakiye paneliyle hizalı)',
+        (tester) async {
+      // fl_chart varsayılanı kenarlara da tam boşluk koyuyor; ölçüldü
+      // (411dp, 10 kova): 1 Eylül'ün çubuğu kendi tarih etiketinin 25px
+      // sağında kalıyordu.
+      await tester.pumpWidget(
+          host(ReportDailyNetFlowChart(series: seriesOf(seriesFixture(4)))));
+      await tester.pumpAndSettle();
+
+      final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+      expect(data.alignment, BarChartAlignment.spaceAround);
+    });
+
+    group('ölçeği ezen çubuk', () {
+      /// Bir maaş + otuz küçük gider: gerçek veri şekli.
+      ReportSeries salaryMonth() => seriesOf(
+            [
+              tx(date: DateTime(2026, 6, 5), amount: 83000, isIncome: true),
+              for (var i = 0; i < 9; i++)
+                tx(
+                    date: DateTime(2026, 6, 1 + i),
+                    amount: 200 + i * 30,
+                    isIncome: false),
+            ],
+            start: DateTime(2026, 6, 1),
+            end: DateTime(2026, 6, 10),
+          );
+
+      test('dengeli seride tavan KONMAZ', () {
+        final series = seriesOf(seriesFixture(5));
+        expect(flowAxisCap(series.buckets), isNull);
+      });
+
+      test('iki çubuklu seride tavan konmaz (kırpınca tek çubuk kalır)', () {
+        final series = seriesOf([
+          tx(date: DateTime(2026, 6, 1), amount: 90000, isIncome: true),
+          tx(date: DateTime(2026, 6, 2), amount: 100, isIncome: false),
+        ]);
+        expect(flowAxisCap(series.buckets), isNull);
+      });
+
+      test('tek çubuk ötekileri eziyorsa tavan İKİNCİYE göre kurulur', () {
+        // Ölçüldü (411dp telefon, "Bu Ay"): 83.000 ₺ maaşın yanında en yüksek
+        // gün gideri 470 ₺, yani gider çubukları grafiğin %0,6'sı — 200dp'lik
+        // panelde ~1,2px. Hiçbir gider görünmüyordu.
+        final cap = flowAxisCap(salaryMonth().buckets);
+        expect(cap, isNotNull);
+        expect(cap, closeTo(440 * 1.4, 0.01));
+      });
+
+      testWidgets('kırpılan çubuk tavanda durur ama TOOLTIP gerçeği yazar',
+          (tester) async {
+        await tester
+            .pumpWidget(host(ReportDailyNetFlowChart(series: salaryMonth())));
+        await tester.pumpAndSettle();
+
+        final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+        final cap = flowAxisCap(salaryMonth().buckets)!;
+        // 5 Haziran = 5. kova (0 tabanlı 4).
+        final group = data.barGroups[4];
+        expect(group.barRods[0].toY, closeTo(cap, 0.01));
+        expect(data.maxY, closeTo(cap, 0.01));
+
+        // Çizilen yükseklik yalan söylemesin diye tooltip KOVANIN tutarını
+        // yazar; `rod.toY` yazsaydı "658,00 ₺" derdi.
+        final tooltip = data.barTouchData.touchTooltipData
+            .getTooltipItem(group, 4, group.barRods[0], 0);
+        expect(tooltip!.text, contains('83.000,00 ₺'));
+      });
+
+      testWidgets('kırpma varken kart bunu YAZAR', (tester) async {
+        await tester
+            .pumpWidget(host(ReportDailyNetFlowChart(series: salaryMonth())));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('83.000,00 ₺'), findsOneWidget);
+        expect(find.textContaining('kırpıldı'), findsOneWidget);
+      });
+
+      testWidgets('kırpma yokken not YAZILMAZ', (tester) async {
+        await tester.pumpWidget(
+            host(ReportDailyNetFlowChart(series: seriesOf(seriesFixture(5)))));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('kırpıldı'), findsNothing);
+      });
     });
 
     testWidgets('haftalık kovada tooltip tek gün değil ARALIK yazar',
@@ -244,7 +332,7 @@ void main() {
     testWidgets('nokta sayısı azken noktalar görünür, çokken gizlenir',
         (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        series: seriesOf(series(5)),
+        series: seriesOf(seriesFixture(5)),
       )));
       await tester.pumpAndSettle();
       expect(
@@ -259,7 +347,7 @@ void main() {
       );
 
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        series: seriesOf(series(30)),
+        series: seriesOf(seriesFixture(30)),
       )));
       await tester.pumpAndSettle();
       expect(
@@ -276,7 +364,7 @@ void main() {
 
     testWidgets('çok günde tarih etiketleri seyreltilir', (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        series: seriesOf(series(30)),
+        series: seriesOf(seriesFixture(30)),
       )));
       await tester.pumpAndSettle();
 
@@ -303,7 +391,7 @@ void main() {
 
     testWidgets('seri hep pozitifken sıfır çizgisi eklenmez', (tester) async {
       await tester.pumpWidget(host(ReportCumulativeBalanceChart(
-        series: seriesOf(series(4)),
+        series: seriesOf(seriesFixture(4)),
       )));
       await tester.pumpAndSettle();
 
@@ -332,6 +420,26 @@ void main() {
           .lineBarsData
           .first;
       expect(bar.spots.map((s) => s.y).toList(), [49500, 49300]);
+    });
+
+    testWidgets('eksen çubuk paneliyle HİZALI: iki uçta yarım kova payı var',
+        (tester) async {
+      // Çubuk grafiği kovayı kendi diliminin ORTASINA koyar; çizgi eksenin
+      // tam ucundan başlıyordu. Aynı kartta alt alta duran iki panelde
+      // 1 Eylül'ün çubuğu ile noktası yarım dilim kaymış oluyordu.
+      final series = seriesOf(seriesFixture(4));
+      await tester
+          .pumpWidget(host(ReportCumulativeBalanceChart(series: series)));
+      await tester.pumpAndSettle();
+
+      final data = tester.widget<LineChart>(find.byType(LineChart)).data;
+      expect(data.minX, -0.5);
+      expect(data.maxX, series.buckets.length - 0.5);
+
+      // Uç değerler tam sayıya yuvarlanıp aynı tarihi iki kez yazdırmamalı.
+      final labels = dateLabels(tester);
+      expect(labels, hasLength(series.buckets.length));
+      expect(labels.toSet(), hasLength(labels.length));
     });
 
     testWidgets('hareketsiz kovada çizgi düz gider, nokta atlanmaz',

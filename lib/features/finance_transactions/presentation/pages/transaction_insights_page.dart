@@ -12,6 +12,7 @@ import 'package:cunehat/core/utils/currencies.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_analytics_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/transaction_report_service.dart';
+import 'package:cunehat/features/finance_transactions/domain/transaction_period.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_bloc.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_event.dart';
 import 'package:cunehat/features/finance_transactions/presentation/bloc/transactions/transaction_state.dart';
@@ -19,10 +20,10 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/insig
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_budget_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/insight_stat_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/insight_widgets/recurring_suggestion_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_section_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_transaction_list_sheet.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/domain/category_tree.dart';
 import 'package:cunehat/features/recurring_transactions/domain/entities/recurring_transaction_entity.dart';
 import 'package:cunehat/features/recurring_transactions/domain/services/recurring_occurrences.dart';
@@ -487,27 +488,20 @@ class _InsightsViewState extends State<_InsightsView> {
           // dönemi değiştirmek için en başa dönmesi gerekiyordu.
           return Column(
             children: [
+              // Dönem kontrolü rapor sayfasıyla AYNI: tek satırlık ay
+              // çubuğu. İki kardeş sayfanın dönemi iki farklı kontrolle
+              // seçmesi için sebep yok ve eski blok (başlık + aralık metni +
+              // yatay kayan çip satırı) 411dp telefonda ekranın dörtte birini
+              // yiyordu. Hızlı seçenekler etikete dokununca açılır.
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ReportSectionHeader(
-                      title: context.l10n.akilliIcgoruler,
-                      fontSize: 20,
-                    ),
-                    const SizedBox(height: 12),
-                    ReportRangeHeader(
-                      range: _range,
-                      onPickDateRange: _pickDateRange,
-                      quickOptions: DateRangeHelper.buildDateRangeQuickOptions(
-                          context.l10n),
-                      onQuickOptionSelected: (picked) => setState(() {
-                        _range = picked;
-                        _hasUserPickedRange = true;
-                      }),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TransactionPeriodBar(
+                  range: _range,
+                  onStep: (step) => setState(() {
+                    _range = shiftPeriod(_range, step);
+                    _hasUserPickedRange = true;
+                  }),
+                  onPick: _pickDateRange,
                 ),
               ),
               Divider(

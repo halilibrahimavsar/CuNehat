@@ -344,12 +344,6 @@ abstract class AppLocalizations {
   /// **'İşlem Raporu'**
   String get islemRaporu;
 
-  /// No description provided for @tooltipTarihAraligi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tarih Aralığı'**
-  String get tooltipTarihAraligi;
-
   /// No description provided for @oncekiDonemeGorePercent.
   ///
   /// In tr, this message translates to:
@@ -7130,25 +7124,25 @@ abstract class AppLocalizations {
   /// No description provided for @reportSystemMovementsTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Transfer ve kuplaj hareketleri'**
+  /// **'Para taşıma hareketleri'**
   String get reportSystemMovementsTitle;
 
   /// No description provided for @reportSystemMovementsOff.
   ///
   /// In tr, this message translates to:
   /// **'{count} hareket gelir–giderin dışında'**
-  String reportSystemMovementsOff(Object count);
+  String reportSystemMovementsOff(int count);
 
   /// No description provided for @reportSystemMovementsOn.
   ///
   /// In tr, this message translates to:
   /// **'{count} hareket gelir–gidere dahil'**
-  String reportSystemMovementsOn(Object count);
+  String reportSystemMovementsOn(int count);
 
   /// No description provided for @reportSystemMovementsHint.
   ///
   /// In tr, this message translates to:
-  /// **'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.'**
+  /// **'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.'**
   String get reportSystemMovementsHint;
 
   /// No description provided for @reportShareTooltip.
@@ -7211,36 +7205,6 @@ abstract class AppLocalizations {
   /// **'{ad} alt kırılımı'**
   String reportBreakdownToggle(Object ad);
 
-  /// No description provided for @reportMonthlyTrendTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Aylık seyir'**
-  String get reportMonthlyTrendTitle;
-
-  /// No description provided for @reportMonthsOption.
-  ///
-  /// In tr, this message translates to:
-  /// **'{ay} ay'**
-  String reportMonthsOption(Object ay);
-
-  /// No description provided for @reportAverageShort.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ort. {tutar}'**
-  String reportAverageShort(Object tutar);
-
-  /// No description provided for @reportMonthlyTrendHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bir aya dokun: raporun dönemi o aya geçer'**
-  String get reportMonthlyTrendHint;
-
-  /// No description provided for @reportMonthlyTrendSemantics.
-  ///
-  /// In tr, this message translates to:
-  /// **'Aylık seyir: {count} ay, ortalama aylık gider {avg}. Ayrıntı için sütunlara dokunun.'**
-  String reportMonthlyTrendSemantics(Object count, Object avg);
-
   /// No description provided for @reportTopPayeesTitle.
   ///
   /// In tr, this message translates to:
@@ -7301,23 +7265,23 @@ abstract class AppLocalizations {
   /// **'önceki döneme göre'**
   String get reportCategoryChange;
 
-  /// No description provided for @reportLensFlow.
-  ///
-  /// In tr, this message translates to:
-  /// **'Akış'**
-  String get reportLensFlow;
-
   /// No description provided for @reportLensBalance.
   ///
   /// In tr, this message translates to:
   /// **'Bakiye'**
   String get reportLensBalance;
 
-  /// No description provided for @reportPeriodSectionTitle.
+  /// No description provided for @reportFlowClippedBar.
   ///
   /// In tr, this message translates to:
-  /// **'Dönem içi seyir'**
-  String get reportPeriodSectionTitle;
+  /// **'Ölçek küçük kalemlere göre; en yüksek çubuk ({tutar}) kırpıldı'**
+  String reportFlowClippedBar(Object tutar);
+
+  /// No description provided for @reportOtherSmallItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Küçük kalemler'**
+  String get reportOtherSmallItems;
 
   /// No description provided for @insightSectionStatus.
   ///
@@ -7382,7 +7346,7 @@ abstract class AppLocalizations {
   /// No description provided for @insightSystemMovementsNote.
   ///
   /// In tr, this message translates to:
-  /// **'{sayi} kuplaj hareketi (transfer, borç, yatırım) sayılmadı'**
+  /// **'{sayi} para taşıma hareketi (transfer, borç, yatırım) sayılmadı'**
   String insightSystemMovementsNote(int sayi);
 
   /// No description provided for @insightDismissSuggestion.

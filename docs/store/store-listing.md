@@ -484,6 +484,12 @@ zemini, başlık şeridi ve **özellik çipleriyle** yerleştirildi.
 
 **Kalan iş:** görselleri Play Console → Mağaza girişi'ne yüklemek.
 
+> ⚠️ **3. kare (`03_rapor.png`) yükleme öncesi YENİDEN ÇEKİLMELİ.** Rapor
+> sayfasının dönem kontrolü tek satırlık ay çubuğuna indi ve sayfa başlığı
+> kalktı; karedeki "01 Ağu 2026 - 31 Ağu 2026" bloğu ile çip satırı artık
+> uygulamada yok. Çipin "Aylık seyir" olan üçüncü sırası da düzeltildi
+> (o kart silindi) — betikteki metin güncel, üretilecek kare değil.
+
 ### Kare başına bir EKRAN değil, bir KATEGORİ
 
 Play telefon için en fazla 8 görsel alıyor. İlk sürümde 8 karede 8 ekran vardı,
@@ -505,7 +511,7 @@ beyanla birebir uyuşmalı.
 |---|---|---|---|
 | 1 | İşlem defteri | *Gelir ve giderin **tek defterde*** | Gün gün döküm · Arama ve filtre · Çoklu cüzdan |
 | 2 | Banka ekstresi inceleme | *Ekstreni at, **satırlar hazır** gelsin* | PDF ve Excel · Fotoğraftan OCR · Aritmetik doğrulama |
-| 3 | Rapor | *Paran **nereye** gitti?* | Kategori çemberi · Dönem karşılaştırma · Aylık seyir |
+| 3 | Rapor | *Paran **nereye** gitti?* | Kategori çemberi · Dönem karşılaştırma · Gelir–gider akışı |
 | 4 | Birikim hedefleri | *Hedefini kur, **varlıklarını** bağla* | Altın, hisse ve fon · Canlı fiyat · Kâr/zarar takibi |
 | 5 | Bütçe | *Bütçeni **aşınca** hemen gör* | Kategori limitleri · Aşım uyarısı · Cüzdan bazlı bütçe |
 | 6 | Borç/alacak | *Borcunu ve alacağını **unutma*** | Taksit ve vade · Kısmi ödeme · Gecikme faizi |

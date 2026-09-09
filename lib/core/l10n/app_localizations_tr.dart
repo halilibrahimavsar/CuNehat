@@ -139,9 +139,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get islemRaporu => 'İşlem Raporu';
 
   @override
-  String get tooltipTarihAraligi => 'Tarih Aralığı';
-
-  @override
   String oncekiDonemeGorePercent(Object percent) {
     return '%$percent önceki döneme göre';
   }
@@ -4015,21 +4012,21 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get reportSystemMovementsTitle => 'Transfer ve kuplaj hareketleri';
+  String get reportSystemMovementsTitle => 'Para taşıma hareketleri';
 
   @override
-  String reportSystemMovementsOff(Object count) {
+  String reportSystemMovementsOff(int count) {
     return '$count hareket gelir–giderin dışında';
   }
 
   @override
-  String reportSystemMovementsOn(Object count) {
+  String reportSystemMovementsOn(int count) {
     return '$count hareket gelir–gidere dahil';
   }
 
   @override
   String get reportSystemMovementsHint =>
-      'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir; para yer değiştirir. Bakiye çizgisi bunları her zaman içerir.';
+      'Cüzdanlar arası transfer, borç ödemesi ve yatırım alım/satımı harcama değildir: para harcanmaz, yalnızca yer değiştirir. Bakiye çizgisi bunları her zaman içerir.';
 
   @override
   String get reportShareTooltip => 'Raporu paylaş';
@@ -4068,28 +4065,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String reportBreakdownToggle(Object ad) {
     return '$ad alt kırılımı';
-  }
-
-  @override
-  String get reportMonthlyTrendTitle => 'Aylık seyir';
-
-  @override
-  String reportMonthsOption(Object ay) {
-    return '$ay ay';
-  }
-
-  @override
-  String reportAverageShort(Object tutar) {
-    return 'Ort. $tutar';
-  }
-
-  @override
-  String get reportMonthlyTrendHint =>
-      'Bir aya dokun: raporun dönemi o aya geçer';
-
-  @override
-  String reportMonthlyTrendSemantics(Object count, Object avg) {
-    return 'Aylık seyir: $count ay, ortalama aylık gider $avg. Ayrıntı için sütunlara dokunun.';
   }
 
   @override
@@ -4135,13 +4110,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportCategoryChange => 'önceki döneme göre';
 
   @override
-  String get reportLensFlow => 'Akış';
-
-  @override
   String get reportLensBalance => 'Bakiye';
 
   @override
-  String get reportPeriodSectionTitle => 'Dönem içi seyir';
+  String reportFlowClippedBar(Object tutar) {
+    return 'Ölçek küçük kalemlere göre; en yüksek çubuk ($tutar) kırpıldı';
+  }
+
+  @override
+  String get reportOtherSmallItems => 'Küçük kalemler';
 
   @override
   String get insightSectionStatus => 'Durum';
@@ -4183,7 +4160,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String insightSystemMovementsNote(int sayi) {
-    return '$sayi kuplaj hareketi (transfer, borç, yatırım) sayılmadı';
+    return '$sayi para taşıma hareketi (transfer, borç, yatırım) sayılmadı';
   }
 
   @override

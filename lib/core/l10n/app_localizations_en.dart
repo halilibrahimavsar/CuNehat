@@ -139,9 +139,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islemRaporu => 'Transaction Report';
 
   @override
-  String get tooltipTarihAraligi => 'Date Range';
-
-  @override
   String oncekiDonemeGorePercent(Object percent) {
     return '$percent% vs previous period';
   }
@@ -4016,21 +4013,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reportSystemMovementsTitle => 'Transfers & linked movements';
+  String get reportSystemMovementsTitle => 'Transfers & moved money';
 
   @override
-  String reportSystemMovementsOff(Object count) {
-    return '$count movements kept out of income–expense';
+  String reportSystemMovementsOff(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries kept out of income–expense',
+      one: '1 entry kept out of income–expense',
+    );
+    return '$_temp0';
   }
 
   @override
-  String reportSystemMovementsOn(Object count) {
-    return '$count movements counted in income–expense';
+  String reportSystemMovementsOn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries counted in income–expense',
+      one: '1 entry counted in income–expense',
+    );
+    return '$_temp0';
   }
 
   @override
   String get reportSystemMovementsHint =>
-      'Transfers between wallets, debt payments and investment buys/sells are not spending — the money moves, it isn\'t spent. The balance line always includes them.';
+      'Transfers between wallets, debt payments and investment buys/sells are not spending: the money isn\'t spent, it only moves. The balance line always includes them.';
 
   @override
   String get reportShareTooltip => 'Share the report';
@@ -4069,27 +4078,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String reportBreakdownToggle(Object ad) {
     return '$ad breakdown';
-  }
-
-  @override
-  String get reportMonthlyTrendTitle => 'Monthly trend';
-
-  @override
-  String reportMonthsOption(Object ay) {
-    return '$ay months';
-  }
-
-  @override
-  String reportAverageShort(Object tutar) {
-    return 'Avg. $tutar';
-  }
-
-  @override
-  String get reportMonthlyTrendHint => 'Tap a month to switch the report to it';
-
-  @override
-  String reportMonthlyTrendSemantics(Object count, Object avg) {
-    return 'Monthly trend: $count months, $avg average monthly spending. Tap the columns for detail.';
   }
 
   @override
@@ -4135,13 +4123,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportCategoryChange => 'vs. previous period';
 
   @override
-  String get reportLensFlow => 'Flow';
-
-  @override
   String get reportLensBalance => 'Balance';
 
   @override
-  String get reportPeriodSectionTitle => 'Within the period';
+  String reportFlowClippedBar(Object tutar) {
+    return 'Scaled to the smaller items; the tallest bar ($tutar) is clipped';
+  }
+
+  @override
+  String get reportOtherSmallItems => 'Small items';
 
   @override
   String get insightSectionStatus => 'Status';
@@ -4183,7 +4173,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String insightSystemMovementsNote(int sayi) {
-    return '$sayi coupling movements (transfer, debt, investment) excluded';
+    String _temp0 = intl.Intl.pluralLogic(
+      sayi,
+      locale: localeName,
+      other: '$sayi money moves excluded (transfer, debt, investment)',
+      one: '1 money move excluded (transfer, debt, investment)',
+    );
+    return '$_temp0';
   }
 
   @override

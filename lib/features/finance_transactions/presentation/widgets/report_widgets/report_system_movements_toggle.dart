@@ -57,8 +57,8 @@ class ReportSystemMovementsToggle extends StatelessWidget {
                 ),
                 Text(
                   included
-                      ? context.l10n.reportSystemMovementsOn(count.toString())
-                      : context.l10n.reportSystemMovementsOff(count.toString()),
+                      ? context.l10n.reportSystemMovementsOn(count)
+                      : context.l10n.reportSystemMovementsOff(count),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),

@@ -1,7 +1,5 @@
-import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
-import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_time_axis.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -22,12 +20,23 @@ import 'package:flutter/material.dart';
 /// Dokununca tooltip o kovanın tarihini ve bakiyeyi [MoneyWriter] ile yazar
 /// (göz düğmesine duyarlı); sıfırın altına inen dönemlerde ayrıca sıfır
 /// çizgisi gösterilir.
+///
+/// Kart DEĞİL panel: akış çubuklarıyla aynı [AppCard] içinde, aynı zaman
+/// ekseni üzerinde durur (bkz. `ReportPeriodChartCard`).
 class ReportCumulativeBalanceChart extends StatelessWidget {
   final ReportSeries series;
+
+  /// Grafik alanının yüksekliği.
+  final double height;
+
+  /// Alt eksende tarih etiketleri yazılsın mı?
+  final bool showDateAxis;
 
   const ReportCumulativeBalanceChart({
     super.key,
     required this.series,
+    this.height = 220,
+    this.showDateAxis = true,
   });
 
   /// Bu sayıdan çok nokta varken tek tek noktalar çizgiyi boğuyor.
@@ -73,144 +82,156 @@ class ReportCumulativeBalanceChart extends StatelessWidget {
     final money = MoneyWriter.of(context);
     final crossesZero = minValue < 0 && maxValue > 0;
 
-    return AppCard(
-      section: AppSection.transactions,
-      padding: const EdgeInsets.fromLTRB(16, 20, 20, 16),
-      child: Semantics(
-        label: context.l10n.reportBalanceChartSemantics(
-          money(balances.first),
-          money(balances.last),
-        ),
-        child: SizedBox(
-          height: 220,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final step = dateLabelStep(
-                pointCount: buckets.length,
-                availableWidth: constraints.maxWidth - kValueAxisWidth,
-                slotWidth: scaledDateLabelSlot(context),
-              );
+    return Semantics(
+      label: context.l10n.reportBalanceChartSemantics(
+        money(balances.first),
+        money(balances.last),
+      ),
+      child: SizedBox(
+        height: height,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final step = dateLabelStep(
+              pointCount: buckets.length,
+              availableWidth: constraints.maxWidth - kValueAxisWidth,
+              slotWidth: scaledDateLabelSlot(context),
+            );
 
-              return LineChart(
-                LineChartData(
-                  minY: axisMin,
-                  maxY: axisMax,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: scheme.primary,
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(show: spots.length <= _maxDotCount),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: scheme.primary.withValues(alpha: 0.1),
-                      ),
+            return LineChart(
+              LineChartData(
+                minY: axisMin,
+                maxY: axisMax,
+                // Yarım kova payı: çubuk grafiği her kovayı kendi DİLİMİNİN
+                // ORTASINA koyar (spaceAround), çizgi ise ilk noktayı eksenin
+                // tam soluna. Aynı kartta alt alta durduklarında 1 Eylül'ün
+                // çubuğu ile 1 Eylül'ün noktası yarım dilim kayıyor, yani
+                // ortak eksen iddiası da alttaki tarih etiketleri de yanlış
+                // oluyordu.
+                minX: -0.5,
+                maxX: (buckets.length - 1) + 0.5,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    // Eğri KAPALI: bakiye adım adım değişir, maaş günündeki
+                    // sıçramayı eğrileştiren spline hem tepeyi aşıyor
+                    // (overshoot) hem de yaşanmamış ara değerler çiziyordu.
+                    isCurved: false,
+                    color: scheme.primary,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(show: spots.length <= _maxDotCount),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: scheme.primary.withValues(alpha: 0.1),
                     ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    fitInsideHorizontally: true,
+                    fitInsideVertically: true,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final index = spot.x.toInt();
+                        final date = index >= 0 && index < buckets.length
+                            ? '${bucketTooltipDate(buckets[index], series.unit)}\n'
+                            : '';
+                        return LineTooltipItem(
+                          '$date${money(spot.y)}',
+                          kChartTooltipStyle,
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    if (crossesZero)
+                      HorizontalLine(
+                        y: 0,
+                        color: scheme.onSurface.withValues(alpha: 0.35),
+                        strokeWidth: 1,
+                        dashArray: [4, 3],
+                      ),
                   ],
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      fitInsideHorizontally: true,
-                      fitInsideVertically: true,
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          final index = spot.x.toInt();
-                          final date = index >= 0 && index < buckets.length
-                              ? '${bucketTooltipDate(buckets[index], series.unit)}\n'
-                              : '';
-                          return LineTooltipItem(
-                            '$date${money(spot.y)}',
-                            kChartTooltipStyle,
-                          );
-                        }).toList();
+                ),
+                titlesData: FlTitlesData(
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: kValueAxisWidth,
+                      interval: yInterval > 0 ? yInterval : 1,
+                      getTitlesWidget: (value, meta) {
+                        // fl_chart aralık etiketlerinin YANINDA eksenin uç
+                        // değerlerini de basıyor; bunlar nefes payından gelen
+                        // rastgele sayılar ("-581") ve komşularının 16px
+                        // dibine düşüp okunmaz bir küme oluşturuyorlardı.
+                        // Yalnız gerçek veri aralığındakileri çiziyoruz.
+                        if (value < minValue || value > maxValue) {
+                          return const SizedBox.shrink();
+                        }
+                        // Tutarlar gizliyken değer ekseni yazılmaz (bkz.
+                        // günlük akış grafiği); çizginin şekli görünür kalır.
+                        if (!money.visible) return const SizedBox.shrink();
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          child: Text(
+                            money.compact(value, symbol: false),
+                            style: chartAxisLabelStyle(scheme),
+                          ),
+                        );
                       },
                     ),
                   ),
-                  extraLinesData: ExtraLinesData(
-                    horizontalLines: [
-                      if (crossesZero)
-                        HorizontalLine(
-                          y: 0,
-                          color: scheme.onSurface.withValues(alpha: 0.35),
-                          strokeWidth: 1,
-                          dashArray: [4, 3],
-                        ),
-                    ],
-                  ),
-                  titlesData: FlTitlesData(
-                    rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: kValueAxisWidth,
-                        interval: yInterval > 0 ? yInterval : 1,
-                        getTitlesWidget: (value, meta) {
-                          // fl_chart aralık etiketlerinin YANINDA eksenin uç
-                          // değerlerini de basıyor; bunlar nefes payından gelen
-                          // rastgele sayılar ("-581") ve komşularının 16px
-                          // dibine düşüp okunmaz bir küme oluşturuyorlardı.
-                          // Yalnız gerçek veri aralığındakileri çiziyoruz.
-                          if (value < minValue || value > maxValue) {
-                            return const SizedBox.shrink();
-                          }
-                          // Tutarlar gizliyken değer ekseni yazılmaz (bkz.
-                          // günlük akış grafiği); çizginin şekli görünür kalır.
-                          if (!money.visible) return const SizedBox.shrink();
-                          return SideTitleWidget(
-                            axisSide: meta.axisSide,
-                            child: Text(
-                              money.compact(value, symbol: false),
-                              style: chartAxisLabelStyle(scheme),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 24,
-                        interval: 1,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index < 0 ||
-                              index >= buckets.length ||
-                              index % step != 0) {
-                            return const SizedBox.shrink();
-                          }
-                          return SideTitleWidget(
-                            axisSide: meta.axisSide,
-                            // Serinin ilk/son tarihi eksenin tam ucuna denk
-                            // geliyor ve kartın dışına taşıyordu.
-                            fitInside:
-                                SideTitleFitInsideData.fromTitleMeta(meta),
-                            child: Text(
-                              bucketAxisLabel(buckets[index], series.unit),
-                              style: chartAxisLabelStyle(scheme),
-                            ),
-                          );
-                        },
-                      ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: showDateAxis,
+                      reservedSize: showDateAxis ? 24 : 0,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        // Eksen uçları (-0.5 / n-0.5) da etiket ister ve
+                        // `toInt()` onları komşu kovaya yuvarlayıp aynı
+                        // tarihi İKİ kez yazdırırdı.
+                        if (value != value.roundToDouble()) {
+                          return const SizedBox.shrink();
+                        }
+                        final index = value.toInt();
+                        if (index < 0 ||
+                            index >= buckets.length ||
+                            index % step != 0) {
+                          return const SizedBox.shrink();
+                        }
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          // Serinin ilk/son tarihi eksenin tam ucuna denk
+                          // geliyor ve kartın dışına taşıyordu.
+                          fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                          child: Text(
+                            bucketAxisLabel(buckets[index], series.unit),
+                            style: chartAxisLabelStyle(scheme),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: yInterval > 0 ? yInterval : 1,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: scheme.onSurface.withValues(alpha: 0.1),
-                      strokeWidth: 1,
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
                 ),
-              );
-            },
-          ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: yInterval > 0 ? yInterval : 1,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: scheme.onSurface.withValues(alpha: 0.1),
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+              ),
+            );
+          },
         ),
       ),
     );

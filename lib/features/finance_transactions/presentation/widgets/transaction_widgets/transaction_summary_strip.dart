@@ -137,9 +137,13 @@ class TransactionSummaryStrip extends StatelessWidget {
 
   /// Dönemde toplamların dışında bırakılan kuplaj hareketi sayısı.
   ///
-  /// l10n anahtarı içgörü sayfasıyla ORTAK: metin ("N kuplaj hareketi
+  /// l10n anahtarı içgörü sayfasıyla ORTAK: metin ("N para taşıma hareketi
   /// (transfer, borç, yatırım) sayılmadı") sayfaya değil kurala ait ve iki
   /// yerde ayrı cümle kurmak, aynı kuralın iki farklı adı olması demekti.
+  ///
+  /// Ekranda "kuplaj" GEÇMEZ: kod tarafının sözlüğü son kullanıcının sözlüğü
+  /// değil. Kavramın kendisi (para harcanmadı, yer değiştirdi) parantezle
+  /// örneklenir.
   Widget _systemNote(BuildContext context, int count) {
     final scheme = Theme.of(context).colorScheme;
     return Row(

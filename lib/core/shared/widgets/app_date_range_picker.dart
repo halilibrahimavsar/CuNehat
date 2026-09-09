@@ -73,6 +73,12 @@ class AppDateRangePicker {
     return showModalBottomSheet<_QuickMenuResult>(
       context: context,
       backgroundColor: Colors.transparent,
+      // Varsayılan tavan ekranın 9/16'sı ve içerik ORAYA SIĞMIYOR: ölçüldü
+      // (360×640 + 48dp gezinme çubuğu) — sütun 92px taşıyor, yani listenin
+      // son satırı olan "Takvimden seç" ekranın dışında kalıyor ve özel
+      // aralık hiç seçilemiyordu. Menü artık içeriği kadar yer alır,
+      // sığmazsa kendi içinde kayar (bkz. [_QuickMenuSheet]).
+      isScrollControlled: true,
       builder: (sheetContext) => _QuickMenuSheet(options: options),
     );
   }
@@ -108,76 +114,85 @@ class _QuickMenuSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 4),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              child: Row(
-                children: [
-                  Icon(Icons.date_range_rounded,
-                      size: 20, color: cs.onSurfaceVariant),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      context.l10n.tarihAraligiSecBaslik,
+        // Tavan ekranın %85'i: menü tam ekranı kaplayıp modal olduğunu
+        // unutturmasın, ama uzun listede satırlar da kesilmesin.
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 4),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.date_range_rounded,
+                          size: 20, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          context.l10n.tarihAraligiSecBaslik,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                for (final option in options)
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    title: Text(
+                      option.label,
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
                         color: cs.onSurface,
                       ),
                     ),
+                    onTap: () => Navigator.of(context).pop(
+                      _QuickMenuResult.range(option.range),
+                    ),
                   ),
-                ],
-              ),
-            ),
-            for (final option in options)
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                title: Text(
-                  option.label,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
+                Divider(
+                  height: 1,
+                  indent: 20,
+                  endIndent: 20,
+                  color: cs.onSurface.withValues(alpha: 0.10),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                  leading: Icon(Icons.calendar_today_rounded,
+                      size: 20, color: cs.primary),
+                  title: Text(
+                    context.l10n.takvimdenSec,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: cs.primary,
+                    ),
                   ),
+                  onTap: () => Navigator.of(context)
+                      .pop(const _QuickMenuResult.openCalendar()),
                 ),
-                onTap: () => Navigator.of(context).pop(
-                  _QuickMenuResult.range(option.range),
-                ),
-              ),
-            Divider(
-              height: 1,
-              indent: 20,
-              endIndent: 20,
-              color: cs.onSurface.withValues(alpha: 0.10),
+                const SizedBox(height: 8),
+              ],
             ),
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-              leading: Icon(Icons.calendar_today_rounded,
-                  size: 20, color: cs.primary),
-              title: Text(
-                context.l10n.takvimdenSec,
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: cs.primary,
-                ),
-              ),
-              onTap: () => Navigator.of(context)
-                  .pop(const _QuickMenuResult.openCalendar()),
-            ),
-            const SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );

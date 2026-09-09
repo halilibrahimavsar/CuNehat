@@ -2,7 +2,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:cunehat/core/services/budgets_changed_notifier.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
-import 'package:cunehat/core/shared/widgets/date_range_chips.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/failure.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -21,7 +20,9 @@ import 'package:cunehat/features/finance_transactions/presentation/pages/transac
 import 'package:cunehat/features/finance_transactions/presentation/widgets/finance_mode.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -223,10 +224,9 @@ void main() {
 
     // Varsayılan mod Karşılaştırma: kategori dağılımı TEK kart çizer.
     // 'Gelir'/'Gider' özet kartında, karşılaştırma kartının çubuk etiketinde,
-    // efsane başlığında, günlük akış grafiğinin açıklamasında ve aylık seyir
-    // kartının açıklamasında geçer.
-    expect(find.text('Gelir'), findsNWidgets(5));
-    expect(find.text('Gider'), findsNWidgets(5));
+    // efsane başlığında ve dönem kartının akış açıklamasında geçer.
+    expect(find.text('Gelir'), findsNWidgets(4));
+    expect(find.text('Gider'), findsNWidgets(4));
     expect(find.text('Net'), findsNWidgets(2));
 
     expect(find.byType(ReportCompareChartCard), findsOneWidget);
@@ -347,9 +347,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // "Değiştir" metin düğmesi ikona döndü: hızlı çipler aynı satıra
-    // geldiğinde metin 360dp'de dar kalıyordu.
-    await tester.tap(find.byIcon(Icons.edit_calendar_rounded));
+    // Dönem etiketine ("Eylül 2026") dokunmak hızlı seçenek menüsünü açar;
+    // ayrı bir takvim düğmesi yok (bkz. TransactionPeriodBar).
+    await tester.tap(find.descendant(
+      of: find.byType(TransactionPeriodBar),
+      matching: find.byType(InkWell),
+    ));
     await tester.pumpAndSettle();
 
     // Tap Choose from calendar in the quick options sheet to open the dialog
@@ -456,8 +459,7 @@ void main() {
     expect(find.text('Tiny'), findsOneWidget);
   });
 
-  testWidgets(
-      'renders ReportRangeHeader even when transactions in current range are empty',
+  testWidgets('dönem kontrolü, dönemde işlem YOKKEN de görünür',
       (WidgetTester tester) async {
     final oldDate = DateTime.now().subtract(const Duration(days: 100));
     final tx = TransactionEntity(
@@ -491,12 +493,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Aralık başlığı VE dönem kontrolü, dönem boş olsa da görünür kalmalı:
-    // aksi hâlde kullanıcı aralığı değiştirecek kontrolü bulamıyordu.
-    expect(find.byType(ReportRangeHeader), findsOneWidget);
-    expect(find.byIcon(Icons.edit_calendar_rounded), findsOneWidget);
-    // Hızlı çipler de burada: dönem değiştirmek artık tek dokunuş.
-    expect(find.byType(DateRangeChips), findsOneWidget);
+    // Dönem kontrolü, dönem boş olsa da görünür kalmalı: aksi hâlde
+    // kullanıcı dönemi değiştirecek kontrolü bulamıyordu.
+    expect(find.byType(TransactionPeriodBar), findsOneWidget);
+    // Oklar da burada: bir önceki/sonraki ay tek dokunuş.
+    expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
   });
 
   testWidgets('tapping legend item opens category details bottom sheet',
@@ -904,5 +906,181 @@ void main() {
           reason: 'yabancı cüzdanın gideri rapora girdi');
       expect(texts.contains('90.050'), isFalse);
     });
+  });
+
+  group('grafik penceresi', () {
+    /// [days] listesindeki günlerde birer gider üretir (bu ay).
+    List<TransactionEntity> monthDays(List<int> days, {DateTime? now}) {
+      final base = now ?? DateTime.now();
+      return [
+        for (final d in days)
+          TransactionEntity(
+            id: 'tx_$d',
+            userId: 'user_123',
+            walletId: 'wallet_123',
+            title: 'Market',
+            tag: 'Food',
+            amount: 100.0 + d,
+            date: DateTime(base.year, base.month, d, 12),
+            type: TransactionTypeModel.expense,
+          ),
+      ];
+    }
+
+    Future<void> pump(WidgetTester tester, List<TransactionEntity> txs) async {
+      when(() => mockTransactionBloc.state).thenReturn(
+        TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(
+          const TransactionReportPage(
+              userId: 'user_123', walletId: 'wallet_123'),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('REGRESYON: yaşanmamış günler çizilmez', (tester) async {
+      // "Bu Ay" ayın son gününe kadar sürer. Kullanıcının bildirdiği hata:
+      // ayın 10'undayken grafiğin sağ üçte ikisi boş, bakiye çizgisi 20 gün
+      // DÜMDÜZ gidiyordu (ölçüldü: 30 kovanın 20'si gelecekte).
+      final now = DateTime.now();
+      await pump(tester, monthDays([1]));
+
+      final flow = tester
+          .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart))
+          .series;
+      final today = DateTime(now.year, now.month, now.day);
+      expect(flow.buckets.last.start, today);
+      expect(
+        flow.buckets.where((b) => b.start.isAfter(today)),
+        isEmpty,
+        reason: 'gelecek bir gün "harcama yapılmadı" demek değil',
+      );
+    });
+
+    testWidgets('ileri tarihli kayıt pencereden DÜŞMEZ', (tester) async {
+      // Kırpma bugünde değil "bugün ya da son kayıt"ta durur: planlanmış bir
+      // işlem özet kartında sayılıyor, grafikten düşerse iki kart aynı dönem
+      // için farklı toplam gösterirdi.
+      final now = DateTime.now();
+      final lastDay = DateTime(now.year, now.month + 1, 0).day;
+      if (now.day >= lastDay) return; // ayın son günü: ileri tarih yok
+      final future = now.day + 1;
+      await pump(tester, monthDays([1, future]));
+
+      final flow = tester
+          .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart))
+          .series;
+      expect(flow.buckets.last.start, DateTime(now.year, now.month, future));
+    });
+
+    testWidgets('veri OLMAYAN bir aya gidince başlıksız boşluk kalmaz',
+        (tester) async {
+      // Grafik hareketsiz seride kendini gizliyor; bölüm başlığı ve
+      // çözünürlük seçicisi ise her hâlükârda çiziliyordu — geriye başlık +
+      // BOŞLUK kalıyordu.
+      await pump(tester, monthDays([1]));
+
+      await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReportPeriodChartCard), findsNothing);
+      expect(find.text('Günlük Gelir–Gider'), findsNothing);
+      expect(find.text('Bakiye Trendi'), findsNothing);
+      expect(find.text('Kategori Dağılımı'), findsNothing);
+    });
+  });
+
+  testWidgets('ay oku dönemi bir ay geri alır', (WidgetTester tester) async {
+    final now = DateTime.now();
+    final txs = [
+      TransactionEntity(
+        id: 'tx_1',
+        userId: 'user_123',
+        walletId: 'wallet_123',
+        title: 'Market',
+        tag: 'Food',
+        amount: 100,
+        date: DateTime(now.year, now.month, 1, 12),
+        type: TransactionTypeModel.expense,
+      ),
+    ];
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(groupedTransactions: {}, allTransactions: txs),
+    );
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final label = DateFormat.yMMMM('tr');
+    expect(find.text(label.format(now)), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+    await tester.pumpAndSettle();
+
+    final previous = DateTime(now.year, now.month - 1, 1);
+    expect(find.text(label.format(previous)), findsOneWidget);
+    expect(find.text(label.format(now)), findsNothing);
+  });
+
+  testWidgets('kullanıcının "Diğer" kategorisi varsa kova BAŞKA ad alır',
+      (WidgetTester tester) async {
+    // Cihazda ölçüldü: karşılaştırma kartının gider tarafında "Diğer %28" ve
+    // "Diğer %15" alt alta duruyordu — biri kullanıcının gerçek kategorisi,
+    // öteki eşiğin altındakileri toplayan sentetik kova.
+    when(() => mockCategoryRepository.getCategories(true))
+        .thenAnswer((_) async => const [
+              CategoryEntity(
+                  id: 'Food',
+                  name: 'Food',
+                  iconName: 'fastfood',
+                  isExpense: true),
+              CategoryEntity(
+                  id: 'diger',
+                  name: 'Diğer',
+                  iconName: 'category',
+                  isExpense: true),
+            ]);
+
+    final now = DateTime.now();
+    TransactionEntity expense(String id, String tag, double amount) =>
+        TransactionEntity(
+          id: id,
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          title: id,
+          tag: tag,
+          amount: amount,
+          date: now,
+          type: TransactionTypeModel.expense,
+        );
+
+    final transactions = [
+      expense('tx_large', 'Food', 1000.0),
+      expense('tx_diger', 'diger', 300.0),
+      expense('tx_small', 'Tiny', 1.0),
+      expense('tx_small_2', 'Tiny2', 1.0),
+    ];
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {now: transactions},
+        allTransactions: transactions,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const TransactionReportPage(userId: 'user_123', walletId: 'wallet_123'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Kullanıcının kategorisi adını korur, kova kendi adını alır.
+    expect(find.text('Diğer'), findsOneWidget);
+    expect(find.text('Küçük kalemler'), findsOneWidget);
   });
 }

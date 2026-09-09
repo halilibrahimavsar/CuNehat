@@ -197,22 +197,6 @@ class ReportSeriesService {
     );
   }
 
-  /// Son [months] takvim ayını kapsayan pencere — [anchor]'ın ayıyla biter.
-  ///
-  /// Aylık trend kartı SEÇİLİ ARALIKTAN bağımsızdır: "bu ay ne harcadım"
-  /// sorusunun cevabı raporun geri kalanında zaten var; buradaki soru "daha
-  /// çok mu harcıyorum" ve o soru daha uzun bir ufuk ister.
-  ///
-  /// `DateTimeRange` DEĞİL kayıt döner: bu servis saf Dart'tır (Flutter
-  /// bağımlılığı yok → kolay birim test edilir), dönüşümü sunum katmanı yapar.
-  ({DateTime start, DateTime end}) monthsWindow(DateTime anchor, int months) {
-    assert(months > 0);
-    return (
-      start: DateTime(anchor.year, anchor.month - (months - 1), 1),
-      end: DateTime(anchor.year, anchor.month + 1, 0),
-    );
-  }
-
   /// Dönem BAŞLAMADAN önceki bakiye: `walletOpeningBalance + Σ signed(önceki)`.
   ///
   /// [all] cüzdanın TÜM işlemleridir (aralığa süzülmemiş). Cüzdanın açılış

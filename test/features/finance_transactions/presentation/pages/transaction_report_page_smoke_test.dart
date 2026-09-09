@@ -24,10 +24,9 @@ import 'package:cunehat/features/finance_transactions/presentation/widgets/repor
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_compare_chart_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_cumulative_balance_chart.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_daily_net_flow_chart.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_monthly_trend_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_period_chart_card.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_range_header.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_summary_cards.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_system_movements_toggle.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_top_payees_card.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -292,14 +291,29 @@ void main() {
     expect(errors, isEmpty, reason: '$errors');
   });
 
-  testWidgets('çözünürlük seçicisi de taşma üretmez', (tester) async {
+  testWidgets('çözünürlük seçicisi bir AYDA çıkmaz, uzun aralıkta çıkar',
+      (tester) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
     await pumpPage(tester);
 
+    // Bir ay (≤35 gün) her zaman GÜNLÜK çizilir; seçenek sunmak kalıcı bir
+    // çip satırından ibaretti.
+    expect(find.text('Hafta'), findsNothing);
+    expect(find.text('Günlük Gelir–Gider'), findsOneWidget);
+
+    // Dönemi "Son 3 Ay"a al: seçici artık bir işe yarıyor.
     final errors = await layoutErrors(tester, () async {
+      await tester.tap(find.descendant(
+        of: find.byType(TransactionPeriodBar),
+        matching: find.byType(InkWell),
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Son 3 Ay'));
+      await tester.pumpAndSettle();
+
       final week = find.text('Hafta');
       await tester.ensureVisible(week);
       await tester.pumpAndSettle();
@@ -359,7 +373,7 @@ void main() {
       await tester.pumpAndSettle();
     });
     expect(errors, isEmpty, reason: '$errors');
-    expect(find.text('Monthly trend'), findsOneWidget);
+    expect(find.text('Daily Income–Expense'), findsOneWidget);
   });
 
   testWidgets('bütün analiz kartları çizilir', (tester) async {
@@ -369,17 +383,15 @@ void main() {
 
     await pumpPage(tester);
 
-    // Dönem kontrolü + beş bölüm başlığı + iki yeni kart.
-    expect(find.byType(ReportRangeHeader), findsOneWidget);
+    // Dönem kontrolü + dört bölüm.
+    expect(find.byType(TransactionPeriodBar), findsOneWidget);
     expect(find.byType(ReportSummaryCards), findsOneWidget);
     expect(find.byType(ReportSystemMovementsToggle), findsOneWidget);
-    // Akış ve bakiye TEK kartta, mercek seçimiyle (bkz.
-    // ReportPeriodChartCard); açılış merceği akış.
+    // Akış ve bakiye TEK kartta, mercek seçimi OLMADAN: ikisi birlikte
+    // okunur (bkz. ReportPeriodChartCard).
     expect(find.byType(ReportPeriodChartCard), findsOneWidget);
     expect(find.byType(ReportDailyNetFlowChart), findsOneWidget);
-    expect(find.byType(ReportCumulativeBalanceChart), findsNothing);
-    expect(find.byType(ReportMonthlyTrendCard), findsOneWidget);
-    expect(find.byType(ReportPeriodLensSelector), findsOneWidget);
+    expect(find.byType(ReportCumulativeBalanceChart), findsOneWidget);
     expect(find.byType(ReportCompareChartCard), findsOneWidget);
     expect(find.byType(ReportBudgetSummaryCard), findsOneWidget);
     expect(find.byType(ReportTopPayeesCard), findsOneWidget);
@@ -456,42 +468,12 @@ void main() {
       const expense =
           24000 + marketTotal + 8 * 180 + 2120 + 2350 + 640 + 1890 + 35000;
 
-      // Bakiye merceğine geç.
-      final balanceChip = find.text('Bakiye');
-      await tester.ensureVisible(balanceChip);
-      await tester.pumpAndSettle();
-      await tester.tap(balanceChip);
-      await tester.pumpAndSettle();
-
       final line = tester.widget<LineChart>(find.byType(LineChart));
       expect(
         line.data.lineBarsData.first.spots.last.y,
         closeTo(income - expense, 0.01),
         reason: 'kuplaj hareketleri bakiyeden düşülemez',
       );
-    });
-
-    testWidgets('aylık seyirdeki ay, o ay seçilince özet gideriyle uyuşur',
-        (tester) async {
-      tester.view.physicalSize = const Size(360, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      await pumpPage(tester);
-
-      // Oto-ayar aralığı geçen aya kaydırdı; trend kartında o ay vurgulu
-      // olmalı ve gideri özet kartıyla aynı çıkmalı.
-      final trend = tester
-          .widget<ReportMonthlyTrendCard>(find.byType(ReportMonthlyTrendCard));
-      final now = DateTime.now();
-      final selected = DateTime(now.year, now.month - 1, 1);
-      expect(trend.selectedMonth, selected);
-
-      final bucket =
-          trend.series.buckets.firstWhere((b) => b.start == selected);
-      const marketTotal = 12 * 850 + 30 * 66;
-      const expected = 24000 + marketTotal + 8 * 180 + 2120 + 2350 + 640 + 1890;
-      expect(bucket.expense, closeTo(expected.toDouble(), 0.01));
     });
   });
 
@@ -537,16 +519,16 @@ void main() {
       addTearDown(tester.view.reset);
 
       await pumpPage(tester);
-      final before = tester.getTopLeft(find.byType(ReportRangeHeader));
+      final before = tester.getTopLeft(find.byType(TransactionPeriodBar));
 
       // Sayfanın sonuna kadar kaydır.
       await tester.drag(
           find.byType(ReportSummaryCards), const Offset(0, -1500));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ReportRangeHeader), findsOneWidget,
+      expect(find.byType(TransactionPeriodBar), findsOneWidget,
           reason: 'hangi dönemin raporuna bakıldığı hep görünmeli');
-      expect(tester.getTopLeft(find.byType(ReportRangeHeader)), before);
+      expect(tester.getTopLeft(find.byType(TransactionPeriodBar)), before);
     });
 
     testWidgets('bölümler ÜRÜN ÖNCELİĞİNE göre sıralı', (tester) async {
@@ -560,40 +542,38 @@ void main() {
           tester.getTopLeft(find.text(title)).dy;
 
       // Kullanıcının sorduğu sıra: ne oldu → nereye gitti → bütçeyi aştım mı
-      // → eğilim ne → tam olarak nereye. Kategori dağılımı eskiden 1507dp'de,
-      // yani iki ekran aşağıdaydı.
+      // → dönem içinde ne zaman → tam olarak nereye. Kategori dağılımı
+      // eskiden 1507dp'de, yani iki ekran aşağıdaydı.
       final kategori = topOf('Kategori Dağılımı');
       final butce = topOf('Bütçe durumu');
-      final aylik = topOf('Aylık seyir');
+      final akis = topOf('Günlük Gelir–Gider');
       final yerler = topOf('En çok harcanan yerler');
 
       expect(kategori, lessThan(butce));
-      expect(butce, lessThan(aylik));
-      expect(aylik, lessThan(yerler));
+      expect(butce, lessThan(akis));
+      expect(akis, lessThan(yerler));
       // Kategori dağılımı İLK ekranda başlamalı.
       expect(kategori, lessThan(800));
     });
 
-    testWidgets('akış ↔ bakiye merceği kartı değiştirir', (tester) async {
+    testWidgets('akış ve bakiye AYNI kartta, mercek çipi olmadan',
+        (tester) async {
       tester.view.physicalSize = const Size(360, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
       await pumpPage(tester);
 
+      // Kullanıcı bölüme bakıp "gelir–gider akışı yok" diyordu: açık olan
+      // mercek bakiyeydi ve çubuklar bir çip ardında saklıydı.
       expect(find.byType(ReportDailyNetFlowChart), findsOneWidget);
-      expect(find.byType(ReportCumulativeBalanceChart), findsNothing);
-
-      final balance = find.text('Bakiye');
-      await tester.ensureVisible(balance);
-      await tester.pumpAndSettle();
-      await tester.tap(balance);
-      await tester.pumpAndSettle();
-
-      expect(find.byType(ReportDailyNetFlowChart), findsNothing);
       expect(find.byType(ReportCumulativeBalanceChart), findsOneWidget);
-      // Başlık merceği izler.
-      expect(find.text('Bakiye Trendi'), findsOneWidget);
+      expect(find.text('Akış'), findsNothing);
+
+      // Tarih ekseni bir KEZ yazılır (altta, bakiye panelinin dibinde).
+      final flow = tester
+          .widget<ReportDailyNetFlowChart>(find.byType(ReportDailyNetFlowChart));
+      expect(flow.showDateAxis, isFalse);
     });
   });
 

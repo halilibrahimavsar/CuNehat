@@ -25,6 +25,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/transaction_widgets/transaction_period_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
@@ -192,7 +193,7 @@ void main() {
     ]);
     await pumpPage(tester);
 
-    expect(find.text('Akıllı İçgörüler'), findsWidgets);
+    expect(find.byType(TransactionPeriodBar), findsOneWidget);
     expect(find.byType(DailySafeToSpendCard), findsOneWidget);
     expect(find.byType(InsightOverspentCard), findsNothing);
   });
@@ -289,10 +290,10 @@ void main() {
 
     expect(find.text('Bu dönemde işlem yok'), findsNothing);
     expect(find.text(formatMoney(750)), findsWidgets);
-    // Dönem başlığı da kaymış olmalı (etiket tek parça yazılır).
-    final movedStart = DateFormat('dd MMM yyyy')
+    // Dönem etiketi de kaymış olmalı: ay çubuğu ayın adını yazar.
+    final movedMonth = DateFormat.yMMMM('tr')
         .format(DateTime(twoMonthsAgo.year, twoMonthsAgo.month, 1));
-    expect(find.textContaining(movedStart), findsOneWidget);
+    expect(find.text(movedMonth), findsOneWidget);
   });
 
   testWidgets('en çok harcanan kategoriye dokunmak işlemleri açar',

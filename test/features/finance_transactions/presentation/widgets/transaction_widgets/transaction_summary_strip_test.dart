@@ -111,8 +111,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Sessizce düşürmek "giderim nereye gitti" sorusunu doğurur.
-    expect(find.textContaining('kuplaj hareketi'), findsOneWidget);
-    expect(find.textContaining('1 kuplaj'), findsOneWidget);
+    // Metin "kuplaj" DEMEZ: son kullanıcı sözlüğünde böyle bir kelime yok.
+    expect(find.textContaining('para taşıma hareketi'), findsOneWidget);
+    expect(find.textContaining('1 para taşıma'), findsOneWidget);
+    expect(find.textContaining('kuplaj'), findsNothing);
   });
 
   testWidgets('kuplaj yokken dipnot da yok (kart şişmez)', (tester) async {
@@ -121,7 +123,7 @@ void main() {
     ])));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('kuplaj hareketi'), findsNothing);
+    expect(find.textContaining('para taşıma hareketi'), findsNothing);
   });
 
   testWidgets('net de kuplajsız hesaplanır', (tester) async {

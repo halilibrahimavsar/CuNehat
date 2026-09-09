@@ -51,7 +51,6 @@
   "hintOdemeIleIlgiliNotlar": "Notes about payment...",
   "islemDetayi": "Transaction Detail",
   "islemRaporu": "Transaction Report",
-  "tooltipTarihAraligi": "Date Range",
   "oncekiDonemeGorePercent": "{percent}% vs previous period",
   "@oncekiDonemeGorePercent": {
     "placeholders": {
@@ -2119,20 +2118,24 @@
       "end": {}
     }
   },
-  "reportSystemMovementsTitle": "Transfers & linked movements",
-  "reportSystemMovementsOff": "{count} movements kept out of income–expense",
+  "reportSystemMovementsTitle": "Transfers & moved money",
+  "reportSystemMovementsOff": "{count, plural, =1{1 entry kept out of income–expense} other{{count} entries kept out of income–expense}}",
   "@reportSystemMovementsOff": {
     "placeholders": {
-      "count": {}
+      "count": {
+        "type": "int"
+      }
     }
   },
-  "reportSystemMovementsOn": "{count} movements counted in income–expense",
+  "reportSystemMovementsOn": "{count, plural, =1{1 entry counted in income–expense} other{{count} entries counted in income–expense}}",
   "@reportSystemMovementsOn": {
     "placeholders": {
-      "count": {}
+      "count": {
+        "type": "int"
+      }
     }
   },
-  "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending — the money moves, it isn't spent. The balance line always includes them.",
+  "reportSystemMovementsHint": "Transfers between wallets, debt payments and investment buys/sells are not spending: the money isn't spent, it only moves. The balance line always includes them.",
   "reportShareTooltip": "Share the report",
   "reportNoIncomeForRate": "No income this period",
   "reportViewPie": "Pie view",
@@ -2167,27 +2170,6 @@
   "@reportBreakdownToggle": {
     "placeholders": {
       "ad": {}
-    }
-  },
-  "reportMonthlyTrendTitle": "Monthly trend",
-  "reportMonthsOption": "{ay} months",
-  "@reportMonthsOption": {
-    "placeholders": {
-      "ay": {}
-    }
-  },
-  "reportAverageShort": "Avg. {tutar}",
-  "@reportAverageShort": {
-    "placeholders": {
-      "tutar": {}
-    }
-  },
-  "reportMonthlyTrendHint": "Tap a month to switch the report to it",
-  "reportMonthlyTrendSemantics": "Monthly trend: {count} months, {avg} average monthly spending. Tap the columns for detail.",
-  "@reportMonthlyTrendSemantics": {
-    "placeholders": {
-      "count": {},
-      "avg": {}
     }
   },
   "reportTopPayeesTitle": "Top places",
@@ -2226,9 +2208,14 @@
     }
   },
   "reportCategoryChange": "vs. previous period",
-  "reportLensFlow": "Flow",
   "reportLensBalance": "Balance",
-  "reportPeriodSectionTitle": "Within the period",
+  "reportFlowClippedBar": "Scaled to the smaller items; the tallest bar ({tutar}) is clipped",
+  "@reportFlowClippedBar": {
+    "placeholders": {
+      "tutar": {}
+    }
+  },
+  "reportOtherSmallItems": "Small items",
   "insightSectionStatus": "Status",
   "insightSectionPeriod": "Period summary",
   "insightSectionHabits": "Spending habits",
@@ -2270,7 +2257,7 @@
   },
   "insightTapForTransactions": "Tap to see the transactions",
   "insightTopExpensesTitle": "Largest expenses",
-  "insightSystemMovementsNote": "{sayi} coupling movements (transfer, debt, investment) excluded",
+  "insightSystemMovementsNote": "{sayi, plural, =1{1 money move excluded (transfer, debt, investment)} other{{sayi} money moves excluded (transfer, debt, investment)}}",
   "@insightSystemMovementsNote": {
     "placeholders": {
       "sayi": {

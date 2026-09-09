@@ -1,19 +1,16 @@
 import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
-import 'package:cunehat/features/finance_transactions/domain/services/report_series_service.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_budget_summary_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
-import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_monthly_trend_card.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_top_payees_card.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
-/// Raporun analiz kartları: aylık seyir, en çok harcanan yer, bütçe özeti ve
-/// kategori bazlı değişim rozeti.
+/// Raporun analiz kartları: en çok harcanan yer, bütçe özeti ve kategori
+/// bazlı değişim rozeti.
 void main() {
   setUpAll(() => Intl.defaultLocale = 'tr');
 
@@ -46,105 +43,6 @@ void main() {
         type:
             income ? TransactionTypeModel.income : TransactionTypeModel.expense,
       );
-
-  group('aylık seyir', () {
-    const service = ReportSeriesService();
-
-    ReportSeries trend({int months = 6}) {
-      final window = service.monthsWindow(DateTime(2026, 6, 15), months);
-      return service.build(
-        inRange: [
-          tx(DateTime(2026, 3, 5), 'A', 3000),
-          tx(DateTime(2026, 4, 5), 'A', 5000),
-          tx(DateTime(2026, 5, 5), 'A', 4000),
-          tx(DateTime(2026, 6, 5), 'A', 9000),
-          tx(DateTime(2026, 6, 1), 'Maaş', 20000, income: true),
-        ],
-        start: window.start,
-        end: window.end,
-        unit: ReportBucketUnit.month,
-      );
-    }
-
-    test('pencere ANKOR ayıyla biter ve tam ayları kapsar', () {
-      final window = service.monthsWindow(DateTime(2026, 6, 15), 6);
-      expect(window.start, DateTime(2026, 1, 1));
-      expect(window.end, DateTime(2026, 6, 30));
-    });
-
-    testWidgets('12 aylık pencere 12 sütun üretir', (tester) async {
-      final series = trend(months: 12);
-      await tester.pumpWidget(host(ReportMonthlyTrendCard(
-        series: series,
-        months: 12,
-        onMonthsChanged: (_) {},
-        onMonthTap: (_) {},
-      )));
-      await tester.pumpAndSettle();
-
-      final chart = tester.widget<BarChart>(find.byType(BarChart));
-      expect(chart.data.barGroups, hasLength(12));
-    });
-
-    testWidgets('ortalama çizgisi YALNIZ hareketli aylardan hesaplanır',
-        (tester) async {
-      await tester.pumpWidget(host(ReportMonthlyTrendCard(
-        series: trend(),
-        months: 6,
-        onMonthsChanged: (_) {},
-        onMonthTap: (_) {},
-      )));
-      await tester.pumpAndSettle();
-
-      // Hareketli 4 ay: 3000 + 5000 + 4000 + 9000 = 21.000 → ort. 5.250.
-      // Boş aylar sayılsaydı 3.500 çıkar ve "harcamam düşüyor" yanılsaması
-      // üretirdi.
-      final chart = tester.widget<BarChart>(find.byType(BarChart));
-      final avgLine = chart.data.extraLinesData.horizontalLines.single;
-      expect(avgLine.y, closeTo(5250, 0.01));
-      expect(find.textContaining('Ort. 5.250,00 ₺'), findsOneWidget);
-    });
-
-    testWidgets('bir aya dokunmak o ayı bildirir', (tester) async {
-      ReportBucket? tapped;
-      await tester.pumpWidget(host(ReportMonthlyTrendCard(
-        series: trend(),
-        months: 6,
-        onMonthsChanged: (_) {},
-        onMonthTap: (b) => tapped = b,
-      )));
-      await tester.pumpAndSettle();
-
-      // Gerçek dokunuş: fl_chart'ın isabet testinden GEÇMESİ gerekiyor,
-      // yoksa test yalnız kendi kurduğu olayı doğrular. Çubuklar 9dp
-      // olduğu için grafiğin genişliğinde tarama yapıyoruz.
-      final chartRect = tester.getRect(find.byType(BarChart));
-      for (var x = chartRect.left + 50;
-          x < chartRect.right - 2 && tapped == null;
-          x += 3) {
-        await tester.tapAt(Offset(x, chartRect.center.dy + 40));
-        await tester.pump();
-      }
-
-      expect(tapped, isNotNull, reason: 'hiçbir sütuna isabet edilemedi');
-      // Dokunulan ay serinin kovalarından biri olmalı.
-      expect(
-        trend().buckets.map((b) => b.start),
-        contains(tapped!.start),
-      );
-    });
-
-    testWidgets('6/12 seçenekleri yazılır', (tester) async {
-      await tester.pumpWidget(host(ReportMonthlyTrendCard(
-        series: trend(),
-        months: 6,
-        onMonthsChanged: (_) {},
-        onMonthTap: (_) {},
-      )));
-      expect(find.text('6 ay'), findsOneWidget);
-      expect(find.text('12 ay'), findsOneWidget);
-    });
-  });
 
   group('en çok harcanan yer', () {
     List<TransactionEntity> statementLike() => [
