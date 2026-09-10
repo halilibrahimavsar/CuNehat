@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../../core/enums/notification_frequency.dart';
+import '../../../../../core/notifications/notification_diagnostics.dart';
 
 class NotificationSettingsState extends Equatable {
   const NotificationSettingsState({
@@ -12,6 +13,8 @@ class NotificationSettingsState extends Equatable {
     this.canRequestPermission = true,
     this.testNotificationSentAt,
     this.testNotificationDelivered = false,
+    this.testNotificationFailure,
+    this.testNotificationDetail,
   });
 
   final bool isLoading;
@@ -36,6 +39,15 @@ class NotificationSettingsState extends Equatable {
   /// kapalıyken "gönderildi" demek kullanıcıyı yanıltıyordu.
   final bool testNotificationDelivered;
 
+  /// Teslim edilemediyse SEBEBİ. Tek bir "gönderilemedi" metni kullanıcıya
+  /// hiçbir şey söylemiyordu: izin mi kapalı, kanal mı susturulmuş, platform mu
+  /// hata verdi — üçü bambaşka çözümler gerektiriyor.
+  final NotificationFailure? testNotificationFailure;
+
+  /// Sebebin ayrıntısı (kanal adı ya da platform istisnasının metni).
+  /// Release'te `debugPrint` hiçbir yere gitmediği için tek taşıyıcı budur.
+  final String? testNotificationDetail;
+
   NotificationSettingsState copyWith({
     bool? isLoading,
     NotificationFrequency? randomRemindersFrequency,
@@ -46,6 +58,9 @@ class NotificationSettingsState extends Equatable {
     bool? canRequestPermission,
     DateTime? testNotificationSentAt,
     bool? testNotificationDelivered,
+    NotificationFailure? testNotificationFailure,
+    String? testNotificationDetail,
+    bool clearTestNotificationFailure = false,
   }) {
     return NotificationSettingsState(
       isLoading: isLoading ?? this.isLoading,
@@ -62,6 +77,14 @@ class NotificationSettingsState extends Equatable {
           testNotificationSentAt ?? this.testNotificationSentAt,
       testNotificationDelivered:
           testNotificationDelivered ?? this.testNotificationDelivered,
+      // Başarılı denemede önceki hatanın silinebilmesi için açık bir bayrak:
+      // `??` ile null geçmek eski sebebi ekranda bırakırdı.
+      testNotificationFailure: clearTestNotificationFailure
+          ? null
+          : (testNotificationFailure ?? this.testNotificationFailure),
+      testNotificationDetail: clearTestNotificationFailure
+          ? null
+          : (testNotificationDetail ?? this.testNotificationDetail),
     );
   }
 
@@ -76,5 +99,7 @@ class NotificationSettingsState extends Equatable {
         canRequestPermission,
         testNotificationSentAt,
         testNotificationDelivered,
+        testNotificationFailure,
+        testNotificationDetail,
       ];
 }

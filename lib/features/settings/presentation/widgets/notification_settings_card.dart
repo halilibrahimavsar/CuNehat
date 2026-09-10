@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/extensions/context_extensions.dart';
+import '../../../../../core/notifications/notification_diagnostics.dart';
 import '../../../../../core/shared/widgets/app_card.dart';
 import '../../../../../core/enums/notification_frequency.dart';
 import '../bloc/notification_settings/notification_settings_bloc.dart';
@@ -50,11 +53,7 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
           AppMessenger.success(context.l10n.notificationTestSent);
           return;
         }
-        AppMessenger.error(
-          state.systemPermissionGranted
-              ? context.l10n.notificationTestFailed
-              : context.l10n.notificationTestFailedNoPermission,
-        );
+        AppMessenger.error(_testFailureMessage(context, state));
       },
       builder: (context, state) {
         if (state.isLoading) {
@@ -110,14 +109,37 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
                 ),
               ),
               // Kullanıcı "Çok (Günde 3)" seçerken ne geleceğini bilmiyordu.
+              // Saatler de yazılıyor: hatırlatmalar artık rastgele değil sabit
+              // saatlerde geliyor ve "ne zaman gelecek" sorusunun cevabı
+              // ekranda durmazsa kullanıcı gelmediğini sanıyor.
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Text(
-                  '“${context.l10n.notifDailyReminder1}”',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontStyle: FontStyle.italic,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '“${context.l10n.notifDailyReminder1}”',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                    ),
+                    if (state.randomRemindersFrequency !=
+                        NotificationFrequency.none) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        context.l10n.notificationScheduleHint(
+                          _slotTimes(state.randomRemindersFrequency),
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                       ),
+                    ],
+                  ],
                 ),
               ),
               const Divider(height: 1),
@@ -162,6 +184,17 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
               ),
 
               const Divider(height: 1),
+              // Tanılama release'te de duruyor: bildirim gelmediğinde sebebi
+              // ancak cihazda okunabiliyor (release'te debugPrint yok).
+              ListTile(
+                leading: const Icon(Icons.monitor_heart_outlined),
+                title: Text(context.l10n.notificationDiagnosticsTitle),
+                subtitle: Text(context.l10n.notificationDiagnosticsSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    context.push(AppRoutes.notificationDiagnostics),
+              ),
+              const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
                 child: Align(
@@ -181,6 +214,35 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard>
       },
     );
   }
+
+  /// Başarısızlığın SEBEBİNE göre metin. Tek bir "gönderilemedi" cümlesi
+  /// kullanıcıya hiçbir şey söylemiyordu: izin kapalıysa ayarlara gitmesi,
+  /// kanal susturulmuşsa o türü açması, platform hatasıysa metni bize
+  /// iletmesi gerekiyor — üçü ayrı çözüm.
+  String _testFailureMessage(
+      BuildContext context, NotificationSettingsState state) {
+    final l10n = context.l10n;
+    return switch (state.testNotificationFailure) {
+      NotificationFailure.noAppPermission =>
+        l10n.notificationTestFailedNoPermission,
+      NotificationFailure.channelBlocked =>
+        l10n.notificationTestFailedChannelBlocked(
+            state.testNotificationDetail ?? ''),
+      NotificationFailure.notDelivered =>
+        l10n.notificationTestFailedNotDelivered,
+      NotificationFailure.platformError => l10n.notificationTestFailedPlatform(
+          state.testNotificationDetail ?? ''),
+      // Sebep taşınmadıysa eski genel metin: yeni bir sebep eklenip burası
+      // unutulursa kullanıcı boş ekran değil, hiç değilse bir uyarı görsün.
+      null => l10n.notificationTestFailed,
+    };
+  }
+
+  /// Seçilen sıklığın günlük saatleri, "10:30, 14:30" biçiminde.
+  String _slotTimes(NotificationFrequency frequency) => frequency.dailySlots
+      .map((slot) => '${slot.hour.toString().padLeft(2, '0')}:'
+          '${slot.minute.toString().padLeft(2, '0')}')
+      .join(', ');
 
   String _getFrequencyLabel(
       BuildContext context, NotificationFrequency frequency) {

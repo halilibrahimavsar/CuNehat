@@ -902,7 +902,7 @@
   "onboardingNavHintAddTitle": "Tap an Icon",
   "onboardingNavHintAddDesc": "Add a new income, expense, investment, debt, or receivable.",
   "notificationSettings": "Notification Settings",
-  "notificationSettingsDesc": "Manage your critical and random notification preferences.",
+  "notificationSettingsDesc": "Manage critical reminders and how often daily notifications arrive.",
   "randomReminders": "Motivational Reminders",
   "randomRemindersOff": "Off",
   "randomRemindersLow": "Low (1/day)",
@@ -924,6 +924,51 @@
   "notificationTestSent": "Test notification sent",
   "notificationTestFailedNoPermission": "Test notification could not be sent: notification permission is off",
   "notificationTestFailed": "Test notification could not be sent",
+  "notificationTestFailedChannelBlocked": "\"{channel}\" notifications are turned off in system settings. The app has permission, but this type is not shown.",
+  "@notificationTestFailedChannelBlocked": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
+  "notificationTestFailedNotDelivered": "The notification reached the system but was not shown. Battery optimisation or a manufacturer restriction may be blocking it.",
+  "notificationTestFailedPlatform": "Notification could not be sent: {detail}",
+  "@notificationTestFailedPlatform": {
+    "placeholders": {
+      "detail": {}
+    }
+  },
+  "notificationDiagnosticsTitle": "Notification diagnostics",
+  "notificationDiagnosticsSubtitle": "See why notifications are not arriving",
+  "notificationDiagnosticsIntro": "The rows below show the current state of notifications. If something is off, that is why they are not reaching you.",
+  "notificationDiagnosticsAppPermission": "App notification permission",
+  "notificationDiagnosticsChannelsTitle": "Notification types",
+  "notificationDiagnosticsExactAlarms": "Exact alarm permission",
+  "notificationDiagnosticsExactAlarmsHint": "Without this permission reminders arrive at the first moment the system allows rather than to the minute. This is a deliberate choice.",
+  "notificationDiagnosticsTimeZone": "Time zone",
+  "notificationDiagnosticsTimeZoneHint": "The time zone could not be read; repeating reminders may drift by an hour.",
+  "notificationDiagnosticsPending": "Scheduled reminders",
+  "notificationDiagnosticsPendingCount": "{count} scheduled",
+  "@notificationDiagnosticsPendingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationDiagnosticsPendingNone": "None — no reminders are scheduled",
+  "notificationDiagnosticsNext": "Next reminder",
+  "notificationDiagnosticsNextUnknown": "None scheduled this session",
+  "notificationDiagnosticsLastError": "Last error",
+  "notificationDiagnosticsNoError": "None",
+  "notificationDiagnosticsRefresh": "Refresh",
+  "notificationDiagnosticsBatteryTitle": "If notifications still do not arrive",
+  "notificationDiagnosticsBatteryBody": "Remove ÇuNehat from battery restrictions in your phone settings. Some manufacturers (Xiaomi, Samsung, Huawei, Oppo) stop background app alarms by default.",
+  "notificationDiagnosticsOn": "On",
+  "notificationDiagnosticsOff": "Off",
+  "notificationScheduleHint": "Reminders arrive at the same times every day: {times}",
+  "@notificationScheduleHint": {
+    "placeholders": {
+      "times": {}
+    }
+  },
   "notificationTestTitle": "ÇuNehat test notification",
   "notificationTestBody": "Notifications are working. Your reminders will look like this.",
   "notifChannelCriticalName": "Critical Reminders",

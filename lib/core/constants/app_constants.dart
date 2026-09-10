@@ -103,4 +103,5 @@ class AppRoutes {
   static const String privacyPolicy = '/privacy-policy';
   static const String bankStatementImport = '/settings/bank-import';
   static const String backupPreview = '/settings/backups';
+  static const String notificationDiagnostics = '/settings/notification-diagnostics';
 }

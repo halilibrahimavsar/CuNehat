@@ -762,6 +762,20 @@ yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 - [x] İlk açılışta gizlilik onam diyaloğu bir kez çıkıyor
 - [x] Bildirim izni istemi çıkıyor (sistem izni verildi; **test bildiriminin
       teslimi ölçülmedi**)
+- [ ] **Ayarlar → Bildirimler → Bildirim tanılama** açılıyor ve dolu geliyor:
+      uygulama izni, kanal bazında açık/kapalı, **saat dilimi UTC DEĞİL**,
+      "planlanmış hatırlatma" sayısı 0'dan büyük *(yeni sayfa; release'te de
+      görünür — Play'deki kurulumu teşhis etmenin tek yolu)*
+- [ ] **Test bildirimi gerçekten görünüyor** (artık kritik kanaldan atılıyor);
+      kanalı sistem ayarlarından susturup tekrar denendiğinde snackbar
+      "… bildirimleri sistem ayarlarından kapatılmış" diyor
+- [ ] **Sıklık "Çok" → ertesi gün bildirim geliyor.** Asıl ölçüm bu: sabit
+      saatler (10:30 / 14:30 / 18:30) `matchDateTimeComponents.time` ile
+      kuruluyor ve alarmı **uygulama hiç açılmadan** sistem yeniden kuruyor.
+      Eskiden her hatırlatma tek atışlıktı ve yalnız uygulama açıkken
+      yenileniyordu — "sıklık çok ama günlerdir bildirim yok"un sebebi buydu.
+      `adb shell dumpsys alarm | grep cunehat` ile alarmların kurulduğu
+      doğrulanabilir
 - [x] **PIN kilidi çalışıyor** — 6 haneli PIN kuruldu, gerçek arka plandan
       (HOME + 40 sn) dönüşte kilit ekranı çıktı, PIN ile açıldı. **Biyometrik
       emülatörde kayıtlı değil** ("Bu cihazda kullanılamıyor" diye doğru
@@ -788,6 +802,11 @@ yükleme değil — imza farklı olur, Adım 9'un doğruluğunu test edemezsin).
 - [ ] Fiş fotoğrafı ekleme + OCR ön-doldurma *(emülatörde kamera yok)*
 - [ ] Uçak modunda: canlı fiyat ve kur ekranları **kilitlenmeden** hata veriyor
 - [ ] Cihazı yeniden başlat → planlı hatırlatmalar hâlâ geliyor
+      *(GSON/R8 kuralları yerinde ve `ScheduledNotificationBootReceiver`
+      manifest'te — kodda eksik yok, kalan iş yalnız cihazda görmek)*
+- [ ] **Borç sekmesinde göz düğmesi**: borç/alacak kartları, geçmiş, ödeme
+      diyaloğu özeti ve taksit planı `**** ₺` oluyor. Girdi alanlarının
+      "Maksimum: …" yardım metni bilerek açık kalır
 
 > ⚠️ **Google ile giriş** başarısızsa: `google_sign_in` 6.x, Google'ın deprecate
 > ettiği legacy SDK'yı kullanıyor. Çözüm `google_sign_in` 7.x'e (Credential

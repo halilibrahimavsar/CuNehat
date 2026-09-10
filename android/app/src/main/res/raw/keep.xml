@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kaynak küçültücüye (isShrinkResources = true) "bunlara dokunma" demek.
+
+  Bildirim ikonlarına referans yalnızca DART tarafından, string olarak veriliyor
+  (NotificationServiceImpl: AndroidInitializationSettings('@drawable/ic_notification'),
+  AndroidNotificationDetails.icon, DrawableResourceAndroidBitmap(...)). Küçültücü
+  Dart snapshot'ını (libapp.so) okuyamaz, bu yüzden o string'ler onun için var
+  değildir ve kaynak "kullanılmıyor" sayılıp release derlemesinden atılır.
+
+  ÖLÇÜLDÜ (v1.0.0+4 APK'sı): `ic_notification_large` release paketinde YOKTU —
+  R.txt derleme öncesi 0x7f08007a atamış, `aapt2 dump resources` çıktısında o
+  kimlik hiç görünmüyor, `mapping/release/resources.txt` onu "Unused resources"
+  listesine koymuş. `ic_notification` yalnızca AndroidManifest.xml'deki
+  `com.dexterous.flutterlocalnotifications.default_notification_icon` meta-data'sı
+  sayesinde ayakta kalmıştı — yani KÜÇÜK ikonun sağ kalması bir tesadüftü.
+
+  Küçük ikon atılırsa `getIdentifier` 0 döner, `setSmallIcon(0)` ile bildirim
+  sistem tarafından SESSİZCE düşürülür: çökme yok, log yok, bildirim yok.
+  Bu dosya o tesadüfü sözleşmeye çevirir.
+
+  Bekçi: test/android/notification_icon_keep_test.dart — Dart'ta kullanılan her
+  `@drawable/...` adının burada listelendiğini doğrular.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification,@drawable/ic_notification_large" />

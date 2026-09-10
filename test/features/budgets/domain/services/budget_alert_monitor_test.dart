@@ -52,7 +52,7 @@ void main() {
           title: any(named: 'title'),
           body: any(named: 'body'),
           payload: any(named: 'payload'),
-        )).thenAnswer((_) async => true);
+        )).thenAnswer((_) async => const NotificationSendResult.delivered());
   }
 
   BudgetAlertMonitor buildMonitor() => BudgetAlertMonitor(

@@ -54,14 +54,17 @@ void main() {
         localizer,
       );
 
-  void stubShow({required bool delivered}) {
+  /// Test bildiriminin SONUCUNU sahteler. Artık `bool` değil tiplenmiş sonuç:
+  /// "gönderilemedi" tek bir metne düşerken kullanıcı ne yapacağını
+  /// bilemiyordu — izin, kanal ve platform hatası ayrı çözümler ister.
+  void stubShow(NotificationSendResult result) {
     when(() => notifications.showNotification(
           id: any(named: 'id'),
           title: any(named: 'title'),
           body: any(named: 'body'),
           payload: any(named: 'payload'),
           channel: any(named: 'channel'),
-        )).thenAnswer((_) async => delivered);
+        )).thenAnswer((_) async => result);
   }
 
   group('izin isteği', () {
@@ -158,62 +161,119 @@ void main() {
   });
 
   group('test bildirimi', () {
+    // İzin kapısı artık BLOC'ta değil SERVİSTE: servis hem uygulama iznine hem
+    // de kanalın susturulmuş olup olmadığına bakıp sebebi tiplenmiş döner.
+    // Bloc'un işi o sebebi state'e taşımak — eskiden hepsi tek bir
+    // "gönderilemedi"ye düşüyordu.
+
     blocTest<NotificationSettingsBloc, NotificationSettingsState>(
-      'izin kapalıyken GÖNDERİLDİ demez ve bildirimi hiç denemez',
+      'izin kapalıysa sebebi taşır ve banner\'ı da düzeltir',
       setUp: () {
-        when(notifications.areNotificationsEnabled)
-            .thenAnswer((_) async => false);
         when(notifications.canRequestPermissions).thenAnswer((_) async => true);
-        stubShow(delivered: true);
+        stubShow(const NotificationSendResult.failed(
+            NotificationFailure.noAppPermission));
       },
       build: build,
       act: (bloc) => bloc.add(const SendTestNotification()),
       expect: () => [
         isA<NotificationSettingsState>()
             .having((s) => s.testNotificationDelivered, 'delivered', isFalse)
+            .having((s) => s.testNotificationFailure, 'failure',
+                NotificationFailure.noAppPermission)
             .having((s) => s.testNotificationSentAt, 'sentAt', isNotNull)
-            // Banner da anında doğruyu göstermeli.
-            .having((s) => s.systemPermissionGranted, 'granted', isFalse),
+            // Kullanıcı izni ekran dışında kapatmış olabilir; banner anında
+            // doğruyu göstermeli.
+            .having((s) => s.systemPermissionGranted, 'granted', isFalse)
+            .having((s) => s.canRequestPermission, 'canRequest', isTrue),
       ],
-      verify: (_) => verifyNever(() => notifications.showNotification(
-            id: any(named: 'id'),
-            title: any(named: 'title'),
-            body: any(named: 'body'),
-            payload: any(named: 'payload'),
-            channel: any(named: 'channel'),
-          )),
     );
 
     blocTest<NotificationSettingsBloc, NotificationSettingsState>(
-      'izin açık ama platform gönderemezse başarısız raporlar',
-      setUp: () {
-        when(notifications.areNotificationsEnabled)
-            .thenAnswer((_) async => true);
-        stubShow(delivered: false);
-      },
+      'kanal susturulmuşsa kanal adını taşır ve izni KAPALI göstermez',
+      setUp: () => stubShow(const NotificationSendResult.failed(
+          NotificationFailure.channelBlocked,
+          detail: 'Kritik Hatırlatmalar')),
       build: build,
       act: (bloc) => bloc.add(const SendTestNotification()),
       expect: () => [
         isA<NotificationSettingsState>()
             .having((s) => s.testNotificationDelivered, 'delivered', isFalse)
+            .having((s) => s.testNotificationFailure, 'failure',
+                NotificationFailure.channelBlocked)
+            .having((s) => s.testNotificationDetail, 'detail',
+                'Kritik Hatırlatmalar')
+            // Uygulama izni AÇIK; yalnız o kanal kapalı. İkisi karıştırılırsa
+            // kullanıcı yanlış ayara gönderilir.
             .having((s) => s.systemPermissionGranted, 'granted', isTrue),
       ],
+      verify: (_) => verifyNever(notifications.canRequestPermissions),
     );
 
     blocTest<NotificationSettingsBloc, NotificationSettingsState>(
-      'izin açık ve teslim edildiyse başarı raporlar',
-      setUp: () {
-        when(notifications.areNotificationsEnabled)
-            .thenAnswer((_) async => true);
-        stubShow(delivered: true);
-      },
+      'platform hatasında istisna metni state\'e taşınır',
+      setUp: () => stubShow(const NotificationSendResult.failed(
+          NotificationFailure.platformError,
+          detail: 'PlatformException(invalid icon)')),
       build: build,
+      act: (bloc) => bloc.add(const SendTestNotification()),
+      expect: () => [
+        isA<NotificationSettingsState>()
+            .having((s) => s.testNotificationFailure, 'failure',
+                NotificationFailure.platformError)
+            // Release'te debugPrint hiçbir yere gitmiyor; ayrıntının TEK
+            // taşıyıcısı bu alan.
+            .having((s) => s.testNotificationDetail, 'detail',
+                'PlatformException(invalid icon)'),
+      ],
+    );
+
+    blocTest<NotificationSettingsBloc, NotificationSettingsState>(
+      'sisteme iletilip gösterilmediyse ayrı bir sebep raporlar',
+      setUp: () => stubShow(const NotificationSendResult.failed(
+          NotificationFailure.notDelivered)),
+      build: build,
+      act: (bloc) => bloc.add(const SendTestNotification()),
+      expect: () => [
+        isA<NotificationSettingsState>()
+            .having((s) => s.testNotificationDelivered, 'delivered', isFalse)
+            .having((s) => s.testNotificationFailure, 'failure',
+                NotificationFailure.notDelivered),
+      ],
+    );
+
+    blocTest<NotificationSettingsBloc, NotificationSettingsState>(
+      'teslim edildiyse başarı raporlar ve ÖNCEKİ sebebi temizler',
+      setUp: () => stubShow(const NotificationSendResult.delivered()),
+      build: build,
+      seed: () => NotificationSettingsState(
+        testNotificationFailure: NotificationFailure.channelBlocked,
+        testNotificationDetail: 'eski',
+        testNotificationSentAt: DateTime(2026),
+      ),
       act: (bloc) => bloc.add(const SendTestNotification()),
       expect: () => [
         isA<NotificationSettingsState>()
             .having((s) => s.testNotificationDelivered, 'delivered', isTrue)
-            .having((s) => s.testNotificationSentAt, 'sentAt', isNotNull),
+            .having((s) => s.testNotificationSentAt, 'sentAt', isNotNull)
+            // Bayat sebep ekranda kalırsa kullanıcı düzelen şeyi düzelmemiş
+            // sanır: copyWith'in `??` davranışı bunu sessizce yapıyordu.
+            .having((s) => s.testNotificationFailure, 'failure', isNull)
+            .having((s) => s.testNotificationDetail, 'detail', isNull),
       ],
+    );
+
+    blocTest<NotificationSettingsBloc, NotificationSettingsState>(
+      'test KRİTİK kanaldan atılır — motivasyon kanalı banner çıkarmıyor',
+      setUp: () => stubShow(const NotificationSendResult.delivered()),
+      build: build,
+      act: (bloc) => bloc.add(const SendTestNotification()),
+      verify: (_) => verify(() => notifications.showNotification(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            payload: any(named: 'payload'),
+            channel: NotificationChannelKind.critical,
+          )).called(1),
     );
   });
 }

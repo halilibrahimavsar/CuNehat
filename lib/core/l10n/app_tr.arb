@@ -923,7 +923,7 @@
   "onboardingNavHintAddTitle": "Simgelere Dokunun",
   "onboardingNavHintAddDesc": "Yeni gelir, gider, yatırım, borç veya alacak ekleyin.",
   "notificationSettings": "Bildirim Ayarları",
-  "notificationSettingsDesc": "Kritik ve rastgele bildirim tercihlerinizi yönetin.",
+  "notificationSettingsDesc": "Kritik hatırlatmaları ve günlük bildirim sıklığınızı yönetin.",
   "randomReminders": "Motive Edici Hatırlatıcılar",
   "randomRemindersOff": "Kapalı",
   "randomRemindersLow": "Az (Günde 1)",
@@ -945,6 +945,51 @@
   "notificationTestSent": "Test bildirimi gönderildi",
   "notificationTestFailedNoPermission": "Test bildirimi gönderilemedi: bildirim izni kapalı",
   "notificationTestFailed": "Test bildirimi gönderilemedi",
+  "notificationTestFailedChannelBlocked": "\"{channel}\" bildirimleri sistem ayarlarından kapatılmış. Uygulama izni açık ama bu tür bildirim gösterilmiyor.",
+  "@notificationTestFailedChannelBlocked": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
+  "notificationTestFailedNotDelivered": "Bildirim sisteme iletildi ama gösterilmedi. Pil optimizasyonu ya da üretici kısıtlaması engelliyor olabilir.",
+  "notificationTestFailedPlatform": "Bildirim gönderilemedi: {detail}",
+  "@notificationTestFailedPlatform": {
+    "placeholders": {
+      "detail": {}
+    }
+  },
+  "notificationDiagnosticsTitle": "Bildirim tanılama",
+  "notificationDiagnosticsSubtitle": "Bildirim gelmiyorsa sebebini burada görün",
+  "notificationDiagnosticsIntro": "Aşağıdaki satırlar bildirimlerin şu anki durumunu gösterir. Bir şey kapalıysa bildirimler o yüzden ulaşmıyor demektir.",
+  "notificationDiagnosticsAppPermission": "Uygulama bildirim izni",
+  "notificationDiagnosticsChannelsTitle": "Bildirim türleri",
+  "notificationDiagnosticsExactAlarms": "Tam zamanlı alarm izni",
+  "notificationDiagnosticsExactAlarmsHint": "Bu izin olmadan hatırlatmalar dakikasında değil, sistemin uygun gördüğü ilk anda gelir. Bilinçli bir tercih.",
+  "notificationDiagnosticsTimeZone": "Saat dilimi",
+  "notificationDiagnosticsTimeZoneHint": "Saat dilimi okunamadı; tekrarlayan hatırlatmalar bir saat kayabilir.",
+  "notificationDiagnosticsPending": "Planlanmış hatırlatma",
+  "notificationDiagnosticsPendingCount": "{count} adet",
+  "@notificationDiagnosticsPendingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationDiagnosticsPendingNone": "Yok — hiçbir hatırlatma kurulu değil",
+  "notificationDiagnosticsNext": "Sıradaki hatırlatma",
+  "notificationDiagnosticsNextUnknown": "Bu oturumda kurulan yok",
+  "notificationDiagnosticsLastError": "Son hata",
+  "notificationDiagnosticsNoError": "Yok",
+  "notificationDiagnosticsRefresh": "Yenile",
+  "notificationDiagnosticsBatteryTitle": "Bildirimler yine de gelmiyorsa",
+  "notificationDiagnosticsBatteryBody": "Telefonun pil ayarlarından ÇuNehat'i kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.",
+  "notificationDiagnosticsOn": "Açık",
+  "notificationDiagnosticsOff": "Kapalı",
+  "notificationScheduleHint": "Hatırlatmalar her gün aynı saatlerde gelir: {times}",
+  "@notificationScheduleHint": {
+    "placeholders": {
+      "times": {}
+    }
+  },
   "notificationTestTitle": "ÇuNehat test bildirimi",
   "notificationTestBody": "Bildirimler çalışıyor. Hatırlatmalarınız bu şekilde görünecek.",
   "notifChannelCriticalName": "Kritik Hatırlatmalar",

@@ -1,4 +1,5 @@
 import 'package:cunehat/core/id_generate/uid_generator.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/repositories/debt_repository.dart';
@@ -117,6 +118,15 @@ class WalletMetricsService {
   final TransactionsRepository transactionsRepository;
   final TransactionsChangedNotifier transactionsChangedNotifier;
 
+  /// Cüzdan silinirken borçların PLANLANMIŞ hatırlatmalarını da düşürmek için.
+  ///
+  /// [purgeWalletData] borçları `DeleteDebtUsecase`'i atlayıp doğrudan
+  /// repository'den siliyor; iptal ise o usecase'in içindeydi. Sonuç: silinmiş
+  /// cüzdanın borcu OS'ta planlı kalıyordu ve `syncAllDebtReminders` yalnız
+  /// VAR OLAN borçları gezdiği için o kayda bir daha hiç uğranmıyordu — yani
+  /// öksüz alarm hiçbir açılışta temizlenmiyordu.
+  final ReminderSyncService reminderSync;
+
   WalletMetricsService({
     required this.walletRepository,
     required this.debtRepository,
@@ -125,6 +135,7 @@ class WalletMetricsService {
     required this.goalRepository,
     required this.transactionsRepository,
     required this.transactionsChangedNotifier,
+    required this.reminderSync,
   });
 
   /// Cüzdan başına yazma kuyruğu: aynı cüzdanın bakiye/metrik
@@ -561,7 +572,11 @@ class WalletMetricsService {
       },
       (debts) async {
         for (final d in debts) {
-          if (d.id != null) await debtRepository.deleteDebt(d.id!);
+          if (d.id == null) continue;
+          // Önce alarmı düşür, sonra kaydı sil: sıra tersse ve silme
+          // patlarsa kayıt duruyor ama hatırlatması iptal edilmiş olurdu.
+          await reminderSync.cancelDebtReminders(d.id!);
+          await debtRepository.deleteDebt(d.id!);
         }
       },
     );

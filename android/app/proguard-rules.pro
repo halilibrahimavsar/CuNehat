@@ -67,3 +67,12 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# ---------------------------------------------------------------------------
+# Bildirim ikonları R8'in DEĞİL, kaynak küçültücünün (isShrinkResources) işi.
+#
+# Yukarıdaki kurallar sınıfları koruyor; ikonlar ise KAYNAK. Onlara tek referans
+# Dart string'i olduğu için küçültücü "kullanılmıyor" sanıp atıyordu (ölçüldü:
+# `+4` APK'sında ic_notification_large yoktu). Koruma kuralı buraya değil
+# `src/main/res/raw/keep.xml` dosyasına yazılır — gerekçesi orada.
+# ---------------------------------------------------------------------------

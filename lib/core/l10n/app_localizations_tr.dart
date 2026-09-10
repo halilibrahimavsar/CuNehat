@@ -2020,7 +2020,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationSettingsDesc =>
-      'Kritik ve rastgele bildirim tercihlerinizi yönetin.';
+      'Kritik hatırlatmaları ve günlük bildirim sıklığınızı yönetin.';
 
   @override
   String get randomReminders => 'Motive Edici Hatırlatıcılar';
@@ -2088,6 +2088,97 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationTestFailed => 'Test bildirimi gönderilemedi';
+
+  @override
+  String notificationTestFailedChannelBlocked(Object channel) {
+    return '\"$channel\" bildirimleri sistem ayarlarından kapatılmış. Uygulama izni açık ama bu tür bildirim gösterilmiyor.';
+  }
+
+  @override
+  String get notificationTestFailedNotDelivered =>
+      'Bildirim sisteme iletildi ama gösterilmedi. Pil optimizasyonu ya da üretici kısıtlaması engelliyor olabilir.';
+
+  @override
+  String notificationTestFailedPlatform(Object detail) {
+    return 'Bildirim gönderilemedi: $detail';
+  }
+
+  @override
+  String get notificationDiagnosticsTitle => 'Bildirim tanılama';
+
+  @override
+  String get notificationDiagnosticsSubtitle =>
+      'Bildirim gelmiyorsa sebebini burada görün';
+
+  @override
+  String get notificationDiagnosticsIntro =>
+      'Aşağıdaki satırlar bildirimlerin şu anki durumunu gösterir. Bir şey kapalıysa bildirimler o yüzden ulaşmıyor demektir.';
+
+  @override
+  String get notificationDiagnosticsAppPermission => 'Uygulama bildirim izni';
+
+  @override
+  String get notificationDiagnosticsChannelsTitle => 'Bildirim türleri';
+
+  @override
+  String get notificationDiagnosticsExactAlarms => 'Tam zamanlı alarm izni';
+
+  @override
+  String get notificationDiagnosticsExactAlarmsHint =>
+      'Bu izin olmadan hatırlatmalar dakikasında değil, sistemin uygun gördüğü ilk anda gelir. Bilinçli bir tercih.';
+
+  @override
+  String get notificationDiagnosticsTimeZone => 'Saat dilimi';
+
+  @override
+  String get notificationDiagnosticsTimeZoneHint =>
+      'Saat dilimi okunamadı; tekrarlayan hatırlatmalar bir saat kayabilir.';
+
+  @override
+  String get notificationDiagnosticsPending => 'Planlanmış hatırlatma';
+
+  @override
+  String notificationDiagnosticsPendingCount(Object count) {
+    return '$count adet';
+  }
+
+  @override
+  String get notificationDiagnosticsPendingNone =>
+      'Yok — hiçbir hatırlatma kurulu değil';
+
+  @override
+  String get notificationDiagnosticsNext => 'Sıradaki hatırlatma';
+
+  @override
+  String get notificationDiagnosticsNextUnknown => 'Bu oturumda kurulan yok';
+
+  @override
+  String get notificationDiagnosticsLastError => 'Son hata';
+
+  @override
+  String get notificationDiagnosticsNoError => 'Yok';
+
+  @override
+  String get notificationDiagnosticsRefresh => 'Yenile';
+
+  @override
+  String get notificationDiagnosticsBatteryTitle =>
+      'Bildirimler yine de gelmiyorsa';
+
+  @override
+  String get notificationDiagnosticsBatteryBody =>
+      'Telefonun pil ayarlarından ÇuNehat\'i kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.';
+
+  @override
+  String get notificationDiagnosticsOn => 'Açık';
+
+  @override
+  String get notificationDiagnosticsOff => 'Kapalı';
+
+  @override
+  String notificationScheduleHint(Object times) {
+    return 'Hatırlatmalar her gün aynı saatlerde gelir: $times';
+  }
 
   @override
   String get notificationTestTitle => 'ÇuNehat test bildirimi';

@@ -82,6 +82,16 @@ DateTime reminderTimeOn(DateTime date) =>
 /// başına geliyordu.
 ///
 /// Sonuç: gecikmiş kalem, işleme alınana kadar her sabah hatırlatılır.
+/// Vade GEÇTİ mi? (Vade gününün [kReminderHour] hatırlatma anı baz alınır.)
+///
+/// Hatırlatmanın tekrarlı mı tek atışlık mı kurulacağını bu belirler:
+/// gelecek vadeli kalem tek atışlık planlanır — tekrarlı planda plugin
+/// tarihi yok sayıp bildirimi YARIN SABAH çalmaya başlatır
+/// (bkz. `NotificationService.scheduleNotification` uyarısı). Vadesi geçmiş
+/// kalem ise işleme alınana kadar her sabah hatırlatılır.
+bool isReminderOverdue(DateTime dueDate, DateTime now) =>
+    !reminderTimeOn(dueDate).isAfter(now);
+
 DateTime nextReminderSlot(DateTime dueDate, DateTime now) {
   final onDueDay = reminderTimeOn(dueDate);
   if (onDueDay.isAfter(now)) return onDueDay;

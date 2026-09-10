@@ -3728,7 +3728,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsDesc.
   ///
   /// In tr, this message translates to:
-  /// **'Kritik ve rastgele bildirim tercihlerinizi yönetin.'**
+  /// **'Kritik hatırlatmaları ve günlük bildirim sıklığınızı yönetin.'**
   String get notificationSettingsDesc;
 
   /// No description provided for @randomReminders.
@@ -3856,6 +3856,156 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Test bildirimi gönderilemedi'**
   String get notificationTestFailed;
+
+  /// No description provided for @notificationTestFailedChannelBlocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{channel}\" bildirimleri sistem ayarlarından kapatılmış. Uygulama izni açık ama bu tür bildirim gösterilmiyor.'**
+  String notificationTestFailedChannelBlocked(Object channel);
+
+  /// No description provided for @notificationTestFailedNotDelivered.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim sisteme iletildi ama gösterilmedi. Pil optimizasyonu ya da üretici kısıtlaması engelliyor olabilir.'**
+  String get notificationTestFailedNotDelivered;
+
+  /// No description provided for @notificationTestFailedPlatform.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim gönderilemedi: {detail}'**
+  String notificationTestFailedPlatform(Object detail);
+
+  /// No description provided for @notificationDiagnosticsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim tanılama'**
+  String get notificationDiagnosticsTitle;
+
+  /// No description provided for @notificationDiagnosticsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim gelmiyorsa sebebini burada görün'**
+  String get notificationDiagnosticsSubtitle;
+
+  /// No description provided for @notificationDiagnosticsIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aşağıdaki satırlar bildirimlerin şu anki durumunu gösterir. Bir şey kapalıysa bildirimler o yüzden ulaşmıyor demektir.'**
+  String get notificationDiagnosticsIntro;
+
+  /// No description provided for @notificationDiagnosticsAppPermission.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama bildirim izni'**
+  String get notificationDiagnosticsAppPermission;
+
+  /// No description provided for @notificationDiagnosticsChannelsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirim türleri'**
+  String get notificationDiagnosticsChannelsTitle;
+
+  /// No description provided for @notificationDiagnosticsExactAlarms.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam zamanlı alarm izni'**
+  String get notificationDiagnosticsExactAlarms;
+
+  /// No description provided for @notificationDiagnosticsExactAlarmsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu izin olmadan hatırlatmalar dakikasında değil, sistemin uygun gördüğü ilk anda gelir. Bilinçli bir tercih.'**
+  String get notificationDiagnosticsExactAlarmsHint;
+
+  /// No description provided for @notificationDiagnosticsTimeZone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat dilimi'**
+  String get notificationDiagnosticsTimeZone;
+
+  /// No description provided for @notificationDiagnosticsTimeZoneHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat dilimi okunamadı; tekrarlayan hatırlatmalar bir saat kayabilir.'**
+  String get notificationDiagnosticsTimeZoneHint;
+
+  /// No description provided for @notificationDiagnosticsPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlanmış hatırlatma'**
+  String get notificationDiagnosticsPending;
+
+  /// No description provided for @notificationDiagnosticsPendingCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} adet'**
+  String notificationDiagnosticsPendingCount(Object count);
+
+  /// No description provided for @notificationDiagnosticsPendingNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yok — hiçbir hatırlatma kurulu değil'**
+  String get notificationDiagnosticsPendingNone;
+
+  /// No description provided for @notificationDiagnosticsNext.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıradaki hatırlatma'**
+  String get notificationDiagnosticsNext;
+
+  /// No description provided for @notificationDiagnosticsNextUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu oturumda kurulan yok'**
+  String get notificationDiagnosticsNextUnknown;
+
+  /// No description provided for @notificationDiagnosticsLastError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son hata'**
+  String get notificationDiagnosticsLastError;
+
+  /// No description provided for @notificationDiagnosticsNoError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yok'**
+  String get notificationDiagnosticsNoError;
+
+  /// No description provided for @notificationDiagnosticsRefresh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get notificationDiagnosticsRefresh;
+
+  /// No description provided for @notificationDiagnosticsBatteryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimler yine de gelmiyorsa'**
+  String get notificationDiagnosticsBatteryTitle;
+
+  /// No description provided for @notificationDiagnosticsBatteryBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefonun pil ayarlarından ÇuNehat\'i kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.'**
+  String get notificationDiagnosticsBatteryBody;
+
+  /// No description provided for @notificationDiagnosticsOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get notificationDiagnosticsOn;
+
+  /// No description provided for @notificationDiagnosticsOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get notificationDiagnosticsOff;
+
+  /// No description provided for @notificationScheduleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatmalar her gün aynı saatlerde gelir: {times}'**
+  String notificationScheduleHint(Object times);
 
   /// No description provided for @notificationTestTitle.
   ///

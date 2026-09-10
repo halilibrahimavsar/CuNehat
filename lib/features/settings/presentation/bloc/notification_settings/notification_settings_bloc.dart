@@ -130,28 +130,42 @@ class NotificationSettingsBloc
     SendTestNotification event,
     Emitter<NotificationSettingsState> emit,
   ) async {
-    // Bildirim izni kapalıyken `show` sessizce yutuluyor ve kullanıcıya
-    // "gönderildi" deniyordu. Önce izni doğrula.
-    if (!await _notificationService.areNotificationsEnabled()) {
+    final l10n = _localizer.l10n;
+    // Test, KRİTİK kanaldan atılır (Importance.max). Eskiden motivasyon
+    // kanalı kullanılıyordu; o kanal `defaultImportance` olduğu için bildirim
+    // banner çıkarmadan sessizce gölgeye düşüyordu ve ayarlar ekranına bakan
+    // kullanıcı hiçbir şey görmeyip "çalışmıyor" diyordu. Kanalların tek tek
+    // durumu tanılama sayfasında ayrıca gösterilir; burada ölçülen şey "boru
+    // hattı çalışıyor mu".
+    final result = await _notificationService.showNotification(
+      id: _testNotificationId,
+      title: l10n.notificationTestTitle,
+      body: l10n.notificationTestBody,
+      channel: NotificationChannelKind.critical,
+    );
+
+    if (result.delivered) {
       emit(state.copyWith(
-        systemPermissionGranted: false,
-        canRequestPermission: await _notificationService.canRequestPermissions(),
         testNotificationSentAt: DateTime.now(),
-        testNotificationDelivered: false,
+        testNotificationDelivered: true,
+        clearTestNotificationFailure: true,
       ));
       return;
     }
 
-    final l10n = _localizer.l10n;
-    final delivered = await _notificationService.showNotification(
-      id: _testNotificationId,
-      title: l10n.notificationTestTitle,
-      body: l10n.notificationTestBody,
-      channel: NotificationChannelKind.motivational,
-    );
+    // İzin kapalıysa banner'ın da güncellenmesi gerekiyor: kullanıcı izni
+    // ekranın dışında kapatmış olabilir.
+    final noPermission =
+        result.failure == NotificationFailure.noAppPermission;
     emit(state.copyWith(
+      systemPermissionGranted: noPermission ? false : null,
+      canRequestPermission: noPermission
+          ? await _notificationService.canRequestPermissions()
+          : null,
       testNotificationSentAt: DateTime.now(),
-      testNotificationDelivered: delivered,
+      testNotificationDelivered: false,
+      testNotificationFailure: result.failure,
+      testNotificationDetail: result.detail,
     ));
   }
 }

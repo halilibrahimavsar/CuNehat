@@ -1,5 +1,6 @@
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/core/error/failure.dart';
+import 'package:cunehat/core/services/reminder_sync_service.dart';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
@@ -439,13 +440,30 @@ DebtEntity _debt(
       isPaid: isPaid,
     );
 
+/// Cüzdan silinirken borçların PLANLANMIŞ hatırlatmaları da düşmeli.
+/// `purgeWalletData` borçları `DeleteDebtUsecase`'i atlayıp doğrudan
+/// repository'den siliyor; iptal ise o usecase'in içindeydi.
+class RecordingReminderSync implements ReminderSyncService {
+  final List<String> cancelledDebts = <String>[];
+
+  @override
+  Future<void> cancelDebtReminders(String debtId) async =>
+      cancelledDebts.add(debtId);
+
+  @override
+  noSuchMethod(Invocation invocation) async {}
+}
+
 void main() {
+  late RecordingReminderSync reminderSync;
+
   late FakeWalletRepository wallets;
   late FakeTransactionsRepository txs;
   late FakeDebtRepository debts;
   late WalletMetricsService service;
 
   setUp(() {
+    reminderSync = RecordingReminderSync();
     wallets = FakeWalletRepository();
     txs = FakeTransactionsRepository();
     debts = FakeDebtRepository();
@@ -457,6 +475,7 @@ void main() {
       goalRepository: FakeGoalRepository(),
       transactionsRepository: txs,
       transactionsChangedNotifier: TransactionsChangedNotifier(),
+      reminderSync: reminderSync,
     );
   });
 
@@ -521,6 +540,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: FailingTransactionsRepository(),
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       final ok = await failingService.recordCashMovement(
@@ -580,6 +600,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: notifier,
+        reminderSync: reminderSync,
       );
       wallets.store['w'] = _wallet(id: 'w', balance: 100, openingBalance: 100);
 
@@ -657,6 +678,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: failing,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
       wallets.store['a'] = _wallet(id: 'a', balance: 999, openingBalance: 1000);
 
@@ -708,6 +730,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
       // Bakiye sapması yarat ki yazma yoluna girilsin (100 + 50 ≠ 100).
       txs.store.add(_income('w', 50));
@@ -757,6 +780,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w', balance: 100);
@@ -795,6 +819,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w', balance: 100);
@@ -817,6 +842,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w', balance: 100);
@@ -859,6 +885,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
       // investment 0 → 120 sapması yarat ki yazma yoluna girilsin.
       investments.store.add(InvestmentEntity(
@@ -887,6 +914,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w', balance: 100);
@@ -909,6 +937,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w');
@@ -974,6 +1003,13 @@ void main() {
       expect(debts.store.where((d) => d.walletId == 'w'), isEmpty);
       expect(receivables.store.where((r) => r.walletId == 'w'), isEmpty);
       expect(investments.store.where((i) => i.walletId == 'w'), isEmpty);
+
+      // Planlanmış hatırlatmalar Hive'da değil OS'ta yaşar: kaydı silmek
+      // alarmı düşürmez. Silinen borç `syncAllDebtReminders`'ın gezdiği
+      // listede de olmadığından, iptal burada yapılmazsa öksüz alarm HİÇBİR
+      // açılışta temizlenmez — vadesi geçmiş bir borçta bu, silinmiş cüzdanın
+      // adıyla her sabah bildirim demektir.
+      expect(reminderSync.cancelledDebts, ['d1']);
     });
   });
 
@@ -987,6 +1023,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: FailingTransactionsRepository(),
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w');
@@ -1004,6 +1041,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       final result = await svc.syncBalance('w');
@@ -1020,6 +1058,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w');
@@ -1036,6 +1075,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       final result = await svc.recordCashMovement(
@@ -1063,6 +1103,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       final result = await svc.syncBalance('w');
@@ -1083,6 +1124,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       final result = await svc.syncBalance('w');
@@ -1099,6 +1141,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.syncDebt('w'), returnsNormally);
@@ -1114,6 +1157,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.syncCredit('w'), returnsNormally);
@@ -1129,6 +1173,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.syncInvestment('w'), returnsNormally);
@@ -1160,6 +1205,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.syncInvestment('w'), returnsNormally);
@@ -1175,6 +1221,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: FailingTransactionsRepository(),
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
@@ -1189,6 +1236,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
@@ -1204,6 +1252,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
@@ -1219,6 +1268,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       expect(() => svc.purgeWalletData('w', 'u'), returnsNormally);
@@ -1236,6 +1286,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
       // Bakiye sapmış (999) → syncBalance 120'ye onaracak; aynı anda
       // syncDebt debt=1000 yazacak. Kuyruk yoksa biri diğerinin yazımını
@@ -1343,6 +1394,7 @@ void main() {
         goalRepository: FakeGoalRepository(),
         transactionsRepository: txs,
         transactionsChangedNotifier: TransactionsChangedNotifier(),
+        reminderSync: reminderSync,
       );
 
       wallets.store['w'] = _wallet(id: 'w');

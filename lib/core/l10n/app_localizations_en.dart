@@ -2017,7 +2017,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSettingsDesc =>
-      'Manage your critical and random notification preferences.';
+      'Manage critical reminders and how often daily notifications arrive.';
 
   @override
   String get randomReminders => 'Motivational Reminders';
@@ -2085,6 +2085,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationTestFailed => 'Test notification could not be sent';
+
+  @override
+  String notificationTestFailedChannelBlocked(Object channel) {
+    return '\"$channel\" notifications are turned off in system settings. The app has permission, but this type is not shown.';
+  }
+
+  @override
+  String get notificationTestFailedNotDelivered =>
+      'The notification reached the system but was not shown. Battery optimisation or a manufacturer restriction may be blocking it.';
+
+  @override
+  String notificationTestFailedPlatform(Object detail) {
+    return 'Notification could not be sent: $detail';
+  }
+
+  @override
+  String get notificationDiagnosticsTitle => 'Notification diagnostics';
+
+  @override
+  String get notificationDiagnosticsSubtitle =>
+      'See why notifications are not arriving';
+
+  @override
+  String get notificationDiagnosticsIntro =>
+      'The rows below show the current state of notifications. If something is off, that is why they are not reaching you.';
+
+  @override
+  String get notificationDiagnosticsAppPermission =>
+      'App notification permission';
+
+  @override
+  String get notificationDiagnosticsChannelsTitle => 'Notification types';
+
+  @override
+  String get notificationDiagnosticsExactAlarms => 'Exact alarm permission';
+
+  @override
+  String get notificationDiagnosticsExactAlarmsHint =>
+      'Without this permission reminders arrive at the first moment the system allows rather than to the minute. This is a deliberate choice.';
+
+  @override
+  String get notificationDiagnosticsTimeZone => 'Time zone';
+
+  @override
+  String get notificationDiagnosticsTimeZoneHint =>
+      'The time zone could not be read; repeating reminders may drift by an hour.';
+
+  @override
+  String get notificationDiagnosticsPending => 'Scheduled reminders';
+
+  @override
+  String notificationDiagnosticsPendingCount(Object count) {
+    return '$count scheduled';
+  }
+
+  @override
+  String get notificationDiagnosticsPendingNone =>
+      'None — no reminders are scheduled';
+
+  @override
+  String get notificationDiagnosticsNext => 'Next reminder';
+
+  @override
+  String get notificationDiagnosticsNextUnknown =>
+      'None scheduled this session';
+
+  @override
+  String get notificationDiagnosticsLastError => 'Last error';
+
+  @override
+  String get notificationDiagnosticsNoError => 'None';
+
+  @override
+  String get notificationDiagnosticsRefresh => 'Refresh';
+
+  @override
+  String get notificationDiagnosticsBatteryTitle =>
+      'If notifications still do not arrive';
+
+  @override
+  String get notificationDiagnosticsBatteryBody =>
+      'Remove ÇuNehat from battery restrictions in your phone settings. Some manufacturers (Xiaomi, Samsung, Huawei, Oppo) stop background app alarms by default.';
+
+  @override
+  String get notificationDiagnosticsOn => 'On';
+
+  @override
+  String get notificationDiagnosticsOff => 'Off';
+
+  @override
+  String notificationScheduleHint(Object times) {
+    return 'Reminders arrive at the same times every day: $times';
+  }
 
   @override
   String get notificationTestTitle => 'ÇuNehat test notification';

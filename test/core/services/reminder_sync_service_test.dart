@@ -86,6 +86,12 @@ void main() {
     when(() => localizer.l10n).thenReturn(tr);
     when(() => settings.isRecurringRemindersEnabled).thenReturn(true);
     when(() => settings.isDebtRemindersEnabled).thenReturn(true);
+    // Eski aralık temizliği tek seferlik: varsayılan olarak HENÜZ yapılmamış.
+    when(() => settings.isLegacyRandomRangePurged).thenReturn(false);
+    when(() => settings.markLegacyRandomRangePurged())
+        .thenAnswer((_) async {});
+    when(() => notifications.purgeLegacyRandomReminders())
+        .thenAnswer((_) async {});
     when(() => settings.getRandomFrequency())
         .thenReturn(NotificationFrequency.none);
     when(() => notifications.cancelNotification(any()))
@@ -97,6 +103,7 @@ void main() {
           scheduledDate: any(named: 'scheduledDate'),
           payload: any(named: 'payload'),
           channel: any(named: 'channel'),
+          repeatDaily: any(named: 'repeatDaily'),
         )).thenAnswer((_) async {});
     when(() => notifications.scheduleRandomDailyReminders(any()))
         .thenAnswer((_) async {});
@@ -128,6 +135,9 @@ void main() {
             scheduledDate: DateTime(2099, 6, 20, kReminderHour),
             payload: NotificationPayloads.pendingRecurring,
             channel: NotificationChannelKind.recurring,
+            // Vade GELECEKTE (2099) → tek atışlık. Tekrarlı kurulsaydı plugin
+            // tarihi yok sayıp bildirimi YARIN SABAH çalmaya başlatırdı.
+            repeatDaily: false,
           )).called(1);
     });
 
@@ -146,6 +156,7 @@ void main() {
             scheduledDate: captureAny(named: 'scheduledDate'),
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           )).captured.single as DateTime;
 
       expect(scheduled.isAfter(DateTime.now()), isTrue);
@@ -167,6 +178,7 @@ void main() {
             scheduledDate: any(named: 'scheduledDate'),
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           ));
     });
 
@@ -184,6 +196,7 @@ void main() {
             scheduledDate: any(named: 'scheduledDate'),
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           ));
     });
   });
@@ -207,6 +220,8 @@ void main() {
             body: tr.notifDebtUpcomingBody('Kredi'),
             scheduledDate: DateTime(2099, 6, 30, kReminderHour),
             payload: NotificationPayloads.debtDue,
+            // "Yarın vadesi var" O TARİHE ait bir uyarı; tekrarlanmaz.
+            repeatDaily: false,
           )).called(1);
       verify(() => notifications.scheduleNotification(
             id: ReminderIds.debtDue('debt_1'),
@@ -214,6 +229,8 @@ void main() {
             body: tr.notifDebtDueBody('Kredi'),
             scheduledDate: DateTime(2099, 7, 1, kReminderHour),
             payload: NotificationPayloads.debtDue,
+            // Vade GELECEKTE → tek atışlık (bkz. yukarıdaki tuzak).
+            repeatDaily: false,
           )).called(1);
     });
 
@@ -228,6 +245,7 @@ void main() {
             scheduledDate: any(named: 'scheduledDate'),
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           ));
     });
 
@@ -244,6 +262,7 @@ void main() {
             scheduledDate: any(named: 'scheduledDate'),
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           ));
     });
 
@@ -268,6 +287,8 @@ void main() {
             body: any(named: 'body'),
             scheduledDate: captureAny(named: 'scheduledDate'),
             payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           )).captured.single as DateTime;
 
       // Geçmişe değil, bir sonraki hatırlatma yuvasına (sabah) kurulmalı.
@@ -284,7 +305,66 @@ void main() {
             body: any(named: 'body'),
             scheduledDate: DateTime(2020, 2, 14, kReminderHour),
             payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           )).called(1);
+    });
+  });
+
+  group('tekrar kuralı: gecikmiş TEKRARLI, gelecek TEK ATIŞLIK', () {
+    /// TUZAK: `matchDateTimeComponents.time` ile kurulan bildirimde plugin
+    /// TARİHİ yok sayar, saat üzerinden bugünden hesaplar. Gelecek vadeli bir
+    /// kalemi tekrarlı kurmak onu YARIN SABAH çalmaya başlatır — kullanıcı
+    /// daha vadesi gelmemiş borç için her gün "son ödeme bugün" bildirimi alır.
+    /// Bu yüzden tekrar YALNIZ vadesi geçmiş kalemlere kurulur.
+
+    bool? capturedRepeat(int id) {
+      final calls = verify(() => notifications.scheduleNotification(
+            id: id,
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            scheduledDate: any(named: 'scheduledDate'),
+            payload: any(named: 'payload'),
+            channel: any(named: 'channel'),
+            repeatDaily: captureAny(named: 'repeatDaily'),
+          )).captured;
+      return calls.isEmpty ? null : calls.single as bool;
+    }
+
+    test('vadesi GEÇMİŞ şablon tekrarlı kurulur', () async {
+      await service.syncRecurringTemplate(
+        template.copyWith(nextExecutionDate: DateTime(2020, 1, 1)),
+      );
+
+      expect(capturedRepeat(ReminderIds.recurring('rec_1')), isTrue);
+    });
+
+    test('vadesi GELECEK şablon tek atışlık kalır', () async {
+      await service.syncRecurringTemplate(template);
+
+      expect(capturedRepeat(ReminderIds.recurring('rec_1')), isFalse);
+    });
+
+    test('vadesi GEÇMİŞ borcun vade günü hatırlatması tekrarlı kurulur',
+        () async {
+      // Taksitli borçta gecikme PLANDAN gelir: başlangıç geçmişe alınınca
+      // 1. taksit gecikmiş olur.
+      await service.syncDebt(debt.copyWith(
+        startDate: DateTime(2020, 1, 15),
+        dueDate: DateTime(2021, 1, 15),
+      ));
+
+      expect(capturedRepeat(ReminderIds.debtDue('debt_1')), isTrue);
+      // Vade ÖNCESİ hatırlatması hiçbir zaman tekrarlanmaz: o tek bir tarihe
+      // ait uyarı.
+      expect(capturedRepeat(ReminderIds.debtUpcoming('debt_1')), isFalse);
+    });
+
+    test('vadesi GELECEK borç tek atışlık kalır', () async {
+      await service.syncDebt(debt);
+
+      expect(capturedRepeat(ReminderIds.debtDue('debt_1')), isFalse);
+      expect(capturedRepeat(ReminderIds.debtUpcoming('debt_1')), isFalse);
     });
   });
 
@@ -308,6 +388,7 @@ void main() {
             scheduledDate: any(named: 'scheduledDate'),
             payload: any(named: 'payload'),
             channel: any(named: 'channel'),
+            repeatDaily: any(named: 'repeatDaily'),
           ));
     });
 
@@ -334,6 +415,39 @@ void main() {
           .cancelNotification(ReminderIds.debtUpcoming('debt_1'))).called(1);
       verify(() => notifications
           .scheduleRandomDailyReminders(NotificationFrequency.none)).called(1);
+    });
+
+    test('eski rastgele aralık BİR KEZ temizlenir, sonra hiç', () async {
+      when(() => recurringRepo.getAllTemplates())
+          .thenAnswer((_) async => const Right([]));
+      when(() => debtRepo.getAllDebts()).thenAnswer((_) async => const Right([]));
+
+      await service.syncAll();
+      verify(() => notifications.purgeLegacyRandomReminders()).called(1);
+      verify(() => settings.markLegacyRandomRangePurged()).called(1);
+
+      // İkinci açılış: bayrak yazıldığı için tur ödenmemeli. Plugin her
+      // iptalde planlı bildirim listesinin TAMAMINI yeniden serileştiriyor;
+      // 60 iptali her açılışta tekrarlamak kalıcı bir bedel olurdu.
+      when(() => settings.isLegacyRandomRangePurged).thenReturn(true);
+      await service.syncAll();
+      verifyNever(() => notifications.purgeLegacyRandomReminders());
+    });
+
+    test('defter okunamazsa sebep TANILAMAYA taşınır', () async {
+      when(() => recurringRepo.getAllTemplates())
+          .thenAnswer((_) async => Left(CacheFailure('şablon kutusu bozuk')));
+      when(() => debtRepo.getAllDebts())
+          .thenAnswer((_) async => Left(CacheFailure('borç kutusu bozuk')));
+
+      await service.syncAll();
+
+      // Sessizce yutulursa "hatırlatmalarım hiç kurulmamış" durumunun izi
+      // kalmıyordu: release'te debugPrint hiçbir yere gitmez.
+      verify(() => notifications.noteFailure(any(), 'şablon kutusu bozuk'))
+          .called(1);
+      verify(() => notifications.noteFailure(any(), 'borç kutusu bozuk'))
+          .called(1);
     });
   });
 }

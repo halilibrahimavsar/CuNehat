@@ -40,12 +40,26 @@ class ReminderSyncService {
 
   /// Tüm hatırlatma türlerini güncel veriye/ayarlara göre yeniden kurar.
   Future<void> syncAll() async {
+    await _purgeLegacyRandomRemindersOnce();
     await Future.wait([
       syncAllRecurringReminders(),
       syncAllDebtReminders(),
       _notifications
           .scheduleRandomDailyReminders(_settings.getRandomFrequency()),
     ]);
+  }
+
+  /// Eski sürümlerin bıraktığı tek atışlık motivasyon planlarını BİR KEZ
+  /// temizler.
+  ///
+  /// Neden bir kez: plugin her iptalde planlı bildirimlerin tamamını JSON'a
+  /// serileştirip prefs'e yazıyor, yani 60 iptal 60 tam tur demek. Bu bedeli
+  /// her açılışta ödemek anlamsız — aralık bir kez boşaldıktan sonra oraya
+  /// yalnız bizim kurduğumuz (en fazla [maxDailyReminderSlots]) kimlik girer.
+  Future<void> _purgeLegacyRandomRemindersOnce() async {
+    if (_settings.isLegacyRandomRangePurged) return;
+    await _notifications.purgeLegacyRandomReminders();
+    await _settings.markLegacyRandomRangePurged();
   }
 
   // ---------------------------------------------------------------- recurring
@@ -60,6 +74,20 @@ class ReminderSyncService {
   /// Vade (ya da o sabahki saat) geçmişse [nextReminderSlot] bir sonraki
   /// sabaha kurar: geçmiş bir zamana planlama sessizce atlandığından, uygulama
   /// kapalıyken vadesi gelen şablon için kullanıcı HİÇ bildirim almıyordu.
+  ///
+  /// Vade GEÇMİŞSE hatırlatma **günlük tekrarlı** kurulur. Tek atışlık
+  /// kurulduğunda "işlenene kadar her sabah hatırlat" sözü kâğıt üstünde
+  /// kalıyordu: bildirim bir kez düşüyor, onu yeniden kuracak tek şey olan
+  /// `syncAll` ise ancak uygulama tekrar açıldığında koşuyordu. Uygulamayı
+  /// açmayan kullanıcı — hatırlatmaya en çok ihtiyacı olan kullanıcı — ömrü
+  /// boyunca TEK bildirim alıyordu. Tekrarı sistem kendi kurar; şablon
+  /// işlendiğinde ya da pasifleştiğinde buradaki `cancelNotification` düşürür.
+  ///
+  /// Vade GELECEKTEYSE tek atışlık kalır: tekrarlı planda plugin tarihi yok
+  /// sayıp saat üzerinden bugünden kuruyor, yani 3 hafta sonraki bir şablon
+  /// yarın sabah "bugün ödemen var" diye bağırırdı. Bildirim vade sabahı
+  /// düşer; kalem o an gecikmişe döndüğü için bir sonraki `syncAll` onu
+  /// tekrarlıya çevirir.
   Future<void> syncRecurringTemplate(
       RecurringTransactionEntity template) async {
     final id = ReminderIds.recurring(template.id);
@@ -68,14 +96,15 @@ class ReminderSyncService {
     if (!template.isActive || !_settings.isRecurringRemindersEnabled) return;
 
     final l10n = _localizer.l10n;
+    final now = DateTime.now();
     await _notifications.scheduleNotification(
       id: id,
       title: l10n.notifRecurringDueTitle,
       body: l10n.notifRecurringDueBody(template.title),
-      scheduledDate:
-          nextReminderSlot(template.nextExecutionDate, DateTime.now()),
+      scheduledDate: nextReminderSlot(template.nextExecutionDate, now),
       payload: NotificationPayloads.pendingRecurring,
       channel: NotificationChannelKind.recurring,
+      repeatDaily: isReminderOverdue(template.nextExecutionDate, now),
     );
   }
 
@@ -85,7 +114,11 @@ class ReminderSyncService {
   Future<void> syncAllRecurringReminders() async {
     final result = await _recurringRepository.getAllTemplates();
     await result.fold(
-      (_) async {},
+      // Defter okunamazsa hiçbir hatırlatma kurulamaz; bu, kullanıcının
+      // gördüğü "bildirim gelmiyor" tablosunun geçerli bir sebebi. Sessizce
+      // yutulursa tanılamada da iz kalmaz.
+      (failure) async =>
+          _notifications.noteFailure('şablonlar okunamadı', failure.message),
       (templates) async {
         for (final template in templates) {
           await syncRecurringTemplate(template);
@@ -113,6 +146,7 @@ class ReminderSyncService {
     if (!_settings.isDebtRemindersEnabled) return;
 
     final l10n = _localizer.l10n;
+    final now = DateTime.now();
     await _notifications.scheduleNotification(
       id: ReminderIds.debtUpcoming(debtId),
       title: l10n.notifDebtUpcomingTitle,
@@ -122,6 +156,8 @@ class ReminderSyncService {
       scheduledDate:
           DateTime(dueDate.year, dueDate.month, dueDate.day - 1, kReminderHour),
       payload: NotificationPayloads.debtDue,
+      // Bilerek TEK ATIŞLIK: "yarın vadesi var" o tek tarihe ait bir uyarı,
+      // her gün tekrarlanacak bir şey değil.
     );
     // Vade günü hatırlatması [nextReminderSlot] ile kurulur, ham vadeyle
     // DEĞİL: geçmiş bir zamana planlama sessizce atlanır
@@ -129,12 +165,23 @@ class ReminderSyncService {
     // hatırlatılması en kritik olan kalem — hiç bildirim almıyordu. Düzenli
     // işlem tarafındaki aynı düzeltmenin borç karşılığı; gecikmiş borç
     // kapatılana kadar her sabah hatırlatılır.
+    //
+    // "Her sabah" ancak GÜNLÜK TEKRARLI planlamayla gerçek olur: tek atışlık
+    // kurulduğunda bildirim bir kez düşüyor ve onu yenileyecek `syncDebt`
+    // ancak uygulama tekrar açıldığında koşuyordu. Ödeme yapıldığında,
+    // taksit kapandığında ya da borç silindiğinde `cancelDebtReminders`
+    // tekrarı düşürür — bu yüzden ödenmiş borç sabaha kadar hatırlatmaz.
+    //
+    // Ama YALNIZ vadesi geçmişse: tekrarlı planda plugin tarihi yok sayıp
+    // saat üzerinden bugünden kuruyor, yani 6 ay sonra vadesi gelen bir kredi
+    // yarın sabah "son ödeme bugün" derdi.
     await _notifications.scheduleNotification(
       id: ReminderIds.debtDue(debtId),
       title: l10n.notifDebtDueTitle,
       body: l10n.notifDebtDueBody(debt.title),
-      scheduledDate: nextReminderSlot(dueDate, DateTime.now()),
+      scheduledDate: nextReminderSlot(dueDate, now),
       payload: NotificationPayloads.debtDue,
+      repeatDaily: isReminderOverdue(dueDate, now),
     );
   }
 
@@ -146,7 +193,8 @@ class ReminderSyncService {
   Future<void> syncAllDebtReminders() async {
     final result = await _debtRepository.getAllDebts();
     await result.fold(
-      (_) async {},
+      (failure) async =>
+          _notifications.noteFailure('borçlar okunamadı', failure.message),
       (debts) async {
         for (final debt in debts) {
           await syncDebt(debt);
