@@ -1,8 +1,9 @@
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
-import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
@@ -348,8 +349,10 @@ class DebtListSection extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      formatMoney(debt.remainingAmount, currency: currency),
+                    MoneyText(
+                      amount: debt.remainingAmount,
+                      currency: currency,
+                      alignment: Alignment.centerRight,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: Colors.redAccent,
@@ -361,8 +364,10 @@ class DebtListSection extends StatelessWidget {
                     if (moneyIsPositive(overdueInterest)) ...[
                       const SizedBox(height: 2),
                       Text(
-                        context.l10n.gecikmeFaiziKisa(
-                            formatMoney(overdueInterest, currency: currency)),
+                        context.l10n.gecikmeFaiziKisa(MoneyWriter(
+                          currency: currency,
+                          visible: context.amountsVisible,
+                        )(overdueInterest)),
                         style: const TextStyle(
                           color: Colors.redAccent,
                           fontSize: 11.5,
@@ -676,8 +681,10 @@ class ReceivableListSection extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  formatMoney(receivable.amount, currency: currency),
+                MoneyText(
+                  amount: receivable.amount,
+                  currency: currency,
+                  alignment: Alignment.centerRight,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,

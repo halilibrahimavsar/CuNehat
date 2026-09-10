@@ -1,6 +1,6 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
-import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_calc_mode.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/services/debt_repayment_calculator.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +38,10 @@ class RepaymentBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Görünürlük DIŞARIDA okunur: AnimatedBuilder yalnız kendi builder'ını
+    // yeniden çalıştırıyor, `watch` bağımlılığı ise bu build'e yazılmalı ki
+    // göz düğmesine basıldığında kart da yeniden çizilsin.
+    final money = MoneyWriter(currency: currency, visible: context.amountsVisible);
 
     return AnimatedBuilder(
       animation: Listenable.merge([
@@ -72,15 +76,13 @@ class RepaymentBreakdownCard extends StatelessWidget {
               label: mode == DebtCalcMode.flatSurcharge
                   ? context.l10n.vadeFarkiLabel
                   : context.l10n.toplamFaizLabel,
-              value: hasData
-                  ? '+ ${formatMoney(totalInterest, currency: currency)}'
-                  : '—',
+              value: hasData ? '+ ${money(totalInterest)}' : '—',
             ),
             if (term > 0) ...[
               const SizedBox(height: 8),
               _SummaryRow(
                 label: context.l10n.aylikTaksitLabel,
-                value: hasData ? formatMoney(monthly, currency: currency) : '—',
+                value: hasData ? money(monthly) : '—',
               ),
             ],
             const SizedBox(height: 12),
@@ -96,7 +98,7 @@ class RepaymentBreakdownCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  hasData ? formatMoney(total, currency: currency) : '—',
+                  hasData ? money(total) : '—',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,

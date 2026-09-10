@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:unified_flutter_features/amount_visibility.dart';
 
 class MockDebtBloc extends MockBloc<DebtEvent, DebtState> implements DebtBloc {}
 
@@ -23,6 +24,21 @@ class MockReceivableBloc extends MockBloc<ReceivableEvent, ReceivableState>
     implements ReceivableBloc {}
 
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
+/// Görünürlük cubit'i gerçek uygulamada `AppProviders` ile MaterialApp'in
+/// ÜSTÜNDE duruyor. `MoneyText` onu ZORUNLU kılar (`context.amountsVisible`
+/// gibi sessizce true'ya düşmez), bu yüzden test kabuğu da sağlamalı.
+/// Gizleme senaryoları ayrı dosyada: debt_amount_visibility_test.dart.
+class _FixedVisibilityCubit extends Cubit<bool>
+    implements AmountVisibilityCubit {
+  _FixedVisibilityCubit(super.initialState);
+
+  @override
+  Future<void> setVisibility(bool isVisible) async => emit(isVisible);
+
+  @override
+  Future<void> toggleVisibility() async => emit(!state);
+}
 
 /// Borç/alacak sayfası artık HER para biriminde açılır: tutarlar cüzdanın
 /// kendi birimindedir (kayıtta ayrı birim alanı yok, birim cüzdandan gelir).
@@ -86,6 +102,9 @@ void main() {
       providers: [
         BlocProvider<DebtBloc>.value(value: mockDebtBloc),
         BlocProvider<ReceivableBloc>.value(value: mockReceivableBloc),
+        BlocProvider<AmountVisibilityCubit>(
+          create: (_) => _FixedVisibilityCubit(true),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: const [

@@ -62,6 +62,9 @@ class DebtCashImpactDialog extends StatelessWidget {
             impact: DebtCashImpact.cash,
             icon: Icons.payments_rounded,
             title: context.l10n.borcNakitSecenekBaslik,
+            // Kullanıcının AZ ÖNCE girdiği tutarın cüzdana ne yapacağını
+            // soran onay metni; göz düğmesinden bilerek muaf — maskelenirse
+            // soru anlamsızlaşır.
             body: context.l10n.borcNakitSecenekGovde(
               formatMoney(amount, currency: currency),
             ),

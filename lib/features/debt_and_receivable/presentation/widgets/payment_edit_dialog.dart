@@ -137,6 +137,8 @@ class _PaymentEditDialogState extends State<PaymentEditDialog> {
                 suffixText: currencySymbol(widget.currency),
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                // Girdi SINIRI: göz düğmesinden bilerek muaf. "En fazla
+                // **** ₺" yazan bir yardım metni formu kullanılamaz kılar.
                 helperText: context.l10n.maksimumFormatmoneyRemaining(
                     formatMoney(widget.maxAmount, currency: widget.currency)),
               ),

@@ -13,7 +13,9 @@ import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:unified_flutter_features/amount_visibility.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class MockDebtBloc extends MockBloc<DebtEvent, DebtState> implements DebtBloc {}
@@ -22,6 +24,19 @@ class MockReceivableBloc extends MockBloc<ReceivableEvent, ReceivableState>
     implements ReceivableBloc {}
 
 class MockOnboardingCoordinator extends Mock implements OnboardingCoordinator {}
+
+/// Göz düğmesi borç modülünde HİÇ dinlenmiyordu: geçmiş kartları da düz
+/// `formatMoney` basıyordu.
+class _FixedVisibilityCubit extends Cubit<bool>
+    implements AmountVisibilityCubit {
+  _FixedVisibilityCubit(super.initialState);
+
+  @override
+  Future<void> setVisibility(bool isVisible) async => emit(isVisible);
+
+  @override
+  Future<void> toggleVisibility() async => emit(!state);
+}
 
 void main() {
   late MockDebtBloc mockDebtBloc;
@@ -53,20 +68,27 @@ void main() {
     getIt.reset();
   });
 
-  Widget buildTestableWidget(Widget child) {
-    return MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('tr'),
-        Locale('en'),
-      ],
-      locale: const Locale('tr'),
-      home: child,
+  /// Görünürlük cubit'i gerçek uygulamada `AppProviders` ile MaterialApp'in
+  /// ÜSTÜNDE duruyor; `MoneyText` onu zorunlu kılar (`context.amountsVisible`
+  /// gibi sessizce true'ya düşmez). Varsayılan açık: mevcut beklentiler
+  /// gerçek tutarları görmeye devam etsin.
+  Widget buildTestableWidget(Widget child, {bool amountsVisible = true}) {
+    return BlocProvider<AmountVisibilityCubit>(
+      create: (_) => _FixedVisibilityCubit(amountsVisible),
+      child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('tr'),
+          Locale('en'),
+        ],
+        locale: const Locale('tr'),
+        home: child,
+      ),
     );
   }
 
@@ -224,5 +246,31 @@ void main() {
 
     expect(find.text('5.000,00 \$'), findsNWidgets(2));
     expect(find.textContaining('₺'), findsNothing);
+  });
+
+  testWidgets('gizliyken geçmiş kartları ve özet toplamı maskelenir',
+      (WidgetTester tester) async {
+    when(() => mockDebtBloc.state).thenReturn(DebtLoaded([testPaidDebt]));
+    when(() => mockReceivableBloc.state)
+        .thenReturn(ReceivableLoaded([testPaidReceivable]));
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        const DebtHistoryPage(
+          userId: 'user_123',
+          walletId: 'wallet_123',
+          walletCurrency: 'TRY',
+          showAppBar: true,
+        ),
+        amountsVisible: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Hem "N borç kapandı" özet toplamı hem de her kartın tutarı.
+    expect(find.text('150.000,00 ₺'), findsNothing);
+    expect(find.text('**** ₺'), findsWidgets);
+    // Ad/karşı taraf maskelenmez; gizlenen yalnız PARA.
+    expect(find.text('Araba Kredisi'), findsOneWidget);
   });
 }

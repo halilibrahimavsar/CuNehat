@@ -3,7 +3,7 @@ import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
 import 'package:cunehat/core/shared/widgets/info_action_menu.dart';
-import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/core/shared/widgets/money_text.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/debt_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/domain/entities/receivable_entity.dart';
 import 'package:cunehat/features/debt_and_receivable/presentation/bloc/debt_bloc/debt_bloc.dart';
@@ -422,8 +422,10 @@ class _HistorySummaryCard extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            formatMoney(amount, currency: currency),
+          MoneyText(
+            amount: amount,
+            currency: currency,
+            alignment: Alignment.centerRight,
             style: const TextStyle(
               fontWeight: FontWeight.w900,
               color: Colors.green,
@@ -498,8 +500,10 @@ class _HistoryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                formatMoney(amount, currency: currency),
+              MoneyText(
+                amount: amount,
+                currency: currency,
+                alignment: Alignment.centerRight,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.green,

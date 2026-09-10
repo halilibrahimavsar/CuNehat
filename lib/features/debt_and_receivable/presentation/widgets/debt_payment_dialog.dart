@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:cunehat/core/utils/amount_input_formatter.dart';
 import 'package:cunehat/core/utils/amount_parser.dart';
 import 'package:cunehat/core/utils/currencies.dart';
+import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
 import 'package:cunehat/core/utils/money_math.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
@@ -97,8 +98,25 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
     return d;
   }
 
-  /// Diyalogdaki her tutar borcun cüzdan biriminde yazılır.
+  /// Göz düğmesinin son okunan durumu.
+  ///
+  /// `context.amountsVisible` `watch` kullandığı için YALNIZ build sırasında
+  /// okunabilir; oysa [_money] build'den sonra da çağrılıyor (silme onayı
+  /// mesajı gibi geri çağrılardan). Değeri build'de bir kez alıp saklıyoruz:
+  /// geri çağrıda son çizilen karenin görünürlüğü zaten doğru cevap.
+  bool _amountsVisible = true;
+
+  /// Diyalogdaki her tutar borcun cüzdan biriminde yazılır ve göz düğmesine
+  /// uyar. Bu kısayol maskesiz kaldığı sürece "tutarları gizle" borç ödeme
+  /// ekranında hiçbir işe yaramıyordu: özet kartı, taksit planı ve ödeme
+  /// geçmişi dahil 17 tutar buradan geçiyor.
   String _money(double amount) =>
+      MoneyWriter(currency: widget.currency, visible: _amountsVisible)(amount);
+
+  /// Girdi alanının SINIRINI söyleyen metinler bilerek maskelenmez:
+  /// "En fazla **** ₺" yazan bir yardım metni formu kullanılamaz hale
+  /// getirir. Aynı karar birikim modülündeki sheet'lerde de verilmişti.
+  String _plainMoney(double amount) =>
       formatMoney(amount, currency: widget.currency);
 
   void _applyQuickPay(double amount) {
@@ -195,6 +213,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     _debt = _resolveDebt(context);
+    _amountsVisible = context.amountsVisible;
     final mq = MediaQuery.of(context);
     // Diyalog kabuğu içeriğe sonsuz yükseklik veriyor; ConstrainedBox bunu
     // filtreler ve SingleChildScrollView sınırlı alanda scroll eder → taşma yok.
@@ -302,7 +321,7 @@ class _DebtPaymentDialogState extends State<DebtPaymentDialog> {
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
                         helperText: context.l10n
-                            .maksimumFormatmoneyRemaining(_money(payoff)),
+                            .maksimumFormatmoneyRemaining(_plainMoney(payoff)),
                       ),
                       validator: (value) => validateAmountInput(
                         value ?? '',
