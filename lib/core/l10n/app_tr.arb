@@ -1147,17 +1147,6 @@
   "bankImportCommitting": "Ekleniyor…",
   "bankImportClose": "Kapat",
   "bankImportRetry": "Tekrar dene",
-  "bankImportMappingTitle": "Sütunları eşle",
-  "bankImportColDate": "Tarih sütunu",
-  "bankImportColDesc": "Açıklama sütunu",
-  "bankImportColAmount": "Tutar sütunu",
-  "bankImportColDebit": "Borç (gider)",
-  "bankImportColCredit": "Alacak (gelir)",
-  "bankImportSignMode": "Tutar işareti",
-  "bankImportSignSingle": "Tek sütun (− gider)",
-  "bankImportSignDebitCredit": "Borç / Alacak",
-  "bankImportDateFormat": "Tarih biçimi",
-  "bankImportDateAuto": "Otomatik",
   "bankImportContinue": "Devam",
   "bankImportColumnN": "{n}. sütun",
   "@bankImportColumnN": {
@@ -1167,12 +1156,8 @@
       }
     }
   },
-  "bankImportPreviewTitle": "Önizleme (ilk hareketler)",
   "bankImportRoleDate": "Tarih",
   "bankImportRoleDesc": "Açıklama",
-  "bankImportRoleAmount": "Tutar",
-  "bankImportRoleDebit": "Borç",
-  "bankImportRoleCredit": "Alacak",
   "bankImportRoleBalance": "Bakiye",
   "bankImportEditDescTitle": "Açıklamayı düzenle",
   "bankImportEditDescLabel": "Açıklama",
@@ -1221,7 +1206,6 @@
   "bankImportSelectAll": "Tümü",
   "bankImportDeselectAll": "Hiçbiri",
   "bankImportStepperMode": "Tek tek incele",
-  "bankImportDuplicate": "Olası tekrar",
   "bankImportStepSkip": "Atla",
   "bankImportStepAdd": "Ekle",
   "bankImportStepAddRest": "Kalanları ekle",
@@ -1426,6 +1410,174 @@
   },
   "bankImportShowUncategorized": "Göster",
   "bankImportStepNeedsCategory": "Önce kategorisiz satırlara kategori seç.",
+  "bankImportMapTitle": "Dosyayı nasıl okuyalım?",
+  "bankImportMapHint": "Sütunları kendimiz tanımaya çalıştık ama emin olamadık. Aşağıdaki hareketler doğru görünüyorsa devam et; yanlışsa ilgili sütuna dokunup ne olduğunu seç.",
+  "bankImportMapResultTitle": "Böyle okunacak",
+  "bankImportMapRowsRead": "{count} hareket okunacak · {income} gelir, {expense} gider",
+  "@bankImportMapRowsRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "income": {
+        "type": "int"
+      },
+      "expense": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportMapSkipped": "{count} satır okunamadı (tarihi ya da tutarı yok)",
+  "@bankImportMapSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportMapBalanceOk": "Bakiye sütunuyla doğrulandı",
+  "bankImportMapBalanceBad": "Bakiye tutmuyor: tutar sütunu ya da işareti yanlış olabilir",
+  "bankImportMapAllIncome": "Hareketlerin hepsi gelir görünüyor. Tutarlar işaretsizse Giden para / Gelen para sütunlarını seç ya da incelemede «Tümünü çevir: Gider»i kullan.",
+  "bankImportMapNeedDate": "Tarih sütununu seç",
+  "bankImportMapNeedDesc": "Açıklama sütununu seç",
+  "bankImportMapNeedAmount": "Tutar sütununu (ya da Giden para / Gelen para sütunlarını) seç",
+  "bankImportMapNoRows": "Bu seçimle hiç hareket okunamıyor.",
+  "bankImportMapColumnsTitle": "Sütunlar",
+  "bankImportMapColumnsHint": "Bir sütunun ne olduğunu değiştirmek için ona dokun.",
+  "bankImportMapRoleSheetTitle": "“{column}” sütunu ne?",
+  "@bankImportMapRoleSheetTitle": {
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportMapDateQuestion": "Tarihler “{sample}” biçiminde. Bu hangisi?",
+  "@bankImportMapDateQuestion": {
+    "placeholders": {
+      "sample": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportRoleDateDesc": "İşlemin tarihi",
+  "bankImportRoleDescDesc": "İşlemin açıklaması ya da karşı taraf",
+  "bankImportRoleAmountLabel": "Tutar (+ / −)",
+  "bankImportRoleAmountDesc": "Tek sütunda tutar; eksi olanlar harcamadır",
+  "bankImportRoleDebitLabel": "Giden para",
+  "bankImportRoleDebitDesc": "Yalnız çıkan paralar (bankada «Borç» yazar)",
+  "bankImportRoleCreditLabel": "Gelen para",
+  "bankImportRoleCreditDesc": "Yalnız giren paralar (bankada «Alacak» yazar)",
+  "bankImportRoleBalanceDesc": "İşlemden sonraki bakiye; okunanları doğrulamaya yarar",
+  "bankImportRoleTag": "Banka kategorisi",
+  "bankImportRoleTagDesc": "Bankanın verdiği kategori/etiket; tahmine yardım eder",
+  "bankImportRoleReference": "İşlem numarası",
+  "bankImportRoleReferenceDesc": "Dekont/referans no; tekrarları kesin bulmaya yarar",
+  "bankImportRoleIgnore": "Kullanma",
+  "bankImportRoleIgnoreDesc": "Bu sütunu yok say",
+  "bankImportRemap": "Sütunları yeniden eşle",
+  "bankImportDupExact": "Zaten kayıtlı",
+  "bankImportDupWithinFile": "Bu dosyada ikinci kez geçiyor",
+  "bankImportDupApproxStrong": "Büyük olasılıkla elle girdiğin kayıt",
+  "bankImportDupApproxPossible": "Elle girdiğin bir kayda benziyor",
+  "bankImportDupSystem": "Borç/yatırım kaydınla eşleşiyor",
+  "bankImportDupReasonSameAmount": "tutar aynı",
+  "bankImportDupReasonCents": "{delta} fark · kuruşsuz yazılmış",
+  "@bankImportDupReasonCents": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupReasonRounded": "{delta} fark · yuvarlanmış",
+  "@bankImportDupReasonRounded": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupReasonSameDay": "aynı gün",
+  "bankImportDupReasonDays": "{days} gün arayla",
+  "@bankImportDupReasonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDupReasonWord": "“{word}” ikisinde de geçiyor",
+  "@bankImportDupReasonWord": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupReasonCategory": "kategori aynı",
+  "bankImportDupWillSkip": "Eklenmeyecek.",
+  "bankImportDupWillAdd": "Yine de eklenecek.",
+  "bankImportDupWillCorrect": "Eklenmeyecek; kaydın tutarı {amount} olacak.",
+  "@bankImportDupWillCorrect": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupAddAnywayExact": "Yine de ekle",
+  "bankImportDupAddAnyway": "Farklı işlem, ekle",
+  "bankImportDupSkip": "Aynı işlem, ekleme",
+  "bankImportDupCorrect": "Tutarı {amount} yap",
+  "@bankImportDupCorrect": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupCorrectUndo": "Düzeltmeden vazgeç",
+  "bankImportApproxWarning": "{count} satır elle girdiğin kayıtlara benzediği için eklenmeyecek. Bu bir tahmin; her satırda nedenini görebilirsin.",
+  "@bankImportApproxWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportCorrectAll": "Benzeyen {count} kaydın tutarını ekstredekiyle düzelt",
+  "@bankImportCorrectAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportCorrectionsPending": "{count} kaydın tutarı ekstredekiyle düzeltilecek.",
+  "@bankImportCorrectionsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportApplyCorrections": "Düzeltmeleri uygula ({count})",
+  "@bankImportApplyCorrections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDoneCorrected": "{count} kaydın tutarı ekstredekiyle düzeltildi.",
+  "@bankImportDoneCorrected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "bankStatementSectionHeader": "BANKA EKSTRESİ",
   "sifirla": "Sıfırla",
   "tumTurlariSifirlaOnayMesaji": "Tüm tanıtım turları sıfırlanacak ve tekrar gösterilecek. Devam edilsin mi?",
@@ -2412,6 +2564,7 @@
   "catSeedPersonalHairdresser": "Kuaför",
   "catSeedPersonalCosmetics": "Kozmetik",
   "catSeedInvestment": "Yatırım",
+  "catSeedFees": "Banka Masrafları",
   "catSeedOther": "Diğer",
   "catSeedSalary": "Maaş",
   "catSeedSideIncome": "Ek Gelir",

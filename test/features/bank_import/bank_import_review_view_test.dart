@@ -58,7 +58,15 @@ ImportDraft _draft({
       amount: amount,
       type: income ? TransactionTypeModel.income : TransactionTypeModel.expense,
       categoryId: categoryId,
-      isDuplicate: duplicate,
+      duplicateOf: duplicate
+          ? DuplicateMatch(
+              kind: DuplicateKind.exact,
+              existingId: 'tx-$description',
+              existingTitle: description,
+              existingAmount: amount,
+              existingDate: DateTime(2026, 3, day),
+            )
+          : null,
     );
 
 void main() {
@@ -773,5 +781,134 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Hepsine uygula'), findsOneWidget);
+  });
+
+  group('yaklaşık tekrar paneli', () {
+    // Kullanıcının senaryosu: bankada 913,15; elle "bim" · 910 · aynı gün.
+    ImportDraft approx({
+      bool selected = false,
+      bool correctExisting = false,
+      bool strong = true,
+      bool system = false,
+    }) =>
+        ImportDraft(
+          date: DateTime(2026, 9, 5),
+          description: 'SATIŞ-517040*4626-BİM L508 YUNUS EMRE',
+          amount: 913.15,
+          type: TransactionTypeModel.expense,
+          categoryId: 'Market',
+          selected: selected,
+          correctExisting: correctExisting,
+          duplicateOf: DuplicateMatch(
+            kind: DuplicateKind.approximate,
+            existingId: 'm1',
+            existingTitle: 'bim',
+            existingTag: 'Market',
+            existingAmount: 910,
+            existingDate: DateTime(2026, 9, 5, 21, 40),
+            existingIsSystem: system,
+            amountDelta: 3.15,
+            amountPattern: AmountPattern.roundedSmall,
+            sharedWord: 'bim',
+            categoryMatches: true,
+            strong: strong,
+          ),
+        );
+
+    setUp(() {
+      when(() => cubit.setDraftSelected(any(), any())).thenReturn(null);
+      when(() => cubit.setCorrectExisting(any(), any())).thenReturn(null);
+      when(() => cubit.correctAllApproximate()).thenReturn(null);
+    });
+
+    testWidgets('NEYLE ve NEDEN eşleştiği satırda yazar', (tester) async {
+      await pump(tester, review(drafts: [approx()]));
+
+      expect(find.text('Büyük olasılıkla elle girdiğin kayıt'), findsOneWidget);
+      // Eşleşen kaydın kendisi: başlık · kategori · tutar · tarih-saat.
+      expect(find.textContaining('“bim” · Market · −'), findsOneWidget);
+      expect(find.textContaining('21:40'), findsOneWidget);
+      // Gerekçeler tek tek.
+      expect(find.textContaining('fark · yuvarlanmış'), findsOneWidget);
+      expect(find.text('aynı gün'), findsOneWidget);
+      expect(find.text('“bim” ikisinde de geçiyor'), findsOneWidget);
+      expect(find.text('kategori aynı'), findsOneWidget);
+      expect(find.text('Eklenmeyecek.'), findsOneWidget);
+    });
+
+    Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+    }
+
+    testWidgets('"Farklı işlem, ekle" satırı eklemeye alır', (tester) async {
+      await pump(tester, review(drafts: [approx()]));
+      await tapVisible(tester, find.text('Farklı işlem, ekle'));
+      verify(() => cubit.setDraftSelected(0, true)).called(1);
+    });
+
+    testWidgets('"Tutarı … yap" eşleşen kaydı düzeltme kararını verir',
+        (tester) async {
+      await pump(tester, review(drafts: [approx()]));
+      await tapVisible(tester, find.textContaining('Tutarı '));
+      verify(() => cubit.setCorrectExisting(0, true)).called(1);
+    });
+
+    testWidgets('düzeltme açıkken ne olacağını ve geri dönüşü söyler',
+        (tester) async {
+      await pump(tester, review(drafts: [approx(correctExisting: true)]));
+      expect(find.textContaining('kaydın tutarı'), findsWidgets);
+      await tapVisible(tester, find.text('Düzeltmeden vazgeç'));
+      verify(() => cubit.setCorrectExisting(0, false)).called(1);
+      // Yalnız düzeltme varsa ana düğme "ekle" değil "düzeltmeleri uygula".
+      expect(find.text('Düzeltmeleri uygula (1)'), findsOneWidget);
+    });
+
+    testWidgets('sistem kaydıyla eşleşmede düzeltme önerilmez', (tester) async {
+      await pump(tester, review(drafts: [approx(system: true)]));
+      expect(find.text('Borç/yatırım kaydınla eşleşiyor'), findsOneWidget);
+      expect(find.textContaining('Tutarı '), findsNothing);
+    });
+
+    testWidgets('özet kartı tahminle eklenmeyecek satırları sayar ve süzer',
+        (tester) async {
+      await pump(
+        tester,
+        review(drafts: [
+          approx(),
+          _draft(description: 'MARKET ALISVERISI', categoryId: 'Market'),
+        ]),
+      );
+
+      expect(find.textContaining('1 satır elle girdiğin kayıtlara benzediği'),
+          findsOneWidget);
+      await tester.tap(find.textContaining('1 satır elle girdiğin'));
+      await tester.pumpAndSettle();
+      // Süzgeç "olası tekrar"a geçti: yalnız eşleşen satır görünür.
+      expect(find.text('MARKET ALISVERISI'), findsNothing);
+      expect(find.textContaining('BİM L508'), findsOneWidget);
+    });
+
+    testWidgets('dar ekranda (360dp) panel taşmaz', (tester) async {
+      // Uzun yüzey: iki satır da (tembel liste) çizilsin.
+      tester.view.physicalSize = const Size(360, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pump(tester, review(drafts: [approx(), approx(strong: false)]));
+
+      expect(find.text('Elle girdiğin bir kayda benziyor'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('toplu düzeltme taşma menüsünde, sayısıyla', (tester) async {
+      await pump(tester, review(drafts: [approx(), approx(strong: false)]));
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Benzeyen 2 kaydın tutarını'));
+      await tester.pumpAndSettle();
+      verify(() => cubit.correctAllApproximate()).called(1);
+    });
   });
 }

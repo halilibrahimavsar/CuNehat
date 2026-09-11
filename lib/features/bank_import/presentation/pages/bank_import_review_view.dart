@@ -17,6 +17,7 @@ import 'package:cunehat/features/bank_import/domain/import_draft.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_cubit.dart';
 import 'package:cunehat/features/bank_import/presentation/bloc/bank_import_state.dart';
 import 'package:cunehat/features/bank_import/presentation/import_category_labels.dart';
+import 'package:cunehat/features/bank_import/presentation/widgets/duplicate_match_panel.dart';
 import 'package:cunehat/features/bank_import/presentation/widgets/similar_group_sheet.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -235,6 +236,10 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             const SizedBox(height: 10),
             _verificationBanner(context),
           ],
+          if (_s.approximateSkippedCount > 0) ...[
+            const SizedBox(height: 10),
+            _approximateBanner(context, _s.approximateSkippedCount),
+          ],
           if (warnings.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
@@ -356,6 +361,48 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Yaklaşık eşleşme yüzünden EKLENMEYECEK satırlar. Kesin tekrarın aksine
+  /// bu karar bir tahmine dayanıyor; kullanıcı sayıyı görmeden eklemeye
+  /// basarsa gerçek bir harcama sessizce dışarıda kalabilirdi. Şerit doğrudan
+  /// o satırlara götürür.
+  Widget _approximateBanner(BuildContext context, int count) {
+    final color = Colors.orange.shade800;
+    return InkWell(
+      onTap: () => setState(() {
+        _stepper = false;
+        _filter = _ReviewFilter.duplicates;
+      }),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.difference_outlined, size: 16, color: color),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.l10n.bankImportApproxWarning(count),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.bankImportShowUncategorized,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w800, color: color),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -600,6 +647,19 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
             label: context.l10n.bankImportGroupSimilar,
             onTap: () => showSimilarGroupSheet(context),
           ),
+        if (_s.correctableCount > 0)
+          _menuItem(
+            icon: Icons.published_with_changes_rounded,
+            label: context.l10n.bankImportCorrectAll(_s.correctableCount),
+            onTap: _cubit.correctAllApproximate,
+          ),
+        // Eşleme ekranı güvenilir dosyalarda atlanıyor; yanılırsak dönüş yolu.
+        if (_s.canRemap)
+          _menuItem(
+            icon: Icons.view_column_outlined,
+            label: context.l10n.bankImportRemap,
+            onTap: _cubit.remap,
+          ),
         _menuItem(
           icon: Icons.view_agenda_outlined,
           label: context.l10n.bankImportStepperMode,
@@ -789,23 +849,26 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
   Widget _row(BuildContext context, int i, ImportDraft d) {
     final cs = Theme.of(context).colorScheme;
     final accent = d.isIncome ? AppGradients.savings : AppGradients.debt;
-    return Opacity(
-      opacity: d.selected ? 1 : 0.45,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 6, 12, 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Checkbox(
-              value: d.selected,
-              visualDensity: VisualDensity.compact,
-              onChanged: (_) => _cubit.toggleDraft(i),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    // Seçimsiz satır soluklaşır — ama tekrar paneli SOLUKLAŞMAZ: satırın
+    // neden eklenmeyeceğini anlatan tek yer orası, okunaklı kalmalı.
+    final dim = d.selected ? 1.0 : 0.45;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 6, 12, 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Checkbox(
+            value: d.selected,
+            visualDensity: VisualDensity.compact,
+            onChanged: (_) => _cubit.toggleDraft(i),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Opacity(
+                  opacity: dim,
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
@@ -836,24 +899,15 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
+                ),
+                const SizedBox(height: 4),
+                Opacity(
+                  opacity: dim,
+                  child: Row(
                     children: [
                       Text(AppFormatters.dateShort.format(d.date),
                           style: TextStyle(
                               fontSize: 12, color: cs.onSurfaceVariant)),
-                      if (d.isDuplicate) ...[
-                        const SizedBox(width: 8),
-                        // Rozet de esner: tarih + rozet + kategori + tür
-                        // simgesi dar telefonda satırı taşırıyordu (ölçüldü).
-                        Flexible(
-                          child: _chip(
-                              context,
-                              Icons.copy_all_rounded,
-                              context.l10n.bankImportDuplicate,
-                              AppGradients.debt),
-                        ),
-                      ],
                       Expanded(
                         child: Align(
                           alignment: Alignment.centerRight,
@@ -881,12 +935,29 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                if (d.isDuplicate) _duplicatePanel(i, d),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _duplicatePanel(int i, ImportDraft d) {
+    final tag = d.duplicateOf?.existingTag;
+    return DuplicateMatchPanel(
+      draft: d,
+      currency: _currency,
+      // Sistem kaydının etiketi bir kimlik değil, okunur addır ("Borç
+      // Ödemesi"); kategori kimliğiyse listeden çözülür.
+      existingCategoryLabel: tag == null
+          ? null
+          : (_categoryLabels[tag] ??
+              ((d.duplicateOf?.existingIsSystem ?? false) ? tag : null)),
+      onSelected: (value) => _cubit.setDraftSelected(i, value),
+      onCorrect: (value) => _cubit.setCorrectExisting(i, value),
     );
   }
 
@@ -941,18 +1012,41 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
 
   Widget _bottomBar(BuildContext context) {
     final blocked = _s.selectedUncategorizedCount;
+    final corrections = _s.correctionCount;
+    final onlyCorrections = _s.selectedCount == 0 && corrections > 0;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(12, 4, 12, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (blocked > 0) _uncategorizedBanner(context, blocked),
+          // Düzeltme, var olan bir kaydı DEĞİŞTİRİR: düğmeye basmadan önce
+          // kaç kaydın etkileneceği görünmeli.
+          if (corrections > 0 && !onlyCorrections)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Icon(Icons.published_with_changes_rounded,
+                      size: 16, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      context.l10n.bankImportCorrectionsPending(corrections),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: _s.canCommit ? () => _cubit.commit() : null,
               icon: const Icon(Icons.playlist_add_check_rounded),
-              label: Text(context.l10n.bankImportAdd(_s.selectedCount)),
+              label: Text(onlyCorrections
+                  ? context.l10n.bankImportApplyCorrections(corrections)
+                  : context.l10n.bankImportAdd(_s.selectedCount)),
               style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16)),
             ),
@@ -1116,8 +1210,7 @@ class _BankImportReviewViewState extends State<BankImportReviewView> {
                   ),
                   if (d.isDuplicate) ...[
                     const SizedBox(height: 8),
-                    Text(context.l10n.bankImportDuplicate,
-                        style: TextStyle(color: AppGradients.debt)),
+                    _duplicatePanel(_step, d),
                   ],
                 ],
               ),

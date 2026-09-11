@@ -501,6 +501,14 @@ class _Done extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            if (state.corrected > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                context.l10n.bankImportDoneCorrected(state.corrected),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
             if (state.hasPastMonthRows) ...[
               const SizedBox(height: 12),
               Row(
@@ -531,7 +539,7 @@ class _Done extends StatelessWidget {
               },
               child: Text(context.l10n.bankImportClose),
             ),
-            if (state.added > 0) ...[
+            if (state.added > 0 || state.corrected > 0) ...[
               const SizedBox(height: 4),
               TextButton.icon(
                 onPressed: () => _undo(context),

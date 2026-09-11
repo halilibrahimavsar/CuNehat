@@ -51,6 +51,31 @@ StatementDateFormat resolveStatementDateFormat(Iterable<String> cells) {
   return StatementDateFormat.dayFirst;
 }
 
+/// Tarih sütununda gün/ay sırası GERÇEKTEN belirsiz mi? Belirsizse sütunun
+/// ilk örneğini döner (kullanıcıya "bu hangisi?" diye sormak için), değilse
+/// `null`.
+///
+/// Belirsiz sayılması için iki şart: 12'yi aşan hiçbir grup yok (kanıt yok,
+/// bkz. [resolveStatementDateFormat]) VE tarihler `/` ya da `-` ile yazılmış.
+/// Noktalı `03.04.2026` biçimi Türkiye'de ve Avrupa'da her zaman gün-önce
+/// okunur; ay-önce yazan ABD biçimi `/` kullanır. Yani yalnız o durumda
+/// soru sormaya değer — aksi hâlde her kısa ekstrede (tüm günler ≤ 12)
+/// gereksiz bir soru çıkardı.
+String? ambiguousStatementDateSample(Iterable<String> cells) {
+  String? sample;
+  for (final cell in cells) {
+    final s = cell.trim();
+    if (s.isEmpty || _isoPrefixRe.hasMatch(s)) continue;
+    final m = _re.firstMatch(s);
+    if (m == null) continue;
+    final a = int.parse(m.group(1)!);
+    final b = int.parse(m.group(2)!);
+    if (a > 12 || b > 12) return null;
+    if (a != b && !m.group(0)!.contains('.')) sample ??= m.group(0);
+  }
+  return sample;
+}
+
 DateTime? parseStatementDate(String raw, StatementDateFormat fmt) {
   final s = raw.trim();
   if (s.isEmpty) return null;

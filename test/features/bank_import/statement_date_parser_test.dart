@@ -143,4 +143,26 @@ void main() {
           StatementDateFormat.dayFirst);
     });
   });
+
+  group('ambiguousStatementDateSample — ne zaman SORULMALI', () {
+    test('/ ile yazılmış ve kanıtsız → belirsiz, örnek döner', () {
+      expect(ambiguousStatementDateSample(['03/04/2026', '05/04/2026']),
+          '03/04/2026');
+    });
+
+    test('noktalı TR biçimi belirsiz sayılmaz (hep gün-önce)', () {
+      expect(
+          ambiguousStatementDateSample(['03.04.2026', '05.04.2026']), isNull);
+    });
+
+    test('12\'yi aşan bir grup kanıttır → sorulmaz', () {
+      expect(
+          ambiguousStatementDateSample(['03/04/2026', '15/04/2026']), isNull);
+    });
+
+    test('ISO ve gün=ay satırları soru doğurmaz', () {
+      expect(
+          ambiguousStatementDateSample(['2026-04-03', '05/05/2026']), isNull);
+    });
+  });
 }

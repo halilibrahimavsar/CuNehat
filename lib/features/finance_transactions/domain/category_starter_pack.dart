@@ -121,6 +121,10 @@ class CategoryStarterPack {
     // hareketleri sistem etiketi taşır, bu kategoriye düşmez —
     // bkz. CashMovementTags.investmentBuy.)
     (key: 'investment', iconName: 'trending_up', children: []),
+    // Bankanın kestiği ücret ve vergiler (EFT/havale ücreti, BSMV, kart
+    // aidatı). Ekstrede sık ve küçük satırlardır; kendi kalemleri olmayınca
+    // her içe aktarımda tek tek soruluyorlardı.
+    (key: 'fees', iconName: 'request_quote', children: []),
     (key: 'other', iconName: 'category', children: []),
   ];
 

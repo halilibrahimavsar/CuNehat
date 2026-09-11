@@ -217,4 +217,94 @@ void main() {
           isTrue);
     });
   });
+
+  group('banka etiketi sütunu (Etiket/Kategori)', () {
+    // Garanti .xls'inin gerçek başlığı. Eskiden "Etiket" hiç okunmuyordu:
+    // aynı hesabın PDF'i etiketi taşırken en temiz kaynak olan .xls atıyordu.
+    const garanti = RawTable([
+      ['Tarih', 'Açıklama', 'Etiket', 'Tutar', 'Bakiye', 'Dekont No'],
+      ['05.09.2025', 'MAAŞ ÖDEMESİ', 'Maaş', '24.279,26', '24.291,54', 'D1'],
+      ['06.09.2025', 'SATIŞ-HAKMAR', 'Alışveriş', '-12,00', '24.279,54', 'D2'],
+    ]);
+
+    test('başlıktan bulunur, taslağa sourceTag olarak geçer', () {
+      final m = mapper.guess(garanti);
+      expect(m.tagCol, 2);
+      expect(m.descCol, 1, reason: 'etiket açıklama sanılmamalı');
+      final drafts = mapper.apply(garanti, m).drafts;
+      expect(drafts.map((d) => d.sourceTag), ['Maaş', 'Alışveriş']);
+    });
+
+    test('eski (etiketsiz) kayıtlı eşleme okunabilir: tagCol null', () {
+      final map = mapper.guess(garanti).toMap()..remove('tagCol');
+      expect(ColumnMapping.fromMap(map).tagCol, isNull);
+    });
+  });
+
+  group('assess — eşleme ekranı ne zaman atlanır', () {
+    const good = RawTable([
+      ['Tarih', 'Açıklama', 'Tutar', 'Bakiye'],
+      ['01.07.2026', 'MARKET', '-100,00', '900,00'],
+      ['02.07.2026', 'MAAS', '1.000,00', '1.900,00'],
+      ['03.07.2026', 'KIRA', '-500,00', '1.400,00'],
+    ]);
+
+    test('başlıklar tanındı + satırlar okundu + bakiye tuttu → güvenilir', () {
+      final a = mapper.assess(good, mapper.guess(good));
+      expect(a.rolesFromHeader, isTrue);
+      expect(a.balanceVerified, isTrue);
+      expect(a.isConfident(), isTrue);
+      expect(a.incomeCount, 1);
+      expect(a.expenseCount, 2);
+    });
+
+    test('başlıksız dosya (içerik sezgisi) → sorulur', () {
+      final headerless = RawTable(good.rows.skip(1).toList());
+      final a = mapper.assess(headerless, mapper.guess(headerless));
+      expect(a.mapping.hasHeaderRow, isFalse);
+      expect(a.isConfident(), isFalse);
+      // Kullanıcı daha önce aynı düzeni onayladıysa sorulmaz.
+      expect(a.isConfident(userConfirmed: true), isTrue);
+    });
+
+    test('bakiye tutmuyorsa → sorulur', () {
+      const broken = RawTable([
+        ['Tarih', 'Açıklama', 'Tutar', 'Bakiye'],
+        ['01.07.2026', 'A', '-100,00', '900,00'],
+        ['02.07.2026', 'B', '-100,00', '500,00'],
+        ['03.07.2026', 'C', '-100,00', '100,00'],
+      ]);
+      final a = mapper.assess(broken, mapper.guess(broken));
+      expect(a.balanceMismatch, isTrue);
+      expect(a.isConfident(), isFalse);
+    });
+
+    test('tarih sırası belirsizse (03/04/2026) → sorulur, örnekle', () {
+      const us = RawTable([
+        ['Date', 'Description', 'Amount'],
+        ['03/04/2026', 'A', '-10.00'],
+        ['05/04/2026', 'B', '-20.00'],
+      ]);
+      final a = mapper.assess(us, mapper.guess(us));
+      expect(a.ambiguousDateSample, '03/04/2026');
+      expect(a.isConfident(), isFalse);
+      // Aynı düzeni daha önce onaylayan kullanıcı soruyu zaten cevapladı.
+      expect(a.isConfident(userConfirmed: true), isTrue);
+    });
+
+    test(
+        'altta tek "TOPLAM" satırı güveni bozmaz, çok sayıda okunamayan '
+        'satır bozar', () {
+      final withTotal = RawTable([
+        ...good.rows,
+        ['', 'TOPLAM', '400,00', ''],
+      ]);
+      expect(mapper.assess(withTotal, mapper.guess(withTotal)).isConfident(),
+          isTrue);
+
+      // Yanlış tarih sütunu: satırların çoğu okunamaz.
+      final wrong = mapper.guess(good).withRole(3, ColumnRole.date);
+      expect(mapper.assess(good, wrong).isConfident(), isFalse);
+    });
+  });
 }

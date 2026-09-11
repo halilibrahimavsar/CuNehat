@@ -122,6 +122,21 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// bu partiyi (yalnız az önce eklenenleri) siler. Oturum-içi (Hive alanı yok).
   List<String> _lastImportedIds = const [];
 
+  /// Son `commit`te tutarı ekstredekiyle düzeltilen defter kayıtlarının
+  /// DÜZELTME ÖNCEKİ hâlleri; "Geri al" bunları geri yazar.
+  List<TransactionEntity> _lastCorrectedOriginals = const [];
+
+  /// İncelemenin başında çekilen defter (id → kayıt). Yaklaşık eşleşmede
+  /// "tutarı düzelt" kararı, kaydın TAMAMINI (kategori, not, fiş…) koruyarak
+  /// yalnız tutarını değiştirmek için buradan okur.
+  Map<String, TransactionEntity> _ledgerById = const {};
+
+  /// Son CSV/Excel tablosu ve ona uygulanan eşleme. İnceleme ekranından
+  /// "sütunları yeniden eşle" dönüşü bunlarla kurulur; PDF/OCR yolunda
+  /// (eşlenecek tablo yok) `null`.
+  RawTable? _lastTable;
+  ColumnMapping? _lastMapping;
+
   /// Paylaş menüsünden gelen ekstrenin önbellekteki TEK KULLANIMLIK kopyası
   /// (bkz. `SharedStatementPlugin.kt`). Finansal belge: akış başa dönünce
   /// ([reset]) ya da cubit kapanınca silinir.
@@ -173,6 +188,8 @@ class BankImportCubit extends Cubit<BankImportState> {
     _verification = StatementVerification.none;
     _statementCurrency = null;
     _fromOcr = false;
+    _lastTable = null;
+    _lastMapping = null;
 
     final DetectedStatementFormat detected;
     try {
@@ -263,13 +280,25 @@ class BankImportCubit extends Cubit<BankImportState> {
         emit(const BankImportError('Dosya boş veya okunamadı.'));
         return;
       }
-      // Aynı bankadan tekrar içe aktarımda kolonları yeniden eşlemeye gerek
-      // kalmasın: son onaylanan eşleme sütun sayısı uyuyorsa başlangıç olur.
-      final saved = await _loadSavedMapping(table.columnCount);
-      emit(BankImportMapping(
-        table: table,
-        mapping: saved ?? _mapper.guess(table),
-      ));
+      final guess = _mapper.guess(table);
+      // Aynı bankadan tekrar içe aktarımda kullanıcının daha önce düzelttiği
+      // eşleme kullanılır — ama yalnız AYNI başlıklı dosyada (bkz.
+      // [_loadSavedMapping]).
+      final saved = await _loadSavedMapping(table, guess);
+      final assessment = _mapper.assess(table, saved ?? guess);
+      _lastTable = table;
+
+      // "Sütunları eşle" ekranı yalnız GEREKTİĞİNDE: başlıklar tanındı,
+      // satırlar okundu ve (varsa) bakiye tutuyorsa sonuç zaten doğrudur;
+      // ekran kullanıcıya bir şey sormadan önce çözülmüş bir işi gösterip
+      // teknik bir karar istiyordu. Gerçek dosyaların hepsi (Garanti .xls,
+      // Akbank CSV) bu kapıdan geçiyor. Yanılırsak inceleme ekranından
+      // "sütunları yeniden eşle" ile dönülür.
+      if (assessment.isConfident(userConfirmed: saved != null)) {
+        await _applyAssessed(table, assessment);
+      } else {
+        emit(BankImportMapping(table: table, assessment: assessment));
+      }
     } catch (e) {
       emit(BankImportError('Dosya okunamadı: $e'));
     }
@@ -349,6 +378,8 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// bittiği anlamına gelir, kurulum adımı normal dosya seçiciye döner.
   void reset() {
     _lastPdfRawText = null;
+    _lastTable = null;
+    _lastMapping = null;
     _reconciliation = null;
     _verification = StatementVerification.none;
     _statementCurrency = null;
@@ -380,8 +411,24 @@ class BankImportCubit extends Cubit<BankImportState> {
   void updateMapping(ColumnMapping mapping) {
     final s = state;
     if (s is BankImportMapping) {
-      emit(BankImportMapping(table: s.table, mapping: mapping));
+      emit(BankImportMapping(
+        table: s.table,
+        assessment: _mapper.assess(s.table, mapping),
+      ));
     }
+  }
+
+  /// İnceleme ekranından eşleme ekranına geri döner (CSV/Excel yolunda).
+  /// Taslaklar dosyadan YENİDEN üretileceği için incelemedeki düzenlemeler
+  /// gider — eylem bu yüzden akışın başında kullanılmak üzere.
+  void remap() {
+    final table = _lastTable;
+    final mapping = _lastMapping;
+    if (table == null || mapping == null) return;
+    emit(BankImportMapping(
+      table: table,
+      assessment: _mapper.assess(table, mapping),
+    ));
   }
 
   /// Seçili arayüz dili; okunamazsa Türkçe.
@@ -396,44 +443,79 @@ class BankImportCubit extends Cubit<BankImportState> {
 
   static const _mappingPrefsKey = 'bank_import_last_mapping';
 
-  /// Onaylanan eşlemeyi sütun sayısıyla birlikte saklar (best-effort).
-  Future<void> _saveMapping(ColumnMapping m, int columnCount) async {
+  /// Kullanıcının onayladığı eşlemeyi, dosyanın BAŞLIK İMZASIYLA birlikte
+  /// saklar (best-effort).
+  Future<void> _saveMapping(ColumnMapping m, RawTable table) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         _mappingPrefsKey,
-        jsonEncode({'columnCount': columnCount, 'mapping': m.toMap()}),
+        jsonEncode({
+          'columnCount': table.columnCount,
+          'header': _mapper.headerSignature(table, m.headerRowIndex),
+          'mapping': m.toMap(),
+        }),
       );
     } catch (_) {
       // Kalıcılık best-effort; başarısızlık akışı bozmamalı.
     }
   }
 
-  /// Kaydedilmiş eşlemeyi YALNIZ sütun sayısı bu tabloyla aynıysa döner (aynı
-  /// banka düzeni sinyali); aksi halde `null` → otomatik tahmine düşülür.
-  Future<ColumnMapping?> _loadSavedMapping(int columnCount) async {
+  /// Kaydedilmiş eşlemeyi YALNIZ bu tablonun başlığı kaydedilenle aynıysa
+  /// döner; başlık satırının KONUMU ise her zaman bu tablonun kendi
+  /// tespitinden ([guess]) alınır.
+  ///
+  /// Eskiden ölçüt yalnız sütun sayısıydı ve kayıtlı `headerRowIndex` aynen
+  /// uygulanıyordu. Ölçüldü: başlığı 6. satırda olan bir Akbank eşlemesi,
+  /// aynı sütun sayılı ama künyesiz başka bir dosyaya uygulanınca 7 gerçek
+  /// hareketten 0 taslak çıkıyordu — ilk 6 satır "başlıktan önce" sayılıp
+  /// hiç okunmuyordu ve ekranda başlık satırını değiştirecek bir kontrol
+  /// yoktu. Aynı bankanın ekstresinde künye bir satır kısalınca da ilk
+  /// hareket sessizce düşüyordu. İmzası olmayan eski kayıtlar yok sayılır.
+  Future<ColumnMapping?> _loadSavedMapping(
+    RawTable table,
+    ColumnMapping guess,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_mappingPrefsKey);
       if (raw == null) return null;
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (data['columnCount'] != columnCount) return null;
+      if (data['columnCount'] != table.columnCount) return null;
+      final header = data['header'];
+      if (header is! List) return null;
+      final current = _mapper.headerSignature(table, guess.headerRowIndex);
+      if (!listEquals(header.cast<String>(), current)) return null;
       return ColumnMapping.fromMap(
-          (data['mapping'] as Map).cast<String, dynamic>());
+              (data['mapping'] as Map).cast<String, dynamic>())
+          .copyWith(headerRowIndex: guess.headerRowIndex);
     } catch (_) {
       return null;
     }
   }
 
-  /// Kolon eşlemesini uygula → varsayılan kategori ata → dedup → inceleme.
+  /// Kullanıcının eşleme ekranında onayladığı eşlemeyi uygular (ve sonraki
+  /// aynı başlıklı dosya için hatırlar) → inceleme.
   Future<void> applyMapping() async {
     final s = state;
     if (s is! BankImportMapping) return;
+    await _saveMapping(s.mapping, s.table);
+    await _applyAssessed(s.table, s.assessment);
+  }
+
+  /// Değerlendirilmiş eşlemenin sonucunu doğrulamadan geçirip kategori/
+  /// tekrar adımlarına verir. Hem otomatik (güvenilir) yol hem kullanıcının
+  /// onayladığı eşleme buradan geçer.
+  Future<void> _applyAssessed(
+    RawTable table,
+    MappingAssessment assessment,
+  ) async {
     emit(const BankImportParsing());
+    _lastMapping = assessment.mapping;
     try {
-      final result = _mapper.apply(s.table, s.mapping);
+      final result = assessment.result;
       _reconciliation = result.reconciliation;
-      final sourceText = s.table.rows.map((r) => r.join(' ')).join('\n');
+      final sourceText = table.rows.map((r) => r.join(' ')).join('\n');
       _statementCurrency = detectDominantCurrency(sourceText);
       // CSV/Excel de PDF ile aynı doğrulama kapısından geçer: bakiye zinciri
       // + ekstrenin kendi beyanları (kayıt sayısı, devreden/kapanış bakiyesi,
@@ -447,8 +529,6 @@ class BankImportCubit extends Cubit<BankImportState> {
         sourceText: sourceText,
         englishGrouping: detectEnglishGrouping(sourceText),
       );
-      // Kullanıcının onayladığı eşlemeyi hatırla (sonraki içe aktarım için).
-      await _saveMapping(s.mapping, s.table.columnCount);
       await _afterParse(result.drafts, result.skippedRows);
     } catch (e) {
       emit(BankImportError('Eşleme uygulanamadı: $e'));
@@ -628,14 +708,31 @@ class BankImportCubit extends Cubit<BankImportState> {
       );
       res.fold((_) {}, (list) => history = list);
     }
-    _historyIndex = _guesser.buildHistoryIndex(history);
+    _historyIndex = _guesser.buildHistoryIndex(
+      history,
+      statementTexts: [for (final d in raw) d.description],
+    );
+    _ledgerById = {
+      for (final t in history)
+        if (t.id != null) t.id!: t,
+    };
 
     var drafts = [
       for (final d in raw) d.copyWith(categoryId: _guessCategory(d, d.type)),
     ];
 
     if (drafts.isNotEmpty) {
-      drafts = markDuplicateDrafts(drafts, history);
+      drafts = markDuplicateDrafts(
+        drafts,
+        history,
+        // Bakiye zinciri tutan ekstrede her satır bakiyeyi değiştirir: aynı
+        // gün aynı tutarlı iki satır İKİ gerçek harekettir, dosya içi tekrar
+        // sayılmamalı (bkz. `markDuplicateDrafts`).
+        rowsProvenDistinct:
+            _verification.status == StatementVerificationStatus.verified ||
+                _reconciliation?.status == ReconcileStatus.matched,
+        rootOf: _rootOf,
+      );
     }
 
     // Hedef cüzdanın birimi HER ZAMAN okunur: inceleme ekranı tutarları bu
@@ -664,18 +761,32 @@ class BankImportCubit extends Cubit<BankImportState> {
       sourceTruncated: _sourceTruncated,
       sourceUnresolvedCells: _sourceUnresolvedCells,
       fromOcr: _fromOcr,
+      canRemap: _lastTable != null && _lastMapping != null,
     ));
+  }
+
+  /// Kategorinin ana kategorisi (kökse kendisi). Yaklaşık tekrar tespitinde
+  /// "Market" ile "Market › Kasap" aynı kalem sayılsın diye.
+  String? _rootOf(String categoryId) {
+    for (final c in [..._expenseCats, ..._incomeCats]) {
+      if (c.id == categoryId) return c.parentId ?? c.id;
+    }
+    return categoryId;
   }
 
   // --- kategori tahmini ---
 
   /// [d]'nin [type] türü için kategori tahmini; güvenilirlik sırasıyla:
-  /// (1) kullanıcının KENDİ geçmişi ("bu markayı geçen sefer X yapmıştım"),
-  /// (2) bankanın ekstrede verdiği kendi etiketi, (3) sabit anahtar-kelime
-  /// sözlüğü. Üçü de tutmazsa BİLEREK `null` döner (türün ilk kategorisine
-  /// düşülmez — eskiden işlemlerin ~%80'i tesadüfen "Yemek" görünüp yanlış
-  /// güven veriyordu). Eşleşmeyenler inceleme ekranında elle seçilir
-  /// (bkz. `BankImportReview.uncategorizedCount`).
+  /// (1) kullanıcının KENDİ geçmişi ("bu üye işyerini geçen sefer X
+  /// yapmıştım"), (2) açıklamadaki üye işyeri (sabit sözlük), (3) bankanın
+  /// ekstrede verdiği kendi etiketi. Üçü de tutmazsa BİLEREK `null` döner
+  /// (türün ilk kategorisine düşülmez — eskiden işlemlerin ~%80'i tesadüfen
+  /// "Yemek" görünüp yanlış güven veriyordu). Eşleşmeyenler inceleme
+  /// ekranında elle seçilir (bkz. `BankImportReview.uncategorizedCount`).
+  ///
+  /// Etiket sözlükten SONRA gelir: gerçek bir Garanti ekstresinde banka tüm
+  /// kart harcamalarını "Alışveriş" etiketliyor, önde durunca Market/İlaç/
+  /// Fatura satırlarını eziyordu (bkz. `CategoryGuesser.guessFromSourceTag`).
   String? _guessCategory(ImportDraft d, TransactionTypeModel type) {
     final isIncome = type == TransactionTypeModel.income;
     final candidates = isIncome ? _incomeCats : _expenseCats;
@@ -688,12 +799,13 @@ class BankImportCubit extends Cubit<BankImportState> {
                 index: index,
                 candidates: candidates,
               )) ??
-        _guesser.guessFromSourceTag(
-          sourceTag: d.sourceTag,
-          candidates: candidates,
-        ) ??
         _guesser.guess(
           description: d.description,
+          isIncome: isIncome,
+          candidates: candidates,
+        ) ??
+        _guesser.guessFromSourceTag(
+          sourceTag: d.sourceTag,
           isIncome: isIncome,
           candidates: candidates,
         );
@@ -703,26 +815,71 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// tahmin tutmuyorsa kategori `null`'a dönmeli, `copyWith` ise
   /// `categoryId ?? this.categoryId` ile eski (artık yanlış türe ait)
   /// kategoriyi korurdu.
-  ImportDraft _retyped(ImportDraft d, TransactionTypeModel type) => ImportDraft(
-        date: d.date,
-        description: d.description,
-        amount: d.amount,
-        type: type,
-        categoryId: _guessCategory(d, type),
-        sourceTag: d.sourceTag,
-        reference: d.reference,
-        isDuplicate: d.isDuplicate,
-        selected: d.selected,
-      );
+  ///
+  /// Defterle eşleşmesi varsa DÜŞER: eşleşme eski türdeki bir kayıtlaydı
+  /// (gider ↔ gider), tür çevrilince artık o kaydın tekrarı değildir. Satır
+  /// da yeniden seçilir — seçimsiz gelmesinin tek nedeni o eşleşmeydi.
+  /// Dosya içi eş (aynı dosyada ikinci kez geçme) türden bağımsızdır, kalır.
+  ImportDraft _retyped(ImportDraft d, TransactionTypeModel type) {
+    final match = d.duplicateOf;
+    final keepMatch = match != null && match.kind == DuplicateKind.withinFile;
+    final dropsLedgerMatch = match != null && !keepMatch;
+    return ImportDraft(
+      date: d.date,
+      description: d.description,
+      amount: d.amount,
+      type: type,
+      categoryId: _guessCategory(d, type),
+      sourceTag: d.sourceTag,
+      reference: d.reference,
+      duplicateOf: keepMatch ? match : null,
+      selected: dropsLedgerMatch ? true : d.selected,
+    );
+  }
 
   // --- inceleme mutasyonları ---
 
   void toggleDraft(int i) => _mutate(
         (d) => [
           for (var k = 0; k < d.length; k++)
-            k == i ? d[k].copyWith(selected: !d[k].selected) : d[k]
+            k == i ? _withSelected(d[k], !d[k].selected) : d[k]
         ],
       );
+
+  /// Seçim değişimi. Satır EKLENECEKSE eşleşen kaydı düzeltme kararı düşer:
+  /// ya yeni kayıt açılır ya eskisi düzeltilir, ikisi birden aynı harcamayı
+  /// iki kez sayardı.
+  static ImportDraft _withSelected(ImportDraft d, bool selected) => d.copyWith(
+        selected: selected,
+        correctExisting: selected ? false : d.correctExisting,
+      );
+
+  /// Yaklaşık eşleşen satırda "aynı harcama, defterdekinin tutarını
+  /// ekstredekiyle düzelt" kararı. Açılınca satır eklenmez (yeni kayıt
+  /// açılmaz); yalnız eşleşmesi düzeltilebilir olan satırda geçerlidir
+  /// (bkz. `DuplicateMatch.canCorrectAmount`).
+  void setCorrectExisting(int i, bool value) => _mutate((d) => [
+        for (var k = 0; k < d.length; k++)
+          if (k == i && (d[k].duplicateOf?.canCorrectAmount ?? false))
+            d[k].copyWith(
+              correctExisting: value,
+              selected: value ? false : d[k].selected,
+            )
+          else
+            d[k],
+      ]);
+
+  /// Düzeltilebilir TÜM yaklaşık eşleşmelerde (kullanıcının "farklı işlem"
+  /// deyip eklemeye aldıkları hariç) tutar düzeltmesini açar.
+  void correctAllApproximate() => _mutate((d) => [
+        for (final x in d)
+          if (!x.selected &&
+              (x.duplicateOf?.isApproximate ?? false) &&
+              x.duplicateOf!.canCorrectAmount)
+            x.copyWith(correctExisting: true)
+          else
+            x,
+      ]);
 
   void setDraftCategory(int i, String categoryId) => _mutate(
         (d) => [
@@ -750,7 +907,7 @@ class BankImportCubit extends Cubit<BankImportState> {
       ]);
 
   void setAllSelected(bool value) =>
-      _mutate((d) => [for (final x in d) x.copyWith(selected: value)]);
+      _mutate((d) => [for (final x in d) _withSelected(x, value)]);
 
   /// Tüm taslakları tek türe (gider/gelir) çevirir. Tek pozitif "Tutar"
   /// sütunlu (işaretsiz) ekstrelerde tüm satırlar yanlışlıkla aynı yöne
@@ -769,7 +926,7 @@ class BankImportCubit extends Cubit<BankImportState> {
   void setDraftSelected(int i, bool value) => _mutate(
         (d) => [
           for (var k = 0; k < d.length; k++)
-            k == i ? d[k].copyWith(selected: value) : d[k]
+            k == i ? _withSelected(d[k], value) : d[k]
         ],
       );
 
@@ -814,19 +971,25 @@ class BankImportCubit extends Cubit<BankImportState> {
     if (s is BankImportReview) emit(s.copyWith(drafts: f(s.drafts)));
   }
 
-  /// Seçili taslakları mevcut cüzdana yazar. Para zinciri: döngü sonunda TEK
+  /// Seçili taslakları mevcut cüzdana yazar ve "tutarı düzelt" denen
+  /// eşleşmelerin defter kaydını düzeltir. Para zinciri: döngü sonunda TEK
   /// syncBalance + TEK notify (O(N²) ve bildirim fırtınası önlenir).
   Future<void> commit() async {
     final s = state;
     if (s is! BankImportReview) return;
     final selected = s.drafts.where((d) => d.selected).toList();
-    if (selected.isEmpty) {
+    final corrections = [
+      for (final d in s.drafts)
+        if (d.correctExisting && !d.selected) d,
+    ];
+    if (selected.isEmpty && corrections.isEmpty) {
       emit(await _buildDone(
           added: 0, totalDrafts: s.drafts.length, committed: const []));
       return;
     }
 
-    emit(BankImportCommitting(done: 0, total: selected.length));
+    final total = selected.length + corrections.length;
+    emit(BankImportCommitting(done: 0, total: total));
     var added = 0;
     final importedIds = <String>[];
     for (var i = 0; i < selected.length; i++) {
@@ -844,10 +1007,26 @@ class BankImportCubit extends Cubit<BankImportState> {
         importedIds.add(id);
       });
       if (i % 10 == 0 || i == selected.length - 1) {
-        emit(BankImportCommitting(done: i + 1, total: selected.length));
+        emit(BankImportCommitting(done: i + 1, total: total));
       }
     }
     _lastImportedIds = importedIds;
+
+    final originals = <TransactionEntity>[];
+    for (final draft in corrections) {
+      final original = _ledgerById[draft.duplicateOf?.existingId];
+      if (original == null || original.isSystem) continue;
+      // Yalnız TUTAR (ve bankanın numarası) değişir: kategori, not, tarih/saat
+      // ve fiş kullanıcınındır. Referans yazılınca aynı hareket bir sonraki
+      // içe aktarımda kesin eşleşmeyle bulunur.
+      final corrected = original.copyWith(
+        amount: draft.amount,
+        reference: draft.reference,
+      );
+      final res = await _txRepo.updateTransaction(corrected);
+      res.fold((_) {}, (_) => originals.add(original));
+    }
+    _lastCorrectedOriginals = originals;
 
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
@@ -856,6 +1035,7 @@ class BankImportCubit extends Cubit<BankImportState> {
       added: added,
       totalDrafts: s.drafts.length,
       committed: selected,
+      corrected: originals.length,
     ));
   }
 
@@ -865,10 +1045,16 @@ class BankImportCubit extends Cubit<BankImportState> {
   /// (yeni dosya/`reset`) geri alma imkânı da doğal olarak biter.
   Future<void> undoImport() async {
     final ids = _lastImportedIds;
-    if (ids.isEmpty) return;
+    final originals = _lastCorrectedOriginals;
+    if (ids.isEmpty && originals.isEmpty) return;
     _lastImportedIds = const [];
+    _lastCorrectedOriginals = const [];
     for (final id in ids) {
       await _txRepo.deleteTransaction(id);
+    }
+    // Düzeltilen kayıtlar eski tutarlarına (ve referanslarına) döner.
+    for (final original in originals) {
+      await _txRepo.updateTransaction(original);
     }
     await _metrics.syncBalance(_walletId);
     _notifier.notify(userId: _userId, walletId: _walletId);
@@ -904,11 +1090,16 @@ class BankImportCubit extends Cubit<BankImportState> {
     required List<ImportDraft> drafts,
     List<CategoryEntity> expenseCategories = const [],
     List<CategoryEntity> incomeCategories = const [],
+    List<TransactionEntity> ledger = const [],
   }) {
     _userId = userId;
     _walletId = walletId;
     _expenseCats = expenseCategories;
     _incomeCats = incomeCategories;
+    _ledgerById = {
+      for (final t in ledger)
+        if (t.id != null) t.id!: t,
+    };
     emit(BankImportReview(
       drafts: drafts,
       expenseCategories: expenseCategories,
@@ -925,6 +1116,7 @@ class BankImportCubit extends Cubit<BankImportState> {
     required int added,
     required int totalDrafts,
     required List<ImportDraft> committed,
+    int corrected = 0,
   }) async {
     final walletRes = await _metrics.walletRepository.getWalletById(_walletId);
     final balance = walletRes.fold((_) => 0.0, (w) => w?.balance ?? 0.0);
@@ -938,7 +1130,8 @@ class BankImportCubit extends Cubit<BankImportState> {
 
     return BankImportDone(
       added: added,
-      skipped: totalDrafts - added,
+      corrected: corrected,
+      skipped: totalDrafts - added - corrected,
       walletId: _walletId,
       userId: _userId,
       balance: balance,

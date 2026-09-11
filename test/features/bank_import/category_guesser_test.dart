@@ -278,6 +278,7 @@ void main() {
       expect(
         guesser.guessFromSourceTag(
           sourceTag: 'Fatura Ödemesi',
+          isIncome: false,
           candidates: defaultExpenseCats,
         ),
         'id-Fatura',
@@ -285,10 +286,119 @@ void main() {
       expect(
         guesser.guessFromSourceTag(
           sourceTag: 'Para Çekme',
+          isIncome: false,
           candidates: defaultExpenseCats,
         ),
         isNull,
       );
+      expect(
+        guesser.guessFromSourceTag(
+          sourceTag: 'Maaş',
+          isIncome: true,
+          candidates: defaultIncomeCats,
+        ),
+        'id-Maaş',
+      );
+    });
+
+    test(
+        'REGRESYON: "Alışveriş" etiketi bir KANALDIR, kategoriye çevrilmez '
+        '(gerçek Garanti ekstresi)', () {
+      // Garanti bütün kart harcamalarını "Alışveriş" etiketliyor: BİM, eczane
+      // ve telefon faturası dahil. Etiket "Alışveriş" kategorisine çevrilince
+      // 85 satırın 50'si oraya düşüyor, sözlüğün doğru bildiği Market/İlaç/
+      // Fatura eziliyordu.
+      expect(
+        guesser.guessFromSourceTag(
+          sourceTag: 'Alışveriş',
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        isNull,
+      );
+    });
+
+    test('alt hedef, anahtar kelimesi kısa olsa da kendi ana hedefini yener',
+        () {
+      // "igdas" (5) "fatura" (6)'dan kısa; uzunluk kuralı satırı genel
+      // "Fatura"ya düşürüyordu. Gerçek Garanti ekstresi: 6 satır
+      // "AVEA COM TR FATURA" hep "Fatura" köküne gidiyordu.
+      expect(
+        guesser.guess(
+          description: 'IGDAS FATURA',
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        'id-${_tr('bills.gas')}',
+      );
+      expect(
+        guesser.guess(
+          description: 'SATIŞ-517040*4626-AVEA COM TR FATURA',
+          isIncome: false,
+          candidates: defaultExpenseCats,
+        ),
+        'id-${_tr('bills.phone')}',
+      );
+    });
+
+    test('ölçülmüş genişletme: gerçek ekstrelerde kategorisiz kalan satırlar',
+        () {
+      String? g(String d, {bool income = false}) => guesser.guess(
+            description: d,
+            isIncome: income,
+            candidates: income ? defaultIncomeCats : defaultExpenseCats,
+          );
+      // Gerçek QNB/Garanti açıklamaları (kişi adları çıkarıldı).
+      expect(g('SATIŞ-517040*4626-HAKMAR MAĞAZACILIK LTD.Ş'), 'id-Market');
+      expect(g('SATIŞ-517040*4626-MACGAL GIDA INS. TEK'), 'id-Market');
+      expect(
+          g('POS Kart İşlemleri - 000000000703239-PEGO GIDA VE UNLU '
+              'MAMULLEISTANBUL TR Pos satış.'),
+          'id-Market');
+      expect(
+          g('POS Kart İşlemleri - 1802387948 -HAS CIGKOFTE ISTANBUL TR '
+              'Pos satış.'),
+          'id-Yemek');
+      expect(
+          g('POS Kart İşlemleri - 000000002543535-TARIHI BAGDETLI '
+              'BOREKCISIISTANBUL TR Pos satış.'),
+          'id-Yemek');
+      expect(
+          g('POS Kart İşlemleri - 3242572 -MEG OTOMOTIV ISTANBUL TR '
+              'Pos satış.'),
+          'id-Ulaşım');
+      expect(g('SATIŞ-517040*4626-DİGİTURK-212 473 73 73'),
+          'id-${_tr('entertainment.subscriptions')}');
+      expect(
+          g('MB Ödeme İşlemleri - 7019233814 - Türk Telekom İnternet/TV '
+              '(TTNET) tahsilatı. Mobil Bankacılık.'),
+          'id-${_tr('bills.internet')}');
+      expect(
+          g('MB Ödeme İşlemleri - 5380283083 - Türk Telekom Mobil '
+              '(TT Mobil)-Faturalı Hat tahsilatı.'),
+          'id-${_tr('bills.phone')}');
+      expect(
+          g('MB Transfer İşlemleri - 3.3.1 EFT Ücreti'), 'id-${_tr('fees')}');
+      expect(g('MB Transfer İşlemleri - BSMV Tahsilatı'), 'id-${_tr('fees')}');
+      expect(g('KESİNTİ VE EKLERİ-'), 'id-${_tr('fees')}');
+      expect(g('İADE -517040******4626', income: true),
+          'id-${_tr('otherIncome')}');
+      // Kanal satırları bilerek kategorisiz kalır.
+      expect(g('ATM PARA ÇEKME-5170********4626-ATM Kodu:01582CRS222'), isNull);
+      expect(g('MOBIL-FAST-578000367'), isNull);
+    });
+
+    test('kelime içindeki alt dizi yanlış eşleşmez (word-start anahtarlar)',
+        () {
+      String? g(String d) => guesser.guess(
+            description: d,
+            isIncome: false,
+            candidates: defaultExpenseCats,
+          );
+      // "lastik" PLASTİK içinde, "gida" SAGIDA içinde geçiyor.
+      expect(g('YILDIZ PLASTIK AMBALAJ'), isNull);
+      expect(g('AYSAGIDA TEKSTIL'), isNull);
+      expect(g('OZLEM LASTIKCI'), 'id-Ulaşım');
     });
   });
 

@@ -201,6 +201,148 @@ void main() {
     });
   });
 
+  group('yaklaşık eşleşmede "tutarı düzelt"', () {
+    // Kullanıcı BİM alışverişini elle 910 TL girmiş; banka 913,15 diyor.
+    final manual = TransactionEntity(
+      id: 'manual-1',
+      userId: 'u1',
+      walletId: 'w1',
+      title: 'bim',
+      tag: 'cat-market',
+      amount: 910,
+      date: DateTime(2026, 9, 5, 14, 32),
+      type: TransactionTypeModel.expense,
+      receiptFileName: 'fis.jpg',
+    );
+    final bankRow = ImportDraft(
+      date: DateTime(2026, 9, 5),
+      description: 'BIM MAGAZALAR A.S. USKUDAR',
+      amount: 913.15,
+      type: TransactionTypeModel.expense,
+      categoryId: 'cat-market',
+      reference: 'DK-77',
+      selected: false,
+      correctExisting: true,
+      duplicateOf: DuplicateMatch(
+        kind: DuplicateKind.approximate,
+        existingId: 'manual-1',
+        existingTitle: 'bim',
+        existingTag: 'cat-market',
+        existingAmount: 910,
+        existingDate: DateTime(2026, 9, 5, 14, 32),
+        amountDelta: 3.15,
+        amountPattern: AmountPattern.roundedSmall,
+        sharedWord: 'bim',
+        categoryMatches: true,
+      ),
+    );
+
+    test('yeni kayıt AÇMAZ; eldekinin yalnız tutarını (+referans) düzeltir',
+        () async {
+      final cubit = build();
+      when(() => txRepo.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [bankRow],
+        ledger: [manual],
+      );
+
+      await cubit.commit();
+
+      verifyNever(() => txRepo.addTransaction(any()));
+      final written = verify(() => txRepo.updateTransaction(captureAny()))
+          .captured
+          .single as TransactionEntity;
+      expect(written.id, 'manual-1');
+      expect(written.amount, 913.15);
+      expect(written.reference, 'DK-77');
+      // Kullanıcının verisi korunur: başlık, kategori, saat, fiş.
+      expect(written.title, 'bim');
+      expect(written.tag, 'cat-market');
+      expect(written.date, DateTime(2026, 9, 5, 14, 32));
+      expect(written.receiptFileName, 'fis.jpg');
+      verify(() => metrics.syncBalance('w1')).called(1);
+
+      final done = cubit.state as BankImportDone;
+      expect(done.added, 0);
+      expect(done.corrected, 1);
+    });
+
+    test('geri alma düzeltilen kaydı eski hâline döndürür', () async {
+      final cubit = build();
+      when(() => txRepo.updateTransaction(any()))
+          .thenAnswer((_) async => const Right(null));
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [bankRow],
+        ledger: [manual],
+      );
+      await cubit.commit();
+
+      await cubit.undoImport();
+
+      final writes = verify(() => txRepo.updateTransaction(captureAny()))
+          .captured
+          .cast<TransactionEntity>();
+      expect(writes.length, 2);
+      expect(writes.last, manual, reason: 'eski tutar ve referanssız hâl');
+      expect(cubit.state, isA<BankImportInitial>());
+    });
+
+    test('satır yeniden seçilince (farklı işlem) düzeltme kararı düşer',
+        () async {
+      final cubit = build();
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [bankRow.copyWith(categoryId: 'cat-market')],
+        ledger: [manual],
+      );
+
+      cubit.toggleDraft(0);
+
+      final d = (cubit.state as BankImportReview).drafts.single;
+      expect(d.selected, isTrue);
+      expect(d.correctExisting, isFalse,
+          reason: 'aynı harcama iki kez sayılmasın');
+    });
+
+    test('sistem kaydıyla (borç kuplajı) eşleşme düzeltilemez', () async {
+      final cubit = build();
+      final system = DuplicateMatch(
+        kind: DuplicateKind.approximate,
+        existingId: 'sys-1',
+        existingTitle: 'Borç Ödemesi',
+        existingAmount: 2500,
+        existingDate: DateTime(2026, 9, 5),
+        existingIsSystem: true,
+        amountDelta: 0.5,
+      );
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          ImportDraft(
+            date: DateTime(2026, 9, 5),
+            description: 'KREDI TAKSIT',
+            amount: 2500.5,
+            type: TransactionTypeModel.expense,
+            selected: false,
+            duplicateOf: system,
+          ),
+        ],
+      );
+
+      cubit.setCorrectExisting(0, true);
+
+      expect((cubit.state as BankImportReview).drafts.single.correctExisting,
+          isFalse);
+    });
+  });
+
   group('undoImport', () {
     test('yalnız az önce eklenenleri siler + resync + notify + başa döner',
         () async {

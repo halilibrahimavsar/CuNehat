@@ -1126,17 +1126,6 @@
   "bankImportCommitting": "Adding…",
   "bankImportClose": "Close",
   "bankImportRetry": "Try again",
-  "bankImportMappingTitle": "Map columns",
-  "bankImportColDate": "Date column",
-  "bankImportColDesc": "Description column",
-  "bankImportColAmount": "Amount column",
-  "bankImportColDebit": "Debit (expense)",
-  "bankImportColCredit": "Credit (income)",
-  "bankImportSignMode": "Amount sign",
-  "bankImportSignSingle": "Single column (− expense)",
-  "bankImportSignDebitCredit": "Debit / Credit",
-  "bankImportDateFormat": "Date format",
-  "bankImportDateAuto": "Auto",
   "bankImportContinue": "Continue",
   "bankImportColumnN": "Column {n}",
   "@bankImportColumnN": {
@@ -1146,12 +1135,8 @@
       }
     }
   },
-  "bankImportPreviewTitle": "Preview (first transactions)",
   "bankImportRoleDate": "Date",
   "bankImportRoleDesc": "Description",
-  "bankImportRoleAmount": "Amount",
-  "bankImportRoleDebit": "Debit",
-  "bankImportRoleCredit": "Credit",
   "bankImportRoleBalance": "Balance",
   "bankImportEditDescTitle": "Edit description",
   "bankImportEditDescLabel": "Description",
@@ -1200,7 +1185,6 @@
   "bankImportSelectAll": "All",
   "bankImportDeselectAll": "None",
   "bankImportStepperMode": "Review one by one",
-  "bankImportDuplicate": "Possible duplicate",
   "bankImportStepSkip": "Skip",
   "bankImportStepAdd": "Add",
   "bankImportStepAddRest": "Add the rest",
@@ -1405,6 +1389,174 @@
   },
   "bankImportShowUncategorized": "Show",
   "bankImportStepNeedsCategory": "Pick a category for the uncategorized rows first.",
+  "bankImportMapTitle": "How should we read this file?",
+  "bankImportMapHint": "We tried to recognise the columns but aren't sure. If the transactions below look right, continue; if not, tap a column and tell us what it is.",
+  "bankImportMapResultTitle": "This is how it will be read",
+  "bankImportMapRowsRead": "{count} transactions · {income} in, {expense} out",
+  "@bankImportMapRowsRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "income": {
+        "type": "int"
+      },
+      "expense": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportMapSkipped": "{count} rows couldn't be read (no date or amount)",
+  "@bankImportMapSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportMapBalanceOk": "Verified against the balance column",
+  "bankImportMapBalanceBad": "The balance doesn't add up: the amount column or its sign may be wrong",
+  "bankImportMapAllIncome": "Every row looks like money in. If the amounts have no sign, pick the money out / money in columns, or use “Set all: Expense” in the review.",
+  "bankImportMapNeedDate": "Pick the date column",
+  "bankImportMapNeedDesc": "Pick the description column",
+  "bankImportMapNeedAmount": "Pick the amount column (or the money out / money in columns)",
+  "bankImportMapNoRows": "No transactions can be read with this choice.",
+  "bankImportMapColumnsTitle": "Columns",
+  "bankImportMapColumnsHint": "Tap a column to change what it is.",
+  "bankImportMapRoleSheetTitle": "What is the “{column}” column?",
+  "@bankImportMapRoleSheetTitle": {
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportMapDateQuestion": "Dates look like “{sample}”. Which is it?",
+  "@bankImportMapDateQuestion": {
+    "placeholders": {
+      "sample": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportRoleDateDesc": "When the transaction happened",
+  "bankImportRoleDescDesc": "What it was, or who it was with",
+  "bankImportRoleAmountLabel": "Amount (+ / −)",
+  "bankImportRoleAmountDesc": "One column; negative amounts are spending",
+  "bankImportRoleDebitLabel": "Money out",
+  "bankImportRoleDebitDesc": "Only money leaving (banks may call it “Debit”)",
+  "bankImportRoleCreditLabel": "Money in",
+  "bankImportRoleCreditDesc": "Only money coming in (banks may call it “Credit”)",
+  "bankImportRoleBalanceDesc": "Balance after each transaction; used to verify",
+  "bankImportRoleTag": "Bank's category",
+  "bankImportRoleTagDesc": "The bank's own category label; helps with guessing",
+  "bankImportRoleReference": "Transaction number",
+  "bankImportRoleReferenceDesc": "Receipt/reference no.; finds duplicates exactly",
+  "bankImportRoleIgnore": "Don't use",
+  "bankImportRoleIgnoreDesc": "Ignore this column",
+  "bankImportRemap": "Re-map columns",
+  "bankImportDupExact": "Already recorded",
+  "bankImportDupWithinFile": "Appears twice in this file",
+  "bankImportDupApproxStrong": "Most likely an entry you added by hand",
+  "bankImportDupApproxPossible": "Looks like an entry you added by hand",
+  "bankImportDupSystem": "Matches one of your debt/investment entries",
+  "bankImportDupReasonSameAmount": "same amount",
+  "bankImportDupReasonCents": "{delta} off · cents left out",
+  "@bankImportDupReasonCents": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupReasonRounded": "{delta} off · rounded",
+  "@bankImportDupReasonRounded": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupReasonSameDay": "same day",
+  "bankImportDupReasonDays": "{days, plural, =1{1 day apart} other{{days} days apart}}",
+  "@bankImportDupReasonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDupReasonWord": "“{word}” in both",
+  "@bankImportDupReasonWord": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupReasonCategory": "same category",
+  "bankImportDupWillSkip": "Won't be added.",
+  "bankImportDupWillAdd": "Will be added anyway.",
+  "bankImportDupWillCorrect": "Won't be added; the entry will be set to {amount}.",
+  "@bankImportDupWillCorrect": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupAddAnywayExact": "Add anyway",
+  "bankImportDupAddAnyway": "It's different, add it",
+  "bankImportDupSkip": "Same one, skip it",
+  "bankImportDupCorrect": "Set amount to {amount}",
+  "@bankImportDupCorrect": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bankImportDupCorrectUndo": "Don't correct",
+  "bankImportApproxWarning": "{count} rows look like entries you added by hand, so they won't be added. It's a guess — each row shows why.",
+  "@bankImportApproxWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportCorrectAll": "Correct {count} matched entries to the statement amount",
+  "@bankImportCorrectAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportCorrectionsPending": "{count} existing entries will be corrected to the statement amount.",
+  "@bankImportCorrectionsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportApplyCorrections": "Apply corrections ({count})",
+  "@bankImportApplyCorrections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bankImportDoneCorrected": "{count} entries were corrected to the statement amount.",
+  "@bankImportDoneCorrected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "bankStatementSectionHeader": "BANK STATEMENT",
   "sifirla": "Reset",
   "tumTurlariSifirlaOnayMesaji": "All intro tours will be reset and shown again. Do you want to continue?",
@@ -2367,6 +2519,7 @@
   "catSeedPersonalHairdresser": "Hairdresser",
   "catSeedPersonalCosmetics": "Cosmetics",
   "catSeedInvestment": "Investment",
+  "catSeedFees": "Bank Fees",
   "catSeedOther": "Other",
   "catSeedSalary": "Salary",
   "catSeedSideIncome": "Side Income",

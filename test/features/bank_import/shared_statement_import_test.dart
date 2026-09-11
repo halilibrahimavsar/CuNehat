@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cunehat/core/services/transactions_changed_notifier.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
 import 'package:cunehat/core/services/wallet_metrics_service.dart';
+import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
 import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/pdf_rasterizer.dart';
@@ -77,7 +78,10 @@ void main() {
   late _MockMapper mapper;
   late _MockCategoryRepo categoryRepo;
 
-  setUpAll(() => registerFallbackValue(const RawTable([])));
+  setUpAll(() {
+    registerFallbackValue(const RawTable([]));
+    registerFallbackValue(const ColumnMapping(dateCol: -1, descCol: -1));
+  });
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -135,6 +139,26 @@ void main() {
     );
     when(() => reader.readCsv(any())).thenAnswer((_) async => table);
     when(() => mapper.guess(any())).thenReturn(mapping);
+    // Güvenilmeyen bir eşleme: akış eşleme adımında durmalı (güvenilir
+    // eşlemede adım atlanır — o yol `bank_import_mapping_flow_test`te).
+    when(() => mapper.assess(any(), any()))
+        .thenAnswer((inv) => MappingAssessment(
+              mapping: inv.positionalArguments[1] as ColumnMapping,
+              result: const MappingResult(
+                [],
+                0,
+                BalanceReconciliation(
+                  status: ReconcileStatus.notAvailable,
+                  derivedSigned: [],
+                  checked: 0,
+                  matched: 0,
+                ),
+                [],
+              ),
+              rolesFromHeader: false,
+              ambiguousDateSample: null,
+              dataRowCount: 1,
+            ));
 
     final cubit = build();
     await cubit.parseFile(

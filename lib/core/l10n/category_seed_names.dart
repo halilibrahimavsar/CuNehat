@@ -102,6 +102,7 @@ String _nameOf(String key, AppLocalizations l10n) => switch (key) {
       'personal.hairdresser' => l10n.catSeedPersonalHairdresser,
       'personal.cosmetics' => l10n.catSeedPersonalCosmetics,
       'investment' => l10n.catSeedInvestment,
+      'fees' => l10n.catSeedFees,
       'other' => l10n.catSeedOther,
       'salary' => l10n.catSeedSalary,
       'sideIncome' => l10n.catSeedSideIncome,

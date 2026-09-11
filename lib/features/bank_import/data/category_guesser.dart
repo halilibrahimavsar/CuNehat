@@ -107,6 +107,7 @@ class CategoryGuesser {
       'kahve dunyasi',
       'simit saray',
       'gloria jean',
+      'pastane',
     ],
     'dining.takeaway': [
       'yemeksepeti',
@@ -121,6 +122,17 @@ class CategoryGuesser {
       ' kfc ',
       'domino',
       'popeyes',
+      // Üye işyeri adında yemeğin TÜRÜ geçen küçük işletmeler (gerçek QNB
+      // ekstresi: "HAS CIGKOFTE", "TARIHI BAGDETLI BOREKCISI"). Marka
+      // listesi bunları hiçbir zaman kapsayamaz.
+      'cigkofte',
+      'borek',
+      'lahmacun',
+      ' pide',
+      'kofte',
+      'burger',
+      ' bufe',
+      ' yemek ',
     ],
     'transport.fuel': [
       'shell',
@@ -133,6 +145,11 @@ class CategoryGuesser {
       'benzin',
       'motorin',
       ' lpg ',
+      ' bp ',
+      'lukoil',
+      'alpet',
+      'sunpet',
+      'kadoil',
     ],
     'transport.taxi': [
       'taksi',
@@ -149,7 +166,21 @@ class CategoryGuesser {
       'ego kart',
     ],
     'transport.parking': ['otopark'],
-    'transport': ['otoyol', ' hgs ', ' ogs ', 'kgm gecis'],
+    'transport': [
+      'otoyol',
+      ' hgs ',
+      ' ogs ',
+      'kgm gecis',
+      // Araç bakımı ve yol: gerçek ekstrede "SUDE MOTOR", "MEG OTOMOTIV".
+      'otomotiv',
+      ' motor ',
+      'oto yikama',
+      ' lastik',
+      'nakliye',
+      'turk hava yollari',
+      'pegasus',
+      'obilet',
+    ],
     // Market (gıda/temel ihtiyaç) ile Alışveriş (giyim/elektronik/genel)
     // bilerek AYRI: ikisi tek kovada toplanınca aylık gıda harcaması
     // görünmez oluyor ve o kaleme bütçe koymak imkânsızlaşıyordu.
@@ -165,7 +196,17 @@ class CategoryGuesser {
       'banabi',
       'tarim kredi',
       'metro market',
+      'hakmar',
+      // "X GIDA" bir gıda işletmesinin ticari adıdır; gerçek ekstrelerde
+      // beş ayrı üye işyeri böyle geçiyordu (MACGAL GIDA, SEYHANLAR GIDA…).
+      ' gida',
+      'unlu mamul',
+      ' firin',
+      'kuruyemis',
+      'sarkuteri',
     ],
+    'groceries.butcher': [' kasap', 'et ve et urunleri'],
+    'groceries.produce': ['manav'],
     'housing.rent': ['kira odeme', ' kira ', 'kiraci'],
     'housing.dues': ['aidat', 'site yonetim', 'apartman yonetim'],
     'education.school': [
@@ -185,8 +226,13 @@ class CategoryGuesser {
       'tellcom',
       ' ttnet ',
       'internet faturasi',
+      'kablonet',
+      'millenicom',
+      // "Türk Telekom İnternet/TV (TTNET)": `turk telekom` (Telefon) daha
+      // uzun olduğu için `ttnet`i yeniyordu; bu anahtar ondan da uzun.
+      'turk telekom internet',
     ],
-    'bills.phone': ['turk telekom', 'turkcell', 'vodafone'],
+    'bills.phone': ['turk telekom', 'turkcell', 'vodafone', ' avea '],
     'bills': ['fatura'],
     'entertainment.subscriptions': [
       'netflix',
@@ -196,6 +242,11 @@ class CategoryGuesser {
       ' blutv ',
       ' exxen ',
       'abonelik',
+      'digiturk',
+      'disney',
+      'google play',
+      'icloud',
+      'apple com',
     ],
     'entertainment.games': ['playstation', 'steam', 'epic games', ' riot '],
     'entertainment.cinema': [
@@ -206,30 +257,50 @@ class CategoryGuesser {
       'konser',
     ],
     'health.pharmacy': ['eczane'],
-    'health.doctor': ['hastane', 'klinik', 'poliklinik', 'laboratuvar'],
+    'health.doctor': [
+      'hastane',
+      'klinik',
+      'klinigi',
+      'poliklinik',
+      'laboratuvar',
+      'tip merkezi',
+      'dis hekimi',
+    ],
     'health.fitness': ['spor salonu', 'fitness', 'macfit', 'gym'],
     'health': [' saglik '],
     'personal.hairdresser': ['kuafor', 'berber'],
     'personal.cosmetics': ['gratis', 'watsons', 'rossmann'],
     'shopping.clothing': [
       'lc waikiki',
+      ' lcw ',
       'defacto',
       ' koton ',
       ' zara ',
       'boyner',
       'decathlon',
+      ' flo ',
     ],
     'shopping.electronics': ['teknosa', 'mediamarkt', 'vatan bilgisayar'],
-    'shopping.homegoods': [' ikea ', 'bellona', 'istikbal'],
+    'shopping.homegoods': [
+      ' ikea ',
+      'bellona',
+      'istikbal',
+      'koctas',
+      'english home',
+    ],
     'shopping': [
       'trendyol',
       'hepsiburada',
       ' n11 ',
       'amazon',
+      'ciceksepeti',
+      'pazarama',
       // Marka değil, bankaların yazdığı JENERİK karşılıklar. Ekstrelerin
       // çoğu üye işyeri adı yerine bunu basıyor; sözlük yalnız markadan
       // ibaret kalınca bu satırlar kategorisiz düşüyordu.
       'kirtasiye',
+      'outlet',
+      'ucuzluk',
     ],
     // Gider tarafındaki `Yatırım`, ekstredeki hisse/fon/altın ALIMIDIR:
     // cüzdandan çıkan paradır. (Uygulama içinden yapılan yatırım hareketleri
@@ -241,13 +312,33 @@ class CategoryGuesser {
       'borsa istanbul',
       'hisse senedi',
     ],
+    // Bankanın kendi kestiği ücret ve vergiler. Gerçek bir QNB ekstresinde
+    // 164 satırın 16'sı buydu ("3.3.1 EFT Ücreti" + ardındaki "BSMV
+    // Tahsilatı" çiftleri) ve hepsi kategorisiz düşüp tek tek soruluyordu.
+    'fees': [
+      'eft ucreti',
+      'havale ucreti',
+      'fast ucreti',
+      'bsmv',
+      'kkdf',
+      'kesinti ve ekleri',
+      'hesap isletim',
+      'kart aidati',
+      'kart ucreti',
+      'komisyon',
+      'masraf',
+    ],
   };
 
   static const Map<String, List<String>> _incomeGroups = {
     'salary': ['maas', 'salary', 'bordro'],
     'sideIncome.bonus': ['prim odemesi', 'ikramiye'],
     'sideIncome': ['ek gelir'],
-    'rentalIncome': ['kira geliri'],
+    'rentalIncome': ['kira geliri', ' kira '],
+    'investmentIncome': ['temettu', 'kar payi', 'faiz', 'yatirim'],
+    // İade ve iptal ekstrede GELİR satırıdır (kart harcamasının geri
+    // dönüşü). Gerçek ekstrelerde "İADE", "... Pos satış. İptali".
+    'otherIncome': ['iade', 'iptali'],
   };
 
   /// Sözlüğün hedefleri. Başlangıç paketiyle olan sözleşme bunlar üzerinden
@@ -257,7 +348,6 @@ class CategoryGuesser {
       _expenseGroups.keys.map(parseCategoryTarget);
   static Iterable<CategoryTarget> get incomeTargets =>
       _incomeGroups.keys.map(parseCategoryTarget);
-  static Iterable<String> get tagGroupTargets => _tagGroups.values;
 
   /// Sözlüğün ham hâli — yalnız sözleşme testleri için (aynı anahtar kelimenin
   /// iki hedefte birden yazılmadığını doğrular). Eşleşme her zaman
@@ -280,6 +370,7 @@ class CategoryGuesser {
     'entertainment': 'movie',
     'personal': 'face',
     'investment': 'trending_up',
+    'fees': 'request_quote',
     'salary': 'payments',
     'sideIncome': 'savings',
     'rentalIncome': 'apartment',
@@ -298,39 +389,31 @@ class CategoryGuesser {
     return resolveTarget(parseCategoryTarget(matched), candidates)?.id;
   }
 
-  /// Bankanın KENDİ etiketi ([ImportDraft.sourceTag]) → uygulamadaki hedef.
-  /// Yalnız anlamlı olanlar eşlenir: "Para Çekme"/"Para Transferi"/"Komisyon"
-  /// gibi etiketler bir harcama TÜRÜ değil bir kanal bildirir, kategoriye
-  /// çevrilmeleri yanlış güven verirdi — bilerek listede yok (o satırlar
-  /// kategorisiz kalıp inceleme ekranında kullanıcıya sorulur).
-  /// Anahtar bankanın Türkçe etiketi (ekstreden gelir, çevrilmez); değer
-  /// bizim hedef anahtarımız.
-  static const Map<String, String> _tagGroups = {
-    'Alışveriş': 'shopping',
-    'Fatura': 'bills',
-    'Fatura Ödemesi': 'bills',
-    'Yatırım': 'investment',
-    'Maaş': 'salary',
-  };
-
-  /// Ekstrenin kendi kategori etiketinden tahmin. Sabit anahtar-kelime
-  /// sözlüğünden GÜÇLÜDÜR (bankanın işlemi sınıflandırması, metinden çıkarılan
-  /// tahmin değil) ama kullanıcının kendi geçmişinden zayıftır. Etiket
-  /// eşlenemiyorsa ya da karşılık gelen kategori kullanıcının listesinde yoksa
-  /// `null` — çağıran bir sonraki tahmin yoluna düşer.
+  /// Bankanın KENDİ etiketinden ([ImportDraft.sourceTag]) tahmin: etiket
+  /// metni AYNI sözlükten geçer ("Fatura" → fatura, "Maaş" → maaş,
+  /// "Market"/"Akaryakıt" gibi üye işyeri sınıfı veren bankalarda da doğru
+  /// hedef).
+  ///
+  /// **Açıklamadan SONRA denenir, önce değil.** Eskiden etiket sözlükten
+  /// güçlü sayılıyordu; gerçek Garanti ekstresinde ölçüldü ki banka BÜTÜN
+  /// kart harcamalarına "Alışveriş" yazıyor — BİM, A101, eczane ve telefon
+  /// faturası dahil. Etiket sözlüğün önünde durunca 85 satırın 50'si
+  /// "Alışveriş"e düşüyor, açıklamanın doğru bildiği Market/İlaç/Fatura
+  /// eziliyordu. "Alışveriş", "Para Çekme", "Para Transferi" bir harcama
+  /// TÜRÜ değil KANAL bildirir; sözlükte karşılıkları olmadığı için artık
+  /// hiçbir kategoriye çevrilmez (satır kategorisiz kalıp kullanıcıya
+  /// sorulur — yanlış güven vermekten iyidir).
   String? guessFromSourceTag({
     required String? sourceTag,
+    required bool isIncome,
     required List<CategoryEntity> candidates,
   }) {
-    final target = _tagTarget(sourceTag);
-    if (target == null) return null;
-    return resolveTarget(target, candidates)?.id;
-  }
-
-  static CategoryTarget? _tagTarget(String? sourceTag) {
-    if (sourceTag == null) return null;
-    final group = _tagGroups[sourceTag];
-    return group == null ? null : parseCategoryTarget(group);
+    if (sourceTag == null || sourceTag.trim().isEmpty) return null;
+    return guess(
+      description: sourceTag,
+      isIncome: isIncome,
+      candidates: candidates,
+    );
   }
 
   /// Hedefi kullanıcının GERÇEK kategori listesine bağlar.
@@ -400,51 +483,114 @@ class CategoryGuesser {
   ///
   /// Geçmiş `tag` alanı doğrudan kategori id'sidir; alt kategoriye yazılmış bir
   /// geçmiş, alt kategoriyi öğretir — hiyerarşi burada bedavaya çalışır.
-  HistoryCategoryIndex buildHistoryIndex(List<TransactionEntity> history) {
+  ///
+  /// [statementTexts] içe aktarılan ekstrenin kendi açıklamalarıdır: bir
+  /// token o ekstrenin satırlarının büyük kısmında geçiyorsa (bankanın kalıbı)
+  /// kategori kanıtı sayılmaz — bkz. [guessFromHistory].
+  HistoryCategoryIndex buildHistoryIndex(
+    List<TransactionEntity> history, {
+    Iterable<String> statementTexts = const [],
+  }) {
     final expense = <String, Map<String, int>>{};
     final income = <String, Map<String, int>>{};
     for (final tx in history) {
       final tag = tx.tag.trim();
       if (tag.isEmpty || tx.isSystem) continue;
       final map = tx.isIncome ? income : expense;
-      for (final tok in _tokens(tx.title)) {
+      for (final tok in _historyTokens(tx.title)) {
         (map[tok] ??= <String, int>{})
             .update(tag, (v) => v + 1, ifAbsent: () => 1);
       }
     }
-    return HistoryCategoryIndex._(expense, income);
+
+    final statementDf = <String, int>{};
+    var statementRows = 0;
+    for (final text in statementTexts) {
+      statementRows++;
+      for (final tok in _historyTokens(text)) {
+        statementDf.update(tok, (v) => v + 1, ifAbsent: () => 1);
+      }
+    }
+    return HistoryCategoryIndex._(expense, income, statementDf, statementRows);
   }
 
-  /// Açıklamayı kullanıcının geçmişinden öğrenilen [index] ile eşleştirir:
-  /// paylaşılan anlamlı token'lar üzerinden en çok kullanılan (ve hâlâ
-  /// [candidates] içinde bulunan) kategori `id`'sini döner; yoksa `null`.
-  /// [guess]'ten ÖNCE denenir; böylece "bu markayı geçen sefer X yapmıştım"
-  /// bilgisi sabit sözlüğü döver. Eşleşme yoksa çağıran sabit sözlüğe düşer.
+  /// Açıklamayı kullanıcının geçmişinden öğrenilen [index] ile eşleştirir;
+  /// eşleşme yoksa ya da kanıt tutarsızsa `null` (çağıran sözlüğe düşer).
+  /// [guess]'ten ÖNCE denenir: "bu üye işyerini geçen sefer X yapmıştım"
+  /// bilgisi sabit sözlüğü döver.
+  ///
+  /// **Neden kapılar var — ölçüldü (11 Eyl 2026).** Eski sürüm açıklamayla
+  /// PAYLAŞILAN HER token'ı oy sayıyordu. Gerçek ekstrelerde her satırda
+  /// bankanın kalıbı geçer ("POS Kart İşlemleri … ISTANBUL TR Pos satış.",
+  /// "SATIŞ-517040*4626-…"), yani ilk ekstre doğru kategorize edilse bile
+  /// ikinci ekstrede `kart`/`islemleri`/`satis`/`istanbul` her satırı
+  /// geçmişin EN SIK kategorisine çekiyordu (İGDAŞ → Market, Enerjisa →
+  /// Telefon, BİM → Alışveriş…) — ve geçmiş sözlükten önce denendiği için
+  /// sözlüğün doğru bildiğini eziyordu. Ekstrenin ilk yarısı kullanıcının
+  /// kategorize ettiği geçmiş, ikinci yarısı yeni içe aktarım olarak
+  /// ölçüldüğünde (doğru/YANLIŞ/boş): QNB 44/38/0 → 69/1/12, Garanti
+  /// 17/25/1 → 38/0/5. "Boş" satırlar kullanıcıya sorulur; yanlış kategori
+  /// ise sessizce rapora gider.
+  ///
+  /// Kapılar:
+  /// 1. **Kalıp kelimeler** ([_boilerplate]) hiç token sayılmaz.
+  /// 2. **Ekstrenin çoğunda geçen token** kanıt değildir (bilinmeyen bir
+  ///    bankanın kalıbı; ekstrenin kendi satırlarından ölçülür).
+  /// 3. **Tutarsız token** kanıt değildir: geçmişte birden çok kategoriye
+  ///    dağılmış bir kelime (semt adı, jenerik kelime) en az [_minPurity]
+  ///    oranında TEK kategoriye gitmiyorsa sayılmaz.
+  /// 4. **Konum**: Türkçe ekstrede üye işyeri adı açıklamanın BAŞINDA durur,
+  ///    semt/şehir arkasından gelir. İlk anlamlı token daha ağır basar —
+  ///    "BIM V365 ACIBADEM" satırı, geçmişte sık görülen "SHELL ACIBADEM"
+  ///    yüzünden Yakıt'a gitmesin.
   String? guessFromHistory({
     required String description,
     required bool isIncome,
     required HistoryCategoryIndex index,
     required List<CategoryEntity> candidates,
   }) {
-    final tokens = _tokens(description);
+    final tokens = [
+      for (final t in _historyTokens(description))
+        if (!index._isStatementBoilerplate(t)) t,
+    ];
     if (tokens.isEmpty) return null;
-    final candidateIds = candidates.map((c) => c.id).toSet();
+    final candidateIds = {for (final c in candidates) c.id};
     final map = isIncome ? index._income : index._expense;
 
-    final scores = <String, int>{};
-    for (final tok in tokens) {
-      final tagCounts = map[tok];
+    final scores = <String, double>{};
+    for (var position = 0; position < tokens.length; position++) {
+      final tagCounts = map[tokens[position]];
       if (tagCounts == null) continue;
+      var total = 0;
+      String? best;
+      var bestCount = 0;
       tagCounts.forEach((tag, count) {
-        if (candidateIds.contains(tag)) {
-          scores.update(tag, (v) => v + count, ifAbsent: () => count);
+        total += count;
+        if (count > bestCount && candidateIds.contains(tag)) {
+          bestCount = count;
+          best = tag;
         }
       });
+      final winner = best;
+      if (winner == null) continue;
+      final purity = bestCount / total;
+      if (purity < _minPurity) continue;
+      // Sıklık BİLEREK ağırlığa girmiyor: geçmişte 10 kez görülen bir semt
+      // adı ("ACIBADEM", hep aynı istasyondan yakıt alınıyorsa) bir kez
+      // görülmüş üye işyeri adını ikinci sıradan yenmemeli. Tutarlılığın
+      // KARESİ: karışık bir kelime (QNB'de "telekom" hem Telefon hem İnternet
+      // faturasında, %60) başta dursa da tek anlamlı "ttnet"i yenmesin.
+      final weight = purity *
+          purity *
+          (position < _positionWeights.length
+              ? _positionWeights[position]
+              : 1.0);
+      scores.update(winner, (v) => v + weight, ifAbsent: () => weight);
     }
     if (scores.isEmpty) return null;
 
     String? best;
-    var bestScore = 0;
+    var bestScore = 0.0;
     scores.forEach((tag, score) {
       if (score > bestScore) {
         bestScore = score;
@@ -453,6 +599,14 @@ class CategoryGuesser {
     });
     return best;
   }
+
+  /// Bir token'ın kategori kanıtı sayılması için geçmişte tek kategoriye
+  /// gitme oranı. Çoğunluk yeter (2'ye 1 "akaryakıt → Ulaşım" kanıttır),
+  /// dağınık kelimeler (semt adları) elenir.
+  static const double _minPurity = 0.6;
+
+  /// İlk, ikinci ve sonraki anlamlı token'ın ağırlığı (bkz. kapı 4).
+  static const List<double> _positionWeights = [3.0, 1.5];
 
   /// [drafts] içinde eşleşen ama kullanıcının GERÇEK kategori listesinde
   /// HİÇBİR karşılığı olmayan hedefleri döner (tekilleştirilmiş). İçe aktarım
@@ -484,7 +638,8 @@ class CategoryGuesser {
 
     for (final d in drafts) {
       want(_matchGroup(d.description, d.isIncome), d.isIncome);
-      want(_tagGroups[d.sourceTag], d.isIncome);
+      final tag = d.sourceTag;
+      if (tag != null) want(_matchGroup(tag, d.isIncome), d.isIncome);
     }
 
     final result = <CategorySuggestion>[];
@@ -518,29 +673,61 @@ class CategoryGuesser {
       _groupIcons[key] ??
       'category';
 
-  /// Geçmiş eşleşmesinde gürültü yaratan, marka-özgü OLMAYAN jenerik banka
-  /// token'ları (yön belirtmez, çoğu işlemde geçer). Dışlanır ki "pos ödeme"
-  /// gibi ortak kelimeler yanlış kategori taşımasın.
-  static const _stopwords = <String>{
-    'pos',
-    'odeme',
-    'para',
-    'transfer',
-    'islem',
-    'tahsilat',
-    'harcama',
+  /// Hiçbir üye işyerini ayırt etmeyen, bankaların KALIBINDA geçen kelimeler:
+  /// kanal ("pos", "satis", "kart"), işlem türü ("islemleri", "tahsilati"),
+  /// şirket eki ("ltd", "sti"), web artığı ("com", "trtr") ve büyük şehirler.
+  /// Geçmiş eşleşmesinde hiç token sayılmazlar (bkz. [guessFromHistory]).
+  ///
+  /// Liste bilinen bankaların kalıbından derlendi; bilinmeyen bir bankanın
+  /// kalıbını ikinci kapı (ekstrenin çoğunda geçen token) yakalar.
+  ///
+  /// "atm" ve "iade" BİLEREK yok: kullanıcı ATM çekimini ya da iadeyi hep aynı
+  /// kategoriye koyuyorsa bunu öğrenmek istenen davranıştır.
+  static const Set<String> _boilerplate = {
+    // kanal / işlem türü
+    'pos', 'webpos', 'sanal', 'satis', 'harcama', 'harcamasi', 'odeme',
+    'odemesi', 'odemeleri', 'tahsilat', 'tahsilati', 'islem', 'islemi',
+    'islemleri', 'transfer', 'havale', 'eft', 'fast', 'swift', 'virman',
+    'para', 'kart', 'karti', 'kartlari', 'kredi', 'banka', 'bankasi', 'bank',
+    'bankacilik', 'mobil', 'internet', 'online', 'sube', 'subesi', 'cep',
+    'alici', 'gonderen', 'sorgu', 'referans', 'dekont', 'nolu', 'biten',
+    'hesap', 'hesaba', 'hesaptan', 'katilim', 'merkez', 'ile',
+    // şirket ekleri
+    'ltd', 'sti', 'sirketi', 'anonim', 'san', 'sanayi', 'tic', 'ticaret',
+    'paz', 'pazarlama', 'ins', 'insaat',
+    // web artığı
+    'www', 'com', 'net', 'org', 'trtr',
+    // ülke / büyük şehir
+    'turk', 'turkiye', 'istanbul', 'ankara', 'izmir', 'bursa', 'antalya',
+    'adana', 'konya', 'kocaeli', 'gaziantep', 'mersin', 'kayseri',
+    'eskisehir', 'samsun', 'trabzon', 'diyarbakir', 'sakarya', 'denizli',
   };
 
-  /// Açıklamayı geçmiş-eşleşmesi için anlamlı token'lara böler: Türkçe
-  /// sadeleştirme + boşluk; kısa (<3), tamamen sayısal (mağaza kodu) ve
-  /// jenerik banka kelimeleri elenir.
-  List<String> _tokens(String s) => normalized(s)
-      .split(' ')
-      .where((t) =>
-          t.length >= 3 &&
-          !_stopwords.contains(t) &&
-          !RegExp(r'^[0-9]+$').hasMatch(t))
-      .toList();
+  /// Açıklamayı geçmiş eşleşmesi için anlamlı token'lara böler, SIRAYI
+  /// koruyarak (konum ağırlığı için). Elenenler: kısa (<3), tamamen sayısal,
+  /// 4+ rakam taşıyan kod ("01582crs222"; marka olan "a101" kalır — eşik
+  /// `label_grouper.dart` ile aynı), kalıp kelimeler ve tekrarlar.
+  static List<String> _historyTokens(String s) {
+    final out = <String>[];
+    for (final t in normalized(s).split(' ')) {
+      if (t.length < 3) continue;
+      if (_boilerplate.contains(t)) continue;
+      if (_digit.allMatches(t).length >= 4) continue;
+      if (_allDigits.hasMatch(t)) continue;
+      if (out.contains(t)) continue;
+      out.add(t);
+    }
+    return out;
+  }
+
+  static final RegExp _digit = RegExp(r'[0-9]');
+  static final RegExp _allDigits = RegExp(r'^[0-9]+$');
+
+  /// Metnin üye işyerini ayırt eden kelimeleri (kalıp, kod ve kısa kelimeler
+  /// elenmiş, sıra korunmuş). Geçmiş eşleşmesiyle AYNI tanım — tekrar tespiti
+  /// "iki metin aynı yeri mi anlatıyor" sorusunu bununla sorar, iki ayrı
+  /// kelime listesi zamanla ayrışmasın diye.
+  static List<String> meaningfulTokens(String s) => _historyTokens(s);
 
   /// [description] hangi hedefe (varsa) düşüyor; kullanıcının kategori
   /// listesinden bağımsız, saf anahtar-kelime eşleşmesi.
@@ -551,6 +738,12 @@ class CategoryGuesser {
   /// kategori hedefleri eklendikçe sözlüğü görünmez bir sıralama sözleşmesine
   /// bağlardı. Uzunluk kelime-sınırı boşlukları hariç ölçülür (` sok ` ile
   /// `market` adil karşılaşsın).
+  ///
+  /// **İstisna — aynı daldaki alt hedef, kendi ana hedefini yener**, anahtar
+  /// kelimesi kısa olsa bile: "İGDAŞ FATURA" satırında `igdas` (5) `fatura`
+  /// (6)'dan kısa, ama `bills.gas` `bills`'in daha özel hâlidir; uzunluk
+  /// kuralı satırı genel "Fatura"ya düşürüyordu (gerçek Garanti ekstresinde
+  /// 6 satır "AVEA COM TR FATURA").
   String? _matchGroup(String description, bool isIncome) {
     final norm = ' ${normalized(description)} ';
     final groups = isIncome ? _incomeGroups : _expenseGroups;
@@ -558,15 +751,30 @@ class CategoryGuesser {
     var bestLength = 0;
     for (final entry in groups.entries) {
       for (final keyword in entry.value) {
+        if (!norm.contains(keyword)) continue;
         final length = keyword.trim().length;
-        if (length <= bestLength) continue;
-        if (norm.contains(keyword)) {
+        if (entry.key == bestKey) {
+          // Aynı hedefin daha uzun anahtarı hedefin gücünü artırır: aksi hâlde
+          // `ttnet` (5) ile kalan İnternet, `turk telekom` (12) Telefon'a
+          // yenilir, kendi `turk telekom internet` (21) anahtarı sayılmazdı.
+          if (length > bestLength) bestLength = length;
+        } else if (bestKey == null ||
+            _outranks(entry.key, length, bestKey, bestLength)) {
           bestKey = entry.key;
           bestLength = length;
         }
       }
     }
     return bestKey;
+  }
+
+  /// [key] hedefi ([length] uzunluğunda bir anahtar kelimeyle), şimdiye kadarki
+  /// en iyi [bestKey]'i geçiyor mu? Bkz. [_matchGroup].
+  static bool _outranks(
+      String key, int length, String bestKey, int bestLength) {
+    if (parseCategoryTarget(key).parentKey == bestKey) return true;
+    if (parseCategoryTarget(bestKey).parentKey == key) return false;
+    return length > bestLength;
   }
 
   /// Türkçe aksanları sadeleştirip küçük harfe çevirir, noktalama/ayraçları
@@ -602,7 +810,31 @@ class CategoryGuesser {
 class HistoryCategoryIndex {
   final Map<String, Map<String, int>> _expense;
   final Map<String, Map<String, int>> _income;
-  const HistoryCategoryIndex._(this._expense, this._income);
+
+  /// İçe aktarılan ekstrede her token'ın geçtiği SATIR sayısı.
+  final Map<String, int> _statementDf;
+  final int _statementRows;
+
+  const HistoryCategoryIndex._(
+    this._expense,
+    this._income,
+    this._statementDf,
+    this._statementRows,
+  );
 
   bool get isEmpty => _expense.isEmpty && _income.isEmpty;
+
+  /// Bir token ekstrenin satırlarının [_maxStatementShare]'inden fazlasında
+  /// geçiyorsa bankanın kalıbıdır, üye işyeri değil. Çok kısa ekstrelerde
+  /// (< [_minStatementRows]) oran anlamsız olduğu için bakılmaz.
+  ///
+  /// Eşik bilerek geniş: aynı markadan sık alışveriş eden kullanıcıda
+  /// ("MIGROS" satırların üçte biri) marka adı kalıp sanılmasın.
+  bool _isStatementBoilerplate(String token) {
+    if (_statementRows < _minStatementRows) return false;
+    return (_statementDf[token] ?? 0) / _statementRows > _maxStatementShare;
+  }
+
+  static const int _minStatementRows = 10;
+  static const double _maxStatementShare = 0.4;
 }

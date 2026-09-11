@@ -2514,39 +2514,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bankImportRetry => 'Try again';
 
   @override
-  String get bankImportMappingTitle => 'Map columns';
-
-  @override
-  String get bankImportColDate => 'Date column';
-
-  @override
-  String get bankImportColDesc => 'Description column';
-
-  @override
-  String get bankImportColAmount => 'Amount column';
-
-  @override
-  String get bankImportColDebit => 'Debit (expense)';
-
-  @override
-  String get bankImportColCredit => 'Credit (income)';
-
-  @override
-  String get bankImportSignMode => 'Amount sign';
-
-  @override
-  String get bankImportSignSingle => 'Single column (− expense)';
-
-  @override
-  String get bankImportSignDebitCredit => 'Debit / Credit';
-
-  @override
-  String get bankImportDateFormat => 'Date format';
-
-  @override
-  String get bankImportDateAuto => 'Auto';
-
-  @override
   String get bankImportContinue => 'Continue';
 
   @override
@@ -2555,22 +2522,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bankImportPreviewTitle => 'Preview (first transactions)';
-
-  @override
   String get bankImportRoleDate => 'Date';
 
   @override
   String get bankImportRoleDesc => 'Description';
-
-  @override
-  String get bankImportRoleAmount => 'Amount';
-
-  @override
-  String get bankImportRoleDebit => 'Debit';
-
-  @override
-  String get bankImportRoleCredit => 'Credit';
 
   @override
   String get bankImportRoleBalance => 'Balance';
@@ -2640,9 +2595,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankImportStepperMode => 'Review one by one';
-
-  @override
-  String get bankImportDuplicate => 'Possible duplicate';
 
   @override
   String get bankImportStepSkip => 'Skip';
@@ -2923,6 +2875,227 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bankImportStepNeedsCategory =>
       'Pick a category for the uncategorized rows first.';
+
+  @override
+  String get bankImportMapTitle => 'How should we read this file?';
+
+  @override
+  String get bankImportMapHint =>
+      'We tried to recognise the columns but aren\'t sure. If the transactions below look right, continue; if not, tap a column and tell us what it is.';
+
+  @override
+  String get bankImportMapResultTitle => 'This is how it will be read';
+
+  @override
+  String bankImportMapRowsRead(int count, int income, int expense) {
+    return '$count transactions · $income in, $expense out';
+  }
+
+  @override
+  String bankImportMapSkipped(int count) {
+    return '$count rows couldn\'t be read (no date or amount)';
+  }
+
+  @override
+  String get bankImportMapBalanceOk => 'Verified against the balance column';
+
+  @override
+  String get bankImportMapBalanceBad =>
+      'The balance doesn\'t add up: the amount column or its sign may be wrong';
+
+  @override
+  String get bankImportMapAllIncome =>
+      'Every row looks like money in. If the amounts have no sign, pick the money out / money in columns, or use “Set all: Expense” in the review.';
+
+  @override
+  String get bankImportMapNeedDate => 'Pick the date column';
+
+  @override
+  String get bankImportMapNeedDesc => 'Pick the description column';
+
+  @override
+  String get bankImportMapNeedAmount =>
+      'Pick the amount column (or the money out / money in columns)';
+
+  @override
+  String get bankImportMapNoRows =>
+      'No transactions can be read with this choice.';
+
+  @override
+  String get bankImportMapColumnsTitle => 'Columns';
+
+  @override
+  String get bankImportMapColumnsHint => 'Tap a column to change what it is.';
+
+  @override
+  String bankImportMapRoleSheetTitle(String column) {
+    return 'What is the “$column” column?';
+  }
+
+  @override
+  String bankImportMapDateQuestion(String sample) {
+    return 'Dates look like “$sample”. Which is it?';
+  }
+
+  @override
+  String get bankImportRoleDateDesc => 'When the transaction happened';
+
+  @override
+  String get bankImportRoleDescDesc => 'What it was, or who it was with';
+
+  @override
+  String get bankImportRoleAmountLabel => 'Amount (+ / −)';
+
+  @override
+  String get bankImportRoleAmountDesc =>
+      'One column; negative amounts are spending';
+
+  @override
+  String get bankImportRoleDebitLabel => 'Money out';
+
+  @override
+  String get bankImportRoleDebitDesc =>
+      'Only money leaving (banks may call it “Debit”)';
+
+  @override
+  String get bankImportRoleCreditLabel => 'Money in';
+
+  @override
+  String get bankImportRoleCreditDesc =>
+      'Only money coming in (banks may call it “Credit”)';
+
+  @override
+  String get bankImportRoleBalanceDesc =>
+      'Balance after each transaction; used to verify';
+
+  @override
+  String get bankImportRoleTag => 'Bank\'s category';
+
+  @override
+  String get bankImportRoleTagDesc =>
+      'The bank\'s own category label; helps with guessing';
+
+  @override
+  String get bankImportRoleReference => 'Transaction number';
+
+  @override
+  String get bankImportRoleReferenceDesc =>
+      'Receipt/reference no.; finds duplicates exactly';
+
+  @override
+  String get bankImportRoleIgnore => 'Don\'t use';
+
+  @override
+  String get bankImportRoleIgnoreDesc => 'Ignore this column';
+
+  @override
+  String get bankImportRemap => 'Re-map columns';
+
+  @override
+  String get bankImportDupExact => 'Already recorded';
+
+  @override
+  String get bankImportDupWithinFile => 'Appears twice in this file';
+
+  @override
+  String get bankImportDupApproxStrong =>
+      'Most likely an entry you added by hand';
+
+  @override
+  String get bankImportDupApproxPossible =>
+      'Looks like an entry you added by hand';
+
+  @override
+  String get bankImportDupSystem =>
+      'Matches one of your debt/investment entries';
+
+  @override
+  String get bankImportDupReasonSameAmount => 'same amount';
+
+  @override
+  String bankImportDupReasonCents(String delta) {
+    return '$delta off · cents left out';
+  }
+
+  @override
+  String bankImportDupReasonRounded(String delta) {
+    return '$delta off · rounded';
+  }
+
+  @override
+  String get bankImportDupReasonSameDay => 'same day';
+
+  @override
+  String bankImportDupReasonDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days apart',
+      one: '1 day apart',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bankImportDupReasonWord(String word) {
+    return '“$word” in both';
+  }
+
+  @override
+  String get bankImportDupReasonCategory => 'same category';
+
+  @override
+  String get bankImportDupWillSkip => 'Won\'t be added.';
+
+  @override
+  String get bankImportDupWillAdd => 'Will be added anyway.';
+
+  @override
+  String bankImportDupWillCorrect(String amount) {
+    return 'Won\'t be added; the entry will be set to $amount.';
+  }
+
+  @override
+  String get bankImportDupAddAnywayExact => 'Add anyway';
+
+  @override
+  String get bankImportDupAddAnyway => 'It\'s different, add it';
+
+  @override
+  String get bankImportDupSkip => 'Same one, skip it';
+
+  @override
+  String bankImportDupCorrect(String amount) {
+    return 'Set amount to $amount';
+  }
+
+  @override
+  String get bankImportDupCorrectUndo => 'Don\'t correct';
+
+  @override
+  String bankImportApproxWarning(int count) {
+    return '$count rows look like entries you added by hand, so they won\'t be added. It\'s a guess — each row shows why.';
+  }
+
+  @override
+  String bankImportCorrectAll(int count) {
+    return 'Correct $count matched entries to the statement amount';
+  }
+
+  @override
+  String bankImportCorrectionsPending(int count) {
+    return '$count existing entries will be corrected to the statement amount.';
+  }
+
+  @override
+  String bankImportApplyCorrections(int count) {
+    return 'Apply corrections ($count)';
+  }
+
+  @override
+  String bankImportDoneCorrected(int count) {
+    return '$count entries were corrected to the statement amount.';
+  }
 
   @override
   String get bankStatementSectionHeader => 'BANK STATEMENT';
@@ -4443,6 +4616,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catSeedInvestment => 'Investment';
+
+  @override
+  String get catSeedFees => 'Bank Fees';
 
   @override
   String get catSeedOther => 'Other';

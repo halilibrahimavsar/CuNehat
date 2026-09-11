@@ -2515,39 +2515,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bankImportRetry => 'Tekrar dene';
 
   @override
-  String get bankImportMappingTitle => 'Sütunları eşle';
-
-  @override
-  String get bankImportColDate => 'Tarih sütunu';
-
-  @override
-  String get bankImportColDesc => 'Açıklama sütunu';
-
-  @override
-  String get bankImportColAmount => 'Tutar sütunu';
-
-  @override
-  String get bankImportColDebit => 'Borç (gider)';
-
-  @override
-  String get bankImportColCredit => 'Alacak (gelir)';
-
-  @override
-  String get bankImportSignMode => 'Tutar işareti';
-
-  @override
-  String get bankImportSignSingle => 'Tek sütun (− gider)';
-
-  @override
-  String get bankImportSignDebitCredit => 'Borç / Alacak';
-
-  @override
-  String get bankImportDateFormat => 'Tarih biçimi';
-
-  @override
-  String get bankImportDateAuto => 'Otomatik';
-
-  @override
   String get bankImportContinue => 'Devam';
 
   @override
@@ -2556,22 +2523,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bankImportPreviewTitle => 'Önizleme (ilk hareketler)';
-
-  @override
   String get bankImportRoleDate => 'Tarih';
 
   @override
   String get bankImportRoleDesc => 'Açıklama';
-
-  @override
-  String get bankImportRoleAmount => 'Tutar';
-
-  @override
-  String get bankImportRoleDebit => 'Borç';
-
-  @override
-  String get bankImportRoleCredit => 'Alacak';
 
   @override
   String get bankImportRoleBalance => 'Bakiye';
@@ -2641,9 +2596,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bankImportStepperMode => 'Tek tek incele';
-
-  @override
-  String get bankImportDuplicate => 'Olası tekrar';
 
   @override
   String get bankImportStepSkip => 'Atla';
@@ -2924,6 +2876,219 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bankImportStepNeedsCategory =>
       'Önce kategorisiz satırlara kategori seç.';
+
+  @override
+  String get bankImportMapTitle => 'Dosyayı nasıl okuyalım?';
+
+  @override
+  String get bankImportMapHint =>
+      'Sütunları kendimiz tanımaya çalıştık ama emin olamadık. Aşağıdaki hareketler doğru görünüyorsa devam et; yanlışsa ilgili sütuna dokunup ne olduğunu seç.';
+
+  @override
+  String get bankImportMapResultTitle => 'Böyle okunacak';
+
+  @override
+  String bankImportMapRowsRead(int count, int income, int expense) {
+    return '$count hareket okunacak · $income gelir, $expense gider';
+  }
+
+  @override
+  String bankImportMapSkipped(int count) {
+    return '$count satır okunamadı (tarihi ya da tutarı yok)';
+  }
+
+  @override
+  String get bankImportMapBalanceOk => 'Bakiye sütunuyla doğrulandı';
+
+  @override
+  String get bankImportMapBalanceBad =>
+      'Bakiye tutmuyor: tutar sütunu ya da işareti yanlış olabilir';
+
+  @override
+  String get bankImportMapAllIncome =>
+      'Hareketlerin hepsi gelir görünüyor. Tutarlar işaretsizse Giden para / Gelen para sütunlarını seç ya da incelemede «Tümünü çevir: Gider»i kullan.';
+
+  @override
+  String get bankImportMapNeedDate => 'Tarih sütununu seç';
+
+  @override
+  String get bankImportMapNeedDesc => 'Açıklama sütununu seç';
+
+  @override
+  String get bankImportMapNeedAmount =>
+      'Tutar sütununu (ya da Giden para / Gelen para sütunlarını) seç';
+
+  @override
+  String get bankImportMapNoRows => 'Bu seçimle hiç hareket okunamıyor.';
+
+  @override
+  String get bankImportMapColumnsTitle => 'Sütunlar';
+
+  @override
+  String get bankImportMapColumnsHint =>
+      'Bir sütunun ne olduğunu değiştirmek için ona dokun.';
+
+  @override
+  String bankImportMapRoleSheetTitle(String column) {
+    return '“$column” sütunu ne?';
+  }
+
+  @override
+  String bankImportMapDateQuestion(String sample) {
+    return 'Tarihler “$sample” biçiminde. Bu hangisi?';
+  }
+
+  @override
+  String get bankImportRoleDateDesc => 'İşlemin tarihi';
+
+  @override
+  String get bankImportRoleDescDesc => 'İşlemin açıklaması ya da karşı taraf';
+
+  @override
+  String get bankImportRoleAmountLabel => 'Tutar (+ / −)';
+
+  @override
+  String get bankImportRoleAmountDesc =>
+      'Tek sütunda tutar; eksi olanlar harcamadır';
+
+  @override
+  String get bankImportRoleDebitLabel => 'Giden para';
+
+  @override
+  String get bankImportRoleDebitDesc =>
+      'Yalnız çıkan paralar (bankada «Borç» yazar)';
+
+  @override
+  String get bankImportRoleCreditLabel => 'Gelen para';
+
+  @override
+  String get bankImportRoleCreditDesc =>
+      'Yalnız giren paralar (bankada «Alacak» yazar)';
+
+  @override
+  String get bankImportRoleBalanceDesc =>
+      'İşlemden sonraki bakiye; okunanları doğrulamaya yarar';
+
+  @override
+  String get bankImportRoleTag => 'Banka kategorisi';
+
+  @override
+  String get bankImportRoleTagDesc =>
+      'Bankanın verdiği kategori/etiket; tahmine yardım eder';
+
+  @override
+  String get bankImportRoleReference => 'İşlem numarası';
+
+  @override
+  String get bankImportRoleReferenceDesc =>
+      'Dekont/referans no; tekrarları kesin bulmaya yarar';
+
+  @override
+  String get bankImportRoleIgnore => 'Kullanma';
+
+  @override
+  String get bankImportRoleIgnoreDesc => 'Bu sütunu yok say';
+
+  @override
+  String get bankImportRemap => 'Sütunları yeniden eşle';
+
+  @override
+  String get bankImportDupExact => 'Zaten kayıtlı';
+
+  @override
+  String get bankImportDupWithinFile => 'Bu dosyada ikinci kez geçiyor';
+
+  @override
+  String get bankImportDupApproxStrong =>
+      'Büyük olasılıkla elle girdiğin kayıt';
+
+  @override
+  String get bankImportDupApproxPossible => 'Elle girdiğin bir kayda benziyor';
+
+  @override
+  String get bankImportDupSystem => 'Borç/yatırım kaydınla eşleşiyor';
+
+  @override
+  String get bankImportDupReasonSameAmount => 'tutar aynı';
+
+  @override
+  String bankImportDupReasonCents(String delta) {
+    return '$delta fark · kuruşsuz yazılmış';
+  }
+
+  @override
+  String bankImportDupReasonRounded(String delta) {
+    return '$delta fark · yuvarlanmış';
+  }
+
+  @override
+  String get bankImportDupReasonSameDay => 'aynı gün';
+
+  @override
+  String bankImportDupReasonDays(int days) {
+    return '$days gün arayla';
+  }
+
+  @override
+  String bankImportDupReasonWord(String word) {
+    return '“$word” ikisinde de geçiyor';
+  }
+
+  @override
+  String get bankImportDupReasonCategory => 'kategori aynı';
+
+  @override
+  String get bankImportDupWillSkip => 'Eklenmeyecek.';
+
+  @override
+  String get bankImportDupWillAdd => 'Yine de eklenecek.';
+
+  @override
+  String bankImportDupWillCorrect(String amount) {
+    return 'Eklenmeyecek; kaydın tutarı $amount olacak.';
+  }
+
+  @override
+  String get bankImportDupAddAnywayExact => 'Yine de ekle';
+
+  @override
+  String get bankImportDupAddAnyway => 'Farklı işlem, ekle';
+
+  @override
+  String get bankImportDupSkip => 'Aynı işlem, ekleme';
+
+  @override
+  String bankImportDupCorrect(String amount) {
+    return 'Tutarı $amount yap';
+  }
+
+  @override
+  String get bankImportDupCorrectUndo => 'Düzeltmeden vazgeç';
+
+  @override
+  String bankImportApproxWarning(int count) {
+    return '$count satır elle girdiğin kayıtlara benzediği için eklenmeyecek. Bu bir tahmin; her satırda nedenini görebilirsin.';
+  }
+
+  @override
+  String bankImportCorrectAll(int count) {
+    return 'Benzeyen $count kaydın tutarını ekstredekiyle düzelt';
+  }
+
+  @override
+  String bankImportCorrectionsPending(int count) {
+    return '$count kaydın tutarı ekstredekiyle düzeltilecek.';
+  }
+
+  @override
+  String bankImportApplyCorrections(int count) {
+    return 'Düzeltmeleri uygula ($count)';
+  }
+
+  @override
+  String bankImportDoneCorrected(int count) {
+    return '$count kaydın tutarı ekstredekiyle düzeltildi.';
+  }
 
   @override
   String get bankStatementSectionHeader => 'BANKA EKSTRESİ';
@@ -4422,6 +4587,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get catSeedInvestment => 'Yatırım';
+
+  @override
+  String get catSeedFees => 'Banka Masrafları';
 
   @override
   String get catSeedOther => 'Diğer';

@@ -4583,72 +4583,6 @@ abstract class AppLocalizations {
   /// **'Tekrar dene'**
   String get bankImportRetry;
 
-  /// No description provided for @bankImportMappingTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sütunları eşle'**
-  String get bankImportMappingTitle;
-
-  /// No description provided for @bankImportColDate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tarih sütunu'**
-  String get bankImportColDate;
-
-  /// No description provided for @bankImportColDesc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Açıklama sütunu'**
-  String get bankImportColDesc;
-
-  /// No description provided for @bankImportColAmount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutar sütunu'**
-  String get bankImportColAmount;
-
-  /// No description provided for @bankImportColDebit.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borç (gider)'**
-  String get bankImportColDebit;
-
-  /// No description provided for @bankImportColCredit.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alacak (gelir)'**
-  String get bankImportColCredit;
-
-  /// No description provided for @bankImportSignMode.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutar işareti'**
-  String get bankImportSignMode;
-
-  /// No description provided for @bankImportSignSingle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tek sütun (− gider)'**
-  String get bankImportSignSingle;
-
-  /// No description provided for @bankImportSignDebitCredit.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borç / Alacak'**
-  String get bankImportSignDebitCredit;
-
-  /// No description provided for @bankImportDateFormat.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tarih biçimi'**
-  String get bankImportDateFormat;
-
-  /// No description provided for @bankImportDateAuto.
-  ///
-  /// In tr, this message translates to:
-  /// **'Otomatik'**
-  String get bankImportDateAuto;
-
   /// No description provided for @bankImportContinue.
   ///
   /// In tr, this message translates to:
@@ -4661,12 +4595,6 @@ abstract class AppLocalizations {
   /// **'{n}. sütun'**
   String bankImportColumnN(int n);
 
-  /// No description provided for @bankImportPreviewTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önizleme (ilk hareketler)'**
-  String get bankImportPreviewTitle;
-
   /// No description provided for @bankImportRoleDate.
   ///
   /// In tr, this message translates to:
@@ -4678,24 +4606,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Açıklama'**
   String get bankImportRoleDesc;
-
-  /// No description provided for @bankImportRoleAmount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutar'**
-  String get bankImportRoleAmount;
-
-  /// No description provided for @bankImportRoleDebit.
-  ///
-  /// In tr, this message translates to:
-  /// **'Borç'**
-  String get bankImportRoleDebit;
-
-  /// No description provided for @bankImportRoleCredit.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alacak'**
-  String get bankImportRoleCredit;
 
   /// No description provided for @bankImportRoleBalance.
   ///
@@ -4822,12 +4732,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tek tek incele'**
   String get bankImportStepperMode;
-
-  /// No description provided for @bankImportDuplicate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Olası tekrar'**
-  String get bankImportDuplicate;
 
   /// No description provided for @bankImportStepSkip.
   ///
@@ -5296,6 +5200,348 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Önce kategorisiz satırlara kategori seç.'**
   String get bankImportStepNeedsCategory;
+
+  /// No description provided for @bankImportMapTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyayı nasıl okuyalım?'**
+  String get bankImportMapTitle;
+
+  /// No description provided for @bankImportMapHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütunları kendimiz tanımaya çalıştık ama emin olamadık. Aşağıdaki hareketler doğru görünüyorsa devam et; yanlışsa ilgili sütuna dokunup ne olduğunu seç.'**
+  String get bankImportMapHint;
+
+  /// No description provided for @bankImportMapResultTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Böyle okunacak'**
+  String get bankImportMapResultTitle;
+
+  /// No description provided for @bankImportMapRowsRead.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hareket okunacak · {income} gelir, {expense} gider'**
+  String bankImportMapRowsRead(int count, int income, int expense);
+
+  /// No description provided for @bankImportMapSkipped.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır okunamadı (tarihi ya da tutarı yok)'**
+  String bankImportMapSkipped(int count);
+
+  /// No description provided for @bankImportMapBalanceOk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye sütunuyla doğrulandı'**
+  String get bankImportMapBalanceOk;
+
+  /// No description provided for @bankImportMapBalanceBad.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye tutmuyor: tutar sütunu ya da işareti yanlış olabilir'**
+  String get bankImportMapBalanceBad;
+
+  /// No description provided for @bankImportMapAllIncome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hareketlerin hepsi gelir görünüyor. Tutarlar işaretsizse Giden para / Gelen para sütunlarını seç ya da incelemede «Tümünü çevir: Gider»i kullan.'**
+  String get bankImportMapAllIncome;
+
+  /// No description provided for @bankImportMapNeedDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih sütununu seç'**
+  String get bankImportMapNeedDate;
+
+  /// No description provided for @bankImportMapNeedDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama sütununu seç'**
+  String get bankImportMapNeedDesc;
+
+  /// No description provided for @bankImportMapNeedAmount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar sütununu (ya da Giden para / Gelen para sütunlarını) seç'**
+  String get bankImportMapNeedAmount;
+
+  /// No description provided for @bankImportMapNoRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu seçimle hiç hareket okunamıyor.'**
+  String get bankImportMapNoRows;
+
+  /// No description provided for @bankImportMapColumnsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütunlar'**
+  String get bankImportMapColumnsTitle;
+
+  /// No description provided for @bankImportMapColumnsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir sütunun ne olduğunu değiştirmek için ona dokun.'**
+  String get bankImportMapColumnsHint;
+
+  /// No description provided for @bankImportMapRoleSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{column}” sütunu ne?'**
+  String bankImportMapRoleSheetTitle(String column);
+
+  /// No description provided for @bankImportMapDateQuestion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarihler “{sample}” biçiminde. Bu hangisi?'**
+  String bankImportMapDateQuestion(String sample);
+
+  /// No description provided for @bankImportRoleDateDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemin tarihi'**
+  String get bankImportRoleDateDesc;
+
+  /// No description provided for @bankImportRoleDescDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemin açıklaması ya da karşı taraf'**
+  String get bankImportRoleDescDesc;
+
+  /// No description provided for @bankImportRoleAmountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar (+ / −)'**
+  String get bankImportRoleAmountLabel;
+
+  /// No description provided for @bankImportRoleAmountDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek sütunda tutar; eksi olanlar harcamadır'**
+  String get bankImportRoleAmountDesc;
+
+  /// No description provided for @bankImportRoleDebitLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giden para'**
+  String get bankImportRoleDebitLabel;
+
+  /// No description provided for @bankImportRoleDebitDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız çıkan paralar (bankada «Borç» yazar)'**
+  String get bankImportRoleDebitDesc;
+
+  /// No description provided for @bankImportRoleCreditLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen para'**
+  String get bankImportRoleCreditLabel;
+
+  /// No description provided for @bankImportRoleCreditDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız giren paralar (bankada «Alacak» yazar)'**
+  String get bankImportRoleCreditDesc;
+
+  /// No description provided for @bankImportRoleBalanceDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemden sonraki bakiye; okunanları doğrulamaya yarar'**
+  String get bankImportRoleBalanceDesc;
+
+  /// No description provided for @bankImportRoleTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka kategorisi'**
+  String get bankImportRoleTag;
+
+  /// No description provided for @bankImportRoleTagDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bankanın verdiği kategori/etiket; tahmine yardım eder'**
+  String get bankImportRoleTagDesc;
+
+  /// No description provided for @bankImportRoleReference.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem numarası'**
+  String get bankImportRoleReference;
+
+  /// No description provided for @bankImportRoleReferenceDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dekont/referans no; tekrarları kesin bulmaya yarar'**
+  String get bankImportRoleReferenceDesc;
+
+  /// No description provided for @bankImportRoleIgnore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanma'**
+  String get bankImportRoleIgnore;
+
+  /// No description provided for @bankImportRoleIgnoreDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sütunu yok say'**
+  String get bankImportRoleIgnoreDesc;
+
+  /// No description provided for @bankImportRemap.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütunları yeniden eşle'**
+  String get bankImportRemap;
+
+  /// No description provided for @bankImportDupExact.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaten kayıtlı'**
+  String get bankImportDupExact;
+
+  /// No description provided for @bankImportDupWithinFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosyada ikinci kez geçiyor'**
+  String get bankImportDupWithinFile;
+
+  /// No description provided for @bankImportDupApproxStrong.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyük olasılıkla elle girdiğin kayıt'**
+  String get bankImportDupApproxStrong;
+
+  /// No description provided for @bankImportDupApproxPossible.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle girdiğin bir kayda benziyor'**
+  String get bankImportDupApproxPossible;
+
+  /// No description provided for @bankImportDupSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Borç/yatırım kaydınla eşleşiyor'**
+  String get bankImportDupSystem;
+
+  /// No description provided for @bankImportDupReasonSameAmount.
+  ///
+  /// In tr, this message translates to:
+  /// **'tutar aynı'**
+  String get bankImportDupReasonSameAmount;
+
+  /// No description provided for @bankImportDupReasonCents.
+  ///
+  /// In tr, this message translates to:
+  /// **'{delta} fark · kuruşsuz yazılmış'**
+  String bankImportDupReasonCents(String delta);
+
+  /// No description provided for @bankImportDupReasonRounded.
+  ///
+  /// In tr, this message translates to:
+  /// **'{delta} fark · yuvarlanmış'**
+  String bankImportDupReasonRounded(String delta);
+
+  /// No description provided for @bankImportDupReasonSameDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'aynı gün'**
+  String get bankImportDupReasonSameDay;
+
+  /// No description provided for @bankImportDupReasonDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gün arayla'**
+  String bankImportDupReasonDays(int days);
+
+  /// No description provided for @bankImportDupReasonWord.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{word}” ikisinde de geçiyor'**
+  String bankImportDupReasonWord(String word);
+
+  /// No description provided for @bankImportDupReasonCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'kategori aynı'**
+  String get bankImportDupReasonCategory;
+
+  /// No description provided for @bankImportDupWillSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenmeyecek.'**
+  String get bankImportDupWillSkip;
+
+  /// No description provided for @bankImportDupWillAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yine de eklenecek.'**
+  String get bankImportDupWillAdd;
+
+  /// No description provided for @bankImportDupWillCorrect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenmeyecek; kaydın tutarı {amount} olacak.'**
+  String bankImportDupWillCorrect(String amount);
+
+  /// No description provided for @bankImportDupAddAnywayExact.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yine de ekle'**
+  String get bankImportDupAddAnywayExact;
+
+  /// No description provided for @bankImportDupAddAnyway.
+  ///
+  /// In tr, this message translates to:
+  /// **'Farklı işlem, ekle'**
+  String get bankImportDupAddAnyway;
+
+  /// No description provided for @bankImportDupSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aynı işlem, ekleme'**
+  String get bankImportDupSkip;
+
+  /// No description provided for @bankImportDupCorrect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarı {amount} yap'**
+  String bankImportDupCorrect(String amount);
+
+  /// No description provided for @bankImportDupCorrectUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzeltmeden vazgeç'**
+  String get bankImportDupCorrectUndo;
+
+  /// No description provided for @bankImportApproxWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır elle girdiğin kayıtlara benzediği için eklenmeyecek. Bu bir tahmin; her satırda nedenini görebilirsin.'**
+  String bankImportApproxWarning(int count);
+
+  /// No description provided for @bankImportCorrectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benzeyen {count} kaydın tutarını ekstredekiyle düzelt'**
+  String bankImportCorrectAll(int count);
+
+  /// No description provided for @bankImportCorrectionsPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kaydın tutarı ekstredekiyle düzeltilecek.'**
+  String bankImportCorrectionsPending(int count);
+
+  /// No description provided for @bankImportApplyCorrections.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzeltmeleri uygula ({count})'**
+  String bankImportApplyCorrections(int count);
+
+  /// No description provided for @bankImportDoneCorrected.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kaydın tutarı ekstredekiyle düzeltildi.'**
+  String bankImportDoneCorrected(int count);
 
   /// No description provided for @bankStatementSectionHeader.
   ///
@@ -7822,6 +8068,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yatırım'**
   String get catSeedInvestment;
+
+  /// No description provided for @catSeedFees.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka Masrafları'**
+  String get catSeedFees;
 
   /// No description provided for @catSeedOther.
   ///

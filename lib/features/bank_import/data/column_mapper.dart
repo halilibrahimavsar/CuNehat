@@ -31,6 +31,64 @@ class MappingResult {
   );
 }
 
+/// Bir eşlemenin bu tabloda ne ürettiği ve ona ne kadar güvenilebileceği.
+/// Eşleme ekranının canlı önizlemesi de, "ekranı hiç göstermeden geç"
+/// kararı da buradan okunur — ikisi aynı ölçüte baksın diye.
+class MappingAssessment {
+  final ColumnMapping mapping;
+  final MappingResult result;
+
+  /// Tarih, açıklama ve tutar (ya da Borç/Alacak) sütunlarının HEPSİ, kendi
+  /// başlıklarındaki anahtar kelimeyle mi bulundu? İçerik sezgisiyle
+  /// (başlıksız dosya) bulunan eşleme ne kadar makul görünse de sorulur.
+  final bool rolesFromHeader;
+
+  /// Gün/ay sırası belirsizse sütunun bir örneği ("03/04/2026"), değilse
+  /// `null` (bkz. [ambiguousStatementDateSample]).
+  final String? ambiguousDateSample;
+
+  /// Başlıktan sonraki, görünürde veri taşıyan satır sayısı.
+  final int dataRowCount;
+
+  const MappingAssessment({
+    required this.mapping,
+    required this.result,
+    required this.rolesFromHeader,
+    required this.ambiguousDateSample,
+    required this.dataRowCount,
+  });
+
+  int get incomeCount => result.drafts.where((d) => d.isIncome).length;
+  int get expenseCount => result.drafts.length - incomeCount;
+  bool get balanceMismatch =>
+      result.reconciliation.status == ReconcileStatus.mismatch;
+  bool get balanceVerified =>
+      result.reconciliation.status == ReconcileStatus.matched;
+
+  /// Birkaç "okunamayan" satır normaldir (ekstrenin altındaki "TOPLAM"
+  /// satırı tarih taşımaz); fazlası yanlış bir tarih/tutar sütununun
+  /// işaretidir.
+  bool get fewSkipped {
+    final allowed = result.drafts.length ~/ 20; // %5
+    return result.skippedRows <= (allowed < 2 ? 2 : allowed);
+  }
+
+  /// Eşleme ekranını hiç göstermeden incelemeye geçilebilir mi?
+  ///
+  /// Kullanıcının kendisinin daha önce onayladığı eşleme ([userConfirmed],
+  /// aynı başlıklı dosya) başlık anahtar kelimelerinin ve tarih sırası
+  /// sorusunun yerini tutar — o soruyu kullanıcı zaten cevapladı ve cevap
+  /// eşlemede duruyor. Diğer şartlar ikisinde de aynı: eşleme geçerli, en az
+  /// bir hareket çıktı, çok az satır atlandı, bakiye varsa tutuyor.
+  bool isConfident({bool userConfirmed = false}) =>
+      mapping.isValid &&
+      (userConfirmed || (mapping.hasHeaderRow && rolesFromHeader)) &&
+      result.drafts.isNotEmpty &&
+      fewSkipped &&
+      (userConfirmed || ambiguousDateSample == null) &&
+      !balanceMismatch;
+}
+
 /// CSV/Excel ham tablosunu [ImportDraft]'lara çeviren eşleyici + otomatik
 /// başlık/içerik sezgisiyle ilk [ColumnMapping] tahmini.
 @lazySingleton
@@ -60,6 +118,16 @@ class ColumnMapper {
     'transaction id',
   ];
 
+  /// Bankanın kendi kategori/sektör sütunu. Garanti `.xls`: "Etiket"; kredi
+  /// kartı ekstrelerinde sık görülen "Sektör" / "Harcama Grubu".
+  static const _tagKw = [
+    'etiket',
+    'kategori',
+    'category',
+    'sektor',
+    'harcama grubu',
+  ];
+
   /// Başlık ve içerik sezgisiyle bir başlangıç eşlemesi üretir.
   ColumnMapping guess(RawTable table) {
     if (table.isEmpty) return const ColumnMapping(dateCol: -1, descCol: -1);
@@ -74,10 +142,24 @@ class ColumnMapper {
     final creditCol = _findByKeywords(header, _creditKw);
     final balanceCol = _findByKeywords(header, _balanceKw);
     final referenceCol = _findByKeywords(header, _referenceKw);
+    var tagCol = _findByKeywords(header, _tagKw);
 
     // "Bakiye Tutarı" gibi TEK başlık hem 'bakiye' hem 'tutar' anahtarını
     // içerebilir; bakiye sütununu yanlışlıkla tutar sanma.
     if (amountCol >= 0 && amountCol == balanceCol) amountCol = -1;
+    // Etiket sütunu başka bir rolle çakışıyorsa (tek hücrede "Kategori/
+    // Açıklama" gibi) o rol kazanır.
+    if ({
+      dateCol,
+      descCol,
+      amountCol,
+      debitCol,
+      creditCol,
+      balanceCol,
+      referenceCol
+    }.contains(tagCol)) {
+      tagCol = -1;
+    }
 
     // İçerik tabanlı fallback (başlık yok ya da eksik). Bakiye sütunu bilerek
     // içerikten TAHMİN EDİLMEZ (running-balance ile tutar aynı derece "para"
@@ -89,8 +171,15 @@ class ColumnMapper {
           _guessMoneyColumn(dataRows, table.columnCount, dateCol, balanceCol);
     }
     if (descCol < 0) {
-      descCol = _guessTextColumn(dataRows, table.columnCount,
-          {dateCol, amountCol, debitCol, creditCol, balanceCol, referenceCol});
+      descCol = _guessTextColumn(dataRows, table.columnCount, {
+        dateCol,
+        amountCol,
+        debitCol,
+        creditCol,
+        balanceCol,
+        referenceCol,
+        tagCol,
+      });
     }
 
     // Gün-önce/ay-önce kararı SÜTUNUN tamamına bakılarak bir kez verilir;
@@ -113,6 +202,7 @@ class ColumnMapper {
       creditCol: useDebitCredit && creditCol >= 0 ? creditCol : null,
       balanceCol: balanceCol >= 0 ? balanceCol : null,
       referenceCol: referenceCol >= 0 ? referenceCol : null,
+      tagCol: tagCol >= 0 ? tagCol : null,
       signMode:
           useDebitCredit ? SignMode.debitCreditColumns : SignMode.signedAmount,
       headerRowIndex: headerIdx,
@@ -154,6 +244,7 @@ class ColumnMapper {
         balance: balance,
         reference:
             m.referenceCol != null ? _nullIfEmpty(cell(m.referenceCol!)) : null,
+        sourceTag: m.tagCol != null ? _nullIfEmpty(cell(m.tagCol!)) : null,
       ));
     }
 
@@ -180,6 +271,7 @@ class ColumnMapper {
                 ? TransactionTypeModel.expense
                 : TransactionTypeModel.income,
             reference: r.reference,
+            sourceTag: r.sourceTag,
           );
         }(),
     ];
@@ -190,6 +282,51 @@ class ColumnMapper {
       [for (final r in rows) r.balance],
     );
   }
+
+  /// [m] eşlemesini [table]'a uygular ve sonucun ne kadar güvenilir olduğunu
+  /// değerlendirir (bkz. [MappingAssessment]).
+  MappingAssessment assess(RawTable table, ColumnMapping m) {
+    final result = apply(table, m);
+    final header = m.hasHeaderRow && m.headerRowIndex < table.rows.length
+        ? table.rows[m.headerRowIndex]
+        : const <String>[];
+    bool headed(int? col, List<String> keywords) =>
+        col != null &&
+        col >= 0 &&
+        col < header.length &&
+        keywords.any(_norm(header[col]).contains);
+
+    final amountFromHeader = switch (m.signMode) {
+      SignMode.signedAmount => headed(m.amountCol, _amountKw),
+      SignMode.debitCreditColumns =>
+        (m.debitCol == null || headed(m.debitCol, _debitKw)) &&
+            (m.creditCol == null || headed(m.creditCol, _creditKw)),
+    };
+
+    final dataRows = _dataRows(table, m.headerRowIndex);
+    return MappingAssessment(
+      mapping: m,
+      result: result,
+      rolesFromHeader: headed(m.dateCol, _dateKw) &&
+          headed(m.descCol, _descKw) &&
+          amountFromHeader,
+      ambiguousDateSample: m.dateCol < 0
+          ? null
+          : ambiguousStatementDateSample([
+              for (final r in dataRows)
+                if (m.dateCol < r.length) r[m.dateCol],
+            ]),
+      dataRowCount:
+          dataRows.where((r) => r.any((c) => c.trim().isNotEmpty)).length,
+    );
+  }
+
+  /// Başlık satırının karşılaştırma için sadeleştirilmiş hâli; başlık yoksa
+  /// boş liste. Kaydedilmiş eşleme yalnız AYNI başlıklı dosyaya uygulanır.
+  List<String> headerSignature(RawTable table, int headerRowIndex) =>
+      headerRowIndex < 0 || headerRowIndex >= table.rows.length
+          ? const []
+          : [for (final c in table.rows[headerRowIndex]) _norm(c)];
 
   double? _signedAmount(ColumnMapping m, String Function(int) cell) {
     if (m.signMode == SignMode.signedAmount) {
@@ -333,6 +470,7 @@ class _DataRow {
   final double magnitude;
   final double? balance;
   final String? reference;
+  final String? sourceTag;
   const _DataRow({
     required this.date,
     required this.description,
@@ -340,5 +478,6 @@ class _DataRow {
     required this.magnitude,
     required this.balance,
     required this.reference,
+    required this.sourceTag,
   });
 }

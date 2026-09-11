@@ -147,15 +147,6 @@ void main() {
           CategoryGuesser.incomeTargets, CategoryStarterPack.income);
     });
 
-    test('banka etiketi eşlemesinin hedefleri de pakette var', () {
-      final available = CategoryStarterPack.allKeys.toSet();
-
-      for (final key in CategoryGuesser.tagGroupTargets) {
-        expect(available.contains(key), isTrue,
-            reason: '"$key" başlangıç paketinde yok');
-      }
-    });
-
     test('aynı anahtar kelime iki hedefte birden geçmez', () {
       // Sözlükte en UZUN anahtar kazanıyor; aynı kelimeyi iki hedefe birden
       // yazmak, kazananı harita sırasına bağlayan görünmez bir sözleşme kurar.

@@ -1,5 +1,6 @@
 import 'package:cunehat/features/bank_import/data/balance_reconciler.dart';
 import 'package:cunehat/features/bank_import/data/category_guesser.dart';
+import 'package:cunehat/features/bank_import/data/column_mapper.dart';
 import 'package:cunehat/features/bank_import/data/raw_table_reader.dart';
 import 'package:cunehat/features/bank_import/data/statement_verification.dart';
 import 'package:cunehat/features/bank_import/domain/column_mapping.dart';
@@ -22,11 +23,15 @@ class BankImportParsing extends BankImportState {
   const BankImportParsing();
 }
 
-/// CSV/Excel: kolon eşleme adımı (kullanıcı sütun→alan eşlemesini onaylar).
+/// CSV/Excel: kolon eşleme adımı. Yalnız otomatik eşlemeye güvenilemediğinde
+/// (ya da kullanıcı incelemeden geri döndüğünde) gösterilir; [assessment]
+/// eşlemenin bu tabloda ne ürettiğini canlı olarak taşır.
 class BankImportMapping extends BankImportState {
   final RawTable table;
-  final ColumnMapping mapping;
-  const BankImportMapping({required this.table, required this.mapping});
+  final MappingAssessment assessment;
+  const BankImportMapping({required this.table, required this.assessment});
+
+  ColumnMapping get mapping => assessment.mapping;
 }
 
 /// Ayrıştırılan taslaklarda bilinen ama kullanıcının o türdeki kategori
@@ -84,6 +89,10 @@ class BankImportReview extends BankImportState {
   /// devrede olmaz — kullanıcı ayrıca uyarılır.
   final bool fromOcr;
 
+  /// Taslaklar bir CSV/Excel tablosundan geldi: inceleme ekranı "sütunları
+  /// yeniden eşle" ile eşleme adımına dönebilir.
+  final bool canRemap;
+
   const BankImportReview({
     required this.drafts,
     required this.expenseCategories,
@@ -96,10 +105,31 @@ class BankImportReview extends BankImportState {
     this.sourceTruncated = false,
     this.sourceUnresolvedCells = 0,
     this.fromOcr = false,
+    this.canRemap = false,
   });
 
   int get selectedCount => drafts.where((d) => d.selected).length;
   int get duplicateCount => drafts.where((d) => d.isDuplicate).length;
+
+  /// Elle girilmiş bir kayda YAKLAŞIK benzediği için (tahminle) seçimsiz
+  /// gelen ve hâlâ eklenmeyecek satırlar — inceleme ekranında ayrıca uyarılır,
+  /// çünkü bu kararı kanıt değil tahmin veriyor.
+  int get approximateSkippedCount => drafts
+      .where((d) => !d.selected && (d.duplicateOf?.isApproximate ?? false))
+      .length;
+
+  /// Defterdeki eşinin tutarı ekstredekiyle düzeltilecek satırlar.
+  int get correctionCount =>
+      drafts.where((d) => d.correctExisting && !d.selected).length;
+
+  /// "Hepsini düzelt" toplu eyleminin kapsayacağı satırlar.
+  int get correctableCount => drafts
+      .where((d) =>
+          !d.selected &&
+          !d.correctExisting &&
+          (d.duplicateOf?.isApproximate ?? false) &&
+          d.duplicateOf!.canCorrectAmount)
+      .length;
 
   /// Kategori tahmin edilemediği için boş kalan (kullanıcının elle
   /// seçmesi gereken) taslak sayısı — bkz. `CategoryGuesser.guess`: yanlış
@@ -117,9 +147,12 @@ class BankImportReview extends BankImportState {
   int get selectedUncategorizedCount =>
       drafts.where((d) => d.selected && d.categoryId == null).length;
 
-  /// Toplu ekleme yapılabilir mi: en az bir seçim var ve seçililerin hepsi
-  /// kategorili.
-  bool get canCommit => selectedCount > 0 && selectedUncategorizedCount == 0;
+  /// Toplu yazım yapılabilir mi: eklenecek ya da düzeltilecek en az bir satır
+  /// var ve eklenecek satırların hepsi kategorili (düzeltilen kayıt zaten
+  /// kendi kategorisini taşır).
+  bool get canCommit =>
+      (selectedCount > 0 || correctionCount > 0) &&
+      selectedUncategorizedCount == 0;
 
   /// [expenseCategories]/[incomeCategories] yalnız inceleme sırasında yeni bir
   /// kategori oluşturulduğunda değişir (bkz. `BankImportCubit`).
@@ -140,6 +173,7 @@ class BankImportReview extends BankImportState {
         sourceTruncated: sourceTruncated,
         sourceUnresolvedCells: sourceUnresolvedCells,
         fromOcr: fromOcr,
+        canRemap: canRemap,
       );
 }
 
@@ -158,6 +192,9 @@ class BankImportCommitting extends BankImportState {
 /// bulunulan ay dışında (liste varsayılanı mevcut ay) → kullanıcıyı uyar.
 class BankImportDone extends BankImportState {
   final int added;
+
+  /// Tutarı ekstredekiyle düzeltilen (yeni kayıt açılmayan) defter kaydı sayısı.
+  final int corrected;
   final int skipped;
   final String walletId;
   final String userId;
@@ -165,6 +202,7 @@ class BankImportDone extends BankImportState {
   final bool hasPastMonthRows;
   const BankImportDone({
     required this.added,
+    this.corrected = 0,
     required this.skipped,
     required this.walletId,
     required this.userId,
