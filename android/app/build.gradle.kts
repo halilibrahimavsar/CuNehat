@@ -53,6 +53,31 @@ android {
     }
 
     buildTypes {
+        // Geliştirme derlemesi AYRI bir uygulama olarak kurulur
+        // (`dev.halilibrahim.cunehat.dev`).
+        //
+        // Neden: Play'deki sürüm Play'in kendi imzasıyla imzalıdır; yerelde
+        // üretilen APK — upload anahtarıyla imzalansa bile — onun ÜZERİNE
+        // kurulamaz (INSTALL_FAILED_UPDATE_INCOMPATIBLE). Tek çare uygulamayı
+        // kaldırmak olurdu, bu da gerçek veriyi silerdi. Ayrı paket adıyla
+        // ikisi yan yana durur: Play sürümü ve verisi hiç ellenmez.
+        //
+        // SÜRÜM (release) derlemesi DEĞİŞMEZ: AAB hâlâ
+        // `dev.halilibrahim.cunehat`. Google ile giriş (Drive yedekleme) dev
+        // pakette çalışmaz — OAuth istemcisi paket adı + SHA-1'e bağlı
+        // (bkz. drive-oauth-package-mismatch); yerel yedek/geri yükleme çalışır.
+        debug {
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
+        // `--profile` de aynı ayrı pakete gider: debug JIT olduğu için 85
+        // satırlık ekstre listesi cihazda yanıltıcı biçimde yavaş görünür,
+        // profile derlemesi AOT'tur. (`maybeCreate`: "profile" tipini Flutter
+        // eklentisi kuruyor, sıraya bağlı kalmayalım.)
+        maybeCreate("profile").apply {
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
         release {
             signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")
