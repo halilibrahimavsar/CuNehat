@@ -1,4 +1,7 @@
+import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/error/app_bloc_observer.dart';
 import 'package:cunehat/core/error/error_handling.dart';
+import 'package:cunehat/core/error/error_log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,17 +13,22 @@ void main() {
   late FlutterExceptionHandler? originalFlutterOnError;
   late bool Function(Object, StackTrace)? originalPlatformOnError;
   late ErrorWidgetBuilder originalErrorWidgetBuilder;
+  late BlocObserver originalBlocObserver;
 
   setUp(() {
     originalFlutterOnError = FlutterError.onError;
     originalPlatformOnError = PlatformDispatcher.instance.onError;
     originalErrorWidgetBuilder = ErrorWidget.builder;
+    originalBlocObserver = Bloc.observer;
+    ErrorLog.instance.resetForTest();
   });
 
   tearDown(() {
     FlutterError.onError = originalFlutterOnError;
     PlatformDispatcher.instance.onError = originalPlatformOnError;
     ErrorWidget.builder = originalErrorWidgetBuilder;
+    Bloc.observer = originalBlocObserver;
+    ErrorLog.instance.resetForTest();
   });
 
   test('framework hatası handler kurulur ve kendisi fırlatmaz', () {
@@ -58,5 +66,46 @@ void main() {
       ),
       returnsNormally,
     );
+  });
+
+  test('framework hatası katmanıyla birlikte hata günlüğüne yazılır', () {
+    installGlobalErrorHandlers();
+
+    FlutterError.onError!(
+      FlutterErrorDetails(
+        exception: StateError('build patladı'),
+        stack: StackTrace.current,
+        library: 'widgets library',
+      ),
+    );
+
+    final entry = ErrorLog.instance.entries.single;
+    expect(entry.source, 'FlutterError · widgets library');
+    expect(entry.message, contains('build patladı'));
+  });
+
+  test('kök zone hatası hata günlüğüne yazılır', () {
+    installGlobalErrorHandlers();
+
+    PlatformDispatcher.instance.onError!(
+      StateError('await edilmemiş'),
+      StackTrace.current,
+    );
+
+    expect(ErrorLog.instance.entries.single.source, 'PlatformDispatcher');
+  });
+
+  test('kurulum Bloc hatalarını da aynı kanala bağlar', () {
+    installGlobalErrorHandlers();
+
+    expect(Bloc.observer, isA<AppBlocObserver>());
+  });
+
+  test('reportError bilerek yakalanan hatayı da günlüğe yazar', () {
+    reportError('Kategori indeksi', StateError('okunamadı'));
+
+    final entry = ErrorLog.instance.entries.single;
+    expect(entry.source, 'Kategori indeksi');
+    expect(entry.type, 'StateError');
   });
 }

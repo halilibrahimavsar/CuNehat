@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/routes/gorouting.dart';
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
+import 'package:cunehat/core/error/error_log.dart';
 import 'package:cunehat/core/models/legacy_safe_adapters.dart';
 import 'package:cunehat/core/services/auto_backup_service.dart';
 import 'package:cunehat/core/services/exchange_rate_service.dart';
@@ -53,6 +55,11 @@ class AppInitialization {
       if (!getIt.isRegistered<AppAuthBloc>()) {
         await configureDependencies();
       }
+
+      // Hata günlüğünün kalıcı katmanı: prefs ancak DI'dan sonra hazır. O ana
+      // kadar yakalanan hatalar (init sırasında doğanlar dahil) bellekte
+      // bekliyordu; attach onları önceki oturumların kayıtlarıyla birleştirir.
+      ErrorLog.instance.attach(getIt<SharedPreferences>());
 
       // Ekranlardaki interaktif turlar (Showcase) için global kayıt. v5
       // API'si artık widget ağacında bir üst (ShowcaseWidget) gerektirmiyor;

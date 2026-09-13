@@ -4826,4 +4826,34 @@ class AppLocalizationsTr extends AppLocalizations {
   String remainingHoursMinutes(Object hours, Object minutes) {
     return '$hours sa $minutes dk';
   }
+
+  @override
+  String get errorLogTitle => 'Hata günlüğü';
+
+  @override
+  String get errorLogSubtitle =>
+      'Sorun bildirirken paylaşabileceğiniz tanı kaydı';
+
+  @override
+  String get errorLogEmpty => 'Kayıtlı hata yok.';
+
+  @override
+  String get errorLogPrivacyNote =>
+      'Bu günlük yalnız bu cihazda tutulur ve siz paylaşmadıkça hiçbir yere gönderilmez. Uygulama beklenmedik davrandığında geliştiriciye iletmek sorunu bulmayı hızlandırır.';
+
+  @override
+  String get errorLogCopy => 'Kopyala';
+
+  @override
+  String get errorLogShare => 'Paylaş';
+
+  @override
+  String get errorLogCopied => 'Hata günlüğü panoya kopyalandı';
+
+  @override
+  String get errorLogClearConfirmTitle => 'Hata günlüğü temizlensin mi?';
+
+  @override
+  String get errorLogClearConfirmDesc =>
+      'Kayıtlı tüm hatalar bu cihazdan silinir.';
 }

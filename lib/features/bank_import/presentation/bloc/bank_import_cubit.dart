@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cunehat/core/blocs/safe_emit.dart';
 import 'package:cunehat/core/constants/prefs_keys.dart';
 import 'package:cunehat/core/id_generate/uid_generator.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
@@ -43,7 +44,8 @@ import 'package:cunehat/features/finance_transactions/domain/repositories/transa
 /// pickAndParse → (CSV/Excel) kolon eşleme → applyMapping → dedup → inceleme →
 /// commit (mevcut cüzdana toplu yazım: tek syncBalance + tek notify).
 @injectable
-class BankImportCubit extends Cubit<BankImportState> {
+class BankImportCubit extends Cubit<BankImportState>
+    with SafeEmitMixin<BankImportState> {
   final RawTableReader _reader;
   final ColumnMapper _mapper;
   final PdfStatementParser _pdfParser;

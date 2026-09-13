@@ -6,6 +6,7 @@ import 'package:cunehat/features/settings/presentation/page/settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/pin_recovery_page.dart';
 import 'package:cunehat/features/settings/presentation/page/security_settings_page.dart';
 import 'package:cunehat/features/settings/presentation/page/notification_diagnostics_page.dart';
+import 'package:cunehat/features/settings/presentation/page/error_log_page.dart';
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:cunehat/features/bank_import/presentation/pages/bank_import_page.dart';
 import 'package:cunehat/features/settings/presentation/page/backup_preview_page.dart';
@@ -149,6 +150,15 @@ GoRouter createAppRouter(AppAuthBloc authBloc) {
           return MaterialPage(
             key: state.pageKey,
             child: const NotificationDiagnosticsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.errorLog,
+        pageBuilder: (context, state) {
+          return MaterialPage(
+            key: state.pageKey,
+            child: const ErrorLogPage(),
           );
         },
       ),

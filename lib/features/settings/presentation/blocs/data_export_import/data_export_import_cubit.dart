@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/blocs/safe_emit.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/services/local_backup_service.dart';
@@ -13,7 +14,8 @@ import 'package:uuid/uuid.dart';
 import 'data_export_import_state.dart';
 
 @injectable
-class DataExportImportCubit extends Cubit<DataExportImportState> {
+class DataExportImportCubit extends Cubit<DataExportImportState>
+    with SafeEmitMixin<DataExportImportState> {
   final CsvService csvService;
   final LocalBackupService localBackupService;
   final TransactionsRepository transactionsRepository;

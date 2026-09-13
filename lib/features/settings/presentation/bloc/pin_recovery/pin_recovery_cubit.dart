@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/local_auth.dart';
 
+import 'package:cunehat/core/blocs/safe_emit.dart';
+
 import 'pin_recovery_state.dart';
 
 export 'pin_recovery_state.dart';
@@ -21,7 +23,8 @@ export 'pin_recovery_state.dart';
 /// 2. **Gecikmeli sıfırlama:** ekran kilidi olmayan cihaz için. Hiçbir sır
 ///    istemez; karşılığında [timedResetDelay] beklenir. Meraklı biri telefonu
 ///    o kadar tutamaz; gerçek sahip ise hiçbir koşulda verisini kaybetmez.
-class PinRecoveryCubit extends Cubit<PinRecoveryState> {
+class PinRecoveryCubit extends Cubit<PinRecoveryState>
+    with SafeEmitMixin<PinRecoveryState> {
   final LocalAuthRepository _repository;
 
   /// Şimdiki zaman. Bekleme süresi zamana bağlı olduğundan enjekte edilebilir.

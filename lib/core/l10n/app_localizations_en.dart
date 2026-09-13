@@ -4853,4 +4853,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String remainingHoursMinutes(Object hours, Object minutes) {
     return '$hours h $minutes m';
   }
+
+  @override
+  String get errorLogTitle => 'Error log';
+
+  @override
+  String get errorLogSubtitle =>
+      'Diagnostic log you can share when reporting a problem';
+
+  @override
+  String get errorLogEmpty => 'No errors recorded.';
+
+  @override
+  String get errorLogPrivacyNote =>
+      'This log stays on this device and is never sent anywhere unless you share it. Sending it to the developer when the app misbehaves helps find the problem faster.';
+
+  @override
+  String get errorLogCopy => 'Copy';
+
+  @override
+  String get errorLogShare => 'Share';
+
+  @override
+  String get errorLogCopied => 'Error log copied to clipboard';
+
+  @override
+  String get errorLogClearConfirmTitle => 'Clear the error log?';
+
+  @override
+  String get errorLogClearConfirmDesc =>
+      'All recorded errors will be removed from this device.';
 }

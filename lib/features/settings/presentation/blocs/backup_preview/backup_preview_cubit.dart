@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:cunehat/core/blocs/safe_emit.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/services/drive_backup_result.dart';
@@ -16,7 +17,8 @@ import 'package:injectable/injectable.dart';
 /// yani geri yüklemeden önce içine bakmanın başka yolu yok. "Üzerine geri yükle
 /// ve gör" yıkıcı bir teşhis yöntemiydi.
 @injectable
-class BackupPreviewCubit extends Cubit<BackupPreviewState> {
+class BackupPreviewCubit extends Cubit<BackupPreviewState>
+    with SafeEmitMixin<BackupPreviewState> {
   final GoogleDriveBackupService _drive;
   final DataSerializationService _data;
   final LocalBackupService _localBackup;

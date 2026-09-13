@@ -8488,6 +8488,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{hours} sa {minutes} dk'**
   String remainingHoursMinutes(Object hours, Object minutes);
+
+  /// No description provided for @errorLogTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hata günlüğü'**
+  String get errorLogTitle;
+
+  /// No description provided for @errorLogSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sorun bildirirken paylaşabileceğiniz tanı kaydı'**
+  String get errorLogSubtitle;
+
+  /// No description provided for @errorLogEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı hata yok.'**
+  String get errorLogEmpty;
+
+  /// No description provided for @errorLogPrivacyNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu günlük yalnız bu cihazda tutulur ve siz paylaşmadıkça hiçbir yere gönderilmez. Uygulama beklenmedik davrandığında geliştiriciye iletmek sorunu bulmayı hızlandırır.'**
+  String get errorLogPrivacyNote;
+
+  /// No description provided for @errorLogCopy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala'**
+  String get errorLogCopy;
+
+  /// No description provided for @errorLogShare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaş'**
+  String get errorLogShare;
+
+  /// No description provided for @errorLogCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hata günlüğü panoya kopyalandı'**
+  String get errorLogCopied;
+
+  /// No description provided for @errorLogClearConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hata günlüğü temizlensin mi?'**
+  String get errorLogClearConfirmTitle;
+
+  /// No description provided for @errorLogClearConfirmDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı tüm hatalar bu cihazdan silinir.'**
+  String get errorLogClearConfirmDesc;
 }
 
 class _AppLocalizationsDelegate

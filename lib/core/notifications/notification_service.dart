@@ -10,6 +10,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'package:cunehat/core/enums/notification_frequency.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/notifications/notification_constants.dart';
 import 'package:cunehat/core/notifications/notification_diagnostics.dart';
 import 'package:cunehat/core/notifications/notification_localizer.dart';
@@ -248,7 +249,10 @@ class NotificationServiceImpl implements NotificationService {
 
   void _recordError(String context, Object error) {
     _lastError = '$context: $error';
-    debugPrint('Notification error — $_lastError');
+    // Tanılama sayfası son hatayı ayrıca gösterir; genel hata günlüğüne de
+    // yazılır ki bildirim arızası diğer hatalarla aynı zaman çizelgesinde
+    // okunabilsin.
+    reportError('Bildirim · $context', error);
   }
 
   AndroidFlutterLocalNotificationsPlugin? get _android =>

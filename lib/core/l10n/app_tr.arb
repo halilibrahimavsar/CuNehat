@@ -2675,5 +2675,14 @@
       "hours": {},
       "minutes": {}
     }
-  }
+  },
+  "errorLogTitle": "Hata günlüğü",
+  "errorLogSubtitle": "Sorun bildirirken paylaşabileceğiniz tanı kaydı",
+  "errorLogEmpty": "Kayıtlı hata yok.",
+  "errorLogPrivacyNote": "Bu günlük yalnız bu cihazda tutulur ve siz paylaşmadıkça hiçbir yere gönderilmez. Uygulama beklenmedik davrandığında geliştiriciye iletmek sorunu bulmayı hızlandırır.",
+  "errorLogCopy": "Kopyala",
+  "errorLogShare": "Paylaş",
+  "errorLogCopied": "Hata günlüğü panoya kopyalandı",
+  "errorLogClearConfirmTitle": "Hata günlüğü temizlensin mi?",
+  "errorLogClearConfirmDesc": "Kayıtlı tüm hatalar bu cihazdan silinir."
 }

@@ -2614,5 +2614,14 @@
       "hours": {},
       "minutes": {}
     }
-  }
+  },
+  "errorLogTitle": "Error log",
+  "errorLogSubtitle": "Diagnostic log you can share when reporting a problem",
+  "errorLogEmpty": "No errors recorded.",
+  "errorLogPrivacyNote": "This log stays on this device and is never sent anywhere unless you share it. Sending it to the developer when the app misbehaves helps find the problem faster.",
+  "errorLogCopy": "Copy",
+  "errorLogShare": "Share",
+  "errorLogCopied": "Error log copied to clipboard",
+  "errorLogClearConfirmTitle": "Clear the error log?",
+  "errorLogClearConfirmDesc": "All recorded errors will be removed from this device."
 }

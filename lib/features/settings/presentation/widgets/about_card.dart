@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cunehat/core/constants/app_constants.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 
@@ -49,6 +51,22 @@ class AboutCard extends StatelessWidget {
                 color: scheme.onSurfaceVariant,
               ),
             ),
+          ),
+          Divider(height: 1, color: scheme.outline.withValues(alpha: 0.1)),
+          // Release'te de açık: cihazda yaşanan bir hatanın tek somut izi bu
+          // günlük (bkz. ErrorLog).
+          ListTile(
+            leading: Icon(Icons.bug_report_outlined, color: scheme.primary),
+            title: Text(
+              context.l10n.errorLogTitle,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+              ),
+            ),
+            subtitle: Text(context.l10n.errorLogSubtitle),
+            trailing: Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            onTap: () => context.push(AppRoutes.errorLog),
           ),
         ],
       ),
