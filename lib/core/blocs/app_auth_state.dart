@@ -28,15 +28,6 @@ class AppAuthenticated extends AppAuthState {
   List<Object?> get props => [user];
 }
 
-/// An error occurred during authentication.
-class AppAuthError extends AppAuthState {
-  final String message;
-  const AppAuthError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
 /// User is authenticated but app is locked (PIN/biometric required).
 class AppAuthLocked extends AppAuthState {
   final LocalUser user;

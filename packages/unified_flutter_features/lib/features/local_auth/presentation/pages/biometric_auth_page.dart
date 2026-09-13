@@ -310,6 +310,11 @@ class _BiometricAuthPageState extends State<BiometricAuthPage>
       return widget.texts.msgPINVerificationFailedE
           .replaceFirst('{error}', error);
     }
+    // Bloc varsayılan (İngilizce) metinlerle kurulur; biyometrik hatası da
+    // yukarıdakiler gibi sayfanın yerelleştirilmiş metnine çevrilmeli.
+    if (msg == const LocalAuthTexts().msgBiometricAuthenticationFailed) {
+      return widget.texts.msgBiometricAuthenticationFailed;
+    }
     return msg;
   }
 

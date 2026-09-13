@@ -1,6 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:unified_flutter_features/core/texts/local_auth_texts.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/login/local_auth_login_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/login/local_auth_login_event.dart';
@@ -8,6 +11,17 @@ import 'package:unified_flutter_features/features/local_auth/presentation/bloc/l
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/local_auth_status.dart';
 
 class _MockRepository extends Mock implements LocalAuthRepository {}
+
+/// Bloc'un `addError` ile host'a ilettiği hataları toplar.
+class _ErrorCapturingObserver extends BlocObserver {
+  final errors = <Object>[];
+
+  @override
+  void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
+    errors.add(error);
+    super.onError(bloc, error, stackTrace);
+  }
+}
 
 void main() {
   late _MockRepository repository;
@@ -267,6 +281,38 @@ void main() {
       act: (bloc) => bloc.add(const BiometricAuthLoginEvent()),
       expect: () => const <LocalAuthLoginState>[],
     );
+
+    // `blocTest` KULLANILMIYOR: `errors:` verildiğinde handler'dan kaçan bir
+    // hata durum beklentisini hiç çalıştırmadan testi geçiriyor (mutasyonla
+    // görüldü) — yani tam da ölçülmek istenen çökme gizleniyordu.
+    test(
+        'eklenti hata fırlatırsa handler çökmez, kilit durumu değişmeden mesaj '
+        'verir ve hatayı gözlemciye iletir', () async {
+      final previousObserver = Bloc.observer;
+      final observer = _ErrorCapturingObserver();
+      Bloc.observer = observer;
+      addTearDown(() => Bloc.observer = previousObserver);
+
+      // Çok fazla denemede sensör kilitlenir; eklenti bunu PlatformException
+      // ile bildirir. Eskiden handler patlıyor, düğme sessizce ölüyordu.
+      when(() => repository.authenticateWithBiometrics(
+              reason: any(named: 'reason'),
+              signInTitle: any(named: 'signInTitle'),
+              cancelButton: any(named: 'cancelButton')))
+          .thenThrow(PlatformException(code: 'LockedOut'));
+      final bloc = LocalAuthLoginBloc(repository: repository);
+      addTearDown(bloc.close);
+
+      bloc.add(const BiometricAuthLoginEvent());
+      final state = await bloc.stream.first.timeout(const Duration(seconds: 2));
+
+      expect(state.authStatus, AuthStatus.initial);
+      expect(
+        state.message,
+        const LocalAuthTexts().msgBiometricAuthenticationFailed,
+      );
+      expect(observer.errors, [isA<PlatformException>()]);
+    });
 
     blocTest<LocalAuthLoginBloc, LocalAuthLoginState>(
       'skips biometric when locked out',

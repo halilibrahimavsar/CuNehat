@@ -315,6 +315,24 @@ void main() {
         payload: 'test_payload',
       ));
     });
+
+    test('eklenti başlatılamazsa initialize fırlatmaz ve tanılamaya yazar',
+        () async {
+      // Bildirim kritik bir alt sistem değil: bu hata eskiden açılıştan
+      // yukarı sızıyor, uygulama "başlatılamadı" ekranında kalıyordu.
+      registerFallbackValue((NotificationResponse response) {});
+      registerFallbackValue(const InitializationSettings());
+      when(() => mockPlugin.initialize(
+            any(),
+            onDidReceiveNotificationResponse:
+                any(named: 'onDidReceiveNotificationResponse'),
+          )).thenThrow(PlatformException(code: 'invalid_icon'));
+
+      await expectLater(service.initialize(), completes);
+
+      final diagnostics = await service.readDiagnostics();
+      expect(diagnostics.lastError, contains('initialize'));
+    });
   });
 
   group('onNotificationTap', () {

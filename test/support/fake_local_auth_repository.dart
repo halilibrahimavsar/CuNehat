@@ -11,6 +11,7 @@ class FakeLocalAuthRepository implements LocalAuthRepository {
     this.backgroundTimeout = 30,
     this.lastBackgroundTime,
     this.authenticateResult = true,
+    this.authenticateError,
   });
 
   bool pinSet;
@@ -19,6 +20,9 @@ class FakeLocalAuthRepository implements LocalAuthRepository {
   int backgroundTimeout;
   int? lastBackgroundTime;
   bool authenticateResult;
+
+  /// Verilirse biyometrik doğrulama bu hatayı fırlatır (sensör kilidi vb.).
+  Object? authenticateError;
 
   int authenticateCalls = 0;
 
@@ -34,6 +38,8 @@ class FakeLocalAuthRepository implements LocalAuthRepository {
     String? cancelButton,
   }) async {
     authenticateCalls++;
+    final error = authenticateError;
+    if (error != null) throw error;
     return authenticateResult;
   }
 

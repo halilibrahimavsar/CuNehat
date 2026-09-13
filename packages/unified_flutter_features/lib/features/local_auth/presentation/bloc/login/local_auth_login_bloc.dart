@@ -174,11 +174,24 @@ class LocalAuthLoginBloc
   ) async {
     if (state.authStatus == AuthStatus.lockedOut) return;
 
-    final success = await _repository.authenticateWithBiometrics(
-      reason: event.reason ?? LocalAuthConstants.defaultBiometricReason,
-      signInTitle: event.signInTitle,
-      cancelButton: event.cancelButton,
-    );
+    final bool success;
+    try {
+      success = await _repository.authenticateWithBiometrics(
+        reason: event.reason ?? LocalAuthConstants.defaultBiometricReason,
+        signInTitle: event.signInTitle,
+        cancelButton: event.cancelButton,
+      );
+    } catch (error, stackTrace) {
+      // Sensör geçici olarak kilitli (çok fazla deneme), parmak izi kayıtlı
+      // değil ya da donanım o an yanıt vermiyor: eklenti bunları
+      // PlatformException olarak fırlatır. Yakalanmadığında düğme sessizce
+      // ölüyordu. `authStatus` BİLEREK değişmez: `failure` PIN alanını sallayıp
+      // temizler, oysa kullanıcı PIN girmedi — PIN klavyesi zaten ekranda,
+      // mesaj yalnız neden olmadığını söyler. Hata host'un gözlemcisine gider.
+      addError(error, stackTrace);
+      emit(state.copyWith(message: _texts.msgBiometricAuthenticationFailed));
+      return;
+    }
     if (success) {
       await _repository.clearLockoutState();
       emit(state.copyWith(

@@ -28,6 +28,9 @@ void main() {
         .thenAnswer((_) async => 30);
     when(() => mockAuthRepo.setBackgroundLockTimeoutSeconds(any()))
         .thenAnswer((_) async {});
+    // Bloc kilit ipucunu taze tutmak için ayar değişimlerini dinliyor.
+    when(() => mockAuthRepo.settingsChanges)
+        .thenAnswer((_) => const Stream<void>.empty());
   });
 
   group('AppAuthBloc initialization', () {
@@ -89,22 +92,194 @@ void main() {
       ],
     );
 
+    // Denetim bulgusu (14 Eyl 2026): depo okunamadığında bloc `AppAuthError`
+    // yayıyordu ve o durumu ne router ne ana sayfa tanıyordu — PIN kurulu
+    // uygulama kilit SORULMADAN açılıyordu.
     blocTest<AppAuthBloc, AppAuthState>(
-      'emits [Loading, Error] when repository throws',
+      'depo iki kez okunamazsa ve önceki okuma yoksa KİLİTLİ açılır',
       setUp: () {
         when(() => mockAuthRepo.isBiometricEnabled())
-            .thenThrow(Exception('Auth error'));
+            .thenAnswer((_) async => false);
+        when(() => mockAuthRepo.isPinSet()).thenThrow(Exception('keystore'));
       },
       build: () => AppAuthBloc(
         localAuthRepository: mockAuthRepo,
         sharedPreferences: prefs,
         systemActivityGuard: guard,
+        retryDelay: Duration.zero,
       ),
+      // Yeniden deneme beklemesi sıfır olsa da bir olay döngüsü turu sürüyor;
+      // son durum ancak ondan sonra yayılır.
+      wait: const Duration(milliseconds: 50),
       expect: () => [
         const AppAuthLoading(),
-        isA<AppAuthError>(),
+        isA<AppAuthLocked>(),
+      ],
+      verify: (_) => verify(() => mockAuthRepo.isPinSet()).called(2),
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'depo okunamazsa ve son okuma kilit YOK dediyse açık kalınır',
+      setUp: () async {
+        // Kilit hiç kurmamış kullanıcı, açamayacağı bir kilidin arkasında
+        // kalmamalı.
+        await prefs.setBool(AppAuthBloc.lockConfiguredKey, false);
+        when(() => mockAuthRepo.isBiometricEnabled())
+            .thenAnswer((_) async => false);
+        when(() => mockAuthRepo.isPinSet()).thenThrow(Exception('keystore'));
+      },
+      build: () => AppAuthBloc(
+        localAuthRepository: mockAuthRepo,
+        sharedPreferences: prefs,
+        systemActivityGuard: guard,
+        retryDelay: Duration.zero,
+      ),
+      // Yeniden deneme beklemesi sıfır olsa da bir olay döngüsü turu sürüyor;
+      // son durum ancak ondan sonra yayılır.
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
       ],
     );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'depo okunamazsa ve son okuma kilit VAR dediyse kilitli açılır',
+      setUp: () async {
+        await prefs.setBool(AppAuthBloc.lockConfiguredKey, true);
+        when(() => mockAuthRepo.isBiometricEnabled())
+            .thenAnswer((_) async => false);
+        when(() => mockAuthRepo.isPinSet()).thenThrow(Exception('keystore'));
+      },
+      build: () => AppAuthBloc(
+        localAuthRepository: mockAuthRepo,
+        sharedPreferences: prefs,
+        systemActivityGuard: guard,
+        retryDelay: Duration.zero,
+      ),
+      // Yeniden deneme beklemesi sıfır olsa da bir olay döngüsü turu sürüyor;
+      // son durum ancak ondan sonra yayılır.
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthLocked>(),
+      ],
+    );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'ilk okuma geçici olarak başarısızsa bir kez daha denenir',
+      setUp: () {
+        var pinReads = 0;
+        when(() => mockAuthRepo.isBiometricEnabled())
+            .thenAnswer((_) async => false);
+        when(() => mockAuthRepo.isPinSet()).thenAnswer((_) async {
+          pinReads++;
+          if (pinReads == 1) throw Exception('geçici');
+          return false;
+        });
+      },
+      build: () => AppAuthBloc(
+        localAuthRepository: mockAuthRepo,
+        sharedPreferences: prefs,
+        systemActivityGuard: guard,
+        retryDelay: Duration.zero,
+      ),
+      // Yeniden deneme beklemesi sıfır olsa da bir olay döngüsü turu sürüyor;
+      // son durum ancak ondan sonra yayılır.
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthenticated>(),
+      ],
+    );
+
+    test('başarılı okuma kilit ipucunu yazar', () async {
+      when(() => mockAuthRepo.isBiometricEnabled())
+          .thenAnswer((_) async => false);
+      when(() => mockAuthRepo.isPinSet()).thenAnswer((_) async => true);
+
+      final bloc = AppAuthBloc(
+        localAuthRepository: mockAuthRepo,
+        sharedPreferences: prefs,
+        systemActivityGuard: guard,
+      );
+      await bloc.stream.firstWhere((s) => s is AppAuthLocked);
+
+      expect(prefs.getBool(AppAuthBloc.lockConfiguredKey), isTrue);
+      await bloc.close();
+    });
+  });
+
+  group('AppAuthBloc depo hatası: dönüş ve ayar değişimi', () {
+    late DateTime clock;
+
+    setUp(() async {
+      prefs = await SharedPreferences.getInstance();
+      clock = DateTime(2026, 9, 14, 12);
+      guard = SystemActivityGuard.withClock(() => clock);
+    });
+
+    AppAuthBloc build() => AppAuthBloc(
+          localAuthRepository: mockAuthRepo,
+          sharedPreferences: prefs,
+          systemActivityGuard: guard,
+          now: () => clock,
+          retryDelay: Duration.zero,
+        );
+
+    blocTest<AppAuthBloc, AppAuthState>(
+      'dönüşte depo okunamazsa kilitlenir — handler eskiden patlıyordu',
+      setUp: () {
+        // Açılış okuması başarılı (PIN kurulu), dönüşteki okumalar başarısız.
+        var pinReads = 0;
+        when(() => mockAuthRepo.isBiometricEnabled())
+            .thenAnswer((_) async => false);
+        when(() => mockAuthRepo.isPinSet()).thenAnswer((_) async {
+          pinReads++;
+          if (pinReads > 1) throw Exception('keystore');
+          return true;
+        });
+      },
+      build: build,
+      act: (bloc) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        bloc.add(AppAuthUnlockRequested(LocalUser.guest()));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        clock = clock.add(const Duration(minutes: 5));
+        bloc.add(const AppAuthAppResumed());
+      },
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        const AppAuthLoading(),
+        isA<AppAuthLocked>(),
+        isA<AppAuthenticated>(),
+        isA<AppAuthLocked>(),
+      ],
+    );
+
+    test('ayardan PIN silinince kilit ipucu hemen güncellenir', () async {
+      final changes = StreamController<void>.broadcast();
+      addTearDown(changes.close);
+      var pinSet = true;
+      when(() => mockAuthRepo.settingsChanges)
+          .thenAnswer((_) => changes.stream);
+      when(() => mockAuthRepo.isBiometricEnabled())
+          .thenAnswer((_) async => false);
+      when(() => mockAuthRepo.isPinSet()).thenAnswer((_) async => pinSet);
+
+      final bloc = build();
+      await bloc.stream.firstWhere((s) => s is AppAuthLocked);
+      expect(prefs.getBool(AppAuthBloc.lockConfiguredKey), isTrue);
+
+      pinSet = false;
+      changes.add(null);
+      await Future<void>.delayed(Duration.zero);
+
+      // Sonraki bir okuma hatası artık bu kullanıcıyı kaldırdığı bir kilidin
+      // arkasına kilitlemez.
+      expect(prefs.getBool(AppAuthBloc.lockConfiguredKey), isFalse);
+      await bloc.close();
+    });
   });
 
   group('AppAuthBloc unlock/lock', () {

@@ -19,6 +19,8 @@ import 'package:cunehat/core/notifications/notification_permission_channel.dart'
 export 'package:cunehat/core/notifications/notification_diagnostics.dart';
 
 abstract class NotificationService {
+  /// Eklentiyi ve saat dilimini kurar. Fırlatmaz: bildirim açılışın kritik
+  /// yolunda duruyor ama kritik bir alt sistem değil; hata tanılamaya düşer.
   Future<void> initialize();
 
   /// Kullanıcının dokunduğu bildirimin yükünü (payload) yayınlar.
@@ -174,10 +176,19 @@ class NotificationServiceImpl implements NotificationService {
       iOS: initializationSettingsDarwin,
     );
 
-    await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
-    );
+    try {
+      await _flutterLocalNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
+      );
+    } catch (e) {
+      // Bildirim KRİTİK bir alt sistem değil: eklenti başlatılamazsa uygulama
+      // yine de açılmalı. Eskiden bu hata `AppInitialization`'dan yukarı
+      // sızıyor ve kullanıcı verisine giremeden "başlatılamadı" ekranında
+      // kalıyordu. Sonraki planlama/gösterim çağrıları kendi yakalayıcılarıyla
+      // tanılamaya düşer.
+      _recordError('initialize', e);
+    }
 
     // Soğuk açılış: uygulama kapalıyken bildirime dokunulduysa
     // onDidReceiveNotificationResponse güvenilir biçimde tetiklenmez;
