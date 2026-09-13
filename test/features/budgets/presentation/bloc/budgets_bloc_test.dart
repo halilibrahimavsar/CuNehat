@@ -59,6 +59,32 @@ void main() {
     spentAmount: 100.0,
   );
 
+  group('sayfa kapanırken', () {
+    // Bloc sayfaya bağlı: kayıt beklenirken sayfa kapanırsa sonraki yeniden
+    // yükleme isteği kapalı bloc'a `add` edildiği için StateError fırlıyordu.
+    test('kayıt sonrası yeniden yükleme kapalı bloc\'ta fırlatmaz', () async {
+      when(() => mockGetUseCase('u1', 'w1'))
+          .thenAnswer((_) async => const Right(<BudgetEntity>[]));
+      when(() => mockSaveUseCase(any())).thenAnswer(
+        (_) => Future.delayed(
+          const Duration(milliseconds: 20),
+          () => const Right(null),
+        ),
+      );
+
+      budgetsBloc.add(const LoadBudgetsEvent(userId: 'u1', walletId: 'w1'));
+      await Future<void>.delayed(Duration.zero);
+      budgetsBloc.add(SaveBudgetEvent(testBudget));
+      await Future<void>.delayed(Duration.zero);
+      await budgetsBloc.close();
+
+      // Kayıt tamamlanıp handler devam edene kadar bekle: fırlayan bir hata
+      // bu testin zone'unda yakalanıp testi düşürür.
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      verify(() => mockSaveUseCase(any())).called(1);
+    });
+  });
+
   group('LoadBudgetsEvent', () {
     blocTest<BudgetsBloc, BudgetsState>(
       'emits [BudgetsLoading, BudgetsLoaded] when loading budgets succeeds',

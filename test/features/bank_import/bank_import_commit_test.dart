@@ -183,6 +183,40 @@ void main() {
       expect(done.hasPastMonthRows, isTrue);
     });
 
+    // Kaydetme sürerken geri basılırsa BlocProvider cubit'i kapatır. Cubit'in
+    // `emit`i kapanıştan sonra StateError fırlatıyordu ve hata döngünün
+    // ortasında fırladığı için kalan satırlar yazılmıyor, bakiye senkronu ve
+    // defter bildirimi atlanıyordu.
+    test('kaydetme sürerken cubit kapanırsa kalan satırlar yine yazılır',
+        () async {
+      final cubit = build();
+      var writes = 0;
+      when(() => txRepo.addTransaction(any())).thenAnswer((_) async {
+        writes++;
+        if (writes == 1) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+        return const Right('new_id');
+      });
+      cubit.debugSeedReview(
+        userId: 'u1',
+        walletId: 'w1',
+        drafts: [
+          _draft(DateTime(2026, 7, 10), 100),
+          _draft(DateTime(2026, 7, 11), 50),
+          _draft(DateTime(2026, 7, 12), 25),
+        ],
+      );
+
+      final committing = cubit.commit();
+      await cubit.close();
+      await committing;
+
+      verify(() => txRepo.addTransaction(any())).called(3);
+      verify(() => metrics.syncBalance('w1')).called(1);
+      verify(() => notifier.notify(userId: 'u1', walletId: 'w1')).called(1);
+    });
+
     test('seçili taslak yoksa hiç yazmaz, added=0', () async {
       final cubit = build();
       cubit.debugSeedReview(

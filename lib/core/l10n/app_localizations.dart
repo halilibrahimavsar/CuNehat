@@ -8542,6 +8542,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kayıtlı tüm hatalar bu cihazdan silinir.'**
   String get errorLogClearConfirmDesc;
+
+  /// No description provided for @driveErrLocalReadFailure.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.'**
+  String get driveErrLocalReadFailure;
 }
 
 class _AppLocalizationsDelegate

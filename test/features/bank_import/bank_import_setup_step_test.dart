@@ -102,6 +102,36 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // Kayıt sürerken geri çıkılırsa yazım yine tamamlanır (SafeEmitMixin) ama
+  // sonuç ekranı ve "Geri al" kaybolur; kullanıcı içe aktarımın yarım kalıp
+  // kalmadığını bilemezdi.
+  testWidgets('kaydetme sürerken geri çıkış engellenir', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<BankImportState>.empty(),
+      initialState: BankImportCommitting(done: 1, total: 3),
+    );
+
+    await pump(tester);
+
+    final popScope = tester
+        .widgetList<PopScope<Object?>>(
+            find.byWidgetPredicate((widget) => widget is PopScope))
+        .first;
+    expect(popScope.canPop, isFalse);
+  });
+
+  testWidgets('kayıt dışındaki adımlarda geri çıkış serbesttir',
+      (tester) async {
+    await pump(tester);
+
+    final popScope = tester
+        .widgetList<PopScope<Object?>>(
+            find.byWidgetPredicate((widget) => widget is PopScope))
+        .first;
+    expect(popScope.canPop, isTrue);
+  });
+
   testWidgets('paylaşım olmadan kurulum adımı dosya seçiciyi sunar',
       (tester) async {
     await pump(tester);

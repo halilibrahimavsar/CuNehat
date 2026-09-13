@@ -4883,4 +4883,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorLogClearConfirmDesc =>
       'All recorded errors will be removed from this device.';
+
+  @override
+  String get driveErrLocalReadFailure =>
+      'Couldn\'t read the data on this device. Restart the app and try again.';
 }

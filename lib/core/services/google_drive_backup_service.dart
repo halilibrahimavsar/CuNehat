@@ -145,9 +145,19 @@ class GoogleDriveBackupService {
     });
   }
 
-  Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    _currentUser = null;
+  /// Oturumu kapatır. Eklenti hatası sonuç olarak döner, sızmaz: eskiden
+  /// fırladığında "bağlantıyı kes" kartı sonsuz yükleme durumunda kalıyordu.
+  Future<DriveResult<void>> signOut() {
+    return _guard(() async {
+      try {
+        await _googleSignIn.signOut();
+      } finally {
+        // Eklenti oturumu kapatamasa da servis eski hesabı kullanmaya devam
+        // etmemeli; bir sonraki sessiz giriş gerçeği yeniden okur.
+        _currentUser = null;
+      }
+      return const DriveResult<void>.success();
+    });
   }
 
   // ================================================================== listing

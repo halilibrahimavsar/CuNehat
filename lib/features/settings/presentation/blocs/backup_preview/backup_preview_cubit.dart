@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:cunehat/core/blocs/safe_emit.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/data_serialization_service.dart';
 import 'package:cunehat/core/services/drive_backup_result.dart';
@@ -88,14 +89,23 @@ class BackupPreviewCubit extends Cubit<BackupPreviewState>
     required String rawJson,
   }) async {
     final inspection = _data.inspectBackup(rawJson);
-    final deviceSummary = await _data.currentDataSummary();
-
-    emit(BackupPreviewDetailLoaded(
-      source: source,
-      inspection: inspection,
-      deviceSummary: deviceSummary,
-      rawJson: rawJson,
-    ));
+    try {
+      final deviceSummary = await _data.currentDataSummary();
+      emit(BackupPreviewDetailLoaded(
+        source: source,
+        inspection: inspection,
+        deviceSummary: deviceSummary,
+        rawJson: rawJson,
+      ));
+    } catch (e, st) {
+      // Karşılaştırma için cihazdaki veri okunamadı. Eskiden ekran "yükleniyor"
+      // durumunda takılı kalıyordu; özetsiz bir detay ekranı ise "cihazda veri
+      // yok" gibi okunup kullanıcıyı yanlışlıkla geri yüklemeye iterdi.
+      reportError('Yedek önizleme · cihaz özeti', e, st);
+      emit(const BackupPreviewDetailFailed(
+        DriveOperationStatus.localReadFailure,
+      ));
+    }
   }
 
   // =================================================================== eylem
@@ -121,14 +131,24 @@ class BackupPreviewCubit extends Cubit<BackupPreviewState>
       _categoriesChanged.notify();
     }
 
-    // Başarıda da hatada da listeye dön: detay ekranındaki özet artık cihazın
+    // Başarıda da hatada da detay yeniden kurulur: eski özet artık cihazın
     // gerçek durumunu yansıtmıyor.
-    emit(BackupPreviewDetailLoaded(
-      source: current.source,
-      inspection: current.inspection,
-      deviceSummary: await _data.currentDataSummary(),
-      rawJson: current.rawJson,
-    ));
+    try {
+      emit(BackupPreviewDetailLoaded(
+        source: current.source,
+        inspection: current.inspection,
+        deviceSummary: await _data.currentDataSummary(),
+        rawJson: current.rawJson,
+      ));
+    } catch (e, st) {
+      // Geri yükleme SONUCU bundan bağımsız: özet okunamadı diye tamamlanmış
+      // bir geri yükleme "başarısız" raporlanmamalı. Eski (artık yanlış) özet
+      // de gösterilmez.
+      reportError('Yedek önizleme · geri yükleme sonrası özet', e, st);
+      emit(const BackupPreviewDetailFailed(
+        DriveOperationStatus.localReadFailure,
+      ));
+    }
 
     return switch (result.status) {
       DataRestoreStatus.success => DriveOperationStatus.success,

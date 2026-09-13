@@ -56,7 +56,7 @@ class _BankImportPageState extends State<BankImportPage> {
           // Tam ekran YALNIZ inceleme adımında geçerli: diğer adımlarda AppBar
           // tek çıkış yolu, gizlenirse kullanıcı akışta kilitlenir.
           final hideChrome = _fullscreen && state is BankImportReview;
-          return Scaffold(
+          final scaffold = Scaffold(
             appBar: hideChrome
                 ? null
                 : AppBar(
@@ -100,6 +100,13 @@ class _BankImportPageState extends State<BankImportPage> {
                 ),
               BankImportError() => _ErrorView(message: state.message),
             },
+          );
+          // Kayıt sürerken geri çıkılamaz. Çıkılsaydı yazım yine tamamlanırdı
+          // (bkz. SafeEmitMixin) ama sonuç ekranı ve "Geri al" kaybolur,
+          // kullanıcı içe aktarımın yarım kalıp kalmadığını bilemezdi.
+          return PopScope(
+            canPop: state is! BankImportCommitting,
+            child: scaffold,
           );
         },
       ),

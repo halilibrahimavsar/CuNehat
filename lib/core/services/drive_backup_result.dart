@@ -79,6 +79,12 @@ enum DriveOperationStatus {
 
   /// Yerel yazım başarısız oldu; eski veri geri alındı (rollback).
   writeFailure,
+
+  /// Cihazdaki veri (karşılaştırma özeti) okunamadı. Yedeğin kendisiyle ilgili
+  /// değil; [corrupt] ya da [serverError] demek kullanıcıya yanlış yeri
+  /// gösterirdi. Durumlar ada göre saklandığı için yeni değer yalnız SONA
+  /// eklenir.
+  localReadFailure,
 }
 
 @immutable

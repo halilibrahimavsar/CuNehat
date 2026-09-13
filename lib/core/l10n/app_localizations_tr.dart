@@ -4856,4 +4856,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get errorLogClearConfirmDesc =>
       'Kayıtlı tüm hatalar bu cihazdan silinir.';
+
+  @override
+  String get driveErrLocalReadFailure =>
+      'Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.';
 }

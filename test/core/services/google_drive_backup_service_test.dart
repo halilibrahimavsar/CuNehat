@@ -262,6 +262,19 @@ void main() {
 
       expect(service.currentUser, isNull);
     });
+
+    // Eskiden eklenti hatası fırlıyor ve "bağlantıyı kes" kartı sonsuz yükleme
+    // durumunda kalıyordu.
+    test('signOut eklenti hatasında fırlatmaz, sebebini sonuç olarak döner',
+        () async {
+      when(() => mockGoogleSignIn.signOut())
+          .thenThrow(PlatformException(code: 'network_error'));
+
+      final result = await service.signOut();
+
+      expect(result.status, DriveOperationStatus.noNetwork);
+      expect(service.currentUser, isNull);
+    });
   });
 
   // ================================================================== listeme

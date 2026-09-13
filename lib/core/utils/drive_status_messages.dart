@@ -36,5 +36,6 @@ String driveStatusMessage(
       ),
     DriveOperationStatus.corrupt => l.driveErrCorrupt,
     DriveOperationStatus.writeFailure => l.driveErrWriteFailure,
+    DriveOperationStatus.localReadFailure => l.driveErrLocalReadFailure,
   };
 }

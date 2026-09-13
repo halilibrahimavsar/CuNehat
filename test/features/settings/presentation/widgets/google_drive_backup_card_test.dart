@@ -269,7 +269,8 @@ void main() {
 
   group('bağlantıyı kes', () {
     setUp(() {
-      when(() => drive.signOut()).thenAnswer((_) async {});
+      when(() => drive.signOut())
+          .thenAnswer((_) async => const DriveResult<void>.success());
     });
 
     // Birden çok Google hesabı olan kullanıcı, yedeklerinin hangi hesapta
@@ -336,7 +337,8 @@ void main() {
         'auto_backup_last_success_at': DateTime(2026, 7, 1).toIso8601String(),
       });
       stubConnected(files: [_file()]);
-      when(() => drive.signOut()).thenAnswer((_) async {});
+      when(() => drive.signOut())
+          .thenAnswer((_) async => const DriveResult<void>.success());
 
       await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
       await tester.pumpAndSettle();
@@ -351,6 +353,42 @@ void main() {
       expect(find.text('30.07.2026 14:05'), findsNothing);
       expect(find.text('Google Drive\'a Bağlan'), findsOneWidget);
       expect(autoBackup.lastSuccessAt, isNull);
+    });
+
+    // Eskiden `signOut` fırlattığında yükleme durumu hiç kapanmıyor, kart
+    // kullanılamaz kalıyordu.
+    testWidgets(
+        'oturum kapatılamazsa yükleme takılmaz, sebep gösterilir ve yedek '
+        'geçmişi korunur', (tester) async {
+      await getIt.reset();
+      await registerAll(prefs: {
+        'auto_backup_frequency': 'daily',
+        'auto_backup_last_success_at': DateTime(2026, 7, 1).toIso8601String(),
+      });
+      stubConnected(files: [_file()]);
+      when(() => drive.signOut()).thenAnswer((_) async =>
+          const DriveResult<void>.failure(DriveOperationStatus.noNetwork));
+
+      await tester.pumpWidget(wrap(const GoogleDriveBackupCard()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.pump();
+      await waitOutCountdown(tester);
+      await tester.tap(find.text('Bağlantıyı Kes').last);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('İnternet bağlantısı yok. Bağlanıp tekrar deneyin.'),
+        findsOneWidget,
+      );
+      // Hesap değişmedi: kart bağlı kalır, otomatik yedek geçmişi silinmez.
+      expect(find.text('30.07.2026 14:05'), findsOneWidget);
+      expect(autoBackup.lastSuccessAt, isNotNull);
+
+      // Düğme yeniden kullanılabilir: yükleme durumu takılı kalmadı.
+      await tester.tap(find.text('Bağlantıyı Kes'));
+      await tester.pump();
+      expect(find.text('Bağlantı kesilsin mi?'), findsOneWidget);
     });
   });
 

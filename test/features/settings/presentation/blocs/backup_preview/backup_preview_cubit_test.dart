@@ -244,6 +244,59 @@ void main() {
     });
   });
 
+  group('okuma hatası', () {
+    Future<void> openDetail() async {
+      const raw = '{"version":4}';
+      when(() => drive.downloadBackup(any()))
+          .thenAnswer((_) async => const DriveResult<String>.success(raw));
+      when(() => data.inspectBackup(raw))
+          .thenReturn(BackupInspection.ok(_summary(), 4));
+      await cubit.openDriveBackup(_file());
+    }
+
+    // Eskiden cihaz özeti fırlatınca ekran "yükleniyor"da takılı kalıyordu.
+    test('cihaz özeti okunamazsa detay yükleniyor ekranında takılmaz',
+        () async {
+      when(() => data.currentDataSummary()).thenThrow(StateError('hive'));
+
+      await openDetail();
+
+      expect((cubit.state as BackupPreviewDetailFailed).status,
+          DriveOperationStatus.localReadFailure);
+    });
+
+    test('geri yükleme tamamlandıysa sonraki özet okunamasa da BAŞARI döner',
+        () async {
+      await openDetail();
+      when(() => data.importDataFromJson(any()))
+          .thenAnswer((_) async => const DataRestoreResult.success());
+      when(() => data.currentDataSummary()).thenThrow(StateError('hive'));
+
+      final status = await cubit.restoreCurrent();
+
+      expect(status, DriveOperationStatus.success);
+      expect((cubit.state as BackupPreviewDetailFailed).status,
+          DriveOperationStatus.localReadFailure);
+    });
+
+    // Sayfa kapanınca cubit de kapanır; eskiden sonraki `emit` StateError
+    // fırlatıyor ve tamamlanmış geri yüklemenin sonucu çağırana ulaşmıyordu.
+    test('sayfa geri yükleme sürerken kapanırsa sonuç yine döner', () async {
+      await openDetail();
+      when(() => data.importDataFromJson(any())).thenAnswer(
+        (_) => Future.delayed(
+          const Duration(milliseconds: 20),
+          () => const DataRestoreResult.success(),
+        ),
+      );
+
+      final restoring = cubit.restoreCurrent();
+      await cubit.close();
+
+      expect(await restoring, DriveOperationStatus.success);
+    });
+  });
+
   group('silme', () {
     test('başarılı silme listeyi tazeler', () async {
       when(() => drive.deleteBackup(any()))

@@ -41,6 +41,28 @@ import 'package:cunehat/features/main_feature/widgets/onboarding_navigation_hint
 import 'package:cunehat/features/settings/presentation/page/privacy_policy_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/error/error_handling.dart';
+
+/// İlk açılış akışını çalıştırır ve NE OLURSA OLSUN [openGate]'i çağırır;
+/// akışın hatası raporlanır.
+///
+/// Kapı, bekleyen düzenli işlem hatırlatmasını ilk açılış diyaloglarının
+/// arkasında bekletir. Eskiden zincirdeki bir adım (ör. yedek teklifi için
+/// cihaz özeti okuması) fırlatınca kapı hiç açılmıyor ve hatırlatma o oturumda
+/// bir daha çıkmıyordu.
+@visibleForTesting
+Future<void> runFirstLaunchThenOpenGate({
+  required Future<void> Function() onboarding,
+  required VoidCallback openGate,
+}) async {
+  try {
+    await onboarding();
+  } catch (e, st) {
+    reportError('Ana sayfa · ilk açılış akışı', e, st);
+  } finally {
+    openGate();
+  }
+}
 
 /// HomePage with vertical list navigation
 ///
@@ -102,10 +124,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // İlk açılışta sırayla: gizlilik onamı, ardından bildirim izni gerekçesi.
     // Tek postFrameCallback'te sıralı çalıştırılır ki sistem izin promptu
     // gizlilik diyaloğuyla çakışmasın.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _runFirstLaunchOnboarding();
-      _openFirstLaunchGate();
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => runFirstLaunchThenOpenGate(
+        onboarding: _runFirstLaunchOnboarding,
+        openGate: _openFirstLaunchGate,
+      ),
+    );
   }
 
   void _openFirstLaunchGate() {

@@ -2623,5 +2623,6 @@
   "errorLogShare": "Share",
   "errorLogCopied": "Error log copied to clipboard",
   "errorLogClearConfirmTitle": "Clear the error log?",
-  "errorLogClearConfirmDesc": "All recorded errors will be removed from this device."
+  "errorLogClearConfirmDesc": "All recorded errors will be removed from this device.",
+  "driveErrLocalReadFailure": "Couldn't read the data on this device. Restart the app and try again."
 }

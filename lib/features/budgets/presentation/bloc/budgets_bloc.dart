@@ -74,16 +74,21 @@ class BudgetsBloc extends Bloc<BudgetsEvent, BudgetsState> {
     final result = await _saveBudgetUsecase(budget);
     result.fold(
       (failure) => emit(BudgetsError(failure)),
-      (_) {
-        // Yeniden yükle
-        if (_currentUserId != null && _currentWalletId != null) {
-          add(LoadBudgetsEvent(
-            userId: _currentUserId!,
-            walletId: _currentWalletId!,
-          ));
-        }
-      },
+      (_) => _reloadIfOpen(),
     );
+  }
+
+  /// Kayıt/silme sonrası listeyi tazeler.
+  ///
+  /// Bloc sayfaya bağlı: usecase beklenirken sayfa kapanmış olabilir ve kapalı
+  /// bir bloc'a `add` StateError fırlatır — kayıt yapılmış olsa da hata
+  /// handler'dan dışarı kaçıyordu.
+  void _reloadIfOpen() {
+    if (isClosed) return;
+    final userId = _currentUserId;
+    final walletId = _currentWalletId;
+    if (userId == null || walletId == null) return;
+    add(LoadBudgetsEvent(userId: userId, walletId: walletId));
   }
 
   Future<void> _onDeleteBudget(

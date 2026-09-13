@@ -119,7 +119,16 @@ class _GoogleDriveBackupCardState extends State<GoogleDriveBackupCard> {
     if (!confirmed || !mounted) return;
 
     setState(() => _isLoading = true);
-    await _backupService.signOut();
+    final result = await _backupService.signOut();
+    if (!result.isSuccess) {
+      // Oturum kapanmadı: hesap değişmediği için yedek geçmişi silinmez ve
+      // kart bağlı kalır. Eskiden bu hata fırlıyor, yükleme göstergesi
+      // sonsuza dek dönüyordu.
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      AppMessenger.error(driveStatusMessage(context.l10n, result.status));
+      return;
+    }
     // Hesap değişebilir: önceki hesabın otomatik yedek geçmişi (son başarı,
     // içerik damgası, hata serisi) yeni hesap için anlamsız ve yanıltıcıdır.
     await _autoBackup.clearState();
