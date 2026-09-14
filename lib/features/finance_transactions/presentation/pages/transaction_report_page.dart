@@ -4,6 +4,7 @@ import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/config/theme/app_surface_theme.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/csv_service.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
@@ -217,8 +218,8 @@ class _TransactionReportViewState extends State<_TransactionReportView> {
     final List<CategoryEntity> categories;
     try {
       categories = await fetchAllCategories(widget.categoryRepository);
-    } catch (e) {
-      debugPrint('Kategori indeksi yuklenemedi, onceki korunuyor: $e');
+    } catch (e, st) {
+      reportError('Rapor · kategori indeksi', e, st);
       return;
     }
     if (!mounted) return;

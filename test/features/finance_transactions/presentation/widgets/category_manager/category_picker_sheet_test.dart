@@ -96,6 +96,33 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Eskiden `_loading` hiç
+  // sıfırlanmıyor ve seçici sonsuz yükleme göstergesinde kalıyordu.
+  testWidgets(
+      'kategoriler okunamazsa yükleme takılmaz; sebep ve yeniden dene '
+      'gösterilir', (tester) async {
+    var reads = 0;
+    when(() => repository.getCategories(any())).thenAnswer((_) async {
+      reads++;
+      if (reads == 1) throw StateError('hive');
+      return all;
+    });
+
+    await tester.pumpWidget(host((_) {}));
+    await open(tester);
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.textContaining('Kategoriler yüklenemedi'), findsOneWidget);
+    // "Henüz kategori yok" demek yanlış bilgi olurdu.
+    expect(find.text('Henüz kategori yok'), findsNothing);
+
+    await tester.tap(find.text('Tekrar Dene'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Kategoriler yüklenemedi'), findsNothing);
+    expect(find.text('Fatura'), findsWidgets);
+  });
+
   group('iki sütun', () {
     // Açılışta sağ sütun SEÇİLİ kategoriyi içeren kökle gelmeli; aksi halde
     // kullanıcı her açılışta nerede olduğunu yeniden bulmak zorunda kalır.

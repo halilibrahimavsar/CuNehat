@@ -1,10 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/services/receipt_ocr_service.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/core/services/system_activity_guard.dart';
@@ -87,13 +90,26 @@ class ReceiptRow extends StatelessWidget {
     // Kamera/galeri de sistem etkinliğidir: sarmalanmazsa PIN açık kullanıcı
     // fişi çekip döndüğünde kilit ekranı açılıyor, form (ve çekilen fiş)
     // yığından siliniyordu (bkz. [SystemActivityGuard]).
-    final XFile? file = await getIt<SystemActivityGuard>().run(
-      () => ImagePicker().pickImage(
-        source: source,
-        maxWidth: 1600,
-        imageQuality: 70,
-      ),
-    );
+    final XFile? file;
+    try {
+      file = await getIt<SystemActivityGuard>().run(
+        () => ImagePicker().pickImage(
+          source: source,
+          maxWidth: 1600,
+          imageQuality: 70,
+        ),
+      );
+    } catch (e, st) {
+      // Kamera/galeri izni reddedildi, cihazda kamera yok ya da seçici zaten
+      // açık. Eklenti bunları istisna olarak fırlatır; yakalanmadığında dokunuş
+      // sessizce hiçbir şey yapmıyordu. Çift dokunuşun ürettiği
+      // `already_active` bir hata değil.
+      if (e is PlatformException && e.code == 'already_active') return;
+      reportError('Fiş eki · görsel seçici', e, st);
+      if (!context.mounted) return;
+      AppMessenger.error(context.l10n.fisGorselAlinamadi);
+      return;
+    }
     if (file == null) return;
 
     controller.pickedReceipt.value = file;

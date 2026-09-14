@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/constants/app_constants.dart';
+import 'package:cunehat/core/error/error_handling.dart';
+import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
 import 'package:cunehat/core/services/receipt_storage_service.dart';
@@ -88,7 +90,18 @@ class _SingleTransactionDetailPageState
   }
 
   Future<void> _loadCategoryIndex() async {
-    final categories = await fetchAllCategories(getIt<CategoryRepository>());
+    // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır (CacheException).
+    // Kardeş sayfalardaki kalıp (bkz. `TransactionPage._loadCategoryIcons`):
+    // hata hâlinde ÖNCEKİ indeks korunur, ilk açılışta karttan gelen ad/ikon
+    // görünmeye devam eder. Eskiden bu çağrı korumasızdı ve hata sayfadan
+    // yakalanmadan kaçıyordu.
+    final List<CategoryEntity> categories;
+    try {
+      categories = await fetchAllCategories(getIt<CategoryRepository>());
+    } catch (e, st) {
+      reportError('İşlem detayı · kategori indeksi', e, st);
+      return;
+    }
     if (!mounted) return;
     final index = buildCategoryDisplayIndex(categories);
     setState(() {

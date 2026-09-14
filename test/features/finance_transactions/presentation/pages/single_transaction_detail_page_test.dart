@@ -270,6 +270,50 @@ void main() {
     expect(find.text('Düzenle'), findsNothing);
   });
 
+  // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Bu sayfanın indeks
+  // yüklemesi eskiden korumasızdı: hata yakalanmadan kaçıyordu (flutter_test
+  // yakalanmamış asenkron hatada testi kendiliğinden düşürür).
+  testWidgets('kategori indeksi okunamazsa sayfa yine açılır',
+      (WidgetTester tester) async {
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenThrow(StateError('hive'));
+    final now = DateTime(2026, 6, 13, 14, 30);
+    final tx = TransactionEntity(
+      id: 'tx_123',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Market Shopping',
+      tag: 'Food',
+      amount: 150.0,
+      date: now,
+      type: TransactionTypeModel.expense,
+      isSystem: false,
+    );
+    final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {
+          now: [tx]
+        },
+        allTransactions: [tx],
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        SingleTransactionDetailPage(
+          item: item,
+          heroTag: 'hero_tx_123',
+          categoryLabel: 'Food',
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Market Shopping'), findsOneWidget);
+  });
+
   testWidgets('tapping Edit opens edit transaction sheet',
       (WidgetTester tester) async {
     final now = DateTime(2026, 6, 13, 14, 30);

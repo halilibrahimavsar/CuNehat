@@ -32,6 +32,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 
 class WalletSheetContent extends StatefulWidget {
   final String userId;
@@ -510,8 +511,20 @@ class _WalletSheetContentState extends State<WalletSheetContent> {
       final visible = wallet!.categoryIds;
       // Küresel liste yalnız kürasyonsuz cüzdanlar için gerekiyor; küratörlü
       // cüzdanda kararı kümenin kendisi veriyor (bkz. `needsCategorySetup`).
-      final anyCategoryExists = visible != null ||
-          (await getIt<CategoryRepository>().getAllCategories()).isNotEmpty;
+      var anyCategoryExists = true;
+      if (visible == null) {
+        try {
+          anyCategoryExists =
+              (await getIt<CategoryRepository>().getAllCategories()).isNotEmpty;
+        } catch (e, st) {
+          // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır; eskiden hata
+          // hızlı başlangıç akışını yarıda kesiyordu. Okunamadıysa başlangıç
+          // paketi ÖNERİLMEZ (varsayılan `true` kalır): var olan kategorilerin
+          // üstüne ikinci bir paket kurmak, önermemekten kötü. Hızlı başlangıç
+          // yine açılır.
+          reportError('Cüzdan · kategori kontrolü', e, st);
+        }
+      }
       if (!context.mounted) return;
       if (needsCategorySetup(
         visibleIds: visible,

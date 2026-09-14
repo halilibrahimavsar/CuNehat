@@ -1,4 +1,5 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/filter_entity.dart';
@@ -95,6 +96,11 @@ class _FilterViewState extends State<FilterView> {
         _incomeCategories = await _forWallet(isExpense: false);
         _expenseCategories = [];
       }
+    } catch (e, st) {
+      // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Filtre sayfası
+      // kategori çipleri olmadan da çalışır; eskiden hata `finally`den sonra
+      // yakalanmadan kaçıyordu.
+      reportError('Filtre · kategoriler', e, st);
     } finally {
       if (mounted) setState(() => _isLoadingCategories = false);
     }

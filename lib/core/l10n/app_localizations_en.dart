@@ -4887,4 +4887,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driveErrLocalReadFailure =>
       'Couldn\'t read the data on this device. Restart the app and try again.';
+
+  @override
+  String get fisGorselAlinamadi =>
+      'Couldn\'t get the image. Check camera and photo permissions.';
 }

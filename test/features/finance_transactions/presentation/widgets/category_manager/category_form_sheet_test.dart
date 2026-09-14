@@ -73,6 +73,30 @@ void main() {
         home: Scaffold(body: child),
       );
 
+  // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Üst kategori
+  // seçenekleri eskiden korumasız yükleniyordu: hata yakalanmadan kaçıyordu
+  // (flutter_test yakalanmamış asenkron hatada testi kendiliğinden düşürür).
+  testWidgets('üst kategoriler okunamazsa form yine açılır ve kaydeder',
+      (tester) async {
+    when(() => repository.getCategories(any())).thenThrow(StateError('hive'));
+
+    await tester.pumpWidget(
+        host(const CategoryFormSheet(isExpense: true, walletId: 'w1')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    await tester.enterText(find.byType(TextFormField).first, 'Fatura');
+    await tester.tap(find.text('Ekle'));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.addCategory(
+          name: 'Fatura',
+          iconName: any(named: 'iconName'),
+          isExpense: true,
+          parentId: null,
+        )).called(1);
+  });
+
   group('yeni kategori', () {
     testWidgets('kimliği repository üretir; çağıran ad göndermekle yetinir',
         (tester) async {

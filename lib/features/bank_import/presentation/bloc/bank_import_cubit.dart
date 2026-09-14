@@ -166,8 +166,16 @@ class BankImportCubit extends Cubit<BankImportState>
     // açık kullanıcıda dönüşte kilit ekranı açılıyor, router bu sayfayı
     // yığından siliyor ve seçilen dosya hiç ayrıştırılmıyordu
     // (bkz. [SystemActivityGuard]).
-    final picked = await _systemActivity
-        .run(() => FilePicker.pickFiles(type: FileType.any));
+    final FilePickerResult? picked;
+    try {
+      picked = await _systemActivity
+          .run(() => FilePicker.pickFiles(type: FileType.any));
+    } catch (e) {
+      // Sağlayıcı ya da izin hatası eklentiden istisna olarak gelir.
+      // Yakalanmadığında "dosya seç" düğmesi sessizce hiçbir şey yapmıyordu.
+      emit(BankImportError('Dosya seçilemedi: $e'));
+      return;
+    }
     final path = picked?.files.single.path;
     if (path == null) {
       emit(const BankImportInitial());
@@ -581,8 +589,17 @@ class BankImportCubit extends Cubit<BankImportState>
     // hem kardeş-ad tekilliğine takılırdı (`duplicateSiblingName` → sessizce
     // atlanır, satır kategorisiz kalırdı) hem de raporu aynı ada sahip iki
     // kimliğe bölerdi. Var olan bağlanır, yenisi yaratılmaz.
-    final globalExpense = await _categoryRepo.getCategories(true);
-    final globalIncome = await _categoryRepo.getCategories(false);
+    final List<CategoryEntity> globalExpense;
+    final List<CategoryEntity> globalIncome;
+    try {
+      globalExpense = await _categoryRepo.getCategories(true);
+      globalIncome = await _categoryRepo.getCategories(false);
+    } catch (e) {
+      // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Yakalanmadığında
+      // öneri adımında kalınıyor, "devam" düğmesi hiçbir şey yapmıyordu.
+      emit(BankImportError('Kategoriler okunamadı: $e'));
+      return;
+    }
 
     for (final suggestion in s.suggestions) {
       if (!approved.contains(suggestion)) continue;

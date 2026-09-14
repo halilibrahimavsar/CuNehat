@@ -8548,6 +8548,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.'**
   String get driveErrLocalReadFailure;
+
+  /// No description provided for @fisGorselAlinamadi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.'**
+  String get fisGorselAlinamadi;
 }
 
 class _AppLocalizationsDelegate

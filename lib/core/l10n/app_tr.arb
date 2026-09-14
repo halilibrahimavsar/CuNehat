@@ -2685,5 +2685,6 @@
   "errorLogCopied": "Hata günlüğü panoya kopyalandı",
   "errorLogClearConfirmTitle": "Hata günlüğü temizlensin mi?",
   "errorLogClearConfirmDesc": "Kayıtlı tüm hatalar bu cihazdan silinir.",
-  "driveErrLocalReadFailure": "Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin."
+  "driveErrLocalReadFailure": "Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.",
+  "fisGorselAlinamadi": "Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin."
 }

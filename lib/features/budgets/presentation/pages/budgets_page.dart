@@ -16,6 +16,8 @@ import 'package:cunehat/features/budgets/presentation/bloc/budgets_state.dart';
 import 'package:cunehat/config/theme/app_gradients.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/shared/widgets/confirm_dialog.dart';
+import 'package:cunehat/core/error/error_handling.dart';
+import 'package:cunehat/core/messaging/app_messenger.dart';
 
 import 'package:cunehat/core/blocs/app_auth_bloc.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
@@ -125,7 +127,15 @@ class _BudgetsBodyState extends State<_BudgetsBody> {
     // Bu harita KÜRESEL kalır (cüzdana daraltılmaz): bir bütçe, kategorisi bu
     // cüzdanda sonradan gizlense de listede durur ve adının çözülmesi gerekir.
     // Daraltılsaydı o satır ham UUID gösterirdi.
-    final cats = await getIt<CategoryRepository>().getCategories(true);
+    final List<CategoryEntity> cats;
+    try {
+      cats = await getIt<CategoryRepository>().getCategories(true);
+    } catch (e, st) {
+      // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Önceki harita
+      // korunur: geçici bir okuma hatası çalışan etiketleri silmemeli.
+      reportError('Bütçeler · kategori adları', e, st);
+      return;
+    }
     if (!mounted) return;
     setState(() => _labels = buildCategoryLabelMap(cats));
   }
@@ -527,10 +537,21 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
   Future<void> _loadCategories() async {
     // Serbest metin yerine gerçek gider kategorileri: bütçenin categoryId'si
     // işlem tag'iyle birebir eşleşmezse harcama hiç birikmez.
-    final categories = await getIt<WalletCategoryService>().categoriesFor(
-      walletId: widget.walletId,
-      isExpense: true,
-    );
+    final List<CategoryEntity> categories;
+    try {
+      categories = await getIt<WalletCategoryService>().categoriesFor(
+        walletId: widget.walletId,
+        isExpense: true,
+      );
+    } catch (e, st) {
+      // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Yakalanmadığında
+      // seçenek listesi sessizce boş kalıyor, kullanıcı hiç kategorisi
+      // olmadığını sanıyordu.
+      reportError('Bütçe ekleme · kategoriler', e, st);
+      if (!mounted) return;
+      AppMessenger.error(context.l10n.kategorilerYuklenemedi('$e'));
+      return;
+    }
     if (!mounted) return;
     setState(() => _categories = categories);
   }

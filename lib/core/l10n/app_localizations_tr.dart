@@ -4860,4 +4860,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get driveErrLocalReadFailure =>
       'Cihazdaki veriler okunamadı. Uygulamayı yeniden başlatıp tekrar deneyin.';
+
+  @override
+  String get fisGorselAlinamadi =>
+      'Görsel alınamadı. Kamera ve fotoğraf izinlerini kontrol edin.';
 }

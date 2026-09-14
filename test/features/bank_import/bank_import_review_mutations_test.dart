@@ -189,6 +189,41 @@ void main() {
   });
 
   group('resolveCategorySuggestions', () {
+    // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Eskiden öneri
+    // adımında kalınıyor, "devam" düğmesi hiçbir şey yapmıyordu.
+    test('küresel kategoriler okunamazsa akış hata ekranına geçer', () async {
+      final repo = _MockCategoryRepo();
+      when(() => repo.getCategories(any())).thenThrow(StateError('hive'));
+      final cubit = BankImportCubit(
+        _MockReader(),
+        _MockMapper(),
+        _MockPdf(),
+        _MockRasterizer(),
+        _MockOcr(),
+        CategoryGuesser(),
+        repo,
+        _walletCategoriesStub(repo),
+        _MockTxRepo(),
+        _MockMetrics(),
+        _MockNotifier(),
+        SystemActivityGuard(),
+      );
+      const suggestion = CategorySuggestion(
+        name: 'Yatırım',
+        isIncome: false,
+        iconName: 'trending_up',
+      );
+      cubit.debugSeedSuggestions(
+        userId: 'u1',
+        walletId: 'w1',
+        suggestions: const [suggestion],
+      );
+
+      await cubit.resolveCategorySuggestions({suggestion});
+
+      expect(cubit.state, isA<BankImportError>());
+    });
+
     test('aynı ADI taşıyan iki öneriden yalnız işaretlenen kurulur', () async {
       // "Yatırım" hem gider hem gelir tarafında bir hedef; onay kimliği ada
       // bakarken birini işaretlemek diğerini de kuruyordu.

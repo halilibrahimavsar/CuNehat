@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/messaging/app_messenger.dart';
 import 'package:cunehat/core/messaging/deletion_undo_message.dart';
@@ -145,8 +146,8 @@ class _TransactionsViewState extends State<_TransactionsView> {
     final List<CategoryEntity> categories;
     try {
       categories = await fetchAllCategories(getIt<CategoryRepository>());
-    } catch (e) {
-      debugPrint('Kategori indeksi yuklenemedi, onceki korunuyor: $e');
+    } catch (e, st) {
+      reportError('İşlemler · kategori indeksi', e, st);
       return;
     }
     if (!mounted) return;

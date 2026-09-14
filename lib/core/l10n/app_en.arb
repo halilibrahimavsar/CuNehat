@@ -2624,5 +2624,6 @@
   "errorLogCopied": "Error log copied to clipboard",
   "errorLogClearConfirmTitle": "Clear the error log?",
   "errorLogClearConfirmDesc": "All recorded errors will be removed from this device.",
-  "driveErrLocalReadFailure": "Couldn't read the data on this device. Restart the app and try again."
+  "driveErrLocalReadFailure": "Couldn't read the data on this device. Restart the app and try again.",
+  "fisGorselAlinamadi": "Couldn't get the image. Check camera and photo permissions."
 }

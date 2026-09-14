@@ -1,3 +1,4 @@
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
@@ -88,7 +89,17 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
   }
 
   Future<void> _loadRoots() async {
-    final all = await _categoryRepository.getCategories(widget.isExpense);
+    final List<CategoryEntity> all;
+    try {
+      all = await _categoryRepository.getCategories(widget.isExpense);
+    } catch (e, st) {
+      // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır; eskiden hata
+      // yakalanmadan kaçıyordu. Üst kategori seçenekleri okunamazsa açılır
+      // liste boş kalır. Kayıt yolu depoyu ayrıca doğrular ve orada da
+      // okunamazsa form hatayı mesajla gösterir; burada yalnız iz bırakılır.
+      reportError('Kategori formu · üst kategoriler', e, st);
+      return;
+    }
     if (!mounted) return;
     setState(() {
       // Kategori kendi üst kategorisi olamaz; alt kategorisi olanlar da

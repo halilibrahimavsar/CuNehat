@@ -1,4 +1,5 @@
 import 'package:cunehat/config/di/injection.dart';
+import 'package:cunehat/core/error/error_handling.dart';
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/services/recent_categories_service.dart';
 import 'package:cunehat/core/shared/widgets/icon_picker.dart';
@@ -98,6 +99,9 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
   String _query = '';
   bool _loading = true;
 
+  /// Kategoriler okunamadıysa sebep; `null` = sorun yok.
+  Object? _loadError;
+
   @override
   void initState() {
     super.initState();
@@ -111,12 +115,30 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
-    final categories = await _walletCategories.categoriesFor(
-      walletId: widget.walletId,
-      isExpense: _isExpense,
-      alwaysInclude: widget.currentId,
-    );
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    final List<CategoryEntity> categories;
+    try {
+      categories = await _walletCategories.categoriesFor(
+        walletId: widget.walletId,
+        isExpense: _isExpense,
+        alwaysInclude: widget.currentId,
+      );
+    } catch (e, st) {
+      // Kategori deposu `Either` DEĞİL, EXCEPTION fırlatır. Yakalanmadığında
+      // `_loading` hiç sıfırlanmıyor ve sayfa sonsuz yükleme göstergesinde
+      // kalıyordu; boş liste göstermek de "henüz kategori yok" diye yanlış
+      // bilgi verirdi.
+      reportError('Kategori seçici', e, st);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadError = e;
+      });
+      return;
+    }
     if (!mounted) return;
     final tree = buildCategoryTree(categories);
 
@@ -225,6 +247,31 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
 
   Widget _body(Color accent) {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    final loadError = _loadError;
+    if (loadError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.l10n.kategorilerYuklenemedi('$loadError'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _load,
+                child: Text(context.l10n.tekrarDene),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     if (_tree.isEmpty) return _notice(context.l10n.henuzKategoriYok);
 
     if (_query.isNotEmpty) {
