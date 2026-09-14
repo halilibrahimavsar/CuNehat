@@ -124,8 +124,15 @@ class SliderMetrics {
     // her turda 1'e yaklaştığından döngü hızla yakınsar.
     final available = knobWidth - 2 * SliderConfig.knobLabelPaddingH;
     for (var i = 0; i < 8 && widest > available; i++) {
+      // Taban mevcut puntoyu aşamaz: sistem yazı ölçeği çok küçükken
+      // (< 11/16) başlangıç puntosu zaten tabanın altındadır ve
+      // `clamp(taban, punto)` ArgumentError fırlatırdı. Hata build sırasında
+      // doğduğu için ana gezinme kaydırıcısı hata görünümüne düşerdi.
       final shrunk = (fontSize * available / widest)
-          .clamp(SliderConfig.knobLabelMinFontSize, fontSize)
+          .clamp(
+            math.min(SliderConfig.knobLabelMinFontSize, fontSize),
+            fontSize,
+          )
           .toDouble();
       if (shrunk == fontSize) break; // daha fazla küçülemiyor
       fontSize = shrunk;

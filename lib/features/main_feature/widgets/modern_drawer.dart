@@ -17,6 +17,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Çekmecedeki kullanıcı avatarı: bağlı Google hesabının fotoğrafı; fotoğraf
+/// yoksa ya da YÜKLENEMEZSE kişi ikonu.
+///
+/// Fotoğraf ağdan gelir; çevrimdışıyken ya da adres geçersizse yüklenemez.
+/// Hata işleyicisi yokken bu hata framework'e "yakalanmamış" diye düşüyor
+/// (çekmecenin her açılışında hata günlüğüne yazılıyor) ve avatar boş bir
+/// daire olarak kalıyordu.
+class DrawerAvatar extends StatefulWidget {
+  const DrawerAvatar({super.key, required this.photoUrl});
+
+  final String? photoUrl;
+
+  @override
+  State<DrawerAvatar> createState() => _DrawerAvatarState();
+}
+
+class _DrawerAvatarState extends State<DrawerAvatar> {
+  bool _photoFailed = false;
+
+  @override
+  void didUpdateWidget(covariant DrawerAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Hesap değişince yeni fotoğrafa yeniden şans verilir.
+    if (oldWidget.photoUrl != widget.photoUrl) _photoFailed = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final photoUrl = widget.photoUrl;
+    final showPhoto = photoUrl != null && !_photoFailed;
+    return CircleAvatar(
+      radius: constants.AppSizes.avatarRadius,
+      backgroundColor: Colors.white,
+      backgroundImage: showPhoto ? NetworkImage(photoUrl) : null,
+      onBackgroundImageError: showPhoto
+          ? (_, __) {
+              if (mounted) setState(() => _photoFailed = true);
+            }
+          : null,
+      child: showPhoto
+          ? null
+          : const Icon(Icons.person, size: 28, color: Colors.blueGrey),
+    );
+  }
+}
+
 /// A premium animated drawer featuring user profile, active wallet summary card,
 /// categorized navigation menu with sub-titles, and system quick links.
 class ModernDrawer extends StatefulWidget {
@@ -359,14 +405,7 @@ class _ModernDrawerState extends State<ModernDrawer>
                 ),
               ],
             ),
-            child: CircleAvatar(
-              radius: constants.AppSizes.avatarRadius,
-              backgroundColor: Colors.white,
-              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-              child: photoUrl == null
-                  ? const Icon(Icons.person, size: 28, color: Colors.blueGrey)
-                  : null,
-            ),
+            child: DrawerAvatar(photoUrl: photoUrl),
           ),
         );
       },

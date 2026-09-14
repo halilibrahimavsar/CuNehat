@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cunehat/config/di/injection.dart';
 import 'package:cunehat/core/error/error_log.dart';
 import 'package:cunehat/core/l10n/app_localizations.dart';
@@ -10,8 +12,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../support/undecodable_image.dart';
 import '../../../../../support/wallet_category_stub.dart';
 
 class _MockCategoryRepository extends Mock implements CategoryRepository {}
@@ -47,23 +51,25 @@ void main() {
     });
   }
 
-  Future<void> pickFromCamera(WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        scaffoldMessengerKey: appMessengerKey,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('tr'), Locale('en')],
-        locale: const Locale('tr'),
-        home: Scaffold(
-          body: ReceiptRow(controller: controller, accent: Colors.teal),
+  Future<void> pumpRow(WidgetTester tester) => tester.pumpWidget(
+        MaterialApp(
+          scaffoldMessengerKey: appMessengerKey,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('tr'), Locale('en')],
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: ReceiptRow(controller: controller, accent: Colors.teal),
+          ),
         ),
-      ),
-    );
+      );
+
+  Future<void> pickFromCamera(WidgetTester tester) async {
+    await pumpRow(tester);
     await tester.tap(find.text('Fiş/fotoğraf ekle'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kamera'));
@@ -98,5 +104,22 @@ void main() {
 
     expect(find.textContaining('Görsel alınamadı'), findsNothing);
     expect(ErrorLog.instance.entries, isEmpty);
+  });
+
+  // Seçilen dosya da çözülemeyebilir (bozuk ya da motorun açamadığı bir
+  // biçim). İşleyici yokken hata "yakalanmamış" diye raporlanıyordu (test bu
+  // durumda kendiliğinden düşer) ve küçük resim boş kalıyordu.
+  testWidgets('seçilen görsel çözülemezse kırık görsel ikonu gösterilir',
+      (tester) async {
+    final dir = Directory.systemTemp.createTempSync('fis_satiri');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final file = File('${dir.path}/bozuk.jpg');
+    await writeUndecodableImage(tester, file);
+    controller.pickedReceipt.value = XFile(file.path);
+
+    await pumpRow(tester);
+    await tester.pump();
+
+    expect(find.byIcon(Icons.broken_image_rounded), findsOneWidget);
   });
 }

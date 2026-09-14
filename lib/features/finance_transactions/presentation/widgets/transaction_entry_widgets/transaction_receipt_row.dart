@@ -327,23 +327,31 @@ class _Thumb extends StatelessWidget {
 
   Widget _image(BuildContext context) {
     final p = picked;
-    if (p != null) return Image.file(File(p.path), fit: BoxFit.cover);
+    if (p != null) {
+      // Yeni seçilen dosya da çözülemeyebilir (bozuk ya da motorun açamadığı
+      // bir biçim). İşleyici yokken kare boş kalıyor ve hata "yakalanmamış"
+      // diye raporlanıyordu.
+      return Image.file(
+        File(p.path),
+        fit: BoxFit.cover,
+        errorBuilder: _brokenImage,
+      );
+    }
     return FutureBuilder<File>(
       future: getIt<ReceiptStorageService>().fileFor(savedName!),
       builder: (context, snap) {
         final file = snap.data;
         if (file == null) return const ColoredBox(color: Colors.black12);
-        return Image.file(
-          file,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const ColoredBox(
-            color: Colors.black12,
-            child: Icon(Icons.broken_image_rounded, size: 20),
-          ),
-        );
+        return Image.file(file, fit: BoxFit.cover, errorBuilder: _brokenImage);
       },
     );
   }
+
+  static Widget _brokenImage(BuildContext _, Object __, StackTrace? ___) =>
+      const ColoredBox(
+        color: Colors.black12,
+        child: Icon(Icons.broken_image_rounded, size: 20),
+      );
 
   Future<void> _open(BuildContext context) async {
     final p = picked;

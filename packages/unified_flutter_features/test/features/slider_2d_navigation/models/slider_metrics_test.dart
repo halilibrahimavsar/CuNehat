@@ -50,6 +50,27 @@ void main() {
     return metrics;
   }
 
+  // Yazı ölçeği 11/16'nın altındayken başlangıç puntosu (16 × ölçek)
+  // küçültme tabanının (11) altında kalıyor ve `clamp(taban, punto)`
+  // ArgumentError fırlatıyordu. Küçültme döngüsü yalnız sığmayan bir etiket
+  // varken çalışır: bugünkü etiketler bu ölçekte sığıyor, uzun bir etiket
+  // (ör. yeni bir dil) tetiklemeye yeter.
+  testWidgets('çok küçük yazı ölçeğinde uzun etiket ölçümü patlamaz',
+      (tester) async {
+    final m = await resolve(
+      tester,
+      labels: const ['ÇOKUZUNBİRETİKETÇOKUZUNBİRETİKETÇOKUZUNBİRETİKET'],
+      scale: 0.5,
+      trackWidth: 304,
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(
+      m.fontSize,
+      lessThanOrEqualTo(SliderConfig.knobLabelFontSize * 0.5),
+    );
+  });
+
   const scales = [1.0, 1.15, 1.3, 1.5, 1.8, 2.0, 2.5];
   const trackWidths = [304.0, 344.0, 395.0, 464.0]; // 320/360/411/480 dp − 16
 

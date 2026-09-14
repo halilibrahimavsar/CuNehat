@@ -4,6 +4,7 @@ import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/shared/widgets/app_card.dart';
 import 'package:cunehat/core/utils/label_grouper.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_bar_width.dart';
 import 'package:flutter/material.dart';
 
 /// Dönemin en çok harcanan YERLERİ — işlem başlıklarına göre.
@@ -225,8 +226,10 @@ class _PayeeRow extends StatelessWidget {
                     ),
                     Container(
                       // En küçük kalem de görünür kalsın.
-                      width: (constraints.maxWidth * fraction)
-                          .clamp(4.0, constraints.maxWidth),
+                      width: visibleBarWidth(
+                        maxWidth: constraints.maxWidth,
+                        fraction: fraction,
+                      ),
                       height: 6,
                       decoration: BoxDecoration(
                         color: scheme.primary,

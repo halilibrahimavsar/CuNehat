@@ -526,7 +526,18 @@ class _ReceiptCard extends StatelessWidget {
                     width: 56,
                     height: 56,
                     child: file != null
-                        ? Image.file(file, fit: BoxFit.cover)
+                        ? Image.file(
+                            file,
+                            fit: BoxFit.cover,
+                            // Dosya var ama çözülemiyor (yarım kalmış kopya,
+                            // bozuk görsel). İşleyici yokken kare boş kalıyor
+                            // ve hata "yakalanmamış" diye raporlanıyordu.
+                            errorBuilder: (_, __, ___) => ColoredBox(
+                              color: scheme.onSurface.withValues(alpha: 0.06),
+                              child: Icon(Icons.broken_image_rounded,
+                                  color: scheme.onSurfaceVariant),
+                            ),
+                          )
                         : ColoredBox(
                             color: scheme.onSurface.withValues(alpha: 0.06),
                             child: Icon(Icons.image_not_supported_rounded,

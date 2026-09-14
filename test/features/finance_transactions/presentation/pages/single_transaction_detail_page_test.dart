@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
@@ -7,6 +8,7 @@ import 'package:cunehat/core/l10n/app_localizations.dart';
 import 'package:cunehat/core/onboarding/onboarding_coordinator.dart';
 import 'package:cunehat/core/onboarding/onboarding_flow.dart';
 import 'package:cunehat/core/services/categories_changed_notifier.dart';
+import 'package:cunehat/core/services/receipt_storage_service.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/category_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_entity.dart';
 import 'package:cunehat/features/finance_transactions/domain/entities/transaction_type_enum.dart';
@@ -34,6 +36,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:unified_flutter_features/unified_flutter_features.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../support/undecodable_image.dart';
 import '../../../../support/wallet_category_stub.dart';
 
 class MockTransactionBloc extends MockBloc<TransactionEvent, TransactionState>
@@ -312,6 +315,58 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Market Shopping'), findsOneWidget);
+  });
+
+  // Fiş dosyası var ama çözülemiyor (yarım kalmış kopya, bozuk görsel).
+  // İşleyici yokken hata "yakalanmamış" diye raporlanıyordu (test bu durumda
+  // kendiliğinden düşer) ve önizleme karesi boş kalıyordu.
+  testWidgets('fiş görseli çözülemezse kırık görsel ikonu gösterilir',
+      (WidgetTester tester) async {
+    final base = Directory.systemTemp.createTempSync('fis_detay');
+    addTearDown(() => base.deleteSync(recursive: true));
+    getIt.registerSingleton<ReceiptStorageService>(
+        ReceiptStorageService.withBaseDir(base));
+    await writeUndecodableImage(
+        tester, File('${base.path}/receipts/bozuk.jpg'));
+
+    final now = DateTime(2026, 6, 13, 14, 30);
+    final tx = TransactionEntity(
+      id: 'tx_fis',
+      userId: 'user_123',
+      walletId: 'wallet_123',
+      title: 'Market Shopping',
+      tag: 'Food',
+      amount: 150.0,
+      date: now,
+      type: TransactionTypeModel.expense,
+      isSystem: false,
+      receiptFileName: 'bozuk.jpg',
+    );
+    final item = TransactionWithBalance(transaction: tx, balanceAfter: 850.0);
+    when(() => mockTransactionBloc.state).thenReturn(
+      TransactionLoaded(
+        groupedTransactions: {
+          now: [tx]
+        },
+        allTransactions: [tx],
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        SingleTransactionDetailPage(item: item, heroTag: 'hero_tx_fis'),
+      ),
+    );
+    // Kart dosyanın varlığını gerçek dosya sistemine sorar; sahte saatte
+    // `pump` o işi bitirmez. Yer tutucu kaybolana dek gerçek zamana izin ver.
+    final placeholder = find.byIcon(Icons.image_not_supported_rounded);
+    for (var i = 0; i < 50 && placeholder.evaluate().isNotEmpty; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)));
+      await tester.pump();
+    }
+
+    expect(find.byIcon(Icons.broken_image_rounded), findsOneWidget);
   });
 
   testWidgets('tapping Edit opens edit transaction sheet',

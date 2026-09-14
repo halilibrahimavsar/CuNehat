@@ -1,6 +1,7 @@
 import 'package:cunehat/core/extensions/context_extensions.dart';
 import 'package:cunehat/core/shared/money_writer.dart';
 import 'package:cunehat/core/utils/money_format.dart';
+import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_bar_width.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_category_data.dart';
 import 'package:cunehat/features/finance_transactions/presentation/widgets/report_widgets/report_change_badge.dart';
 import 'package:flutter/material.dart';
@@ -278,8 +279,11 @@ class _ChildRow extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        width: (constraints.maxWidth * fraction)
-                            .clamp(3.0, constraints.maxWidth),
+                        width: visibleBarWidth(
+                          maxWidth: constraints.maxWidth,
+                          fraction: fraction,
+                          minVisible: 3.0,
+                        ),
                         height: ReportCategoryBarList.childBarHeight,
                         decoration: BoxDecoration(
                           color: child.color,
@@ -445,8 +449,10 @@ class _Row extends StatelessWidget {
                     Container(
                       // En küçük kalem bile GÖRÜNÜR kalsın: sıfır genişlikli
                       // bir çubuk "veri yok" gibi okunur.
-                      width: (constraints.maxWidth * fraction)
-                          .clamp(4.0, constraints.maxWidth),
+                      width: visibleBarWidth(
+                        maxWidth: constraints.maxWidth,
+                        fraction: fraction,
+                      ),
                       height: ReportCategoryBarList.barHeight,
                       decoration: BoxDecoration(
                         color: item.color,
