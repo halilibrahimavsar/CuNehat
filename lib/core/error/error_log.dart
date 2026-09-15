@@ -203,7 +203,7 @@ class ErrorLog {
   /// eklenir; kayıtların kendisinden başka kullanıcı verisi eklenmez.
   String formatForShare() {
     final buffer = StringBuffer()
-      ..writeln('ÇuNehat hata günlüğü · ${_entries.length} kayıt')
+      ..writeln('ÇuHat hata günlüğü · ${_entries.length} kayıt')
       ..writeln('Oluşturma: ${formatTimestamp(clock())}')
       ..writeln('Platform: ${_platformDescription()}');
     for (final entry in entries) {

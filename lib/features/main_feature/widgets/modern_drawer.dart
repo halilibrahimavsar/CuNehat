@@ -421,7 +421,9 @@ class _ModernDrawerState extends State<ModernDrawer>
     final driveUser = getIt<GoogleDriveBackupService>().currentUser;
     final displayName =
         driveUser?.displayName ?? user?.displayName ?? context.l10n.defaultUser;
-    final email = driveUser?.email ?? user?.email ?? context.l10n.yerelMod;
+    // Yerel kullanıcının gösterilecek bir e-postası yok: `LocalUser.guest`
+    // alanı yer tutucudur. Bağlı Drive hesabı yoksa "Yerel Mod" yazılır.
+    final email = driveUser?.email ?? context.l10n.yerelMod;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -919,7 +921,7 @@ class _ModernDrawerState extends State<ModernDrawer>
           ),
           const SizedBox(width: 8),
           Text(
-            'ÇuNehat v1.0.0',
+            'ÇuHat v1.0.0',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

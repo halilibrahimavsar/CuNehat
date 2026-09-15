@@ -8,6 +8,6 @@
 
     <!-- Debug'daki ayrımın aynısı: yan yana kurulumda simgeler karışmasın. -->
     <application
-        android:label="ÇuNehat DEV"
+        android:label="ÇuHat DEV"
         tools:replace="android:label" />
 </manifest>

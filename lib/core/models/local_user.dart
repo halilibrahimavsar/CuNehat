@@ -11,10 +11,13 @@ class LocalUser extends Equatable {
     required this.displayName,
   });
 
+  /// Hesapsız (yerel) kullanıcı. [email] yalnız alanı dolduran bir yer
+  /// tutucudur ve arayüzde GÖSTERİLMEZ: çekmece e-posta olarak yalnız bağlı
+  /// Google Drive hesabını, o yoksa "Yerel Mod"u yazar.
   factory LocalUser.guest() {
     return const LocalUser(
       uid: 'local_user',
-      email: 'guest@cunehat.local',
+      email: 'guest@local',
       displayName: 'Misafir Kullanıcı',
     );
   }

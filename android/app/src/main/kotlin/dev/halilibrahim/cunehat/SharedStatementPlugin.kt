@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
  * PAYLAŞILAN ekstre dosyasını içe aktarma akışına taşır.
  *
  * **Yeni bir izin YOKTUR.** Manifest'teki `ACTION_SEND` süzgeci bir izin değil;
- * uygulamayı yalnızca paylaş menüsünde görünür yapar. Kullanıcı CuNehat'i
+ * uygulamayı yalnızca paylaş menüsünde görünür yapar. Kullanıcı ÇuHat'ı
  * seçtiğinde Android o TEK öğe için tek seferlik, salt-okunur bir URI izni
  * verir — dosya seçicinin (SAF) verdiğinden daha geniş değil, daha dardır.
  *

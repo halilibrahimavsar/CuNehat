@@ -74,7 +74,7 @@ class LocalBackupService {
       // PIN açıkken dönüşte kilit ekranı akışı yarıda kesiyordu.
       final path = await _systemActivity.run(
         () => FilePicker.saveFile(
-          dialogTitle: 'ÇuNehat yedeğini kaydet',
+          dialogTitle: 'ÇuHat yedeğini kaydet',
           fileName: _backupFileName(),
           type: FileType.custom,
           allowedExtensions: const ['json'],
@@ -155,7 +155,7 @@ class LocalBackupService {
 
       await SharePlus.instance.share(ShareParams(
         files: [XFile(path)],
-        text: shareText ?? 'ÇuNehat yedeği',
+        text: shareText ?? 'ÇuHat yedeği',
       ));
 
       return const LocalBackupResult.success();

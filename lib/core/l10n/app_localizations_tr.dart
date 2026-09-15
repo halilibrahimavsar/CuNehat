@@ -651,7 +651,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get fullBackupCancelled => 'Yedekleme işlemi iptal edildi.';
 
   @override
-  String get fullBackupShareText => 'ÇuNehat tam yedeği';
+  String get fullBackupShareText => 'ÇuHat tam yedeği';
 
   @override
   String get activeWalletRequiredForExport =>
@@ -2054,7 +2054,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationRationaleBody =>
-      'ÇuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.';
+      'ÇuHat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.';
 
   @override
   String get notificationRationaleLater => 'Şimdi Değil';
@@ -2167,7 +2167,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationDiagnosticsBatteryBody =>
-      'Telefonun pil ayarlarından ÇuNehat\'i kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.';
+      'Telefonun pil ayarlarından ÇuHat\'ı kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.';
 
   @override
   String get notificationDiagnosticsOn => 'Açık';
@@ -2181,7 +2181,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get notificationTestTitle => 'ÇuNehat test bildirimi';
+  String get notificationTestTitle => 'ÇuHat test bildirimi';
 
   @override
   String get notificationTestBody =>
@@ -2256,7 +2256,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get notifDailyReminderTitle => 'ÇuNehat';
+  String get notifDailyReminderTitle => 'ÇuHat';
 
   @override
   String get notifDailyReminder1 =>
@@ -3283,7 +3283,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyIntro =>
-      'ÇuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.';
+      'ÇuHat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.';
 
   @override
   String get privacyLocalDataTitle => 'Cihazınızda saklanan veriler';
@@ -3297,7 +3297,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyDriveBody =>
-      'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve kısıtlı \"drive.appdata\" kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) kendi Drive\'ınızdaki, başka uygulamaların erişemediği özel bir klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.';
+      'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve yalnızca bu uygulamaya ayrılmış \"drive.appdata\" kapsamı kullanılır. Yedekler kendi Drive\'ınızdaki, başka uygulamaların erişemediği gizli bir uygulama klasörüne yazılır; en fazla son 5 kopya tutulur. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.';
 
   @override
   String get privacyMarketDataTitle => 'Piyasa verisi';
@@ -3311,7 +3311,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupOfferBody =>
-      'ÇuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.';
+      'ÇuHat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.';
 
   @override
   String get backupOfferSetup => 'Yedeklemeyi Kur';
@@ -3367,7 +3367,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get privacyConsentBody =>
-      'ÇuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.';
+      'ÇuHat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.';
 
   @override
   String get privacyConsentAcknowledge => 'Anladım';

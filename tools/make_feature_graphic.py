@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Play feature graphic'in YAZI bloğunu yeniden çizer (1024x500).
 
-Neden betik: marka adı `CuNehat` iken `ÇuNehat` oldu ve grafik elle çizilmiş
-tek bir PNG'ydi — üreteci yoktu, yani her metin değişikliği elde yeniden
-tasarım demekti.
+Neden betik: grafik elle çizilmiş tek bir PNG'ydi — üreteci yoktu, yani her
+metin değişikliği elde yeniden tasarım demekti. Kelime işareti şimdiye kadar
+iki kez değişti: `CuNehat` → `ÇuNehat` (26 Ağu 2026) → `ÇuHat` (16 Eyl 2026).
 
 Neden "yeniden çizim" ve sıfırdan üretim değil: işaret (halka + yükselen ok)
 ve zemin gradyanı elle yapılmış, kaynağı yok. Bu yüzden görselin kendisi
@@ -35,7 +35,7 @@ WORDMARK_BASELINE = 245
 SUB_LINE1_TOP = 284
 SUB_LINE2_TOP = 328
 
-WORDMARK = "ÇuNehat"
+WORDMARK = "ÇuHat"
 SUB_LINES = ("Kişisel finans — cüzdanlar,", "bütçeler, borçlar, yatırımlar")
 
 TEXT = (255, 255, 255)
@@ -75,7 +75,9 @@ def main() -> None:
 
     draw = ImageDraw.Draw(img)
 
-    # Kelime işareti: özgün blokla aynı genişliğe (353 px) oturan boy.
+    # Kelime işareti boyu ilk kelime işaretine (`ÇuNehat`, 353 px genişlik)
+    # göre ölçüldü. Boy marka kimliğinin parçası; kısa ad aynı boyda daha dar
+    # oturur, boy büyütülmez.
     word_font = load_font(82, "Bold")
     # `anchor="ls"` = sol/temel çizgi; özgün temel çizgi ölçüldü.
     draw.text((LEFT, WORDMARK_BASELINE), WORDMARK, font=word_font,

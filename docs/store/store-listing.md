@@ -1,4 +1,4 @@
-# ÇuNehat — Play Store listing metinleri
+# ÇuHat — Play Store listing metinleri
 
 Adım 8'in eksik parçası. Karakter sınırları Play Console'un dayattığı sert
 sınırlardır; aşarsan form kaydetmez.
@@ -10,32 +10,46 @@ sınırlardır; aşarsan form kaydetmez.
 
 ---
 
-## Marka adı: ÇuNehat, `Ç` ile
+## Marka adı: ÇuHat (16 Eylül 2026'ya kadar ÇuNehat)
 
-Uygulamanın adı **ÇuNehat**. Bir dönem `C` ile yazılıyordu; bunun teknik bir
-gerekçesi olduğu sanılıyordu, yoktu — Play Console'un uygulama adı alanı da
-`AndroidManifest.xml`'deki `android:label` de Unicode kabul ediyor.
+Uygulamanın adı **ÇuHat**. 16 Eylül 2026'da ÇuNehat'tan değişti; uygulama o gün
+yalnız kapalı testteydi (13 tester), halka açık bir marka geçmişi yoktu. Paket
+adı ve kullanıcı verisine bağlı kimlikler DEĞİŞMEDİ (aşağıdaki ikinci tablo).
 
-**Ç olan yerler** (2026-08-26'da geçildi): Play Console uygulama adı,
-`android:label`, `MaterialApp.title`, tüm l10n metinleri, çekmecedeki sürüm
-satırı, gizlilik politikası ve tanıtım görselindeki kelime işareti.
+**Yazım: uygulamada `Ç`, mağaza başlığında düz `C`.**
 
-**ASCII kalan yerler ve nedenleri — bunlara dokunma:**
+| Nerede | Yazım |
+|---|---|
+| `android:label`, `MaterialApp.title`, l10n, çekmecedeki sürüm satırı, gizlilik politikası, tanıtım görseli | **ÇuHat** |
+| Play Console uygulama adı (tr-TR + en-US) | **CuHat** — 30 Ağu 2026'daki düz `C` kararı, ad değişikliğinde yeniden onaylandı |
+
+Neden başlıkta `C`: kullanıcıların çoğu telefonda harf ayarsız yazar ("cuhat")
+ve Play'in Türkçe ç/c normalizasyonu garanti değil. Başlık aramanın en ağır
+alanı olduğu için ASCII yazımı kesin yakalar; `Ç`'li yazım uzun açıklamanın
+**ilk cümlesinde** `ÇuHat (CuHat)` olarak indeksleniyor.
+
+**Türkçe ekler kalın ünlüyle:** `ÇuHat'ı`, `ÇuHat'a`, `ÇuHat'ın`, `ÇuHat'ta` —
+"hat → hattı, hatta" gibi okunur. Eski metinler ince ek kullanıyordu
+(`ÇuNehat'i`, `'e`, `'in`); ad değişikliğinde her biri tek tek düzeltildi.
+
+**Eski adı taşıyan kalıcı kimlikler — bunlara dokunma:**
 
 | Yer | Değer | Neden |
 |---|---|---|
-| `applicationId` | `dev.halilibrahim.cunehat` | ASCII zorunlu; **yayından sonra asla değişmez** |
-| Dart tanımlayıcıları | `CuNehatApp`, `cunehat_app.dart` | kod, marka değil |
-| Yedek dosya adı | `cunehat_backup_YYYYMMDD_HHmm.json` | paylaşım/dosya sistemi tuzağı |
+| `applicationId` + Kotlin paketi | `dev.halilibrahim.cunehat` | değişirse Play'de başka bir uygulama olur |
+| Drive yedek öneki | `cunehat_backup` | liste sorgusu `name contains`; değişirse mevcut Drive yedekleri görünmez olur |
+| Yerel yedek dosya adı | `cunehat_backup_YYYYMMDD_HHmm.json` | Drive önekiyle aynı ad; `.gitignore` bekçisi bu desene bağlı |
+| Bildirim kanal kimlikleri | `cunehat_critical` / `_recurring` / `_motivational` | değişirse kullanıcının kanal ayarları kaybolur |
+| MethodChannel adları | `dev.halilibrahim.cunehat/…` | iç kimlik, iki taraf birlikte değişmeli |
+| Dart paketi ve tanımlayıcılar | `cunehat`, `CuNehatApp` | kod, marka değil |
+| GitHub repo adı | `CuNehat` | değişirse Pages eski adresi yönlendirmez; Play'deki gizlilik politikası URL'i 404 olur |
+
+Bu ayrım `test/branding/brand_identity_test.dart` ile kilitli: eski ad görünen
+bir yerde kalırsa ya da tablodaki bir kimlik değişirse test kırılır.
 
 **Simge `Ç` olmadı ve olmamalı.** İşaret bir "C" halkası gibi okunuyor ama
 harf değil marka işaretidir. Sedilla eklemek 48dp'de kuyruk ekler ve işaretin
 dış çapının tuvalin %72'si olması kuralını bozar (bkz. ikon turu notları).
-
-**ASO tarafı: her iki yazımı da indeksle.** Play'in Türkçe aramada ç/c
-normalizasyonu garanti değil; kullanıcı "cunehat" da yazabilir. Bu yüzden uzun
-açıklamanın **ilk cümlesinde** parantez içinde `(CuNehat)` duruyor. Başlıkta
-durmasın — orada 10 karakter, aranan terime gitmeli.
 
 ---
 
@@ -48,8 +62,8 @@ sinyallere (tutunma, listeden kuruluma dönüşüm) kaydı — yani metin seni a
 sonucuna sokar, **elde tutan şey ürün.**
 
 **Bu listelemedeki en büyük tek kayıp başlıktı.** Play Console'un uygulama adı
-alanı 30 karakter ve "ÇuNehat" bunun 7'sini kullanıp **sıfır arama hacmi**
-getiriyor: kimse "ÇuNehat" aramıyor, çünkü kimse bilmiyor. Türkiye pazarındaki
+alanı 30 karakter ve marka adı bunun 5'ini kullanıp **sıfır arama hacmi**
+getiriyor: kimse "ÇuHat" aramıyor, çünkü kimse bilmiyor. Türkiye pazarındaki
 rakiplerin tamamı ana terimi başlığa koyuyor — *Gelir Gider Takibi*,
 *GiderimVar - Gelir Gider Bütçe*, *Bütçe Yönetimi Gelir & Gider*,
 *Hızlı Bütçe – Gider Yöneticisi*. Marka adı tek başına başlıkta durduğu sürece
@@ -65,7 +79,7 @@ israf; her alan yeni terim taşımalı):
 | Uzun açıklama | cüzdan, kredi kartı, fiş, OCR, yatırım, döviz, altın, taksit, rapor, yedek |
 
 **Ana terimi kazan, farkı ekran görüntüsünde göster.** Bu kategoride onlarca
-klon var; ÇuNehat'i ayıran şey **banka ekstresi okuma** (PDF/CSV/Excel + taranmış
+klon var; ÇuHat'ı ayıran şey **banka ekstresi okuma** (PDF/CSV/Excel + taranmış
 PDF için cihaz içi OCR) — Türkiye pazarında neredeyse hiçbir rakipte yok. Ama
 "ekstre" arama hacmi "gelir gider"in yanında küçük. Doğru kurgu: **aramaya ana
 terimle gir, dönüşümü farkla al.**
@@ -77,13 +91,13 @@ terimle gir, dönüşümü farkla al.**
 ### Uygulama adı (sınır 30) — **en ağır alan**
 
 ```
-ÇuNehat: Gelir Gider Takibi
+CuHat: Gelir Gider Takibi
 ```
 
-*27 karakter.* Marka + ana terim. "Gelir gider" bu kategorinin baş terimi;
+*25 karakter.* Marka (düz `C`, bkz. *Marka adı*) + ana terim. "Gelir gider" bu kategorinin baş terimi;
 "takibi" ifadeyi doğal bitiriyor.
 
-> **Değerlendirilip elenen alternatif:** `ÇuNehat: Gelir Gider Bütçe` (26) bir
+> **Değerlendirilip elenen alternatif:** `CuHat: Gelir Gider Bütçe` (24) bir
 > baş terim daha taşıyor ama arama sonucunda anahtar kelime yığını gibi okunuyor.
 > Dönüşüm artık sıralamada anahtar kelimeden ağır bastığı için okunabilirlik
 > seçildi. İlk kurulumlar geldikten sonra Play Console'un **listeleme deneyleri**
@@ -108,12 +122,12 @@ banka ekstresi. Sonundaki gizlilik ifadesi dönüşüm için duruyor.
 
 > **Açılıştaki ilk ~170 karakter kritik:** Play listelemede metni orada kesip
 > "Devamını oku" koyuyor. Kesilmeden önce görünen kısım hem baş terimleri hem
-> kancayı taşımalı. Aşağıdaki açılış **169 karakter** ve cümle sınırında
-> bitiyor; parantezli `(CuNehat)` de oraya sığdı, yani ikinci yazım da
+> kancayı taşımalı. Aşağıdaki açılış **165 karakter** ve cümle sınırında
+> bitiyor; parantezli `(CuHat)` de oraya sığdı, yani ikinci yazım da
 > indekseniyor.
 
 ```
-ÇuNehat (CuNehat); gelir gider takibi, bütçe ve borç takibi için yapılmış
+ÇuHat (CuHat); gelir gider takibi, bütçe ve borç takibi için yapılmış
 reklamsız bir kişisel finans uygulamasıdır. Banka ekstrenizi okur, veriler
 telefonunuzda kalır.
 
@@ -127,7 +141,8 @@ güncel kur otomatik uygulanır, bakiyeler kuruşu kuruşuna tutar.
 
 GELİR, GİDER VE KATEGORİLER
 İşlemlerini kategorilere ayır, kendi kategorilerini oluştur, ikonunu ve rengini
-seç. Her işleme not, etiket ve fiş fotoğrafı ekleyebilirsin.
+seç. Her işleme not, etiket ve fiş fotoğrafı ekleyebilirsin. Kategorilerin yan
+menüde kendi sayfası var; her cüzdan yalnız kendi kategori kümesini gösterir.
 
 BANKA EKSTRESİNİ İÇE AKTAR
 PDF, CSV, Excel (.xls/.xlsx) ekstrelerini doğrudan oku. Taranmış PDF'ler bile
@@ -165,7 +180,8 @@ harcadığını rakamla ve grafikle gör.
 
 GÜVENLİK
 Parmak izi / yüz tanıma veya PIN ile kilitle. Kilit uygulamanın kendisindedir,
-bir hesaba bağlı değildir.
+bir hesaba bağlı değildir. PIN'ini unutursan veri gitmez: cihaz kilidinle
+açabilir ya da 24 saat gecikmeli sıfırlama isteyebilirsin.
 
 YEDEKLEME VE DIŞA AKTARMA
 Google Drive'a yedekle ve geri yükle — yedek senin kendi Drive alanında,
@@ -173,7 +189,8 @@ uygulamaya özel klasörde tutulur. Ayrıca JSON ve CSV olarak dışa aktarabili
 Verini istediğin an alıp gidebilirsin; dışa aktarma hiçbir zaman kilitlenmez.
 
 TÜRKÇE VE İNGİLİZCE
-Arayüz her iki dilde. Açık ve koyu tema desteği var.
+Arayüz her iki dilde; hazır kategori adları uygulamanın diline göre kurulur.
+Açık ve koyu tema desteği var.
 
 ---
 
@@ -184,11 +201,11 @@ Finansal kayıtların telefonunun içindeki veritabanında durur. Google ile gir
 yalnızca Drive yedeğini açmak istersen sorulur ve tamamen isteğe bağlıdır —
 diğer tüm özellikler girişsiz çalışır.
 
-ÇuNehat bir banka ya da finans kuruluşu değildir; kredi, yatırım veya ödeme
+ÇuHat bir banka ya da finans kuruluşu değildir; kredi, yatırım veya ödeme
 hizmeti sunmaz. Yalnızca kendi kayıtlarını tutmana yarayan bir defterdir.
 ```
 
-*~2.950 karakter — sınırın rahat altında.*
+*~3.340 karakter — sınırın rahat altında.*
 
 ---
 
@@ -197,13 +214,13 @@ hizmeti sunmaz. Yalnızca kendi kayıtlarını tutmana yarayan bir defterdir.
 ### App name (limit 30)
 
 ```
-ÇuNehat: Budget & Expenses
+CuHat: Budget & Expenses
 ```
 
-*26 karakter.* Aynı mantık: marka + baş terim. Marka `Ç` ile, İngilizce
-listelemede de — tek marka, tek yazım.
+*24 karakter.* Aynı mantık: marka + baş terim. Marka İngilizce listelemede de
+TR başlıktaki gibi düz `C` ile — iki dilde tek karar.
 
-> `ÇuNehat: Expense & Budget Tracker` doğal olurdu ama **33 karakter** — sınırı
+> `CuHat: Expense & Budget Tracker` doğal olurdu ama **31 karakter** — sınırı
 > aşıyor, Console kaydetmez. "Tracker" kelimesini kısa açıklamaya bırak.
 
 ### Short description (limit 80)
@@ -223,7 +240,7 @@ statement import.
 ### Long description (limit 4000)
 
 ```
-ÇuNehat (CuNehat) is an ad-free personal finance app for expense tracking,
+ÇuHat (CuHat) is an ad-free personal finance app for expense tracking,
 budgeting and debt tracking. It reads your bank statements, and your data stays
 on your phone.
 
@@ -237,7 +254,8 @@ apply the current exchange rate automatically, and balances stay cent-accurate.
 
 INCOME, EXPENSES AND CATEGORIES
 Sort transactions into categories, create your own, pick icons and colours. Every
-transaction can carry a note, a tag and a receipt photo.
+transaction can carry a note, a tag and a receipt photo. Categories have their
+own page in the side menu, and each wallet shows only its own set.
 
 BANK STATEMENT IMPORT
 Read PDF, CSV and Excel (.xls/.xlsx) statements directly. Even scanned PDFs are
@@ -276,7 +294,8 @@ in numbers and in charts.
 
 SECURITY
 Lock the app with fingerprint, face unlock or a PIN. The lock belongs to the app
-itself and is not tied to any account.
+itself and is not tied to any account. Forgetting your PIN doesn't cost you your
+data: unlock with your device lock, or request a 24-hour delayed reset.
 
 BACKUP AND EXPORT
 Back up to Google Drive and restore — the backup lives in your own Drive, in the
@@ -284,7 +303,8 @@ app's private folder. You can also export to JSON and CSV. You can take your dat
 and leave whenever you want; export is never locked behind a payment.
 
 TURKISH AND ENGLISH
-The interface is available in both languages, with light and dark themes.
+The interface is available in both languages, and built-in category names are
+created in your app language. Light and dark themes are supported.
 
 ---
 
@@ -295,7 +315,7 @@ analytics SDK. Your financial records sit in a database inside your phone.
 Signing in with Google is only asked for if you choose to enable Drive backup,
 and it is entirely optional — every other feature works without signing in.
 
-ÇuNehat is not a bank or a financial institution and offers no credit, investment
+ÇuHat is not a bank or a financial institution and offers no credit, investment
 or payment services. It is simply a ledger for keeping your own records.
 ```
 
@@ -306,7 +326,7 @@ or payment services. It is simply a ledger for keeping your own records.
 ### Türkçe (sınır 500)
 
 ```
-ÇuNehat'in ilk sürümü.
+ÇuHat'ın ilk sürümü.
 
 Cüzdanlar ve çoklu para birimi, gelir/gider takibi, kategoriler, bütçeler,
 borç ve alacak takibi, yinelenen işlemler ve hatırlatıcılar, raporlar ve
@@ -319,7 +339,7 @@ Reklamsız ve aboneliksiz. Verilerin cihazında kalır.
 ### English (limit 500)
 
 ```
-The first release of ÇuNehat.
+The first release of ÇuHat.
 
 Wallets and multi-currency, income and expense tracking, categories, budgets,
 debt and receivable tracking, recurring transactions and reminders, reports and
@@ -467,6 +487,57 @@ If you forget your PIN
 Numbers
 • Transfers no longer count as spending — report, budget and insights agree.
 • Multi-wallet and foreign-currency totals fixed.
+```
+
+---
+
+## Sürüm notları — 1.0.0 (versionCode 6)
+
+Ad değişikliği sürümü (16 Eyl 2026): **ÇuNehat → ÇuHat**. Kapsam `76683c2..`
+(`+5` hazırlığından sonrası): bildirim sağlamlığı, rapor dönem çubuğu, borçta
+göz düğmesi, ekstre 12. tur, çalışma zamanı hata denetimi (5 kısım) ve ad
+değişikliği. Şema DEĞİŞMEDİ (`schemaVersion` 10). İki yeni tercih anahtarı var
+(`app_auth_lock_configured`, `error_log_v1`); ikisi de yoksa güvenli varsayılana
+düşer.
+
+> ⚠️ Notlar testerların `+5`'i aldığını varsayar. Testerlarda hâlâ `+4` varsa
+> `+5` notlarının "Kategoriler artık senin" ve "Şifreni unutursan" bölümleri de
+> girmeli; 500 sınırı için "Banka ekstresi" bölümü tek maddeye indirilir.
+
+### Türkçe (476 karakter, sınır 500)
+
+```
+Uygulamanın yeni adı: ÇuHat
+• Aynı uygulama; verilerin, yedeklerin ve ayarların yerinde.
+
+Hatırlatmalar
+• Vadesi geçen kayıt için hatırlatma her sabah yeniden gelir.
+
+Banka ekstresi
+• İkinci içe aktarımda kategori tahmini düzeldi; elle girdiğin kayıt tekrar olarak yakalanıyor.
+• Kaydederken geri basınca içe aktarım yarıda kalmıyor.
+
+Güvenlik ve kararlılık
+• PIN'li uygulama her koşulda kilitli açılır.
+• Takılan yükleme ekranları düzeldi; hata günlüğü Ayarlar → Hakkında'da.
+```
+
+### English (472 karakter, sınır 500)
+
+```
+The app has a new name: ÇuHat
+• Same app; your data, backups and settings stay as they are.
+
+Reminders
+• Overdue items now remind you again every morning.
+
+Bank statements
+• Category guesses on a second import are fixed; entries you added by hand are caught as duplicates.
+• Pressing back while saving no longer interrupts the import.
+
+Security and stability
+• A PIN-protected app always opens locked.
+• Stuck loading screens fixed; an error log is under Settings → About.
 ```
 
 ---
@@ -624,27 +695,12 @@ Grafiğin yazı bloğu `tools/make_feature_graphic.py` ile yeniden üretilebilir
 
 ---
 
-## Uzun açıklamada eksik kalanlar (9 Eyl 2026 denetimi)
+## Uzun açıklamada eksik kalanlar — ✅ KAPANDI (16 Eyl 2026)
 
-Aşağıdaki üç madde uygulamada **var** ama yayımlanmış uzun açıklamada **yok**.
-Hiçbiri yanlış beyan değil (eksik anlatım yanıltıcı beyan sayılmaz), o yüzden
-`+5` yüklemesini bloke etmez — ama listelemeyi Console'da bir dahaki
-düzenlemende bu üç cümle girmeli. Metni buraya yazıyorum ki "neydi o" diye
-aranmasın; **girildiğinde bu bölüm silinip cümleler yukarıdaki bloğa taşınacak.**
-
-| Nerede | Eklenecek |
-|---|---|
-| `GELİR, GİDER VE KATEGORİLER` sonuna | *Kategorilerin yan menüde kendi sayfası var; her cüzdan yalnız kendi kategori kümesini gösterir.* |
-| `GÜVENLİK` sonuna | *PIN'ini unutursan veri gitmez: cihaz kilidinle açabilir ya da 24 saat gecikmeli sıfırlama isteyebilirsin.* |
-| `TÜRKÇE VE İNGİLİZCE` sonuna | *Hazır kategori adları uygulamanın diline göre kurulur.* |
-
-İngilizcesi:
-
-| Where | Add |
-|---|---|
-| end of `INCOME, EXPENSES AND CATEGORIES` | *Categories have their own page in the side menu, and each wallet shows only its own set.* |
-| end of `SECURITY` | *Forgetting your PIN no longer costs your data: unlock with your device lock, or request a 24-hour delayed reset.* |
-| end of `TURKISH AND ENGLISH` | *Built-in category names are created in your app language.* |
+9 Eylül denetiminde uygulamada olup uzun açıklamada olmayan üç özellik —
+kategorilerin kendi sayfası ve cüzdana göre görünürlüğü, PIN kurtarma, hazır
+kategori adlarının dile göre kurulması — ad değişikliği turunda yukarıdaki TR ve
+EN uzun açıklamalara taşındı. Console'a yeni başlıkla aynı gönderimde girer.
 
 **Neden karelere girmedi:** 8 telefon yuvasının tamamı dolu ve mevcut sekiz
 tema (defter, ekstre, rapor, birikim, bütçe, borç, düzenli, gizlilik) bu üç
@@ -677,5 +733,5 @@ karenin çipleri zaten dolu; tablet görselleri eklenirken (aşağıdaki liste)
   üstelik bu sinyali besliyor.
 - **Site zaten var, tam kullanılmıyor.** `docs/index.html` şu an yalnız gizlilik
   politikasına link veriyor. Play bağlantısı + ekran görüntüleri eklenirse
-  markalı arama ("ÇuNehat") için indekslenen bir dış sinyal olur. Play URL'i
+  markalı arama ("ÇuHat") için indekslenen bir dış sinyal olur. Play URL'i
   ancak yayından sonra oluşacağı için bu iş production çıkışına ertelenmeli.

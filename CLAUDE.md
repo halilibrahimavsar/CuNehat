@@ -1,4 +1,4 @@
-# ÇuNehat — Proje Kuralları
+# ÇuHat — Proje Kuralları
 
 ## Veri uyumluluğu politikası (kapalı test YAYINDA)
 

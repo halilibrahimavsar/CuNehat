@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ÇuNehat — Privacy Policy / Gizlilik Politikası</title>
+  <title>ÇuHat — Privacy Policy / Gizlilik Politikası</title>
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -27,14 +27,14 @@
 
   <!-- =========================== ENGLISH =========================== -->
   <section id="en">
-    <h1>ÇuNehat — Privacy Policy</h1>
-    <p class="meta">Last updated: 4 August 2026 · App package: <code>dev.halilibrahim.cunehat</code></p>
+    <h1>ÇuHat — Privacy Policy</h1>
+    <p class="meta">Last updated: 16 September 2026 · App package: <code>dev.halilibrahim.cunehat</code> · formerly ÇuNehat</p>
 
     <p>
-      ÇuNehat ("the app") is a personal finance application that helps you track
+      ÇuHat ("the app") is a personal finance application that helps you track
       wallets, transactions, debts, receivables, investments, budgets and
       recurring entries. This policy explains what data the app handles, how it
-      is used, and the choices you have. We designed ÇuNehat to be
+      is used, and the choices you have. We designed ÇuHat to be
       <strong>offline-first</strong>: your financial records stay on your device
       unless you explicitly enable cloud backup.
     </p>
@@ -62,11 +62,11 @@
     <ul>
       <li><strong>Your email address</strong> — shown in the app so you know which
         account is connected.</li>
-      <li><strong>Google Drive application data folder</strong> (restricted
-        <code>drive.appdata</code> scope only) — a single backup file
-        (<code>cunehat_backup.json</code>) is written to a private,
-        app-specific folder in <em>your own</em> Google Drive. This folder is not
-        visible in your normal Drive view and is not accessible by other apps.</li>
+      <li><strong>Google Drive application data folder</strong> (app-specific
+        <code>drive.appdata</code> scope only) — backups are written to a hidden,
+        app-specific folder in <em>your own</em> Google Drive, and the app keeps
+        at most the last 5 copies. This folder is not visible in your normal
+        Drive view and is not accessible by other apps.</li>
     </ul>
     <p>
       The app does <strong>not</strong> request full Drive access and cannot read
@@ -89,14 +89,14 @@
     <h3>1.4 Receipt photos and on-device text recognition</h3>
     <p>
       You can optionally attach a receipt photo to a transaction, taken with the
-      camera or picked from your gallery through the system picker. ÇuNehat does
+      camera or picked from your gallery through the system picker. ÇuHat does
       not request permanent camera or storage permission; the system hands over
       only the single image you choose.
     </p>
     <ul>
       <li><strong>Images stay on your device.</strong> They are copied into the
         app's private storage and are never uploaded — not to us, and not to your
-        Google Drive backup (the backup file contains records only, no images).</li>
+        Google Drive backups (backups contain records only, no images).</li>
       <li><strong>Text recognition runs offline.</strong> Reading the amount and
         date from a receipt uses Google ML Kit's on-device text recognition model,
         which is bundled inside the app. The image is not sent to any server.</li>
@@ -107,7 +107,7 @@
     <h3>1.5 Bank statement import</h3>
     <p>
       You can import a bank statement (PDF, CSV, Excel) that you select yourself,
-      or send to ÇuNehat from another app's share menu. This is always initiated
+      or send to ÇuHat from another app's share menu. This is always initiated
       by you — the app has no access to your bank and no permission to browse
       your files.
     </p>
@@ -117,8 +117,22 @@
         recognition described in 1.4.</li>
       <li>Only the transactions you confirm on the review screen are saved. The
         statement file itself is not retained by the app.</li>
-      <li>When a file is shared with ÇuNehat, Android grants a one-time,
+      <li>When a file is shared with ÇuHat, Android grants a one-time,
         read-only permission for that single file.</li>
+    </ul>
+
+    <h3>1.6 Error log (stays on your device)</h3>
+    <p>
+      To help diagnose problems, the app keeps a short log of recent errors in its
+      private storage: at most 50 entries, each with the time, the part of the
+      app involved, the error message and a technical trace. Error messages can
+      include fragments of the data being processed when the error occurred.
+    </p>
+    <ul>
+      <li>The log is <strong>never sent anywhere automatically</strong>.</li>
+      <li>You can view, copy, share or clear it under
+        <em>Settings → About → Error log</em>. It leaves your device only if you
+        share it yourself, and only to the app you choose.</li>
     </ul>
 
     <h2>2. How we use data</h2>
@@ -132,7 +146,7 @@
 
     <h2>3. Google API Services — Limited Use</h2>
     <p>
-      ÇuNehat's use of information received from Google APIs adheres to the
+      ÇuHat's use of information received from Google APIs adheres to the
       <a href="https://developers.google.com/terms/api-services-user-data-policy">
       Google API Services User Data Policy</a>, including the Limited Use
       requirements. The Google Drive access is used exclusively to back up and
@@ -153,9 +167,9 @@
       <li><strong>Local data:</strong> remains until you delete it. You can erase
         all local data from <em>Settings → Data management → Delete all data</em>,
         or by uninstalling the app or clearing its storage.</li>
-      <li><strong>Cloud backup:</strong> you can delete the Drive backup file from
-        within the app (<em>Settings → Backup</em>), or disconnect your account.
-        You may also remove the app's access at any time from your
+      <li><strong>Cloud backup:</strong> you can delete one or all of your Drive
+        backups from within the app (<em>Settings → Backup</em>), or disconnect
+        your account. You may also remove the app's access at any time from your
         <a href="https://myaccount.google.com/permissions">Google Account
         permissions</a>.</li>
     </ul>
@@ -184,7 +198,7 @@
 
     <h2>8. Children</h2>
     <p>
-      ÇuNehat is a general-purpose finance tool and is not directed at children
+      ÇuHat is a general-purpose finance tool and is not directed at children
       under 13. We do not knowingly collect data from children.
     </p>
 
@@ -205,15 +219,15 @@
 
   <!-- =========================== TÜRKÇE =========================== -->
   <section id="tr" lang="tr">
-    <h1>ÇuNehat — Gizlilik Politikası</h1>
-    <p class="meta">Son güncelleme: 4 Ağustos 2026 · Uygulama paketi: <code>dev.halilibrahim.cunehat</code></p>
+    <h1>ÇuHat — Gizlilik Politikası</h1>
+    <p class="meta">Son güncelleme: 16 Eylül 2026 · Uygulama paketi: <code>dev.halilibrahim.cunehat</code> · önceki adıyla ÇuNehat</p>
 
     <p>
-      ÇuNehat ("uygulama"); cüzdanları, işlemleri, borçları, alacakları,
+      ÇuHat ("uygulama"); cüzdanları, işlemleri, borçları, alacakları,
       yatırımları, bütçeleri ve tekrarlayan kayıtları takip etmenize yardımcı olan
       bir kişisel finans uygulamasıdır. Bu politika, uygulamanın hangi verileri
       işlediğini, bunların nasıl kullanıldığını ve sahip olduğunuz seçenekleri
-      açıklar. ÇuNehat <strong>önce-çevrimdışı</strong> tasarlandı: bulut
+      açıklar. ÇuHat <strong>önce-çevrimdışı</strong> tasarlandı: bulut
       yedeklemeyi açıkça etkinleştirmediğiniz sürece finansal kayıtlarınız
       cihazınızda kalır.
     </p>
@@ -242,10 +256,10 @@
     <ul>
       <li><strong>E-posta adresiniz</strong> — hangi hesabın bağlı olduğunu görmeniz
         için uygulamada gösterilir.</li>
-      <li><strong>Google Drive uygulama-veri klasörü</strong> (yalnızca kısıtlı
-        <code>drive.appdata</code> kapsamı) — tek bir yedek dosyası
-        (<code>cunehat_backup.json</code>), <em>kendi</em> Google Drive'ınızdaki
-        özel, uygulamaya-özgü bir klasöre yazılır. Bu klasör normal Drive
+      <li><strong>Google Drive uygulama-veri klasörü</strong> (yalnızca bu
+        uygulamaya ayrılmış <code>drive.appdata</code> kapsamı) — yedekler
+        <em>kendi</em> Google Drive'ınızdaki gizli, uygulamaya özgü bir klasöre
+        yazılır; uygulama en fazla son 5 kopyayı tutar. Bu klasör normal Drive
         görünümünüzde görünmez ve başka uygulamalar erişemez.</li>
     </ul>
     <p>
@@ -270,14 +284,14 @@
     <h3>1.4 Fiş fotoğrafları ve cihaz-içi metin tanıma</h3>
     <p>
       İsterseniz bir işleme fiş fotoğrafı ekleyebilirsiniz; fotoğraf kamerayla
-      çekilir ya da sistem seçicisi üzerinden galeriden seçilir. ÇuNehat kalıcı
+      çekilir ya da sistem seçicisi üzerinden galeriden seçilir. ÇuHat kalıcı
       kamera veya depolama izni istemez; sistem yalnızca seçtiğiniz tek görseli
       uygulamaya verir.
     </p>
     <ul>
       <li><strong>Görseller cihazınızda kalır.</strong> Uygulamanın özel
         depolama alanına kopyalanır ve hiçbir yere yüklenmez — bize de,
-        Google Drive yedeğinize de (yedek dosyası yalnızca kayıtları içerir,
+        Google Drive yedeklerinize de (yedekler yalnızca kayıtları içerir,
         görsel içermez).</li>
       <li><strong>Metin tanıma çevrimdışı çalışır.</strong> Fişten tutar ve
         tarih okuma, uygulamanın içine gömülü Google ML Kit cihaz-içi metin
@@ -288,7 +302,7 @@
     <h3>1.5 Banka ekstresi içe aktarma</h3>
     <p>
       Kendi seçtiğiniz bir banka ekstresini (PDF, CSV, Excel) içe aktarabilir ya
-      da başka bir uygulamanın paylaş menüsünden ÇuNehat'e gönderebilirsiniz. Bu
+      da başka bir uygulamanın paylaş menüsünden ÇuHat'a gönderebilirsiniz. Bu
       her zaman sizin başlattığınız bir işlemdir — uygulamanın bankanıza erişimi
       ve dosyalarınızı tarama izni yoktur.
     </p>
@@ -298,8 +312,22 @@
         aynı çevrimdışı metin tanımayla okunur.</li>
       <li>Yalnızca inceleme ekranında onayladığınız hareketler kaydedilir.
         Ekstre dosyasının kendisi uygulamada saklanmaz.</li>
-      <li>Bir dosya ÇuNehat ile paylaşıldığında Android o tek dosya için tek
+      <li>Bir dosya ÇuHat ile paylaşıldığında Android o tek dosya için tek
         seferlik, salt-okunur bir izin verir.</li>
+    </ul>
+
+    <h3>1.6 Hata günlüğü (cihazınızda kalır)</h3>
+    <p>
+      Sorunları teşhis edebilmek için uygulama, son hataların kısa bir kaydını
+      özel depolama alanında tutar: en fazla 50 kayıt; her birinde zaman,
+      hatanın oluştuğu bölüm, hata mesajı ve teknik iz bulunur. Hata mesajları,
+      hata anında işlenen verinin parçalarını içerebilir.
+    </p>
+    <ul>
+      <li>Günlük <strong>kendiliğinden hiçbir yere gönderilmez</strong>.</li>
+      <li><em>Ayarlar → Hakkında → Hata günlüğü</em> ekranından görebilir,
+        kopyalayabilir, paylaşabilir veya temizleyebilirsiniz. Cihazınızdan
+        yalnızca siz paylaşırsanız ve yalnızca seçtiğiniz uygulamaya çıkar.</li>
     </ul>
 
     <h2>2. Verileri nasıl kullanırız</h2>
@@ -314,7 +342,7 @@
 
     <h2>3. Google API Hizmetleri — Sınırlı Kullanım</h2>
     <p>
-      ÇuNehat'in Google API'lerinden alınan bilgileri kullanımı,
+      ÇuHat'ın Google API'lerinden alınan bilgileri kullanımı,
       <a href="https://developers.google.com/terms/api-services-user-data-policy">
       Google API Hizmetleri Kullanıcı Verileri Politikası</a>'na (Sınırlı Kullanım
       gereklilikleri dahil) uyar. Google Drive erişimi yalnızca isteğiniz üzerine
@@ -335,9 +363,10 @@
       <li><strong>Yerel veri:</strong> siz silene kadar kalır. Tüm yerel veriyi
         <em>Ayarlar → Veri yönetimi → Tüm veriyi sil</em> üzerinden, ya da
         uygulamayı kaldırarak veya depolamasını temizleyerek silebilirsiniz.</li>
-      <li><strong>Bulut yedeği:</strong> Drive yedek dosyasını uygulama içinden
-        (<em>Ayarlar → Yedekleme</em>) silebilir veya hesabınızın bağlantısını
-        kesebilirsiniz. Uygulamanın erişimini istediğiniz zaman
+      <li><strong>Bulut yedeği:</strong> Drive yedeklerinizden birini ya da
+        tümünü uygulama içinden (<em>Ayarlar → Yedekleme</em>) silebilir veya
+        hesabınızın bağlantısını kesebilirsiniz. Uygulamanın erişimini
+        istediğiniz zaman
         <a href="https://myaccount.google.com/permissions">Google Hesabı
         izinleri</a>nden de kaldırabilirsiniz.</li>
     </ul>
@@ -366,7 +395,7 @@
 
     <h2>8. Çocuklar</h2>
     <p>
-      ÇuNehat genel amaçlı bir finans aracıdır ve 13 yaş altı çocuklara yönelik
+      ÇuHat genel amaçlı bir finans aracıdır ve 13 yaş altı çocuklara yönelik
       değildir. Çocuklardan bilerek veri toplamayız.
     </p>
 

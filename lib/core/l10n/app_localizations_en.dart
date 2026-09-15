@@ -647,7 +647,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullBackupCancelled => 'Backup action cancelled.';
 
   @override
-  String get fullBackupShareText => 'ÇuNehat full backup';
+  String get fullBackupShareText => 'ÇuHat full backup';
 
   @override
   String get activeWalletRequiredForExport =>
@@ -2051,7 +2051,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationRationaleBody =>
-      'ÇuNehat can remind you when debt and receivable due dates approach and when recurring transactions await approval. This requires notification permission. You can keep using the app without it; you just won\'t see reminders.';
+      'ÇuHat can remind you when debt and receivable due dates approach and when recurring transactions await approval. This requires notification permission. You can keep using the app without it; you just won\'t see reminders.';
 
   @override
   String get notificationRationaleLater => 'Not Now';
@@ -2166,7 +2166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationDiagnosticsBatteryBody =>
-      'Remove ÇuNehat from battery restrictions in your phone settings. Some manufacturers (Xiaomi, Samsung, Huawei, Oppo) stop background app alarms by default.';
+      'Remove ÇuHat from battery restrictions in your phone settings. Some manufacturers (Xiaomi, Samsung, Huawei, Oppo) stop background app alarms by default.';
 
   @override
   String get notificationDiagnosticsOn => 'On';
@@ -2180,7 +2180,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationTestTitle => 'ÇuNehat test notification';
+  String get notificationTestTitle => 'ÇuHat test notification';
 
   @override
   String get notificationTestBody =>
@@ -2255,7 +2255,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notifDailyReminderTitle => 'ÇuNehat';
+  String get notifDailyReminderTitle => 'ÇuHat';
 
   @override
   String get notifDailyReminder1 =>
@@ -3292,7 +3292,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyIntro =>
-      'ÇuNehat is a personal finance app that helps you track your financial records. It is designed offline-first: your data stays on your device unless you explicitly enable cloud backup. We operate no server.';
+      'ÇuHat is a personal finance app that helps you track your financial records. It is designed offline-first: your data stays on your device unless you explicitly enable cloud backup. We operate no server.';
 
   @override
   String get privacyLocalDataTitle => 'Data stored on your device';
@@ -3306,7 +3306,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyDriveBody =>
-      'Cloud backup is OFF by default. If you turn it on, you sign in with Google and only your email address (so you can see which account is connected) and the restricted \"drive.appdata\" scope are used. A single backup file (cunehat_backup.json) is written to a private, app-specific folder in your own Google Drive that other apps cannot access. The app does not request full Drive access and cannot read your other files.';
+      'Cloud backup is OFF by default. If you turn it on, you sign in with Google and only your email address (so you can see which account is connected) and the app-specific \"drive.appdata\" scope are used. Backups are written to a hidden, app-specific folder in your own Google Drive that other apps cannot access; at most the last 5 copies are kept. The app does not request full Drive access and cannot read your other files.';
 
   @override
   String get privacyMarketDataTitle => 'Market data';
@@ -3320,7 +3320,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupOfferBody =>
-      'ÇuNehat keeps your records on no server. If you lose your phone, reset it, or uninstall the app, this data is gone for good. Turning on automatic backup keeps a regular copy in a private folder inside your own Google Drive.';
+      'ÇuHat keeps your records on no server. If you lose your phone, reset it, or uninstall the app, this data is gone for good. Turning on automatic backup keeps a regular copy in a private folder inside your own Google Drive.';
 
   @override
   String get backupOfferSetup => 'Set Up Backup';
@@ -3376,7 +3376,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyConsentBody =>
-      'ÇuNehat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.';
+      'ÇuHat stores your data only on your device; we operate no server. The optional Google Drive backup is written to a private folder in your own Drive, and only if you enable it. Your data is not shared with third parties; there is no advertising or tracking.';
 
   @override
   String get privacyConsentAcknowledge => 'Got it';

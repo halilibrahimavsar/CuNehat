@@ -1296,7 +1296,7 @@ abstract class AppLocalizations {
   /// No description provided for @fullBackupShareText.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat tam yedeği'**
+  /// **'ÇuHat tam yedeği'**
   String get fullBackupShareText;
 
   /// No description provided for @activeWalletRequiredForExport.
@@ -3794,7 +3794,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationRationaleBody.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.'**
+  /// **'ÇuHat; borç/alacak vade tarihleri yaklaştığında ve tekrarlayan işlemler onay beklediğinde size hatırlatma gönderebilir. Bunun için bildirim izni gerekir. İzin vermeseniz de uygulamayı kullanmaya devam edebilirsiniz; sadece hatırlatmalar gösterilmez.'**
   String get notificationRationaleBody;
 
   /// No description provided for @notificationRationaleLater.
@@ -3986,7 +3986,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationDiagnosticsBatteryBody.
   ///
   /// In tr, this message translates to:
-  /// **'Telefonun pil ayarlarından ÇuNehat\'i kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.'**
+  /// **'Telefonun pil ayarlarından ÇuHat\'ı kısıtlamadan çıkarın. Bazı üreticiler (Xiaomi, Samsung, Huawei, Oppo) arka plandaki uygulamaların alarmlarını varsayılan olarak durdurur.'**
   String get notificationDiagnosticsBatteryBody;
 
   /// No description provided for @notificationDiagnosticsOn.
@@ -4010,7 +4010,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationTestTitle.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat test bildirimi'**
+  /// **'ÇuHat test bildirimi'**
   String get notificationTestTitle;
 
   /// No description provided for @notificationTestBody.
@@ -4130,7 +4130,7 @@ abstract class AppLocalizations {
   /// No description provided for @notifDailyReminderTitle.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat'**
+  /// **'ÇuHat'**
   String get notifDailyReminderTitle;
 
   /// No description provided for @notifDailyReminder1.
@@ -5864,7 +5864,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyIntro.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.'**
+  /// **'ÇuHat, finansal kayıtlarınızı takip etmenize yardımcı olan bir kişisel finans uygulamasıdır. \"Önce-çevrimdışı\" tasarlandı: bulut yedeklemeyi açıkça etkinleştirmediğiniz sürece verileriniz cihazınızda kalır. Sunucumuz yoktur.'**
   String get privacyIntro;
 
   /// No description provided for @privacyLocalDataTitle.
@@ -5888,7 +5888,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyDriveBody.
   ///
   /// In tr, this message translates to:
-  /// **'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve kısıtlı \"drive.appdata\" kapsamı kullanılır. Tek bir yedek dosyası (cunehat_backup.json) kendi Drive\'ınızdaki, başka uygulamaların erişemediği özel bir klasöre yazılır. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.'**
+  /// **'Bulut yedekleme varsayılan olarak KAPALIDIR. Açarsanız Google ile oturum açılır; yalnızca e-posta adresiniz (hangi hesabın bağlı olduğunu görmeniz için) ve yalnızca bu uygulamaya ayrılmış \"drive.appdata\" kapsamı kullanılır. Yedekler kendi Drive\'ınızdaki, başka uygulamaların erişemediği gizli bir uygulama klasörüne yazılır; en fazla son 5 kopya tutulur. Tam Drive erişimi istenmez; diğer dosyalarınız okunamaz.'**
   String get privacyDriveBody;
 
   /// No description provided for @privacyMarketDataTitle.
@@ -5912,7 +5912,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupOfferBody.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.'**
+  /// **'ÇuHat kayıtlarını bir sunucuda tutmaz. Telefonunu kaybeder, sıfırlar ya da uygulamayı kaldırırsan bu veriler geri gelmez. Otomatik yedeklemeyi açarsan kayıtlarının kopyası düzenli olarak kendi Google Drive\'ındaki özel bir klasöre alınır.'**
   String get backupOfferBody;
 
   /// No description provided for @backupOfferSetup.
@@ -6008,7 +6008,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyConsentBody.
   ///
   /// In tr, this message translates to:
-  /// **'ÇuNehat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.'**
+  /// **'ÇuHat verilerinizi yalnızca cihazınızda saklar; sunucumuz yoktur. İsteğe bağlı Google Drive yedeği yalnızca siz açarsanız, kendi Drive\'ınızdaki özel bir klasöre yazılır. Verileriniz üçüncü taraflarla paylaşılmaz; reklam veya izleme yoktur.'**
   String get privacyConsentBody;
 
   /// No description provided for @privacyConsentAcknowledge.

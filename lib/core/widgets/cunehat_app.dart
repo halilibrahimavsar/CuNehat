@@ -33,7 +33,7 @@ class CuNehatApp extends StatelessWidget {
       themeMode: ThemeMode.light,
       theme: theme,
       locale: locale,
-      title: "ÇuNehat",
+      title: "ÇuHat",
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         AppLocalizations.delegate,

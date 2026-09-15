@@ -7,8 +7,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <!-- Yan yana kurulumda hangi simgenin hangisi olduğu belli olsun:
-         Play sürümü "ÇuNehat", geliştirme derlemesi "ÇuNehat DEV". -->
+         Play sürümü "ÇuHat", geliştirme derlemesi "ÇuHat DEV". -->
     <application
-        android:label="ÇuNehat DEV"
+        android:label="ÇuHat DEV"
         tools:replace="android:label" />
 </manifest>

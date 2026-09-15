@@ -1,4 +1,4 @@
-# ÇuNehat — Google Play İlk Yayın Rehberi
+# ÇuHat — Google Play İlk Yayın Rehberi
 
 Kod tarafı hazır. Bu doküman **kodla halledilemeyen, senin yapman gereken**
 adımları sırayla anlatır. Adımlar birbirine bağımlı — özellikle 4 ve 9
@@ -8,15 +8,27 @@ arasındaki sıra kritik, sebebi 9'da açıklanıyor.
 Cloud projesi, Flutter SDK kurulu.
 
 **Uygulama kimliği (değiştirilemez, yayından sonra sabit):**
-`dev.halilibrahim.cunehat` · sürüm `1.0.0+5` (**hazırlanıyor, henüz
-yüklenmedi**). Testerların elindeki sürüm hâlâ `1.0.0+4` — 3 Eyl'de yüklendi,
-etiketi `v1.0.0+4`.
+`dev.halilibrahim.cunehat` · sürüm `1.0.0+6` (**hazırlanıyor, henüz
+yüklenmedi**) — ad değişikliği + çalışma zamanı hata denetimi. Son etiketli
+yükleme `v1.0.0+4` (3 Eyl). `+5` 9 Eyl'de yüklemeye hazırlanmıştı ama etiketi
+atılmadı; yüklenip yüklenmediğini Console'dan doğrula, yüklendiyse o commit'i
+(`76683c2`) etiketle. `+6` bu yüzden seçildi: kodların yalnız artması yeter,
+atlanan numara zararsız.
+
+**Ad değişikliği — 16 Eylül 2026: ÇuNehat → ÇuHat.** Görünen ad `ÇuHat`,
+mağaza başlığı `CuHat: Gelir Gider Takibi`. Paket adı, Drive yedek öneki,
+bildirim kanal kimlikleri ve **GitHub repo adı** eski adı taşır ve DEĞİŞMEZ —
+tablo ve gerekçe `docs/store/store-listing.md` → *Marka adı*; kilit
+`test/branding/brand_identity_test.dart`. Repo adı özellikle önemli: GitHub,
+repo adı değişince Pages adresini yönlendirmez; Play'e verilen gizlilik
+politikası URL'i 404 olur.
 
 > **Sürüm kodları kalıcı tüketilir.** Bir kod herhangi bir kanala bir kez
 > yüklendiyse, o sürüm silinse/atılsa bile geri gelmez. `1` yakıldı (ilk
 > deneme reddedildi), `2`, `3` ve `4` kapalı teste yüklendi (sonuncusu
-> 3 Eyl 2026). `5` **henüz yakılmadı** — yüklenene kadar yeni işler aynı `+5`
-> içinde birikebilir, her commit için artırmaya gerek yok.
+> 3 Eyl 2026). `5`'in yüklenip yüklenmediği etiketle
+> kayıtlı değil (bkz. yukarı); `+6` hazırlanıyor ve yüklenene kadar yeni işler
+> aynı `+6` içinde birikebilir, her commit için artırmaya gerek yok.
 >
 > **Hangi kodun yüklendiğini etiketlerden oku, hafızadan değil.** Yüklenen her
 > derlemenin `v<versionName>+<versionCode>` adında açıklamalı bir git etiketi
@@ -29,7 +41,7 @@ etiketi `v1.0.0+4`.
 
 ---
 
-## 📍 Durum panosu — son ölçüm 9 Eylül 2026
+## 📍 Durum panosu — son ölçüm 16 Eylül 2026
 
 | Adım | Ne | Durum |
 |---|---|---|
@@ -42,16 +54,17 @@ etiketi `v1.0.0+4`.
 | 7 | Data Safety formu | ✅ Dolduruldu |
 | 8a | İçerik derecelendirme + hedef kitle | ✅ Dolduruldu |
 | 8b | App access + finansal özellikler | ✅ Dolduruldu |
-| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi, ama **8 ekran görüntüsünün TAMAMI 9 Eyl'de yeniden çekildi** (`docs/store/screenshots/`) — `+5` ile birlikte Console'a yeniden yüklenmeli, bkz. `store-listing.md` → *Set 9 Eylül 2026'da yeniden çekildi*. Mağaza adı **`CuNehat`** olarak KALACAK — bilinçli karar (30 Ağu). Uygulama içi/görsel taraf `ÇuNehat`; fark biliniyor ve kabul edildi, bkz. aşağıdaki not |
+| 8c | **Mağaza girişi (metin + ikon + görseller)** | 🟡 tr-TR + en-US girildi, ama **8 ekran görüntüsünün TAMAMI 9 Eyl'de yeniden çekildi** (`docs/store/screenshots/`) — `+5` ile birlikte Console'a yeniden yüklenmeli, bkz. `store-listing.md` → *Set 9 Eylül 2026'da yeniden çekildi*. **16 Eyl: ad değişti (ÇuNehat → ÇuHat).** Mağaza başlığı `CuHat: Gelir Gider Takibi` (en-US `CuHat: Budget & Expenses`; düz C kararı 30 Ağu'dan sürüyor), uygulama içi ve tanıtım görseli `ÇuHat`. Başlık, uzun açıklamalar ve yeni tanıtım görseli `+6` ile aynı gönderimde girilecek; **önce gizlilik politikası yayına alınır** — bkz. Adım 8 sonundaki karar notu |
 | 8d | **Etiketler (3 tane)** | ✅ Mağaza ayarlarıyla birlikte gönderildi |
 | — | **Cihaz duman testi** | 🟡 **KISMEN (8 Eyl)** — emülatörde (API 36, 3 tuşlu gezinme) 8 madde ✔, ayrıca **`+4` → `+5` yerinde yükseltme provası geçti** (10 kutu açıldı, veri yerinde, v9 yedek migrasyonla yüklendi, `+5` v10 yazıyor). Kalan 8 madde imzaya/donanıma bağlı → yüklemeden sonra telefonda. Bkz. Adım 10 |
 | 9 | AAB yükle → Play'in SHA-1'i → 3. OAuth istemcisi | ✅ **TAMAM** — üç istemci de doğru; Play sürümünde Drive yedekleme cihazda doğrulandı (29 Ağu) |
-| 11 | Kapalı test 12 tester × 14 gün | 🟢 **SAYAÇ İŞLİYOR** — 13 tester opt-in oldu (28 Ağu). Panoda ilk iki madde ✔; kalan: "en az 12 kullanıcıyla 14 gün". Production başvurusu en erken **~11 Eyl**, inceleme ≤7 gün → **~18 Eyl** |
+| 11 | Kapalı test 12 tester × 14 gün | ✅ **14 gün doldu** (28 Ağu → 11 Eyl, 13 tester). ⚠️ Şart **başvuru anında** ölçülür: başvurduğunda ≥12 tester opt-in ve önceki 14 gün kesintisiz. Production onayı gelene kadar testerlar programda kalmalı |
 | — | **Monetizasyon kapısı** | ✅ **KRİTİK YOLDAN ÇIKTI (7 Eyl)** — v1.0 **ücretsiz ve reklamsız** yayınlanıyor: IAP yok, paywall yok, monetizasyon kodu yok. Pro 2. aşamada ve yalnız v1.0'da **olmayan** özelliklerden kurulacak. Ödeme/mevzuat tarafı da 2. aşamaya kaldı. Plan repo dışında: `../CuNehat-ozel/monetizasyon-plani.md` |
-| 12 | Production | ⬜ |
+| 12 | Production | 🟡 **Başvuru gönderiliyor (16 Eyl 2026)** — inceleme genelde ≤7 gün. Onay gelince `+6` kapalı testten terfi eder, yalnız **Türkiye** — bkz. Adım 12 |
 
-**Kod tarafı sağlık (9 Eyl 2026, yükleme öncesi ölçüm):**
-`flutter test` **2413/2413**, `dart analyze` **0 sorun**.
+**Kod tarafı sağlık (16 Eyl 2026, `+6` yükleme öncesi ölçüm):**
+`flutter test` **2618/2618** (uygulama) + **179/179** (`unified_flutter_features`),
+`dart analyze` **0 sorun**, AAB 89,2 MB ve `CN=Halil Ibrahim Avsar` ile imzalı.
 
 > **Suite bir gün sonra yine kendiliğinden kırılmıştı (2412/1).** 8 Eyl'de yeşil olan
 > `transaction_page_test.dart` → "ay değişince önceki günün vurgusu düşer" 9 Eyl'de
@@ -375,10 +388,15 @@ Yani `registerLicense(...)` çağırsan da **hiçbir etkisi olmaz**. Bu yüzden:
 açık bir URL istiyor.
 
 > **✅ YAYINDA ve doğrulandı (21 Ağu 2026).** Üç adres ölçüldü:
-> `.../ÇuNehat/privacy-policy.html` → **200** (TR+EN içerik yerinde),
-> `.../ÇuNehat/RELEASE_GUIDE.html` → **404**,
-> `.../ÇuNehat/cunehat-mantiksal-analiz.html` → **404**.
+> `.../CuNehat/privacy-policy.html` → **200** (TR+EN içerik yerinde),
+> `.../CuNehat/RELEASE_GUIDE.html` → **404**,
+> `.../CuNehat/cunehat-mantiksal-analiz.html` → **404**.
 > Yani `_config.yml`'deki `exclude` listesi çalışıyor, sızıntı yok.
+>
+> ⚠️ **Bu blokta ve aşağıdaki adımlarda URL'ler 26 Ağu – 16 Eyl 2026 arasında
+> `/ÇuNehat/` yazıyordu** — C→Ç marka geçişindeki toplu değiştirmenin yan
+> etkisi; o adres **404** verir (16 Eyl'de ölçüldü). URL'deki ad markayı değil
+> **repo adını** (`CuNehat`) izler; marka değişse de değişmez.
 > Aşağıdaki 1–6 adımları yeniden yapmana gerek yok; **ancak `_config.yml`'i
 > değiştirirsen 6. maddedeki 404 kontrolünü tekrarla.**
 
@@ -386,7 +404,7 @@ açık bir URL istiyor.
 > Pages bu dosyaları tarayıcıda okunur ve indekslenebilir sayfalara çevirir.
 > 2026-08-08'de buna göre düzenlendi:
 > - `cunehat-monetizasyon-plani.md` **repodan çıkarıldı** (kişisel vergi /
->   BAĞ-KUR ayrıntıları içeriyordu) → `../ÇuNehat-ozel/` altında duruyor.
+>   BAĞ-KUR ayrıntıları içeriyordu) → `../CuNehat-ozel/` altında duruyor.
 > - `docs/_config.yml` eklendi: `RELEASE_GUIDE.md`, eski analiz dokümanı ve
 >   `store/` siteden hariç tutuluyor.
 > - `docs/index.html` eklendi ki site kökü 404 vermesin.
@@ -401,11 +419,11 @@ açık bir URL istiyor.
 1. GitHub → repo → **Settings → Pages**
 2. Source: **Deploy from a branch** → Branch: `main`, klasör: `/docs`
 3. Birkaç dakika sonra URL:
-   `https://halilibrahimavsar.github.io/ÇuNehat/privacy-policy.html`
+   `https://halilibrahimavsar.github.io/CuNehat/privacy-policy.html`
 4. Tarayıcıda aç, TR ve EN bölümlerinin ikisinin de göründüğünü doğrula.
 5. İçindeki iletişim e-postasını (`halirlnj@gmail.com`) teyit et.
-6. **Sızıntı kontrolü:** `.../ÇuNehat/RELEASE_GUIDE.html` ve
-   `.../ÇuNehat/cunehat-mantiksal-analiz.html` adreslerinin **404 verdiğini**
+6. **Sızıntı kontrolü:** `.../CuNehat/RELEASE_GUIDE.html` ve
+   `.../CuNehat/cunehat-mantiksal-analiz.html` adreslerinin **404 verdiğini**
    doğrula. Veriyorlarsa `_config.yml` işlememiş demektir.
 
 Bu URL'i iki yerde kullanacaksın: Play Console store listing + Google Cloud
@@ -415,13 +433,13 @@ OAuth consent ekranı.
 
 ## Adım 4 — Google Cloud: OAuth consent ekranı
 
-Drive yedeği `drive.appdata` kapsamını kullanıyor (hassas kapsam).
+Drive yedeği `drive.appdata` kapsamını kullanıyor (Google'ın kapsam tablosunda **non-sensitive** — doğrulama başvurusu gerekmez; bkz. durum panosu).
 
 1. <https://console.cloud.google.com> → doğru projeyi seç (yoksa oluştur)
 2. **APIs & Services → Library** → **Google Drive API** → Enable
 3. **APIs & Services → OAuth consent screen**
    - User type: **External**
-   - App name: `ÇuNehat`
+   - App name: `ÇuHat` *(16 Eyl 2026'ya kadar `ÇuNehat`. Ad değişikliğinde Google Auth Platform → **Branding** ekranında güncellenir; marka doğrulanmışsa yeni ad yeniden doğrulamaya girebilir — genelde dakikalar, bazen 2-3 iş günü)*
    - User support email + Developer contact: kendi e-postan
    - App domain → **Privacy policy link**: Adım 3'teki URL
 4. **Scopes** (yeni arayüzde **Data Access**) → Add or remove scopes → yalnız
@@ -447,7 +465,7 @@ Drive yedeği `drive.appdata` kapsamını kullanıyor (hassas kapsam).
 Consent screen sayfasında bu sayaç **her projede** görünür, korkutucu ama
 seni bağlamıyor. Console'un kendi tanımı: cap, *"unapproved **sensitive or
 restricted** scopes"* isteyen uygulamalardaki izin veren kullanıcı sayısını
-sınırlar. ÇuNehat hiç sensitive/restricted kapsam istemiyor → sınırlayacak
+sınırlar. ÇuHat hiç sensitive/restricted kapsam istemiyor → sınırlayacak
 bir şey yok. Sayaç yine artar, sadece bir sayaçtır.
 
 > **Yine de gözünle doğrula:** Consent screen → **Scopes** sayfasında
@@ -503,17 +521,17 @@ ilk yüklemeden sonra alınabiliyor — **Adım 9**.
 
 | Alan | Değer |
 |---|---|
-| Uygulama adı | **`ÇuNehat: Gelir Gider Takibi`** *(27 kr — gerekçesi `store-listing.md`)* |
+| Uygulama adı | **`CuHat: Gelir Gider Takibi`** *(25 kr — gerekçesi `store-listing.md`)* |
 | Varsayılan dil | Türkçe (tr-TR) |
 | Uygulama mı oyun mu | Uygulama |
 | Ücretsiz mi ücretli mi | Ücretsiz *(ücretliye sonradan geçilemez)* |
 | Kategori | Finans |
 
-> **Uygulama adı ≠ `android:label`.** Manifest'teki `ÇuNehat` telefondaki
+> **Uygulama adı ≠ `android:label`.** Manifest'teki `ÇuHat` telefondaki
 > simgenin altında yazan ad; buradaki alan **mağazada aranan ve indekslenen**
-> ad. Play'in en ağır ASO alanı bu, 30 karakterin 23'ünü sıfır arama hacimli
-> markaya harcamak en pahalı hata olurdu. Uygulama oluştururken sade "ÇuNehat"
-> girdiysen sorun değil — **Mağaza girişi** ekranından değiştirilebiliyor.
+> ad. Play'in en ağır ASO alanı bu, 30 karakterin 25'ini sıfır arama hacimli
+> markaya harcamak en pahalı hata olurdu. Uygulama oluştururken sade marka
+> adını girdiysen sorun değil — **Mağaza girişi** ekranından değiştirilebiliyor.
 
 ### Etiketler (en fazla 5)
 
@@ -592,26 +610,33 @@ Bu tablo uygulamanın gerçek davranışından çıkarıldı; olduğu gibi gir.
   büyük ekran vitrininde geri plana atar; ilk güncellemeye yazıldı.
 
 > **Kalan iş bu adımda yalnız Console'a girmek:** metinleri `store-listing.md`'den
-> kopyala, üç görsel setini yükle. Uygulama adının **`ÇuNehat: Gelir Gider Takibi`**
-> olduğundan emin ol — sadece "ÇuNehat" bırakılırsa 30 karakterlik en ağır ASO
-> alanının 23'ü boşa gider.
+> kopyala, üç görsel setini yükle. Uygulama adının **`CuHat: Gelir Gider Takibi`**
+> olduğundan emin ol — sadece "CuHat" bırakılırsa 30 karakterlik en ağır ASO
+> alanının 25'i boşa gider.
 
 > **Metin yazarken dikkat:** "kredi verme", "borç para verme", "faizsiz kredi"
 > gibi ifadeler Play'in Finansal Hizmetler politikasını tetikler ve ek beyan
-> ister. ÇuNehat borç/alacak **takibi** yapıyor, finansal ürün sunmuyor —
+> ister. ÇuHat borç/alacak **takibi** yapıyor, finansal ürün sunmuyor —
 > metin bunu net söylemeli. "Borçlarını ve alacaklarını takip et" güvenli;
 > "kredi çöz" değil.
 
-> **Marka yazımı — VERİLMİŞ KARAR (30 Ağu 2026).** Mağaza adı `CuNehat: Gelir
-> Gider Takibi`, düz `C` ile, ve **öyle kalacak.** Bu bilinçli bir karardır,
-> eksik iş değil; ileride "düzeltilecek hata" sanılmasın.
+> **Marka yazımı — VERİLMİŞ KARAR (30 Ağu 2026; 16 Eyl 2026 ad değişikliğinde
+> yeniden onaylandı).** Mağaza adı `CuHat: Gelir Gider Takibi` (en-US:
+> `CuHat: Budget & Expenses`), düz `C` ile, ve **öyle kalacak.** Bu bilinçli bir
+> karardır, eksik iş değil; ileride "düzeltilecek hata" sanılmasın.
 >
-> Bilinen ve kabul edilen fark: uygulamanın kendisi `ÇuNehat` diyor —
-> `android:label`, 14 l10n dizesi, gizlilik politikası (17 yerde) ve **tanıtım
-> görselindeki kelime işareti**. Sonuncusu mağaza sayfasında başlığın hemen
-> yanında duruyor, yani fark orada görünür. Vazgeçilirse iki alan düzenlemesi
-> yeter (tr-TR + en-US uygulama adı), yeni derleme gerekmez;
-> `docs/store/store-listing.md` hâlâ `Ç`'li metinleri taşıyor.
+> Bilinen ve kabul edilen fark: uygulamanın kendisi `ÇuHat` diyor —
+> `android:label`, 16 l10n dizesi, gizlilik politikası ve **tanıtım görselindeki
+> kelime işareti**. Sonuncusu mağaza sayfasında başlığın hemen yanında duruyor,
+> yani fark orada görünür. Vazgeçilirse iki alan düzenlemesi yeter (tr-TR +
+> en-US uygulama adı), yeni derleme gerekmez.
+>
+> **Ad değişikliğinde Console sırası (16 Eyl 2026):** (1) gizlilik politikası
+> yeni adla yayında → (2) `+6` kapalı teste ve aynı gönderimde tr-TR / en-US
+> başlık, uzun açıklama, tanıtım görseli → (3) Google Cloud → Branding ekranında
+> uygulama adı. Politika geçiş için eski adı da anıyor ("önceki adıyla
+> ÇuNehat"): yeni mağaza adı incelemeden geçene kadar eski ad yayında kalıyor ve
+> Play, politikanın mağazadaki adı ya da geliştiriciyi anmasını istiyor.
 
 **Diğer formlar:**
 
@@ -906,13 +931,34 @@ sorulur — bunları ciddiye alarak yaz, form gerçekten okunuyor. İnceleme
 
 ## Adım 12 — Production'a çıkış
 
-1. **Test ve yayınlama → Üretim** → yeni sürüm → aynı AAB'yi kullan
-2. Sürüm notlarını yaz (TR + EN)
-3. Ülke/bölge seçimi
-4. **İncelemeye gönder**
+**Önkoşul:** production erişimi onaylandı. Başvuru 16 Eyl 2026'da gönderildi;
+onay e-postayla gelir ve Kontrol paneli'nde Production açılır. Onay gelene kadar
+testerlar programda kalmalı — Google, opt-in tester sayısının 12'nin altına
+düşmesini "ek test gerekiyor" gerekçesi sayıyor.
 
-İlk inceleme genelde birkaç gün sürer; yeni geliştirici hesaplarında daha uzun
+1. **Yönetilen yayınlama'yı aç** (Yayınlama genel bakışı). Onaylanan değişiklik
+   sen "Yayınla" diyene kadar canlıya çıkmaz; ilk halka açık sürümden önce
+   mağaza sayfasını son kez gözle kontrol edebilmek için. Açıkken kapalı test
+   güncellemeleri de onaydan sonra "Yayınla" ister.
+2. **Test ve yayınlama → Production → Ülkeler/bölgeler → yalnız Türkiye**
+   (karar 16 Eyl 2026: PDF ekstre okuma TR bankalarına özel, mağaza metni TR'ye
+   göre yazıldı). Ülke eklemek sonradan birkaç tık.
+3. **Kapalı testteki sürümü terfi ettir:** Kapalı test → yürüyen sürüm →
+   **Promote release (sürümü terfi ettir) → Production**. Aynı AAB, yeniden
+   derleme yok. Terfi edilen sürüm, testerların birkaç gün kullandığı sürüm
+   olmalı (şu an `+6`).
+4. **Sürüm notları:** `store-listing.md` → *Sürüm notları — v1.0.0* (tr-TR +
+   en-US). Kapalı test notları değil; production kullanıcısı için ilk sürüm.
+5. **Yayına alma %100.** İlk sürümde kademeli dağıtımın koruyacağı mevcut
+   kullanıcı yok.
+6. **İncelemeye gönder** → onaylanınca **Yayınla**.
+
+İnceleme genelde birkaç gün sürer; yeni geliştirici hesaplarında daha uzun
 sürebilir. Reddedilirse gerekçe e-postayla gelir.
+
+**Yayından hemen sonra:** Play sayfasını oturum açmamış bir tarayıcıda aç
+(başlık, tanıtım görseli, gizlilik linki), kendi telefonunda Play'den
+güncellemeyi al ve verinin yerinde olduğuna bak. Sonra Adım 13.
 
 ---
 

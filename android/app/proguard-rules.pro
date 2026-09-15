@@ -1,4 +1,4 @@
-# CuNehat release (R8) kuralları.
+# ÇuHat release (R8) kuralları.
 # Hive üretilmiş adapter kullanır (reflection yok); google_sign_in /
 # local_auth / flutter_secure_storage kendi consumer kurallarını taşır.
 # Release duman testinde crash çıkarsa kural buraya eklenir.
