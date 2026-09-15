@@ -71,6 +71,12 @@ class CuNehatApp extends StatelessWidget {
                     cancelLabel: l10n.cancelLabel,
                     pinMismatchMessage: l10n.pinMismatchMessage,
                     pinValidationMessage: l10n.pinValidationMessage,
+                    pinFieldLabel: l10n.pinFieldLabel,
+                    confirmPinFieldLabel: l10n.confirmPinFieldLabel,
+                    currentPinFieldLabel: l10n.currentPinFieldLabel,
+                    newPinFieldLabel: l10n.newPinFieldLabel,
+                    confirmNewPinFieldLabel: l10n.confirmNewPinFieldLabel,
+                    verifyLabel: l10n.verifyLabel,
                     msgCreateAPinFirst: l10n.msgCreateAPinFirst,
                     msgBiometricAuthenticationIsNot:
                         l10n.msgBiometricAuthenticationIsNot,

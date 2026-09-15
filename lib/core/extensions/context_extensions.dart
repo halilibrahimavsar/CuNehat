@@ -33,6 +33,15 @@ extension LocalizationX on BuildContext {
       cancelLabel: l.cancelLabel,
       pinMismatchMessage: l.pinMismatchMessage,
       pinValidationMessage: l.pinValidationMessage,
+      // PIN diyaloglarının alan etiketleri: paketin varsayılanları İngilizce
+      // ('PIN (6 digits)', 'Confirm PIN'…) ve geçilmediğinde Türkçe arayüzde
+      // olduğu gibi görünüyordu (16 Eyl 2026'da cihazda ölçüldü).
+      pinFieldLabel: l.pinFieldLabel,
+      confirmPinFieldLabel: l.confirmPinFieldLabel,
+      currentPinFieldLabel: l.currentPinFieldLabel,
+      newPinFieldLabel: l.newPinFieldLabel,
+      confirmNewPinFieldLabel: l.confirmNewPinFieldLabel,
+      verifyLabel: l.verifyLabel,
       msgCreateAPinFirst: l.msgCreateAPinFirst,
       msgBiometricAuthenticationIsNot: l.msgBiometricAuthenticationIsNot,
       msgBiometricAuthenticationFailed: l.msgBiometricAuthenticationFailed,

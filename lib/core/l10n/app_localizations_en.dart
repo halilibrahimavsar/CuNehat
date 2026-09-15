@@ -420,6 +420,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinValidationMessage => 'Enter a 6-digit PIN';
 
   @override
+  String get pinFieldLabel => 'PIN (6 digits)';
+
+  @override
+  String get confirmPinFieldLabel => 'Confirm PIN';
+
+  @override
+  String get currentPinFieldLabel => 'Current PIN';
+
+  @override
+  String get newPinFieldLabel => 'New PIN';
+
+  @override
+  String get confirmNewPinFieldLabel => 'Confirm new PIN';
+
+  @override
+  String get verifyLabel => 'Verify';
+
+  @override
   String get pinLockTitle => 'PIN Lock';
 
   @override

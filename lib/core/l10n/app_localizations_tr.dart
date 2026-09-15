@@ -422,6 +422,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinValidationMessage => '6 haneli bir PIN girin';
 
   @override
+  String get pinFieldLabel => 'PIN (6 hane)';
+
+  @override
+  String get confirmPinFieldLabel => 'PIN\'i doğrula';
+
+  @override
+  String get currentPinFieldLabel => 'Mevcut PIN';
+
+  @override
+  String get newPinFieldLabel => 'Yeni PIN';
+
+  @override
+  String get confirmNewPinFieldLabel => 'Yeni PIN\'i doğrula';
+
+  @override
+  String get verifyLabel => 'Doğrula';
+
+  @override
   String get pinLockTitle => 'PIN Kilidi';
 
   @override

@@ -867,6 +867,42 @@ abstract class AppLocalizations {
   /// **'6 haneli bir PIN girin'**
   String get pinValidationMessage;
 
+  /// No description provided for @pinFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN (6 hane)'**
+  String get pinFieldLabel;
+
+  /// No description provided for @confirmPinFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN\'i doğrula'**
+  String get confirmPinFieldLabel;
+
+  /// No description provided for @currentPinFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mevcut PIN'**
+  String get currentPinFieldLabel;
+
+  /// No description provided for @newPinFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni PIN'**
+  String get newPinFieldLabel;
+
+  /// No description provided for @confirmNewPinFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni PIN\'i doğrula'**
+  String get confirmNewPinFieldLabel;
+
+  /// No description provided for @verifyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrula'**
+  String get verifyLabel;
+
   /// No description provided for @pinLockTitle.
   ///
   /// In tr, this message translates to:
